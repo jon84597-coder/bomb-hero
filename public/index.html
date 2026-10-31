@@ -1566,6 +1566,33 @@
   .acctbtn.primary.dim { opacity: .62; }
   .acctbtn.dev { background: #2b2340; border-color: #6b5aa8; color: #d9cdff; }
   .acctsec2 { font-size: 10.5px; color: #a98a68; text-align: center; line-height: 1.6; margin-top: 6px; }
+  /* v4.3：矮螢幕（≤700px 高，例如 360×640）把註冊表單收緊 ——
+     讓「註冊並綁定進度」這顆主按鈕不用捲卡片就看得到 */
+  @media (max-height: 700px) {
+    #acctModal { padding: 8px; }
+    .acctcard { max-height: calc(100vh - 16px); max-height: calc(100svh - 16px); padding: 10px 12px 9px; border-radius: 17px; border-width: 2px; }
+    .accthead h3 { font-size: 17px; }
+    .acctclose { width: 28px; height: 28px; font-size: 13px; }
+    .acctwho { margin: 6px 0 2px; gap: 8px; }
+    .acctav { width: 36px; height: 36px; font-size: 19px; border-width: 2px; }
+    .acctwho .an { font-size: 15px; }
+    .acctrows { margin: 5px 0 2px; }
+    .acctrow { font-size: 12px; padding: 4px 2px; }
+    .acctrow b { font-size: 12.5px; }
+    .accttabs { margin: 6px 0 5px; gap: 5px; }
+    .accttab { padding: 6px 5px; font-size: 12px; border-radius: 9px; }
+    .acctform { gap: 2px; }
+    .acctform label { margin-top: 3px; font-size: 11px; }
+    .acctin { padding: 7px 10px; font-size: 13px; border-radius: 9px; }
+    .accthint { font-size: 10px; line-height: 1.35; }
+    .accterr { font-size: 10.5px; line-height: 1.35; }
+    .acctstr { height: 5px; margin: 0; }
+    .acctstr i { height: 4px; }
+    .acctbtn { padding: 8px 11px; font-size: 13px; border-radius: 11px; }
+    .acctbtn.primary { margin-top: 5px; padding: 9px 12px; font-size: 13.5px; }
+    .acctsec2 { display: none; }
+    .acctprov { gap: 6px; margin: 8px 0 4px; }
+  }
   .acctmeta { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 4px; }
   .acctok { font-size: 11px; font-weight: 800; color: #2f7d4a; background: #eefaf1; border: 1.5px solid #bfe6c8; border-radius: 999px; padding: 3px 9px; }
   .acctdev { margin-left: 6px; font-size: 10px; font-weight: 900; color: #ffd9b0; background: #4a3a6b; border-radius: 999px; padding: 2px 7px; }
@@ -13468,7 +13495,7 @@ const VERSION_LOG = [
   { v: '4.3', date: '2026-11-01', now: true, items: [
     '<b>網頁直接註冊</b>：右上角「👤 帳號」現在有「登入／註冊／第三方」三個分頁，不用 Google／FB 也能用帳號＋密碼註冊',
     '<b>密碼資安</b>：密碼一律經 <b>scrypt 加鹽雜湊</b>（記憶體困難、與 Argon2／bcrypt 同級）才寫入資料庫，<b>伺服器不保存明文</b>；登入用 timingSafeEqual 比對，連錯 5 次自動鎖 5 分鐘',
-    '<b>即時驗證</b>：帳號格式（3~20 位英數字或完整 Email）與密碼強度（至少 8 位、需英文字母＋數字）都在輸入時就提示，附強度條',
+    '<b>即時驗證</b>：帳號格式（3~20 位英數字或完整 Email）與密碼強度（至少 8 位、需英文字母＋數字）都在輸入時就提示，附強度條；矮螢幕（≤700px 高）表單自動收緊，主按鈕不用捲就看得到',
     '<b>遊客進度無痛轉移</b>：遊客玩到一半再註冊，關卡進度、配點、金幣、觸控版面全部合併到新帳號，一點都不會不見',
     '<b>開發者後台</b>：jon84597@gmail.com 登入後可開「🛠 開發者後台」—— 會員名單（UID／來源／第三方 ID／註冊 IP／精確到秒的加入時間）、玩家足跡、停權、修存檔、全服公告',
     '<b>開發者特權</b>：全 32 關（含 BOSS）直接解鎖、可跳關測試；內部測試版本的更新內容不會出現在玩家的「版本更新內容」面板'
