@@ -147,7 +147,7 @@ ok(typeof P.Solo.renderGo === 'function', 'Solo.renderGo() 會更新大按鈕文
 })();
 ok(/b\.addEventListener\('click', function \(\) \{[\s\S]{0,160}Solo\.sel === n\) \{ Solo\.go\(\); return; \}/.test(html),
   '同一顆關卡按鈕再點一次也會直接出發（老玩家不用多按一下）');
-ok(/if \(n > Solo\.unlocked\) \{ toast\(t\('solo\.lockToast'/.test(html), '未解鎖時有清楚的鎖頭提示（v2.7：走 t()）');
+ok(/if \(n > Solo\.maxUnlocked\(\)\) \{ toast\(t\('solo\.lockToast'/.test(html), '未解鎖時有清楚的鎖頭提示（v2.7：走 t()）');
 
 // ================================================================
 console.log('\n=== 3. 手機搖桿預設「小」 ===');
@@ -384,8 +384,8 @@ ok(P.BOSS_POWER > 1, 'BOSS 火焰仍比玩家的初始火力長');
 
 // ================================================================
 console.log('\n=== 9. 版本與整體 ===');
-ok(P.VERSION === '4.2', '版本 = 3.9（' + P.VERSION + '）');
-ok(html.indexOf('<span id="verTxt">4.2</span>') > 0, '畫面上的版本號同步 4.2');
+ok(P.VERSION === '4.3', '版本 = 3.9（' + P.VERSION + '）');
+ok(html.indexOf('<span id="verTxt">4.3</span>') > 0, '畫面上的版本號同步 4.3');
 
 let runErr = null;
 try {

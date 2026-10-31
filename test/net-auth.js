@@ -201,7 +201,104 @@ async function waitUp(port) {
   r = await api('/api/rpg/state');
   ok(r.status === 401, '沒有 session 不能讀雲端存檔');
 
-  console.log('\n=== 9. 第三方登入（未設定 / 已設定）===');
+  console.log('\n=== 9. 傳統帳密註冊／登入（v4.3） ===');
+  r = await api('/api/auth/register', { method: 'POST', body: { id: 'ab', pw: 'abc12345' } });
+  ok(r.status === 400 && r.json.err === 'BAD_USER', '帳號太短 → 400 BAD_USER');
+  r = await api('/api/auth/register', { method: 'POST', body: { id: 'bad name', pw: 'abc12345' } });
+  ok(r.status === 400 && r.json.err === 'BAD_USER', '帳號含空白 → 400 BAD_USER');
+  r = await api('/api/auth/register', { method: 'POST', body: { id: 'e2e@test.com', pw: '123' } });
+  ok(r.status === 400 && r.json.err === 'PW_SHORT', '密碼太短 → 400 PW_SHORT');
+  r = await api('/api/auth/register', { method: 'POST', body: { id: 'e2e@test.com', pw: 'abcdefgh' } });
+  ok(r.status === 400 && r.json.err === 'PW_NEED_DIGIT', '純字母密碼 → 400 PW_NEED_DIGIT');
+
+  await sleep(600);
+  r = await api('/api/auth/register', { method: 'POST', body: { id: 'e2e@test.com', pw: 'Passw0rd123' } });
+  ok(r.status === 200 && r.json.ok, '註冊成功（200）');
+  ok(r.json.account && r.json.account.email === 'e2e@test.com', '回傳的帳號就是剛註冊的 Email');
+  ok(r.json.account.kind === 'member' && r.json.account.hasPass === true, 'kind=member、hasPass=true');
+  ok(r.json.account.unlocked === 1, '新帳號只開到第 1 關');
+  ok(!/Passw0rd123/.test(JSON.stringify(r.json)), '回應裡沒有明文密碼');
+  ok(/bh_sid/.test(cookieHeader()), '發了 session cookie（bh_sid）');
+  const setCk = r.headers.getSetCookie ? r.headers.getSetCookie().join('|') : (r.headers.get('set-cookie') || '');
+  ok(/HttpOnly/i.test(setCk), 'cookie 是 HttpOnly（JS 讀不到）');
+
+  await sleep(600);
+  r = await api('/api/auth/register', { method: 'POST', body: { id: 'E2E@Test.com', pw: 'Passw0rd123' } });
+  ok(r.status === 409 && r.json.err === 'ID_TAKEN', '同帳號再註冊（大小寫不同）→ 409 ID_TAKEN');
+
+  // 通關 → 進度進帳號
+  await sleep(400);
+  r = await api('/api/rpg/stage-clear', { method: 'POST', body: { stage: 1 } });
+  ok(r.status === 200 && r.json.account.rpg.cleared === 1, '第 1 關通關存進帳號');
+  await sleep(700);
+  r = await api('/api/rpg/stage-clear', { method: 'POST', body: { stage: 3 } });
+  ok(r.json && r.json.ok === false, '不能跳關（3 > 2）→ 被擋');
+
+  // 登出 → 錯密碼 → 對密碼
+  await api('/api/auth/logout', { method: 'POST' });
+  await sleep(300);
+  r = await api('/api/auth/login', { method: 'POST', body: { id: 'e2e@test.com', pw: 'wrongpass1' } });
+  ok(r.status === 401 && r.json.err === 'BAD_LOGIN', '密碼錯 → 401 BAD_LOGIN');
+  r = await api('/api/auth/login', { method: 'POST', body: { id: 'nobody@test.com', pw: 'wrongpass1' } });
+  ok(r.status === 401 && r.json.err === 'BAD_LOGIN', '帳號不存在也回同一個錯誤（不洩漏帳號是否存在）');
+  r = await api('/api/auth/login', { method: 'POST', body: { id: 'E2E@test.com', pw: 'Passw0rd123' } });
+  ok(r.status === 200 && r.json.ok, '大小寫不敏感的帳號也能登入');
+  ok(r.json.account.rpg.cleared === 1, '登入後進度還在（1 關）');
+  ok((r.json.account.logins | 0) >= 1, '有累計登入次數（' + r.json.account.logins + '）');
+
+  // 改密碼
+  r = await api('/api/auth/password', { method: 'POST', body: { old: 'nope12345', pw: 'NewPassw0rd9' } });
+  ok(r.status === 401 || (r.json && r.json.ok === false), '舊密碼錯 → 不給改');
+  await sleep(300);
+  r = await api('/api/auth/password', { method: 'POST', body: { old: 'Passw0rd123', pw: 'NewPassw0rd9' } });
+  ok(r.status === 200 && r.json.ok, '舊密碼正確 → 改密碼成功');
+  await api('/api/auth/logout', { method: 'POST' });
+  await sleep(300);
+  r = await api('/api/auth/login', { method: 'POST', body: { id: 'e2e@test.com', pw: 'Passw0rd123' } });
+  ok(r.status === 401, '舊密碼已失效');
+  r = await api('/api/auth/login', { method: 'POST', body: { id: 'e2e@test.com', pw: 'NewPassw0rd9' } });
+  ok(r.status === 200 && r.json.ok, '新密碼可以登入');
+
+  console.log('\n=== 9b. 開發者帳號與後台（v4.3） ===');
+  r = await api('/api/admin/overview');
+  ok(r.status === 403, '一般會員打後台 → 403');
+  await api('/api/auth/logout', { method: 'POST' });
+  await sleep(700);
+  r = await api('/api/auth/register', { method: 'POST', body: { id: 'jon84597@gmail.com', pw: 'DevPass8899' } });
+  ok(r.status === 200 && r.json.account.dev === true, '白名單帳號一註冊就被標記 dev');
+  ok(r.json.account.tier === 'developer', 'tier = developer');
+  ok(r.json.account.unlocked === 32, '開發者 RPG 全 32 關解鎖');
+  await sleep(400);
+  r = await api('/api/rpg/stage-clear', { method: 'POST', body: { stage: 20 } });
+  ok(r.status === 200 && r.json.account.rpg.cleared === 20, '開發者可以直接跳第 20 關（豁免循序解鎖）');
+
+  r = await api('/api/admin/overview');
+  ok(r.status === 200 && r.json.ok && Array.isArray(r.json.accounts), '後台拿得到會員名單');
+  ok(r.json.stats.devs >= 1 && r.json.stats.members >= 2, '統計：開發者 ' + r.json.stats.devs + '、會員 ' + r.json.stats.members);
+  ok(r.json.devEmails.indexOf('jon84597@gmail.com') >= 0, '名單帶回開發者白名單');
+  const me = (r.json.accounts || []).filter(function (a) { return a.email === 'jon84597@gmail.com'; })[0] || {};
+  ok(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(me.createdStr || ''), '加入時間精確到秒（' + me.createdStr + '）');
+  ok(me.firstIp === '127.0.0.1' || me.ip === '127.0.0.1', '有記註冊 IP（' + (me.firstIp || me.ip) + '）');
+  ok(me.provider === 'web', '來源記為 web（傳統帳密）');
+  ok(me.hasPass === true, '名單看得出有沒有設密碼');
+  const e2e = (r.json.accounts || []).filter(function (a) { return a.email === 'e2e@test.com'; })[0] || {};
+  ok(e2e.id && r.json.accounts.length >= 2, '另一個會員也在名單裡');
+
+  r = await api('/api/admin/player?id=' + encodeURIComponent(me.id));
+  ok(r.status === 200 && r.json.account, '後台查單一玩家詳情');
+  ok(Array.isArray(r.json.account.events), '詳情裡有操作足跡陣列');
+
+  r = await api('/api/admin/announce', { method: 'POST', body: { text: 'E2E 停機公告', hours: 1 } });
+  ok(r.status === 200 && r.json.ok, '發布全服公告');
+  await api('/api/auth/logout', { method: 'POST' });
+  await sleep(300);
+  r = await api('/api/auth/guest', { method: 'POST', body: { deviceId: 'net-auth-e2e-device-0001' } });
+  ok(r.status === 200 && r.json.account, '回到遊客身分');
+  ok(r.json.announce && /E2E 停機公告/.test(r.json.announce.text), '遊客一進來就收到公告');
+  r = await api('/api/admin/overview');
+  ok(r.status === 403, '遊客打後台 → 403');
+
+  console.log('\n=== 10. 第三方登入（未設定 / 已設定）===');
   r = await api('/api/auth/google/start', { redirect: 'manual' });
   ok(r.status === 503 && r.json.err === 'PROVIDER_OFF', '沒設定 client id → 503（前端會顯示提示）');
 

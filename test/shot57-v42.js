@@ -52,7 +52,7 @@ function tp(x, y, id) { return { x: Math.round(x), y: Math.round(y), id: id || 1
       rot: !!document.getElementById('rotHint'), ver: window.__BH.VERSION };
   })()`);
   console.log('    ' + JSON.stringify(r));
-  ok(r.ver === '4.2', '版本 4.2');
+  ok(r.ver === '4.3', '版本 4.3');
   ok(r.touch === true, '手機環境被正確辨識（IS_TOUCH）');
   ok(/touch/.test(r.body), 'body 有 .touch');
   ok(r.mode === 'slide', '預設是模式 A（隱形滑動區）');

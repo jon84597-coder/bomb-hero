@@ -67,6 +67,90 @@ function canonical(v) {
   const keys = Object.keys(v).filter(function (k) { return v[k] !== undefined; }).sort();
   return '{' + keys.map(function (k) { return JSON.stringify(k) + ':' + canonical(v[k]); }).join(',') + '}';
 }
+
+/* ================================================================
+   v4.3：傳統帳密 —— 密碼雜湊（資安核心）
+   ----------------------------------------------------------------
+   本專案堅持「零 npm 依賴」，所以不用 bcrypt/argon2 套件（那些要編譯），
+   改用 Node 內建 crypto.scrypt：記憶體困難（memory-hard）的 KDF，
+   OWASP 把它列為 Argon2 之外的首選，抗 GPU／ASIC 暴力破解的強度同級。
+   · 每位使用者一組獨立的 16-byte 隨機鹽（絕不加固定鹽、絕不共用）
+   · 只存 algo/N/r/p/salt/hash —— 資料庫裡沒有任何明文或可逆加密的密碼
+   · 比對用 crypto.timingSafeEqual，避免計時側通道
+   ================================================================ */
+const PW_MIN = 8, PW_MAX = 128;
+const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 64;
+const SCRYPT_MAXMEM = 96 * 1024 * 1024;
+const RE_EMAIL = /^[a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/i;
+const RE_USER = /^[a-z0-9_]{3,20}$/i;
+
+function scryptAsync(pw, salt, N, r, p, keylen) {
+  return new Promise(function (resolve, reject) {
+    crypto.scrypt(pw, salt, keylen, { N: N, r: r, p: p, maxmem: SCRYPT_MAXMEM }, function (err, dk) {
+      if (err) reject(err); else resolve(dk);
+    });
+  });
+}
+async function hashPassword(pw) {
+  const salt = crypto.randomBytes(16);
+  const dk = await scryptAsync(String(pw), salt, SCRYPT_N, SCRYPT_R, SCRYPT_P, SCRYPT_KEYLEN);
+  return {
+    algo: 'scrypt', v: 1, N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P,
+    salt: salt.toString('base64'), hash: dk.toString('base64')
+  };
+}
+async function verifyPassword(pw, rec) {
+  if (!rec || rec.algo !== 'scrypt' || !rec.salt || !rec.hash) return false;
+  const salt = Buffer.from(String(rec.salt), 'base64');
+  const want = Buffer.from(String(rec.hash), 'base64');
+  if (!salt.length || want.length < 16) return false;
+  const N = clampInt(rec.N, 1024, 1 << 20, SCRYPT_N);
+  const r = clampInt(rec.r, 1, 32, SCRYPT_R);
+  const p = clampInt(rec.p, 1, 16, SCRYPT_P);
+  const dk = await scryptAsync(String(pw), salt, N, r, p, want.length);
+  return dk.length === want.length && crypto.timingSafeEqual(dk, want);
+}
+/* 帳號：可用 Email 或「使用者名稱」（3~20 位英數／底線，不含特殊符號） */
+function validIdent(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!s || s.length > 120) return { ok: false, err: 'BAD_ID' };
+  const low = s.toLowerCase();
+  if (s.indexOf('@') >= 0) {
+    if (!RE_EMAIL.test(s)) return { ok: false, err: 'BAD_EMAIL' };
+    return { ok: true, kind: 'email', id: low, key: 'web:' + low };
+  }
+  if (!RE_USER.test(s)) return { ok: false, err: 'BAD_USER' };
+  return { ok: true, kind: 'user', id: low, key: 'web:' + low };
+}
+function pwProblem(pw) {
+  const s = String(pw == null ? '' : pw);
+  if (s.length < PW_MIN) return 'PW_SHORT';
+  if (s.length > PW_MAX) return 'PW_LONG';
+  if (!/[a-z]/i.test(s)) return 'PW_NEED_LETTER';
+  if (!/[0-9]/.test(s)) return 'PW_NEED_DIGIT';
+  return '';
+}
+/* 開發者白名單：預設 jon84597@gmail.com，可用環境變數 BH_DEV_EMAILS 追加（逗號分隔） */
+const DEV_EMAILS_DEFAULT = ['jon84597@gmail.com'];
+function devEmailList(env) {
+  const list = DEV_EMAILS_DEFAULT.slice();
+  const raw = String((env && env.BH_DEV_EMAILS) || '').trim();
+  if (raw) {
+    raw.split(/[,;\s]+/).forEach(function (e) {
+      const s = e.trim().toLowerCase();
+      if (s && list.indexOf(s) < 0) list.push(s);
+    });
+  }
+  return list;
+}
+/* 後台「加入時間」要精確到秒：yyyy-mm-dd hh:mm:ss（伺服器本地時區） */
+function stamp(ms) {
+  const d = new Date(ms || Date.now());
+  function two(n) { return (n < 10 ? '0' : '') + n; }
+  return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' +
+    two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds());
+}
+
 function sumAlloc(a) {
   let n = 0;
   for (let i = 0; i < ATTRS.length; i++) n += (a && a[ATTRS[i]]) || 0;
@@ -174,11 +258,13 @@ function spendPoint(rpg, attr, delta) {
   return { ok: true, alloc: Object.assign({}, rpg.alloc), left: total - sumAlloc(rpg.alloc), total: total };
 }
 
-/* 過關：必須是按順序解鎖（只能打「下一關」，或重打已過關的舊關卡） */
-function applyClear(rpg, stage, meta) {
+/* 過關：必須是按順序解鎖（只能打「下一關」，或重打已過關的舊關卡）
+   opts.force = 開發者測試用：直接跳關（一般玩家永遠不會走到這條） */
+function applyClear(rpg, stage, meta, opts) {
   const s = Math.floor(Number(stage));
   if (!isFinite(s) || s < 1 || s > MAX_STAGE) return { ok: false, err: 'BAD_STAGE' };
-  if (s > rpg.cleared + 1) return { ok: false, err: 'STAGE_LOCKED', need: rpg.cleared + 1, got: s };
+  const force = !!(opts && opts.force);
+  if (!force && s > rpg.cleared + 1) return { ok: false, err: 'STAGE_LOCKED', need: rpg.cleared + 1, got: s };
   const replay = s <= rpg.cleared;
   if (!replay) {
     rpg.cleared = s;
@@ -321,6 +407,7 @@ function createStore(dir, persist) {
           db.devices = obj.devices || {};
           db.tamper = obj.tamper || 0;
           db.created = obj.created || db.created;
+          db.announce = obj.announce || null;      // v4.3：全服公告
         }
       }
     } catch (e) {
@@ -454,11 +541,54 @@ function createCloud(options) {
 
   const states = new Map();     // OAuth state → { provider, bind, redirect, exp }
   const limiter = makeLimiter();
-  const stats = { logins: 0, bindings: 0, tamper: 0, rateLimited: 0, syncs: 0 };
+  const stats = { logins: 0, bindings: 0, tamper: 0, rateLimited: 0, syncs: 0, registers: 0, webLogins: 0, bans: 0 };
+  const DEV_EMAILS = devEmailList(env);
+  db.announce = db.announce || null;
   db.tamper = db.tamper || 0;
 
   /* ---------- 帳號 ---------- */
   function findById(id) { return db.accounts[id] || null; }
+
+  /* 用識別鍵找帳號（web:xxx / google:sub …），已合併的舊帳號不算 */
+  function findByKey(key) {
+    for (const id in db.accounts) {
+      const a = db.accounts[id];
+      if (a && !a.mergedInto && a.key === key) return a;
+    }
+    return null;
+  }
+  function findByEmail(email) {
+    const em = String(email || '').toLowerCase();
+    if (!em) return null;
+    for (const id in db.accounts) {
+      const a = db.accounts[id];
+      if (a && !a.mergedInto && a.kind === 'member' && String(a.email || '').toLowerCase() === em) return a;
+    }
+    return null;
+  }
+  function isDev(acc) {
+    if (!acc) return false;
+    if (acc.dev === true) return true;
+    const em = String(acc.email || '').toLowerCase();
+    return !!em && DEV_EMAILS.indexOf(em) >= 0;
+  }
+  /* 記錄來源 IP（保留最近 8 組，客服核對用） */
+  function noteIp(acc, raw) {
+    const s = String(raw || '').slice(0, 64);
+    if (!acc || !s || s === 'unknown') return;
+    acc.ip = s;
+    if (!acc.firstIp) acc.firstIp = s;
+    const ips = acc.ips || (acc.ips = []);
+    if (ips.indexOf(s) < 0) { ips.push(s); if (ips.length > 8) ips.shift(); }
+  }
+  /* 操作足跡（環狀保留最近 40 筆） */
+  function logEvent(acc, type, data) {
+    if (!acc) return;
+    const ev = Object.assign({ t: Date.now(), type: String(type || '').slice(0, 24) }, data || {});
+    const arr = acc.events || (acc.events = []);
+    arr.push(ev);
+    if (arr.length > 40) arr.splice(0, arr.length - 40);
+  }
 
   function createAccount(kind, info) {
     const id = (kind === 'guest' ? 'g_' : 'u_') + rid(8);
@@ -469,13 +599,28 @@ function createCloud(options) {
       sub: info.sub || '',
       name: info.name || (kind === 'guest' ? '遊客' : '玩家'),
       email: info.email || '',
+      username: info.username || '',
+      key: info.key || '',
       avatar: info.avatar || '',
+      pass: null,                      // v4.3：scrypt 加鹽雜湊（絕不存明文）
       created: Date.now(),
       lastSeen: Date.now(),
       mergedInto: null,
       rpg: defaultRpg(),
-      layout: null                     // v4.2：手機觸控版面（null = 還沒設定過）
+      layout: null,                    // v4.2：手機觸控版面（null = 還沒設定過）
+      /* ---- v4.3：後台需要的營運資料 ---- */
+      dev: false,
+      banned: null,                    // { at, reason } → 停權
+      ip: '',
+      firstIp: '',
+      ips: [],
+      loginCount: 0,
+      fails: 0,
+      lockUntil: 0,
+      stages: {},                      // 各關卡遊玩次數
+      events: []                       // 最近操作足跡
     };
+    if (acc.email) acc.dev = DEV_EMAILS.indexOf(String(acc.email).toLowerCase()) >= 0;
     db.accounts[id] = acc;
     store.touch();
     return acc;
@@ -491,7 +636,7 @@ function createCloud(options) {
     if (!acc) {
       acc = createAccount('member', {
         provider: provider, sub: profile.sub, name: profile.name,
-        email: profile.email, avatar: profile.avatar
+        email: profile.email, avatar: profile.avatar, key: key
       });
       acc.key = key;
     } else {
@@ -501,6 +646,9 @@ function createCloud(options) {
       acc.lastSeen = Date.now();
     }
     acc.provider = provider;
+    acc.sub = String(profile.sub || acc.sub || '');
+    // v4.3：第三方登入也一樣標記開發者身分
+    if (acc.email && DEV_EMAILS.indexOf(String(acc.email).toLowerCase()) >= 0) acc.dev = true;
     store.touch();
     return acc;
   }
@@ -568,6 +716,7 @@ function createCloud(options) {
     if (!s) return null;
     const acc = findById(s.uid);
     if (!acc || acc.mergedInto) return acc ? findById(acc.mergedInto) : null;
+    if (acc.banned) return null;           // v4.3：停權帳號 → 一律當成沒登入
     acc.lastSeen = Date.now();
     return acc;
   }
@@ -578,19 +727,26 @@ function createCloud(options) {
 
   function publicAccount(acc) {
     const points = pointsTotalFor(acc.rpg.cleared);
+    const dev = isDev(acc);
     return {
       id: acc.id,
       kind: acc.kind,
       name: acc.name,
       email: acc.email,
+      username: acc.username || '',
       avatar: acc.avatar,
       provider: acc.provider || '',
       created: acc.created,
       rpg: acc.rpg,
       points: points,
       left: points - sumAlloc(acc.rpg.alloc),
-      unlocked: Math.min(MAX_STAGE, acc.rpg.cleared + 1),
+      // 開發者：全關卡解鎖（RPG 32 張全部直接可玩）
+      unlocked: dev ? MAX_STAGE : Math.min(MAX_STAGE, acc.rpg.cleared + 1),
       layout: acc.layout || null,
+      dev: dev,                        // v4.3：給前端做「全關卡解鎖 / 版本紀錄豁免」
+      tier: dev ? 'developer' : 'player',
+      hasPass: !!acc.pass,
+      logins: acc.loginCount | 0,
       save: makeEnvelope(secret, acc)
     };
   }
@@ -647,12 +803,68 @@ function createCloud(options) {
     return { on: !!(id && sec), label: def.label, color: def.color, id: id };
   }
 
+  /* v4.3：全服公告（後台發布，前端首頁／遊戲中顯示，過期自動消失） */
+  function announceOut() {
+    const a = db.announce;
+    if (!a || !a.text) return null;
+    if (a.until && a.until < Date.now()) return null;
+    return { text: String(a.text).slice(0, 300), ts: a.ts || 0, until: a.until || 0 };
+  }
+
+  /* v4.3：後台專用資料（只給開發者看，一般玩家一律 403） */
+  function adminRow(a) {
+    return {
+      id: a.id, kind: a.kind, name: a.name, username: a.username || '',
+      email: a.email || '', provider: a.provider || 'guest', sub: a.sub || '',
+      dev: isDev(a), banned: a.banned ? { at: a.banned.at, reason: a.banned.reason || '' } : null,
+      ip: a.ip || '', firstIp: a.firstIp || '', ips: (a.ips || []).slice(-5),
+      created: a.created || 0, createdStr: stamp(a.created),
+      lastSeen: a.lastSeen || 0, lastSeenStr: stamp(a.lastSeen),
+      logins: a.loginCount | 0,
+      cleared: a.rpg ? (a.rpg.cleared | 0) : 0,
+      gold: a.rpg ? (a.rpg.gold | 0) : 0,
+      hasPass: !!a.pass
+    };
+  }
+
+  function adminOverview() {
+    const list = [];
+    let members = 0, guests = 0, devs = 0, banned = 0, today = 0, online = 0;
+    const now = Date.now(), day0 = new Date(); day0.setHours(0, 0, 0, 0);
+    const d0 = day0.getTime(), h24 = now - 86400000;
+    for (const id in db.accounts) {
+      const a = db.accounts[id];
+      if (a.mergedInto) continue;
+      if (a.kind === 'member') members++; else guests++;
+      if (isDev(a)) devs++;
+      if (a.banned) banned++;
+      if ((a.created || 0) >= d0) today++;
+      if ((a.lastSeen || 0) >= h24) online++;
+      list.push(adminRow(a));
+    }
+    list.sort(function (x, y) { return (y.created || 0) - (x.created || 0); });
+    return {
+      ok: true,
+      stats: {
+        accounts: members + guests, members: members, guests: guests, devs: devs,
+        banned: banned, newToday: today, online24h: online,
+        tamper: stats.tamper, rateLimited: stats.rateLimited,
+        registers: stats.registers, webLogins: stats.webLogins,
+        logins: stats.logins, bindings: stats.bindings
+      },
+      announce: announceOut(),
+      accounts: list.slice(0, 300),
+      devEmails: DEV_EMAILS
+    };
+  }
+
   async function handle(req, res, url) {
     const p = url.pathname;
     if (p.indexOf('/api/') !== 0) return false;
     const isAuth = p.indexOf('/api/auth/') === 0;
     const isRpg = p.indexOf('/api/rpg/') === 0;
-    if (!isAuth && !isRpg) return false;
+    const isAdmin = p.indexOf('/api/admin/') === 0;
+    if (!isAuth && !isRpg && !isAdmin) return false;
 
     /* ---- 共用：全域 IP 限流（每分鐘 300 次，避免被腳本掃） ---- */
     if (!limiter.take('ip:' + ip(req), 300, 5).ok) {
@@ -688,26 +900,150 @@ function createCloud(options) {
           // 已經登入正式帳號就不要被降級成遊客
           db.devices[hash] = cur.id;
           store.touch();
-          return send(res, 200, { ok: true, account: publicAccount(cur) }), true;
+          return send(res, 200, { ok: true, account: publicAccount(cur), announce: announceOut() }), true;
         }
         db.devices[hash] = acc.id;
         acc.lastSeen = Date.now();
         store.touch();
         cookieSet(res, req, makeToken(secret, acc.id));
-        return send(res, 200, { ok: true, account: publicAccount(acc) }), true;
+        return send(res, 200, { ok: true, account: publicAccount(acc), announce: announceOut() }), true;
       }
 
       /* ---------------- 我是誰 ---------------- */
       if (p === '/api/auth/me' && req.method === 'GET') {
         const acc = session(req);
-        if (!acc) return send(res, 200, { ok: true, guest: true, account: null }), true;
-        return send(res, 200, { ok: true, guest: acc.kind === 'guest', account: publicAccount(acc) }), true;
+        const ann = announceOut();
+        if (!acc) return send(res, 200, { ok: true, guest: true, account: null, announce: ann }), true;
+        return send(res, 200, {
+          ok: true, guest: acc.kind === 'guest', account: publicAccount(acc), announce: ann
+        }), true;
       }
 
       /* ---------------- 登出 ---------------- */
       if (p === '/api/auth/logout' && req.method === 'POST') {
         cookieClear(res);
         return send(res, 200, { ok: true }), true;
+      }
+
+      /* ================================================================
+         v4.3：傳統帳密（Email / 使用者名稱 ＋ 密碼）
+         - 註冊：密碼經 scrypt 加鹽雜湊後才寫入，資料庫不存明文
+         - 登入：同樣的 KDF 重算後 timingSafeEqual 比對 → 發 HttpOnly Session Cookie
+         - 連續錯 5 次鎖 5 分鐘（Lockout），並用固定成本雜湊抹平「帳號是否存在」的時差
+         ================================================================ */
+      if (p === '/api/auth/register' && req.method === 'POST') {
+        if (!gate(req, res, 'reg', 8, 0.5)) return true;
+        const body = await readJson(req, 4096);
+        if (!body) return fail(res, 400, 'BAD_BODY'), true;
+        const idc = validIdent(body.id || body.username || body.email);
+        if (!idc.ok) return send(res, 400, { ok: false, err: idc.err }), true;
+        const raw = String(body.pw || body.password || '');
+        const pwErr = pwProblem(raw);
+        if (pwErr) return send(res, 400, { ok: false, err: pwErr }), true;
+        if (findByKey(idc.key)) return send(res, 409, { ok: false, err: 'ID_TAKEN' }), true;
+        // 這個 Email 已經用 Google／FB／LINE 登入過 → 不要另開一個新帳號（進度會分家）
+        if (idc.kind === 'email') {
+          const other = findByEmail(idc.id);
+          if (other) {
+            return send(res, 409, {
+              ok: false, err: 'EMAIL_OAUTH', provider: other.provider || ''
+            }), true;
+          }
+        }
+        const rec = await hashPassword(raw);            // ← 單向雜湊 + 每人獨立鹽
+        const cur = session(req);
+        const acc = createAccount('member', {
+          provider: 'web',
+          key: idc.key,
+          username: idc.kind === 'user' ? idc.id : '',
+          email: idc.kind === 'email' ? idc.id : '',
+          name: String(body.name || '').trim().slice(0, 24) || idc.id,
+          ip: ip(req)
+        });
+        acc.pass = rec;
+        acc.loginCount = 1;
+        acc.dev = (acc.email && DEV_EMAILS.indexOf(String(acc.email).toLowerCase()) >= 0) || false;
+        noteIp(acc, ip(req));
+        logEvent(acc, 'register', { ip: ip(req) });
+        // 遊客進度完整轉移：關卡、配點、金幣、觸控版面一起帶過來
+        if (cur && cur.kind === 'guest' && cur.id !== acc.id && !cur.mergedInto) {
+          bindGuest(acc, cur);
+          stats.bindings++;
+          logEvent(acc, 'bind', { from: cur.id });
+        }
+        stats.registers++;
+        stats.logins++;
+        store.touch();
+        cookieSet(res, req, makeToken(secret, acc.id));
+        return send(res, 200, { ok: true, account: publicAccount(acc), merged: !!(cur && cur.kind === 'guest') }), true;
+      }
+
+      if (p === '/api/auth/login' && req.method === 'POST') {
+        if (!gate(req, res, 'login', 20, 1)) return true;
+        const body = await readJson(req, 4096);
+        if (!body) return fail(res, 400, 'BAD_BODY'), true;
+        const idc = validIdent(body.id || body.username || body.email);
+        const raw = String(body.pw || body.password || '');
+        const acc = idc.ok ? findByKey(idc.key) : null;
+        if (acc && acc.banned) {
+          return send(res, 403, {
+            ok: false, err: 'BANNED',
+            reason: (acc.banned && acc.banned.reason) || ''
+          }), true;
+        }
+        const now = Date.now();
+        if (acc && acc.lockUntil && acc.lockUntil > now) {
+          const retry = Math.ceil((acc.lockUntil - now) / 1000);
+          return send(res, 423, { ok: false, err: 'LOCKED', retry: retry }, { 'Retry-After': String(retry) }), true;
+        }
+        let okPw = false;
+        if (acc && acc.pass) okPw = await verifyPassword(raw, acc.pass);
+        else await hashPassword(raw || 'x');        // 帳號不存在也花同樣成本，避免 timing 探測
+        if (!acc || !acc.pass || !okPw) {
+          if (acc) {
+            acc.fails = (acc.fails | 0) + 1;
+            if (acc.fails >= 5) { acc.lockUntil = now + 300000; acc.fails = 0; logEvent(acc, 'lock', { ip: ip(req) }); }
+            logEvent(acc, 'login-fail', { ip: ip(req) });
+            store.touch();
+          }
+          return send(res, 401, { ok: false, err: 'BAD_LOGIN' }), true;
+        }
+        acc.fails = 0;
+        acc.lockUntil = 0;
+        acc.loginCount = (acc.loginCount | 0) + 1;
+        acc.lastSeen = now;
+        noteIp(acc, ip(req));
+        logEvent(acc, 'login', { ip: ip(req) });
+        const cur = session(req);
+        if (cur && cur.kind === 'guest' && cur.id !== acc.id && !cur.mergedInto) {
+          bindGuest(acc, cur);
+          stats.bindings++;
+          logEvent(acc, 'bind', { from: cur.id });
+        }
+        stats.webLogins++;
+        stats.logins++;
+        store.touch();
+        cookieSet(res, req, makeToken(secret, acc.id));
+        return send(res, 200, { ok: true, account: publicAccount(acc) }), true;
+      }
+
+      if (p === '/api/auth/password' && req.method === 'POST') {
+        if (!gate(req, res, 'passwd', 4, 0.2)) return true;
+        const acc = session(req);
+        if (!acc) return fail(res, 401, 'NO_SESSION'), true;
+        const body = await readJson(req, 2048);
+        if (!body) return fail(res, 400, 'BAD_BODY'), true;
+        const oldPw = String(body.old || body.oldPassword || '');
+        const newPw = String(body.pw || body.password || '');
+        if (acc.pass && !(await verifyPassword(oldPw, acc.pass))) {
+          return send(res, 401, { ok: false, err: 'BAD_LOGIN' }), true;
+        }
+        const pwErr = pwProblem(newPw);
+        if (pwErr) return send(res, 400, { ok: false, err: pwErr }), true;
+        acc.pass = await hashPassword(newPw);      // 重新加鹽重算，舊雜湊直接作廢
+        logEvent(acc, 'passwd', { ip: ip(req) });
+        store.touch();
+        return send(res, 200, { ok: true, account: publicAccount(acc) }), true;
       }
 
       /* ---------------- 第三方登入：導向 ---------------- */
@@ -782,6 +1118,126 @@ function createCloud(options) {
         return redirectBack(res, back, 'ok'), true;
       }
 
+      /* ================================================================
+         v4.3：開發者後台 API —— 只有 DEV_EMAILS 白名單（jon84597@gmail.com）
+         的一般玩家一律 403，並記一次 tamper
+         ================================================================ */
+      if (isAdmin) {
+        const me = session(req);
+        if (!me) return fail(res, 401, 'NO_SESSION'), true;
+        if (!isDev(me)) {
+          stats.tamper++;
+          db.tamper = (db.tamper || 0) + 1;
+          store.touch();
+          return fail(res, 403, 'NOT_DEV'), true;
+        }
+        if (!gate(req, res, 'admin', 60, 6)) return true;
+
+        if (p === '/api/admin/overview' && req.method === 'GET') {
+          return send(res, 200, adminOverview()), true;
+        }
+
+        /* 客服查詢：UID / Email / 使用者名稱都可以 */
+        if (p === '/api/admin/player' && req.method === 'GET') {
+          const q = String(url.searchParams.get('id') || url.searchParams.get('q') || '').trim();
+          let acc = q ? findById(q) : null;
+          if (!acc && q) {
+            const idc = validIdent(q);
+            if (idc.ok) acc = findByKey(idc.key);
+            if (!acc) acc = findByEmail(q);
+          }
+          if (!acc) return fail(res, 404, 'NOT_FOUND'), true;
+          const row = adminRow(acc);
+          row.alloc = acc.rpg ? Object.assign({}, acc.rpg.alloc) : null;
+          row.cleared = acc.rpg ? (acc.rpg.cleared | 0) : 0;
+          row.points = pointsTotalFor(row.cleared);
+          row.spent = acc.rpg ? sumAlloc(acc.rpg.alloc) : 0;
+          row.playSec = acc.rpg ? (acc.rpg.playSec | 0) : 0;
+          row.stages = acc.stages || {};
+          row.events = (acc.events || []).slice(-30).reverse().map(function (e) {
+            return Object.assign({}, e, { str: stamp(e.t) });
+          });
+          return send(res, 200, { ok: true, account: row }), true;
+        }
+
+        /* 停權 / 解除停權（IP 或 UID 對應的帳號） */
+        if (p === '/api/admin/ban' && req.method === 'POST') {
+          const body = await readJson(req, 2048);
+          if (!body) return fail(res, 400, 'BAD_BODY'), true;
+          const target = findById(String(body.id || ''));
+          if (!target) return fail(res, 404, 'NOT_FOUND'), true;
+          if (isDev(target) && target.id !== me.id) return fail(res, 403, 'CANT_BAN_DEV'), true;
+          if (body.on === false || body.on === 0 || body.on === '0') {
+            target.banned = null;
+            logEvent(target, 'unban', { by: me.id });
+          } else {
+            target.banned = {
+              at: Date.now(),
+              reason: String(body.reason || '').slice(0, 120),
+              by: me.id
+            };
+            stats.bans++;
+            logEvent(target, 'ban', { by: me.id });
+          }
+          store.touch();
+          return send(res, 200, { ok: true, account: adminRow(target) }), true;
+        }
+
+        /* 客服修復：直接改關卡進度／金幣（開發者測試數值用） */
+        if (p === '/api/admin/grant' && req.method === 'POST') {
+          const body = await readJson(req, 2048);
+          if (!body) return fail(res, 400, 'BAD_BODY'), true;
+          const target = findById(String(body.id || ''));
+          if (!target) return fail(res, 404, 'NOT_FOUND'), true;
+          if (body.cleared != null) {
+            target.rpg.cleared = clampInt(body.cleared, 0, MAX_STAGE, target.rpg.cleared | 0);
+          }
+          if (body.gold != null) {
+            target.rpg.gold = clampInt(body.gold, 0, 99999999, target.rpg.gold | 0);
+          }
+          target.rpg.alloc = fitAlloc(target.rpg.alloc, pointsTotalFor(target.rpg.cleared));
+          target.rpg.ver = (target.rpg.ver || 1) + 1;
+          logEvent(target, 'grant', { by: me.id, cleared: target.rpg.cleared | 0, gold: target.rpg.gold | 0 });
+          store.touch();
+          return send(res, 200, { ok: true, account: adminRow(target), rpg: target.rpg }), true;
+        }
+
+        /* 客服修復：把配點歸零重新配 */
+        if (p === '/api/admin/reset-alloc' && req.method === 'POST') {
+          const body = await readJson(req, 2048);
+          if (!body) return fail(res, 400, 'BAD_BODY'), true;
+          const target = findById(String(body.id || ''));
+          if (!target) return fail(res, 404, 'NOT_FOUND'), true;
+          target.rpg.alloc = { hp: 0, def: 0, spd: 0, atk: 0 };
+          target.rpg.ver = (target.rpg.ver || 1) + 1;
+          logEvent(target, 'reset-alloc', { by: me.id });
+          store.touch();
+          return send(res, 200, { ok: true, account: adminRow(target) }), true;
+        }
+
+        /* 線上公告：不用重新部署就能對全服推播 */
+        if (p === '/api/admin/announce' && req.method === 'POST') {
+          const body = await readJson(req, 4096);
+          if (!body) return fail(res, 400, 'BAD_BODY'), true;
+          const text = String(body.text || '').trim().slice(0, 300);
+          if (!text) {
+            db.announce = null;
+          } else {
+            const hours = clampInt(body.hours, 0, 720, 24);
+            db.announce = {
+              text: text,
+              ts: Date.now(),
+              until: hours > 0 ? Date.now() + hours * 3600000 : 0,
+              by: me.id
+            };
+          }
+          store.touch();
+          return send(res, 200, { ok: true, announce: announceOut() }), true;
+        }
+
+        return fail(res, 404, 'NO_SUCH_API'), true;
+      }
+
       /* ---------------- 需要登入的 RPG API ---------------- */
       if (isRpg) {
         const acc = session(req);
@@ -823,13 +1279,33 @@ function createCloud(options) {
           if (!gate(req, res, 'clear', 3, 2)) return true;
           const body = await readJson(req, 2048);
           if (!body) return fail(res, 400, 'BAD_BODY'), true;
-          const r = applyClear(acc.rpg, body.stage, { deaths: body.deaths, playSec: body.playSec });
+          // v4.3：開發者可以跳關（一般玩家照規矩，只能打下一關）
+          const r = applyClear(acc.rpg, body.stage, { deaths: body.deaths, playSec: body.playSec },
+            { force: isDev(acc) });
           if (!r.ok) {
             if (r.err === 'STAGE_LOCKED') stats.tamper++;
             return send(res, 409, Object.assign({ ok: false }, r)), true;
           }
+          logEvent(acc, 'clear', { stage: Math.floor(Number(body.stage)) | 0 });
           store.touch();
           return send(res, 200, Object.assign({ ok: true, account: publicAccount(acc) }, r)), true;
+        }
+
+        /* v4.3：行為足跡（上線、開關卡、拿道具、配點…）→ 後台客服核對用 */
+        if (p === '/api/rpg/event' && req.method === 'POST') {
+          if (!gate(req, res, 'event', 40, 3)) return true;
+          const body = await readJson(req, 2048);
+          if (!body) return fail(res, 400, 'BAD_BODY'), true;
+          const type = String(body.type || '').slice(0, 24);
+          if (!type) return fail(res, 400, 'BAD_TYPE'), true;
+          const st = body.stage != null ? clampInt(body.stage, 0, MAX_STAGE, 0) : 0;
+          if (st) {
+            acc.stages = acc.stages || {};
+            acc.stages[st] = (acc.stages[st] | 0) + 1;
+          }
+          logEvent(acc, type, st ? { stage: st } : null);
+          store.touch();
+          return send(res, 200, { ok: true }), true;
         }
 
         /* 存檔同步：前端帶回伺服器簽發的信封，先驗章再驗內容 */
@@ -941,19 +1417,25 @@ function createCloud(options) {
   }
 
   function statsOut() {
-    let guests = 0, members = 0;
+    let guests = 0, members = 0, devs = 0, banned = 0;
     for (const id in db.accounts) {
       const a = db.accounts[id];
       if (a.mergedInto) continue;
       if (a.kind === 'member') members++; else guests++;
+      if (isDev(a)) devs++;
+      if (a.banned) banned++;
     }
     return {
       accounts: guests + members,
       guests: guests,
       members: members,
+      devs: devs,
+      banned: banned,
       tamper: stats.tamper,
       rateLimited: stats.rateLimited,
       logins: stats.logins,
+      registers: stats.registers,
+      webLogins: stats.webLogins,
       bindings: stats.bindings,
       syncs: stats.syncs,
       persisted: !!persist,
@@ -969,9 +1451,11 @@ function createCloud(options) {
     db: db,
     _internals: {
       session: session, publicAccount: publicAccount, findById: findById,
+      findByKey: findByKey, findByEmail: findByEmail, isDev: isDev,
       createAccount: createAccount, mergeProgress: mergeProgress, store: store,
       bindGuest: bindGuest, upsertMember: upsertMember, db: db,
-      sanitizeLayout: sanitizeLayout
+      sanitizeLayout: sanitizeLayout, adminOverview: adminOverview, logEvent: logEvent,
+      noteIp: noteIp, hashPassword: hashPassword, verifyPassword: verifyPassword
     }
   };
 }
@@ -986,5 +1470,10 @@ module.exports = {
   applyClear: applyClear, mergeProgress: mergeProgress, fitAlloc: fitAlloc,
   makeEnvelope: makeEnvelope, verifyEnvelope: verifyEnvelope,
   makeToken: makeToken, readToken: readToken, canonical: canonical,
-  makeLimiter: makeLimiter, sumAlloc: sumAlloc
+  makeLimiter: makeLimiter, sumAlloc: sumAlloc,
+  /* v4.3：帳密註冊／資安 */
+  hashPassword: hashPassword, verifyPassword: verifyPassword,
+  validIdent: validIdent, pwProblem: pwProblem, stamp: stamp,
+  devEmailList: devEmailList, DEV_EMAILS_DEFAULT: DEV_EMAILS_DEFAULT,
+  PW_MIN: PW_MIN
 };

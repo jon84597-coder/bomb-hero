@@ -1,10 +1,10 @@
-# 炸彈超人 網頁版 — 爆爆英雄 BOMB HERO v4.2
+# 炸彈超人 網頁版 — 爆爆英雄 BOMB HERO v4.3
 
 單檔、零依賴的炸彈超人遊戲，外加一支零依賴的 Node.js 後端（房間制即時對戰）。
 前端 `public/index.html` **一個檔案就包含全部 HTML / CSS / JavaScript 與圖片**，
 不用 npm install、不用打包工具，雙擊就能玩。
 
-- 版本：**v4.2**
+- 版本：**v4.3**
 - 前端：原生 HTML5 / Canvas / ES5+ 相容語法，**零第三方套件**
 - 後端：`server.js` ＋ `cloud.js`（只用 Node 內建 `http` / `fs` / `path` / `crypto`，**零依賴**）
 - 帳號：Google / Facebook（另支援 LINE）OAuth 登入、遊客模式、雲端存檔、HMAC 簽章、限流
@@ -17,9 +17,9 @@
 ## 目錄結構
 
 ```
-bomb-hero-v4.2/
+bomb-hero-v4.3/
 ├─ README.md               # 本文件（含 GitHub 上傳、部署步驟）
-├─ CHANGELOG.md            # v2.1 ~ v4.2 完整版本演進
+├─ CHANGELOG.md            # v2.1 ~ v4.3 完整版本演進
 ├─ .gitignore
 ├─ .github/
 │  └─ workflows/pages.yml  # GitHub Pages 自動部署（把 public/ 發布出去）
@@ -71,10 +71,10 @@ npx serve public            # 或 python -m http.server -d public 8000
 
 ```bash
 # 解壓後進入資料夾
-cd bomb-hero-v4.2
+cd bomb-hero-v4.3
 git init
 git add -A
-git commit -m "BOMB HERO v4.2"
+git commit -m "BOMB HERO v4.3"
 git branch -M main
 git remote add origin https://github.com/<你的帳號>/<repo 名稱>.git
 git push -u origin main
@@ -146,6 +146,17 @@ CMD ["node", "server.js"]
   生成後做**尋路檢核**，起點一定走得到出口
 - **怪物分級（RPG）**：基礎小怪 1~2 格、中階 2~4 格（鐵甲蟲／骷髏兵有硬殼防禦）、飛行 1~3 格（穿牆）；
   BOSS 10 格以上，血量低於 **40% 暴走**（更快、丟彈更兇、同場 6 顆），被炸彈砸到會**暈眩**
+- **🔑 傳統帳密註冊**：帳號彈窗有「登入／註冊／第三方」三分頁，可直接用 **Email 或使用者名稱 + 密碼**
+  註冊；打字當下即時驗證（帳號 3~20 位英數字或完整 Email、密碼至少 8 位且需英數混合）＋
+  三段式強度條＋兩次密碼一致性檢查
+- **🔐 密碼絕不明文**：`crypto.scrypt`（N=16384, r=8, p=1, 64 bytes）＋每人一組 16 bytes 隨機鹽單向雜湊，
+  只存鹽與雜湊值；比對用 `timingSafeEqual`，帳號不存在時也跑一次同樣的雜湊（不洩漏帳號是否存在）；
+  連錯 5 次鎖 5 分鐘，註冊／登入／改密碼／後台各自限流
+- **🛠️ 開發者帳號**：`jon84597@gmail.com` 由後端標記 Developer —— RPG 32 張地圖＋單人 8 關（含 BOSS）
+  全部解鎖、可跳關測試；內部版本（`dev:true`）與測試條目**不會出現在玩家的版本更新面板**
+- **📊 後台數據看板**（僅開發者）：會員名單含 UID／來源平台／第三方平台 ID／註冊 IP／加入時間（精確到秒）、
+  上線次數、各關卡遊玩頻率、停留時間；操作足跡（配點／通關／道具）＋客服工具（查詢、修存檔、重置配點、
+  停權／解除）＋**全服公告**（免重新部署即時發布）
 - **👤 帳號系統**：右上角常駐「綁定帳號」—— Google / Facebook（另支援 LINE）一鍵授權登入，
   不用記密碼；沒登入也能用**遊客模式**直接玩 RPG（本機身分基於 LocalStorage Device ID）
 - **🔗 遊客無痛升級**：綁定時把遊客的關卡進度、配點、金幣**合併**進正式帳號（取聯集，不覆蓋、不歸零）
@@ -176,7 +187,7 @@ CMD ["node", "server.js"]
 ```bash
 cd test
 node _syntax.js                        # 語法檢查
-node verify-v47.js                     # 逐版跑：node verify-v10.js … verify-v47.js（37 組）
+node verify-v49.js                     # 逐版跑：node verify-v10.js … verify-v49.js（39 組）
 node net-relay.js                      # 後端 relay API（線上配對）
 node net-auth.js                       # 帳號 / 雲端存檔 / 簽章 / 限流（會自己起一個測試伺服器）
 node net-live.js                       # 端到端線上對戰

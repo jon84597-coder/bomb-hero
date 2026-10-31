@@ -20,7 +20,7 @@ function ok(cond, name) {
       txt: chip ? chip.textContent.replace(/\\s+/g, ' ').trim() : '',
       hasSig: !!(C.acc() && C.acc().save && C.acc().save.sig) };
   })()`);
-  ok(r.ver === '4.2', '版本 4.2');
+  ok(r.ver === '4.3', '版本 4.3');
   ok(r.online === true && r.guest === true, '自動取得遊客身分（免登入就能玩）');
   ok(r.txt.indexOf('綁定帳號') >= 0, '右上角常駐「綁定帳號」：' + r.txt);
   ok(r.hasSig === true, '伺服器已簽發 HMAC 存檔信封');
@@ -29,6 +29,9 @@ function ok(cond, name) {
   console.log('\n=== 2. 綁定彈窗 ===');
   await p.eval("document.getElementById('acctChip').click()");
   await cdp.sleep(400);
+  // v4.3：彈窗預設停在「註冊」分頁，第三方授權按鈕在「第三方」分頁
+  await p.eval("(function(){ const b=document.querySelector('#acctBody .accttab[data-tab=\"prov\"]'); if(b) b.click(); })()");
+  await cdp.sleep(300);
   r = await p.eval(`(() => {
     const m = document.getElementById('acctModal');
     const btns = Array.from(document.querySelectorAll('#acctBody .acctbtn'));
