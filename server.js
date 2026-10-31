@@ -6,6 +6,7 @@
  */
 
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
@@ -847,6 +848,114 @@ function handleRelayLeave(body, res) {
   sendJSON(res, 200, { ok: true });
 }
 
+// ============ v3.6：全域統計（瀏覽人數 / 按讚）============
+// 存成 data/stats.json（不存在就從 0 開始；寫入失敗也不影響遊戲）
+// v3.7：Render 免費方案的磁碟會歸零 → 可用 STATS_PATH 指到 Persistent Disk（例如 /var/data/stats.json）
+const STATS_FILE = process.env.STATS_PATH || path.join(__dirname, 'data', 'stats.json');
+const DATA_DIR = path.dirname(STATS_FILE);
+const STATS_VID_KEEP = 5000;               // 最多記住多少個訪客 id，避免檔案無限長大
+const STATS = { views: 0, likes: 0, day: '', dayViews: 0, vids: [], likers: [] };
+let statsDirty = false;
+let statsSaving = false;
+
+function dayKey() {
+  const d = new Date();
+  const p = function (x) { return (x < 10 ? '0' : '') + x; };
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function trimArr(a) { if (a.length > STATS_VID_KEEP) a.splice(0, a.length - STATS_VID_KEEP); }
+function rollStatsDay() {
+  const k = dayKey();
+  if (STATS.day !== k) { STATS.day = k; STATS.dayViews = 0; }
+  return k;
+}
+function loadStats() {
+  try {
+    if (!fs.existsSync(STATS_FILE)) return;
+    const j = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'));
+    if (isFinite(j.views)) STATS.views = j.views | 0;
+    if (isFinite(j.likes)) STATS.likes = j.likes | 0;
+    if (typeof j.day === 'string') STATS.day = j.day;
+    if (isFinite(j.dayViews)) STATS.dayViews = j.dayViews | 0;
+    if (Array.isArray(j.vids)) STATS.vids = j.vids.slice(-STATS_VID_KEEP).map(String);
+    if (Array.isArray(j.likers)) STATS.likers = j.likers.slice(-STATS_VID_KEEP).map(String);
+  } catch (e) { /* 讀不到就從 0 開始，不影響遊戲 */ }
+}
+function saveStats() {
+  if (statsSaving) return;
+  statsSaving = true;
+  const data = JSON.stringify({
+    views: STATS.views, likes: STATS.likes, day: STATS.day, dayViews: STATS.dayViews,
+    vids: STATS.vids.slice(-STATS_VID_KEEP), likers: STATS.likers.slice(-STATS_VID_KEEP),
+    savedAt: Date.now()
+  });
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+  const tmp = STATS_FILE + '.tmp';
+  fs.writeFile(tmp, data, 'utf8', function (err) {
+    if (err) { statsSaving = false; return; }
+    fs.rename(tmp, STATS_FILE, function (e2) {
+      statsSaving = false;
+      if (!e2) statsDirty = false;
+    });
+  });
+}
+loadStats();
+rollStatsDay();
+
+// v3.7：同步立刻落盤（Render 休眠 / 重新部署會送 SIGTERM，只剩幾秒鐘，不能等 10 秒的定時器）
+function flushStatsSync() {
+  try {
+    const data = JSON.stringify({
+      views: STATS.views, likes: STATS.likes, day: STATS.day, dayViews: STATS.dayViews,
+      vids: STATS.vids.slice(-STATS_VID_KEEP), likers: STATS.likers.slice(-STATS_VID_KEEP),
+      savedAt: Date.now()
+    });
+    try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+    fs.writeFileSync(STATS_FILE, data, 'utf8');
+    statsDirty = false;
+    return true;
+  } catch (e) { return false; }
+}
+
+// v3.7：容器重建後把數字抓回來（設了 STATS_RESTORE_URL 才做；失敗就安靜從 0 開始）
+const STATS_RESTORE_URL = String(process.env.STATS_RESTORE_URL || '').trim();
+function tryRestoreStats() {
+  if (!STATS_RESTORE_URL || STATS.views > 0) return;
+  const mod = STATS_RESTORE_URL.indexOf('https:') === 0 ? https : http;
+  let done = false;
+  try {
+    const req = mod.get(STATS_RESTORE_URL, function (r) {
+      let buf = '';
+      r.on('data', function (c) { buf += c; });
+      r.on('end', function () {
+        if (done) return;
+        done = true;
+        try {
+          const j = JSON.parse(buf);
+          if (isFinite(j.views)) STATS.views = Math.max(STATS.views, j.views | 0);
+          if (isFinite(j.likes)) STATS.likes = Math.max(STATS.likes, j.likes | 0);
+          if (typeof j.day === 'string' && j.day === STATS.day && isFinite(j.dayViews)) {
+            STATS.dayViews = Math.max(STATS.dayViews, j.dayViews | 0);
+          }
+          if (Array.isArray(j.vids)) STATS.vids = j.vids.slice(-STATS_VID_KEEP).map(String);
+          if (Array.isArray(j.likers)) STATS.likers = j.likers.slice(-STATS_VID_KEEP).map(String);
+          rollStatsDay();
+          console.log('[stats] 已從 STATS_RESTORE_URL 還原：' + STATS.views + ' 瀏覽 / ' + STATS.likes + ' 讚');
+        } catch (e) { /* 抓到不是 JSON 就當沒這回事 */ }
+      });
+    });
+    req.on('error', function () { done = true; });
+    req.setTimeout(8000, function () { done = true; try { req.destroy(); } catch (e) {} });
+  } catch (e) { /* 設了怪網址也不影響遊戲 */ }
+}
+tryRestoreStats();
+
+function statsOut(extra) {
+  const o = { ok: true, views: STATS.views, likes: STATS.likes, dayViews: STATS.dayViews, day: STATS.day };
+  if (extra) { for (const k in extra) o[k] = extra[k]; }
+  return o;
+}
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -878,6 +987,44 @@ function serveStatic(pathname, res) {
     });
     res.end(buf);
   });
+}
+
+// ---- v3.6 統計 handler ----
+function handleStatsGet(sp, res) {
+  const vid = String(sp.get('vid') || '').slice(0, 40);
+  sendJSON(res, 200, statsOut({ liked: vid ? STATS.likers.indexOf(vid) >= 0 : false }));
+}
+function handleStatsView(b, res) {
+  rollStatsDay();
+  const vid = String((b && b.vid) || '').slice(0, 40);
+  let fresh = false;
+  if (!vid) {                                  // 沒帶 id：算一次瀏覽（不重複計算）
+    STATS.views++; STATS.dayViews++; fresh = true;
+  } else if (STATS.vids.indexOf(vid) < 0) {    // 同一個訪客只算一次
+    STATS.vids.push(vid); trimArr(STATS.vids);
+    STATS.views++; STATS.dayViews++; fresh = true;
+  }
+  statsDirty = true;
+  sendJSON(res, 200, statsOut({ fresh: fresh, liked: vid ? STATS.likers.indexOf(vid) >= 0 : false }));
+}
+function handleStatsLike(b, res) {
+  const vid = String((b && b.vid) || '').slice(0, 40);
+  const undo = !!(b && (b.undo === true || b.d === -1));
+  let liked = vid ? STATS.likers.indexOf(vid) >= 0 : false;
+  if (undo) {
+    if (liked) {
+      const i = STATS.likers.indexOf(vid);
+      if (i >= 0) STATS.likers.splice(i, 1);
+      STATS.likes = Math.max(0, STATS.likes - 1);
+      liked = false;
+    }
+  } else if (!liked) {                         // 同一個訪客只能按一次讚
+    if (vid) { STATS.likers.push(vid); trimArr(STATS.likers); }
+    STATS.likes++;
+    liked = true;
+  }
+  statsDirty = true;
+  sendJSON(res, 200, statsOut({ liked: liked }));
 }
 
 const server = http.createServer(function (req, res) {
@@ -925,9 +1072,28 @@ const server = http.createServer(function (req, res) {
   if (url.pathname === '/api/relay/list' && req.method === 'GET') {
     return handleRelayList(res);
   }
+  // v3.6：瀏覽人數 / 按讚
+  // v3.7：完整快照（含訪客 id 清單），把內容貼到任何靜態空間就能當 STATS_RESTORE_URL
+  if (url.pathname === '/api/stats/snapshot' && req.method === 'GET') {
+    sendJSON(res, 200, {
+      ok: true, views: STATS.views, likes: STATS.likes, day: STATS.day, dayViews: STATS.dayViews,
+      vids: STATS.vids, likers: STATS.likers, file: STATS_FILE, savedAt: Date.now()
+    });
+    return;
+  }
+  if (url.pathname === '/api/stats' && req.method === 'GET') {
+    return handleStatsGet(url.searchParams, res);
+  }
+  if (url.pathname === '/api/stats/view' && req.method === 'POST') {
+    return readBody(req, function (b) { b ? handleStatsView(b, res) : sendJSON(res, 400, { ok: false, err: 'bad body' }); });
+  }
+  if (url.pathname === '/api/stats/like' && req.method === 'POST') {
+    return readBody(req, function (b) { b ? handleStatsLike(b, res) : sendJSON(res, 400, { ok: false, err: 'bad body' }); });
+  }
   if (url.pathname === '/api/health') {
     return sendJSON(res, 200, {
       ok: true,
+      views: STATS.views, likes: STATS.likes, dayViews: STATS.dayViews,
       rooms: rooms.size,
       relay: relayRooms.size,
       players: Array.from(rooms.values()).reduce(function (n, r) { return n + r.players.filter(function (p) { return p.connected; }).length; }, 0)
@@ -977,6 +1143,22 @@ setInterval(function () {
   });
 }, TICK_MS);
 
+// v3.6：統計定期落盤（v3.7 縮短為 3 秒，縮小意外遺失的窗口）
+setInterval(function () { if (statsDirty) saveStats(); }, 3000);
+
+// v3.7：收到結束訊號時同步存檔（Render 休眠、或每次 git push 重新部署都會送 SIGTERM）
+['SIGTERM', 'SIGINT', 'SIGHUP'].forEach(function (sig) {
+  process.on(sig, function () {
+    try { flushStatsSync(); } catch (e) {}
+    process.exit(0);
+  });
+});
+process.on('uncaughtException', function (e) {
+  console.error('[uncaughtException]', e && e.message);
+  try { flushStatsSync(); } catch (e2) {}
+});
+
 server.listen(PORT, '0.0.0.0', function () {
   console.log('炸彈超人 Online 啟動：http://0.0.0.0:' + PORT);
+  console.log('[stats] 存檔位置：' + STATS_FILE + '（目前 ' + STATS.views + ' 瀏覽 / ' + STATS.likes + ' 讚）');
 });
