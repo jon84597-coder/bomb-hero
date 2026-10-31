@@ -23,7 +23,7 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
   ok(/測試版/.test(home.beta), 'RPG 鈕有「測試版 Beta」標籤（' + home.beta + '）');
   ok(home.store, '首頁有商店鈕');
   ok(home.vlogBtn, '左上角有版本更新內容標籤');
-  ok(home.ver === '4.0', '版本 4.0');
+  ok(home.ver === '4.1', '版本 4.1');
   await page.shot('test/v40-1-home.png');
 
   // ---------- 2. 版本更新面板 ----------
@@ -38,7 +38,7 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
   })())`));
   ok(vl.open, '點標籤會打開版本更新面板');
   ok(vl.n >= 10, '面板列出 ' + vl.n + ' 個版本');
-  ok(vl.now && /4\.0/.test(vl.first), '最上面是當前版本 v4.0（' + vl.first + '）');
+  ok(vl.now && /4\.1/.test(vl.first), '最上面是當前版本 v4.1（' + vl.first + '）');
   await page.shot('test/v40-2-versionlog.png');
   await page.eval(`document.getElementById('verLogClose').click()`);
   await sleep(250);

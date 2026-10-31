@@ -9,8 +9,12 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+const cloud = require('./cloud').createCloud();
+
 const PORT = process.env.PORT || 3000;
 const PUB = path.join(__dirname, 'public');
+// v4.1：Render 之類的反向代理會給 x-forwarded-proto，不是 https 就 308 轉過去
+const FORCE_HTTPS = String(process.env.BH_FORCE_HTTPS || '1') !== '0';
 
 const T = 40, COLS = 15, ROWS = 13;
 const ROUND_TIME = 180;      // 單局時限（秒）
@@ -880,8 +884,31 @@ function serveStatic(pathname, res) {
   });
 }
 
+/* v4.1 安全標頭：所有回應都加上（HSTS 只在 https 時才送，避免本機開發被鎖） */
+function applySecurityHeaders(req, res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  const proto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  if (proto === 'https' || (req.socket && req.socket.encrypted)) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+}
+
 const server = http.createServer(function (req, res) {
   const url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
+
+  applySecurityHeaders(req, res);
+
+  // 強制 HTTPS（憑證由 Render / 反向代理處理，這裡只負責把 http 導去 https）
+  if (FORCE_HTTPS) {
+    const proto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+    if (proto === 'http') {
+      res.writeHead(308, { Location: 'https://' + (req.headers['x-forwarded-host'] || req.headers.host || '') + req.url });
+      return res.end();
+    }
+  }
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
@@ -926,12 +953,26 @@ const server = http.createServer(function (req, res) {
     return handleRelayList(res);
   }
   if (url.pathname === '/api/health') {
+    const cs = cloud.stats();
     return sendJSON(res, 200, {
       ok: true,
       rooms: rooms.size,
       relay: relayRooms.size,
-      players: Array.from(rooms.values()).reduce(function (n, r) { return n + r.players.filter(function (p) { return p.connected; }).length; }, 0)
+      players: Array.from(rooms.values()).reduce(function (n, r) { return n + r.players.filter(function (p) { return p.connected; }).length; }, 0),
+      accounts: cs.accounts,
+      tamper: cs.tamper
     });
+  }
+
+  // v4.1：帳號 / 第三方登入 / 雲端存檔（cloud.js 自己處理路由，這裡只負責轉交）
+  if (url.pathname.indexOf('/api/auth/') === 0 || url.pathname.indexOf('/api/rpg/') === 0) {
+    cloud.handle(req, res, url).then(function (done) {
+      if (!done) sendJSON(res, 404, { ok: false, err: 'no such api' });
+    }).catch(function (e) {
+      console.error('[cloud] handle 失敗:', e && e.message);
+      try { sendJSON(res, 500, { ok: false, err: 'server error' }); } catch (e2) {}
+    });
+    return;
   }
 
   if (url.pathname.indexOf('/api/') === 0) {
@@ -979,4 +1020,9 @@ setInterval(function () {
 
 server.listen(PORT, '0.0.0.0', function () {
   console.log('炸彈超人 Online 啟動：http://0.0.0.0:' + PORT);
+  const cs = cloud.stats();
+  if (!cs.persisted) console.log('[cloud] 目前為記憶體模式（重啟後帳號會消失）');
+  else console.log('[cloud] 帳號資料存放於 ' + cs.dir + '（建議掛載持久磁碟）');
 });
+
+module.exports = { server: server, cloud: cloud };
