@@ -1,0 +1,88 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>layout probe</title>
+<style>
+  html,body { background:#111; color:#0f0; font:12px/1.5 monospace; margin:0; }
+  #out { white-space: pre-wrap; padding:8px; }
+  .frm { border:0; position:absolute; left:-99999px; top:0; }
+</style>
+<div id="out">running...</div>
+<script>
+const CASES = [
+  { w: 320, h: 568, name: 'iPhone SE' },
+  { w: 360, h: 780, name: 'Android 360' },
+  { w: 390, h: 844, name: 'iPhone 14' },
+  { w: 430, h: 932, name: 'iPhone 14 Pro Max' }
+];
+const SCREENS = ['scr-title', 'scr-solo', 'scr-battle', 'scr-settings'];
+const out = document.getElementById('out');
+const lines = [];
+function say(s) { lines.push(s); out.textContent = lines.join('\n'); }
+
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function measure(win, doc, label) {
+  const de = doc.documentElement;
+  const vw = de.clientWidth;
+  const res = { label, vw, overflowX: de.scrollWidth - vw, bad: [] };
+  // 逐元素檢查右邊界是否超出視口
+  const all = doc.querySelectorAll('.card, .seg, .seg button, .row, .keyrow, .keybtn, .stagegrid, .menu, .mbtn, .chargrid, .chcard, .pmset, .tinput, .title-card');
+  all.forEach(el => {
+    if (!el.offsetParent && el.tagName !== 'BODY') return;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0) return;
+    if (r.right > vw + 1 || r.left < -1) {
+      res.bad.push((el.id ? '#' + el.id : el.className.split(' ')[0]) +
+        ' L' + Math.round(r.left) + ' R' + Math.round(r.right) + ' W' + Math.round(r.width) +
+        ' "' + (el.textContent || '').trim().slice(0, 12) + '"');
+    }
+  });
+  return res;
+}
+
+async function run() {
+  for (const c of CASES) {
+    const f = document.createElement('iframe');
+    f.className = 'frm';
+    f.width = c.w; f.height = c.h;
+    f.style.width = c.w + 'px'; f.style.height = c.h + 'px';
+    f.src = '../index.html?touch=1';
+    document.body.appendChild(f);
+    await new Promise(r => { f.onload = r; });
+    await wait(900);
+    const win = f.contentWindow, doc = f.contentDocument;
+    const de = doc.documentElement;
+    say('=== ' + c.name + ' ' + c.w + 'x' + c.h + ' | body="' + doc.body.className + '"');
+    say('  inner=' + win.innerWidth + ' clientW=' + de.clientWidth + ' scrollW=' + de.scrollWidth +
+        ' vv=' + (win.visualViewport ? Math.round(win.visualViewport.width) : '-'));
+    for (const sid of SCREENS) {
+      const sc = doc.getElementById(sid);
+      if (!sc) continue;
+      doc.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+      sc.classList.add('on');
+      await wait(160);
+      const m = measure(win, doc, sid);
+      say('  [' + sid + '] scrollW=' + de.scrollWidth + ' over=' + (de.scrollWidth - de.clientWidth) +
+          ' h=' + de.scrollHeight + ' bad=' + (m.bad.length ? '\n      - ' + m.bad.join('\n      - ') : '0'));
+      if (sid === 'scr-settings') {
+        const card = sc.querySelector('.card');
+        const seg = doc.getElementById('segSize2');
+        const last = seg && seg.lastElementChild;
+        if (card && seg && last) {
+          const rc = card.getBoundingClientRect(), rg = seg.getBoundingClientRect(), rl = last.getBoundingClientRect();
+          say('      card W' + Math.round(rc.width) + ' R' + Math.round(rc.right) +
+              ' | segSize2 W' + Math.round(rg.width) + ' | last btn "' + last.textContent.trim() +
+              '" L' + Math.round(rl.left) + ' R' + Math.round(rl.right) + ' visible=' + (rl.right <= m.vw));
+        }
+        // 可捲動性
+        say('      scrollable=' + (de.scrollHeight > win.innerHeight) +
+            ' bodyOverflowY=' + win.getComputedStyle(doc.body).overflowY);
+      }
+    }
+    f.remove();
+    await wait(150);
+  }
+  say('DONE');
+}
+run().catch(e => say('ERR ' + e.message + '\n' + e.stack));
+</script>

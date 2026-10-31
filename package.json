@@ -1,0 +1,13 @@
+{
+  "name": "bomberman-online",
+  "version": "1.0.0",
+  "private": true,
+  "description": "炸彈超人網頁版：單人闖關 + 多人即時對戰",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
