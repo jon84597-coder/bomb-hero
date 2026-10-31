@@ -17,7 +17,7 @@ const PROBE = `(function(){
   const de = document.documentElement;
   const vw = de.clientWidth;
   const bad = [];
-  document.querySelectorAll('.card,.seg,.seg button,.row,.keyrow,.keybtn,.stagegrid,.menu,.mbtn,.chargrid,.chcard,.pmset,.tinput,.title-card,.onlineroom,.netcol').forEach(el=>{
+  document.querySelectorAll('.card,.seg,.seg button,.row,.keyrow,.keybtn,.stagegrid,.menu,.mbtn,.chargrid,.chcard,.pmset,.tinput,.title-card,.onlineroom,.netcol,.rpgrows,.rpgrow,.rpgpips,.rpgstep,.rpgsum,.rpggrid').forEach(el=>{
     if (!el.getClientRects().length) return;
     const r = el.getBoundingClientRect();
     if (r.width === 0) return;

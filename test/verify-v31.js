@@ -13,8 +13,8 @@ function ok(cond, name) {
 }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '3.2', '版本 = 3.2');
-ok(/<span id="verTxt">3\.2<\/span>/.test(html), '徽章版本號同步 3.2');
+ok(P.VERSION === '4.0', '版本 = 4.0');
+ok(/<span id="verTxt">4\.0<\/span>/.test(html), '徽章版本號同步 4.0');
 
 // ================================================================
 console.log('\n=== 1. 手機橫放：選單重排＋拖曳捲動 ===');

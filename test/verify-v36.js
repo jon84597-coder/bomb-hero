@@ -15,7 +15,7 @@ function ok(cond, name) {
 }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '3.2', '版本 = 3.2');
+ok(P.VERSION === '4.0', '版本 = 3.5');
 ok(html.indexOf('v3.0：作者公告欄（首頁左上角背景空白處）') > 0, 'CSS 有 v3.0 公告欄註解');
 
 console.log('\n=== 1. HTML 結構 ===');
@@ -47,15 +47,15 @@ ok(body.indexOf('— Jon.') > 0, '署名 Jon.');
 console.log('\n=== 3. CSS：左上角固定 + 收起成膠囊 ===');
 const cssAnn = (html.match(/\/\* =+\s*\n\s*v3\.0：作者公告欄[\s\S]*?body\.touch \.annbox \.annhead \{[^}]*\}/) || [''])[0];
 ok(cssAnn.length > 200, 'CSS 有 v3.0 公告欄區塊');
-ok(/\.annbox \{\s*\n\s*position: fixed; z-index: 900;/.test(html), '.annbox 固定定位（不隨內容排版跑掉）');
-ok(/\.annbox \{\s*\n\s*position: fixed; z-index: 900;\s*\n\s*left: 10px; top: calc\(56px \+ env\(safe-area-inset-top, 0px\)\);/.test(html),
-   '位置在左上角（讓開上方工具列、支援瀏海安全區）');
+ok(/\.annbox \{\s*\n(?:[^\n]*\n){0,2}?\s*position: fixed; z-index: 900;/.test(html), '.annbox 固定定位（不隨內容排版跑掉）');
+ok(/left: 10px; top: calc\(94px \+ env\(safe-area-inset-top, 0px\)\);/.test(cssAnn),
+   '位置在左上角（v4.0 往下讓開「版本更新內容」標籤 → 94px）');
 ok(/width: clamp\(190px, 17vw, 300px\); max-width: calc\(100vw - 20px\);/.test(html), '寬度隨視窗縮放、不超出螢幕');
 ok(/\.annbox\.min \.annbody \{ display: none; \}/.test(html), '收起時內容隱藏 → 只剩一顆小膠囊');
 ok(/\.annbox \.annbody \{[\s\S]*?max-height: min\(52vh, 430px\); overflow-y: auto;/.test(html), '內容區高度上限 + 可上下捲動');
 ok(/@media \(min-width: 1400px\) \{ \.annbox \{ width: clamp\(240px, 18vw, 340px\); \}/.test(html), '大螢幕（≥1400px）再放大');
 ok(/@media \(max-width: 1199px\) \{ \.annbox \{ width: min\(320px, calc\(100vw - 20px\)\); \} \}/.test(html), '窄螢幕展開時接近滿版寬');
-ok(/body\.touch \.annbox \{ left: 8px; top: calc\(48px \+ env\(safe-area-inset-top, 0px\)\); \}/.test(html), '手機版位置／尺寸微調');
+ok(/body\.touch \.annbox \{ left: 8px; top: calc\(84px \+ env\(safe-area-inset-top, 0px\)\); \}/.test(html), '手機版位置／尺寸微調（v4.0 讓開版本標籤 → 84px）');
 ok(/body\.touch \.annbox \.annbody \{ font-size: 12px; max-height: 58vh; \}/.test(html), '手機版字級縮小、捲動區加大');
 
 console.log('\n=== 4. JS：開合 + 預設狀態 ===');

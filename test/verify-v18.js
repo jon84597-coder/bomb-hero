@@ -185,10 +185,10 @@ me.cart = false;
 console.log('=== 3. 死亡／擊殺對話框 ===');
 freshBattle();
 ok(BH.DEAD_LINES.length === 3, '死者台詞有 3 句');
-ok(BH.DEAD_LINES.indexOf('哎呀！該死！') >= 0 && BH.DEAD_LINES.indexOf('可惡..我會回來報仇...！') >= 0 &&
-   BH.DEAD_LINES.indexOf('媽的！幹！') >= 0, '死者台詞內容正確');
+ok(BH.DEAD_LINES.indexOf('哎呀！糟糕糟糕！！') >= 0 && BH.DEAD_LINES.indexOf('可惡..我下次一定會贏...！') >= 0 &&
+   BH.DEAD_LINES.indexOf('天啊！不～！') >= 0, '死者台詞內容正確（v3.8）');
 ok(BH.KILL_LINES.length === 3, '凶手台詞有 3 句');
-ok(BH.KILL_LINES.indexOf('哈哈！傻B！') >= 0 && BH.KILL_LINES.indexOf('還是我厲害！') >= 0 &&
+ok(BH.KILL_LINES.indexOf('哈哈！你還得加把勁！') >= 0 && BH.KILL_LINES.indexOf('還是我厲害！') >= 0 &&
    BH.KILL_LINES.indexOf('我的炸彈好吃嗎？') >= 0, '凶手台詞內容正確');
 
 G.bubbles.length = 0;

@@ -3,7 +3,7 @@ const path = require('path');
 const { launch, sleep } = require('./cdp');
 const URL = 'file:///' + path.resolve(__dirname, '../index.html').replace(/\\/g, '/');
 
-const SCREENS = ['scr-title', 'scr-solo', 'scr-battle', 'scr-settings', 'scr-online'];
+const SCREENS = ['scr-title', 'scr-solo', 'scr-battle', 'scr-settings', 'scr-online', 'scr-rpg'];
 const CASES = [{ w: 360, h: 780 }, { w: 390, h: 844 }];
 
 (async () => {
@@ -17,6 +17,7 @@ const CASES = [{ w: 360, h: 780 }, { w: 390, h: 844 }];
     console.log('=== ' + c.w + 'x' + c.h);
     for (const scr of SCREENS) {
       const has = await page.eval(`(function(){
+        if (window.__BH && window.__BH.Rpg) window.__BH.Rpg.render();
         document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
         var s=document.getElementById('${scr}'); if(!s) return false; s.classList.add('on');
         document.scrollingElement.scrollTop = 0; return true;

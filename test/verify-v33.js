@@ -16,8 +16,8 @@ function ok(cond, name) {
 }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '3.2', '版本 = 3.2');
-ok(/<span id="verTxt">3\.2<\/span>/.test(html), '徽章版本號同步 3.2');
+ok(P.VERSION === '4.0', '版本 = 4.0');
+ok(/<span id="verTxt">4\.0<\/span>/.test(html), '徽章版本號同步 4.0');
 
 console.log('\n=== 1. 語言列表（10 種） ===');
 const ids = P.LANGS.map(function (l) { return l.id; });
@@ -105,7 +105,7 @@ let deadSaid = null;
   deadSaid = G.bubbles.length ? G.bubbles[0].text : null;
 })();
 ok(deadSaid && /[A-Za-z]/.test(deadSaid) && !/[一-鿿]/.test(deadSaid),
-   '死亡台詞變成英文：' + JSON.stringify(deadSaid));
+   '死亡台詞變成英文（v3.8 新台詞）：' + JSON.stringify(deadSaid));
 let killSaid = null;
 (function () {
   G.bubbles.length = 0;
@@ -113,7 +113,7 @@ let killSaid = null;
   killSaid = G.bubbles.length ? G.bubbles[0].text : null;
 })();
 ok(killSaid && /[A-Za-z]/.test(killSaid) && !/[一-鿿]/.test(killSaid),
-   '擊殺台詞變成英文：' + JSON.stringify(killSaid));
+   '擊殺台詞變成英文（v3.8 新台詞）：' + JSON.stringify(killSaid));
 P.setLang('zh-TW', true);
 (function () {
   G.bubbles.length = 0;

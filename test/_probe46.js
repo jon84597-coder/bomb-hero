@@ -1,0 +1,12 @@
+const { makeEnv } = require('./_sandbox');
+const env = makeEnv();
+const P = env.BH, G = P.Game;
+G.rpg = true;
+P.startRpg(32);
+console.log('T=', G.T, 'cols=', G.cols, 'rows=', G.rows, 'theme=', G.theme && (G.theme.n || G.theme.name), 'mapInfo=', G.mapInfo && G.mapInfo.n);
+console.log('enemies=', G.enemies.length, 'types=', G.enemies.map(e=>e.type).join(','));
+const boss = G.enemies.filter(e=>e.type==='boss')[0];
+console.log('boss hp/maxHp/def=', boss && boss.hp, boss && boss.maxHp, boss && boss.def, 'speedMul=', boss && boss.speedMul);
+console.log('player=', G.players[0] && {hp:G.players[0].hpCur, armor:G.players[0].armorCur, rpg:G.players[0].rpg, power:G.players[0].power, speed:G.players[0].rpgSpd});
+console.log('SIZES', JSON.stringify(P.SIZES));
+console.log('THEMES[0] keys', Object.keys(P.THEMES[0]));
