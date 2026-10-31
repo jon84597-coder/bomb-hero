@@ -190,7 +190,7 @@ ok(/Game\.mode === 'rpg'\) \? 32 : 8/.test(html), 'RPG 共 32 關（一般闖關
 
 console.log('\n=== 8. RPG 與一般模式互不干擾 ===');
 G.rpg = false;
-ok(P.VERSION === '4.1', '版本仍是 4.1');
+ok(P.VERSION === '4.2', '版本仍是 4.2');
 P.startSolo(1);
 ok(!G.rpg, '一般闖關不會被 RPG 狀態污染');
 ok(G.enemies.length > 0 && !!G.door, '一般闖關照常生成怪物與出口');

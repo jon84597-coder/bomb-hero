@@ -1,13 +1,15 @@
-# 炸彈超人 網頁版 — 爆爆英雄 BOMB HERO v4.1
+# 炸彈超人 網頁版 — 爆爆英雄 BOMB HERO v4.2
 
 單檔、零依賴的炸彈超人遊戲，外加一支零依賴的 Node.js 後端（房間制即時對戰）。
 前端 `public/index.html` **一個檔案就包含全部 HTML / CSS / JavaScript 與圖片**，
 不用 npm install、不用打包工具，雙擊就能玩。
 
-- 版本：**v4.1**
+- 版本：**v4.2**
 - 前端：原生 HTML5 / Canvas / ES5+ 相容語法，**零第三方套件**
 - 後端：`server.js` ＋ `cloud.js`（只用 Node 內建 `http` / `fs` / `path` / `crypto`，**零依賴**）
 - 帳號：Google / Facebook（另支援 LINE）OAuth 登入、遊客模式、雲端存檔、HMAC 簽章、限流
+- 手機操作：**全域隱形滑動區**（半邊畫面任意處＝搖桿中心）或**虛擬搖桿**（可拖曳位置、三段大小）
+- 版面：橫放／直放都自動塞滿可視高度（畫布不再被 4:3 撐高、觸控鍵不會跑到畫面外）
 - 連線方式：HTTP 短輪詢 `/api/relay/*`（不需 WebSocket，任何反向代理都吃）
 
 ---
@@ -15,9 +17,9 @@
 ## 目錄結構
 
 ```
-bomb-hero-v4.1/
+bomb-hero-v4.2/
 ├─ README.md               # 本文件（含 GitHub 上傳、部署步驟）
-├─ CHANGELOG.md            # v2.1 ~ v4.1 完整版本演進
+├─ CHANGELOG.md            # v2.1 ~ v4.2 完整版本演進
 ├─ .gitignore
 ├─ .github/
 │  └─ workflows/pages.yml  # GitHub Pages 自動部署（把 public/ 發布出去）
@@ -69,10 +71,10 @@ npx serve public            # 或 python -m http.server -d public 8000
 
 ```bash
 # 解壓後進入資料夾
-cd bomb-hero-v4.1
+cd bomb-hero-v4.2
 git init
 git add -A
-git commit -m "BOMB HERO v4.1"
+git commit -m "BOMB HERO v4.2"
 git branch -M main
 git remote add origin https://github.com/<你的帳號>/<repo 名稱>.git
 git push -u origin main
@@ -161,7 +163,7 @@ CMD ["node", "server.js"]
   小圖直接用遊戲自己的繪圖函式畫出來，跟實機一模一樣
 - **📜 版本更新內容**：首頁左上角標籤，從 **Ver 3.0** 起每一版的更新明細都在裡面（每版持續追加）
 - **🛒 商店**：首頁按鈕（目前顯示「準備中」，未來開放）
-- **操作**：PC 鍵盤 WASD / 方向鍵 + 空白鍵；手機虛擬搖桿 + 觸控按鍵（直式／橫式都可玩）
+- **操作**：PC 鍵盤 WASD / 方向鍵 + 空白鍵；手機兩種模式可切換 —— **隱形滑動區**（推薦，半邊畫面按下去就往那個方向走，區內沒有任何圖示）或**虛擬搖桿**（可拖曳到順手的位置、大小小／中／大）；直式／橫式都可玩，畫面自動塞滿可視高度
 - **多語言**：繁中、簡中、English、日本語、한국어、ไทย、Tiếng Việt、Русский、Deutsch、Italiano
 - **精緻圖示**：黑色圓型炸彈（點燃火苗＋火星）、遙控彈 LED 面板、四層水滴火焰、頭上對話框台詞（10 語）；
   手機觸控按鈕直接用同一套美術畫在按鈕裡，外加三層同心金屬圓框

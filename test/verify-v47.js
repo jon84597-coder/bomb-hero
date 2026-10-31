@@ -1,4 +1,4 @@
-// 無頭測試 v47（v4.1）：帳號 / 第三方登入 / 雲端存檔 / 資安純函式
+// 無頭測試 v47（v4.2）：帳號 / 第三方登入 / 雲端存檔 / 資安純函式
 // 只測 cloud.js 的後端邏輯（HTTP 層由 net-auth.js 測）
 const path = require('path');
 const fs = require('fs');

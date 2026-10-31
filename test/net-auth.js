@@ -1,4 +1,4 @@
-// 端到端測試 v4.1：帳號 / 遊客 / 配點 / 存檔簽章 / 限流 / HTTPS（需要真的起伺服器）
+// 端到端測試 v4.2：帳號 / 遊客 / 配點 / 存檔簽章 / 限流 / HTTPS（需要真的起伺服器）
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -173,6 +173,25 @@ async function waitUp(port) {
   }
   ok(codes.indexOf(429) > 0, '連續存檔會被限流（' + codes.join(',') + '）');
   ok(codes[0] === 200, '第一次存檔是允許的');
+
+  console.log('\n=== 7b. 觸控版面（v4.2）===');
+  await sleep(1200);
+  r = await api('/api/rpg/layout', { method: 'POST', body: { layout: { mode: 'stick', side: 'right', act: 'left', size: 1.2, pad: { x: 0.25, y: 0.75 } } } });
+  ok(r.status === 200 && r.json.ok, '可以存觸控版面');
+  ok(r.json.layout && r.json.layout.mode === 'stick', '回傳清洗後的版面（mode=stick）');
+  ok(r.json.account && r.json.account.layout && r.json.account.layout.pad.x === 0.25, '帳號資料裡帶著版面');
+  r = await api('/api/rpg/state');
+  ok(r.json.account.layout && r.json.account.layout.size === 1.2, '重讀仍拿得到版面');
+  r = await api('/api/rpg/layout', { method: 'POST', body: { layout: { mode: 'hack', size: 999, pad: { x: -5, y: 5 } } } });
+  ok(r.status === 200 && r.json.layout.mode === 'slide', '亂填 mode → 退回 slide');
+  ok(r.json.layout.size === 1.6 && r.json.layout.pad.x === 0 && r.json.layout.pad.y === 1, '亂填數字 → 夾回合法範圍');
+  r = await api('/api/rpg/layout', { method: 'POST', body: { layout: null } });
+  ok(r.status === 200 && r.json.layout === null, '送 null 可以清掉版面');
+  r = await api('/api/rpg/layout', { method: 'POST', body: '{oops', headers: { 'Content-Type': 'application/json' } });
+  ok(r.status === 400 && r.json.err === 'BAD_BODY', '爛 body → 400');
+  for (let i = 0; i < 8; i++) r = await api('/api/rpg/layout', { method: 'POST', body: { layout: {} } });
+  ok(r.status === 429, '版面 API 也有限流（' + r.status + '）');
+  await sleep(1200);
 
   console.log('\n=== 8. 登出 ===');
   r = await api('/api/auth/logout', { method: 'POST' });

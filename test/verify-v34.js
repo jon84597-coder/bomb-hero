@@ -16,8 +16,8 @@ function ok(cond, name) {
 }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.1', '版本 = 4.1');
-ok(/<span id="verTxt">4\.1<\/span>/.test(html), '徽章版本號同步 4.1');
+ok(P.VERSION === '4.2', '版本 = 4.2');
+ok(/<span id="verTxt">4\.2<\/span>/.test(html), '徽章版本號同步 4.2');
 
 console.log('\n=== 1. IS_TOUCH 收嚴（v2.8 核心：觸控 PC 不再誤判） ===');
 ok(html.indexOf("const coarse = !!(mm && mm('(pointer: coarse)').matches);") > 0, '有檢查 pointer: coarse');

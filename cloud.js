@@ -103,6 +103,38 @@ function defaultRpg() {
   };
 }
 
+/* ---------- v4.2：觸控版面（模式／左右半邊／大小／自訂搖桿位置） ----------
+   前端只送「玩家在設定裡選了什麼」，這裡一律重新夾成合法值，
+   所以就算有人用改機工具塞 999 或字串進來，也只會被壓回允許範圍。 */
+const LAYOUT_SIZE_MIN = 0.6, LAYOUT_SIZE_MAX = 1.6;
+function clampNum(v, lo, hi, def) {
+  const n = Number(v);
+  if (!isFinite(n)) return def;
+  return n < lo ? lo : (n > hi ? hi : n);
+}
+function round3(v) { return Math.round(v * 1000) / 1000; }
+function defaultLayout() {
+  return { mode: 'slide', side: 'left', act: 'right', size: 0.8, pad: null };
+}
+function sanitizeLayout(v) {
+  if (!v || typeof v !== 'object') return null;
+  const out = defaultLayout();
+  out.mode = (v.mode === 'stick') ? 'stick' : 'slide';
+  out.side = (v.side === 'right') ? 'right' : 'left';
+  out.act = (v.act === 'left') ? 'left' : 'right';
+  out.size = round3(clampNum(v.size, LAYOUT_SIZE_MIN, LAYOUT_SIZE_MAX, 0.8));
+  const p = v.pad;
+  if (p && typeof p === 'object' && isFinite(Number(p.x)) && isFinite(Number(p.y))) {
+    out.pad = {
+      x: round3(clampNum(p.x, 0, 1, 0.18)),
+      y: round3(clampNum(p.y, 0, 1, 0.82))
+    };
+  } else {
+    out.pad = null;
+  }
+  return out;
+}
+
 /* 驗證配點：只能是 0..10 的整數，總和不得超過「目前可用的總點數」 */
 function validateAlloc(alloc, pointsTotal) {
   const cap = (pointsTotal == null || !isFinite(pointsTotal)) ? BASE_POINTS : clampInt(pointsTotal, 0, MAX_POINTS, BASE_POINTS);
@@ -441,7 +473,8 @@ function createCloud(options) {
       created: Date.now(),
       lastSeen: Date.now(),
       mergedInto: null,
-      rpg: defaultRpg()
+      rpg: defaultRpg(),
+      layout: null                     // v4.2：手機觸控版面（null = 還沒設定過）
     };
     db.accounts[id] = acc;
     store.touch();
@@ -481,6 +514,8 @@ function createCloud(options) {
   function bindGuest(member, guest) {
     if (!member || !guest || guest.mergedInto || member.id === guest.id) return false;
     member.rpg = mergeProgress(member.rpg, guest.rpg);
+    // v4.2：正式帳號還沒有版面就用遊客調好的那套（有設定過就維持自己的）
+    if (!member.layout && guest.layout) member.layout = guest.layout;
     guest.mergedInto = member.id;
     for (const h in db.devices) if (db.devices[h] === guest.id) db.devices[h] = member.id;
     store.touch();
@@ -555,6 +590,7 @@ function createCloud(options) {
       points: points,
       left: points - sumAlloc(acc.rpg.alloc),
       unlocked: Math.min(MAX_STAGE, acc.rpg.cleared + 1),
+      layout: acc.layout || null,
       save: makeEnvelope(secret, acc)
     };
   }
@@ -843,6 +879,18 @@ function createCloud(options) {
           return send(res, 200, { ok: true, account: publicAccount(acc) }), true;
         }
 
+        /* v4.2：觸控版面（模式 / 左右 / 大小 / 自訂搖桿位置）
+           只存「玩家在設定裡選了什麼」，一律經 sanitizeLayout() 夾回合法值 */
+        if (p === '/api/rpg/layout' && req.method === 'POST') {
+          if (!gate(req, res, 'layout', 6, 1)) return true;
+          const body = await readJson(req, 2048);
+          if (!body) return fail(res, 400, 'BAD_BODY'), true;
+          acc.layout = sanitizeLayout(body.layout);
+          acc.lastSeen = Date.now();
+          store.touch();
+          return send(res, 200, { ok: true, layout: acc.layout, account: publicAccount(acc) }), true;
+        }
+
         if (p === '/api/rpg/reset' && req.method === 'POST') {
           if (!gate(req, res, 'reset', 2, 0.2)) return true;
           const body = await readJson(req, 1024);
@@ -922,7 +970,8 @@ function createCloud(options) {
     _internals: {
       session: session, publicAccount: publicAccount, findById: findById,
       createAccount: createAccount, mergeProgress: mergeProgress, store: store,
-      bindGuest: bindGuest, upsertMember: upsertMember, db: db
+      bindGuest: bindGuest, upsertMember: upsertMember, db: db,
+      sanitizeLayout: sanitizeLayout
     }
   };
 }
@@ -933,6 +982,7 @@ module.exports = {
   ATTRS: ATTRS, BASE_POINTS: BASE_POINTS, CAP: CAP, MAX_POINTS: MAX_POINTS, MAX_STAGE: MAX_STAGE,
   pointsTotalFor: pointsTotalFor, goldFor: goldFor, stageReward: stageReward,
   defaultRpg: defaultRpg, validateAlloc: validateAlloc, spendPoint: spendPoint,
+  defaultLayout: defaultLayout, sanitizeLayout: sanitizeLayout,
   applyClear: applyClear, mergeProgress: mergeProgress, fitAlloc: fitAlloc,
   makeEnvelope: makeEnvelope, verifyEnvelope: verifyEnvelope,
   makeToken: makeToken, readToken: readToken, canonical: canonical,

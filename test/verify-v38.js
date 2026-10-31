@@ -15,8 +15,8 @@ function ok(cond, name) {
 }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.1', '版本 = 4.1');
-ok(/<span id="verTxt">4\.1<\/span>/.test(html), '徽章版本號同步 4.1');
+ok(P.VERSION === '4.2', '版本 = 4.2');
+ok(/<span id="verTxt">4\.2<\/span>/.test(html), '徽章版本號同步 4.2');
 
 console.log('\n=== 1. pkrow 改釘工具列左側 ===');
 ok(/\/\* v3\.2：玩家卡改釘在最上面工具列（navBar）同一條的左側空位[\s\S]*?\.pkrow \{\s*\n\s*position: fixed; top: calc\(5px \+ env\(safe-area-inset-top, 0px\)\); left: 10px;\s*\n\s*z-index: 1100;/.test(html),

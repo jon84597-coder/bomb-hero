@@ -152,7 +152,8 @@ ok(/if \(n > Solo\.unlocked\) \{ toast\(t\('solo\.lockToast'/.test(html), '未�
 // ================================================================
 console.log('\n=== 3. 手機搖桿預設「小」 ===');
 
-ok(/const DEF_TPAD = \{ side: 'left', act: 'right', size: 0\.8 \}/.test(html), 'DEF_TPAD 預設 size = 0.8（小）');
+// v4.2：DEF_TPAD 多了 mode / pad，改用「重點欄位都在」的檢查
+ok(/const DEF_TPAD = \{[^}]*side: 'left'[^}]*act: 'right'[^}]*size: 0\.8/.test(html), 'DEF_TPAD 預設 size = 0.8（小）');
 ok(/bombhero-tpad-def/.test(html), '舊存檔（原本是「中」）升級時自動調成「小」');
 ok(/<button data-v="0\.8">小<\/button>/.test(html), '設定裡「小」的選項值就是 0.8');
 
@@ -383,8 +384,8 @@ ok(P.BOSS_POWER > 1, 'BOSS 火焰仍比玩家的初始火力長');
 
 // ================================================================
 console.log('\n=== 9. 版本與整體 ===');
-ok(P.VERSION === '4.1', '版本 = 3.9（' + P.VERSION + '）');
-ok(html.indexOf('<span id="verTxt">4.1</span>') > 0, '畫面上的版本號同步 4.1');
+ok(P.VERSION === '4.2', '版本 = 3.9（' + P.VERSION + '）');
+ok(html.indexOf('<span id="verTxt">4.2</span>') > 0, '畫面上的版本號同步 4.2');
 
 let runErr = null;
 try {

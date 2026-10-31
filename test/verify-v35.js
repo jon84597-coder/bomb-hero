@@ -13,8 +13,8 @@ function ok(cond, name) {
 }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.1', '版本 = 4.1');
-ok(/<span id="verTxt">4\.1<\/span>/.test(html), '徽章版本號同步 4.1');
+ok(P.VERSION === '4.2', '版本 = 4.2');
+ok(/<span id="verTxt">4\.2<\/span>/.test(html), '徽章版本號同步 4.2');
 
 console.log('\n=== 1. 玩家卡橫排（HTML／CSS 結構） ===');
 ok(html.indexOf('<div class="pkrow hide" id="pkRoster"></div>') > 0, 'HTML 有 #pkRoster 容器（在 game-top 與 game-flex 之間）');

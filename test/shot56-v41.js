@@ -1,4 +1,4 @@
-// 瀏覽器端到端驗證 v4.1：帳號膠囊 / 綁定彈窗 / 伺服器權威配點 / 過關 / 存檔簽章 / 手機版面
+// 瀏覽器端到端驗證 v4.2：帳號膠囊 / 綁定彈窗 / 伺服器權威配點 / 過關 / 存檔簽章 / 手機版面
 const cdp = require('./cdp');
 
 let pass = 0, fail = 0;
@@ -20,7 +20,7 @@ function ok(cond, name) {
       txt: chip ? chip.textContent.replace(/\\s+/g, ' ').trim() : '',
       hasSig: !!(C.acc() && C.acc().save && C.acc().save.sig) };
   })()`);
-  ok(r.ver === '4.1', '版本 4.1');
+  ok(r.ver === '4.2', '版本 4.2');
   ok(r.online === true && r.guest === true, '自動取得遊客身分（免登入就能玩）');
   ok(r.txt.indexOf('綁定帳號') >= 0, '右上角常駐「綁定帳號」：' + r.txt);
   ok(r.hasSig === true, '伺服器已簽發 HMAC 存檔信封');

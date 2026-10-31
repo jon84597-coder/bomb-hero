@@ -72,6 +72,8 @@ function makeEnv(opts) {
 
   const listeners = {};
   const storage = {};
+  // v4.2：可以預先塞 localStorage（測「老玩家升級後的行為」這種情境）
+  if (opts.storage) { for (const k in opts.storage) storage[k] = String(opts.storage[k]); }
   function mkEl(tag) { return getId(tag + '#' + Math.random().toString(36).slice(2)); }
   const sandbox = {
     console, Math, JSON, Object, Array, Date, parseInt, parseFloat, isNaN, isFinite,
