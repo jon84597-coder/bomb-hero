@@ -167,9 +167,9 @@ ok(t7.size >= 7, '第 7 關種類最多（' + t7.size + ' 種）');
 // 兩段血的小怪
 const beetle = P.makeEnemy(2, 2, 'beetle', 5, 1);
 const slimeE = P.makeEnemy(2, 2, 'slime', 5, 1);
-// v4.11：單人闖關與 RPG 統一血量（共用 FOE_HP）→ 史萊姆 3、鐵甲蟲 4
-ok(beetle.hp === 4, '鐵甲蟲要炸四次（hp=4，v4.11 與 RPG 統一）');
-ok(slimeE.hp === 3, '史萊姆要炸三次（hp=3，v4.11 與 RPG 統一）');
+// v4.12：單人闖關與 RPG 的血量規則是分開的 → 單人闖關的小怪一擊必殺
+ok(beetle.hp === 1, '鐵甲蟲在單人闖關炸一下就死（hp=1）');
+ok(slimeE.hp === 1, '史萊姆在單人闖關炸一下就死（hp=1）');
 ok(beetle.eName === '鐵甲蟲' && beetle.wing === false, 'makeEnemy 會帶入中文名與翅膀屬性');
 
 // 小怪速度有感差異

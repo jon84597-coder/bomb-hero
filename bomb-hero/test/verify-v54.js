@@ -22,29 +22,26 @@ P.settings.size = 'M'; P.settings.hazards = 'off'; P.settings.sd = 'off';
 P.settings.ctrl = 'kb'; P.settings.soloDiff = 'normal'; P.settings.soloTime = 300;
 
 // ================================================================
-head('1. 單人闖關的小怪：血量跟 RPG 一樣 + 有血條');
+head('1. 單人闖關的小怪：一擊必殺（v4.12：血量規則兩模式分離）');
 P.startSolo(1, false);
 G.state = 'play';
 const soloEnemies = G.enemies.filter(function (e) { return !e.boss; });
 ok(soloEnemies.length > 0, '單人關有生成小怪（' + soloEnemies.length + ' 隻）');
+// v4.12：單人闖關的怪一律 hp=1（一擊必殺）→ 不再跟 RPG_FOE 比
 let hpOk = true, maxOk = true;
 soloEnemies.forEach(function (e) {
-  const f = P.RPG_FOE[e.type];
-  if (!f) return;
-  if (e.hp !== f.hp) hpOk = false;
-  if (e.maxHp !== f.hp) maxOk = false;
+  if (e.hp !== 1) hpOk = false;
+  if (e.maxHp !== 1) maxOk = false;
 });
-ok(hpOk, '單人怪的 hp 全部等於 RPG_FOE 的數值（史萊姆 3／鐵甲蟲 4／骷髏兵 4…）');
-ok(maxOk, '單人怪都有 maxHp（血條畫得出來）');
-ok(P.FOE_HP && P.FOE_HP.slime === 3 && P.FOE_HP.beetle === 4 && P.FOE_HP.skull === 4,
-  'FOE_HP 共用血量表：slime 3 / beetle 4 / skull 4');
-ok(P.RPG_FOE.slime.hp === P.FOE_HP.slime && P.RPG_FOE.eye.hp === P.FOE_HP.eye,
-  'RPG_FOE 的 hp 直接引用 FOE_HP（兩邊不會各寫各的漂移）');
+ok(hpOk, '單人怪的 hp 全部 = 1（一擊必殺，v4.12 規格）');
+ok(maxOk, '單人怪的 maxHp 也 = 1（沒有血量概念 → 不畫血條）');
+ok(P.RPG_FOE.slime.hp === 3 && P.RPG_FOE.beetle.hp === 4 && P.RPG_FOE.lizard.hp === 5,
+  'RPG 模式仍有自己的血量表（史萊姆 3／鐵甲蟲 4／疾風蜥 5）');
 const hudFn = html.slice(html.indexOf('function drawRpgHud(T) {'), html.indexOf('function drawRpgHud(T) {') + 900);
 ok(hudFn.indexOf('if (!e.maxHp || e.maxHp <= 1) continue;') >= 0 &&
    hudFn.indexOf('if (!Game.rpg) return;') >= 0 &&
    hudFn.indexOf('if (!e.maxHp || e.maxHp <= 1) continue;') < hudFn.indexOf('if (!Game.rpg) return;'),
-  'drawRpgHud 的敵人血條在 RPG 判斷之前 → 單人／RPG／BOSS 都畫');
+  'drawRpgHud 的敵人血條在 RPG 判斷之前（v4.12：只有 RPG 模式畫）');
 // 血條實際畫出來（用 fillRect 呼叫次數驗證）
 {
   const e0 = soloEnemies[0];
@@ -53,7 +50,7 @@ ok(hudFn.indexOf('if (!e.maxHp || e.maxHp <= 1) continue;') >= 0 &&
   env.rec.calls.length = 0;
   P.drawRpgHud(T);
   const rects = env.rec.calls.filter(function (c) { return c[0] === 'fillRect'; });
-  ok(rects.length >= 2, '單人模式下敵人頭上真的畫出血條（fillRect ' + rects.length + ' 次）');
+  ok(rects.length === 0, '單人模式下不畫血條（v4.12：血量規則兩模式分離）');
 }
 
 // 炸 3 下史萊姆才死（不再是炸一下就死）
@@ -62,7 +59,7 @@ ok(hudFn.indexOf('if (!e.maxHp || e.maxHp <= 1) continue;') >= 0 &&
   const T = G.T;
   slime.x = 3 * T + T / 2; slime.y = 3 * T + T / 2;
   slime.speed = 0; slime.dirT = 999;    // 站定不動（否則會亂走離開火焰 → 測試不穩）
-  ok(slime.hp === 3, '史萊姆 3 點血（炸 3 下）');
+  ok(slime.hp === 1, '史萊姆 1 點血（單人闖關一擊必殺）');
   let bombs = 0;
   while (!slime.dead && bombs < 6) {
     bombs++;
@@ -73,7 +70,7 @@ ok(hudFn.indexOf('if (!e.maxHp || e.maxHp <= 1) continue;') >= 0 &&
       mineLife: 10, moving: null, flying: null, held: false, seed: bombs, armT: 40 });
     for (let i = 0; i < 60; i++) { P.updateWorld(1 / 60); if (!slime.dead) P.updateEnemy(slime, 1 / 60); }
   }
-  ok(slime.dead && bombs === 3, '史萊姆炸 3 下才死（實測 ' + bombs + ' 下）');
+  ok(slime.dead && bombs === 1, '史萊姆炸 1 下就死（實測 ' + bombs + ' 下）');
 }
 
 // ================================================================
@@ -290,11 +287,11 @@ ok(/enemyAtCell\(ncx \+ stepX, ncy \+ stepY\)/.test(html),
 
 // ================================================================
 head('9. 版本與整體回歸');
-ok(P.VERSION === '4.11', 'VERSION = 4.11');
-ok(/id="verTxt">4\.11/.test(html), '畫面版本號同步 4.11');
-ok(/id="verLogVer">4\.11/.test(html), '版本紀錄面板同步 4.11');
-ok(P.VERSION_LOG[0].v === '4.11' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 最新一筆是 v4.11');
-ok(P.VERSION_LOG[0].items.length === 8, 'v4.11 記錄了 8 項更新');
+ok(P.VERSION === '4.12', 'VERSION = 4.12（v4.12 升版）');
+ok(/id="verTxt">4\.12/.test(html), '畫面版本號同步 4.12（v4.12 升版）');
+ok(/id="verLogVer">4\.12/.test(html), '版本紀錄面板同步 4.12（v4.12 升版）');
+ok(P.VERSION_LOG[0].v === '4.12' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 最新一筆是 v4.12');
+ok(P.VERSION_LOG[0].items.length === 6, 'v4.12 記錄了 6 項更新');
 // 完整跑一場不報錯
 {
   let threw = null;
