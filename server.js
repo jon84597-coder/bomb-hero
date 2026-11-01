@@ -713,6 +713,13 @@ function relayCode() {
 
 function relayRoom(code) { return relayRooms.get(String(code || '')); }
 
+// v4.15：人數一律夾在 2～8 之間（前端送什麼都擋得住）
+function clampCount(v) {
+  const n = parseInt(v, 10);
+  if (!isFinite(n)) return 4;
+  return Math.max(2, Math.min(RELAY_MAX, n));
+}
+
 function relayHost(room) {
   return room.roster.find(function (p) { return p.pid === room.host; });
 }
@@ -748,7 +755,8 @@ function handleRelayCreate(body, res) {
   const code = relayCode();
   const pid = newPid();
   const name = String(body.name || '玩家').slice(0, 8);
-  const count = parseInt(body.count, 10) === 8 ? 8 : 4;
+  // v4.15：房主可以設 2～8 人（原本只收 4／8）
+  const count = clampCount(body.count);
   const room = {
     id: code, created: Date.now(), host: pid, phase: 'wait', count: count,
     roster: [{ pid: pid, name: name, ch: 0, slot: 0, entry: 1, lastSeen: Date.now() }],
@@ -761,7 +769,10 @@ function handleRelayCreate(body, res) {
 function handleRelayJoin(body, res) {
   const room = relayRoom(body.code);
   if (!room) return sendJSON(res, 404, { ok: false, err: '房號不存在（可能已解散）' });
-  if (room.roster.length >= RELAY_MAX) return sendJSON(res, 409, { ok: false, err: '這間房已經滿了' });
+  // v4.15：滿不滿要看房主設的人數（2～8），不是固定 8
+  if (room.roster.length >= Math.min(RELAY_MAX, room.count || RELAY_MAX)) {
+    return sendJSON(res, 409, { ok: false, err: '這間房已經滿了' });
+  }
   if (room.phase === 'play') return sendJSON(res, 409, { ok: false, err: '這局已經開始了，等下一局' });
 
   const pid = newPid();
@@ -818,7 +829,7 @@ function handleRelayPush(body, res) {
       if (typeof m.name === 'string') p.name = m.name.slice(0, 8);
     });
   }
-  if (typeof body.count === 'number') room.count = body.count === 8 ? 8 : 4;
+  if (typeof body.count === 'number') room.count = clampCount(body.count);
   if (body.snap) { room.snap = body.snap; }
   room.v++;
   sendJSON(res, 200, { ok: true, v: room.v });
