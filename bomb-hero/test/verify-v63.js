@@ -158,13 +158,13 @@ head('5. 對戰 AI 丟炸彈 = 玩家的隔牆丟法（不是直接砸人）');
 // ================================================================
 head('6. 版本與 SW');
 {
-  ok(P.VERSION === '4.18', '版號 = ' + P.VERSION);
+  ok(P.VERSION === '4.19', '版號 = ' + P.VERSION);
   ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步');
-  ok(P.VERSION_LOG[0].v === '4.18' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 4.18（now）');
-  ok(P.VERSION_LOG[0].items.join(' ').indexOf('分享') >= 0, '4.18 條目寫了分享');
-  ok(P.VERSION_LOG[0].items.join(' ').indexOf('暱稱') >= 0, '4.18 條目寫了暱稱');
-  ok(P.VERSION_LOG[0].items.join(' ').indexOf('手套') >= 0, '4.18 條目寫了手套');
-  ok(/SW_VERSION = 'v4\.18\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.18.0');
+  ok(P.VERSION_LOG[0].v === '4.19' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 4.19（now）');
+  ok(P.VERSION_LOG[1].items.join(' ').indexOf('分享') >= 0, '4.18 條目寫了分享');
+  ok(P.VERSION_LOG[1].items.join(' ').indexOf('暱稱') >= 0, '4.18 條目寫了暱稱');
+  ok(P.VERSION_LOG[1].items.join(' ').indexOf('手套') >= 0, '4.18 條目寫了手套');
+  ok(/SW_VERSION = 'v4\.19\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.19.0');
 }
 
 // ================================================================

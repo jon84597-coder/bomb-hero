@@ -310,6 +310,12 @@ const T = G.T;
 function bossAt(cx, cy, hp) {
   const b = P.makeBoss(cx, cy, hp || 10);
   clearBoard();
+  // v4.19：BOSS 現在會追人（2 格內）→ 把周圍清成空地，位移量測才不會被牆擋住
+  for (let y = cy - 3; y <= cy + 3; y++) {
+    for (let x = cx - 3; x <= cx + 3; x++) {
+      if (y >= 1 && y < G.rows - 1 && x >= 1 && x < G.cols - 1) G.grid[y][x] = 0;
+    }
+  }
   G.enemies.push(b);
   return b;
 }
@@ -378,7 +384,8 @@ ok(boss.hp === 9, '同一道火不會連扣（還是 ' + boss.hp + '）');
 // --- 炸彈數量上限（普通 4 / 暴走 6） ---
 boss = bossAt(2, 2, 10);
 const far = G.players[0];
-far.x = 13 * T + T / 2; far.y = 11 * T + T / 2;
+// v4.19：BOSS 只在你踏進 2 格內才放炸彈 → 玩家站到 (4,2)
+far.x = 4 * T + T / 2; far.y = 2 * T + T / 2; far.alive = true;
 boss.bombT = 0;
 let normalMax = 0;
 for (let i = 0; i < 900; i++) {
@@ -391,7 +398,7 @@ ok(normalMax <= 4, '普通狀態同時最多 4 顆炸彈（峰值 ' + normalMax 
 ok(normalMax >= 3, 'BOSS 會主動一直放炸彈（峰值 ' + normalMax + ' 顆）');
 ok(bossBombs.concat([{ power: 2 }]).every(b => b.power === P.BOSS_POWER) && P.BOSS_POWER === 2,
   'v2.2：BOSS 火力改成 2 格（' + (bossBombs[0] ? bossBombs[0].power : '-') + '）');
-ok(G.bombs.some(b => b.flying), 'BOSS 會把手上的炸彈丟出去（越牆投擲）');
+ok(!G.bombs.some(b => b.flying), 'v4.19：2 格內直接放腳下，不再遠距離越牆丟（越牆投擲只在更遠時才會用）');
 
 // --- 暴走模式 ---
 boss = bossAt(2, 2, 10);
@@ -450,10 +457,11 @@ ok(land && land.x >= 4 && land.y >= 4 && land.dist >= 1, 'findLanding 找得到�
 boss = bossAt(4, 4, 10);
 boss.bombT = 99;
 const p4 = G.players[0];
-p4.x = 4 * T + T / 2; p4.y = 11 * T + T / 2;
+// v4.19：BOSS 只在 2 格內才追人 → 玩家站到正下方 2 格
+p4.x = 4 * T + T / 2; p4.y = 6 * T + T / 2; p4.alive = true;
 const px0 = boss.x, py0 = boss.y;
 for (let i = 0; i < 30; i++) P.updateBoss(boss, 1 / 60);
-ok(boss.y > py0, '沒危險時 BOSS 會朝玩家靠近（y ' + py0.toFixed(0) + ' → ' + boss.y.toFixed(0) + '）');
+ok(boss.y > py0, '玩家在 2 格內時 BOSS 會朝他靠近（y ' + py0.toFixed(0) + ' → ' + boss.y.toFixed(0) + '）');
 ok(boss.walkT > 0, '移動時有走路動畫計時（手腳會動）');
 
 // =====================================================================
@@ -609,7 +617,8 @@ for (let i = 0; i < 240; i++) {
 // 注意：4 秒內的「靠近幀數」會被初始隨機方向主宰（同一支測試可能跑出 0 或 240），
 // 不適合作為斷言 → 只印出來參考，改驗證行為本身的原始碼證據。
 console.log('  · 240 幀內靠近 ' + chased + ' 幀（受初始方向隨機性影響，僅供參考）');
-ok(/if \(best && Math\.random\(\) < \.48\)/.test(html), 'v4.17：追人判斷調到 48%（比 35% 更主動，但不是死追）');
+ok(/if \(foe && Math\.random\(\) < \(isAngryFoe\(e\) \? \.78 : \.48\)\)/.test(html),
+  'v4.19：追人機率掛在仇恨上（低階 .48／中高階 .78），沒被發現就不追');
 ok(!/if \(best && Math\.random\(\) < \.6\)/.test(html), '舊的 60% 死追判斷已移除');
 
 // 邊界不會飛出去

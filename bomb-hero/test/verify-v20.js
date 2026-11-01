@@ -362,6 +362,8 @@ P.settings.soloTime = 0;
 freshSolo(2);
 ok(P.Game.timer === Infinity, '無限時間：計時器是 ∞');
 ok(P.Game.players[0].alive === true, '無限時間不會倒數');
+// v4.19：怪物會在 2 格內主動攻擊，5 秒內可能真的被打死 → 這段只驗「時間到不扣命」，先清場
+P.Game.enemies = []; P.Game.bombs = [];
 for (let i = 0; i < 300; i++) P.updateSolo(1 / 60);
 ok(P.Game.players[0].alive === true && P.Game.players[0].lives === 3, '跑 5 秒也不會因時間到而扣命');
 P.settings.soloTime = 180;

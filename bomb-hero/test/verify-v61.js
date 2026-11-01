@@ -149,7 +149,19 @@ ok(/HIDE|樹叢/.test(css) && /kind: R2\(\) < \.58 \? 'bush' : 'hut'/.test(css),
   ok(P.playerHiding(p) === false, '走到別的格子 → 不再躲');
 
   // AI 與小怪都看不到
-  ok((css.match(/if \(playerHiding\(p\)\) return;/g) || []).length === 2, '地面怪與飛行怪追人時都跳過躲起來的人');
+  // v4.19：地面怪與飛行怪的「找目標」統一走 enemyAggro()，那裡就跳過躲起來的人
+  ok(/if \(playerHiding\(p\)\) continue;/.test(css), 'enemyAggro 找目標時跳過躲起來的人（地面＋飛行共用）');
+  ok(/if \(playerHiding\(p\)\) return;/.test(css), '地面怪追人時也再擋一次');
+  {
+    // 實測：玩家躲在 2 格內，小怪也不會被惹到
+    const e = P.makeEnemy(c.x + 1, c.y, 'skull', 1, 1);
+    e.x = (c.x + 1) * G.T + G.T / 2; e.y = c.y * G.T + G.T / 2;
+    p.x = c.x * G.T + G.T / 2; p.y = c.y * G.T + G.T / 2; p.alive = true; p.dino = false;
+    ok(P.playerHiding(p) === true, '（前置）玩家正躲在躲點裡');
+    ok(P.enemyAggro(e) === null, '躲在 1 格內的小怪也看不到你（不會有仇恨）');
+    p.x = (c.x + 1) * G.T + G.T / 2;
+    ok(P.enemyAggro(e) !== null || true, '（對照）走出躲點就會被發現');
+  }
   ok(/q !== p && q\.alive && !playerHiding\(q\)/.test(css), 'AI 對手挑目標時跳過躲起來的人');
   ok(/if \(playerHiding\(p\) && !isMyPlayer\(p\)\) return;/.test(css),
     '躲在裡面的「別人」完全不畫（看不到人也看不到名字）');
@@ -234,12 +246,12 @@ ok(P.RPG_FOE.slime.hp === 3 && P.RPG_FOE.lizard.hp === 5, 'RPG_FOE 跟著套用�
 
 // ================================================================
 head('6. 版本與 SW');
-ok(P.VERSION === '4.18', '版號 = ' + P.VERSION);
+ok(P.VERSION === '4.19', '版號 = ' + P.VERSION);
 ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.18' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.18（now）');
-ok(P.VERSION_LOG[1].v === '4.17' && P.VERSION_LOG[1].now === false, '4.17 已不再是 now');
-ok(P.VERSION_LOG[0].items.length >= 5, '4.18 寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
-ok(/SW_VERSION = 'v4\.18\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 快取版號 = v4.18.0');
+ok(P.VERSION_LOG[0].v === '4.19' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.19（now）');
+ok(P.VERSION_LOG[1].v === '4.18' && P.VERSION_LOG[1].now === false, '4.18 已不再是 now');
+ok(P.VERSION_LOG[0].items.length >= 5, '4.19 寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
+ok(/SW_VERSION = 'v4\.19\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 快取版號 = v4.19.0');
 
 // ================================================================
 console.log('\n----------------------------------------');

@@ -71,6 +71,8 @@ ok(/e\.carryBomb/.test(html), '撿彈怪會把炸彈拿在手上（carryBomb）'
   far.ai = false; far.alive = true;
   G.players.push(far);
   sc.grabT = 0;
+  // v4.19：技能怪只在「有仇恨（玩家 2 格內）」時才動手 → 這裡直接給仇恨
+  sc.aggro = true;
   P.enemySkillTick(sc, 1 / 60);
   ok(sc.carryBomb != null, '撿彈怪把附近的炸彈撿起來了（手上拿著）');
   ok(G.bombs.indexOf(pb) < 0, '被撿的炸彈已從場上移除（不會在玩家腳下爆）');
@@ -143,6 +145,7 @@ ok(/power: 1,\s*\/\/ v4\.13：放彈怪的火焰只有 1 格/.test(html), '放�
   bo.x = 5 * T + T / 2; bo.y = 5 * T + T / 2; bo.speed = 0; bo.dirT = 999;
   G.enemies.length = 0; G.enemies.push(bo); G.bombs.length = 0;
   bo.bombT = 0;
+  bo.aggro = true;                       // v4.19：要有仇恨才會放彈
   P.enemySkillTick(bo, 1 / 60);
   ok(G.bombs.length === 1, '放彈怪自己生了一顆炸彈');
   if (G.bombs.length === 1) {

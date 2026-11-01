@@ -269,7 +269,7 @@ head('9. 小怪變多、血量回升、AI 更聰明');
   ok(!!liz, '疾風蜥還在怪物表裡');
   ok(/cand\.sort\(function \(a, b\) \{ return a\.d - b\.d; \}\);/.test(css), '追人的怪改成挑最近的一格走');
   ok(/if \(dangerAt\(nx, ny, null\)\) return;/.test(css), '追人的怪不會踩進火線');
-  ok(/Math\.random\(\) < \.48/.test(css), '飛行怪追人機率 35% → 48%');
+  ok(/\(isAngryFoe\(e\) \? \.78 : \.48\)/.test(css), 'v4.19：飛行怪追人機率掛在 2 格仇恨上（.48／.78）');
 }
 
 // ================================================================
@@ -300,6 +300,14 @@ head('10. 對戰 AI 隔牆丟炸彈（v4.18：要手套、不砸人）');
       if (G.grid[y][x + 2] !== 0 || G.grid[y][x + 3] !== 0) continue; // 牆後有連續兩格空地
       spot = { ax: x, ay: y, bx: x + 3, by: y, wx: x + 1 };
     }
+  }
+  if (!spot) {
+    // 隨機地圖不一定有這種排列 → 自己造一條「空地／牆／空地／空地」
+    const yy = Math.floor(G.rows / 2), xx = 3;
+    G.grid[yy][xx] = 0; G.grid[yy][xx + 1] = 1; G.grid[yy][xx + 2] = 0; G.grid[yy][xx + 3] = 0;
+    G.grid[yy + 1][xx] = 1; G.grid[yy + 1][xx + 2] = 1; G.grid[yy + 1][xx + 3] = 1;
+    G.grid[yy - 1][xx] = 1; G.grid[yy - 1][xx + 2] = 1; G.grid[yy - 1][xx + 3] = 1;
+    spot = { ax: xx, ay: yy, bx: xx + 3, by: yy, wx: xx + 1 };
   }
   ok(!!spot, '找到「前面是牆」的測試地形');
   if (spot) {
@@ -364,12 +372,12 @@ head('12. 迴歸：玩過 RPG 再回單人，不會卡在 RPG 扣血邏輯');
 
 // ================================================================
 head('13. 版本與 SW');
-ok(P.VERSION === '4.18', '版號 = ' + P.VERSION);
+ok(P.VERSION === '4.19', '版號 = ' + P.VERSION);
 ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.18' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.18（now）');
-ok(P.VERSION_LOG[1].v === '4.17' && P.VERSION_LOG[1].now === false, '4.17 已不再是 now');
-ok(P.VERSION_LOG[1].items.join(' ').indexOf('隨從') >= 0, '4.17 版本紀錄有寫隨從');
-ok(/SW_VERSION = 'v4\.18\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.18.0');
+ok(P.VERSION_LOG[0].v === '4.19' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.19（now）');
+ok(P.VERSION_LOG[1].v === '4.18' && P.VERSION_LOG[1].now === false, '4.18 已不再是 now');
+ok(P.VERSION_LOG[2].items.join(' ').indexOf('隨從') >= 0, '4.17 版本紀錄有寫隨從');
+ok(/SW_VERSION = 'v4\.19\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.19.0');
 
 // ================================================================
 console.log('\n----------------------------------------');

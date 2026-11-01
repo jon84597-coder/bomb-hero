@@ -94,10 +94,11 @@ ok(src(/if \(sp\.kind === 'fly'\) e\.speed = Math\.min\(e\.speed, FLY_SPEED_CAP 
 console.log('\n=== 3. 不再一直盯著玩家追 ===');
 ok(src(/e\.turnT = 1\.6 \+ Math\.random\(\) \* 1\.6;/), '開場轉向延遲 1.6~3.2 秒（原本 0.8~2.2）');
 ok(src(/e\.turnT = 1\.3 \+ Math\.random\(\) \* 1\.8;/), '後續轉向間隔 1.3~3.1 秒（原本 0.7~2.1）');
-ok(src(/if \(best && Math\.random\(\) < \.48\)/), 'v4.17：直接朝玩家飛的機率 35% → 48%（AI 更主動）');
+ok(src(/if \(foe && Math\.random\(\) < \(isAngryFoe\(e\) \? \.78 : \.48\)\)/),
+  'v4.19：朝玩家飛的機率掛在仇恨上（低階 .48／中高階 .78）');
 ok(!/if \(best && Math\.random\(\) < \.6\)/.test(html), '舊的 60% 追人判斷已移除');
-ok(src(/Math\.atan2\(best\.y - e\.y, best\.x - e\.x\) \+ \(Math\.random\(\) - \.5\) \* \.7/),
-  '追人角度擾動 .5 → .7（v4.17：更準一點，但還是不會直直撞過來）');
+ok(src(/Math\.atan2\(foe\.y - e\.y, foe\.x - e\.x\) \+ \(Math\.random\(\) - \.5\) \* \.7/),
+  '追人角度擾動維持 .7（更準一點，但還是不會直直撞過來）');
 
 // ==================================================================
 console.log('\n=== 4. RPG 模式同步 ===');
