@@ -26,6 +26,8 @@ const CAP = 10;                 // 單項上限
 const MAX_POINTS = ATTRS.length * CAP;   // 40（全部點滿）
 const MAX_STAGE = 32;
 const SESSION_TTL = 30 * 24 * 3600 * 1000;
+// v4.13：「維持登入」勾選後，這次登入的有效期改成 1 年（不勾則 30 天）
+const KEEP_TTL = 365 * 24 * 3600 * 1000;
 const COOKIE = 'bh_sid';
 
 /* ---------------------------------------------------------------- 小工具 */
@@ -522,6 +524,18 @@ function createCloud(options) {
   const dir = opt.dir || env.BH_DATA_DIR || path.join(__dirname, 'data');
   const store = createStore(dir, persist);
   const db = store.db;
+  // v4.13：偵測「這個資料夾會不會在重新部署後被清空」
+  //   Render 免費方案的磁碟是暫時的 → 每次改版重新部署，帳號就歸零（要重新註冊）。
+  //   判斷方式：路徑在 /opt/render（Render 的暫時檔案系統）且沒有明確指定 BH_DATA_DIR。
+  const dataDirEnv = String((env && env.BH_DATA_DIR) || '').trim();
+  const onCloud = /(^|[\\/])opt[\\/]render([\\/]|$)/.test(dir) ||
+    /(^|[\\/])var[\\/]task([\\/]|$)/.test(dir) ||
+    /srv[\\/]app/i.test(dir);
+  // v4.13：沒設 BH_DATA_DIR → 用預設的 ./data → 雲端平台的暫時磁碟 → 重新部署帳號會消失
+  const ephemeral = !dataDirEnv && (onCloud || /[\\/]data$/.test(dir) || dir === "data");
+  const persistWarning = ephemeral
+    ? 'BH_DATA_DIR 未設定且資料夾位於 Render 暫時磁碟 → 重新部署後帳號會全部消失（請掛載持久磁碟並設 BH_DATA_DIR=/data）'
+    : '';
 
   let secret = opt.secret || env.BH_AUTH_SECRET || '';
   if (!secret) {
@@ -854,7 +868,10 @@ function createCloud(options) {
       },
       announce: announceOut(),
       accounts: list.slice(0, 300),
-      devEmails: DEV_EMAILS
+      devEmails: DEV_EMAILS,
+      // v4.13：把「資料會不會被清掉」的警告一起回傳 → 前端後台可直接看到
+      dataEphemeral: ephemeral,
+      persistWarning: persistWarning
     };
   }
 
@@ -913,9 +930,11 @@ function createCloud(options) {
       if (p === '/api/auth/me' && req.method === 'GET') {
         const acc = session(req);
         const ann = announceOut();
-        if (!acc) return send(res, 200, { ok: true, guest: true, account: null, announce: ann }), true;
+        if (!acc) return send(res, 200, { ok: true, guest: true, account: null, announce: ann,
+          persistWarning: persistWarning }), true;
         return send(res, 200, {
-          ok: true, guest: acc.kind === 'guest', account: publicAccount(acc), announce: ann
+          ok: true, guest: acc.kind === 'guest', account: publicAccount(acc), announce: ann,
+          persistWarning: persistWarning
         }), true;
       }
 
@@ -935,6 +954,8 @@ function createCloud(options) {
         if (!gate(req, res, 'reg', 8, 0.5)) return true;
         const body = await readJson(req, 4096);
         if (!body) return fail(res, 400, 'BAD_BODY'), true;
+        // v4.13：keep = true → 這次登入的有效期拉長（維持登入）
+        const keep = !!(body && body.keep);
         const idc = validIdent(body.id || body.username || body.email);
         if (!idc.ok) return send(res, 400, { ok: false, err: idc.err }), true;
         const raw = String(body.pw || body.password || '');
@@ -974,7 +995,9 @@ function createCloud(options) {
         stats.registers++;
         stats.logins++;
         store.touch();
-        cookieSet(res, req, makeToken(secret, acc.id));
+        // v4.13：維持登入 → cookie 與 token 都給 1 年；否則用預設的 30 天
+        cookieSet(res, req, makeToken(secret, acc.id, keep ? KEEP_TTL : undefined),
+          keep ? Math.floor(KEEP_TTL / 1000) : undefined);
         return send(res, 200, { ok: true, account: publicAccount(acc), merged: !!(cur && cur.kind === 'guest') }), true;
       }
 
@@ -982,6 +1005,8 @@ function createCloud(options) {
         if (!gate(req, res, 'login', 20, 1)) return true;
         const body = await readJson(req, 4096);
         if (!body) return fail(res, 400, 'BAD_BODY'), true;
+        // v4.13：keep = true → 這次登入的有效期拉長（維持登入）
+        const keep = !!(body && body.keep);
         const idc = validIdent(body.id || body.username || body.email);
         const raw = String(body.pw || body.password || '');
         const acc = idc.ok ? findByKey(idc.key) : null;
@@ -1023,8 +1048,10 @@ function createCloud(options) {
         stats.webLogins++;
         stats.logins++;
         store.touch();
-        cookieSet(res, req, makeToken(secret, acc.id));
-        return send(res, 200, { ok: true, account: publicAccount(acc) }), true;
+        // v4.13：維持登入 → cookie 與 token 都給 1 年；否則用預設的 30 天
+        cookieSet(res, req, makeToken(secret, acc.id, keep ? KEEP_TTL : undefined),
+          keep ? Math.floor(KEEP_TTL / 1000) : undefined);
+        return send(res, 200, { ok: true, account: publicAccount(acc), keep: keep }), true;
       }
 
       if (p === '/api/auth/password' && req.method === 'POST') {

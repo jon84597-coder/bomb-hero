@@ -142,13 +142,13 @@ ok(/musicGain\.gain\.value\s*=\s*0\.32\s*\*\s*settings\.bgm/.test(html) && /sfxG
 // =====================================================================
 console.log('\n=== 3. 小怪種類變多、變兇 ===');
 const SP = BH.ENEMY_SPECIES;
-ok(Array.isArray(SP) && SP.length === 10, '小怪共 10 種（' + (SP || []).length + '）');
-ok(SP.filter(s => s.wing).length === 4, '天空飛的 4 種（有翅膀）');
-ok(SP.filter(s => !s.wing).length === 6, '地上走的 6 種（沒翅膀）');
-ok(new Set(SP.map(s => s.id)).size === 10, '每種 id 都不重複');
+ok(Array.isArray(SP) && SP.length === 20, '小怪共 20 種（' + (SP || []).length + '）');
+ok(SP.filter(s => s.wing).length === 6, '天空飛的 6 種（有翅膀）');
+ok(SP.filter(s => !s.wing).length === 14, '地上走的 14 種（沒翅膀）');
+ok(new Set(SP.map(s => s.id)).size === 20, '每種 id 都不重複');
 ok(SP.every(s => s.name && s.name.length >= 2), '每種都有中文名');
 ok(new Set(SP.map(s => s.color)).size >= 8, '顏色至少 8 種不同（外型辨識度）');
-ok(SP.every(s => s.r >= 12 && s.r <= 16), '體型半徑 12～16（不會大小失衡）');
+ok(SP.every(s => s.r >= 12 && s.r <= 18), '體型半徑 12～18（不會大小失衡）');
 ok(BH.speciesOf('bat').wing === true, 'speciesOf 查得到（bat 會飛）');
 ok(BH.speciesOf('slime').wing === false, 'speciesOf 查得到（slime 走地面）');
 
@@ -529,7 +529,7 @@ SP.forEach(function (sp) {
 const artFails = Object.entries(artHashes).filter(([k, v]) => String(v).indexOf('ERR') === 0);
 ok(artFails.length === 0, '10 種小怪都能畫出來不報錯' + (artFails.length ? '（' + artFails.map(f => f[0]).join(',') + '）' : ''));
 const uniqArt = new Set(Object.values(artHashes));
-ok(uniqArt.size === 10, '10 種外型的繪圖指令都不同（' + uniqArt.size + ' / 10）');
+ok(uniqArt.size === 20, '20 種外型的繪圖指令都不同（' + uniqArt.size + ' / 20）');
 
 // 翅膀會拍（時間不同 → 指令不同）
 const bat = P.makeEnemy(3, 3, 'bat', 5, 1);

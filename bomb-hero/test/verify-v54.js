@@ -236,12 +236,12 @@ ok(/bombAt\(nx, ny\) && !\(p\.glove && !p\.carry\)/.test(html),
 // ================================================================
 head('8. 踢／拳擊的炸彈碰到敵人停在前方（不穿過）');
 ok(/function enemyAtCell/.test(html), '新增 enemyAtCell（某格是否有活著的敵人）');
-ok(/enemyAtCell\(nx, ny\)\) return \{ x: x, y: y, dist: i \+ 1 \};/.test(html),
-  'findLanding：前方有敵人 → 停在敵人前一格');
+ok(/if \(stopAtFoe !== false && enemyAtCell\(nx, ny\)\)/.test(html),
+  'findLanding：前方有敵人 → 停在敵人前一格（v4.13 仍保留此規則）');
 ok(/enemyAtCell\(ncx \+ m\.dx, ncy \+ m\.dy\)/.test(html),
   '被踢飛的炸彈：前方有敵人 → 停下');
-ok(/enemyAtCell\(ncx \+ stepX, ncy \+ stepY\)/.test(html),
-  '被打飛的炸彈：前方有敵人 → 提前停下');
+ok(/const land = findLanding\(bx, by, d\.x, d\.y, false, true\);/.test(html),
+  '被打飛的炸彈：沿著路徑逐格跳 → 前方有敵人會停在敵人前一格（v4.13）');
 // 實測踢彈
 {
   const p = G.players[0];
@@ -287,11 +287,11 @@ ok(/enemyAtCell\(ncx \+ stepX, ncy \+ stepY\)/.test(html),
 
 // ================================================================
 head('9. 版本與整體回歸');
-ok(P.VERSION === '4.12', 'VERSION = 4.12（v4.12 升版）');
-ok(/id="verTxt">4\.12/.test(html), '畫面版本號同步 4.12（v4.12 升版）');
-ok(/id="verLogVer">4\.12/.test(html), '版本紀錄面板同步 4.12（v4.12 升版）');
-ok(P.VERSION_LOG[0].v === '4.12' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 最新一筆是 v4.12');
-ok(P.VERSION_LOG[0].items.length === 6, 'v4.12 記錄了 6 項更新');
+ok(P.VERSION === '4.13', 'VERSION = 4.13');
+ok(/id="verTxt">4\.13/.test(html), '畫面版本號同步 4.13');
+ok(/id="verLogVer">4\.13/.test(html), '版本紀錄面板同步 4.13');
+ok(P.VERSION_LOG[0].v === '4.13' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 最新一筆是 v4.13');
+ok(P.VERSION_LOG[0].items.length === 8, 'v4.13 記錄了 8 項更新');
 // 完整跑一場不報錯
 {
   let threw = null;

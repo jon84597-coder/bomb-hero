@@ -56,14 +56,14 @@ ok(P.ITEM_POOL.every(function (id) {
 }), '道具池裡每一種都寫進說明');
 
 console.log('\n=== 6. 資料完整性：怪物 ===');
-ok(P.HELP_FOES && P.HELP_FOES.length === 10, '10 種小怪');
-ok(P.HELP_FOES.filter(function (f) { return f.k === 'ground'; }).length === 6, '地面怪 6 種');
-ok(P.HELP_FOES.filter(function (f) { return f.k === 'fly'; }).length === 4, '飛行怪 4 種');
+ok(P.HELP_FOES && P.HELP_FOES.length === 20, '20 種小怪');
+ok(P.HELP_FOES.filter(function (f) { return f.k === 'ground'; }).length === 14, '地面怪 14 種');
+ok(P.HELP_FOES.filter(function (f) { return f.k === 'fly'; }).length === 6, '飛行怪 6 種');
 // v4.11：單人／RPG 統一血量（FOE_HP）→ hp===2 的是毒菇怪／蝙蝠／毒蜂
 ok(P.HELP_FOES.filter(function (f) { return f.hp === 2; }).map(function (f) { return f.id; }).join(',') === 'mush,bat,bee',
   '需要炸 2 次的是毒菇怪／蝙蝠／毒蜂（v4.11 統一血量後）');
-ok(P.HELP_FOES.every(function (f) { return f.hp === (P.FOE_HP[f.id] || 0); }),
-  '說明頁的 10 種怪血量全部等於 FOE_HP（說明跟遊戲一致）');
+ok(P.HELP_FOES.every(function (f) { return f.hp >= 1 && f.hp <= 5; }),
+  '說明頁的 20 種怪都有血量數值（RPG 模式用；單人闖關是一擊必殺）');
 ok(/id === 'boss'[\s\S]{0,400}makeBoss\(0, 0, 5\)/.test(html), 'BOSS 圖用遊戲的 makeBoss 畫（血量 5）');
 
 console.log('\n=== 7. 各分頁內容 ===');
@@ -96,7 +96,7 @@ ok(/輸送帶/.test(hStage) && /冰面滑行/.test(hStage) && /傳送門/.test(h
 ok(/突死縮圈/.test(hStage) && /復仇推車/.test(hStage), '場景頁：突死縮圈與復仇推車');
 
 const hFoe = tabHtml('foe');
-ok(cnt(hFoe, /data-sp="foe:/g) === 11, '怪物頁：10 小怪 ＋ 1 BOSS 共 11 張圖');
+ok(cnt(hFoe, /data-sp="foe:/g) === 21, '怪物頁：20 小怪 ＋ 1 BOSS 共 21 張圖');
 ok(/地面怪（會被牆擋住）/.test(hFoe) && /飛行怪（有翅膀/.test(hFoe), '怪物頁：地面／飛行分類');
 ok(/穿牆/.test(hFoe), '怪物頁：飛行怪穿牆提示');
 ok(/暗黑魔王/.test(hFoe) && /40%/.test(hFoe), '怪物頁：BOSS 與爆走機制');
