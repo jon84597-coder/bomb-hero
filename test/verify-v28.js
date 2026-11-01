@@ -285,8 +285,8 @@ ok(/ch: \(pv && typeof pv\.ch === 'number'\) \? pv\.ch : randomChar\(\)/.test(ht
 
 // ================================================================
 console.log('\n=== 9. 版本與整體 ===');
-ok(P.VERSION === '4.4', '版本 = 3.9（' + P.VERSION + '）');
-ok(html.indexOf('<span id="verTxt">4.4</span>') > 0, '畫面上的版本號同步 4.3');
+ok(P.VERSION === '4.5', '版本 = 3.9（' + P.VERSION + '）');
+ok(html.indexOf('<span id="verTxt">4.5</span>') > 0, '畫面上的版本號同步 4.3');
 
 let runErr = null;
 try {

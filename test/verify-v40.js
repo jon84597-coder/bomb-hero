@@ -13,8 +13,8 @@ function ok(cond, name) {
 }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.4', '版本 = 4.2');
-ok(/<span id="verTxt">4\.4<\/span>/.test(html), '徽章版本號同步 4.3');
+ok(P.VERSION === '4.5', '版本 = 4.2');
+ok(/<span id="verTxt">4\.5<\/span>/.test(html), '徽章版本號同步 4.3');
 
 console.log('\n=== 1. onPop 遊戲中分支 ===');
 ok(/function onPop\(\) \{\s*\n\s*if \(cur === 'game'\) \{/.test(html), 'onPop 有獨立的遊戲中分支');

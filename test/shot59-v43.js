@@ -69,7 +69,7 @@ async function waitUp() {
     ver: window.__BH.VERSION, online: C.online(), guest: C.guest(), tab: C.state.tab,
     dev: C.isDev(), name: (document.getElementById('acctName')||{}).textContent }; })()`);
   console.log('    ' + JSON.stringify(r));
-  ok(r.ver === '4.4', '版本 4.3');
+  ok(r.ver === '4.5', '版本 4.3');
   ok(r.online === true, '連上伺服器');
   ok(r.guest === true, '一開始是遊客');
   ok(r.dev === false, '一般遊客不是開發者');

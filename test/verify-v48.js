@@ -22,11 +22,11 @@ function ok(cond, name) {
 function src(re) { return re.test(html); }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.4', '版本 = 4.3');
-ok(/<span id="verTxt">4\.4<\/span>/.test(html), '徽章版本號同步 4.3');
-ok(P.VERSION_LOG[0].v === '4.4' && P.VERSION_LOG[0].now === true, '版本紀錄最新一筆是 4.3');
-ok(P.VERSION_LOG[1].v === '4.3' && !P.VERSION_LOG[1].now, '上一筆 4.3 已不是「當前」');
-const v42 = P.VERSION_LOG[2].items.join('|');
+ok(P.VERSION === '4.5', '版本 = 4.3');
+ok(/<span id="verTxt">4\.5<\/span>/.test(html), '徽章版本號同步 4.3');
+ok(P.VERSION_LOG[0].v === '4.5' && P.VERSION_LOG[0].now === true, '版本紀錄最新一筆是 4.5');
+ok(P.VERSION_LOG[1].v === '4.4' && !P.VERSION_LOG[1].now, '上一筆 4.4 已不是「當前」');
+const v42 = P.VERSION_LOG[3].items.join('|');
 ['隱形滑動', '虛擬搖桿', '死區', '自訂搖桿位置', '雲端'].forEach(function (k) {
   ok(v42.indexOf(k) >= 0, 'v4.2 條列提到「' + k + '」');
 });

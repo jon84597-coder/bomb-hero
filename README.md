@@ -1,10 +1,10 @@
-# 炸彈超人 網頁版 — 爆爆英雄 BOMB HERO v4.4
+# 炸彈超人 網頁版 — 爆爆英雄 BOMB HERO v4.5
 
 單檔、零依賴的炸彈超人遊戲，外加一支零依賴的 Node.js 後端（房間制即時對戰）。
 前端 `public/index.html` **一個檔案就包含全部 HTML / CSS / JavaScript 與圖片**，
 不用 npm install、不用打包工具，雙擊就能玩。
 
-- 版本：**v4.4**
+- 版本：**v4.5**
 - 前端：原生 HTML5 / Canvas / ES5+ 相容語法，**零第三方套件**
 - 後端：`server.js` ＋ `cloud.js`（只用 Node 內建 `http` / `fs` / `path` / `crypto`，**零依賴**）
 - 帳號：Google / Facebook（另支援 LINE）OAuth 登入、遊客模式、雲端存檔、HMAC 簽章、限流
@@ -17,9 +17,9 @@
 ## 目錄結構
 
 ```
-bomb-hero-v4.4/
+bomb-hero-v4.5/
 ├─ README.md               # 本文件（含 GitHub 上傳、部署步驟）
-├─ CHANGELOG.md            # v2.1 ~ v4.4 完整版本演進
+├─ CHANGELOG.md            # v2.1 ~ v4.5 完整版本演進
 ├─ .gitignore
 ├─ .github/
 │  └─ workflows/pages.yml  # GitHub Pages 自動部署（把 public/ 發布出去）
@@ -71,10 +71,10 @@ npx serve public            # 或 python -m http.server -d public 8000
 
 ```bash
 # 解壓後進入資料夾
-cd bomb-hero-v4.4
+cd bomb-hero-v4.5
 git init
 git add -A
-git commit -m "BOMB HERO v4.4"
+git commit -m "BOMB HERO v4.5"
 git branch -M main
 git remote add origin https://github.com/<你的帳號>/<repo 名稱>.git
 git push -u origin main
@@ -146,6 +146,11 @@ CMD ["node", "server.js"]
   生成後做**尋路檢核**，起點一定走得到出口
 - **怪物分級（RPG）**：基礎小怪 1~2 格、中階 2~4 格（鐵甲蟲／骷髏兵有硬殼防禦）、飛行 1~3 格（穿牆）；
   BOSS 10 格以上，血量低於 **40% 暴走**（更快、丟彈更兇、同場 6 顆），被炸彈砸到會**暈眩**
+- **🩸 受傷提示輕量化**：以前受傷會在**畫面正中央**彈出 `clamp(52px,10vmin,110px)` 的巨大
+  「❤️ 4 / 5　🛡️ 0 / 2」，手機上還會換成兩行、整片蓋住戰場；這組中央大字**已完全移除**，改成三件事：
+  ① 角色**頭頂**冒出小紅字 `-1`（護甲在擋時是藍字），0.5 秒往上輕飄並淡出，深色外框＋白色內框三層描邊；
+  ② 畫布**四邊**閃一圈柔和紅光（中央完全透明、約 0.3 秒收完，護甲擋下時是藍光）；
+  ③ 頂部「❤️ 4/5」放大 **1.2 倍**並閃一次紅光、數字轉紅（道具的「好東西」仍是金色 1.38 倍，不會搞混）
 - **📢 道具提示輕量化**：吃到道具／恐龍蛋時，原本蓋在地圖左上角的大方塊（寬 46%、不透明深底）已移除，
   改成貼在**頂部資訊列下緣**的細長半透明橫幅（毛玻璃＋圓角 14px，手機上也只有 32px 高）：
   淡入 → 停留 2 秒 → 淡出，全程 `pointer-events:none`，**不擋點擊也不擋走位**
@@ -194,7 +199,7 @@ CMD ["node", "server.js"]
 ```bash
 cd test
 node _syntax.js                        # 語法檢查
-node verify-v50.js                     # 逐版跑：node verify-v10.js … verify-v50.js（40 組）
+node verify-v51.js                     # 逐版跑：node verify-v10.js … verify-v51.js（41 組）
 node net-relay.js                      # 後端 relay API（線上配對）
 node net-auth.js                       # 帳號 / 雲端存檔 / 簽章 / 限流（會自己起一個測試伺服器）
 node net-live.js                       # 端到端線上對戰

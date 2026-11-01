@@ -12,8 +12,8 @@ function ok(cond, name) {
 function cnt(s, re) { const m = s.match(re); return m ? m.length : 0; }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.4', '版本 = 4.3');
-ok(/<span id="verTxt">4\.4<\/span>/.test(html), '徽章版本號同步 4.3');
+ok(P.VERSION === '4.5', '版本 = 4.3');
+ok(/<span id="verTxt">4\.5<\/span>/.test(html), '徽章版本號同步 4.3');
 
 console.log('\n=== 1. 首頁：RPG 模式鈕（含 Beta 標籤）===');
 ok(/<button class="mbtn rpgbtn" id="btnRpg">/.test(html), '有「RPG 模式」選單鈕（rpgbtn）');
@@ -31,15 +31,16 @@ ok(/id="verLog"/.test(html) && /id="verLogBody"/.test(html), '有可捲動的更
 ok(typeof P.VersionLog === 'object' && typeof P.VersionLog.show === 'function', 'VersionLog 模組可用');
 const log = P.VERSION_LOG;
 ok(Array.isArray(log) && log.length >= 10, '版本紀錄 ' + log.length + ' 筆（v3.0 起）');
-ok(log[0].v === '4.4' && log[0].now === true, '最新一筆是 v4.4（當前版本）');
-ok(log[1].v === '4.3' && !log[1].now, '上一筆 v4.3 已不是「當前版本」');
-ok(log[2].v === '4.2' && !log[2].now, '再上一筆 v4.2 也不是「當前版本」');
-ok(log[3].v === '4.1' && !log[3].now, 'v4.1 也不是「當前版本」');
-ok(log[4].v === '4.0' && !log[4].now, 'v4.0 也不是「當前版本」');
+ok(log[0].v === '4.5' && log[0].now === true, '最新一筆是 v4.5（當前版本）');
+ok(log[1].v === '4.4' && !log[1].now, '上一筆 v4.4 已不是「當前版本」');
+ok(log[2].v === '4.3' && !log[2].now, '再上一筆 v4.3 也不是「當前版本」');
+ok(log[3].v === '4.2' && !log[3].now, 'v4.2 也不是「當前版本」');
+ok(log[4].v === '4.1' && !log[4].now, 'v4.1 也不是「當前版本」');
+ok(log[5].v === '4.0' && !log[5].now, 'v4.0 也不是「當前版本」');
 ok(log[log.length - 1].v === '3.0', '最舊一筆是 v3.0（符合「自 Ver 3.0 起」）');
 ok(log.every(function (e) { return e.v && e.date && Array.isArray(e.items) && e.items.length; }),
   '每一筆都有版本號、日期與條列內容');
-const v40 = log[4].items.join('|');
+const v40 = log[5].items.join('|');
 ['RPG 模式', '四維屬性', '32 張', '商店'].forEach(function (k) {
   ok(v40.indexOf(k) >= 0, 'v4.0 條列提到「' + k + '」');
 });

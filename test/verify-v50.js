@@ -23,11 +23,11 @@ const env = makeEnv();
 const P = env.BH;
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.4', '版本 = 4.4', P.VERSION);
-ok(src(/<span id="verTxt">4\.4<\/span>/), '首頁徽章同步 4.4');
-ok(P.VERSION_LOG[0].v === '4.4' && P.VERSION_LOG[0].now === true, '版本紀錄最新一筆是 4.4');
-ok(P.VERSION_LOG[1].v === '4.3' && !P.VERSION_LOG[1].now, '上一筆 4.3 已不是「當前」');
-const v44 = P.VERSION_LOG[0].items.join('|');
+ok(P.VERSION === '4.5', '版本 = 4.5', P.VERSION);
+ok(src(/<span id="verTxt">4\.5<\/span>/), '首頁徽章同步 4.5');
+ok(P.VERSION_LOG[0].v === '4.5' && P.VERSION_LOG[0].now === true, '版本紀錄最新一筆是 4.5');
+ok(P.VERSION_LOG[1].v === '4.4' && !P.VERSION_LOG[1].now, '上一筆 4.4 已不是「當前」');
+const v44 = P.VERSION_LOG[1].items.join('|');
 ['道具提示', '淡出', '狀態列', 'pointer-events'].forEach(function (k) {
   ok(v44.indexOf(k) >= 0, 'v4.4 條列提到「' + k + '」');
 });

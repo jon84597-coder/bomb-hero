@@ -13,8 +13,8 @@ function ok(cond, name) {
 function cnt(s, re) { const m = s.match(re); return m ? m.length : 0; }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.4', '版本 = 4.2');
-ok(/<span id="verTxt">4\.4<\/span>/.test(html), '徽章版本號同步 4.3');
+ok(P.VERSION === '4.5', '版本 = 4.2');
+ok(/<span id="verTxt">4\.5<\/span>/.test(html), '徽章版本號同步 4.3');
 
 console.log('\n=== 1. HTML：statBox 整塊移除 ===');
 ok(html.indexOf('id="statBox"') < 0, '沒有 #statBox');
@@ -60,7 +60,7 @@ ok(html.indexOf('id="btnHelp"') > 0, '遊戲說明按鈕還在');
 ok(html.indexOf('id="ctaBar"') > 0, '「下一步」快捷鈕還在');
 ok(typeof P.Game === 'object' && typeof P.startSolo === 'function', '遊戲核心導出正常');
 ok(typeof P.drawBombOn === 'function' && typeof P.drawFlameOn === 'function', 'v3.8 繪圖導出正常');
-ok(/const VERSION = '4\.4';/.test(html), '版本常數是 4.4');
+ok(/const VERSION = '4\.5';/.test(html), '版本常數是 4.5');
 
 console.log('\n結果：' + pass + ' 通過 / ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);

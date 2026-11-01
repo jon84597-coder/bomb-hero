@@ -23,7 +23,7 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
   ok(/測試版/.test(home.beta), 'RPG 鈕有「測試版 Beta」標籤（' + home.beta + '）');
   ok(home.store, '首頁有商店鈕');
   ok(home.vlogBtn, '左上角有版本更新內容標籤');
-  ok(home.ver === '4.4', '版本 4.3');
+  ok(home.ver === '4.5', '版本 4.3');
   await page.shot('test/v40-1-home.png');
 
   // ---------- 2. 版本更新面板 ----------

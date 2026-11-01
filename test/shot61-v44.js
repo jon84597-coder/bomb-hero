@@ -59,9 +59,9 @@ async function waitUp() {
   // ---------- 1. 版本與樣式 ----------
   console.log('\n=== 1. 版本與橫幅基本樣式 ===');
   const ver = await evalJs('__BH.VERSION');
-  ok(ver === '4.4', '版本 = 4.4', ver);
+  ok(ver === '4.5', '版本 = 4.4', ver);
   const badge = await evalJs("document.getElementById('verTxt').textContent");
-  ok(badge === '4.4', '首頁徽章同步 4.4', badge);
+  ok(badge === '4.5', '首頁徽章同步 4.4', badge);
 
   const css = await evalJs(`(function(){
     const tt = document.getElementById('toast');
@@ -241,7 +241,7 @@ async function waitUp() {
   const src = fs.readFileSync(HTML_PATH, 'utf8');
   ok(!/max-width: 46%/.test(src), '原始碼已無 max-width: 46% 的舊規則');
   ok(/v4\.4：道具／坐騎提示＝輕量 Toast 橫幅/.test(src), '有 v4.4 的樣式註解');
-  ok(/function hudFlash\(key, ms\)/.test(src), '有 hudFlash() 狀態列高亮');
+  ok(/function hudFlash\(key, ms, kind\)/.test(src), '有 hudFlash() 狀態列高亮（v4.5 起多一個 kind 參數）');
   ok(/applyHudFx\(\);\s*\/\/ v4\.4：HUD 重畫後/.test(src), 'HUD 重畫後會補回高亮');
 
   // ---------- 9. 手機橫放：橫幅不擋操作 ----------

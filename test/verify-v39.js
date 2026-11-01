@@ -12,8 +12,8 @@ function ok(cond, name) {
 }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.4', '版本 = 4.2');
-ok(/<span id="verTxt">4\.4<\/span>/.test(html), '徽章版本號同步 4.3');
+ok(P.VERSION === '4.5', '版本 = 4.2');
+ok(/<span id="verTxt">4\.5<\/span>/.test(html), '徽章版本號同步 4.3');
 
 console.log('\n=== 1. netErrText 存在且邏輯正確 ===');
 ok(typeof P.Net.netErrText === 'function', 'Net.netErrText 是函式');
