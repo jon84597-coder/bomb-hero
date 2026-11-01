@@ -65,8 +65,12 @@ function withRandom(v, fn) {
 }
 
 // ================================================================
-head('1. 仇恨範圍：一律 2 格');
+head('1. 仇恨範圍：小怪 2 格、BOSS 3 格');
 ok(P.AGGRO_TILES === 2, 'AGGRO_TILES = 2（實測 ' + P.AGGRO_TILES + '）');
+ok(P.BOSS_AGGRO_TILES === 3, 'v4.20：BOSS_AGGRO_TILES = 3（實測 ' + P.BOSS_AGGRO_TILES + '）');
+ok(typeof P.aggroTiles === 'function', '__BH 匯出 aggroTiles');
+ok(P.aggroTiles({ boss: true }) === 3 && P.aggroTiles({ type: 'skull' }) === 2,
+  'aggroTiles()：BOSS 3 格、小怪 2 格');
 ok(typeof P.enemyAggro === 'function', '__BH 匯出 enemyAggro');
 ok(typeof P.foeInRange === 'function', '__BH 匯出 foeInRange');
 ok(typeof P.isAngryFoe === 'function' && typeof P.foeTier === 'function', '__BH 匯出 foeTier / isAngryFoe');
@@ -223,7 +227,9 @@ head('9. BOSS：平常只在自己的地盤踱步');
   const boss = P.makeBoss(px + 5, py, 12);
   G.enemies.push(boss);
   ok(boss.homeCX === px + 5 && boss.homeCY === py && boss.homeTiles === 4, 'BOSS 記住自己的地盤（4 格）');
-  place(p, px, py); p.alive = true; p.invuln = 999;   // 玩家在 5 格外
+  // v4.20：BOSS 的仇恨是 3 格，牠踱步的範圍（±4）可能自己走到玩家旁邊
+  // → 玩家要站得比「地盤半徑 + 3 格」更遠，才測得到「沒被惹到」
+  place(p, 1, Math.max(1, Math.min(G.rows - 2, py))); p.alive = true; p.invuln = 999;
   const hx = boss.homeCX * T + T / 2, hy = boss.homeCY * T + T / 2;
   let maxAway = 0, anywhere = 0;
   const bx0 = boss.x, by0 = boss.y;
@@ -232,7 +238,7 @@ head('9. BOSS：平常只在自己的地盤踱步');
     maxAway = Math.max(maxAway, Math.hypot(boss.x - hx, boss.y - hy));
     anywhere = Math.max(anywhere, Math.hypot(boss.x - bx0, boss.y - by0));
   }
-  ok(boss.aggro === false, '玩家在 5 格外 → BOSS 沒被惹到');
+  ok(boss.aggro === false, '玩家在 8 格外（地盤外 4 格以上）→ BOSS 沒被惹到');
   ok(G.bombs.length === 0, '沒被惹到一顆炸彈都不放（' + G.bombs.length + '）');
   ok(anywhere > T * .8, '平常真的會走來走去（走了 ' + (Math.round(anywhere / T * 10) / 10) + ' 格）');
   ok(maxAway <= boss.homeTiles * T + T * 1.6, '只在自家地盤走動（最遠 ' + Math.round(maxAway / T * 10) / 10 + ' 格）');
@@ -253,6 +259,40 @@ head('9. BOSS：平常只在自己的地盤踱步');
   p.alive = false;                            // 玩家離場（死亡）＝沒有目標
   for (let i = 0; i < 5; i++) P.updateBoss(boss, DT);
   ok(boss.aggro === false, '沒有目標就回到踱步狀態');
+}
+
+head('9b. v4.20：BOSS 3 格內就發火（小怪同距離還看不到）');
+{
+  const p = soloStage(1);
+  clearEnemies();
+  for (let y = 2; y < G.rows - 2; y++) for (let x = 1; x < G.cols - 1; x++) G.grid[y][x] = 0;
+  G.bombs.length = 0;
+  const px = Math.floor(G.cols / 2) - 3, py = Math.floor(G.rows / 2);
+  const boss = P.makeBoss(px + 5, py, 12);
+  G.enemies.push(boss);
+  place(p, px, py); p.alive = true; p.invuln = 999;
+
+  // 2.6 格：小怪（2 格）還看不到，BOSS（3 格）已經發火
+  const sk = addFoe(px, py, 'skull');
+  sk.x = p.x + 2.6 * T; sk.y = p.y;
+  ok(P.enemyAggro(sk) === null, '2.6 格 → 小怪還看不到（小怪仍是 2 格）');
+  boss.x = p.x + 2.6 * T; boss.y = p.y;
+  P.updateBoss(boss, DT);
+  ok(boss.aggro === true, '2.6 格 → BOSS 已經發火');
+
+  // 正好 3 格：還在範圍內
+  boss.x = p.x + 3 * T; boss.y = p.y;
+  P.updateBoss(boss, DT);
+  ok(boss.aggro === true, '正好 3 格 → BOSS 還在生氣（界線算在內）');
+
+  // 3.4 格：跑出 3 格 → 放棄
+  boss.x = p.x + 3.4 * T; boss.y = p.y;
+  P.updateBoss(boss, DT);
+  ok(boss.aggro === false, '3.4 格 → BOSS 沒被惹到');
+  ok(boss.windT === 0 && boss.dashT === 0, '沒被惹到不會蓄力也不會衝刺');
+  boss.x = p.x + 2.6 * T; boss.y = p.y;
+  P.updateBoss(boss, DT);
+  ok(boss.angerT > 0, '回到 3 格內又開始累積怒氣（angerT = ' + boss.angerT.toFixed(2) + '）');
 }
 
 head('10. 生氣效果：只在中階／高階怪（含 BOSS）頭上冒 😡');
@@ -293,12 +333,14 @@ head('10. 生氣效果：只在中階／高階怪（含 BOSS）頭上冒 😡');
 head('11. 說明書與版本');
 ok(css.indexOf('中階／高階') > 0, '說明書寫了中階／高階小怪');
 ok(css.indexOf('都只在你踏進 <b>2 格內</b>才會發現你') > 0, '說明書寫了 2 格規則');
-ok(P.VERSION === '4.19', '版號 = ' + P.VERSION);
+ok(P.VERSION === '4.20', '版號 = ' + P.VERSION);
 ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.19' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.19（now）');
-ok(P.VERSION_LOG[0].items.join(' ').indexOf('2 格') >= 0, '更新內容有寫 2 格規則');
-ok(P.VERSION_LOG[1].v === '4.18' && P.VERSION_LOG[1].now === false, '4.18 已不是 now');
-ok(/SW_VERSION = 'v4\.19\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.19.0');
+ok(P.VERSION_LOG[0].v === '4.20' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.20（now）');
+ok(P.VERSION_LOG[0].items.join(' ').indexOf('3 格') >= 0, 'v4.20 更新內容寫了 BOSS 3 格');
+ok(P.VERSION_LOG[1].v === '4.19' && P.VERSION_LOG[1].now === false, '4.19 已不是 now');
+ok(P.VERSION_LOG[1].items.join(' ').indexOf('2 格') >= 0, '4.19 條目仍寫著 2 格規則');
+ok(P.VERSION_LOG[2].v === '4.18' && P.VERSION_LOG[2].now === false, '4.18 已不是 now');
+ok(/SW_VERSION = 'v4\.20\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.20.0');
 
 console.log('\n' + (fail ? '✗ ' + fail + ' 項失敗 / ' : '') + '通過 ' + pass + ' 項');
 process.exit(fail ? 1 : 0);

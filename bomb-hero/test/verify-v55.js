@@ -157,7 +157,8 @@ const VRE2 = new RegExp('id="verLogVer">' + P.VERSION.replace(/\./g, '\\.'));
 ok(VRE.test(html), '畫面版本號同步 ' + P.VERSION);
 ok(VRE2.test(html), '版本紀錄面板同步 ' + P.VERSION);
 ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 最新一筆是 v' + P.VERSION);
-ok(P.VERSION_LOG[0].items.length >= 5, '最新版記錄了 ' + P.VERSION_LOG[0].items.length + ' 項更新');
+// v4.20：小改版只有 2 條（BOSS 3 格）→ 門檻降到 2，只驗「有寫內容」
+ok(P.VERSION_LOG[0].items.length >= 2, '最新版記錄了 ' + P.VERSION_LOG[0].items.length + ' 項更新');
 ok(P.VERSION_LOG[1] && P.VERSION_LOG[1].now === false, 'v' + P.VERSION_LOG[1].v + ' 已改成 now:false');
 // 完整跑一場不報錯
 {
