@@ -150,7 +150,7 @@ console.log('\n=== 4. 首頁標題：拿掉 ICON，BOMB HERO 大字 / 爆爆英�
 ok(html.indexOf('class="logo-big"') < 0, 'ICON 圖塊已拿掉（首頁沒有 .logo-big）');
 ok(/<img class="title-logo" id="titleLogo" alt="BOMB HERO 爆爆英雄"[^>]*src="data:image\/png;base64,[A-Za-z0-9+/=]{1000,}"/.test(html), 'v2.1：標題改用美術 LOGO 圖（data URI 內嵌、夠大不是佔位）');
 ok(html.indexOf('title-en') < 0 && html.indexOf('title-zh') < 0, 'v2.1：舊的文字標題（.title-en／.title-zh）已完全移除');
-ok(/<div class="ver beta">測試版 v<span id="verTxt">4\.3<\/span><\/div>/.test(html), '「測試版 v3.9」小字徽章');
+ok(/<div class="ver beta">測試版 v<span id="verTxt">4\.4<\/span><\/div>/.test(html), '「測試版 v3.9」小字徽章');
 const logoRule = html.match(/\.title-logo \{[^}]*width: clamp\(([^)]*)\)/);
 const betaRule = html.match(/\.ver\.beta \{[^}]*font-size: clamp\(([^)]*)\)/);
 function clampMax(s) { const a = (s || '').split(','); return parseFloat((a[a.length - 1] || '0').replace('px', '')); }
@@ -362,8 +362,8 @@ ok(Object.keys(aiLv).every(function (k) { return k === '0' || k === '1' || k ===
 
 // ================================================================
 console.log('\n=== 9. 版本與整體 ===');
-ok(P.VERSION === '4.3', '版本 = 3.9（' + P.VERSION + '）');
-ok(html.indexOf('<span id="verTxt">4.3</span>') > 0, '畫面上的版本號同步 4.3');
+ok(P.VERSION === '4.4', '版本 = 3.9（' + P.VERSION + '）');
+ok(html.indexOf('<span id="verTxt">4.4</span>') > 0, '畫面上的版本號同步 4.3');
 let runErr = null;
 try {
   freshBattle();

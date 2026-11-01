@@ -3,7 +3,13 @@
 const fs = require('fs');
 const vm = require('vm');
 
-const html = fs.readFileSync(__dirname + '/../index.html', 'utf8');
+// index.html 可能在專案根（開發目錄），也可能在 public/（E 槽／部署副本）
+const HTML_PATH = (function () {
+  const a = __dirname + '/../index.html';
+  const b = __dirname + '/../public/index.html';
+  return fs.existsSync(a) ? a : b;
+})();
+const html = fs.readFileSync(HTML_PATH, 'utf8');
 
 function makeEnv(opts) {
   opts = opts || {};

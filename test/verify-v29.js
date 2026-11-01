@@ -165,8 +165,8 @@ ok(P.hasRotateHint() === false, '沙盒環境（非直式手機）不會跳出�
 
 // ================================================================
 console.log('\n=== 9. 版本與整體 ===');
-ok(P.VERSION === '4.3', '版本 = 3.9（' + P.VERSION + '）');
-ok(html.indexOf('<span id="verTxt">4.3</span>') > 0, '畫面上的版本號同步 4.3');
+ok(P.VERSION === '4.4', '版本 = 3.9（' + P.VERSION + '）');
+ok(html.indexOf('<span id="verTxt">4.4</span>') > 0, '畫面上的版本號同步 4.3');
 // 回歸：遊戲還能跑
 let runErr = null;
 try {

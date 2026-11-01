@@ -34,7 +34,7 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
   const j = JSON.parse(t);
   ok(j.statBox === false, '首頁沒有統計列');
   ok(j.annTop >= 80 && j.annTop <= 110, '公告欄讓開左上角版本標籤（top=' + j.annTop + 'px，預期約 94）');
-  ok(j.ver === '4.3', '版本 4.3');
+  ok(j.ver === '4.4', '版本 4.3');
   ok(j.stats === 'undefined', '__BH.Stats 已移除');
   await page.shot('test/v38-1-title.png');
 

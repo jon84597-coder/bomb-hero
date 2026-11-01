@@ -15,7 +15,7 @@ function ok(cond, name) {
 }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.3', '版本 = 3.5');
+ok(P.VERSION === '4.4', '版本 = 3.5');
 ok(html.indexOf('v3.0：作者公告欄（首頁左上角背景空白處）') > 0, 'CSS 有 v3.0 公告欄註解');
 
 console.log('\n=== 1. HTML 結構 ===');

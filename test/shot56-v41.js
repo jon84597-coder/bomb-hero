@@ -20,7 +20,7 @@ function ok(cond, name) {
       txt: chip ? chip.textContent.replace(/\\s+/g, ' ').trim() : '',
       hasSig: !!(C.acc() && C.acc().save && C.acc().save.sig) };
   })()`);
-  ok(r.ver === '4.3', '版本 4.3');
+  ok(r.ver === '4.4', '版本 4.3');
   ok(r.online === true && r.guest === true, '自動取得遊客身分（免登入就能玩）');
   ok(r.txt.indexOf('綁定帳號') >= 0, '右上角常駐「綁定帳號」：' + r.txt);
   ok(r.hasSig === true, '伺服器已簽發 HMAC 存檔信封');
