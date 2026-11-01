@@ -224,12 +224,12 @@ head('8. 線上：人數與隊別會同步給客人');
 
 // ================================================================
 head('9. 版本與說明');
-ok(P.VERSION === '4.16', '版號 = ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.16' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆是 4.16（now）');
-ok(P.VERSION_LOG[1].v === '4.15' && P.VERSION_LOG[1].now === false, '4.15 已不再是 now');
-ok(P.VERSION_LOG[0].items.join(' ').indexOf('樹叢') >= 0, '版本紀錄有寫可躲人的樹叢／破屋');
-ok(/SW_VERSION = 'v4\.16\.0'/.test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')),
-  'sw.js 快取版號升到 v4.16.0');
+ok(P.VERSION === '4.17', '版號 = ' + P.VERSION);
+ok(P.VERSION_LOG[0].v === '4.17' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆是 4.17（now）');
+ok(P.VERSION_LOG[1].v === '4.16' && P.VERSION_LOG[1].now === false, '4.16 已不再是 now');
+ok(P.VERSION_LOG[0].items.join(' ').indexOf('隨從') >= 0, '版本紀錄有寫隨從系統');
+ok(/SW_VERSION = 'v4\.17\.0'/.test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')),
+  'sw.js 快取版號升到 v4.17.0');
 
 // ================================================================
 console.log('\n通過 ' + pass + ' / ' + (pass + fail));

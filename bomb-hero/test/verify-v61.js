@@ -219,12 +219,12 @@ ok(/HIDE|樹叢/.test(css) && /kind: R2\(\) < \.58 \? 'bush' : 'hut'/.test(css),
 }
 
 // ================================================================
-head('5. RPG 小怪血量微調');
-ok(P.FOE_HP.slime === 2 && P.FOE_HP.crab === 2 && P.FOE_HP.mush === 2, '基礎怪 2 下（史萊姆／螃蟹／毒菇）');
-ok(P.FOE_HP.beetle === 3 && P.FOE_HP.skull === 3 && P.FOE_HP.lizard === 4, '中階怪 3～4 下（鐵甲蟲／骷髏兵／疾風蜥）');
-ok(Object.keys(P.FOE_HP).every(function (k) { return P.FOE_HP[k] >= 2 && P.FOE_HP[k] <= 4; }),
-  '全部落在 2～4 之間（' + Object.keys(P.FOE_HP).map(function (k) { return P.FOE_HP[k]; }).join('/') + '）');
-ok(P.RPG_FOE.slime.hp === 2 && P.RPG_FOE.lizard.hp === 4, 'RPG_FOE 跟著套用新血量');
+head('5. RPG 小怪血量（v4.17 調回來）');
+ok(P.FOE_HP.slime === 3 && P.FOE_HP.crab === 3 && P.FOE_HP.mush === 3, '基礎怪 3 下（史萊姆／螃蟹／毒菇）');
+ok(P.FOE_HP.beetle === 4 && P.FOE_HP.skull === 4 && P.FOE_HP.lizard === 5, '中階怪 4～5 下（鐵甲蟲／骷髏兵／疾風蜥）');
+ok(Object.keys(P.FOE_HP).every(function (k) { return P.FOE_HP[k] >= 3 && P.FOE_HP[k] <= 5; }),
+  '全部落在 3～5 之間（' + Object.keys(P.FOE_HP).map(function (k) { return P.FOE_HP[k]; }).join('/') + '）');
+ok(P.RPG_FOE.slime.hp === 3 && P.RPG_FOE.lizard.hp === 5, 'RPG_FOE 跟著套用新血量');
 {
   // 單人闖關不受影響：一律一擊必殺
   P.startSolo(1, false);
@@ -234,12 +234,12 @@ ok(P.RPG_FOE.slime.hp === 2 && P.RPG_FOE.lizard.hp === 4, 'RPG_FOE 跟著套用�
 
 // ================================================================
 head('6. 版本與 SW');
-ok(P.VERSION === '4.16', '版號 = ' + P.VERSION);
+ok(P.VERSION === '4.17', '版號 = ' + P.VERSION);
 ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.16' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.16（now）');
-ok(P.VERSION_LOG[1].v === '4.15' && P.VERSION_LOG[1].now === false, '4.15 已不再是 now');
-ok(P.VERSION_LOG[0].items.length >= 5, '4.16 寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
-ok(/SW_VERSION = 'v4\.16\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 快取版號 = v4.16.0');
+ok(P.VERSION_LOG[0].v === '4.17' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.17（now）');
+ok(P.VERSION_LOG[1].v === '4.16' && P.VERSION_LOG[1].now === false, '4.16 已不再是 now');
+ok(P.VERSION_LOG[0].items.length >= 5, '4.17 寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
+ok(/SW_VERSION = 'v4\.17\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 快取版號 = v4.17.0');
 
 // ================================================================
 console.log('\n----------------------------------------');
