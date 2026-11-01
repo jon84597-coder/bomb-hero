@@ -194,13 +194,16 @@ function mapWith(shape, theme) {
 function hazardCells() {
   const out = [];
   for (let y = 1; y < G.rows - 1; y++)
-    for (let x = 1; x < G.cols - 1; x++)
-      if (G.hazards[y][x]) out.push({ x: x, y: y, h: G.hazards[y][x] });
+    for (let x = 1; x < G.cols - 1; x++) {
+      const hz = G.hazards[y][x];
+      // v4.16：樹叢／破屋（躲點）不算「地形機關」，不影響跑道形狀的斷言
+      if (hz && hz.type !== 'hide') out.push({ x: x, y: y, h: hz });
+    }
   return out;
 }
 // 出口門那一格不算斷點（跑道要繞過門，不可能壓在門上）
 function isHz(x, y) {
-  if (G.hazards[y] && G.hazards[y][x]) return true;
+  if (G.hazards[y] && G.hazards[y][x] && G.hazards[y][x].type !== 'hide') return true;
   if (G.door && G.door.x === x && G.door.y === y) return true;
   return false;
 }

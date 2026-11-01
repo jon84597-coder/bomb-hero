@@ -1,6 +1,6 @@
 // test/verify-v59.js —— v4.14
 //   ① 拿了遙控器（計時炸彈）／手套之後：踢彈、打彈、撿彈、投彈都要正常
-//   ② 單人闖關 8 關 → 32 張地圖（8 大主題 × 4 張，每區第 4 張是魔王關）
+//   ② 單人闖關 8 關 → 32 張地圖（8 大主題 × 4 張；v4.16 起只有第 32 關有魔王）
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
 const P = env.BH, G = P.Game, html = env.html;
@@ -162,16 +162,16 @@ ok(/buildOrganicMap\(cols, rows, theme, info, rngFrom\(seed\)/.test(html),
     try {
       P.startSolo(st, false);
       const boss = G.enemies.filter(function (e) { return e.type === 'boss'; }).length;
-      const wantBoss = ((st - 1) % 4 === 3) ? 1 : 0;
+      const wantBoss = st >= 32 ? 1 : 0;        // v4.16：只有第 32 關有 BOSS
       if (boss !== wantBoss) bad.push(st + ':boss' + boss + '/' + wantBoss);
       if (G.grid[1][1] !== 0) bad.push(st + ':spawn');
       if (!G.door) bad.push(st + ':door');
       if (G.stage !== st) bad.push(st + ':stage');
       if (!G.theme) bad.push(st + ':theme');
-      // 魔王血量：第一區 5 → 第八區 12
+      // 魔王血量：最終魔王固定 12 下
       if (wantBoss) {
         const b = G.enemies.filter(function (e) { return e.type === 'boss'; })[0];
-        const want = Math.min(12, 5 + Math.floor((st - 1) / 4));
+        const want = 12;
         if (b.maxHp !== want) bad.push(st + ':hp' + b.maxHp + '/' + want);
       }
       seen.push(G.mapInfo.n);
@@ -201,7 +201,7 @@ ok(!/@media \(max-width: 640px\)[\s\S]*?\.stagegrid \{ grid-template-columns: re
 head('7. 整體回歸：跑 frames 不報錯');
 [
   [1, '第 1 關'],
-  [4, '第 4 關（魔王關）'],
+  [4, '第 4 關（一般關）'],
   [32, '第 32 關（最終魔王）']
 ].forEach(function (c) {
   let threw = null;

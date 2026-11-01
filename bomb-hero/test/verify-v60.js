@@ -69,8 +69,8 @@ ok(P.TEAMS.map(function (t) { return t.hex; }).join(',') === '#ff5a5a,#4aa8ff,#4
 ok(/<div class="seg" id="segTeams">[\s\S]{0,200}data-v="4">4<\/button><\/div>/.test(css) &&
    /組隊對戰（隊數 2～4，同隊不會互炸）/.test(css),
   '對戰設定有「關閉／2／3／4 隊」');
-ok(/id="btnTeam"[^>]*>👥 組隊 對戰<small>紅／藍／綠／黃 4 隊/.test(css), '主選單的「組隊 對戰」不再是「未開放」');
-ok(!/id="btnTeam"[^>]*class="mbtn soon"/.test(css), '組隊按鈕已經拿掉 soon 灰態');
+ok(css.indexOf('id="btnTeam"') < 0, 'v4.16：主選單不再放「組隊 對戰」（只留「對戰」）');
+ok(/id="segTeams"/.test(css), '組隊改成在對戰頁選隊數（入口只有一個）');
 
 // 分隊：輪流分（P1紅、P2藍…）
 [2, 3, 4].forEach(function (n) {
@@ -224,12 +224,12 @@ head('8. 線上：人數與隊別會同步給客人');
 
 // ================================================================
 head('9. 版本與說明');
-ok(P.VERSION === '4.15', '版號 = ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.15' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆是 4.15（now）');
-ok(P.VERSION_LOG[1].v === '4.14' && P.VERSION_LOG[1].now === false, '4.14 已不再是 now');
-ok(P.VERSION_LOG[0].items.join(' ').indexOf('組隊對戰') >= 0, '版本紀錄有寫組隊對戰');
-ok(/SW_VERSION = 'v4\.15\.0'/.test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')),
-  'sw.js 快取版號升到 v4.15.0');
+ok(P.VERSION === '4.16', '版號 = ' + P.VERSION);
+ok(P.VERSION_LOG[0].v === '4.16' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆是 4.16（now）');
+ok(P.VERSION_LOG[1].v === '4.15' && P.VERSION_LOG[1].now === false, '4.15 已不再是 now');
+ok(P.VERSION_LOG[0].items.join(' ').indexOf('樹叢') >= 0, '版本紀錄有寫可躲人的樹叢／破屋');
+ok(/SW_VERSION = 'v4\.16\.0'/.test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')),
+  'sw.js 快取版號升到 v4.16.0');
 
 // ================================================================
 console.log('\n通過 ' + pass + ' / ' + (pass + fail));

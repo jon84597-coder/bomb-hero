@@ -131,8 +131,8 @@ ok(allMaxOne, '單人闖關的小怪 maxHp = 1（沒有血量概念）');
 }
 // RPG 模式仍有血量
 {
-  ok(P.RPG_FOE.slime.hp === 3 && P.RPG_FOE.beetle.hp === 4 && P.RPG_FOE.lizard.hp === 5,
-    'RPG 模式的怪仍有血量（史萊姆 3／鐵甲蟲 4／疾風蜥 5）');
+  ok(P.RPG_FOE.slime.hp === 2 && P.RPG_FOE.beetle.hp === 3 && P.RPG_FOE.lizard.hp === 4,
+    'RPG 模式的怪仍有血量（v4.16 微調：史萊姆 2／鐵甲蟲 3／疾風蜥 4）');
   ok(typeof P.FOE_HP === 'object', 'FOE_HP 仍存在（RPG 模式共用）');
 }
 

@@ -35,8 +35,8 @@ soloEnemies.forEach(function (e) {
 });
 ok(hpOk, '單人怪的 hp 全部 = 1（一擊必殺，v4.12 規格）');
 ok(maxOk, '單人怪的 maxHp 也 = 1（沒有血量概念 → 不畫血條）');
-ok(P.RPG_FOE.slime.hp === 3 && P.RPG_FOE.beetle.hp === 4 && P.RPG_FOE.lizard.hp === 5,
-  'RPG 模式仍有自己的血量表（史萊姆 3／鐵甲蟲 4／疾風蜥 5）');
+ok(P.RPG_FOE.slime.hp === 2 && P.RPG_FOE.beetle.hp === 3 && P.RPG_FOE.lizard.hp === 4,
+  'RPG 模式仍有自己的血量表（v4.16 微調：史萊姆 2／鐵甲蟲 3／疾風蜥 4）');
 const hudFn = html.slice(html.indexOf('function drawRpgHud(T) {'), html.indexOf('function drawRpgHud(T) {') + 900);
 ok(hudFn.indexOf('if (!e.maxHp || e.maxHp <= 1) continue;') >= 0 &&
    hudFn.indexOf('if (!Game.rpg) return;') >= 0 &&
