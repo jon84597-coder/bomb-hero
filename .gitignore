@@ -9,3 +9,8 @@ __pycache__/
 # v4.1：帳號資料（含個資與 session 密鑰）絕對不要進 git
 data/
 *.bad-*
+
+# 本地建置 / 工作階段產物（不要進 git）
+dist/
+.tools/
+bomberman-online/
