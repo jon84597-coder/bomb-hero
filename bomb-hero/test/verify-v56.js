@@ -22,7 +22,7 @@ head('⑥ 手套投彈：可以投到對方身體裡，不會停在牆上');
 ok(typeof P.playerAtCell === 'function', 'playerAtCell 存在（某格是否有活著的玩家）');
 ok(/if \(canLandOnPlayer && playerAtCell\(nx, ny\)\)/.test(html),
   'findLanding 支援「可以停在玩家格」的選項');
-ok(/const land = findLanding\(cx, cy, d\.x, d\.y, true, false, p\);/.test(html),
+ok(/findLanding\(cx, cy, d\.x, d\.y, true, false, p\)/.test(html),
   'throwCarried（手套投彈）開啟 canLandOnPlayer 並帶上投彈者');
 ok(/const land = findLanding\(bx, by, d\.x, d\.y, false, true\);/.test(html),
   'punchBomb（拳擊）則是 stopAtFoe（停在敵人前一格）');

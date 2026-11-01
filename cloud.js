@@ -739,6 +739,43 @@ function createCloud(options) {
     return h.indexOf('Bearer ') === 0 ? h.slice(7).trim() : '';
   }
 
+  /* ================================================================
+     v4.18：分享到社群平台拿金幣
+     伺服器是唯一權威（前端改 localStorage 也刷不出金幣）：
+       ① prepare 發一次性 token（HMAC 簽「帳號 + 平台 + nonce + 期限」，5 分鐘）
+       ② claim 驗 token → 驗平台 → 驗沒領過 → 驗每日上限 → 才加金幣
+       ③ 每個平台終身只能領一次，每天最多 3 次（記錄在帳號資料裡，重新部署也在）
+     ================================================================ */
+  const SHARE_PLATFORMS = ['line', 'fb', 'x', 'wa', 'copy'];
+  const SHARE_REWARD = 1000;
+  const SHARE_TTL = 5 * 60 * 1000;
+  const SHARE_DAILY_MAX = 3;
+  function shareState(a) {
+    if (!a.share || typeof a.share !== 'object') a.share = {};
+    if (!a.share.claimed || typeof a.share.claimed !== 'object') a.share.claimed = {};
+    return a.share;
+  }
+  function shareDayKey(t) {
+    const d = new Date(t || Date.now());
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+  function shareToken(acc, platform, nonce, exp) {
+    return crypto.createHmac('sha256', secret)
+      .update('share|' + acc.id + '|' + platform + '|' + nonce + '|' + exp)
+      .digest('hex').slice(0, 40);
+  }
+  function shareOut(acc) {
+    const st = shareState(acc);
+    const day = shareDayKey();
+    return {
+      claimed: st.claimed,
+      day: day,
+      n: st.day === day ? (st.n | 0) : 0,
+      max: SHARE_DAILY_MAX,
+      reward: SHARE_REWARD
+    };
+  }
+
   function publicAccount(acc) {
     const points = pointsTotalFor(acc.rpg.cleared);
     const dev = isDev(acc);
@@ -761,6 +798,7 @@ function createCloud(options) {
       tier: dev ? 'developer' : 'player',
       hasPass: !!acc.pass,
       logins: acc.loginCount | 0,
+      share: shareOut(acc),            // v4.18：哪些平台領過分享金幣
       save: makeEnvelope(secret, acc)
     };
   }
@@ -881,7 +919,8 @@ function createCloud(options) {
     const isAuth = p.indexOf('/api/auth/') === 0;
     const isRpg = p.indexOf('/api/rpg/') === 0;
     const isAdmin = p.indexOf('/api/admin/') === 0;
-    if (!isAuth && !isRpg && !isAdmin) return false;
+    const isShare = p.indexOf('/api/share/') === 0;
+    if (!isAuth && !isRpg && !isAdmin && !isShare) return false;
 
     /* ---- 共用：全域 IP 限流（每分鐘 300 次，避免被腳本掃） ---- */
     if (!limiter.take('ip:' + ip(req), 300, 5).ok) {
@@ -890,6 +929,69 @@ function createCloud(options) {
     }
 
     try {
+      /* ---------------- v4.18：分享拿金幣 ---------------- */
+      if (p === '/api/share/prepare' && req.method === 'POST') {
+        if (!gate(req, res, 'share', 12, 3)) return true;
+        const acc0 = session(req);
+        if (!acc0) return fail(res, 401, 'NO_AUTH'), true;
+        if (acc0.kind !== 'member') return fail(res, 403, 'NEED_LOGIN'), true;
+        const body = await readJson(req, 1024);
+        if (!body) return fail(res, 400, 'BAD_BODY'), true;
+        const platform = String(body.platform || '');
+        if (SHARE_PLATFORMS.indexOf(platform) < 0) return fail(res, 400, 'BAD_PLATFORM'), true;
+        const st = shareState(acc0);
+        if (st.claimed[platform]) return send(res, 409, { ok: false, err: 'ALREADY', share: shareOut(acc0) }), true;
+        const day = shareDayKey();
+        if (st.day !== day) { st.day = day; st.n = 0; }
+        if ((st.n | 0) >= SHARE_DAILY_MAX) {
+          return send(res, 429, { ok: false, err: 'DAILY_LIMIT', share: shareOut(acc0) }), true;
+        }
+        const nonce = rid(16), exp = Date.now() + SHARE_TTL;
+        st.prep = { platform: platform, nonce: nonce, exp: exp };
+        store.touch();
+        return send(res, 200, {
+          ok: true, token: shareToken(acc0, platform, nonce, exp), exp: exp, reward: SHARE_REWARD
+        }), true;
+      }
+
+      if (p === '/api/share/claim' && req.method === 'POST') {
+        if (!gate(req, res, 'share', 12, 3)) return true;
+        const acc0 = session(req);
+        if (!acc0) return fail(res, 401, 'NO_AUTH'), true;
+        if (acc0.kind !== 'member') return fail(res, 403, 'NEED_LOGIN'), true;
+        const body = await readJson(req, 1024);
+        if (!body) return fail(res, 400, 'BAD_BODY'), true;
+        const platform = String(body.platform || '');
+        const token = String(body.token || '');
+        const st = shareState(acc0);
+        const prep = st.prep;
+        if (!prep || prep.platform !== platform || !(prep.exp > Date.now())) {
+          return send(res, 409, { ok: false, err: 'EXPIRED', share: shareOut(acc0) }), true;
+        }
+        if (shareToken(acc0, platform, prep.nonce, prep.exp) !== token) {
+          stats.tamper++;
+          return send(res, 409, { ok: false, err: 'BAD_TOKEN' }), true;
+        }
+        st.prep = null;                                   // 一次性：用完立刻作廢
+        if (st.claimed[platform]) {
+          return send(res, 409, { ok: false, err: 'ALREADY', share: shareOut(acc0) }), true;
+        }
+        const day = shareDayKey();
+        if (st.day !== day) { st.day = day; st.n = 0; }
+        if ((st.n | 0) >= SHARE_DAILY_MAX) {
+          return send(res, 429, { ok: false, err: 'DAILY_LIMIT', share: shareOut(acc0) }), true;
+        }
+        st.claimed[platform] = Date.now();
+        st.n = (st.n | 0) + 1;
+        acc0.rpg.gold = Math.max(0, (acc0.rpg.gold | 0) + SHARE_REWARD);
+        logEvent(acc0, 'share', { platform: platform, gold: acc0.rpg.gold | 0 });
+        store.touch();
+        return send(res, 200, {
+          ok: true, reward: SHARE_REWARD, gold: acc0.rpg.gold | 0,
+          share: shareOut(acc0), account: publicAccount(acc0)
+        }), true;
+      }
+
       /* ---------------- 登入設定 ---------------- */
       if (p === '/api/auth/config' && req.method === 'GET') {
         const out = { ok: true, origin: originOf(req), providers: {} };

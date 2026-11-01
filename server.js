@@ -982,7 +982,8 @@ const server = http.createServer(function (req, res) {
   // v4.3：加上 /api/admin/*（開發者後台，cloud.js 內另有白名單檢查）
   if (url.pathname.indexOf('/api/auth/') === 0 ||
       url.pathname.indexOf('/api/rpg/') === 0 ||
-      url.pathname.indexOf('/api/admin/') === 0) {
+      url.pathname.indexOf('/api/admin/') === 0 ||
+      url.pathname.indexOf('/api/share/') === 0) {
     cloud.handle(req, res, url).then(function (done) {
       if (!done) sendJSON(res, 404, { ok: false, err: 'no such api' });
     }).catch(function (e) {

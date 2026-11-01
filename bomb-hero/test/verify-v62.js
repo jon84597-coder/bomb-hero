@@ -273,42 +273,62 @@ head('9. 小怪變多、血量回升、AI 更聰明');
 }
 
 // ================================================================
-head('10. 對戰 AI 也會丟炸彈');
+head('10. 對戰 AI 隔牆丟炸彈（v4.18：要手套、不砸人）');
 {
   ok(typeof P.aiLobBomb === 'function', '__BH 有匯出 aiLobBomb');
-  ok(/aiLobBomb\(p, tgt\.p\)/.test(css), 'controlAI 會呼叫 aiLobBomb');
+  ok(/aiLobBomb\(p, lv\)/.test(css), 'controlAI 會呼叫 aiLobBomb');
+  ok(/if \(!p\.glove\) return false;/.test(css), '★ 沒撿到搬彈手套就不能丟');
+  ok(/function aiGrabOwnBomb/.test(css), '會把腳下的炸彈舉起來（aiGrabOwnBomb）');
+  ok(/function aiThrowLanding/.test(css), '落點交給 aiThrowLanding 算（不鎖定人）');
+  ok(/if \(playerAtCell\(land\.x, land\.y\)\) return null;/.test(css), '★ 落點上有玩家就不丟（絕不直接命中）');
+  ok(/throwCarried\(p, \{ land: land \}\)/.test(css), '真的走玩家的投擲流程（throwCarried）');
+  ok(!/lobbed: true/.test(css), 'v4.17 的「直接飛到對手格」已移除');
   const lv = P.AI_LEVELS;
   ok(lv.weak.lob > 0 && lv.normal.lob > lv.weak.lob && lv.strong.lob > lv.normal.lob,
     '難度越高越愛丟（' + [lv.weak.lob, lv.normal.lob, lv.strong.lob].join('/') + '）');
-  void lv;
-  // 實測：兩個 AI 站在同一排、中間隔著牆
+
+  // 實測：造一條「A → 牆 → 空地 → 空地 → B」的走廊
   P.startBattle();
   G.state = 'play';
   T = G.T;
   const a = G.players[0], b = G.players[1];
-  // 找一排有「兩格空地、距離 3 以上」的位置
+  G.players.forEach(function (q) { if (q !== a && q !== b) q.alive = false; });
   let spot = null;
-  for (let y = 1; y < G.rows - 1 && !spot; y++) {
-    const free = [];
-    for (let x = 1; x < G.cols - 1; x++) if (G.grid[y][x] === 0) free.push(x);
-    for (let i = 0; i < free.length && !spot; i++) {
-      for (let j = free.length - 1; j > i; j--) {
-        if (free[j] - free[i] >= 3) { spot = { ax: free[i], ay: y, bx: free[j], by: y }; break; }
-      }
+  for (let y = 2; y < G.rows - 2 && !spot; y++) {
+    for (let x = 2; x < G.cols - 5 && !spot; x++) {
+      if (G.grid[y][x] !== 0 || G.grid[y][x + 1] === 0) continue;   // 腳下空地、正前方不是空地（牆或軟磚）
+      if (G.grid[y][x + 2] !== 0 || G.grid[y][x + 3] !== 0) continue; // 牆後有連續兩格空地
+      spot = { ax: x, ay: y, bx: x + 3, by: y, wx: x + 1 };
     }
   }
-  ok(!!spot, '找到測試用的直線空地');
+  ok(!!spot, '找到「前面是牆」的測試地形');
   if (spot) {
+    G.bombs.length = 0; G.items.length = 0;
     a.x = spot.ax * T + T / 2; a.y = spot.ay * T + T / 2; a.alive = true;
+    a.facing = 'right'; a.aiDir = 'right'; a.lobCd = 0; a.glove = false; a.carry = null;
     b.x = spot.bx * T + T / 2; b.y = spot.by * T + T / 2; b.alive = true;
-    G.bombs.length = 0;
-    const r = P.aiLobBomb(a, b);
-    ok(r === true, 'AI 丟出一顆炸彈');
-    const bomb = G.bombs[G.bombs.length - 1];
-    ok(bomb && bomb.flying && bomb.owner === a, '炸彈是飛行狀態、主人是 AI');
-    ok(bomb.cx === spot.bx && bomb.cy === spot.by, '落點就是對手那一格（' + bomb.cx + ',' + bomb.cy + '）');
+
+    ok(P.aiLobBomb(a, P.AI_LEVELS.normal) === false, '沒有手套 → 一顆都不丟');
+
+    a.glove = true;
+    ok(P.aiLobBomb(a, P.AI_LEVELS.normal) === false, '有手套但腳下沒炸彈 → 也不丟');
+
+    P.placeBomb(a);
+    ok(G.bombs.length === 1, 'AI 先在腳下放了一顆炸彈');
+    const r = P.aiLobBomb(a, P.AI_LEVELS.normal);
+    ok(r === true, '有手套＋有炸彈 → 舉起來丟出去');
+    const bomb = G.bombs[0];
+    ok(bomb && bomb.owner === a, '炸彈主人是 AI');
+    ok(bomb.cx > spot.wx, '★ 飛過牆了（落點 x=' + bomb.cx + '，牆在 x=' + spot.wx + '）');
+    ok(P.playerAtCell(bomb.cx, bomb.cy) === false, '★ 落點沒有任何玩家（不會直接砸人）');
+    ok(!(bomb.cx === spot.bx && bomb.cy === spot.by), '★ 落點不是對手那一格');
+    ok(a.carry === null, '丟完手上是空的');
     ok(a.lobCd > 0, '丟完進入冷卻（' + a.lobCd.toFixed(1) + 's）');
-    ok(P.aiLobBomb(a, null) === false, '沒有對手就不會丟');
+
+    // 對照組：把對手移到「牆後第一格」→ 那個落點會砸到人 → 這個方向不能丟
+    a.lobCd = 0;
+    b.x = (spot.wx + 1) * T + T / 2; b.y = spot.by * T + T / 2;
+    ok(P.aiThrowLanding(a, 'right') === null, '★ 落點上有人 → 這個方向直接放棄');
   }
 }
 
@@ -344,11 +364,12 @@ head('12. 迴歸：玩過 RPG 再回單人，不會卡在 RPG 扣血邏輯');
 
 // ================================================================
 head('13. 版本與 SW');
-ok(P.VERSION === '4.17', '版號 = ' + P.VERSION);
+ok(P.VERSION === '4.18', '版號 = ' + P.VERSION);
 ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.17' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.17（now）');
-ok(P.VERSION_LOG[0].items.join(' ').indexOf('隨從') >= 0, '版本紀錄有寫隨從');
-ok(/SW_VERSION = 'v4\.17\.1'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.17.1');
+ok(P.VERSION_LOG[0].v === '4.18' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.18（now）');
+ok(P.VERSION_LOG[1].v === '4.17' && P.VERSION_LOG[1].now === false, '4.17 已不再是 now');
+ok(P.VERSION_LOG[1].items.join(' ').indexOf('隨從') >= 0, '4.17 版本紀錄有寫隨從');
+ok(/SW_VERSION = 'v4\.18\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.18.0');
 
 // ================================================================
 console.log('\n----------------------------------------');

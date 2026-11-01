@@ -234,12 +234,12 @@ ok(P.RPG_FOE.slime.hp === 3 && P.RPG_FOE.lizard.hp === 5, 'RPG_FOE 跟著套用�
 
 // ================================================================
 head('6. 版本與 SW');
-ok(P.VERSION === '4.17', '版號 = ' + P.VERSION);
+ok(P.VERSION === '4.18', '版號 = ' + P.VERSION);
 ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.17' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.17（now）');
-ok(P.VERSION_LOG[1].v === '4.16' && P.VERSION_LOG[1].now === false, '4.16 已不再是 now');
-ok(P.VERSION_LOG[0].items.length >= 5, '4.17 寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
-ok(/SW_VERSION = 'v4\.17\.1'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 快取版號 = v4.17.1');
+ok(P.VERSION_LOG[0].v === '4.18' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.18（now）');
+ok(P.VERSION_LOG[1].v === '4.17' && P.VERSION_LOG[1].now === false, '4.17 已不再是 now');
+ok(P.VERSION_LOG[0].items.length >= 5, '4.18 寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
+ok(/SW_VERSION = 'v4\.18\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 快取版號 = v4.18.0');
 
 // ================================================================
 console.log('\n----------------------------------------');
