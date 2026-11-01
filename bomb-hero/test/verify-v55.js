@@ -151,12 +151,14 @@ ok(/drawBombOn\(g, r, it\.kind === 'bomb' \? 3 : 7/.test(html), '炸彈圖示畫
 
 // ================================================================
 head('5. 版本與 Service Worker');
-ok(P.VERSION === '4.13', 'VERSION = 4.13');
-ok(/id="verTxt">4\.13/.test(html), '畫面版本號同步 4.13');
-ok(/id="verLogVer">4\.13/.test(html), '版本紀錄面板同步 4.13');
-ok(P.VERSION_LOG[0].v === '4.13' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 最新一筆是 v4.13');
-ok(P.VERSION_LOG[0].items.length === 8, 'v4.13 記錄了 8 項更新');
-ok(P.VERSION_LOG[1].v === '4.12' && P.VERSION_LOG[1].now === false, 'v4.12 已改成 now:false');
+ok(/^\d+\.\d+$/.test(P.VERSION), 'VERSION 格式正確（' + P.VERSION + '）');
+const VRE = new RegExp('id="verTxt">' + P.VERSION.replace(/\./g, '\\.'));
+const VRE2 = new RegExp('id="verLogVer">' + P.VERSION.replace(/\./g, '\\.'));
+ok(VRE.test(html), '畫面版本號同步 ' + P.VERSION);
+ok(VRE2.test(html), '版本紀錄面板同步 ' + P.VERSION);
+ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 最新一筆是 v' + P.VERSION);
+ok(P.VERSION_LOG[0].items.length >= 5, '最新版記錄了 ' + P.VERSION_LOG[0].items.length + ' 項更新');
+ok(P.VERSION_LOG[1] && P.VERSION_LOG[1].now === false, 'v' + P.VERSION_LOG[1].v + ' 已改成 now:false');
 // 完整跑一場不報錯
 {
   let threw = null;

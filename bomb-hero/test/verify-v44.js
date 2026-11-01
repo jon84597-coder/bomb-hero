@@ -20,8 +20,8 @@ function cssSeg(startRe) {
 }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.7', '版本 = 4.2');
-ok(/const VERSION = '4\.7';/.test(html), '版本常數是 4.5');
+ok(/^\d+\.\d+$/.test(P.VERSION), 'VERSION 格式正確（' + P.VERSION + '）');
+ok(html.indexOf("const VERSION = '" + P.VERSION + "';") > 0, '版本常數 = ' + P.VERSION);
 
 console.log('\n=== 1. HTML：三顆鈕換成內嵌小畫布 ===');
 ok(/<div class="tbtn tact"[^>]*><canvas class="ticon" data-icon="bomb"><\/canvas><\/div>/.test(html),

@@ -160,7 +160,7 @@ P.settings.soloTime = 300;
 P.startBossRush();
 const GB = P.Game;
 ok(GB.bossRush === true, 'BOSS 模式旗標開啟');
-ok(GB.stage === 8, '直接進入第 8 關（暗黑魔王城）');
+ok(GB.stage === 32, 'v4.14：直接進入第 32 關（魔王之間／暗黑魔王城）');
 ok(GB.enemies.length === 1 && GB.enemies[0].boss === true, '場上只有魔王、沒有小怪（敵人數 ' + GB.enemies.length + '）');
 ok(GB.players[0].lives === 3, 'BOSS 模式 3 條命');
 ok(!!GB.door, 'BOSS 關也有出口門');

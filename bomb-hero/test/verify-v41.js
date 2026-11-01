@@ -14,8 +14,8 @@ function cnt(s, re) { const m = s.match(re); return m ? m.length : 0; }
 function tabHtml(id) { P.Help.setTab(id); P.Help.render(); return env.getId('helpBody').innerHTML; }
 
 console.log('\n=== 0. 版本 ===');
-ok(P.VERSION === '4.7', '版本 = 4.2');
-ok(/<span id="verTxt">4\.7<\/span>/.test(html), '徽章版本號同步 4.3');
+ok(/^\d+\.\d+$/.test(P.VERSION), 'VERSION 格式正確（' + P.VERSION + '）');
+ok(html.indexOf('id="verTxt">' + P.VERSION) > 0, '徽章版本號同步 ' + P.VERSION);
 
 console.log('\n=== 1. 畫布 ctx 可切換（說明頁要拿遊戲畫法畫小圖）===');
 ok(/let ctx = cv\.getContext\('2d'\);/.test(html), 'ctx 改成 let（可暫時指向說明頁小畫布）');

@@ -512,7 +512,13 @@ function countHz() {
 }
 ok(!buildErr, '8 關都能正常建圖 + 跑 3 幀' + (buildErr ? '：' + buildErr.message : ''));
 ok(stageInfo.length === 8, '8 關全部通過（' + stageInfo.map(i => i.name).join('、') + '）');
-ok(new Set(stageInfo.map(i => i.style)).size === 8, '8 關風格各不相同');
+// v4.14：單人變成 32 張地圖（8 大主題 × 4 張）→ 第 1~8 關只涵蓋前兩個大主題，
+//   所以「風格各不相同」改成驗「8 大主題各不相同」
+{
+  const styles = [];
+  for (let k = 1; k <= 32; k += 4) { freshSolo(k); styles.push(G.theme.style); }
+  ok(new Set(styles).size === 8, '8 大主題風格各不相同（' + styles.join('、') + '）');
+}
 ok(stageInfo.every(i => i.T > 0), '每關都有可用的磚塊尺寸（相機與繪圖正常）');
 
 // =====================================================================

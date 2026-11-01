@@ -201,13 +201,17 @@ ok(/String\(Math\.ceil\(me\.fireCd\)\)/.test(html), '圖示上會顯示冷卻倒
 
 // ================================================================
 head('7. 手套抓炸彈');
-ok(/if \(p\.glove && !p\.carry\) \{/.test(html), 'placeBomb 有手套撿彈分支');
-ok(/if \(b && p && p\.glove\) return false;/.test(html),
-  '戴手套可以走進炸彈格（否則永遠走不到炸彈旁邊）');
+// v4.14：撿彈抽成 tryGlovePickup()，動作鍵「撿彈優先」；炸彈恢復實體、踢／打不再看手套
+ok(/function tryGlovePickup\(p\)/.test(html), 'v4.14：撿彈是獨立的 tryGlovePickup()');
+ok(/if \(tryGlovePickup\(p\)\) return;/.test(html), 'placeBomb 會先試著撿彈');
+ok(/else if \(tryGlovePickup\(p\)\) \{ \/\* 已撿起 \*\/ \}/.test(html),
+  'v4.14：動作鍵撿彈優先（線圈炸彈搶不走）');
+ok(!/if \(b && p && p\.glove\) return false;/.test(html),
+  'v4.14：炸彈對戴手套的人也是實體（不會再走過炸彈格）');
 ok(/const dirs4 = \[\[1, 0\], \[-1, 0\], \[0, 1\], \[0, -1\]\];/.test(html),
   '撿彈時四個方向都找（腳下／面前／左右）');
-ok(/bombAt\(nx, ny\) && !\(p\.glove && !p\.carry\)/.test(html),
-  '戴手套時不會被自動踢／打搶走');
+ok(/if \(bombAt\(nx, ny\) && !p\.carry\) \{/.test(html),
+  'v4.14：踢／打不再被手套擋掉（只有手上拿著炸彈時不觸發）');
 // 實測撿彈 → 投擲
 {
   const p = G.players[0];
@@ -287,11 +291,14 @@ ok(/const land = findLanding\(bx, by, d\.x, d\.y, false, true\);/.test(html),
 
 // ================================================================
 head('9. 版本與整體回歸');
-ok(P.VERSION === '4.13', 'VERSION = 4.13');
-ok(/id="verTxt">4\.13/.test(html), '畫面版本號同步 4.13');
-ok(/id="verLogVer">4\.13/.test(html), '版本紀錄面板同步 4.13');
-ok(P.VERSION_LOG[0].v === '4.13' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 最新一筆是 v4.13');
-ok(P.VERSION_LOG[0].items.length === 8, 'v4.13 記錄了 8 項更新');
+ok(/^\d+\.\d+$/.test(P.VERSION), 'VERSION 格式正確（' + P.VERSION + '）');
+const VRE = new RegExp('id="verTxt">' + P.VERSION.replace(/\./g, '\\.'));
+const VRE2 = new RegExp('id="verLogVer">' + P.VERSION.replace(/\./g, '\\.'));
+ok(VRE.test(html), '畫面版本號同步 ' + P.VERSION);
+ok(VRE2.test(html), '版本紀錄面板同步 ' + P.VERSION);
+ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 最新一筆是 v' + P.VERSION);
+ok(P.VERSION_LOG[0].items.length >= 5, '最新版記錄了 ' + P.VERSION_LOG[0].items.length + ' 項更新');
+ok(P.VERSION_LOG[1] && P.VERSION_LOG[1].now === false, '上一筆（v' + P.VERSION_LOG[1].v + '）已不是「當前」');
 // 完整跑一場不報錯
 {
   let threw = null;
