@@ -876,9 +876,12 @@ function serveStatic(pathname, res) {
       return res.end('not found');
     }
     const ext = path.extname(file).toLowerCase();
+    // v4.6：Service Worker 與 manifest 一定要 no-cache，
+    // 否則玩家瀏覽器會抱著舊的 sw.js／manifest.json，改版也吃不到
+    const noCache = ext === '.html' || /(?:^|[\\/])sw\.js$/.test(file) || /manifest\.json$/.test(file);
     res.writeHead(200, {
       'Content-Type': MIME[ext] || 'application/octet-stream',
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=300'
+      'Cache-Control': noCache ? 'no-cache' : 'public, max-age=300'
     });
     res.end(buf);
   });

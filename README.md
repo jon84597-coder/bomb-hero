@@ -1,14 +1,15 @@
-# 炸彈超人 網頁版 — 爆爆英雄 BOMB HERO v4.5
+# 炸彈超人 網頁版 — 爆爆英雄 BOMB HERO v4.7
 
 單檔、零依賴的炸彈超人遊戲，外加一支零依賴的 Node.js 後端（房間制即時對戰）。
 前端 `public/index.html` **一個檔案就包含全部 HTML / CSS / JavaScript 與圖片**，
 不用 npm install、不用打包工具，雙擊就能玩。
 
-- 版本：**v4.5**
+- 版本：**v4.7**
 - 前端：原生 HTML5 / Canvas / ES5+ 相容語法，**零第三方套件**
 - 後端：`server.js` ＋ `cloud.js`（只用 Node 內建 `http` / `fs` / `path` / `crypto`，**零依賴**）
 - 帳號：Google / Facebook（另支援 LINE）OAuth 登入、遊客模式、雲端存檔、HMAC 簽章、限流
 - 手機操作：**全域隱形滑動區**（半邊畫面任意處＝搖桿中心）或**虛擬搖桿**（可拖曳位置、三段大小）
+- PWA：首頁右上角可「📱 下載 App」，裝到電腦桌面／手機主畫面後以全螢幕獨立視窗執行；Service Worker 離線快取
 - 版面：橫放／直放都自動塞滿可視高度（畫布不再被 4:3 撐高、觸控鍵不會跑到畫面外）
 - 連線方式：HTTP 短輪詢 `/api/relay/*`（不需 WebSocket，任何反向代理都吃）
 
@@ -17,9 +18,9 @@
 ## 目錄結構
 
 ```
-bomb-hero-v4.5/
+bomb-hero-v4.7/
 ├─ README.md               # 本文件（含 GitHub 上傳、部署步驟）
-├─ CHANGELOG.md            # v2.1 ~ v4.5 完整版本演進
+├─ CHANGELOG.md            # v2.1 ~ v4.7 完整版本演進
 ├─ .gitignore
 ├─ .github/
 │  └─ workflows/pages.yml  # GitHub Pages 自動部署（把 public/ 發布出去）
@@ -27,14 +28,17 @@ bomb-hero-v4.5/
 ├─ server.js               # ★ 後端：房間管理 / 狀態同步 / 靜態檔案（零依賴）
 ├─ cloud.js                # ★ 帳號 / 第三方登入 / 雲端存檔 / 資安（零依賴）
 ├─ public/
-│  └─ index.html           # ★ 遊戲本體（單檔，約 1.6MB，含全部素材與 10 語字典）
+│  ├─ index.html           # ★ 遊戲本體（單檔，約 1.8MB，含全部素材與 10 語字典）
+│  ├─ manifest.json       # v4.6 PWA 安裝資訊（name / icons / display: standalone）
+│  ├─ sw.js                # v4.6 Service Worker（離線快取，/api/ 不快取）
+│  └─ icons/               # v4.6 捷徑圖示（192 / 512 / maskable / apple-touch / favicon）
 ├─ legacy/                 # 早期原型 HTML（solo / multi / bomb-hero / 舊版 index）
 ├─ tools/                  # 建置與 SPA 測試腳本（_build_spa.py、_spa_test.js）
 ├─ art/                    # 美術素材原始切圖 + 產生器（assets.js / parts.js，35MB）
 └─ test/                   # 無頭測試與版本修補腳本
    ├─ _sandbox.js          #   假 DOM 沙盒（可在 Node 裡跑整支遊戲）
    ├─ _syntax.js           #   語法檢查
-   ├─ verify-v*.js         #   37 組版本驗證（1900+ 斷言）
+   ├─ verify-v*.js         #   43 組版本驗證（2100+ 斷言）
    ├─ net-auth.js          #   帳號 / 存檔簽章 / 限流 / HTTPS 端到端測試
    ├─ net-relay.js         #   後端 relay API 測試
    ├─ net-live.js          #   端到端線上對戰測試
@@ -71,10 +75,10 @@ npx serve public            # 或 python -m http.server -d public 8000
 
 ```bash
 # 解壓後進入資料夾
-cd bomb-hero-v4.5
+cd bomb-hero-v4.7
 git init
 git add -A
-git commit -m "BOMB HERO v4.5"
+git commit -m "BOMB HERO v4.7"
 git branch -M main
 git remote add origin https://github.com/<你的帳號>/<repo 名稱>.git
 git push -u origin main
@@ -200,7 +204,7 @@ CMD ["node", "server.js"]
 ```bash
 cd test
 node _syntax.js                        # 語法檢查
-node verify-v51.js                     # 逐版跑：node verify-v10.js … verify-v51.js（41 組）
+node verify-v53.js                     # 逐版跑：node verify-v10.js … verify-v53.js（43 組）
 node net-relay.js                      # 後端 relay API（線上配對）
 node net-auth.js                       # 帳號 / 雲端存檔 / 簽章 / 限流（會自己起一個測試伺服器）
 node net-live.js                       # 端到端線上對戰

@@ -102,8 +102,10 @@ function makeEnv(opts) {
       addEventListener: (t, fn) => { (listeners[t] = listeners[t] || []).push(fn); },
       removeEventListener() {},
       createElement: t => mkEl(t),
-      body: mkEl('body'),
-      documentElement: mkEl('html')
+      // v4.6：body／documentElement 要「同一個」（真瀏覽器就是同一個），
+      // 不然測試拿 getId('body') 跟程式拿 document.body 會是兩個不同物件
+      body: getId('body'),
+      documentElement: getId('html')
     }
   };
   sandbox.window = sandbox;
