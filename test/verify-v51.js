@@ -143,10 +143,12 @@ ok(src(/\.chip\.fx-hurt::after \{[^}]*rgba\(255, 72, 88/), '外框是紅色光�
 ok(src(/@keyframes hudRingHurt/), '有獨立的光圈擴散動畫');
 ok(src(/\.chip\.fx-hurt b \{ color: #ff5568; \}/), '數字本身轉紅');
 ok(src(/prefers-reduced-motion[^}]*\}?[^@]*#gameTop \.chip\.fx-hurt/), '「減少動態」時自動關掉動畫');
-ok(src(/return kind === 'hurt'|const hurt = kind === 'hurt'/), 'hudFlash 支援 kind = hurt');
+ok(src(/const mode = \(kind === 'hurt' \|\| kind === 'armor'\)/), 'hudFlash 支援 kind = hurt / armor');
 ok(src(/const HUD_FX_KIND = \{\}/), '用 HUD_FX_KIND 記住是「好東西」還是「受傷」');
-ok(src(/HUD_FX_KIND\[k\] === 'hurt' \? 'fx-hurt' : 'fx'/), 'applyHudFx 會依種類補回正確的 class');
-ok(src(/el\.classList\.remove\('fx', 'fx-hurt'\)/), '清掉時兩種 class 都移除（不會卡住紅色）');
+ok(src(/const cls = hudFxCls\(k\);/), 'applyHudFx 會依種類補回正確的 class');
+ok(src(/el\.classList\.remove\('fx', 'fx-hurt', 'fx-armor'\)/), '清掉時三種 class 都移除（不會卡住顏色）');
+ok(src(/#gameTop \.chip\.fx-armor \{ animation: hudPopHurt/), '只扣護甲時走藍色 .fx-armor');
+ok(src(/\.chip\.fx-armor::after \{[^}]*rgba\(92, 172, 255/), '護甲光圈是藍色（和藍字、藍光一致）');
 // 吃道具仍然是金色 1.38 倍
 ok(src(/22% \{ transform: scale\(1\.38\); \}/), '道具的好東西高亮仍是 1.38 倍（兩種回饋可分辨）');
 let hudOk = true;

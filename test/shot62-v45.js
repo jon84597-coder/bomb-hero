@@ -226,6 +226,16 @@ const PIXEL_PROBE = `(function(){
   ok(arm.armor === 1 && arm.hp === 5, '護甲 2 → 1，生命沒掉', arm.armor + ' / hp ' + arm.hp);
   ok(arm.txt === '-1' && arm.color === '#5fb6ff', '藍字 -1（看得出是護甲在擋）', arm.txt + ' ' + arm.color);
   ok(arm.kind === 'armor', '邊緣是藍光', arm.kind);
+  // HUD 要等下一幀 updateHud() 才會長出護甲 chip，所以要等一下再讀
+  await sleep(80);
+  const armChip = await evalJs(`(function(){
+    const e = document.querySelector('#gameTop [data-k="armor"]');
+    if (!e) return null;
+    const b = e.querySelector('b');
+    return { cls: e.className, color: b ? getComputedStyle(b).color : '', txt: e.textContent.trim() };
+  })()`);
+  ok(armChip && /fx-armor/.test(armChip.cls), '護甲列掛上藍色 .fx-armor', armChip && armChip.cls);
+  ok(armChip && /rgb\(63, 157, 255\)|#3f9dff/i.test(armChip.color), '護甲數字轉藍', armChip && armChip.color);
   ok(arm.banner === 'none', '仍然沒有中央大字', arm.banner);
   await sleep(110);
   await shot('v45-3-armor-blue.png');

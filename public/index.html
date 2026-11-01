@@ -471,8 +471,19 @@
     0% { opacity: .95; transform: scale(.97); }
     100% { opacity: 0; transform: scale(1.24); }
   }
+  /* 只扣護甲時走藍色版本：和頭上的藍字、邊緣藍光同一套顏色語言 */
+  #gameTop .chip.fx-armor { animation: hudPopHurt .9s cubic-bezier(.2,.9,.3,1); }
+  #gameTop .chip.fx-armor::after {
+    content: ''; position: absolute; inset: -4px; border-radius: inherit;
+    border: 2px solid rgba(92, 172, 255, .95);
+    box-shadow: 0 0 16px rgba(80, 160, 255, .85), inset 0 0 10px rgba(120, 190, 255, .45);
+    animation: hudRingHurt .9s ease-out forwards; pointer-events: none;
+  }
+  #gameTop .chip.fx-armor b { color: #3f9dff; }
+  #gameTop .chip.fx-armor .ic { filter: drop-shadow(0 0 8px rgba(90, 170, 255, .95)); }
   @media (prefers-reduced-motion: reduce) {
-    #gameTop .chip.fx-hurt, #gameTop .chip.fx-hurt::after { animation: none; }
+    #gameTop .chip.fx-hurt, #gameTop .chip.fx-hurt::after,
+    #gameTop .chip.fx-armor, #gameTop .chip.fx-armor::after { animation: none; }
   }
   .chip.playerchip { gap: 8px; }
   .chip .pdot { width: 13px; height: 13px; border-radius: 5px; flex: none; }
@@ -8961,7 +8972,7 @@ function banner(txt, dur) {
 //       淡入 → 停留（預設 2 秒）→ 淡出，同時讓對應的狀態列圖示彈一下。
 const HUD_FX = {};       // key -> 高亮失效時間（ms）
 const HUD_FX_T = {};     // key -> 清除計時器
-// v4.5：'fx'（金色，吃到好東西）= 1.38 倍；'fx-hurt'（紅色，受傷）= 1.2 倍＋紅光
+// v4.5：'fx'（金色，吃到好東西）= 1.38 倍；'fx-hurt'（扣血）／'fx-armor'（扣護甲）= 1.2 倍＋光圈
 const HUD_FX_KIND = {};  // key -> 'fx' | 'hurt'
 let toastSeq = 0;
 
@@ -9023,10 +9034,14 @@ function hudFxEls(key) {
   }
   return [].slice.call(top.querySelectorAll('[data-k="' + key + '"]'));
 }
+function hudFxCls(key) {
+  const k = HUD_FX_KIND[key];
+  return k === 'hurt' ? 'fx-hurt' : k === 'armor' ? 'fx-armor' : 'fx';
+}
 function hudFxClear(key) {
   delete HUD_FX[key];
   delete HUD_FX_KIND[key];
-  hudFxEls(key).forEach(function (el) { el.classList.remove('fx', 'fx-hurt'); });
+  hudFxEls(key).forEach(function (el) { el.classList.remove('fx', 'fx-hurt', 'fx-armor'); });
 }
 // 把「還在時效內」的高亮補回目前的 DOM —— HUD 每次數值變動都會重畫 innerHTML，
 // 不補回來的話高亮會在新節點上消失（吃道具時數值一定會變，所以一定會重畫）。
@@ -9034,9 +9049,9 @@ function applyHudFx() {
   const now = Date.now();
   Object.keys(HUD_FX).forEach(function (k) {
     if (HUD_FX[k] < now) { hudFxClear(k); return; }
-    const cls = HUD_FX_KIND[k] === 'hurt' ? 'fx-hurt' : 'fx';
+    const cls = hudFxCls(k);
     hudFxEls(k).forEach(function (el) {
-      el.classList.remove('fx', 'fx-hurt');
+      el.classList.remove('fx', 'fx-hurt', 'fx-armor');
       el.classList.add(cls);
     });
   });
@@ -9044,15 +9059,17 @@ function applyHudFx() {
 function hudFlash(key, ms, kind) {
   if (!key) return;
   const span = ms || 760;
-  const hurt = kind === 'hurt';
+  // kind：'fx'（吃到好東西，金色 1.38 倍）／'hurt'（扣血，紅色 1.2 倍）／'armor'（扣護甲，藍色 1.2 倍）
+  const mode = (kind === 'hurt' || kind === 'armor') ? kind : 'fx';
   // 先登記時效：「背包剛拿到的那一格」這一幀還不存在（HUD 要等數值變了才重畫），
   // 所以即使現在抓不到節點也要記下來，下一幀 applyHudFx() 會補上。
   HUD_FX[key] = Date.now() + span;
-  HUD_FX_KIND[key] = hurt ? 'hurt' : 'fx';
+  HUD_FX_KIND[key] = mode;
+  const cls = mode === 'fx' ? 'fx' : (mode === 'hurt' ? 'fx-hurt' : 'fx-armor');
   hudFxEls(key).forEach(function (el) {
-    el.classList.remove('fx', 'fx-hurt');
+    el.classList.remove('fx', 'fx-hurt', 'fx-armor');
     void el.offsetWidth;          // 重新觸發 CSS 動畫
-    el.classList.add(hurt ? 'fx-hurt' : 'fx');
+    el.classList.add(cls);
   });
   clearTimeout(HUD_FX_T[key]);
   HUD_FX_T[key] = setTimeout(function () { hudFxClear(key); }, span + 20);
@@ -14265,7 +14282,7 @@ function hurtFeedback(p, dh, da) {
     pushPop(p.x, hy, '-' + dh, { color: '#ff4d5e', size: 1 });
   }
   hurtEdge(dh ? 'hp' : 'armor');
-  hudFlash(dh ? 'hp' : 'armor', 900, 'hurt');
+  hudFlash(dh ? 'hp' : 'armor', 900, dh ? 'hurt' : 'armor');
 }
 
 function drawPops(T) {
