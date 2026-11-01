@@ -16669,6 +16669,7 @@ const SHARE_PLATFORMS = [
 ];
 const Share = (function () {
   const REWARD = 1000, DAILY_MAX = 3;
+  const LOGIN_TIP = '🔐 分享金幣要先用右上角「帳號」登入，而且不能是遊客';
   let claimed = {}, dayN = 0, busy = false, note = '';
 
   function api(path, body) {
@@ -16747,7 +16748,7 @@ const Share = (function () {
     if (busy) return Promise.resolve({ ok: false, err: 'BUSY' });
     if (claimed[pl.k]) { toast('這個平台已經領過 1000 金幣了', 2.2); return Promise.resolve({ ok: false, err: 'ALREADY' }); }
     if (!member()) {
-      note = '🔐 分享金幣要先用右上角「帳號」登入（遊客不行）';
+      note = LOGIN_TIP;
       render();
       toast('🔐 分享金幣要登入正式帳號才能領', 2.8);
       return Promise.resolve({ ok: false, err: 'NEED_LOGIN' });
@@ -16786,9 +16787,12 @@ const Share = (function () {
   function render() {
     const grid = $id('shareGrid');
     const nt = $id('shareNote');
+    const dev = (function () { try { return !!(Cloud.isDev && Cloud.isDev()); } catch (e) { return false; } })();
+    // v4.18：沒登入先把話講清楚（不要等按下才發現領不到）
+    if (!dev && !member()) { if (!note) note = LOGIN_TIP; }
+    else if (note === LOGIN_TIP) note = '';
     if (nt) nt.textContent = note;
     if (!grid) return;
-    const dev = (function () { try { return !!(Cloud.isDev && Cloud.isDev()); } catch (e) { return false; } })();
     grid.innerHTML = SHARE_PLATFORMS.map(function (pl) {
       const done = !!claimed[pl.k] || dev;
       return '<button class="sharebtn' + (done ? ' done' : '') + '" data-share="' + pl.k + '"' +
