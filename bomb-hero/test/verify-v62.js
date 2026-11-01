@@ -348,7 +348,7 @@ ok(P.VERSION === '4.17', '版號 = ' + P.VERSION);
 ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
 ok(P.VERSION_LOG[0].v === '4.17' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.17（now）');
 ok(P.VERSION_LOG[0].items.join(' ').indexOf('隨從') >= 0, '版本紀錄有寫隨從');
-ok(/SW_VERSION = 'v4\.17\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.17.0');
+ok(/SW_VERSION = 'v4\.17\.1'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.17.1');
 
 // ================================================================
 console.log('\n----------------------------------------');

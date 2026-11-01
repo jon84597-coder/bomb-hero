@@ -239,7 +239,7 @@ ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 
 ok(P.VERSION_LOG[0].v === '4.17' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.17（now）');
 ok(P.VERSION_LOG[1].v === '4.16' && P.VERSION_LOG[1].now === false, '4.16 已不再是 now');
 ok(P.VERSION_LOG[0].items.length >= 5, '4.17 寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
-ok(/SW_VERSION = 'v4\.17\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 快取版號 = v4.17.0');
+ok(/SW_VERSION = 'v4\.17\.1'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 快取版號 = v4.17.1');
 
 // ================================================================
 console.log('\n----------------------------------------');
