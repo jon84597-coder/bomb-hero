@@ -241,30 +241,24 @@ ok(/if \(dizzyImmune\(e, b\)\) continue;/.test(html), '小怪／BOSS：自己丟
 })();
 
 // ================================================================
-console.log('\n=== 6. 紅龍：紅光只在身體邊緣閃 ===');
+console.log('\n=== 6. 紅龍：沒有紅色光暈（v4.33 改用獨立的手繪紅圖） ===');
 
-// v4.11 之後紅龍變大，光暈改成 0.20T → 0.92T（仍保持「中心不發光、外圈不出格子」）
-ok(/createRadialGradient\(x, y \+ T \* \.06, T \* \.[0-9]+, x, y \+ T \* \.06, T \* \.9[0-9]\)/.test(html),
-  '光暈是環狀：內圈 > 0（中心不發光）、外圈 ≤ 0.99T（不出格子）');
-ok(/gr\.addColorStop\(0, 'rgba\(255,90,50,0\)'\);/.test(html), '中心完全透明 → 不會整團往外擴');
-ok(/ctx\.ellipse\(x, y \+ T \* \.06, T \* \.9[0-9], T \* \.[0-9]+/.test(html), '氣場範圍 0.92T（沒有超過一格）');
-ok(/rgba\(255,\d+,\d+,' \+ \(a \* \.\d+\)/.test(html), '最亮的那一層落在身體邊緣');
-ok(/ctx\.strokeStyle = 'rgba\(255,100,60,'/.test(html), '邊緣再畫一圈會閃的細紅線');
-ok(/Math\.sin\(Game\.gameT \* 6\.6\) \* \.30 \+ Math\.sin\(Game\.gameT \* 3\.1\) \* \.15/.test(html),
-  '紅光會閃（兩個頻率疊出不規則的火光感）');
+ok(!/createRadialGradient\(x, y \+ T \* \.06/.test(html), '不再畫紅光暈（徑向漸層已移除）');
+ok(!/gr\.addColorStop\(0, 'rgba\(255,90,50,0\)'\);/.test(html), '環狀光暈整段刪掉');
+ok(!/ctx\.strokeStyle = 'rgba\(255,100,60,'/.test(html), '邊緣細紅線已移除');
+ok(!/Math\.sin\(Game\.gameT \* 6\.6\) \* \.30/.test(html), '閃爍頻率那段也一起移除');
+ok(/drawMountSprite\(ctx, red \? 'red' : 'green'/.test(html), '紅龍改用獨立的手繪紅圖');
 (function () {
-  const p = freshSolo(1);
+  const p2 = freshSolo(1);
   openField();
-  p.dino = true; p.redDragon = true; p.fireCd = 0;
+  p2.dino = true; p2.redDragon = true; p2.fireCd = 0;
   const g = mk();
   clearRec();
-  P.drawDino(p, G.T);
-  const ellipses = rec.calls.filter(function (c) { return c[0] === 'ellipse'; });
-  ok(ellipses.length > 0, '紅龍有畫氣場');
-  const big = ellipses.filter(function (c) { return c[3] > G.T * 1.0; });
-  ok(big.length === 0, '沒有大於 1 格的超大光暈');
+  P.drawDino(p2, G.T);
+  const grad = rec.calls.filter(function (c) { return c[0] === 'createRadialGradient'; });
+  ok(grad.length === 0, '畫紅龍時完全沒有建立徑向漸層（＝沒有光暈）');
   const strokes = rec.sets.filter(function (c) { return c[0] === 'strokeStyle' && String(c[1]).indexOf('rgba(255,100,60') === 0; });
-  ok(strokes.length > 0, '有畫出會閃的邊緣紅線');
+  ok(strokes.length === 0, '沒有紅色描邊光圈');
 })();
 
 // ================================================================

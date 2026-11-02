@@ -42,10 +42,17 @@ const PNG = process.argv[4] || 'scale.png';
       }
       // 只留「玩家附近 3 格內」的，排成 3 欄
       var near=order.filter(function(c){ return Math.abs(c[0]-hx)<=2 && Math.abs(c[1]-hy)<=2; });
-      var want=['penguin','crystal','bat','snowball','seal','panda'];
+      var want=['penguin','crystal','bat'];
       G.enemies.length=0;
+      // v4.32：把玩家搬到第一個空地（相機才對得到人），怪擺在他右邊／下面
+      var hp0=near[0];
+      if(hp0){ h.x=hp0[0]*T+T/2; h.y=hp0[1]*T+T/2; }
+      var p0=near[0], rest=near.slice(1).filter(function(c){
+        return Math.max(Math.abs(c[0]-p0[0]), Math.abs(c[1]-p0[1]))>=2;
+      });
+      h.invuln=0;
       want.forEach(function(id,i){
-        var pos=near[i] || near[near.length-1];
+        var pos=rest[i] || rest[rest.length-1];
         if(!pos) return;
         var e=BH.makeEnemy(pos[0], pos[1], id, ${STAGE}, 1);   // makeEnemy 吃的是格子座標
         e.dirName = (i%2)?'left':'right'; e.dirT=99; e.aggro=false; e.hp=999;

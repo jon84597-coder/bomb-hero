@@ -15,4 +15,10 @@ crystal   bbox 715x840  asp 0.851  out 143x168   15.2 KB  dir +1  hs 2.10  spin
 bat       bbox 942x824  asp 1.143  out 192x168   18.2 KB  dir +1  hs 2.05  flap
 snowball  bbox 860x745  asp 1.154  out 194x168   16.3 KB  dir +1  hs 2.25  roll
 seal      bbox 924x637  asp 1.451  out 244x168   16.0 KB  dir -1  hs 2.10  slide
-panda     bbox 770x951  asp 0.810  out 136x168   14.0 KB  dir +1  hs 2.25  stomp
+panda     bbox 770x951  asp 0.810  out 136x168   14.0 KB  dir +1  hs 2.48  stomp
+lavaslime bbox 861x825  asp 1.044  out 175x168   17.4 KB  dir +1  hs 2.31  jelly
+lavaworm  bbox 786x740  asp 1.062  out 178x168   14.5 KB  dir -1  hs 2.37  inch
+bee       bbox 868x817  asp 1.062  out 178x168   16.7 KB  dir -1  hs 2.02  flap
+bomber    bbox 790x893  asp 0.885  out 149x168   14.9 KB  dir -1  hs 2.21  waddle
+lizard    bbox 905x529  asp 1.711  out 287x168   27.8 KB  dir +1  hs 1.45  skitter
+rockling  bbox 871x909  asp 0.958  out 161x168   15.6 KB  dir -1  hs 1.55  stomp

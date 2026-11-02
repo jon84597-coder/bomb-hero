@@ -46,7 +46,14 @@ SPECS = [
     ('stage3', '03-bat',     'bat',     +1, 2.05, 'flap'),
     ('stage3', '04-snowball','snowball',+1, 2.25, 'roll'),
     ('stage3', '05-seal',    'seal',    -1, 2.10, 'slide'),
-    ('stage3', '06-panda',   'panda',   +1, 2.25, 'stomp'),
+    ('stage3', '06-panda',   'panda',   +1, 2.475, 'stomp'),
+    # ---- 第 4 大關 熔岩洞窟（v4.33）----
+    ('stage4', '01-lavaslime', 'lavaslime', +1, 2.31, 'jelly'),
+    ('stage4', '02-lavaworm',  'lavaworm',  -1, 2.37, 'inch'),
+    ('stage4', '03-bee',       'bee',       -1, 2.02, 'flap'),
+    ('stage4', '04-bomber',    'bomber',    -1, 2.21, 'waddle'),
+    ('stage4', '05-lizard',    'lizard',    +1, 1.45, 'skitter'),
+    ('stage4', '06-rockling',  'rockling',  -1, 1.55, 'stomp'),
 ]
 
 
@@ -86,7 +93,7 @@ def main():
                       % (key, W0, H0, asp, Wt, Ht, len(data) / 1024.0, d, hs, anim))
 
     js = ('// ---------- 小怪美術（自動生成，勿手改；來源 art/foes/pack_foes_game.py）----------\n'
-          '// 第 1 大關 6 隻（v4.30）＋ 第 2 大關 6 隻（v4.31）＋ 第 3 大關 6 隻（v4.32）；單張貼圖，靠鏡像轉向\n'
+          '// 第 1～4 大關各 6 隻（v4.30~v4.33）；單張貼圖，靠鏡像轉向\n'
           'const FOE_ART = {\n' + '\n'.join(out) + '\n};\n')
     io.open(os.path.join(ROOT, '_foes_game_parts.js'), 'w',
             encoding='utf-8', newline='').write(js)

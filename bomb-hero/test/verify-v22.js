@@ -158,7 +158,7 @@ rec.calls.length = 0;
 const bd = BH.drawSpriteChar(mkCtx2D(), BH.CHARACTERS[0], 100, 100, 20, { moving: true, walk: 1.2, facing: 'right' });
 const drew = rec.calls.filter(function (c) { return c[0] === 'drawImage'; });
 ok(drew.length === 1, '畫角色就是 drawImage 一次（真的貼使用者的圖）');
-ok(drew.length === 1 && Math.abs(drew[0][5] - 67.5) < .01, '高度 = R×3.75×0.9（v4.32 主角縮 10%；' + (drew[0] && drew[0][5]) + '）');
+ok(drew.length === 1 && Math.abs(drew[0][5] - 60.75) < .01, '高度 = R×3.75×0.81（v4.33 主角再縮 10%；' + (drew[0] && drew[0][5]) + '）');
 ok(drew.length === 1 && Math.abs(drew[0][4] / drew[0][5] - 166 / 320) < .01, '長寬比跟原圖一致（不變形）');
 ok(bd && bd.H > 0 && bd.topY < 100, '回傳頭部位置給名牌／手上炸彈定位');
 
