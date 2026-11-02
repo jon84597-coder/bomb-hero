@@ -50,8 +50,8 @@ ok(/body\.touch #scr-title \.title-card \.title-logo \{ width: clamp\(160px, min
 ok(/<div class="titlewrap">\s*<img class="title-logo"/.test(html), 'LOGO 圖還包在 .titlewrap 裡');
 
 console.log('\n=== 4. 單人怪物量增加 ===');
-ok(/const SOLO_WAVE = \[8, 11, 12, 15, 16, 19, 20\];/.test(html),
-  'v4.17：小怪變多 —— 前 7 關 [8,11,12,15,16,19,20]（第 8 關後連續成長，上限 26）');
+ok(/const base0 = Math\.round\(4 \+ stage \* \.25\);/.test(html),
+  'v4.36：小怪量改成隨關卡平滑成長（4 + stage × .25）');
 function freshSolo(stage) {
   P.settings.size = 'M';
   P.settings.hazards = 'off';
@@ -62,11 +62,19 @@ function freshSolo(stage) {
 }
 P.settings.soloDiff = 'normal';
 freshSolo(1);
-ok(G.enemies.length === 8, '普通・第 1 關 = 8 隻小怪（v4.17：原本 6，實測 ' + G.enemies.length + '）');
-freshSolo(3);
-ok(G.enemies.length === 12, '普通・第 3 關 = 12 隻（v4.17：原本 9，實測 ' + G.enemies.length + '）');
-freshSolo(7);
-ok(G.enemies.length === 20, '普通・第 7 關 = 20 隻（v4.17：原本 15，實測 ' + G.enemies.length + '）');
+const mobsOf = function () {
+  return G.enemies.filter(function (e) { return e.type !== 'boss'; }).length;
+};
+ok(P.FOE_MAX_LIVE === 12, '每場最多 12 隻小怪（FOE_MAX_LIVE=' + P.FOE_MAX_LIVE + '）');
+const c34 = [];
+for (let st = 1; st <= 32; st++) { freshSolo(st); c34.push(mobsOf()); }
+ok(c34.every(function (n) { return n <= P.FOE_MAX_LIVE; }),
+  '32 關全部不超過 12 隻（最大 ' + Math.max.apply(null, c34) + '）');
+ok(c34[0] >= 2 && c34[0] <= 6, '普通・第 1 關 2～6 隻小怪（實測 ' + c34[0] + '）');
+ok(Math.max.apply(null, c34) >= 9, '後段關卡仍有 9 隻以上（最大 ' + Math.max.apply(null, c34) + '）');
+const bossLow = [4, 8, 12, 16, 20, 24, 28].filter(function (st) { return !(c34[st - 1] < c34[st - 2]); });
+ok(bossLow.length === 0,
+  '章節魔王關的小怪比前一關少（留力氣打王）' + (bossLow.length ? '：' + bossLow.join(',') : ''));
 let eEasy = 0, eHard = 0;
 P.settings.soloDiff = 'easy'; for (let k = 0; k < 5; k++) { freshSolo(4); eEasy += G.enemies.length; }
 P.settings.soloDiff = 'hard'; for (let k = 0; k < 5; k++) { freshSolo(4); eHard += G.enemies.length; }
@@ -83,7 +91,7 @@ ok(/ITEM_POOL = \[/.test(html), '道具池仍在（種類不變，只是數量�
 
 console.log('\n=== 6. 體積 sanity ===');
 // v4.30：內嵌 6 隻小怪美術 → 上限放寬到 2.7M
-ok(html.length > 900000 && html.length < 3050000, '單檔體積正常（' + (html.length / 1024).toFixed(0) + ' KB）');
+ok(html.length > 900000 && html.length < 3350000, '單檔體積正常（' + (html.length / 1024).toFixed(0) + ' KB）');   // v4.36：多了 8 隻 BOSS 貼圖
 
 console.log('\n========================================');
 console.log('通過 ' + pass + ' / 失敗 ' + fail);

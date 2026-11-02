@@ -217,13 +217,19 @@ G.eggs.length = 0;
 G.eggs.push({ x: pcx, y: pcy, bob: 0, wob: 0 });
 ok(P.takeEgg(p7) === true, '吃到第一顆蛋');
 ok(p7.dino === true && !p7.redDragon, '第一次只是騎上小龍（還不是紅龍）');
-// 吐火：只有面前 2 格
+// 吐火：v4.36 改成「扇形 3 格」——正的 3 格 ＋ 前 2 格左右各溢 1 格
 G.flames.length = 0; p7.fireCd = 0; p7.facing = 'right';
 P.fireBreath(p7);
 const oneDir = cellsOfFlames();
-ok(oneDir.length === 2, '小龍只燒面前一個方向 2 格（' + oneDir.length + ' 格）');
-ok(oneDir.every(function (k) { return k.indexOf((pcx + 1) + ',') === 0 || k.indexOf((pcx + 2) + ',') === 0; }),
-  '小龍火焰在右側（面朝右）');
+const RANGE26 = P.DINO_FIRE_RANGE;
+ok(RANGE26 >= 3, '小龍吐火範圍 ≥ 3 格（DINO_FIRE_RANGE=' + RANGE26 + '）');
+const straight26 = [];
+for (let i = 1; i <= RANGE26; i++) straight26.push((pcx + i) + ',' + pcy);
+ok(straight26.every(function (k) { return oneDir.indexOf(k) >= 0; }),
+  '小龍正前方 ' + RANGE26 + ' 格都燒到（面朝右）');
+ok(oneDir.indexOf((pcx + 1) + ',' + (pcy - 1)) >= 0 && oneDir.indexOf((pcx + 1) + ',' + (pcy + 1)) >= 0,
+  '小龍前 2 格左右有溢火（對手斜著站也燒得到）');
+ok(oneDir.length >= RANGE26 + 2, '小龍火焰共 ' + oneDir.length + ' 格（≥ ' + (RANGE26 + 2) + '）');
 // 第二次吃蛋 → 紅龍
 G.eggs.push({ x: pcx, y: pcy, bob: 0, wob: 0 });
 ok(P.takeEgg(p7) === true, '吃到第二顆蛋');
@@ -240,13 +246,19 @@ const around = {
 let covered = 0;
 Object.keys(around).forEach(function (k) { if (fourDir.indexOf(around[k]) >= 0) covered++; });
 ok(covered === 8, '紅龍吐火涵蓋上下左右各 2 格（' + covered + '/8）');
-ok(fourDir.length === 8, '剛好 8 格火焰（' + fourDir.length + '）');
+ok(fourDir.length >= 24, '紅龍火焰鋪滿四方向扇形（' + fourDir.length + ' 格）');
 ok(fourDir.indexOf(pcx + ',' + pcy) < 0, '自己腳下不會著火');
 // 不管朝哪個方向都一樣是四方向
 ['up', 'down', 'left'].forEach(function (dn) {
   G.flames.length = 0; p7.fireCd = 0; p7.facing = dn;
   P.fireBreath(p7);
-  ok(cellsOfFlames().length === 8, '朝 ' + dn + ' 時一樣是四方向 8 格');
+  const fc26 = cellsOfFlames();
+  const hit26 = [
+    (pcx + 1) + ',' + pcy, (pcx - 1) + ',' + pcy,
+    pcx + ',' + (pcy + 1), pcx + ',' + (pcy - 1)
+  ].filter(function (k) { return fc26.indexOf(k) >= 0; }).length;
+  ok(hit26 === 4 && fc26.length >= 24,
+    '朝 ' + dn + ' 時一樣是四方向（四格都燒到、共 ' + fc26.length + ' 格）');
 });
 // 被炸一下龍還是不見
 p7.alive = true; p7.invuln = 0;

@@ -46,8 +46,9 @@ ok(/function placeBomb\(p\) \{[\s\S]{0,400}?return false;/.test(html), 'placeBom
 ok(src(/else if \(tryGlovePickup\(p\)\) \{ \/\* 已撿起 \*\/ \}/), '動作鍵仍然「先看腳下能不能撿」');
 ok(!/const dirs4 = \[\[1, 0\], \[-1, 0\], \[0, 1\], \[0, -1\]\][\s\S]{0,200}bombAt/.test(html),
   '四個方向亂找的邏輯已移除');
-ok(src(/if \(b\.owner === p && !b\.ownerLeft\) return false;/), '自己的炸彈要離開過該格才准撿');
-ok(src(/if \(fb && fb\.owner !== p\) b = fb;/), '面前那一格只撿「不是自己的」炸彈');
+ok(src(/if \(b\.owner === p && b\.cx === cx && b\.cy === cy && !b\.ownerLeft\) return false;/), '站在自己的炸彈上（沒離開過）不撿');
+ok(src(/if \(b\.owner === p && \(b\.age \|\| 0\) < \.35\) return false;/), '剛放下 0.35 秒內的炸彈不撿（連放保護）');
+ok(src(/b = bombAt\(cx \+ fd\.x, cy \+ fd\.y\);/), '面前那一格不論誰的炸彈都能撿（v4.36）');
 
 // ==================================================================
 console.log('\n=== 1. 站在自己剛放的炸彈上連按 → 不會被撿走 ===');
@@ -84,6 +85,7 @@ ok(P.tryGlovePickup(p) === false, '背後的炸彈不會被撿（舊版會）');
 // ==================================================================
 console.log('\n=== 3. 想撿回來：走回炸彈上面按 → 撿得起來 ===');
 put(p, cx, cy);
+for (let i = 0; i < 30; i++) step(.016);     // v4.36：剛放下有 0.35 秒保護期，先讓它長大
 ok(P.tryGlovePickup(p) === true, '站回第一顆上面 → 撿得起來');
 ok(p.carry === G.bombs[0] && G.bombs[0].held === true, 'carry 指向那顆、held = true');
 P.throwCarried(p);
@@ -107,7 +109,7 @@ ok(p2.carry === G.bombs[0], 'carry 指向面前那顆');
 P.throwCarried(p2);
 
 // ==================================================================
-console.log('\n=== 5. 自己的炸彈在面前（腳下是空地）→ 不准撿，正常放彈 ===');
+console.log('\n=== 5. 自己的炸彈在面前（腳下是空地）→ v4.36 起可以撿 ===');
 const p3 = freshSolo(1);
 const [bx, by] = openCell();
 put(p3, bx, by);
@@ -118,8 +120,13 @@ G.bombs.push({
   timer: 2.4, power: 1, owner: p3, passers: [p3], remoteArmed: false, mine: false,
   moving: null, flying: null, held: false, ownerLeft: true, seed: 0, armT: 40
 });
-ok(P.tryGlovePickup(p3) === false, '自己面前的炸彈不會被撿（要踩上去才撿）');
-ok(P.placeBomb(p3) === true, '腳下是空地 → 照樣放得下去');
+// v4.36：面前那一格不論誰的都能撿（手套本來就該這樣用）；但 0.35 秒內剛放下的不算
+ok(P.tryGlovePickup(p3) === false, '剛放下（<0.35 秒）→ 還不能撿');
+G.bombs[0].age = 1;
+ok(P.tryGlovePickup(p3) === true, '面前自己的舊炸彈 → 撿得起來（v4.36 修正）');
+ok(p3.carry === G.bombs[0], 'carry 指向那顆');
+P.throwCarried(p3);
+ok(P.placeBomb(p3) === true, '丟出去之後 → 腳下照樣放得下去');
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v4.34 撿彈分派：' + pass + ' 通過 / ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);

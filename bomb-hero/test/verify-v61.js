@@ -40,12 +40,14 @@ ok(typeof P.soloIsBoss === 'function', '__BH 有匯出 soloIsBoss');
   for (let st = 1; st <= 32; st++) {
     P.startSolo(st, false);
     const bosses = G.enemies.filter(function (e) { return e.type === 'boss'; });
-    const want = st === 32 ? 1 : 0;
+    // v4.36：章節魔王（4／8…28）也出王，第 32 關是最終魔王
+    const want = (st === 32 || (st % 4 === 0)) ? 1 : 0;
     if (bosses.length !== want) bad.push(st + ':boss' + bosses.length + '/' + want);
     if (st === 32) { hp32 = bosses[0] ? bosses[0].maxHp : 0; mobs32 = G.enemies.length; }
     if (st === 31) mobs31 = G.enemies.length;
   }
-  ok(bad.length === 0, '32 關實際生成：只有第 32 關有 BOSS' + (bad.length ? '（' + bad.join(',') + '）' : ''));
+  ok(bad.length === 0, '32 關實際生成：章節魔王（4／8…28）＋最終魔王（32）都有 BOSS' +
+    (bad.length ? '（' + bad.join(',') + '）' : ''));
   ok(hp32 === 12, '最終魔王血量 12 下（' + hp32 + '）');
   ok(mobs31 > mobs32, '第 31 關的小怪比第 32 關多（魔王關小怪減量：' + mobs31 + ' vs ' + mobs32 + '）');
 }

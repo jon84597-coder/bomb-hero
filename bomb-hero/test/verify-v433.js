@@ -47,8 +47,14 @@ ok(iPause > 0 && iPause < iStages && iStages < iSet, '按鈕位置在「重新�
 // ==================================================================
 console.log('\n=== 2. 主角再縮 10% ===');
 ok(P.HERO_ART_SCALE === 0.81, 'HERO_ART_SCALE = 0.81（v4.32 是 .90）', P.HERO_ART_SCALE);
-ok(src(/const rigH = R \* 3\.75 \* HERO_ART_SCALE;/), '零件骨架高度乘上 HERO_ART_SCALE');
-ok(src(/const H = R \* 3\.75 \* HERO_ART_SCALE;/), '整張圖 fallback 也乘上 HERO_ART_SCALE');
+// v4.36：豬／青蛙／小雞再縮 5% → 高度算式尾巴多一個 heroSizeK()
+ok(src(/const rigH = R \* 3\.75 \* HERO_ART_SCALE \* heroSizeK\(c\.animal\);/),
+  '零件骨架高度乘上 HERO_ART_SCALE（再乘角色體型係數）');
+ok(src(/const H = R \* 3\.75 \* HERO_ART_SCALE \* heroSizeK\(c\.animal\);/),
+  '整張圖 fallback 也乘上 HERO_ART_SCALE（再乘角色體型係數）');
+ok(P.HERO_SIZE_K.pig === .95 && P.HERO_SIZE_K.frog === .95 && P.HERO_SIZE_K.chick === .95,
+  '豬／青蛙／小雞都是 0.95（縮 5%）');
+ok(P.heroSizeK('pig') === .95 && P.heroSizeK('dragon') === 1, 'heroSizeK() 只縮那三隻，其他不動');
 // 只縮顯示：判定半徑與腳底位置沒被動到
 ok(src(/const R = T \* \.40 \* \(p\.dino \? \.82 : 1\)/), '站立時 R 仍是 T×.40（碰撞沒變小）');
 

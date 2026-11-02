@@ -49,7 +49,8 @@ function putBomb(p, cx, cy, remote) {
   const b = {
     cx: cx, cy: cy, px: cx * T + T / 2, py: cy * T + T / 2,
     timer: remote ? 9999 : 2.4, power: 2, owner: p, passers: [], remoteArmed: !!remote,
-    mine: false, mineLife: 10, moving: null, flying: null, held: false, ownerLeft: true, seed: 1, armT: 40
+    mine: false, mineLife: 10, moving: null, flying: null, held: false, ownerLeft: true, seed: 1, armT: 40,
+    age: 1                                     // v4.36：1 秒 = 超過 0.35 秒保護期，視為「放一陣子了」
   };
   G.bombs.push(b);
   return b;
@@ -163,7 +164,8 @@ ok(/buildOrganicMap\(cols, rows, theme, info, rngFrom\(seed\)/.test(html),
     try {
       P.startSolo(st, false);
       const boss = G.enemies.filter(function (e) { return e.type === 'boss'; }).length;
-      const wantBoss = st >= 32 ? 1 : 0;        // v4.16：只有第 32 關有 BOSS
+      // v4.36：每大關第 4 張（4／8…28）是章節魔王，第 32 關是最終魔王
+      const wantBoss = (st >= 32 || (st % 4 === 0)) ? 1 : 0;
       if (boss !== wantBoss) bad.push(st + ':boss' + boss + '/' + wantBoss);
       if (G.grid[1][1] !== 0) bad.push(st + ':spawn');
       if (!G.door) bad.push(st + ':door');
@@ -172,7 +174,7 @@ ok(/buildOrganicMap\(cols, rows, theme, info, rngFrom\(seed\)/.test(html),
       // 魔王血量：最終魔王固定 12 下
       if (wantBoss) {
         const b = G.enemies.filter(function (e) { return e.type === 'boss'; })[0];
-        const want = 12;
+        const want = st >= 32 ? 12 : (4 + Math.ceil(st / 4));   // 章節魔王 5～11、最終 12
         if (b.maxHp !== want) bad.push(st + ':hp' + b.maxHp + '/' + want);
       }
       seen.push(G.mapInfo.n);

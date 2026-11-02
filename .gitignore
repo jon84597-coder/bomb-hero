@@ -22,3 +22,10 @@ bomb-hero/art/foes/stage3/_raw/
 bomb-hero/art/foes/stage4/_raw/
 bomb-hero/art/mounts/_raw/
 bomb-hero/art/foes/stage2/_raw/
+
+# v4.36 章節 BOSS：AI 原始大圖與中間檢查圖不進版控（交付版 b1~b8.png）
+bomb-hero/art/bosses/_raw/
+bomb-hero/art/bosses/_raw2/
+bomb-hero/art/bosses/_contact_raw.png
+bomb-hero/art/bosses/_chk_b3_new.png
+bomb-hero/art/bosses/_chk_b3_b7.png

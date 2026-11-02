@@ -340,8 +340,10 @@ G10.flames.length = 0;
 const before = G10.flames.length;
 const fired = P.fireBreath(pd);
 ok(fired === true, '恐龍可以吐火');
-ok(G10.flames.length === 2, '吐火打到前 2 格（實際 ' + G10.flames.length + ' 格）');
-ok(Math.abs(G10.flames[0].cx - 5) <= 1 && Math.abs(G10.flames[1].cx - 6) <= 1, '火焰在前方兩格（x=5,6）');
+// v4.36：吐火改成「前 3 格 ＋ 左右各溢一格」的扇形 → 格數變多
+ok(G10.flames.length >= 5, '吐火燒到前方 3 格＋左右扇形（實際 ' + G10.flames.length + ' 格）');
+const fxs = G10.flames.map(function (f) { return f.cx; });
+ok(fxs.indexOf(5) >= 0 && fxs.indexOf(6) >= 0 && fxs.indexOf(7) >= 0, '正前方 3 格都有火（x=5,6,7）');
 ok(Math.abs(pd.fireCd - P.DINO_FIRE_CD) < 1e-6, '吐火後冷卻 ' + pd.fireCd.toFixed(1) + ' 秒');
 const again = P.fireBreath(pd);
 ok(again === false, '冷卻中不能再吐火');

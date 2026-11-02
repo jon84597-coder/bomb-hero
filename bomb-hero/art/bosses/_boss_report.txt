@@ -1,0 +1,8 @@
+b1  bbox 858x966  asp 0.888  out 249x280   23.7 KB
+b2  bbox 797x906  asp 0.880  out 246x280   21.6 KB
+b3  bbox 872x918  asp 0.950  out 266x280   21.7 KB
+b4  bbox 832x933  asp 0.892  out 250x280   27.9 KB
+b5  bbox 810x939  asp 0.863  out 242x280   22.2 KB
+b6  bbox 874x919  asp 0.951  out 266x280   30.7 KB
+b7  bbox 908x898  asp 1.011  out 283x280   23.4 KB
+b8  bbox 869x941  asp 0.923  out 259x280   25.0 KB

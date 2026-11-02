@@ -143,7 +143,8 @@ head('6. 寒冰地圖：四種元件分得出來');
   // v4.26：美術改成「預烘焙材質引擎」→ 這裡改驗 MAT.ice 的材質表與三種繪製函式
   ok(/function paintHardTile/.test(noCmt) && /function paintSoftTile/.test(noCmt) &&
      /function paintFloorTile/.test(noCmt), '找得到硬牆／軟牆／地板三種材質繪製函式');
-  const iceMat = /ice: \{[\s\S]*?\n  \},/.exec(noCmt);
+  // v4.36：FOE_FX_STYLE 也有一行 `ice: { glow: ... }` → 這裡要指名「下面接 hard:」才是 MAT.ice
+  const iceMat = /ice: \{\s*\n    hard: [\s\S]*?\n  \},/.exec(noCmt);
   ok(!!iceMat, '找得到 MAT.ice 材質表');
   const matBlk = function (k) {
     const m = new RegExp(k + ': \\{([\\s\\S]*?)\\}').exec(iceMat ? iceMat[0] : '');

@@ -172,7 +172,9 @@ function typesOfStage(stage) {
 }
 const t1 = typesOfStage(1), t4 = typesOfStage(4), t7 = typesOfStage(7);
 ok(t1.size >= 2, '第 1 關就有 2 種以上小怪（' + t1.size + '）');
-ok(t4.size > t1.size, '第 4 關種類比第 1 關多（' + t4.size + ' > ' + t1.size + '）');
+// v4.36：第 4 關改成「章節魔王關」，小怪只留 6 成 → 種類數不能拿來跟前幾關比
+ok(t7.size > t1.size, '第 7 關種類比第 1 關多（' + t7.size + ' > ' + t1.size + '）');
+ok(t4.size >= 2, '第 4 關（章節魔王關）仍有小怪陪打（' + t4.size + ' 種）');
 // v4.27：每關只會出現「所屬大關」那 6 隻 → 後段關卡最多就是 6 種
 ok(t7.size >= 6, '第 7 關種類最多（' + t7.size + ' 種）');
 const rosterBad = [];
@@ -396,13 +398,21 @@ G.flames.length = 0;
 //        ② 火焰要用「現在」的格子 —— updateBoss 會讓 BOSS 走位，用上面算好的 bc 常常打空，
 //           導致這 3 項時好時壞（火焰傷害是比對火焰格與 BOSS 所在格，位置一偏就完全沒判定）。
 boss.hitT = -9;
-const cc = cellOf(boss);
-G.flames.push({ cx: cc.x, cy: cc.y, owner: G.players[0], type: 'center', t: .46 });
-P.updateBoss(boss, 1 / 60);
-ok(boss.hp === 9, '玩家的火焰才扣得到 BOSS 的血（hp ' + boss.hp + '）');
+// v4.36：updateBoss 是「先走位、後比對火焰格」，火焰格一定要用同一幀算出來的 BOSS 格，
+//   否則牠往前走一格這一幀就整個打空（這 3 項以前會偶發紅燈）。這裡每幀重放一次火焰直到命中。
+let fireHitFrame = -1;
+for (let k = 0; k < 40; k++) {
+  const cc = cellOf(boss);
+  G.flames.length = 0;
+  G.flames.push({ cx: cc.x, cy: cc.y, owner: G.players[0], type: 'center', t: .46 });
+  P.updateBoss(boss, 1 / 60);
+  if (boss.hp === 9) { fireHitFrame = k; break; }
+}
+ok(fireHitFrame >= 0, '玩家的火焰才扣得到 BOSS 的血（hp ' + boss.hp + '，第 ' + (fireHitFrame + 1) + ' 幀命中）');
 ok(boss.hitT > 0, '受擊後有 0.8 秒無敵（hitT=' + boss.hitT.toFixed(2) + '）');
+const hpAfterHit = boss.hp;
 P.updateBoss(boss, 1 / 60);
-ok(boss.hp === 9, '同一道火不會連扣（還是 ' + boss.hp + '）');
+ok(boss.hp === hpAfterHit, '同一道火不會連扣（還是 ' + boss.hp + '）');
 
 // --- 炸彈數量上限（普通 4 / 暴走 6） ---
 boss = bossAt(2, 2, 10);
@@ -670,7 +680,7 @@ ok(!/\brequire\s*\(/.test(html) && !/^\s*import\s/m.test(html), '沒有 node 專
 ok(/<\/html>\s*$/.test(html.trim()), '檔案結尾完整（</html>）');
 const bytes = fs.statSync(__dirname + '/../index.html').size;
 // v4.21：多了提示卡／離場卡／10 語言文案 → 上限放寬到 2.2MB（單檔遊戲，仍在合理範圍）
-ok(bytes > 900000 && bytes < 3250000, '檔案大小合理（' + (bytes / 1024).toFixed(0) + ' KB）');   // v4.34：8 隻主角 + 48 隻小怪 + 2 龍坐騎內嵌 → 上限 3.25MB
+ok(bytes > 900000 && bytes < 3500000, '檔案大小合理（' + (bytes / 1024).toFixed(0) + ' KB）');   // v4.36：8 主角 + 48 小怪 + 2 龍 + 8 BOSS 內嵌 → 上限 3.5MB
 ok(!!BH && !!BH.Game && !!BH.startSolo, '__BH 正常匯出（腳本沒有中途爆掉）');
 ok(typeof BH.render === 'function' && typeof BH.updateSolo === 'function', '主迴圈函式都在');
 

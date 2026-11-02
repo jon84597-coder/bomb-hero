@@ -257,9 +257,12 @@ head('8. 隨從幫忙撿道具');
 head('9. 小怪變多、血量回升、AI 更聰明');
 {
   soloStage(1);
-  ok(G.enemies.length === 8, '單人第 1 關 8 隻（原本 6，實測 ' + G.enemies.length + '）');
-  ok(/const SOLO_WAVE = \[8, 11, 12, 15, 16, 19, 20\];/.test(css), '小怪量曲線往上調');
-  ok(/Math\.min\(26, 17 \+ Math\.round\(\(stage - 7\) \* \.55\)\)/.test(css), '第 8 關後改成 17 起跳、上限 26');
+  ok(G.enemies.length >= 2 && G.enemies.length <= P.FOE_MAX_LIVE,
+    '單人第 1 關 2～' + P.FOE_MAX_LIVE + ' 隻（實測 ' + G.enemies.length + '）');
+  ok(/const base0 = Math\.round\(4 \+ stage \* \.25\);/.test(css),
+    'v4.36：小怪量改成隨關卡平滑成長（4 + stage × .25）');
+  ok(/Math\.min\(FOE_MAX_LIVE, Math\.round\(base \* diff\.enemy/.test(css),
+    '每場都夾在 FOE_MAX_LIVE（12 隻）以內');
   ok(/Math\.round\(\(7 \+ stage \* \.95\)/.test(css), 'RPG 小怪量公式也往上調');
   ok(P.FOE_HP.slime === 3 && P.FOE_HP.beetle === 4 && P.FOE_HP.lizard === 5, 'RPG 血量回升（3／4／5）');
   ok(P.FOE_HP.bat === 3 && P.FOE_HP.eye === 4, '飛行怪血量也回升');
