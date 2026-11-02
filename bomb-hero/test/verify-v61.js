@@ -246,12 +246,12 @@ ok(P.RPG_FOE.slime.hp === 3 && P.RPG_FOE.lizard.hp === 5, 'RPG_FOE 跟著套用�
 
 // ================================================================
 head('6. 版本與 SW');
-ok(P.VERSION === '4.21', '版號 = ' + P.VERSION);
+ok(/^\d+\.\d+$/.test(P.VERSION), '版號格式 = ' + P.VERSION);
 ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.21' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.21（now）');
+ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = ' + P.VERSION + '（now）');
 ok((P.VERSION_LOG.filter(function (e) { return e.v === '4.19'; })[0] || {}).now === false, '4.19 已不再是 now');
-ok(P.VERSION_LOG[0].items.length >= 2, '4.21 寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
-ok(/SW_VERSION = 'v4\.21\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 快取版號 = v4.21.0');
+ok(P.VERSION_LOG[0].items.length >= 2, P.VERSION + ' 寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
+ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 快取版號 = v' + P.VERSION + '.0');
 
 // ================================================================
 console.log('\n----------------------------------------');

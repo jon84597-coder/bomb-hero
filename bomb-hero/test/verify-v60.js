@@ -224,13 +224,13 @@ head('8. 線上：人數與隊別會同步給客人');
 
 // ================================================================
 head('9. 版本與說明');
-ok(P.VERSION === '4.21', '版號 = ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.21' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆是 4.21（now）');
+ok(/^\d+\.\d+$/.test(P.VERSION), '版號格式 = ' + P.VERSION);
+ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆是 ' + P.VERSION + '（now）');
 ok((P.VERSION_LOG.filter(function (e) { return e.v === '4.19'; })[0] || {}).now === false, '4.19 已不再是 now');
 // v4.20：隨從是 4.17 的內容，版本紀錄一直往後長 → 用內容找人，不要綁死索引
 ok(P.VERSION_LOG.some(function (e) { return e.items.join(' ').indexOf('隨從') >= 0; }), '版本紀錄有寫隨從系統');
-ok(/SW_VERSION = 'v4\.21\.0'/.test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')),
-  'sw.js 快取版號升到 v4.21.0');
+ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')),
+  'sw.js 快取版號升到 v' + P.VERSION + '.0');
 
 // ================================================================
 console.log('\n通過 ' + pass + ' / ' + (pass + fail));

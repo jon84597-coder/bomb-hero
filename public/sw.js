@@ -12,10 +12,10 @@
      · /api/ 一律不攔（帳號、雲端存檔、線上配對都必須即時）
    ================================================================ */
 
-var SW_VERSION = 'v4.21.0';
+var SW_VERSION = 'v4.22.0';
 var CORE_CACHE = 'bh-core-' + SW_VERSION;   // 遊戲本體（離線也要開得起來）
 var ASSET_CACHE = 'bh-asset-' + SW_VERSION; // 圖示等靜態資源
-var NAV_TIMEOUT = 3500;
+var NAV_TIMEOUT = 2200;   // v4.22：Render 冷啟動一定超過，早點回快取讓畫面先出來
 
 var CORE = [
   './',
@@ -78,6 +78,23 @@ function putSafe(cacheName, key, res) {
   caches.open(cacheName).then(function (c) { c.put(key, copy); }).catch(function () {});
 }
 
+/* v4.22：退回快取後，背景繼續等伺服器。真的拿到新版（ETag 不同）就通知頁面換掉，
+   否則玩家會一直停在舊版（Render 免費方案冷啟動 30~60 秒，一定超過導覽逾時）。 */
+function watchForNewer(cachedRes, req) {
+  var oldTag = '';
+  try { oldTag = (cachedRes && cachedRes.headers.get('etag')) || ''; } catch (e) {}
+  fetch(new Request(req.url, { cache: 'no-store' })).then(function (res) {
+    if (!res || !res.ok) return;
+    var newTag = '';
+    try { newTag = res.headers.get('etag') || ''; } catch (e) {}
+    if (oldTag && newTag && oldTag === newTag) return;    // 一樣 → 不用吵
+    putSafe(CORE_CACHE, './index.html', res);
+    return self.clients.matchAll({ type: 'window' }).then(function (list) {
+      list.forEach(function (c) { try { c.postMessage({ type: 'NEW_VERSION' }); } catch (e) {} });
+    });
+  }).catch(function () {});
+}
+
 /* 導覽：網路優先（有逾時）→ 快取 → 首頁 */
 function navFetch(req) {
   return new Promise(function (resolve) {
@@ -85,7 +102,9 @@ function navFetch(req) {
     function done(res) { if (settled) return; settled = true; resolve(res); }
 
     var timer = setTimeout(function () {
-      caches.match('./index.html').then(function (c) { if (c) done(c); });
+      caches.match('./index.html').then(function (c) {
+        if (c) { done(c); watchForNewer(c, req); }   // 先讓玩家看到畫面，背景確認有沒有新版
+      });
     }, NAV_TIMEOUT);
 
     fetch(req).then(function (res) {
@@ -95,7 +114,7 @@ function navFetch(req) {
     }).catch(function () {
       clearTimeout(timer);
       caches.match(req).then(function (r1) {
-        if (r1) return done(r1);
+        if (r1) { done(r1); watchForNewer(r1, req); return; }
         caches.match('./index.html').then(function (r2) {
           done(r2 || new Response(
             '<!doctype html><meta charset="utf-8"><title>離線</title>' +

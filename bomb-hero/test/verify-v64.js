@@ -333,14 +333,14 @@ head('10. 生氣效果：只在中階／高階怪（含 BOSS）頭上冒 😡');
 head('11. 說明書與版本');
 ok(css.indexOf('中階／高階') > 0, '說明書寫了中階／高階小怪');
 ok(css.indexOf('都只在你踏進 <b>2 格內</b>才會發現你') > 0, '說明書寫了 2 格規則');
-ok(P.VERSION === '4.21', '版號 = ' + P.VERSION);
+ok(/^\d+\.\d+$/.test(P.VERSION), '版號格式 = ' + P.VERSION);
 ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.21' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.21（now）');
-ok(P.VERSION_LOG[0].items.join(' ').indexOf('離開遊戲') >= 0, 'v4.21 更新內容寫了離開遊戲');
+ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = ' + P.VERSION + '（now）');
+ok(((P.VERSION_LOG.filter(function (e) { return e.v === '4.21'; })[0] || {}).items || []).join(' ').indexOf('離開遊戲') >= 0, '4.21 更新內容寫了離開遊戲');
 ok((P.VERSION_LOG.filter(function (e) { return e.v === '4.19'; })[0] || {}).now === false, '4.19 已不是 now');
 ok(((P.VERSION_LOG.filter(function (e) { return e.v === '4.19'; })[0] || {}).items || []).join(' ').indexOf('2 格') >= 0, '4.19 條目仍寫著 2 格規則');
 ok((P.VERSION_LOG.filter(function (e) { return e.v === '4.18'; })[0] || {}).now === false, '4.18 已不是 now');
-ok(/SW_VERSION = 'v4\.21\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.21.0');
+ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v' + P.VERSION + '.0');
 
 console.log('\n' + (fail ? '✗ ' + fail + ' 項失敗 / ' : '') + '通過 ' + pass + ' 項');
 process.exit(fail ? 1 : 0);

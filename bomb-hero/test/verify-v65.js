@@ -181,12 +181,16 @@ head('8. i18n：10 種語言都有提示卡文字');
 
 head('9. 版本與 Service Worker');
 {
-  ok(P.VERSION === '4.21', '版號 = ' + P.VERSION);
+  // v4.22 起改成「不綁死版本號」：只驗格式與四處同步，升版就不用再改這支
+  ok(/^\d+\.\d+$/.test(P.VERSION), '版號格式 = ' + P.VERSION);
   ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-  ok(P.VERSION_LOG[0].v === '4.21' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.21（now）');
-  ok(P.VERSION_LOG[0].items.join(' ').indexOf('離開遊戲') >= 0, '更新內容寫了離開遊戲');
-  ok(P.VERSION_LOG[1].v === '4.20' && P.VERSION_LOG[1].now === false, '4.20 已不是 now');
-  ok(/SW_VERSION = 'v4\.21\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.21.0');
+  ok(css.indexOf('id="verLogVer">' + P.VERSION + '<') > 0, '版本紀錄標題同步 ' + P.VERSION);
+  ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = ' + P.VERSION + '（now）');
+  const e421 = P.VERSION_LOG.filter(e => e.v === '4.21')[0];
+  ok(!!e421 && e421.items.join(' ').indexOf('離開遊戲') >= 0, '4.21 的更新內容寫了離開遊戲');
+  ok(P.VERSION_LOG.filter(e => e.v === '4.20').every(e => e.now === false), '4.20 已不是 now');
+  ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')),
+    'sw.js = v' + P.VERSION + '.0');
 }
 
 console.log('\n通過 ' + pass + ' 項，失敗 ' + fail + ' 項');
