@@ -60,7 +60,14 @@ ok(src(/const R = T \* \.40 \* \(p\.dino \? \.82 : 1\)/), '站立時 R 仍是 T�
 
 // ==================================================================
 console.log('\n=== 3. 第 3 大關熊貓再放大 10% ===');
-ok(Math.abs(P.FOE_ART.panda.hs - 2.475) < .01, 'FOE_ART.panda.hs ≈ 2.475（2.25 × 1.1）', P.FOE_ART.panda.hs);
+// v4.37 尺寸重新配比後不再固定 2.475，改驗「熊貓仍是第 3 大關最高的一隻」
+function dispH(k) { return P.enemyArtR(P.makeEnemy(3, 3, k, 1, 1)) * P.FOE_ART[k].hs; }
+const S3 = ['penguin', 'crystal', 'bat', 'snowball', 'seal'];
+ok(P.FOE_ART.panda.hs > 1.5 && P.FOE_ART.panda.hs < 4,
+  'FOE_ART.panda.hs 存在且在合理範圍', P.FOE_ART.panda.hs);
+ok(S3.every(function (k) { return dispH('panda') > dispH(k); }),
+  '熊貓是第 3 大關最高的一隻（比企鵝／冰晶／蝙蝠／雪球／海豹都高）',
+  S3.map(function (k) { return k + ' ' + dispH(k).toFixed(0); }).join(' / ') + ' vs panda ' + dispH('panda').toFixed(0));
 
 // ==================================================================
 console.log('\n=== 4. 第 4 大關 6 隻手繪小怪 ===');
