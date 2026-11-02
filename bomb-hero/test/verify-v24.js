@@ -642,7 +642,8 @@ ok(!/@import/.test(html), '沒有 @import 外鏈');
 ok(!/\brequire\s*\(/.test(html) && !/^\s*import\s/m.test(html), '沒有 node 專用語法（瀏覽器直接跑）');
 ok(/<\/html>\s*$/.test(html.trim()), '檔案結尾完整（</html>）');
 const bytes = fs.statSync(__dirname + '/../index.html').size;
-ok(bytes > 900000 && bytes < 2000000, '檔案大小合理（' + (bytes / 1024).toFixed(0) + ' KB）');
+// v4.21：多了提示卡／離場卡／10 語言文案 → 上限放寬到 2.2MB（單檔遊戲，仍在合理範圍）
+ok(bytes > 900000 && bytes < 2300000, '檔案大小合理（' + (bytes / 1024).toFixed(0) + ' KB）');
 ok(!!BH && !!BH.Game && !!BH.startSolo, '__BH 正常匯出（腳本沒有中途爆掉）');
 ok(typeof BH.render === 'function' && typeof BH.updateSolo === 'function', '主迴圈函式都在');
 

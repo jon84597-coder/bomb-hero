@@ -372,12 +372,12 @@ head('12. 迴歸：玩過 RPG 再回單人，不會卡在 RPG 扣血邏輯');
 
 // ================================================================
 head('13. 版本與 SW');
-ok(P.VERSION === '4.20', '版號 = ' + P.VERSION);
+ok(P.VERSION === '4.21', '版號 = ' + P.VERSION);
 ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.20' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.20（now）');
-ok(P.VERSION_LOG[1].v === '4.19' && P.VERSION_LOG[1].now === false, '4.19 已不再是 now');
+ok(P.VERSION_LOG[0].v === '4.21' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.21（now）');
+ok((P.VERSION_LOG.filter(function (e) { return e.v === '4.19'; })[0] || {}).now === false, '4.19 已不再是 now');
 ok(P.VERSION_LOG.filter(function (e) { return e.v === '4.17'; })[0].items.join(' ').indexOf('隨從') >= 0, '4.17 版本紀錄有寫隨從');
-ok(/SW_VERSION = 'v4\.20\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.20.0');
+ok(/SW_VERSION = 'v4\.21\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v4.21.0');
 
 // ================================================================
 console.log('\n----------------------------------------');
