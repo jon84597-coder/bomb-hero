@@ -25,7 +25,8 @@ head('1. 作者公告不再蓋住選單（這是「按鈕點不到」的元凶�
 {
   // 先把 CSS 註解拿掉，否則「舊版是 position:fixed」這種說明文字會被誤判
   const cssNoCmt = css.replace(/\/\*[\s\S]*?\*\//g, '');
-  const m = cssNoCmt.match(/\.annbox \{([\s\S]*?)\}/);
+  // 只取獨立的 `.annbox {` 規則（v4.23 起還有 `.toprow .annbox {`，別抓錯）
+  const m = cssNoCmt.match(/\n\s{2}\.annbox \{([\s\S]*?)\}/);
   const block = m ? m[1] : '';
   ok(!!m, '找得到 .annbox 樣式');
   ok(!/position:\s*fixed/.test(block), '.annbox 不再是 position:fixed（以前浮在左上角蓋住按鈕）');

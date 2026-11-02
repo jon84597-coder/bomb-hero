@@ -186,7 +186,8 @@ head('8. 版本與快取');
 {
   ok(/^\d+\.\d+$/.test(P.VERSION), '版號格式 = ' + P.VERSION);
   ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = ' + P.VERSION);
-  ok(P.VERSION_LOG[0].items.join(' ').indexOf('14px') > 0, '更新內容有寫「整頁往上跳」這件事');
+  const v422log = P.VERSION_LOG.filter(function (e) { return e.v === '4.22'; })[0] || { items: [] };
+ok(v422log.items.join(' ').indexOf('14px') > 0, '4.22 更新內容有寫「整頁往上跳」這件事');
   ok(P.VERSION_LOG.filter(e => e.v === '4.21').every(e => e.now === false), '4.21 已不是 now');
   ok(src.indexOf('id="verLogVer">' + P.VERSION + '<') > 0, '版本紀錄標題同步');
   const sws = ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'];
