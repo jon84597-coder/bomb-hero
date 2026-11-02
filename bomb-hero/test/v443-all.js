@@ -90,59 +90,78 @@ console.log('\n=== 2. 推車：丟到牆上會彈一格，落地就停 ===');
 }
 
 // ==================================================================
-console.log('\n=== 3. 場景貼圖（第一大關全組 + 第二大關地板） ===');
+console.log('\n=== 3. 場景貼圖（八個主題的地面） ===');
 {
   const A = P.TILE_ART;
   ok(!!A, 'TILE_ART 存在');
-  ok(A.hard.length === 3, '硬牆 3 張', A.hard.length);
-  ok(A.soft.length >= 1, '軟牆至少 1 張', A.soft.length);
-  ok(A.floor.length === 4, '草地 4 張（v4.45b 換掉舊的 3 張）', A.floor.length);
-  ok(A.outer.length >= 2, '外牆至少 2 張', A.outer.length);
-  ok(Array.isArray(A.floorSand) && A.floorSand.length === 4, '沙漠沙地 4 張',
-    A.floorSand && A.floorSand.length);
-  const all = [].concat(A.hard, A.soft, A.floor, A.outer, A.floorSand);
+  // v4.46：牆（硬磚／軟磚／外框）全部回歸程序化美術，只留地面貼圖
+  ok(A.hard === undefined && A.soft === undefined && A.outer === undefined,
+    '牆的三組貼圖已移除（第一大關除了地面都回溯成程序美術）');
+  ok(A.floor.length === 4, '草地 4 張', A.floor.length);
+
+  const PAIRS = [['floorSand', '沙地'], ['floorIce', '雪地'], ['floorLava', '熔岩'],
+                 ['floorNeon', '霓虹'], ['floorSea', '深海'], ['floorSky', '天空'],
+                 ['floorDark', '暗黑']];
+  PAIRS.forEach(function (pr) {
+    ok(Array.isArray(A[pr[0]]) && A[pr[0]].length === 4, pr[1] + ' 4 張',
+      A[pr[0]] && A[pr[0]].length);
+  });
+
+  let all = [].concat(A.floor);
+  PAIRS.forEach(function (pr) { all = all.concat(A[pr[0]] || []); });
+  ok(all.length === 32, '總共 32 張（8 個主題 × 4）', all.length);
   ok(all.every(function (o) { return /^data:image\/webp;base64,[A-Za-z0-9+/=]+$/.test(o.u); }),
     '全部是 webp data URI（沒有漏前綴）');
-  ok(all.length === 17, '總共 17 張（3+3+4+3+4）', all.length);
 
-  // 檔案大小（v4.44 起每張 128×128）
   const bytes = all.reduce(function (a, o) { return a + o.u.length; }, 0);
-  ok(bytes < 60000, 'base64 合計 < 60KB（省空間）', (bytes / 1024).toFixed(1) + ' KB');
+  ok(bytes < 90000, 'base64 合計 < 90KB（省空間）', (bytes / 1024).toFixed(1) + ' KB');
 
-  // 尺寸：牆類 128×128（tiles2），地面 128×128（ground）
-  const t2 = JSON.parse(fs.readFileSync(__dirname + '/../art/tiles2/_stats.json', 'utf8'));
-  ok(t2.length === 12, '牆類貼圖 12 張都有統計', t2.length);
-  const gs = JSON.parse(fs.readFileSync(__dirname + '/../art/ground/_stats.json', 'utf8'));
-  ok(gs.length === A.floor.length, '草地統計筆數＝floor 張數', gs.length);
-  const ss = JSON.parse(fs.readFileSync(__dirname + '/../art/ground/_stats-sand.json', 'utf8'));
-  ok(ss.length === A.floorSand.length, '沙地統計筆數＝floorSand 張數', ss.length);
-  // 地面亮度要跟沙漠主題色對得上（否則拼起來會看到方格）
-  ok(Math.max.apply(null, ss.map(function (d) { return d.L; })) -
-    Math.min.apply(null, ss.map(function (d) { return d.L; })) < 3, '四張沙地亮度差 < 3 灰階');
-  ok(Math.max.apply(null, gs.map(function (d) { return d.L; })) -
-    Math.min.apply(null, gs.map(function (d) { return d.L; })) < 3, '四張草地亮度差 < 3 灰階');
-  const buf = fs.readFileSync(__dirname + '/../art/tiles2/tile-hard0.png');
-  ok(buf.readUInt32BE(16) === 128 && buf.readUInt32BE(20) === 128, '牆貼圖是 128×128',
-    buf.readUInt32BE(16) + 'x' + buf.readUInt32BE(20));
-  const gbuf = fs.readFileSync(__dirname + '/../art/ground/tile-sand0.png');
-  ok(gbuf.readUInt32BE(16) === 128 && gbuf.readUInt32BE(20) === 128, '沙地貼圖是 128×128',
-    gbuf.readUInt32BE(16) + 'x' + gbuf.readUInt32BE(20));
+  // 統計檔要跟貼圖對得上（否則改圖忘了重跑管線）
+  function stat(f) {
+    return JSON.parse(fs.readFileSync(__dirname + '/../art/ground/' + f, 'utf8'));
+  }
+  ok(stat('_stats.json').length === 4, '草地統計 4 筆');
+  ok(stat('_stats-sand.json').length === 4, '沙地統計 4 筆');
+  ok(stat('_stats-ice.json').length === 4, '雪地統計 4 筆');
+  const gs = stat('_stats-ground.json');
+  ['lava', 'neon', 'sea', 'sky', 'dark'].forEach(function (k) {
+    ok(gs[k] && gs[k].length === 4, k + ' 統計 4 筆', gs[k] && gs[k].length);
+  });
 
-  // 生效範圍：第一大關整組；第二大關只換地板
-  ok(/const sandFloor = \(st === 'sand' && k === 'floor'\);/.test(src),
-    'TileArt：沙漠關只換地板');
-  ok(/if \(st !== 'forest' && !sandFloor\) return false;/.test(src),
-    '其餘主題（含沙漠的牆）維持原本程序繪製');
-  ok(/pick\(sandFloor \? 'floorSand' : k, seed\)/.test(src), '沙漠地板走 floorSand 那組圖');
-  ok(/TileArt\.draw\(ring \? 'outer' : 'hard'/.test(src), '石牆會依「是不是最外圈」挑外牆／硬牆');
-  ok(/TileArt\.draw\('soft'/.test(src), '軟磚用新貼圖');
+  // 每個主題的四張亮度差要小（差太多拼起來就是方格）
+  function spread(list) {
+    const Ls = list.map(function (d) { return d.L; });
+    return Math.max.apply(null, Ls) - Math.min.apply(null, Ls);
+  }
+  ok(spread(stat('_stats.json')) < 3, '四張草地亮度差 < 3 灰階');
+  ok(spread(stat('_stats-sand.json')) < 3, '四張沙地亮度差 < 3 灰階');
+  ok(spread(stat('_stats-ice.json')) < 3, '四張雪地亮度差 < 3 灰階');
+  ['lava', 'neon', 'sea', 'sky', 'dark'].forEach(function (k) {
+    ok(spread(gs[k]) < 3, '四張' + k + '亮度差 < 3 灰階', spread(gs[k]).toFixed(2));
+  });
+
+  // 尺寸
+  const gbuf = fs.readFileSync(__dirname + '/../art/ground/tile-sky0.png');
+  const gw0 = gbuf.readUInt32BE(16);
+  ok(gw0 === 96 && gbuf.readUInt32BE(20) === 96, '新主題地面是 96×96（59px 顯示夠用，省額度）',
+    gw0 + 'x' + gbuf.readUInt32BE(20));
+
+  // 生效範圍與繪製路徑
+  ok(/if \(k !== 'floor'\) return false;/.test(src), 'TileArt 只認地板（牆走程序化）');
+  ok(/sand: 'floorSand', ice: 'floorIce', lava: 'floorLava'/.test(src),
+    '主題對照表：沙地／雪地／熔岩');
+  ok(/const im = pick\(ALT\[st\] \|\| 'floor', seed\);/.test(src),
+    '草原用 floor，其餘主題用各自的 floorXXX');
   ok(/TileArt\.draw\('floor'/.test(src), '地板用新貼圖');
-  ok(/drawStone\(px, py, T, th\.hard, x \* 37 \+ y \* 7, x, y\);/.test(src),
-    '呼叫端有把格子座標傳進去（才分得出外圈）');
+  ok(!/TileArt\.draw\(ring \? 'outer' : 'hard'/.test(src), '石牆不再走貼圖');
+  ok(!/TileArt\.draw\('soft'/.test(src), '軟磚不再走貼圖');
+  ok(/function paintGroundDecor/.test(src), '有地面裝飾（冰晶／火星／水草／血跡…）');
+  ok(/paintGroundDecor\(x, y, px, py, T, \(th && th\.style\) \|\| 'forest'\);/.test(src),
+    '地板畫完接著畫裝飾');
 
   // 沙盒裡沒有 Image → 不能爆掉，要退回原本的程序化美術
   ok(P.TileArt.readyCount() === 0, '沒有 Image 時不會硬載（沙盒安全）');
-  ok(P.TileArt.draw('hard', 0, 0, 0, T) === false, '沒載到圖就回 false → 走原本畫法');
+  ok(P.TileArt.draw('floor', 0, 0, 0, T) === false, '沒載到圖就回 false → 走原本畫法');
 }
 
 // ==================================================================

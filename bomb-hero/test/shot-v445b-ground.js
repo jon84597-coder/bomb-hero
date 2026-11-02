@@ -17,7 +17,7 @@ async function shoot(port, stage, tag) {
   }
   await p.eval('window.__BH.startSolo(' + stage + ')');
   for (let i = 0; i < 40; i++) {
-    if (await p.eval('window.__BH.TileArt && window.__BH.TileArt.readyCount() >= 17')) break;
+    if (await p.eval('window.__BH.TileArt && window.__BH.TileArt.readyCount() >= window.__BH.TileArt.total()')) break;
     await sleep(200);
   }
   console.log('  [' + tag + '] tiles', await p.eval('window.__BH.TileArt.readyCount() + "/" + window.__BH.TileArt.total()'));
@@ -37,7 +37,7 @@ async function shoot(port, stage, tag) {
   const crop = await p.eval(`(function(){
     var cv=document.getElementById('cv');
     var c2=document.createElement('canvas'); c2.width=520; c2.height=520;
-    c2.getContext('2d').drawImage(cv, 40, 40, 520, 520, 0, 0, 520, 520);
+    c2.getContext('2d').drawImage(cv, 200, 90, 560, 560, 0, 0, 560, 560);
     return c2.toDataURL('image/png');
   })()`);
   fs.writeFileSync(path.join(OUT, tag + '-crop.png'), Buffer.from(crop.split(',')[1], 'base64'));
@@ -45,7 +45,7 @@ async function shoot(port, stage, tag) {
 }
 
 (async () => {
-  await shoot(9493, 1, 'stage1');
-  await shoot(9495, 5, 'stage5');
+  const stages = [[9493, 1], [9495, 5], [9497, 9], [9499, 13], [9501, 17], [9503, 21], [9505, 25], [9507, 29]];
+  for (const [port, st] of stages) await shoot(port, st, 'stage' + st);
   console.log('  saved ->', OUT);
 })();
