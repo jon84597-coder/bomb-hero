@@ -52,6 +52,10 @@ def cut(src, dst, tol=TOL):
     pal = bg_palette(px, w, h)
 
     def is_bg(c):
+        # 背景一定是「中性色」（純白或灰棋盤格）。有彩度的像素（淡藍毛、粉頰、奶油白偏暖）
+        # 一律不動 —— 否則 TOL=30 會把角色的淺色毛當背景挖出黑洞。
+        if max(c) - min(c) > 26:
+            return False
         return min(dist(c, p) for p in pal) <= tol
 
     mask = bytearray(w * h)          # 1 = 背景

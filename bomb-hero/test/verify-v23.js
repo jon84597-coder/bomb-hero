@@ -76,13 +76,15 @@ function nameOfBlock(blk, key, H) {
   const M = BH.IMG_PARTS[key];
   const W = H * M.asp;
   let best = '', bestD = 1e9;
-  PARTS.forEach(function (pn) {
+  // v4.29：新主角的頭與身軀用同一個水平裁切框（寬度一樣），只比寬度會把頭認成身體
+  // → 寬度 + 高度一起比
+  Object.keys(M.p).forEach(function (pn) {
     const d = M.p[pn];
     if (!d) return;
-    const dW = Math.abs(blk.w - d.w * W);
-    if (dW < bestD) { bestD = dW; best = pn; }
+    const dd = Math.abs(blk.w - d.w * W) + Math.abs(blk.h - d.h * H);
+    if (dd < bestD) { bestD = dd; best = pn; }
   });
-  return bestD < 1.5 ? best : ('?' + best);
+  return bestD < 3 ? best : ('?' + best);
 }
 
 // ================================================================
@@ -95,18 +97,25 @@ const ipKeys = Object.keys(IP);
 ok(ipKeys.length === 10, '10 組部位圖（8 動物 + BOSS + 小龍），實際 ' + ipKeys.length);
 ok(['rabbit', 'bear', 'dog', 'cat', 'pig', 'panda', 'frog', 'chick', 'boss', 'dragon'].every(k => ipKeys.indexOf(k) >= 0),
   '八隻動物 + boss + dragon 都有部位圖');
+// v4.29：主角改成 v3 站立版 —— 必要部位是「頭／身／左右腿」，手與尾巴選用
+// （熊貓兩手在胸前交握，切手會吃掉胸口，所以那隻沒有手臂層）
+const NEED = ['head', 'torso', 'legL', 'legR'];
 const allPartsOk = ipKeys.every(function (k) {
   const g = IP[k];
-  return g && PARTS.every(function (pn) {
+  if (!g || !g.p) return false;
+  const keys = Object.keys(g.p);
+  if (!NEED.every(function (pn) { return !!g.p[pn]; })) return false;
+  return keys.every(function (pn) {
     const d = g.p[pn];
-    return d && /^data:image\/webp;base64,/.test(d.u) && d.u.length > 500 &&
-      d.x >= 0 && d.y >= 0 && d.w > 0 && d.h > 0 && d.w <= 1 && d.h <= 1 &&
-      d.px >= 0 && d.px <= 1 && d.py >= 0 && d.py <= 1;
+    // 層框可略超出 bbox（頭含耳朵、手含肩關節 6px 重疊）→ 允許 -0.3 ~ 1.4
+    return d && /^data:image\/webp;base64,/.test(d.u) && d.u.length > 200 &&
+      d.x >= -.3 && d.y >= -.3 && d.w > 0 && d.h > 0 && d.w <= 1.4 && d.h <= 1.4 &&
+      d.px >= -.3 && d.px <= 1.3 && d.py >= -.3 && d.py <= 1.3;
   });
 });
-ok(allPartsOk, '每組 6 個部位（頭／身／雙手／雙腿）都是合法 webp data URL + 座標');
+ok(allPartsOk, '每組至少 頭／身／左右腿（手與尾巴選用）都是合法 webp data URL + 座標');
 let totalBytes = 0;
-ipKeys.forEach(k => PARTS.forEach(pn => { totalBytes += IP[k].p[pn].u.length; }));
+ipKeys.forEach(k => Object.keys(IP[k].p).forEach(pn => { totalBytes += IP[k].p[pn].u.length; }));
 ok(totalBytes > 200000 && totalBytes < 700000,
   '部位圖總量合理（' + Math.round(totalBytes / 1024) + 'KB base64，單檔仍可直接開）');
 ok(ipKeys.every(k => IP[k].asp > .3 && IP[k].asp < 1.6), '每組都有原圖長寬比（asp），畫的時候不變形');
