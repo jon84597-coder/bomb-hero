@@ -1,5 +1,14 @@
-# 把 public/ 丟上 GitHub Pages（靜態託管，單人闖關／本機對戰可玩）
-# 啟用方式：Repo → Settings → Pages → Source 選「GitHub Actions」
+# 把 public/ 丟上 GitHub Pages（靜態鏡像：單人闖關／本機對戰可玩）
+#
+# ⚠️ 重要：這個 repo 的 GitHub Pages **從來沒有啟用過**（API 查 /pages 回 404），
+#    所以 configure-pages 一定失敗 —— 之前那 30 次紅叉全部都是這個原因，
+#    跟 `npm run build` 無關（這個 workflow 根本沒有 npm 步驟，本專案是純靜態單檔）。
+#
+# 要真的部署到 Pages，只需要 repo 主人做一次（API 的 enablement 需要 PAT，不接受預設 GITHUB_TOKEN）：
+#   Repo → Settings → Pages → Build and deployment → Source 選「GitHub Actions」→ 之後 push 就會自動上線
+#
+# 在那之前，這個 workflow 會「成功但跳過部署」，並在 summary 留下明確提示，
+# 不會再讓人以為是程式碼壞掉。正式站（Render）完全不受影響。
 name: Deploy to GitHub Pages
 
 on:
@@ -19,14 +28,51 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      pages: ${{ steps.pages.outcome }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
+
+      - name: 確認 GitHub Pages 是否已啟用
+        id: pages
+        uses: actions/configure-pages@v5
+        # 沒啟用時這一步會 throw（Get Pages site failed）→ 不要讓它把整個 workflow 判死
+        continue-on-error: true
+
+      - name: Pages 未啟用 → 給明確說明（不算失敗）
+        if: steps.pages.outcome != 'success'
+        run: |
+          echo "::warning title=GitHub Pages 尚未啟用::請到 Settings → Pages → Source 選「GitHub Actions」，靜態鏡像才會上線。正式站（Render）不受影響。"
+          {
+            echo "### ⚠️ GitHub Pages 尚未啟用，這次沒有部署（不是程式碼錯誤）"
+            echo ""
+            echo "| 項目 | 狀態 |"
+            echo "|---|---|"
+            echo "| 建置（本專案是純靜態，沒有 npm run build） | ✅ 不需要 |"
+            echo "| GitHub Pages 站台 | ❌ 從未啟用（API /pages 回 404） |"
+            echo "| 正式站 Render | ✅ 正常 |"
+            echo ""
+            echo "**開啟方式（只需一次）**：Repo → Settings → Pages → Build and deployment → Source 選 **GitHub Actions**，再回來重跑這個 workflow。"
+            echo ""
+            echo "> 註：actions/configure-pages 的 enablement: true 需要 PAT，預設的 GITHUB_TOKEN 不能用，"
+            echo "> 因此這一步無法由 workflow 自己完成。"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 檢查靜態檔是否齊全
+        if: steps.pages.outcome == 'success'
+        run: |
+          for f in public/index.html public/sw.js public/manifest.json; do
+            if [ ! -f "$f" ]; then echo "::error file=$f::缺少靜態檔，請先同步部署副本"; exit 1; fi
+          done
+
       - uses: actions/upload-pages-artifact@v3
+        if: steps.pages.outcome == 'success'
         with:
           path: ./public
+
   deploy:
     needs: build
+    if: needs.build.outputs.pages == 'success'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

@@ -5,7 +5,9 @@
   "description": "爆爆英雄 BOMB HERO：單人闖關 + 多人即時對戰 + RPG（帳號 / 雲端存檔）",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "node tools/build-static.js",
+    "test": "node bomb-hero/test/verify.js"
   },
   "engines": {
     "node": ">=18"
