@@ -35,11 +35,18 @@ SPECS = [
     ('stage1', '06-beetle', 'beetle', -1, 1.74, 'skitter'),
     # ---- 第 2 大關 沙漠遺跡 ----
     ('stage2', '01-crab',   'crab',     +1, 2.25, 'scuttle'),
-    ('stage2', '02-mummy',  'mummy',    +1, 1.86, 'shamble'),
+    ('stage2', '02-mummy',  'mummy',    +1, 2.05, 'shamble'),
     ('stage2', '03-eye',    'eye',      +1, 2.35, 'float'),
     ('stage2', '04-sandworm', 'sandworm', +1, 2.10, 'burrow'),
-    ('stage2', '05-dune',   'dune',     -1, 1.92, 'stomp'),
+    ('stage2', '05-dune',   'dune',     -1, 2.11, 'stomp'),
     ('stage2', '06-scorp',  'scorp',    +1, 2.02, 'pinch'),
+    # ---- 第 3 大關 冰雪原（v4.32）----
+    ('stage3', '01-penguin', 'penguin', +1, 2.30, 'waddle'),
+    ('stage3', '02-crystal', 'crystal', +1, 2.10, 'spin'),
+    ('stage3', '03-bat',     'bat',     +1, 2.05, 'flap'),
+    ('stage3', '04-snowball','snowball',+1, 2.25, 'roll'),
+    ('stage3', '05-seal',    'seal',    -1, 2.10, 'slide'),
+    ('stage3', '06-panda',   'panda',   +1, 2.25, 'stomp'),
 ]
 
 
@@ -79,7 +86,7 @@ def main():
                       % (key, W0, H0, asp, Wt, Ht, len(data) / 1024.0, d, hs, anim))
 
     js = ('// ---------- 小怪美術（自動生成，勿手改；來源 art/foes/pack_foes_game.py）----------\n'
-          '// 第 1 大關 6 隻（v4.30）＋ 第 2 大關 6 隻（v4.31）；單張貼圖，靠鏡像轉向\n'
+          '// 第 1 大關 6 隻（v4.30）＋ 第 2 大關 6 隻（v4.31）＋ 第 3 大關 6 隻（v4.32）；單張貼圖，靠鏡像轉向\n'
           'const FOE_ART = {\n' + '\n'.join(out) + '\n};\n')
     io.open(os.path.join(ROOT, '_foes_game_parts.js'), 'w',
             encoding='utf-8', newline='').write(js)
