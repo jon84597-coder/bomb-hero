@@ -25,7 +25,8 @@ const HIT = id => `(function(){
 })()`;
 
 (async () => {
-  const br = await launch({ w: 1280, h: 900, port: 9481 });
+  // v4.23：9481 會被其他程式的臨時埠佔用（Chrome 綁不上 → CDP 起不來），改用 9460
+  const br = await launch({ w: 1280, h: 900, port: 9460 });
 
   // ================= PC 滑鼠 =================
   console.log('=== 1. PC 1280x900（真實滑鼠點擊）===');
