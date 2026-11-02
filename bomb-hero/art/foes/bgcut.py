@@ -16,6 +16,13 @@ v4.34 修的三個病：
   C. 白邊：抗鋸齒像素是「角色色 × a + 白 × (1-a)」→ 貼著透明又夠白的像素往內剝 3 圈，
      再收邊 1px＋羽化，最後對半透明像素做「去白前乘（unpremultiply against white）」。
 
+⚠ A2／A3 兩關預設「關閉」（BGCUT_GAPFILL / BGCUT_CREVICE），因為它們會把「發光核心、
+  純白眼珠、白色毛髮」這種本來就該留著的純白一起吃掉。遇到坐騎那種「沒有發光、沒有純白眼珠」
+  的手繪圖再打開，而且開完一定要目檢：
+    BGCUT_GAPFILL=1 BGCUT_CREVICE=1 python bgcut.py --fix art/mounts/dragon-green.png ...
+  A2 = 腳底縫隙（最底 22%、被地面暗線包住的整片白）
+  A3 = 夾縫純白（翅膀／耳朵／脖子之間、手臂內側，被裁切到 255 的數位白）
+
 用法：
   python bgcut.py raw1.png out1.png raw2.png out2.png ...
   python bgcut.py --fix  already_cut1.png already_cut2.png ...      # 就地補救
@@ -30,6 +37,13 @@ ERODE = 1                                        # 收邊像素（吃掉混到�
 PEEL = 3                                         # 往內剝幾圈白邊
 SHADOW = True                                    # 吃掉腳下那圈貼地陰影
 MIN_KEEP = 0.005                                 # 連通塊面積 < 最大塊的 0.5% → 當碎屑丟掉
+# 腳底縫隙：腳跟腳之間、腳跟尾巴之間常常「整片純白」，但生圖又在腳下畫了一條暗色地面線，
+# 把這片白完全包住 → 從邊界泛洪走不到、也不夠大到算「洞」→ 會留一塊白。
+# 特徵：完全碰不到透明區（5px 內都沒有）＋在角色最底 22% ＋平坦純白。
+GAPFILL = os.environ.get('BGCUT_GAPFILL', '0') == '1'
+GAP_YREL = float(os.environ.get('BGCUT_GAP_YREL', '0.78'))
+GAP_AREA = float(os.environ.get('BGCUT_GAP_AREA', '0.0004'))   # 佔畫面面積比例
+CREVICE = os.environ.get('BGCUT_CREVICE', '0') == '1'          # 夾縫純白（翅膀／脖子／手臂內側）
 
 
 def bg_palette(px, w, h):
@@ -140,6 +154,87 @@ def _finish(rgb, isbg, w, h, tag=''):
             isbg[i] = 1
         hole_area += area
 
+    # ---- A2. 腳底縫隙：被「畫上去的地面暗線」包住的整片純白 ----
+    #   只看角色最底 22%（眼睛鞏膜、牙齒都在上面 → 不會被動到），
+    #   而且要求「5px 內完全碰不到透明」——真正的白腳掌一定貼著下緣輪廓，會被這一關擋掉。
+    gap_area = 0
+    if GAPFILL:
+        solid_idx = [i for i in range(w * h) if not isbg[i]]
+        if solid_idx:
+            ytop = min(i // w for i in solid_idx)
+            ybot = max(i // w for i in solid_idx)
+            ylim = ytop + int((ybot - ytop) * GAP_YREL)
+            # 透明區往外擴 2px（5x5）→ 用來判斷「這塊白有沒有接到外面」
+            tg = Image.frombytes('L', (w, h), bytes(255 if isbg[i] else 0 for i in range(w * h)))
+            tgn = tg.filter(ImageFilter.MaxFilter(5))
+            tp = tgn.load()
+            whites2 = bytearray(w * h)
+            for i in solid_idx:
+                c = px[i % w, i // w]
+                if min(c) >= 244 and max(c) - min(c) <= 10:
+                    whites2[i] = 1
+            _, comps1 = label(whites2, w, h, conn8=False)
+            min_gap = max(60, int(GAP_AREA * w * h))
+            for area, border, pix in comps1:
+                if border or area < min_gap:
+                    continue
+                if max(i // w for i in pix) < ylim:      # 不在最底那一段 → 是眼睛／牙齒，不動
+                    continue
+                if any(tp[i % w, i // w] for i in pix):  # 碰到透明區 → 是輪廓外的抗鋸齒，交給剝白邊
+                    continue
+                vals = []
+                step = max(1, len(pix) // 400)
+                for i in pix[::step]:
+                    c = px[i % w, i // w]
+                    vals.append((c[0] + c[1] + c[2]) / 3.0)
+                m = sum(vals) / len(vals)
+                if (sum((v - m) ** 2 for v in vals) / len(vals)) ** .5 > 3.0:
+                    continue
+                for i in pix:
+                    isbg[i] = 1
+                gap_area += area
+
+
+    # ---- A3. 夾縫純白：翅膀／耳朵／脖子之間、手臂內側這種「被兩個部件夾住」的背景白 ----
+    #   跟 A 的差別：不限在畫面底部，但要求「真的是被裁切過的數位純白」（max 通道 ≥250，
+    #   且整塊有 55% 以上是 252+）——眼白／高光通常不會被裁到 255，這關就是靠「有沒有被裁切」
+    #   把它們分開；再加平坦度與「5px 內碰不到透明」兩道保險。
+    crev_area = 0
+    if CREVICE:
+        solid_idx = [i for i in range(w * h) if not isbg[i]]
+        if solid_idx:
+            tg = Image.frombytes('L', (w, h), bytes(255 if isbg[i] else 0 for i in range(w * h)))
+            tp = tg.filter(ImageFilter.MaxFilter(5)).load()
+            whites3 = bytearray(w * h)
+            for i in solid_idx:
+                c = px[i % w, i // w]
+                if min(c) >= 235 and max(c) - min(c) <= 20 and max(c) >= 250:
+                    whites3[i] = 1
+            _, comps3 = label(whites3, w, h, conn8=False)
+            min_crev = max(160, int(0.00022 * w * h))
+            for area, border, pix in comps3:
+                if border or area < min_crev:
+                    continue
+                if any(tp[i % w, i // w] for i in pix):
+                    continue
+                vals = []
+                clipped = 0
+                step = max(1, len(pix) // 500)
+                sample = pix[::step]
+                for i in sample:
+                    c = px[i % w, i // w]
+                    if max(c) >= 252:
+                        clipped += 1
+                    vals.append((c[0] + c[1] + c[2]) / 3.0)
+                if clipped < len(sample) * .55:
+                    continue
+                m = sum(vals) / len(vals)
+                if (sum((v - m) ** 2 for v in vals) / len(vals)) ** .5 > 4.0:
+                    continue
+                for i in pix:
+                    isbg[i] = 1
+                crev_area += area
+
     # ---- B2. 貼地陰影：角色腳下那圈灰灰的橢圓（生圖常常自己畫上去）----
     #   特徵：中性灰、亮度 130~215、局部很平（3x3 極差很小），而且從最底邊連上來。
     #   只從「最底邊」泛洪，所以只會吃掉腳下那一片，不會往身上爬。
@@ -243,7 +338,7 @@ def _finish(rgb, isbg, w, h, tag=''):
         bbox = (max(0, bbox[0] - pad), max(0, bbox[1] - pad),
                 min(w, bbox[2] + pad), min(h, bbox[3] + pad))
         out = out.crop(bbox)
-    return out, hole_area, dropped
+    return out, hole_area + gap_area + crev_area, dropped
 
 
 def cut(src, dst=None, tol=TOL, verbose=True):
