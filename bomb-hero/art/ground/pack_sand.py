@@ -21,16 +21,20 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RAW = os.path.join(HERE, '_raw', 'sand')
 
 OUT_SIZE = 128
-CROP = 512
-CROPS = [(0, 0), (512, 0), (0, 512), (512, 512)]
+# v4.45c：沙紋要「看得見」。母圖 1024 裡一條風紋約 55px，取 512 縮到 128 只剩 6~8px
+# （59px 格子裡 3~4px）→ 看起來是細碎顆粒。取 224 縮 128（比 0.57）沙紋約 31px，
+# 59px 格子裡約 14px，才看得出是「沙紋」而不是「雜點」。
+CROP = 224
+CROPS = [(0, 0), (800, 0), (0, 800), (800, 800)]
+CROP_OUT = 158           # 任意角度旋轉後，中心 224/√2 ≈ 158 一定有內容
 MOTHERS = ['Seamless_tileable_hand_painted_2026-11-02T21-32-10.png']
 
 # 目標色調：沙漠地板主題色 (227,202,149)。遊戲裡牆會壓暗，貼圖取略亮一點點
 TARGET_RGB = (229.0, 205.0, 152.0)
-TARGET_STD = 6.0         # 沙地是低對比材質：11 以上會變「雜訊」，5 以下像塑膠板
+TARGET_STD = 10.0        # 沙紋要看得見：6 太平像塑膠板，12 以上會變雜訊
 
-KEEP_LOW = 0.00          # 完全不留大面積起伏（沙地只要細顆粒，任何中低頻都會拼出方格）
-CLARITY = 2.2            # 局部對比（UnsharpMask 半徑大一點 -> 沙粒浮出來）
+KEEP_LOW = 0.20          # 保留一點大面積起伏（0＝純顆粒、太平；太高會拼出方格）
+CLARITY = 2.6            # 局部對比（UnsharpMask 半徑大一點 -> 沙粒與沙紋浮出來）
 USE = None
 
 # ── 程序化裝飾 ────────────────────────────────────────────────
@@ -41,6 +45,10 @@ PEBBLE_N = (0, 0)        # 每張放幾顆小石子
 PEBBLE_R = (2.6, 5.4)    # 半徑範圍（128px 貼圖上；59px 遊戲格約 1.2~2.5px）
 PEBBLE_COL = (196.0, 182.0, 160.0)
 CRACK_N = (0, 0)         # 幾條細裂紋
+
+# 每格是「獨立貼上去」的，不必跨格連續 -> 可以任意角度旋轉再從中心裁切，
+# 四塊沙紋方向就散了。只轉 0/90/180 的話，斜向沙紋仍會在格邊形成人字／菱形山脊。
+ANGLES = [-34.0, 27.0, 68.0, -12.0]
 
 
 # ---------------------------------------------------------------- 去浮水印
@@ -186,12 +194,15 @@ def build():
             im = Image.fromarray(np.clip(block + .5, 0, 255).astype(np.uint8))
             i = idx
             idx += 1
-            im = im.resize((OUT_SIZE, OUT_SIZE), Image.LANCZOS)
+            # 旋轉（四角會被裁掉）-> 取中心 CROP_OUT -> 縮到 128
+            im = im.rotate(ANGLES[i % len(ANGLES)], resample=Image.BICUBIC)
+            c0 = (CROP - CROP_OUT) // 2
+            im = im.crop((c0, c0, c0 + CROP_OUT, c0 + CROP_OUT)).resize((OUT_SIZE, OUT_SIZE), Image.LANCZOS)
             # 沙粒是很細的高頻，縮小後先拉對比再銳化
             im = ImageEnhance.Contrast(im).enhance(1.12)
             im = im.filter(ImageFilter.UnsharpMask(radius=1.6, percent=int(CLARITY * 100), threshold=1))
             a = np.asarray(im).astype(np.float32)
-            a = flatten_low_freq(a, radius=5)
+            a = flatten_low_freq(a, radius=20)
             a = grain(a, 970 + i, amp=2.2)
             a = match_stats(a)
             # 程序化裝飾：每張獨立 seed -> 四張不會是同一個圖案
