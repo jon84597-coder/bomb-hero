@@ -21,7 +21,10 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
     if (!ready) { console.log('結果：' + pass + ' 通過 / ' + (fail + 1) + ' 失敗'); await b.close(); return; }
 
     const ver = await p.eval('window.__BH.VERSION');
-    ok(ver === '4.28', '線上版本是 4.28（實際 ' + ver + '）');
+    // v4.30：改成跟本機 index.html 的 VERSION 比對（不再寫死版號）
+    const localVer = (require('fs').readFileSync(require('path').join(__dirname, '../index.html'), 'utf8')
+      .match(/const VERSION = '([0-9.]+)'/) || [])[1];
+    ok(ver === localVer, '線上版本與本機相同（線上 ' + ver + ' / 本機 ' + localVer + '）');
     const n = await p.eval('window.__BH.ENEMY_SPECIES.length');
     ok(n === 48, '線上小怪 48 隻（實際 ' + n + '）');
     const blocks = await p.eval('window.__BH.STAGE_ROSTER.length');
