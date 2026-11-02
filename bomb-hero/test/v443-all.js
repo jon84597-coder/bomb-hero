@@ -90,35 +90,50 @@ console.log('\n=== 2. 推車：丟到牆上會彈一格，落地就停 ===');
 }
 
 // ==================================================================
-console.log('\n=== 3. 場景貼圖（第一大關） ===');
+console.log('\n=== 3. 場景貼圖（第一大關全組 + 第二大關地板） ===');
 {
   const A = P.TILE_ART;
   ok(!!A, 'TILE_ART 存在');
   ok(A.hard.length === 3, '硬牆 3 張', A.hard.length);
   ok(A.soft.length >= 1, '軟牆至少 1 張', A.soft.length);
-  ok(A.floor.length === 3, '地板 3 張', A.floor.length);
+  ok(A.floor.length === 4, '草地 4 張（v4.45b 換掉舊的 3 張）', A.floor.length);
   ok(A.outer.length >= 2, '外牆至少 2 張', A.outer.length);
-  const all = [].concat(A.hard, A.soft, A.floor, A.outer);
+  ok(Array.isArray(A.floorSand) && A.floorSand.length === 4, '沙漠沙地 4 張',
+    A.floorSand && A.floorSand.length);
+  const all = [].concat(A.hard, A.soft, A.floor, A.outer, A.floorSand);
   ok(all.every(function (o) { return /^data:image\/webp;base64,[A-Za-z0-9+/=]+$/.test(o.u); }),
     '全部是 webp data URI（沒有漏前綴）');
-  ok(all.length >= 9, '總共至少 9 張', all.length);
+  ok(all.length === 17, '總共 17 張（3+3+4+3+4）', all.length);
 
   // 檔案大小（v4.44 起每張 128×128）
   const bytes = all.reduce(function (a, o) { return a + o.u.length; }, 0);
   ok(bytes < 60000, 'base64 合計 < 60KB（省空間）', (bytes / 1024).toFixed(1) + ' KB');
 
-  // 尺寸
-  const dims = JSON.parse(fs.readFileSync(__dirname + '/../art/tiles2/_stats.json', 'utf8'));
-  ok(dims.length === all.length, '_stats.json 筆數與 TILE_ART 一致', dims.length);
-  const png = require('child_process');
-  // 用 PIL 不方便 → 直接讀 PNG 標頭（tile-*.png 是 128×128）
+  // 尺寸：牆類 128×128（tiles2），地面 128×128（ground）
+  const t2 = JSON.parse(fs.readFileSync(__dirname + '/../art/tiles2/_stats.json', 'utf8'));
+  ok(t2.length === 12, '牆類貼圖 12 張都有統計', t2.length);
+  const gs = JSON.parse(fs.readFileSync(__dirname + '/../art/ground/_stats.json', 'utf8'));
+  ok(gs.length === A.floor.length, '草地統計筆數＝floor 張數', gs.length);
+  const ss = JSON.parse(fs.readFileSync(__dirname + '/../art/ground/_stats-sand.json', 'utf8'));
+  ok(ss.length === A.floorSand.length, '沙地統計筆數＝floorSand 張數', ss.length);
+  // 地面亮度要跟沙漠主題色對得上（否則拼起來會看到方格）
+  ok(Math.max.apply(null, ss.map(function (d) { return d.L; })) -
+    Math.min.apply(null, ss.map(function (d) { return d.L; })) < 3, '四張沙地亮度差 < 3 灰階');
+  ok(Math.max.apply(null, gs.map(function (d) { return d.L; })) -
+    Math.min.apply(null, gs.map(function (d) { return d.L; })) < 3, '四張草地亮度差 < 3 灰階');
   const buf = fs.readFileSync(__dirname + '/../art/tiles2/tile-hard0.png');
-  ok(buf.readUInt32BE(16) === 128 && buf.readUInt32BE(20) === 128, '輸出貼圖是 128×128',
+  ok(buf.readUInt32BE(16) === 128 && buf.readUInt32BE(20) === 128, '牆貼圖是 128×128',
     buf.readUInt32BE(16) + 'x' + buf.readUInt32BE(20));
+  const gbuf = fs.readFileSync(__dirname + '/../art/ground/tile-sand0.png');
+  ok(gbuf.readUInt32BE(16) === 128 && gbuf.readUInt32BE(20) === 128, '沙地貼圖是 128×128',
+    gbuf.readUInt32BE(16) + 'x' + gbuf.readUInt32BE(20));
 
-  // 只換第一大關
-  ok(/if \(!Game\.theme \|\| Game\.theme\.style !== 'forest'\) return false;/.test(src),
-    'TileArt 只在 forest（第一大關）生效');
+  // 生效範圍：第一大關整組；第二大關只換地板
+  ok(/const sandFloor = \(st === 'sand' && k === 'floor'\);/.test(src),
+    'TileArt：沙漠關只換地板');
+  ok(/if \(st !== 'forest' && !sandFloor\) return false;/.test(src),
+    '其餘主題（含沙漠的牆）維持原本程序繪製');
+  ok(/pick\(sandFloor \? 'floorSand' : k, seed\)/.test(src), '沙漠地板走 floorSand 那組圖');
   ok(/TileArt\.draw\(ring \? 'outer' : 'hard'/.test(src), '石牆會依「是不是最外圈」挑外牆／硬牆');
   ok(/TileArt\.draw\('soft'/.test(src), '軟磚用新貼圖');
   ok(/TileArt\.draw\('floor'/.test(src), '地板用新貼圖');
