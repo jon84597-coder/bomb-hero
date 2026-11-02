@@ -140,24 +140,42 @@ head('6. 寒冰地圖：四種元件分得出來');
     ok(Lsoft > Lhard + .20, '軟牆明顯比硬牆亮（差 ' + (Lsoft - Lhard).toFixed(2) + '）');
     ok(Lfloor > Lsoft + .20, '地板明顯比軟牆亮（差 ' + (Lfloor - Lsoft).toFixed(2) + '）');
   }
-  // 形狀：軟牆是八角、硬牆是方塊
-  const crate = /function drawCrateIce[\s\S]*?\n\}\n/.exec(noCmt);
-  ok(!!crate, '找得到 drawCrateIce');
-  ok(crate && /const cut = w \* \.26/.test(crate[0]), '軟牆用八角切角（形狀跟硬牆不同）');
-  ok(crate && /#d2f8ff/.test(crate[0]), '軟牆是亮青冰晶');
-  ok(crate && /rgba\(12,58,84,\.62\)/.test(crate[0]), '軟牆的裂痕是深色（不是白色反光）');
-
-  const wall = /function drawWallIce[\s\S]*?\n\}\n/.exec(noCmt);
-  ok(!!wall, '找得到 drawWallIce');
-  ok(wall && /#3d7398/.test(wall[0]) && /#15314a/.test(wall[0]), '硬牆是深藍漸層');
-  ok(wall && /#0b2236/.test(wall[0]), '硬牆有深色粗外框（實心感）');
+  // v4.26：美術改成「預烘焙材質引擎」→ 這裡改驗 MAT.ice 的材質表與三種繪製函式
+  ok(/function paintHardTile/.test(noCmt) && /function paintSoftTile/.test(noCmt) &&
+     /function paintFloorTile/.test(noCmt), '找得到硬牆／軟牆／地板三種材質繪製函式');
+  const iceMat = /ice: \{[\s\S]*?\n  \},/.exec(noCmt);
+  ok(!!iceMat, '找得到 MAT.ice 材質表');
+  const matBlk = function (k) {
+    const m = new RegExp(k + ': \\{([\\s\\S]*?)\\}').exec(iceMat ? iceMat[0] : '');
+    return m ? m[1] : '';
+  };
+  const hexIn = function (s, k) {
+    const m = new RegExp(k + ": '(#[0-9a-fA-F]{6})'").exec(s);
+    return m ? m[1] : null;
+  };
+  const hardB = matBlk('hard'), softB = matBlk('soft'), floorB = matBlk('floor');
+  const mHard = hexIn(hardB, 'face2'), mSoft = hexIn(softB, 'face2'), mFloor = hexIn(floorB, 'a');
+  ok(!!mHard && !!mSoft && !!mFloor, '冰主題三種材質都有主色（' + [mHard, mSoft, mFloor].join(' / ') + '）');
+  if (mHard && mSoft && mFloor) {
+    // 材質表自己也要守住明度階梯（不然改配色時很容易把牆地板改到一樣亮）
+    const lh = lum(mHard), ls = lum(mSoft), lf = lum(mFloor);
+    ok(lf > .70, '材質表：地板很亮（L=' + lf.toFixed(2) + '）');
+    ok(lh < .20, '材質表：硬牆很深（L=' + lh.toFixed(2) + '）');
+    ok(ls > lh + .20, '材質表：軟牆明顯比硬牆亮（差 ' + (ls - lh).toFixed(2) + '）');
+    ok(lf > ls + .20, '材質表：地板明顯比軟牆亮（差 ' + (lf - ls).toFixed(2) + '）');
+  }
+  // 形狀：軟牆是八角冰晶（跟硬牆的方塊拉開差距）
+  const softFn = /function paintSoftTile[\s\S]*?\n\}\n/.exec(noCmt);
+  ok(!!softFn, '找得到 paintSoftTile');
+  ok(softFn && /const cut = w \* \.26/.test(softFn[0]), '軟牆用八角切角（形狀跟硬牆不同）');
 
   // 地板：不可以再有「整條白色亮帶」（會被誤認成牆的上緣）
-  const floorBlock = noCmt.slice(noCmt.indexOf("if (st === 'ice') {"), noCmt.indexOf("if (st === 'lava') {"));
-  ok(floorBlock.length > 100, '找得到冰主題地板分支');
+  const fpos = noCmt.indexOf('function paintFloorTile');
+  const floorBlock = noCmt.slice(noCmt.indexOf("if (st === 'ice') {", fpos), noCmt.indexOf("if (st === 'lava') {", fpos));
+  ok(fpos > 0 && floorBlock.length > 100, '找得到冰主題地板分支');
   ok(!/fillRect\(px \+ T \* \.04, py \+ T \* \.04, T \* \.92, T \* \.10\)/.test(floorBlock),
     '冰地板不再有那條橫貫的白色亮帶');
-  ok(/rgba\(158,182,200,\.42\)/.test(floorBlock), '地板用淡灰細縫（低對比）');
+  ok(/rgba\(150,178,198,\.44\)/.test(floorB), '地板用淡灰細縫（低對比）');
 
   // 滑地：深藍鏡面 + 霓虹邊
   ok(/#8ff0ff/.test(noCmt), '滑地有霓虹青邊框');

@@ -491,9 +491,13 @@ const wantStyles = ['forest', 'lava', 'ice', 'sand', 'neon', 'sea', 'sky', 'dark
 ok(wantStyles.every(s => TH.some(t => t.style === s)), '草原／熔岩／冰雪／沙漠／霓虹／深海／天空／暗黑都在');
 
 ok(typeof P.drawStone === 'function' && typeof P.drawCrate === 'function', '石頭與木箱各有專門畫法（可按主題分派）');
-ok(/function drawWallIce/.test(html) && /function drawWallLava/.test(html) && /function drawWallSand/.test(html)
-  && /function drawWallDark/.test(html) && /function drawWallNeon/.test(html), '五種牆面專屬材質函式都在');
-ok(/function drawCrateIce/.test(html) && /function drawCrateLava/.test(html) && /function paintFloorStyle/.test(html), '木箱與地板也有主題材質');
+// v4.26：改成一組「材質引擎」——每個主題都在 paintHardTile / paintSoftTile / paintFloorTile 裡有自己的分支
+ok(/function paintHardTile/.test(html) && /function paintSoftTile/.test(html) && /function paintFloorTile/.test(html),
+  '硬牆／軟牆／地板各有一支材質繪製函式');
+const matTxt2 = html.slice(html.indexOf('const MAT = {'), html.indexOf('\n};', html.indexOf('const MAT = {')));
+ok(wantStyles.every(function (s) { return new RegExp('\\n  ' + s + ': \\{').test(matTxt2); }),
+  '八個主題都有自己的材質表（' + wantStyles.join('/') + '）');
+ok(/function paintFloorStyle/.test(html) && /artBlit\(/.test(html), '木箱與地板也走同一套預烘焙材質');
 
 // 每個風格畫出來的指令真的不同
 const hashes = {};
