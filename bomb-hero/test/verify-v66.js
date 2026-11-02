@@ -34,7 +34,9 @@ head('1. 第一次觸控不再讓整頁位移（商店點不動的真兇）');
   // body 本體的 padding 還在
   const bodyM = noCmt.match(/(?:^|\n)\s*body\s*\{([\s\S]*?)\}/);
   ok(!!bodyM && /padding\s*:\s*14px/.test(bodyM[1]), 'body 的 14px padding 還在（兩邊一致就不會跳）');
-  ok(!/body\.touch[^{]*\{[^}]*padding\s*:\s*0/.test(noCmt), '沒有任何 body.touch 變體把 padding 歸零');
+  // v4.43：只檢查「body.touch 這條規則本身」，子元素（如 .wrap.game）不在限制內
+  ok(!/body\.touch(?:\.[a-z-]+)*\s*\{[^}]*padding\s*:\s*0/.test(noCmt),
+    '沒有任何 body.touch 變體把 padding 歸零');
 }
 
 /* ------------------------------------------------------------------ 2 */

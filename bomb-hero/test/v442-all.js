@@ -90,16 +90,17 @@ function clearGrid() {
 }
 
 {
-  // 三種距離各放一面石牆在正前方該距離上 → 都必須丟得到
+  // v4.43：石牆在集氣距離上 → 丟中牆後往同方向「彈一格」，落地就停
   [1, 2, 3].forEach(function (d, i) {
     clearGrid();
     putCart(6, 0);
     G.grid[d][6] = 1;
     const land = P.cartPickLanding(me, i);
-    ok(!!land && land.y === d, '集氣 ' + (i + 1) + '（' + (i + 1) + ' 格）→ 石牆在正前方 → 丟得上去',
+    ok(!!land && land.y === d + 1, '集氣 ' + (i + 1) + ' → 砸到第 ' + d + ' 格的牆後彈到第 ' + (d + 1) + ' 格',
       land && (land.x + ',' + land.y));
-    ok(!!land && land.onWall === true, '集氣 ' + (i + 1) + ' → 標記 onWall（炸彈坐在牆頂）');
-    ok(!!land && land.dist === d, '集氣 ' + (i + 1) + ' → 距離就是 ' + d + ' 格', land && land.dist);
+    ok(!!land && land.onWall === false && land.bounce === 1, '集氣 ' + (i + 1) + ' → 落地（彈 1 格）',
+      land && ('onWall=' + land.onWall + ' bounce=' + land.bounce));
+    ok(!!land && land.dist === d + 1, '集氣 ' + (i + 1) + ' → 距離 ' + (d + 1) + ' 格', land && land.dist);
   });
 }
 
@@ -111,8 +112,8 @@ clearGrid();
   G.bombs = []; me.cartCd = 0;
   ok(P.cartThrowBomb(me, 1) === true, '丟得出去');
   const b = G.bombs[G.bombs.length - 1];
-  ok(b && b.cx === 6 && b.cy === 2, '炸彈在第 2 格（牆上）', b && (b.cx + ',' + b.cy));
-  ok(b && b.onWall === true, '炸彈帶 onWall 標記');
+  ok(b && b.cx === 6 && b.cy === 3, '炸彈砸到第 2 格牆後彈到第 3 格', b && (b.cx + ',' + b.cy));
+  ok(b && b.onWall === false, '落地了（onWall=false）');
   ok(me.cartCd > 0, '進入冷卻', me.cartCd);
 }
 
@@ -191,8 +192,8 @@ console.log('\n--- 2f. 不會再飛超過 3 格（v4.41 的硬上限還在） --
       if (land.onWall) walls++;
     }
   });
-  ok(maxD <= 3, '對戰地圖外圈 × 3 段：最遠還是 3 格', maxD + ' 格');
-  ok(walls > 0, '其中有些就是丟在牆上（' + walls + '/' + n + '）');
+  ok(maxD <= 3 + P.CART_BOUNCE_MAX, '對戰地圖外圈 × 3 段：最遠 = 3 + 彈跳上限', maxD + ' 格');
+  ok(walls >= 0 && walls < n, '只有彈不出去才會停在牆頂（' + walls + '/' + n + '）');
 }
 
 // ==================================================================

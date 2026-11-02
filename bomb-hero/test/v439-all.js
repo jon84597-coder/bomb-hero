@@ -186,17 +186,18 @@ console.log('\n=== 4. 推車投擲：只有飛越牆壁才彈跳 ===');
   ok(walls.peaks > 2, '飛越那兩格牆時才多彈（回彈 ' + walls.peaks.toFixed(1) + ' px）');
   ok(walls.peaks > open.peaks + 2, '有牆比沒牆明顯更彈（' + walls.peaks.toFixed(1) + ' vs ' + open.peaks.toFixed(1) + ' px）');
 
-  // v4.41：撞到石牆就停 → 路徑裡不會有「牆的那一格」，實際上也就不會再彈跳
+  // v4.43：第 2、3 格是石牆 → 集滿 3 格丟到牆上時會「彈過牆」，落在第 4 格
   const cart = G.players[1];
   cart.cart = true; cart.alive = true;
   cart.x = 6 * T + T / 2; cart.y = 0 * T + T / 2;
   G.grid[2][6] = 1; G.grid[3][6] = 1;
   const land = P.cartPickLanding(cart, 2);           // 遠 3 格（第 3 格是石牆）
-  ok(!!land && land.y === 3, '兩格牆都越過，丟到第 3 格（' + (land && land.y) + '）');
-  ok(!!land && land.onWall === true, '第 3 格是石牆 → 標記 onWall');
+  ok(!!land && land.y === 4, '兩格牆都彈過，落在第 4 格（' + (land && land.y) + '）');
+  ok(!!land && land.onWall === false && land.bounce === 1, '落地了（彈 1 格）',
+    land && ('onWall=' + land.onWall + ' bounce=' + land.bounce));
   ok(!!land && land.path.filter(function (n) { return n.w === 1; }).length === 2,
     '路徑裡「牆的兩格」都標到了（w=1）');
-  ok(!!land && land.path.length === 4, '路徑 4 格（推車 → 第 3 格）', land && land.path.length);
+  ok(!!land && land.path.length === 5, '路徑 5 格（推車 → 第 4 格）', land && land.path.length);
 
   const src = require('fs').readFileSync(__dirname + '/../index.html', 'utf8');
   ok(/const fhop = c\.w \? Math\.sin\(k \* Math\.PI\) \* T \* \.46 : 0;/.test(src), '只有 w=1 的段落才加彈跳');

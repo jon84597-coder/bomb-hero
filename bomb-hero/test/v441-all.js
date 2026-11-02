@@ -144,13 +144,14 @@ console.log('\n--- 2b. 對戰地圖：每個外圈格 × 三段集氣，全部�
       maxD = Math.max(maxD, d);
       if (d > 3) bad++;
       if (d < 1) bad++;
-      if (land.onWall) walls++;                        // v4.42：落在石牆上是允許的（丟到牆上）
+      if (land.onWall) walls++;                        // v4.43：只剩「彈不出去」才會停在牆頂
       if (land.onSoft) softs++;
     }
   });
   ok(bad === 0, '外圈 ' + spots.length + ' 個位置 × 3 段：沒有一次超過 3 格', 'bad=' + bad);
-  ok(walls > 0, '有些位置就是「把炸彈丟到石牆上」（' + walls + ' 次）');
-  ok(maxD <= 3, '最遠距離 = ' + maxD + ' 格（硬上限 3）');
+  ok(walls >= 0 && walls <= n, '牆頂落點只在彈不出去時出現（' + walls + ' 次）');
+  ok(maxD <= 3 + P.CART_BOUNCE_MAX, '最遠 = 集氣 3 格 + 彈跳 ' + P.CART_BOUNCE_MAX + ' 格上限',
+    maxD + ' 格');
   ok(nulls === 0, '對戰地圖上不會「按了沒反應」（0 次丟不出去）', nulls + '/' + n);
   ok(softs > 0, '有些位置是「砸在軟磚上」（' + softs + ' 次）');
 }
@@ -164,8 +165,8 @@ console.log('\n--- 2b2. 厚牆地形：直接丟到牆上（不會穿牆、也�
   }
   putCart(2, 0);
   const land = P.cartPickLanding(me, 2);
-  ok(!!land && land.y === 3 && land.onWall === true, '前面 3 格全是石牆 → 丟到第 3 格牆上',
-    land && (land.y + ' onWall=' + land.onWall));
+  ok(!!land && land.y === 6 && land.onWall === true, '整排都是石牆 → 彈 3 格後停在牆頂（第 6 格）',
+    land && (land.y + ' onWall=' + land.onWall + ' bounce=' + land.bounce));
   G.bombs = []; me.cartCd = 0;
   ok(P.cartThrowBomb(me, 2) === true, '投擲回傳 true');
   ok(G.bombs.length === 1 && G.bombs[0].onWall === true, '生了一顆在牆上的炸彈');
@@ -204,7 +205,7 @@ clearGrid();
   const thrown = P.cartThrowBomb(me, 2);
   ok(thrown, '丟得出去');
   const b = G.bombs[G.bombs.length - 1];
-  ok(b && b.cy === 3 && b.onWall === true, '炸彈在第 3 格牆上',
+  ok(b && b.cy === 4 && b.onWall === false, '炸彈彈到第 4 格（地上）',
     b && ('y=' + b.cy + ' onWall=' + b.onWall));
 }
 

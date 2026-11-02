@@ -40,3 +40,9 @@ bomb-hero/art/hides/_raw2/
 bomb-hero/art/hides/_raw3/
 bomb-hero/art/hides/_sheet_raw*.png
 bomb-hero/art/hides/_preview_*.png
+
+# v4.43 場景貼圖：AI 原始大圖與檢查圖不進版控（交付版 art/tiles/tile-*.png）
+bomb-hero/art/tiles/_raw/
+bomb-hero/art/tiles/_raw2/
+bomb-hero/art/tiles/_sheet*.png
+bomb-hero/art/tiles/_preview_*.png

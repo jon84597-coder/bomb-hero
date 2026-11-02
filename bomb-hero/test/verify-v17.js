@@ -165,8 +165,9 @@ const dn17 = dir17.dn, vec17 = dir17.d;
 const want17 = BH.CART_LV[1].reach;
 const dist17 = Math.abs(b.cx - cartCx) + Math.abs(b.cy - cartCy);
 const onRay17 = (b.cx - cartCx) === vec17.x * dist17 && (b.cy - cartCy) === vec17.y * dist17;
-ok(onRay17 && dist17 >= 1 && dist17 <= want17, '落點在推車的垂直射線上，且不超過集氣距離（' + cartCx + ',' + cartCy +
-  ' 往' + dn17 + ' → ' + b.cx + ',' + b.cy + '，' + dist17 + ' / ' + want17 + ' 格）');
+ok(onRay17 && dist17 >= 1 && dist17 <= want17 + BH.CART_BOUNCE_MAX,
+  '落點在推車的垂直射線上（集氣距離 + 最多彈跳 ' + BH.CART_BOUNCE_MAX + ' 格）' +
+  '（' + cartCx + ',' + cartCy + ' 往' + dn17 + ' → ' + b.cx + ',' + b.cy + '，' + dist17 + ' / ' + want17 + ' 格）');
 // v4.41：撞到石牆就停 —— 落點前面不能有石牆，落點自己也不能是石牆
 ok(b.onWall === (G.grid[b.cy][b.cx] === 1), '牆上的落點有標 onWall（畫在牆頂）',
   'cell=' + G.grid[b.cy][b.cx] + ' onWall=' + b.onWall);

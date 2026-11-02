@@ -182,10 +182,10 @@ G.grid[2][2] = 1;                                       // 第 2 格是石牆
 G.bombs.length = 0;
 ok(BH.cartThrowBomb(me, 1) === true && G.bombs.length === 1, '第 2 格是石牆 → 照樣丟得出去（丟在牆上）');
 const fb = G.bombs[G.bombs.length - 1];
-ok(fb && fb.cx === 2 && fb.cy === 2, '落點就在石牆那一格（' +
+ok(fb && fb.cx === 3 && fb.cy === 2, '丟到石牆 → 彈一格，落在牆後的空地（' +
   (fb ? fb.cx + ',' + fb.cy : '-') + '）');
-ok(fb && fb.onWall === true, '標記 onWall（炸彈畫在牆頂）');
-ok(fb && fb.flying && fb.flying.path.length === 3, '路徑 3 格（推車 → 第 2 格牆）' +
+ok(fb && fb.onWall === false, '落地了（不再停在牆頂）');
+ok(fb && fb.flying && fb.flying.path.length === 4, '路徑 4 格（推車 → 牆 → 彈到的空地）' +
   '（' + (fb && fb.flying ? fb.flying.path.length : 0) + ' 格）');
 
 // 整個內場都被牆塞滿 → 丟在牆上，不當機

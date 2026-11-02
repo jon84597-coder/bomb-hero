@@ -36,19 +36,22 @@ clearGrid();
   ok(P.cartLandingDir(me) === 'left', '站在右邊 → 只能往左丟', P.cartLandingDir(me));
 }
 
-console.log('\n=== 2. v4.42：可以丟到 1／2／3 格的牆上 ===');
+console.log('\n=== 2. v4.43：丟到牆上 → 往同方向彈一格，落地就停 ===');
 clearGrid();
 {
   putCart(6, 0);
   G.grid[1][6] = 1;                            // 第 1 格石牆
   const l1 = P.cartPickLanding(me, 0);         // 近 1 格
-  ok(l1 && l1.x === 6 && l1.y === 1, '第 1 格是石牆 → 丟到牆上', l1 && (l1.x + ',' + l1.y));
-  ok(l1 && l1.onWall === true, '標記 onWall（炸彈坐在牆頂）', l1 && l1.onWall);
+  ok(l1 && l1.x === 6 && l1.y === 2, '第 1 格是石牆 → 彈過牆、落在第 2 格',
+    l1 && (l1.x + ',' + l1.y));
+  ok(l1 && l1.onWall === false && l1.bounce === 1, '落地（不再停在牆頂）· 彈了 1 格',
+    l1 && ('onWall=' + l1.onWall + ' bounce=' + l1.bounce));
 
   G.grid[2][6] = 1;                            // 第 2 格也是石牆
   const l2 = P.cartPickLanding(me, 1);         // 中 2 格
-  ok(l2 && l2.y === 2 && l2.onWall === true, '第 2 格是石牆 → 丟到第 2 格的牆上',
-    l2 && (l2.y + ' onWall=' + l2.onWall));
+  ok(l2 && l2.y === 3 && l2.onWall === false && l2.bounce === 1,
+    '第 2 格是石牆 → 連著牆一路彈到第 3 格',
+    l2 && (l2.y + ' onWall=' + l2.onWall + ' bounce=' + l2.bounce));
 
   const l3 = P.cartPickLanding(me, 2);         // 遠 3 格（第 3 格是空地）
   ok(l3 && l3.y === 3 && !l3.onWall, '第 3 格是空地 → 越過兩格牆落在空地', l3 && l3.y);
@@ -65,13 +68,13 @@ clearGrid();
   ok(!!land && land.onSoft === true, '標記 onSoft（引爆時把磚炸掉）', land && land.onSoft);
 }
 
-console.log('\n=== 3b. 3 格全是石牆 → 丟到最遠那格牆上 ===');
+console.log('\n=== 3b. 3 格全是石牆 → 彈到牆外的第 4 格 ===');
 clearGrid();
 {
   putCart(6, 0);
   for (let y = 1; y <= 3; y++) G.grid[y][6] = 1;
   const land = P.cartPickLanding(me, 2);
-  ok(!!land && land.y === 3 && land.onWall === true, '落在第 3 格石牆上',
+  ok(!!land && land.y === 4 && land.onWall === false, '彈過三格牆、落在第 4 格',
     land && (land.y + ' onWall=' + land.onWall));
 }
 
@@ -110,8 +113,8 @@ clearGrid();
   const thrown = P.cartThrowBomb(me, 2);
   ok(thrown, '整條射線都是牆 → 仍丟得出去');
   const b = G.bombs[G.bombs.length - 1];
-  ok(G.bombs.length === 1 && b && b.cy === 3 && b.onWall === true,
-    '炸彈停在第 3 格、標 onWall', b && (b.cy + ' onWall=' + b.onWall));
+  ok(G.bombs.length === 1 && b && b.cy === 6 && b.onWall === true,
+    '整排牆彈不出去 → 停在牆頂（第 6 格）', b && (b.cy + ' onWall=' + b.onWall));
 }
 
 console.log('\n=== 7. 推車移動速度提到滑冰鞋 5 級 ===');
