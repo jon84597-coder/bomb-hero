@@ -14,3 +14,6 @@ data/
 dist/
 .tools/
 bomberman-online/
+
+# v5 美術：AI 原始大圖不進版控（交付版在 stage1/）
+bomb-hero/art/foes/stage1/_raw/
