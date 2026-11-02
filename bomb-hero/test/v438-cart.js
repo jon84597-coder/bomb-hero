@@ -36,26 +36,34 @@ clearGrid();
   ok(P.cartLandingDir(me) === 'left', '站在右邊 → 只能往左丟', P.cartLandingDir(me));
 }
 
-console.log('\n=== 2. 遇到牆會彈跳過去，第一格空地才落地 ===');
+console.log('\n=== 2. v4.41：撞到硬牆就停住（不再一格一格彈過牆） ===');
 clearGrid();
 {
   putCart(6, 0);
-  G.grid[1][6] = 1;      // 第一格硬牆
-  G.grid[2][6] = 2;      // 第二格軟磚
-  const land = P.cartPickLanding(me, 0);       // 近 3 格
+  G.grid[2][6] = 1;      // 第 2 格硬牆
+  const land = P.cartPickLanding(me, 2);       // 遠 3 格
   ok(!!land, '有落點', land && (land.x + ',' + land.y));
   ok(land && land.x === 6, '同一條垂直線上（沒偏掉）', land && land.x);
-  ok(land && land.y >= 3, '越過第 1、2 格，落在第 3 格之後', land && land.y);
-  ok(land && land.path && land.path.length >= 4, '飛行路徑有把牆格串進去', land && land.path.length);
+  ok(land && land.y === 1, '擋在牆前 → 落在第 1 格（不會翻過石牆）', land && land.y);
+  ok(land && land.path.length === 2, '飛行路徑只有「推車 → 落點」', land && land.path.length);
 }
 
-console.log('\n=== 3. 整排牆也能丟穿（不會卡在牆上） ===');
+console.log('\n=== 3. 只有軟磚 → 砸在磚上（引爆順便破磚） ===');
 clearGrid();
 {
   putCart(6, 0);
-  for (let y = 1; y <= 6; y++) G.grid[y][6] = 1;
-  const land = P.cartPickLanding(me, 0);       // 近 3 格：第 3 格是牆 → 繼續往前找
-  ok(!!land && land.y === 7, '連 6 格牆都跳過，落在第 7 格', land && land.y);
+  for (let y = 1; y <= 3; y++) G.grid[y][6] = 2;
+  const land = P.cartPickLanding(me, 2);
+  ok(!!land && land.y === 3, '落在最遠那塊軟磚上', land && land.y);
+  ok(!!land && land.onSoft === true, '標記 onSoft（引爆時把磚炸掉）', land && land.onSoft);
+}
+
+console.log('\n=== 3b. 硬牆在第一格 → 3 格內全沒得放，直接丟不出去 ===');
+clearGrid();
+{
+  putCart(6, 0);
+  for (let y = 1; y <= 3; y++) G.grid[y][6] = 1;
+  ok(!P.cartPickLanding(me, 2), '沒有落點（不會飛到牆後面）');
 }
 
 console.log('\n=== 4. 集氣等級決定飛多遠 ===');
@@ -66,9 +74,8 @@ clearGrid();
   const l1 = P.cartPickLanding(me, 1);
   const l2 = P.cartPickLanding(me, 2);
   ok(l0 && l1 && l2, '三段都有落點');
-  ok(l0.dist < l1.dist && l1.dist < l2.dist, '近 < 中 < 遠',
+  ok(l0.dist === 1 && l1.dist === 2 && l2.dist === 3, '三段 = 1／2／3 格（硬上限 3）',
     l0.dist + ' / ' + l1.dist + ' / ' + l2.dist);
-  ok(l2.dist <= 10, '最遠不超過 10 格', l2.dist);
 }
 
 console.log('\n=== 5. 真的丟得出去，而且帶逐格跳躍動畫 ===');
@@ -79,7 +86,7 @@ clearGrid();
   const thrown = P.cartThrowBomb(me, 1);
   ok(thrown, '投出去成功');
   const b = G.bombs[G.bombs.length - 1];
-  ok(b && b.flying && b.flying.path && b.flying.path.length > 1, '炸彈帶飛行路徑（逐格彈跳）',
+  ok(b && b.flying && b.flying.path && b.flying.path.length > 1, '炸彈帶飛行路徑',
     b && b.flying && b.flying.path.length);
   ok(b && b.cx === 6, '落點在同一條垂直線上', b && b.cx);
   ok(me.cartCd > 0, '進入冷卻', me.cartCd);

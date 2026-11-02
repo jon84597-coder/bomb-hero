@@ -186,16 +186,15 @@ console.log('\n=== 4. 推車投擲：只有飛越牆壁才彈跳 ===');
   ok(walls.peaks > 2, '飛越那兩格牆時才多彈（回彈 ' + walls.peaks.toFixed(1) + ' px）');
   ok(walls.peaks > open.peaks + 2, '有牆比沒牆明顯更彈（' + walls.peaks.toFixed(1) + ' vs ' + open.peaks.toFixed(1) + ' px）');
 
-  // path 節點要帶 w 旗標
+  // v4.41：撞到石牆就停 → 路徑裡不會有「牆的那一格」，實際上也就不會再彈跳
   const cart = G.players[1];
   cart.cart = true; cart.alive = true;
   cart.x = 6 * T + T / 2; cart.y = 0 * T + T / 2;
   G.grid[2][6] = 1; G.grid[3][6] = 1;
-  const land = P.cartPickLanding(cart, 0);
-  ok(!!land, '集氣最短也能算落點');
-  ok(land.path.some(function (n) { return n.w === 1; }), '路徑有標記「牆的那一格」');
-  ok(land.path.filter(function (n) { return n.w === 1; }).length === 2, '兩格牆都標到了',
-    land.path.filter(function (n) { return n.w === 1; }).length);
+  const land = P.cartPickLanding(cart, 2);           // 遠 3 格
+  ok(!!land && land.y === 1, '前面是石牆 → 停在第 1 格（' + (land && land.y) + '）');
+  ok(!!land && land.path.every(function (n) { return n.w !== 1; }), '路徑裡沒有牆節點（不再彈過牆）');
+  ok(!!land && land.path.length === 2, '路徑只有「推車 → 落點」（' + (land && land.path.length) + ' 格）');
 
   const src = require('fs').readFileSync(__dirname + '/../index.html', 'utf8');
   ok(/const fhop = c\.w \? Math\.sin\(k \* Math\.PI\) \* T \* \.46 : 0;/.test(src), '只有 w=1 的段落才加彈跳');

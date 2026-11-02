@@ -1,0 +1,12 @@
+const { makeEnv } = require('./_sandbox');
+const env = makeEnv();
+const P = env.BH, G = P.Game;
+G.rpg = true; P.settings.size='M'; P.startRpg(32);
+const boss = G.enemies.filter(e=>e.type==='boss')[0];
+console.log('boss keys', Object.keys(boss).join(','));
+console.log('alive', boss.alive, 'dead', boss.dead, 'cart', boss.cart, 'dizzy', boss.dizzy, 'x', boss.x, 'y', boss.y, 'T', G.T);
+console.log('DIZZY_TIME', P.DIZZY_TIME);
+const b = { px: boss.x, py: boss.y, owner: null };
+P.flyingDizzyCheck(b, G.T);
+console.log('after dizzy =', boss.dizzy);
+console.log('setDizzy direct ->', P.setDizzy(boss, G.T), boss.dizzy);

@@ -334,13 +334,13 @@ function chargeThrow(frames) {
   };
 }
 const r1 = chargeThrow(3);
-ok(r1.hasBomb && r1.dist === 3 && r1.row === 4, '輕按一下 → 丟到第 3 格（dist ' + r1.dist + '）');
+ok(r1.hasBomb && r1.dist === 1 && r1.row === 4, '輕按一下 → 丟到第 1 格（dist ' + r1.dist + '）');
 const r2 = chargeThrow(Math.round(P.CART_CHARGE_MAX * .6 * 60));
-ok(r2.lv === 1, '按到一半時畫面顯示「中 6 格」');
-ok(r2.hasBomb && r2.dist === 6, '集氣一半 → 丟到第 6 格（dist ' + r2.dist + '）');
+ok(r2.lv === 1, '按到一半時畫面顯示「中 2 格」');
+ok(r2.hasBomb && r2.dist === 2, '集氣一半 → 丟到第 2 格（dist ' + r2.dist + '）');
 const r3 = chargeThrow(Math.round(P.CART_CHARGE_MAX * 60) + 6);
-ok(r3.lv === 2, '按到滿時畫面顯示「遠 10 格」');
-ok(r3.hasBomb && r3.dist === 10, '集滿 → 丟到第 10 格（dist ' + r3.dist + '）');
+ok(r3.lv === 2, '按到滿時畫面顯示「遠 3 格」');
+ok(r3.hasBomb && r3.dist === 3, '集滿 → 丟到第 3 格（dist ' + r3.dist + '，硬上限）');
 ok(r3.dist > r2.dist && r2.dist > r1.dist, '集越多丟越遠（' + r1.dist + ' → ' + r2.dist + ' → ' + r3.dist + '）');
 // 集氣時的操作提示與畫面顏色
 cp.cartCharge = P.CART_CHARGE_MAX; cp.cartCd = 0;
@@ -348,7 +348,7 @@ clearRec();
 const g8 = mk();
 try { P.drawCart(cp, T8); } catch (e) { console.log('  ! drawCart 例外：' + e.message); }
 const texts8 = callsNamed('fillText').map(function (c) { return String(c[1]); });
-ok(texts8.some(function (t) { return t.indexOf('遠 10 格') >= 0; }), '集滿時頭上顯示「遠 10 格」（' + texts8.join('|') + '）');
+ok(texts8.some(function (t) { return t.indexOf('遠 3 格') >= 0; }), '集滿時頭上顯示「遠 3 格」（' + texts8.join('|') + '）');
 [0, 1, 2].forEach(function (lv) {
   ok(styleUsed(P.CART_LV[lv].color), '第 ' + (lv + 1) + ' 格用專屬顏色 ' + P.CART_LV[lv].color);
 });
@@ -356,7 +356,7 @@ clearRec();
 cp.cartCharge = P.CART_CHARGE_MAX * .5;
 const g8b = mk();
 try { P.drawCart(cp, T8); } catch (e) {}
-ok(callsNamed('fillText').some(function (c) { return String(c[1]).indexOf('中 6 格') >= 0; }), '集一半時顯示「中 6 格」');
+ok(callsNamed('fillText').some(function (c) { return String(c[1]).indexOf('中 2 格') >= 0; }), '集一半時顯示「中 2 格」');
 ok(P.cartThrowBomb(cp) !== undefined, '沒給等級時預設第 2 段（舊行為相容）');
 // AI 推車也會隨機選等級
 freshBattle();

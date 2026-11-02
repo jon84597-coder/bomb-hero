@@ -173,19 +173,19 @@ ok(hb && hb.cy === 3 && hb.cx === BH.CART_LV[1].reach,
   '人類落點同樣在射線上（' + (hb ? hb.cx + ',' + hb.cy : '-') + '）');
 me.cart = false;
 
-// 射線上有牆 → 照樣跳過去，落點是第一格空地（＝需求「丟到牆上再彈到下一格，落地才停」）
+// v4.41：射線上有石牆 → 停在牆前，不再「一格一格彈過牆」
 freshBattle();
 clearArea(1, 1, G.cols - 2, G.rows - 2);
 me.cart = true;
 me.x = T / 2; me.y = T * 2 + T / 2;                     // 最左邊 → 只能往右射
-for (let x = 4; x <= 8; x++) G.grid[2][x] = 1;          // 前方一整排硬牆
+G.grid[2][2] = 1;                                       // 第 2 格是石牆
 G.bombs.length = 0;
-ok(BH.cartThrowBomb(me, 2) === true && G.bombs.length === 1, '前方一整排牆仍丟得出去（不會 null）');
+ok(BH.cartThrowBomb(me, 2) === true && G.bombs.length === 1, '前方有石牆仍丟得出去（停在牆前）');
 const fb = G.bombs[G.bombs.length - 1];
-ok(fb && fb.cx === 10 && fb.cy === 2, '落點跳過整排牆落在第一格空地（' +
+ok(fb && fb.cx === 1 && fb.cy === 2, '落點停在石牆前面那一格（' +
   (fb ? fb.cx + ',' + fb.cy : '-') + '）');
-ok(fb && fb.flying && fb.flying.path.length === 11, '逐格飛行路徑記了 ' +
-  (fb && fb.flying ? fb.flying.path.length : 0) + ' 格（含被跳過的牆）');
+ok(fb && fb.flying && fb.flying.path.length === 2, '路徑只有推車 → 落點（' +
+  (fb && fb.flying ? fb.flying.path.length : 0) + ' 格，沒有彈跳）');
 
 // 整個內場都被牆塞滿 → 丟不出去也不當機
 clearArea(0, 0, G.cols - 1, G.rows - 1);
