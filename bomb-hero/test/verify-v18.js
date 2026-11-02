@@ -173,24 +173,26 @@ ok(hb && hb.cy === 3 && hb.cx === BH.CART_LV[1].reach,
   '人類落點同樣在射線上（' + (hb ? hb.cx + ',' + hb.cy : '-') + '）');
 me.cart = false;
 
-// v4.41：射線上有石牆 → 停在牆前，不再「一格一格彈過牆」
+// v4.42：石牆也能丟（炸彈坐在牆頂），不會被牆擋在半路
 freshBattle();
 clearArea(1, 1, G.cols - 2, G.rows - 2);
 me.cart = true;
 me.x = T / 2; me.y = T * 2 + T / 2;                     // 最左邊 → 只能往右射
 G.grid[2][2] = 1;                                       // 第 2 格是石牆
 G.bombs.length = 0;
-ok(BH.cartThrowBomb(me, 2) === true && G.bombs.length === 1, '前方有石牆仍丟得出去（停在牆前）');
+ok(BH.cartThrowBomb(me, 1) === true && G.bombs.length === 1, '第 2 格是石牆 → 照樣丟得出去（丟在牆上）');
 const fb = G.bombs[G.bombs.length - 1];
-ok(fb && fb.cx === 1 && fb.cy === 2, '落點停在石牆前面那一格（' +
+ok(fb && fb.cx === 2 && fb.cy === 2, '落點就在石牆那一格（' +
   (fb ? fb.cx + ',' + fb.cy : '-') + '）');
-ok(fb && fb.flying && fb.flying.path.length === 2, '路徑只有推車 → 落點（' +
-  (fb && fb.flying ? fb.flying.path.length : 0) + ' 格，沒有彈跳）');
+ok(fb && fb.onWall === true, '標記 onWall（炸彈畫在牆頂）');
+ok(fb && fb.flying && fb.flying.path.length === 3, '路徑 3 格（推車 → 第 2 格牆）' +
+  '（' + (fb && fb.flying ? fb.flying.path.length : 0) + ' 格）');
 
-// 整個內場都被牆塞滿 → 丟不出去也不當機
+// 整個內場都被牆塞滿 → 丟在牆上，不當機
 clearArea(0, 0, G.cols - 1, G.rows - 1);
 for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) G.grid[y][x] = 1;
-ok(BH.cartThrowBomb(me) === false, '全場都是牆時安全回傳 false（不當機）');
+G.bombs.length = 0;
+ok(BH.cartThrowBomb(me) === true && G.bombs.length === 1, '全場都是牆時仍丟得出去（落在牆上，不當機）');
 me.cart = false;
 
 // ================================================================

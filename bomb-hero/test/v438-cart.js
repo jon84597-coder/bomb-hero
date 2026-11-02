@@ -36,16 +36,23 @@ clearGrid();
   ok(P.cartLandingDir(me) === 'left', '站在右邊 → 只能往左丟', P.cartLandingDir(me));
 }
 
-console.log('\n=== 2. v4.41：撞到硬牆就停住（不再一格一格彈過牆） ===');
+console.log('\n=== 2. v4.42：可以丟到 1／2／3 格的牆上 ===');
 clearGrid();
 {
   putCart(6, 0);
-  G.grid[2][6] = 1;      // 第 2 格硬牆
-  const land = P.cartPickLanding(me, 2);       // 遠 3 格
-  ok(!!land, '有落點', land && (land.x + ',' + land.y));
-  ok(land && land.x === 6, '同一條垂直線上（沒偏掉）', land && land.x);
-  ok(land && land.y === 1, '擋在牆前 → 落在第 1 格（不會翻過石牆）', land && land.y);
-  ok(land && land.path.length === 2, '飛行路徑只有「推車 → 落點」', land && land.path.length);
+  G.grid[1][6] = 1;                            // 第 1 格石牆
+  const l1 = P.cartPickLanding(me, 0);         // 近 1 格
+  ok(l1 && l1.x === 6 && l1.y === 1, '第 1 格是石牆 → 丟到牆上', l1 && (l1.x + ',' + l1.y));
+  ok(l1 && l1.onWall === true, '標記 onWall（炸彈坐在牆頂）', l1 && l1.onWall);
+
+  G.grid[2][6] = 1;                            // 第 2 格也是石牆
+  const l2 = P.cartPickLanding(me, 1);         // 中 2 格
+  ok(l2 && l2.y === 2 && l2.onWall === true, '第 2 格是石牆 → 丟到第 2 格的牆上',
+    l2 && (l2.y + ' onWall=' + l2.onWall));
+
+  const l3 = P.cartPickLanding(me, 2);         // 遠 3 格（第 3 格是空地）
+  ok(l3 && l3.y === 3 && !l3.onWall, '第 3 格是空地 → 越過兩格牆落在空地', l3 && l3.y);
+  ok(l3 && l3.path.length === 4, '飛行路徑 4 格（推車 → 第 3 格）', l3 && l3.path.length);
 }
 
 console.log('\n=== 3. 只有軟磚 → 砸在磚上（引爆順便破磚） ===');
@@ -58,12 +65,14 @@ clearGrid();
   ok(!!land && land.onSoft === true, '標記 onSoft（引爆時把磚炸掉）', land && land.onSoft);
 }
 
-console.log('\n=== 3b. 硬牆在第一格 → 3 格內全沒得放，直接丟不出去 ===');
+console.log('\n=== 3b. 3 格全是石牆 → 丟到最遠那格牆上 ===');
 clearGrid();
 {
   putCart(6, 0);
   for (let y = 1; y <= 3; y++) G.grid[y][6] = 1;
-  ok(!P.cartPickLanding(me, 2), '沒有落點（不會飛到牆後面）');
+  const land = P.cartPickLanding(me, 2);
+  ok(!!land && land.y === 3 && land.onWall === true, '落在第 3 格石牆上',
+    land && (land.y + ' onWall=' + land.onWall));
 }
 
 console.log('\n=== 4. 集氣等級決定飛多遠 ===');
@@ -92,15 +101,17 @@ clearGrid();
   ok(me.cartCd > 0, '進入冷卻', me.cartCd);
 }
 
-console.log('\n=== 6. 射線上沒有空地 → 不亂丟 ===');
+console.log('\n=== 6. 射線全是牆 → 丟到第 3 格牆上，不會一直往前飛 ===');
 clearGrid();
 {
   putCart(6, 0);
   for (let y = 1; y < G.rows - 1; y++) G.grid[y][6] = 1;
   G.bombs = [];
   const thrown = P.cartThrowBomb(me, 2);
-  ok(!thrown, '整條射線都是牆 → 不丟（不會憑空出現在牆裡）');
-  ok(G.bombs.length === 0, '沒有產生炸彈', G.bombs.length);
+  ok(thrown, '整條射線都是牆 → 仍丟得出去');
+  const b = G.bombs[G.bombs.length - 1];
+  ok(G.bombs.length === 1 && b && b.cy === 3 && b.onWall === true,
+    '炸彈停在第 3 格、標 onWall', b && (b.cy + ' onWall=' + b.onWall));
 }
 
 console.log('\n=== 7. 推車移動速度提到滑冰鞋 5 級 ===');

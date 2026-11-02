@@ -191,10 +191,12 @@ console.log('\n=== 4. 推車投擲：只有飛越牆壁才彈跳 ===');
   cart.cart = true; cart.alive = true;
   cart.x = 6 * T + T / 2; cart.y = 0 * T + T / 2;
   G.grid[2][6] = 1; G.grid[3][6] = 1;
-  const land = P.cartPickLanding(cart, 2);           // 遠 3 格
-  ok(!!land && land.y === 1, '前面是石牆 → 停在第 1 格（' + (land && land.y) + '）');
-  ok(!!land && land.path.every(function (n) { return n.w !== 1; }), '路徑裡沒有牆節點（不再彈過牆）');
-  ok(!!land && land.path.length === 2, '路徑只有「推車 → 落點」（' + (land && land.path.length) + ' 格）');
+  const land = P.cartPickLanding(cart, 2);           // 遠 3 格（第 3 格是石牆）
+  ok(!!land && land.y === 3, '兩格牆都越過，丟到第 3 格（' + (land && land.y) + '）');
+  ok(!!land && land.onWall === true, '第 3 格是石牆 → 標記 onWall');
+  ok(!!land && land.path.filter(function (n) { return n.w === 1; }).length === 2,
+    '路徑裡「牆的兩格」都標到了（w=1）');
+  ok(!!land && land.path.length === 4, '路徑 4 格（推車 → 第 3 格）', land && land.path.length);
 
   const src = require('fs').readFileSync(__dirname + '/../index.html', 'utf8');
   ok(/const fhop = c\.w \? Math\.sin\(k \* Math\.PI\) \* T \* \.46 : 0;/.test(src), '只有 w=1 的段落才加彈跳');

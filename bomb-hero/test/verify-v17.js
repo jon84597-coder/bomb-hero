@@ -168,12 +168,9 @@ const onRay17 = (b.cx - cartCx) === vec17.x * dist17 && (b.cy - cartCy) === vec1
 ok(onRay17 && dist17 >= 1 && dist17 <= want17, '落點在推車的垂直射線上，且不超過集氣距離（' + cartCx + ',' + cartCy +
   ' 往' + dn17 + ' → ' + b.cx + ',' + b.cy + '，' + dist17 + ' / ' + want17 + ' 格）');
 // v4.41：撞到石牆就停 —— 落點前面不能有石牆，落點自己也不能是石牆
-let wall17 = false;
-for (let k = 1; k < dist17; k++) {
-  if (G.grid[cartCy + vec17.y * k][cartCx + vec17.x * k] === 1) wall17 = true;
-}
-ok(!wall17, '不會穿過石牆（落點前面沒有石牆）');
-ok(G.grid[b.cy][b.cx] !== 1, '不會丟進石頭裡');
+ok(b.onWall === (G.grid[b.cy][b.cx] === 1), '牆上的落點有標 onWall（畫在牆頂）',
+  'cell=' + G.grid[b.cy][b.cx] + ' onWall=' + b.onWall);
+ok(dist17 <= 3, '距離不超過 3 格（石牆不再讓它多飛）', dist17);
 // 推車人（aiP 自己在外圈）不會被瞄準：落點一定在內場
 ok(b.cx >= 1 && b.cy >= 1 && b.cx <= G.cols - 2 && b.cy <= G.rows - 2, '落點在內場（不會丟在外圈推車區）');
 // 人類玩家（非 AI）走舊規則：朝場內丟

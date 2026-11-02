@@ -175,8 +175,8 @@ ok(/const HIDE_THEME_POOL = \[/.test(css) && /function hidePool\(\)/.test(css),
   ok(/let alpha = mine \? \.34 : 1;/.test(css) && /HIDE_UI_ICON\[hz\.kind\]/.test(css),
     '自己躲進去時物件降到 34% 並留一個小標記（找得到自己）');
   ok(/function drawHideTile\(px, py, T, alpha, kind, seed\)/.test(css) &&
-     /const HIDE_ART_SCALE = 1\.14;/.test(css) && /const HIDE_ART_MAXH = 1\.10;/.test(css),
-    '躲點用美術貼圖畫（寬 1.14 格、高上限 1.10 格）');
+     /const HIDE_ART_SCALE = 1\.14;/.test(css) && /const HIDE_ART_MAXH = 1\.26;/.test(css),
+    '躲點用美術貼圖畫（寬 1.14 格、高上限 1.26 格）');
   ok(/const hidNow = !!\(hz && hz\.type === 'hide'\)/.test(css) && /toast\(t\('hide\.in'\)/.test(css),
     '躲進去會跳一句提示（hide.in）');
   ['hide.in'].forEach(function (k) {

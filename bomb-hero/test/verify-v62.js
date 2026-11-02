@@ -359,7 +359,7 @@ ok(/function drawCart\(p, T\)/.test(css), '有 drawCart');
   ok(/const fp = land\.path \|\| \[\]/.test(body), '瞄準線沿飛行路徑畫（不是直線兩點）');
   ok(/for \(let k = 1; k < fp\.length; k\+\+\) ctx\.lineTo\(fp\[k\]\.x \* T \+ T \/ 2/.test(body),
     '有一條從推車到落點的瞄準折線');
-  ok(/ctx\.fillText\(String\(land\.dist\), cxp, cyp\)/.test(body), '落點中央標「第幾格」（實際距離）');
+  ok(/ctx\.fillText\(String\(land\.dist\), cxp, cypv?\)/.test(body), '落點中央標「第幾格」（實際距離）');
   ok(/冷卻 ' \+ Math\.max\(0, p\.cartCd\)\.toFixed\(1\)/.test(body), '冷卻時顯示剩餘秒數');
 }
 

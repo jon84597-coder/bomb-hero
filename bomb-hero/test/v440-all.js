@@ -119,12 +119,14 @@ console.log('\n=== 2. 五種藏人場景物件 ===');
   ok(di.length === 1, '有貼圖就畫貼圖', di.length);
   if (di.length) {
     const w = di[0][4], h = di[0][5], dy = di[0][3];   // drawImage(img, dx, dy, dw, dh)
-    ok(w <= T2 * 1.141 && w >= T2 * 1.05, '寬只比一格多一點點（1.05～1.14 格）', (w / T2).toFixed(2) + ' 格');
-    ok(h <= T2 * 1.10 + .01, '高不超過 1.10 格（不會蓋掉上面那一格）', (h / T2).toFixed(2) + ' 格');
+    ok(w <= T2 * 1.141 && w >= T2 * 0.94, '寬度落在 0.94～1.14 格（細高的陶甕才不會被壓成小不點）',
+      (w / T2).toFixed(2) + ' 格');
+    ok(h <= T2 * 1.261, '高不超過 1.26 格（不會蓋掉上面那一格）', (h / T2).toFixed(2) + ' 格');
     ok(Math.abs(dy + h - (100 + T2 * .93)) < .01, '底部對齊格子下緣（站在地上，不是浮空）',
       (dy + h).toFixed(1) + ' vs ' + (100 + T2 * .93).toFixed(1));
   }
   ok(src.indexOf('const HIDE_ART_SCALE = 1.14;') >= 0, '尺寸是常數（1.14 格）');
+  ok(src.indexOf('const HIDE_ART_MAXH = 1.26;') >= 0, '高度上限是常數（1.26 格）');
 
   // 沒圖時要退回向量畫法（不會開天窗）
   P.HideArt.get = function () { return null; };
