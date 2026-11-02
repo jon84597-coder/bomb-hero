@@ -59,3 +59,5 @@ bomb-hero/test/_v444/
 # AI 生成原圖（不進版控）
 generated-images/
 bomb-hero/art/tiles2/_preview_*.png
+bomb-hero/art/scene/style/_raw/
+bomb-hero/art/scene/style/_sheet.png
