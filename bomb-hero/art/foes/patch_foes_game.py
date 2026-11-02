@@ -15,7 +15,7 @@ foe_js = io.open(DATA, encoding='utf-8', newline='').read().replace('\r\n', '\n'
 
 # ---------- 1) FOE_ART 資料 ----------
 if 'const FOE_ART = {' in s:
-    s = re.sub(r'// -+ v4\.30：第一大關小怪美術.*?\n\};\n', foe_js + '\n', s, count=1, flags=re.S)
+    s = re.sub(r'// -+ (?:v4\.\d+：第[一二]大關小怪美術|小怪美術).*?\n\};\n', foe_js + '\n', s, count=1, flags=re.S)
 else:
     anchor = 'const IMG_PARTS = {'
     assert s.count(anchor) == 1
@@ -24,7 +24,7 @@ else:
 # ---------- 2) 載入器 + 繪製函式 ----------
 BLOCK = r'''// <<FOE_SPRITE_BEGIN>>
 // ================================================================
-//   v4.30：第一大關 6 隻小怪換成美術圖（單張貼圖）
+//   v4.30／v4.31：第 1・2 大關共 12 隻小怪換成美術圖（單張貼圖）
 //   · 小怪沒有拆件 → 用「鏡像 ＋ 擠壓 ＋ 抬升 ＋ 傾斜」做動作，
 //     角色空間的 +x 永遠 = 面朝方向，所以所有前傾／前挪都寫正數。
 //   · M.dir = 原圖朝哪邊；side = 想去的方向 × dir → 往左走就整隻左右翻。
@@ -134,6 +134,56 @@ function drawFoeSprite(g, sp, e, x, y, R, flash) {
     lift = moving ? Math.abs(Math.sin(w * 6)) * H * .075 : Math.sin(t * 2.1) * H * .012;
     sy = 1 + Math.sin(t * 3.1) * .015;
     sx = 1 - Math.sin(t * 3.1) * .01;
+  } else if (anim === 'scuttle') {
+    // 螃蟹：橫向蟹行 —— 身體左右晃、每步抬一點點
+    const j = Math.sin(w * 11);
+    tilt = (moving ? .075 : .028) * j;
+    lift = Math.abs(j) * H * .035 * (moving ? 1 : .35);
+    sy = 1 + Math.sin(w * 5.5) * .02 * (moving ? 1 : .4);
+    sx = 1 - Math.sin(w * 5.5) * .015 * (moving ? 1 : .4);
+    fwd = moving ? j * H * .018 : 0;
+  } else if (anim === 'shamble') {
+    // 木乃伊：僵直拖步 —— 整隻往一邊倒、頓一下再換邊
+    const j = Math.sin(w * 6.2);
+    const st = Math.sin(w * 3.1);
+    tilt = (moving ? .095 : .03) * j + (moving ? .03 : 0);
+    lift = Math.abs(st) * H * .045 * (moving ? 1 : .3);
+    sy = 1 - Math.abs(j) * .025 * (moving ? 1 : .4);
+    sx = 1 + Math.abs(j) * .018 * (moving ? 1 : .4);
+    fwd = moving ? j * H * .022 : 0;
+  } else if (anim === 'float') {
+    // 眼球怪：整隻漂 —— 慢速上下＋輕輕擺
+    const b = Math.sin(t * 2.4 + (e.bobP || 0));
+    const b2 = Math.sin(t * 1.5 + (e.bobP || 0) * .7);
+    lift = b * H * .055 + H * .02;
+    tilt = b2 * .055;
+    sy = 1 + b2 * .02;
+    sx = 1 - b2 * .02;
+  } else if (anim === 'burrow') {
+    // 流沙蟲：從沙裡一伸一縮（垂直蠕動），帶一點左右扭
+    const j = Math.sin(w * 4.6);
+    const up = Math.sin(t * 1.8);
+    lift = (moving ? Math.max(0, j) * H * .05 : up * H * .022);
+    sy = 1 + (moving ? j * .05 : up * .028);
+    sx = 1 - (moving ? j * .035 : up * .02);
+    tilt = (moving ? Math.sin(w * 2.3) * .05 : Math.sin(t * 1.3) * .03);
+    fwd = moving ? Math.sin(w * 4.6) * H * .015 : 0;
+  } else if (anim === 'stomp') {
+    // 沙丘獸：沉重踏步 —— 落地壓扁、抬腳時整隻上浮
+    const j = Math.abs(Math.sin(w * 5.5));
+    lift = j * H * .05 * (moving ? 1 : .25);
+    sy = 1 - (1 - j) * .045 * (moving ? 1 : .5);
+    sx = 1 + (1 - j) * .032 * (moving ? 1 : .5);
+    tilt = Math.sin(w * 2.75) * .035 * (moving ? 1 : .3);
+    fwd = moving ? Math.sin(w * 5.5) * H * .012 : 0;
+  } else if (anim === 'pinch') {
+    // 蠍子：鉗夾突進 —— 前後小幅抽動＋尾巴節奏
+    const j = Math.sin(w * 9);
+    fwd = (moving ? Math.max(0, j) : 0) * H * .045;
+    sy = 1 + j * .025 * (moving ? 1 : .4);
+    sx = 1 - j * .02 * (moving ? 1 : .4);
+    tilt = Math.sin(w * 4.5) * .03 * (moving ? 1 : .4);
+    lift = Math.abs(j) * H * .018 * (moving ? 1 : .2);
   } else {
     // 鐵甲蟲：六腳快速小碎步
     const j = Math.sin(w * 20);
