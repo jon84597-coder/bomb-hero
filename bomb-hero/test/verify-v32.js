@@ -58,7 +58,8 @@ console.log('\n=== 2. 畫面只裝 60%（不再整張地圖全塞） ===');
 
 ok(/const MOBILE_VIEW_FRAC = 0\.6;/.test(html), '可視比例常數 = 0.6');
 ok(typeof P.MOBILE_VIEW_FRAC === 'number' && P.MOBILE_VIEW_FRAC === 0.6, 'MOBILE_VIEW_FRAC 已匯出 = 0.6');
-ok(/return clamp\(Math\.round\(fit \/ MOBILE_VIEW_FRAC\), 24, 62\);/.test(html), '手機格子 = 基準 / 0.6（24~62）');
+ok(/return clamp\(Math\.round\(Math\.floor\(Math\.min\(fw, fh\)\) \/ MOBILE_VIEW_FRAC\), 24, 62\);/.test(html),
+   '手機橫放格子 = 基準 / 0.6（24~62；直放 v4.47 改走滿版公式）');
 ok(/return clamp\(Math\.round\(VIEW_H \/ 9\.2\), 30, 62\);/.test(html), '桌機維持原公式（不受影響）');
 
 (function () {

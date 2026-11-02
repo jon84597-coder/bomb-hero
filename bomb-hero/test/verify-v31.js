@@ -44,10 +44,12 @@ ok(/const se = document\.scrollingElement \|\| document\.documentElement;\s*\n\s
 console.log('\n=== 2. 遊戲畫面：手機只裝 60%（v2.6） ===');
 
 ok(/const MOBILE_VIEW_FRAC = 0\.6;/.test(html), '有「手機可視比例」常數 0.6');
-ok(/const fit = Math\.floor\(Math\.min\(VIEW_W \/ Game\.cols, VIEW_H \/ Game\.rows\)\);/.test(html),
-   '先算「整張塞進去」的基準格子');
-ok(/return clamp\(Math\.round\(fit \/ MOBILE_VIEW_FRAC\), 24, 62\);/.test(html),
-   '再放大到只裝 60%（clamp 24~62）');
+ok(/const fw = VIEW_W \/ Game\.cols, fh = VIEW_H \/ Game\.rows;/.test(html),
+   '先算寬／高各自的基準格子（v4.47：兩個方向要分開算）');
+ok(/return clamp\(Math\.round\(Math\.floor\(Math\.min\(fw, fh\)\) \/ MOBILE_VIEW_FRAC\), 24, 62\);/.test(html),
+   '橫放：再放大到只裝 60%（clamp 24~62）');
+ok(/if \(VIEW_H > VIEW_W\) \{[\s\S]*?return clamp\(Math\.round\(Math\.min\(fh, VIEW_W \/ 7\.2\)\), 24, 62\);/.test(html),
+   '直放：高度優先 ＋ 至少留 7.2 格寬（v4.47 滿版，不能出現上下深色空帶）');
 ok(/if \(document\.body && document\.body\.classList\.contains\('touch'\)\) \{/.test(html),
    '只影響手機（touch），桌機維持原本手感');
 
@@ -62,9 +64,9 @@ ok(/if \(document\.body && document\.body\.classList\.contains\('touch'\)\) \{/.
   P.settings.ctrl = 'touch';
   P.startSolo(1, false);
   const T = G.T, mw = T * G.cols, mh = T * G.rows;
-  const fit = Math.floor(Math.min(378 / G.cols, 566 / G.rows));
-  ok(T === Math.min(62, Math.max(24, Math.round(fit / 0.6))),
-     'T = 基準格子 / 0.6（' + T + '，基準 ' + fit + '）');
+  // v4.47：378×566 是「直放」→ 走新公式（高度優先、至少 7.2 格寬），不再用整張的 60%
+  const wantP = Math.min(62, Math.max(24, Math.round(Math.min(566 / G.rows, 378 / 7.2))));
+  ok(T === wantP, '直放 T = min(高度基準, 寬/7.2)（' + T + '，預期 ' + wantP + '）');
   ok(mw > 378 || mh > 566, '地圖不再整張塞進畫面（' + mw + '×' + mh + ' vs 378×566）');
   const frac = Math.min(378 / mw, 566 / mh);
   ok(frac > 0.5 && frac < 0.72, '畫面看得到約六成地圖（實測 ' + (frac * 100).toFixed(0) + '%）');

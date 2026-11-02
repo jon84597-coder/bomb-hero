@@ -35,8 +35,12 @@ head('1. 第一次觸控不再讓整頁位移（商店點不動的真兇）');
   const bodyM = noCmt.match(/(?:^|\n)\s*body\s*\{([\s\S]*?)\}/);
   ok(!!bodyM && /padding\s*:\s*14px/.test(bodyM[1]), 'body 的 14px padding 還在（兩邊一致就不會跳）');
   // v4.43：只檢查「body.touch 這條規則本身」，子元素（如 .wrap.game）不在限制內
-  ok(!/body\.touch(?:\.[a-z-]+)*\s*\{[^}]*padding\s*:\s*0/.test(noCmt),
-    '沒有任何 body.touch 變體把 padding 歸零');
+  // v4.47：唯一允許的例外是 `body.touch.in-game` —— 它只在「進遊戲」這個明確的畫面切換時
+  // 加上，不是第一次觸控（加 .touch）那一刻，所以不會出現「按鈕在手指底下位移」的老問題。
+  ok(!/body\.touch(?!\.in-game)(?:\.[a-z-]+)*\s*\{[^}]*padding\s*:\s*0/.test(noCmt),
+    '除了 in-game（進遊戲才套用）以外，沒有 body.touch 變體把 padding 歸零');
+  ok(noCmt.indexOf('body.touch.in-game { padding: 0; }') >= 0,
+    'v4.47：遊戲中 body padding 歸零（畫面左右貼邊）');
 }
 
 /* ------------------------------------------------------------------ 2 */
