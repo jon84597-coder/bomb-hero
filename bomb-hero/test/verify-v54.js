@@ -203,13 +203,13 @@ ok(/String\(Math\.ceil\(me\.fireCd\)\)/.test(html), '圖示上會顯示冷卻倒
 head('7. 手套抓炸彈');
 // v4.14：撿彈抽成 tryGlovePickup()，動作鍵「撿彈優先」；炸彈恢復實體、踢／打不再看手套
 ok(/function tryGlovePickup\(p\)/.test(html), 'v4.14：撿彈是獨立的 tryGlovePickup()');
-ok(/if \(tryGlovePickup\(p\)\) return;/.test(html), 'placeBomb 會先試著撿彈');
+ok(!/if \(tryGlovePickup\(p\)\) return;/.test(html), 'v4.34：placeBomb 不再順手撿彈（改由動作鍵分派）');
 ok(/else if \(tryGlovePickup\(p\)\) \{ \/\* 已撿起 \*\/ \}/.test(html),
   'v4.14：動作鍵撿彈優先（線圈炸彈搶不走）');
 ok(!/if \(b && p && p\.glove\) return false;/.test(html),
   'v4.14：炸彈對戴手套的人也是實體（不會再走過炸彈格）');
-ok(/const dirs4 = \[\[1, 0\], \[-1, 0\], \[0, 1\], \[0, -1\]\];/.test(html),
-  '撿彈時四個方向都找（腳下／面前／左右）');
+ok(!/const dirs4 = \[\[1, 0\], \[-1, 0\], \[0, 1\], \[0, -1\]\];/.test(html),
+  'v4.34：撿彈不再往四個方向亂找（只認腳下；面前只撿別人的）');
 ok(/if \(bombAt\(nx, ny\) && !p\.carry\) \{/.test(html),
   'v4.14：踢／打不再被手套擋掉（只有手上拿著炸彈時不觸發）');
 // 實測撿彈 → 投擲
@@ -220,11 +220,11 @@ ok(/if \(bombAt\(nx, ny\) && !p\.carry\) \{/.test(html),
   p.x = 5 * T + T / 2; p.y = 5 * T + T / 2; p.facing = 'right';
   G.grid[5][5] = 0; G.grid[5][6] = 0;
   G.bombs.length = 0; G.flames.length = 0;
-  const gb = { cx: 6, cy: 5, px: 6 * T + T / 2, py: p.y, timer: 2.4, power: 2, owner: p,
+  const gb = { cx: 5, cy: 5, px: p.x, py: p.y, timer: 2.4, power: 2, owner: null,
     passers: [], remoteArmed: false, mine: false, mineLife: 10,
-    moving: null, flying: null, held: false, seed: 3, armT: 40 };
+    moving: null, flying: null, held: false, ownerLeft: true, seed: 3, armT: 40 };
   G.bombs.push(gb);
-  P.placeBomb(p);
+  ok(P.tryGlovePickup(p) === true, 'v4.34：站在炸彈上按動作鍵 → 撿起來');
   ok(p.carry === gb && gb.held === true, '按動作鍵 → 撿起炸彈（carry + held）');
   const t0 = gb.timer;
   for (let i = 0; i < 30; i++) P.updateWorld(1 / 60);

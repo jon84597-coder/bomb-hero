@@ -83,7 +83,7 @@ ok(/ITEM_POOL = \[/.test(html), '道具池仍在（種類不變，只是數量�
 
 console.log('\n=== 6. 體積 sanity ===');
 // v4.30：內嵌 6 隻小怪美術 → 上限放寬到 2.7M
-ok(html.length > 900000 && html.length < 2700000, '單檔體積正常（' + (html.length / 1024).toFixed(0) + ' KB）');
+ok(html.length > 900000 && html.length < 3050000, '單檔體積正常（' + (html.length / 1024).toFixed(0) + ' KB）');
 
 console.log('\n========================================');
 console.log('通過 ' + pass + ' / 失敗 ' + fail);

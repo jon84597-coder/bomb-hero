@@ -60,7 +60,7 @@ ok(Math.abs(P.FOE_ART.panda.hs - 2.475) < .01, 'FOE_ART.panda.hs ≈ 2.475（2.2
 console.log('\n=== 4. 第 4 大關 6 隻手繪小怪 ===');
 const S4 = [['lavaslime', 'jelly'], ['lavaworm', 'inch'], ['bee', 'flap'],
 ['bomber', 'waddle'], ['lizard', 'skitter'], ['rockling', 'stomp']];
-ok(Object.keys(P.FOE_ART).length === 24, 'FOE_ART 共 24 隻（4 大關 × 6）', Object.keys(P.FOE_ART).length);
+ok(Object.keys(P.FOE_ART).length >= 24, 'FOE_ART 至少 24 隻（v4.34 起 48 隻）', Object.keys(P.FOE_ART).length);
 S4.forEach(function (pair) {
   const id = pair[0], anim = pair[1];
   const m = P.FOE_ART[id];

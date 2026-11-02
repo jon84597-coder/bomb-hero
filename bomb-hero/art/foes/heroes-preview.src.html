@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>爆爆英雄 · 主角群美術 HERO v1 — 8 隻動物英雄</title>
+<style>
+  :root{
+    --bg:#0d0f14; --panel:#171a21; --panel2:#1e222b; --line:#2c323d;
+    --gold:#d9a441; --gold2:#f0c675; --cyan:#7cc4e8; --leaf:#7fbf6a;
+    --tx:#eceaf2; --tx2:#a9b0bf; --tx3:#727a8a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+    font:15px/1.75 -apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    background-image:radial-gradient(1200px 620px at 15% -10%,#1d2230 0%,transparent 60%),
+                     radial-gradient(900px 520px at 110% 8%,#221d16 0%,transparent 55%);
+    background-attachment:fixed;}
+  .wrap{max-width:1180px;margin:0 auto;padding:48px 28px 120px}
+  h1,h2,h3{font-family:"Noto Serif TC","Songti TC",Georgia,serif;font-weight:700;letter-spacing:.02em}
+  .kicker{font:600 12px/1 ui-monospace,monospace;letter-spacing:.28em;color:var(--gold);text-transform:uppercase}
+  h1{font-size:clamp(30px,4.4vw,50px);margin:14px 0 6px;line-height:1.15}
+  h1 em{font-style:normal;color:var(--gold2)}
+  .sub{color:var(--tx2);max-width:790px;margin:0}
+  .rule{height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin:26px 0 0}
+
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;min-width:118px}
+  .stat b{display:block;font-size:20px;color:var(--gold2);font-family:ui-monospace,monospace}
+  .stat span{font-size:12px;color:var(--tx3)}
+
+  section{margin-top:64px}
+  h2{font-size:24px;margin:0 0 6px;display:flex;align-items:center;gap:12px}
+  h2 .n{font:700 13px/1 ui-monospace,monospace;color:var(--gold);border:1px solid var(--gold);
+    border-radius:6px;padding:5px 8px;letter-spacing:.1em}
+  .lead{color:var(--tx2);margin:0 0 22px;max-width:850px}
+
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .card h4{margin:0 0 8px;font-size:15px;color:var(--gold2)}
+  .card p{margin:0;color:var(--tx2);font-size:14px}
+  .card code{color:var(--cyan);font-size:12.5px}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  th{text-align:left;font:600 12px/1 ui-monospace,monospace;letter-spacing:.12em;color:var(--tx3);
+    padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--panel2)}
+  td{padding:10px 14px;border-bottom:1px solid #232833;color:var(--tx2);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.id{font-family:ui-monospace,monospace;color:var(--gold2);white-space:nowrap}
+  td.nm{color:var(--tx);white-space:nowrap}
+  .chip{display:inline-block;min-width:20px;text-align:center;font:700 11px/18px ui-monospace,monospace;
+    border-radius:5px;padding:0 5px;background:#262d38;color:var(--gold);border:1px solid #3a4353}
+  .ok{color:var(--leaf)}
+  .warn{color:#e0a35f}
+
+  .hero{display:grid;grid-template-columns:minmax(280px,400px) 1fr;gap:26px;
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:26px}
+  .hero .pic{background:
+      radial-gradient(circle at 50% 42%,rgba(217,164,65,.13),transparent 62%),
+      repeating-conic-gradient(#1a1e26 0% 25%,#141821 0% 50%) 50%/22px 22px;
+    border:1px solid var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;
+    padding:14px;min-height:300px}
+  .hero .pic img{width:100%;max-width:340px;height:auto;display:block;
+    filter:drop-shadow(0 14px 22px rgba(0,0,0,.55))}
+  .hero h3{margin:0 0 2px;font-size:22px}
+  .hero .tag{display:inline-block;font:600 11px/1 ui-monospace,monospace;letter-spacing:.12em;
+    color:var(--gold);border:1px solid #4a3f28;background:#241f16;border-radius:5px;padding:5px 7px;margin-bottom:14px}
+  .kv{display:grid;grid-template-columns:88px 1fr;gap:6px 14px;font-size:13.5px;margin:0}
+  .kv dt{color:var(--tx3);font-family:ui-monospace,monospace;font-size:12px;letter-spacing:.06em}
+  .kv dd{margin:0;color:var(--tx2)}
+  .kv dd b{color:var(--tx)}
+  .sizes{display:flex;align-items:flex-end;gap:14px;margin-top:16px;padding-top:14px;border-top:1px dashed #2d3542}
+  .sizes figure{margin:0;text-align:center}
+  .sizes img{display:block;image-rendering:auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))}
+  .sizes figcaption{font:600 10px/1 ui-monospace,monospace;color:var(--tx3);margin-top:5px}
+  .note{background:#241f16;border:1px solid #4a3f28;border-left:3px solid var(--gold);
+    border-radius:10px;padding:14px 18px;color:var(--tx2);font-size:14px;margin-top:16px}
+  .note b{color:var(--gold2)}
+  @media(max-width:760px){.hero{grid-template-columns:1fr}.sizes{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">BOMB HERO · HERO ART BIBLE v2</div>
+  <h1>主角群 · <em>8 隻動物英雄</em><span style="font-size:.44em;color:var(--cyan);margin-left:14px">v2 站立常態版</span></h1>
+  <p class="sub">
+    與《小怪美術聖經 v5》<b>同一套規範</b>：45° 左上方暖白主光（5200K）、右下方冷色補光 25%、
+    主光對側 35% 輪廓光、全接縫 AO 30~40%、手繪 PBR 材質、動作中帧、透明底去背。
+    48 隻小怪與 8 隻主角共用同一組光照參數，因此在同一張地圖上不會有「兩款遊戲」的違和感。
+  </p>
+  <div class="note">
+    <b>v2 改了什麼：</b>① 全部改成<b>站立常態</b>（雙腳平踏、手臂自然下垂）——這是 Idle 呼吸的基準；
+    ② <b>拿掉手上的炸彈</b>（炸彈改成獨立道具層，否則拆件後手臂會永遠黏著一顆彈）；
+    ③ 頭身比拉到 <b>1:1.1~1.7</b>、加大眼睛與腮紅＝更可愛；
+    ④ 8 隻重新拆成「頭／軀幹／左右腿（貓狗加尾巴）」四～五層。
+    <br>動作與表情的實際效果請看 <b>heroes-playground.html</b>（可點擊、可切 5 狀態 × 3 表情）。
+  </div>
+  <div class="rule"></div>
+
+  <div class="stats">
+    <div class="stat"><b>8</b><span>角色</span></div>
+    <div class="stat"><b>1024</b><span>生成尺寸</span></div>
+    <div class="stat"><b>512</b><span>交付尺寸</span></div>
+    <div class="stat"><b>1:1.2–2</b><span>頭身比</span></div>
+    <div class="stat"><b>4 段</b><span>Prompt 結構</span></div>
+  </div>
+
+  <section>
+    <h2><span class="n">01</span>群像總覽</h2>
+    <p class="lead">八隻角色並排。剪影互不重複是第一原則：長耳／寬桶／尖耳捲尾／細長弓背／正圓／梨形縮肩／寬扁／小蛋團。</p>
+    <div class="hero" style="grid-template-columns:1fr">
+      <div class="pic" style="min-height:0"><img src="TOK_CONTACT" alt="主角群對照"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">02</span>逐隻設定</h2>
+    <p class="lead">每隻標註「剪影簽名 / 材質光學 / 道具動作」——這三項就是生圖 Prompt 的四段式骨架，換皮不換軸。</p>
+
+    <div class="hero">
+      <div class="pic"><img src="TOK_RABBIT" alt="兔兔BIBI"></div>
+      <div>
+        <h3>兔兔 BIBI</h3>
+        <span class="tag">美貌的 · RABBIT · 淡藍 #9ecbff</span>
+        <dl class="kv">
+          <dt>剪影簽名</dt><dd>蛋形直立身 <b>1:1.45</b>＋<b>一耳直立一耳後折</b>＋圍巾向右甩出＝不對稱三角</dd>
+          <dt>材質 主</dt><dd>短絨毛，邊緣有絨毛斷裂感，掠光時單根毛髮可見</dd>
+          <dt>材質 副</dt><dd>粗針織羊毛圍巾（纖維可見）＋磨舊皮革側背包</dd>
+          <dt>常態姿勢</dt><dd>雙腳平踏、圍巾尾端垂在身側；兩臂自然下垂</dd>
+          <dt>辨識重點</dt><dd>① 折耳 ② 圍巾 ③ 舉彈的手</dd>
+          <dt>遊戲內</dt><dd>50px 頭像／26px 地圖仍可讀（長耳是唯一長耳角色）</dd>
+        </dl>
+        <div class="sizes">
+          <figure><img src="TOK_RABBIT" width="128" alt=""><figcaption>128</figcaption></figure>
+          <figure><img src="TOK_RABBIT" width="64" alt=""><figcaption>64</figcaption></figure>
+          <figure><img src="TOK_RABBIT" width="40" alt=""><figcaption>40</figcaption></figure>
+          <figure><img src="TOK_RABBIT" width="26" alt=""><figcaption>26</figcaption></figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="pic"><img src="TOK_BEAR" alt="小熊BOBO"></div>
+      <div>
+        <h3>小熊 BOBO</h3>
+        <span class="tag">非常有特色的 · BEAR · 焦糖棕 #c98d5a</span>
+        <dl class="kv">
+          <dt>剪影簽名</dt><dd>桶狀寬身 <b>1:1.1</b>（最寬）＋短粗腿＋小圓耳</dd>
+          <dt>材質 主</dt><dd>厚層絨毛，毛團分束、邊緣蓬鬆斷裂</dd>
+          <dt>材質 副</dt><dd>帆布工裝背心（磨損縫線、布紋積塵）＋黃銅扣</dd>
+          <dt>常態姿勢</dt><dd>雙腳微開平踏、短臂垂在身側、重心正中</dd>
+          <dt>辨識重點</dt><dd>① 噸位 ② 背心 ③ 抱彈後仰</dd>
+          <dt>狀態</dt><dd><span class="ok">v2 已修</span>：肌肉線條消除、成一整塊圓潤體塊</dd>
+        </dl>
+        <div class="sizes">
+          <figure><img src="TOK_BEAR" width="128" alt=""><figcaption>128</figcaption></figure>
+          <figure><img src="TOK_BEAR" width="64" alt=""><figcaption>64</figcaption></figure>
+          <figure><img src="TOK_BEAR" width="40" alt=""><figcaption>40</figcaption></figure>
+          <figure><img src="TOK_BEAR" width="26" alt=""><figcaption>26</figcaption></figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="pic"><img src="TOK_DOG" alt="柴犬KIKI"></div>
+      <div>
+        <h3>柴犬 KIKI</h3>
+        <span class="tag">有個性的 · SHIBA · 琥珀橙 #f5b971</span>
+        <dl class="kv">
+          <dt>剪影簽名</dt><dd>尖立三角耳＋<b>捲尾壓在背上</b>＋前傾挺胸</dd>
+          <dt>材質 主</dt><dd>雙層硬毛，剪影邊緣有硬質毛束分組</dd>
+          <dt>材質 副</dt><dd>磨損棉布領巾（會起毛邊）＋深色眼線</dd>
+          <dt>常態姿勢</dt><dd>標準站姿、<b>雙手叉腰</b>、挺胸抬下巴（跩）</dd>
+          <dt>辨識重點</dt><dd>① 叼彈嘴 ② 捲尾 ③ 半瞇眼的跩笑</dd>
+          <dt>狀態</dt><dd><span class="ok">v2 已修</span>：腿縮短、頭加大、雙手持叉腰</dd>
+        </dl>
+        <div class="sizes">
+          <figure><img src="TOK_DOG" width="128" alt=""><figcaption>128</figcaption></figure>
+          <figure><img src="TOK_DOG" width="64" alt=""><figcaption>64</figcaption></figure>
+          <figure><img src="TOK_DOG" width="40" alt=""><figcaption>40</figcaption></figure>
+          <figure><img src="TOK_DOG" width="26" alt=""><figcaption>26</figcaption></figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="pic"><img src="TOK_CAT" alt="貓咪NANA"></div>
+      <div>
+        <h3>貓咪 NANA</h3>
+        <span class="tag">賤賤的 · CAT · 淡紫 #b8aef0</span>
+        <dl class="kv">
+          <dt>剪影簽名</dt><dd>細長 <b>S 形</b>＋三角大耳＋長尾反向配重（唯一弓背型）</dd>
+          <dt>材質 主</dt><dd>絲滑細毛，高光窄而長（與絨毛的寬柔高光形成對比）</dd>
+          <dt>材質 副</dt><dd>天鵝絨領巾（吸光、衰減快）＋尾部隱約虎斑</dd>
+          <dt>常態姿勢</dt><dd>單手叉腰、另一手垂放、長尾在身後勾成問號</dd>
+          <dt>辨識重點</dt><dd>① 一瞇一睜的眼 ② 兩顆彈 ③ 長尾</dd>
+          <dt>狀態</dt><dd><span class="ok">v2 已修</span>：加胖、頭加大、單手叉腰</dd>
+        </dl>
+        <div class="sizes">
+          <figure><img src="TOK_CAT" width="128" alt=""><figcaption>128</figcaption></figure>
+          <figure><img src="TOK_CAT" width="64" alt=""><figcaption>64</figcaption></figure>
+          <figure><img src="TOK_CAT" width="40" alt=""><figcaption>40</figcaption></figure>
+          <figure><img src="TOK_CAT" width="26" alt=""><figcaption>26</figcaption></figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="pic"><img src="TOK_PIG" alt="豬豬MOMO"></div>
+      <div>
+        <h3>豬豬 MOMO</h3>
+        <span class="tag">非常可愛的 · PIG · 泡泡糖粉 #ffb3c7</span>
+        <dl class="kv">
+          <dt>剪影簽名</dt><dd>近正圓身體＋短樁腿＋貼臉圓鼻（唯一「無頸」）</dd>
+          <dt>材質 主</dt><dd>微蠟光豬皮，大面積柔高光＋細微毛孔</dd>
+          <dt>材質 副</dt><dd>絨面鼻頭（吸光）＋耳後一朵小向日葵</dd>
+          <dt>常態姿勢</dt><dd>雙腳並攏、短手張開垂在身側、身體微前傾</dd>
+          <dt>辨識重點</dt><dd>① 圓鼻 ② 捧彈 ③ 向日葵</dd>
+          <dt>狀態</dt><dd><span class="ok">可交付</span></dd>
+        </dl>
+        <div class="sizes">
+          <figure><img src="TOK_PIG" width="128" alt=""><figcaption>128</figcaption></figure>
+          <figure><img src="TOK_PIG" width="64" alt=""><figcaption>64</figcaption></figure>
+          <figure><img src="TOK_PIG" width="40" alt=""><figcaption>40</figcaption></figure>
+          <figure><img src="TOK_PIG" width="26" alt=""><figcaption>26</figcaption></figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="pic"><img src="TOK_PANDA" alt="熊貓ZUZU"></div>
+      <div>
+        <h3>熊貓 ZUZU</h3>
+        <span class="tag">膽小的 · PANDA · 雪白／炭黑</span>
+        <dl class="kv">
+          <dt>剪影簽名</dt><dd>梨形＋<b>縮肩到耳根</b>＋整個人縮成逗號形</dd>
+          <dt>材質 主</dt><dd>厚密絨毛，白毛透光、黑毛吸光（同光源下兩種反應）</dd>
+          <dt>材質 副</dt><dd>啞光黑毛區（吸收 90% 光，只留輪廓光）</dd>
+          <dt>常態姿勢</dt><dd><b>內八站姿、雙膝互撞</b>、兩手在胸前絞在一起</dd>
+          <dt>辨識重點</dt><dd>① 黑眼圈 ② 彈後偷看的眼 ③ 縮肩</dd>
+          <dt>狀態</dt><dd><span class="ok">可交付</span></dd>
+        </dl>
+        <div class="sizes">
+          <figure><img src="TOK_PANDA" width="128" alt=""><figcaption>128</figcaption></figure>
+          <figure><img src="TOK_PANDA" width="64" alt=""><figcaption>64</figcaption></figure>
+          <figure><img src="TOK_PANDA" width="40" alt=""><figcaption>40</figcaption></figure>
+          <figure><img src="TOK_PANDA" width="26" alt=""><figcaption>26</figcaption></figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="pic"><img src="TOK_FROG" alt="青蛙GUGU"></div>
+      <div>
+        <h3>青蛙 GUGU</h3>
+        <span class="tag">獨特的 · FROG · 萊姆綠 #7ee08a</span>
+        <dl class="kv">
+          <dt>剪影簽名</dt><dd>寬扁 <b>1.4:1</b>＋頭頂兩顆凸眼球＋Z 字折後腿（唯一趴姿）</dd>
+          <dt>材質 主</dt><dd>濕滑兩棲皮，蠟質窄高光＋深綠斑塊</dd>
+          <dt>材質 副</dt><dd>米白半透明喉囊（SSS，像燈籠一樣透光）</dd>
+          <dt>常態姿勢</dt><dd><b>用後腿站立</b>、蹼手垂在身側、寬底盤</dd>
+          <dt>辨識重點</dt><dd>① 凸眼 ② 喉囊 ③ 撐地的手</dd>
+          <dt>狀態</dt><dd><span class="ok">可交付</span>（與史萊姆的撞型已用「寬扁＋凸眼」解掉）</dd>
+        </dl>
+        <div class="sizes">
+          <figure><img src="TOK_FROG" width="128" alt=""><figcaption>128</figcaption></figure>
+          <figure><img src="TOK_FROG" width="64" alt=""><figcaption>64</figcaption></figure>
+          <figure><img src="TOK_FROG" width="40" alt=""><figcaption>40</figcaption></figure>
+          <figure><img src="TOK_FROG" width="26" alt=""><figcaption>26</figcaption></figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="pic"><img src="TOK_CHICK" alt="小雞DODO"></div>
+      <div>
+        <h3>小雞 DODO</h3>
+        <span class="tag">特別的 · CHICK · 奶油黃 #ffd95e</span>
+        <dl class="kv">
+          <dt>剪影簽名</dt><dd>小蛋形 <b>1:1.35</b>（最矮小）＋三根呆毛＋蛋殼帽</dd>
+          <dt>材質 主</dt><dd>絨羽，邊緣極蓬鬆、單根絨枝掠光</dd>
+          <dt>材質 副</dt><dd>粉筆質感蛋殼（啞光＋髮絲裂紋）</dd>
+          <dt>常態姿勢</dt><dd>兩隻小腳平踏、短翅垂在身側、微微仰頭</dd>
+          <dt>辨識重點</dt><dd>① 呆毛 ② 蛋殼帽 ③ 頭頂的彈</dd>
+          <dt>狀態</dt><dd><span class="ok">可交付</span></dd>
+        </dl>
+        <div class="sizes">
+          <figure><img src="TOK_CHICK" width="128" alt=""><figcaption>128</figcaption></figure>
+          <figure><img src="TOK_CHICK" width="64" alt=""><figcaption>64</figcaption></figure>
+          <figure><img src="TOK_CHICK" width="40" alt=""><figcaption>40</figcaption></figure>
+          <figure><img src="TOK_CHICK" width="26" alt=""><figcaption>26</figcaption></figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">03</span>三軸差異矩陣</h2>
+    <p class="lead">沿用聖經 §1.5 的硬規則：任兩隻最多共用 1 個軸。共用 2 軸以上＝換色重貼，須重新設計。</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>#</th><th>角色</th><th>軸 A 剪影</th><th>軸 B 材質（主）</th><th>軸 C 動態</th></tr></thead>
+        <tbody>
+          <tr><td class="id">01</td><td class="nm">兔兔 BIBI</td><td><span class="chip">C</span> 直立 1:1.45 長耳</td><td>短絨毛 / 羊毛</td><td>蹬跳</td></tr>
+          <tr><td class="id">02</td><td class="nm">小熊 BOBO</td><td><span class="chip">A</span> 寬桶 1:1.1</td><td>厚層絨毛 / 帆布</td><td>穩步推進</td></tr>
+          <tr><td class="id">03</td><td class="nm">柴犬 KIKI</td><td><span class="chip">C</span> 尖耳捲尾前傾</td><td>雙層硬毛 / 棉布</td><td>衝刺</td></tr>
+          <tr><td class="id">04</td><td class="nm">貓咪 NANA</td><td><span class="chip">B</span> 細長 S 形 + 長尾</td><td>絲滑細毛 / 天鵝絨</td><td>潛行躡步</td></tr>
+          <tr><td class="id">05</td><td class="nm">豬豬 MOMO</td><td><span class="chip">A</span> 正圓無頸</td><td>蠟光豬皮 / 絨面</td><td>小碎步</td></tr>
+          <tr><td class="id">06</td><td class="nm">熊貓 ZUZU</td><td><span class="chip">C</span> 梨形縮肩</td><td>厚密絨毛（黑白雙反應）</td><td>縮退</td></tr>
+          <tr><td class="id">07</td><td class="nm">青蛙 GUGU</td><td><span class="chip">D</span> 寬扁 1.4:1 凸眼</td><td>濕滑兩棲皮 / SSS 喉囊</td><td>蹲跳</td></tr>
+          <tr><td class="id">08</td><td class="nm">小雞 DODO</td><td><span class="chip">A</span> 小蛋團 1:1.35</td><td>絨羽 / 蛋殼</td><td>踉蹌碎步</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <b>檢查結論：</b>剪影軸內部已用寬高比再切開（寬桶 1:1.1 / 正圓 1:1 / 小蛋團 1:1.35，三者並排不會混）。
+      唯一風險是<b>材質軸「絨毛」過度集中（8 隻中 5 隻主材質是絨毛）</b>——目前靠副材質分流（羊毛 / 帆布 / 棉布 / 天鵝絨 / 蛋殼），
+      進遊戲後若同一鏡頭出現三隻以上，建議把熊貓改成「短絨＋硬毛混」、柴犬改「剛毛」以拉大差異。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">04</span>與小怪的一致性檢查</h2>
+    <div class="grid3">
+      <div class="card"><h4>光源方向</h4><p>8 張全部為左上方主光、右下冷補光、對側暖輪廓 <span class="ok">✔ 一致</span></p></div>
+      <div class="card"><h4>材質語彙</h4><p>沿用聖經 §1.3 的 11 組材質表，主角只用到絨毛 / 濕皮 / 皮革 / 布料四類 <span class="ok">✔ 同一本字典</span></p></div>
+      <div class="card"><h4>渲染手法</h4><p>手繪 PBR、雕塑體積、邊緣斷裂感，與第一關 6 隻同批次產出 <span class="ok">✔ 同款</span></p></div>
+      <div class="card"><h4>色溫</h4><p>主光統一偏暖，但補光色受角色主色影響（貓偏紫、雞偏冷）<span class="warn">△ 進遊戲加統一 tint</span></p></div>
+      <div class="card"><h4>頭身比</h4><p>豬 / 雞 / 蛙 / 兔 / 熊貓符合 1:1.2–2；<b>狗與貓偏 1:3</b> <span class="warn">△ 待修</span></p></div>
+      <div class="card"><h4>共同道具</h4><p>8 隻都持<b>同一款圓形炸彈</b>（短引線＋橙色火花）＝ IP 統一符號 <span class="ok">✔ 已建立</span></p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">05</span>下一步（選一）</h2>
+    <div class="grid3">
+      <div class="card"><h4>A · 修 3 隻</h4><p>重跑 柴犬（腿縮短、頭加大）、貓咪（加胖到 1:1.6）、小熊（去掉肌肉線條）。其餘 5 隻直接進版控。</p></div>
+      <div class="card"><h4>B · 全部進版控</h4><p>現在就當「繪本風」定案，先接進選角畫面看實際 50px 效果，之後再決定要不要 Q 版化。</p></div>
+      <div class="card"><h4>C · 出拆件表</h4><p>挑 1 隻（建議兔兔或豬豬）做 Hero 拆件 + 8 向轉面，走 `split_parts.py` 那條管線接進 `drawRigChar()`。</p></div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

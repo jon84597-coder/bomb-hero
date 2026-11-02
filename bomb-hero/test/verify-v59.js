@@ -49,7 +49,7 @@ function putBomb(p, cx, cy, remote) {
   const b = {
     cx: cx, cy: cy, px: cx * T + T / 2, py: cy * T + T / 2,
     timer: remote ? 9999 : 2.4, power: 2, owner: p, passers: [], remoteArmed: !!remote,
-    mine: false, mineLife: 10, moving: null, flying: null, held: false, seed: 1, armT: 40
+    mine: false, mineLife: 10, moving: null, flying: null, held: false, ownerLeft: true, seed: 1, armT: 40
   };
   G.bombs.push(b);
   return b;
@@ -96,7 +96,8 @@ kickCase({ kick: true, glove: true, remote: true }, '踢彈鞋＋手套＋遙控
 head('2. 撿彈：動作鍵撿彈優先（線圈炸彈也搶不走）');
 function pickCase(opts, label) {
   const p = fresh(opts);
-  const b = putBomb(p, 6, 5, opts.remote);
+  // v4.34：撿彈只認腳下那一格 → 炸彈要放在玩家站的那格
+  const b = putBomb(p, 5, 5, opts.remote);
   IN.act = true; frame(p, 1); IN.act = false;
   ok(p.carry === b && b.held === true, label + ' → 撿起炸彈');
   return { p: p, b: b };
@@ -114,7 +115,7 @@ pickCase({ glove: true, kick: true, remote: true }, '手套＋踢彈鞋＋遙控
 // 沒手套的人按動作鍵 → 是放彈，不會誤撿
 {
   const p = fresh({});
-  const b = putBomb(p, 6, 5, false);
+  const b = putBomb(p, 5, 5, false);
   IN.act = true; frame(p, 1); IN.act = false;
   ok(!p.carry && !b.held, '沒有手套 → 按動作鍵不會撿炸彈');
 }
@@ -135,7 +136,7 @@ head('3. 炸彈是實體：戴手套也不會穿過去');
 head('4. 遙控引爆：不會炸到手上拿著的那一顆');
 {
   const p = fresh({ glove: true, remote: true });
-  const held = putBomb(p, 6, 5, true);
+  const held = putBomb(p, 5, 5, true);
   IN.act = true; frame(p, 1); IN.act = false;
   ok(p.carry === held, '先用手套撿起遙控彈');
   const other = putBomb(p, 9, 5, true);

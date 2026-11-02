@@ -21,39 +21,67 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # 遊戲內顯示高度 ≈ 30px，手機 DPR 2 + 縮放 2.5 → 150px，取 168 留餘裕
-HT = 168
-QUALITY = 84
+HT = 160
+QUALITY = 80
 
 # (資料夾, 檔名, 遊戲 id, 原圖朝向, 顯示高度倍率 hs, 動作)
 SPECS = [
     # ---- 第 1 大關 綠野草原 ----
     ('stage1', '01-slime',  'slime',  +1, 1.95, 'jelly'),
     ('stage1', '02-bunny',  'bunny',  +1, 2.30, 'hop'),
-    ('stage1', '03-frog',   'frog',   -1, 1.88, 'hop'),
-    ('stage1', '04-cater',  'cater',  -1, 1.92, 'inch'),
+    ('stage1', '03-frog',   'frog',   +1, 1.88, 'hop'),
+    ('stage1', '04-cater',  'cater',  +1, 1.92, 'inch'),
     ('stage1', '05-mush',   'mush',   +1, 1.95, 'sway'),
-    ('stage1', '06-beetle', 'beetle', -1, 1.74, 'skitter'),
+    ('stage1', '06-beetle', 'beetle', +1, 1.74, 'skitter'),
     # ---- 第 2 大關 沙漠遺跡 ----
     ('stage2', '01-crab',   'crab',     +1, 2.25, 'scuttle'),
     ('stage2', '02-mummy',  'mummy',    +1, 2.05, 'shamble'),
     ('stage2', '03-eye',    'eye',      +1, 2.35, 'float'),
     ('stage2', '04-sandworm', 'sandworm', +1, 2.10, 'burrow'),
-    ('stage2', '05-dune',   'dune',     -1, 2.11, 'stomp'),
+    ('stage2', '05-dune',   'dune',     +1, 2.11, 'stomp'),
     ('stage2', '06-scorp',  'scorp',    +1, 2.02, 'pinch'),
     # ---- 第 3 大關 冰雪原（v4.32）----
     ('stage3', '01-penguin', 'penguin', +1, 2.30, 'waddle'),
     ('stage3', '02-crystal', 'crystal', +1, 2.10, 'spin'),
     ('stage3', '03-bat',     'bat',     +1, 2.05, 'flap'),
     ('stage3', '04-snowball','snowball',+1, 2.25, 'roll'),
-    ('stage3', '05-seal',    'seal',    -1, 2.10, 'slide'),
+    ('stage3', '05-seal',    'seal',    +1, 2.10, 'slide'),
     ('stage3', '06-panda',   'panda',   +1, 2.475, 'stomp'),
     # ---- 第 4 大關 熔岩洞窟（v4.33）----
     ('stage4', '01-lavaslime', 'lavaslime', +1, 2.31, 'jelly'),
-    ('stage4', '02-lavaworm',  'lavaworm',  -1, 2.37, 'inch'),
-    ('stage4', '03-bee',       'bee',       -1, 2.02, 'flap'),
-    ('stage4', '04-bomber',    'bomber',    -1, 2.21, 'waddle'),
+    ('stage4', '02-lavaworm',  'lavaworm',  +1, 2.37, 'inch'),
+    ('stage4', '03-bee',       'bee',       +1, 2.02, 'flap'),
+    ('stage4', '04-bomber',    'bomber',    +1, 2.21, 'waddle'),
     ('stage4', '05-lizard',    'lizard',    +1, 1.45, 'skitter'),
-    ('stage4', '06-rockling',  'rockling',  -1, 1.55, 'stomp'),
+    ('stage4', '06-rockling',  'rockling',  +1, 1.55, 'stomp'),
+    # ---- 第 5 大關 夜光彩城（v4.34）----
+    ('stage5', '01-wisp',      'wisp',      +1, 1.882, 'float'),
+    ('stage5', '02-scavenger', 'scavenger', +1, 2.044, 'waddle'),
+    ('stage5', '03-robot',     'robot',     +1, 2.158, 'stomp'),
+    ('stage5', '04-pulser',    'pulser',    +1, 2.366, 'sway'),
+    ('stage5', '05-laserbee',  'laserbee',  +1, 2.374, 'flap'),
+    ('stage5', '06-neonbot',   'neonbot',   +1, 2.309, 'float'),
+    # ---- 第 6 大關 深海遺跡 ----
+    ('stage6', '01-octopus',   'octopus',   +1, 2.058, 'jelly'),
+    ('stage6', '02-angler',    'angler',    +1, 2.682, 'float'),
+    ('stage6', '03-ghost',     'ghost',     +1, 1.667, 'float'),
+    ('stage6', '04-hermit',    'hermit',    +1, 1.647, 'scuttle'),
+    ('stage6', '05-jelly',     'jelly',     +1, 1.667, 'jelly'),
+    ('stage6', '06-urchin',    'urchin',    +1, 2.151, 'roll'),
+    # ---- 第 7 大關 天空要塞 ----
+    ('stage7', '01-hornet',    'hornet',    +1, 1.857, 'flap'),
+    ('stage7', '02-airship',   'airship',   +1, 1.365, 'float'),
+    ('stage7', '03-sapper',    'sapper',    +1, 1.907, 'waddle'),
+    ('stage7', '04-thunder',   'thunder',   +1, 2.317, 'spin'),
+    ('stage7', '05-windwisp',  'windwisp',  +1, 2.317, 'float'),
+    ('stage7', '06-galehawk',  'galehawk',  +1, 1.104, 'flap'),
+    # ---- 第 8 大關 暗黑魔王城 ----
+    ('stage8', '01-skull',     'skull',     +1, 1.656, 'shamble'),
+    ('stage8', '02-imp',       'imp',       +1, 2.259, 'waddle'),
+    ('stage8', '03-darkbat',   'darkbat',   +1, 1.104, 'flap'),
+    ('stage8', '04-wizard',    'wizard',    +1, 1.936, 'shamble'),
+    ('stage8', '05-royalguard','royalguard',+1, 2.259, 'stomp'),
+    ('stage8', '06-deathknight','deathknight',+1, 1.882, 'stomp'),
 ]
 
 
@@ -93,7 +121,7 @@ def main():
                       % (key, W0, H0, asp, Wt, Ht, len(data) / 1024.0, d, hs, anim))
 
     js = ('// ---------- 小怪美術（自動生成，勿手改；來源 art/foes/pack_foes_game.py）----------\n'
-          '// 第 1～4 大關各 6 隻（v4.30~v4.33）；單張貼圖，靠鏡像轉向\n'
+          '// 第 1～8 大關各 6 隻（v4.30~v4.34）；單張貼圖，全部朝右（dir=+1），靠鏡像轉向\n'
           'const FOE_ART = {\n' + '\n'.join(out) + '\n};\n')
     io.open(os.path.join(ROOT, '_foes_game_parts.js'), 'w',
             encoding='utf-8', newline='').write(js)

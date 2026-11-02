@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>爆爆英雄 · 主角群動作測試場（8 隻動物英雄）</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#121c2e; --panel2:#0e1728; --line:#22314c;
+    --txt:#e8eef8; --dim:#8fa2be; --acc:#6ee06a; --acc2:#ffd166; --hot:#ff6b6b;
+    --violet:#b8aef0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(1200px 700px at 20% -10%,#17253c 0%,var(--bg) 60%);
+    color:var(--txt);font:14px/1.6 "Segoe UI","Microsoft JhengHei",system-ui,sans-serif;
+    display:flex;flex-direction:column;min-height:100%;
+  }
+  header{
+    padding:14px 22px 9px;border-bottom:1px solid var(--line);
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  }
+  header h1{margin:0;font-size:17px;letter-spacing:.4px}
+  header .sub{color:var(--dim);font-size:12.5px}
+  header .tag{
+    font-size:11.5px;padding:2px 8px;border-radius:999px;
+    background:rgba(184,174,240,.14);color:var(--violet);border:1px solid rgba(184,174,240,.4);
+  }
+  main{flex:1;display:flex;gap:0;min-height:0}
+  aside{
+    width:300px;flex:0 0 300px;padding:12px 14px;overflow:auto;
+    border-right:1px solid var(--line);background:rgba(10,17,29,.55);
+  }
+  .hint{font-size:12px;color:var(--dim);margin:0 0 8px}
+  .card{
+    display:grid;grid-template-columns:54px 1fr auto;gap:8px;align-items:center;
+    padding:7px;border:1px solid var(--line);border-radius:11px;margin-bottom:7px;
+    background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,0));
+    cursor:pointer;transition:border-color .15s,transform .12s;
+  }
+  .card:hover{border-color:rgba(184,174,240,.6);transform:translateY(-1px)}
+  .card .th{width:54px;height:54px;border-radius:9px;background:#1a2740;display:grid;place-items:center;overflow:hidden}
+  .card .th img{max-width:50px;max-height:50px;display:block}
+  .card .nm{font-weight:700;font-size:13px;line-height:1.3}
+  .card .nm small{display:block;font-weight:400;color:var(--dim);font-size:10.5px;letter-spacing:.3px}
+  .card .st{font-size:10px;color:var(--dim);line-height:1.45;margin-top:2px}
+  .card .btns{display:flex;flex-direction:column;gap:3px}
+  .card button{
+    font:inherit;font-size:10px;padding:2px 6px;border-radius:6px;cursor:pointer;
+    background:#1a2740;color:var(--txt);border:1px solid var(--line);
+  }
+  .card button:hover{background:#22314c}
+  .stage-wrap{flex:1;display:flex;flex-direction:column;min-width:0;padding:12px 16px 16px}
+  .toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
+  .toolbar button{
+    font:inherit;font-size:12.5px;padding:6px 12px;border-radius:8px;cursor:pointer;
+    background:#16233a;color:var(--txt);border:1px solid var(--line);
+  }
+  .toolbar button:hover{background:#1e2f4c;border-color:#35507a}
+  .toolbar button.on{background:rgba(110,224,106,.16);border-color:rgba(110,224,106,.6);color:var(--acc)}
+  .toolbar button.exp.on{background:rgba(255,209,102,.18);border-color:rgba(255,209,102,.65);color:var(--acc2)}
+  .toolbar .sep{width:1px;height:22px;background:var(--line);margin:0 2px}
+  .toolbar .cnt{color:var(--dim);font-size:12px;margin-left:auto}
+  canvas#game{
+    width:100%;max-width:960px;aspect-ratio:960/576;display:block;
+    border-radius:14px;border:1px solid var(--line);background:#243a24;
+    box-shadow:0 18px 48px rgba(0,0,0,.45);cursor:crosshair;
+  }
+  .strip{margin-top:11px;max-width:960px;border:1px solid var(--line);border-radius:12px;
+    background:var(--panel2);padding:10px 12px;}
+  .strip h2{margin:0 0 6px;font-size:12.5px;color:var(--dim);font-weight:600}
+  .strip .row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+  .strip .grp{display:flex;align-items:flex-end;gap:4px;border:1px solid var(--line);
+    border-radius:8px;padding:5px 7px;background:#101a2b}
+  .strip .gn{font-size:10.5px;color:var(--dim);margin-right:2px}
+  .faces{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+  .faces .fr{background:#101a2b;border:1px solid var(--line);border-radius:8px;padding:4px;text-align:center}
+  .faces .fr canvas{display:block;margin:0 auto;background:#20351f;border-radius:6px;
+    width:100%;max-width:112px;height:auto}
+  .faces .fn{font-size:10px;color:var(--dim);margin-top:2px;line-height:1.2}
+  .faces .fl{font-size:9.5px;color:#7d8ca6;letter-spacing:.5px}
+  .strip figure{margin:0;text-align:center}
+  .strip figure canvas{display:block;background:#2c4a2a;border-radius:5px}
+  .strip figcaption{font-size:10px;color:var(--dim);margin-top:3px}
+  .legend{font-size:11.5px;color:var(--dim);margin-top:7px;line-height:1.6}
+  .legend b{color:var(--txt)}
+</style>
+</head>
+<body>
+<header>
+  <h1>主角群動作測試場</h1>
+  <span class="tag">8 HEROES · 5 STATES · 3 FACES</span>
+  <span class="sub">頭／軀幹／左右手／左右腿（貓狗加尾巴）分層拼裝。點卡片生成 → 點畫布讓他走過去 → 看 Idle / Move / Attack / Hurt / Die 與開心／痛苦／大哭。</span>
+</header>
+
+<main>
+  <aside>
+    <p class="hint">點卡片＝生成 1 隻。右側小鈕可單獨觸發攻擊／受傷／死亡。</p>
+    <div id="cards"></div>
+  </aside>
+
+  <div class="stage-wrap">
+    <div class="toolbar">
+      <button id="btnAll">全部出動</button>
+      <button id="btnMove">全部移動</button>
+      <button id="btnAtk">全部攻擊</button>
+      <button id="btnHurt">全部受傷</button>
+      <button id="btnDie">全部死亡</button>
+      <div class="sep"></div>
+      <span style="font-size:11.5px;color:var(--dim)">表情</span>
+      <button class="exp" data-ex="auto" class="on">自動</button>
+      <button class="exp" data-ex="happy">開心</button>
+      <button class="exp" data-ex="pain">痛苦</button>
+      <button class="exp" data-ex="cry">大哭</button>
+      <div class="sep"></div>
+      <button data-sp="0.25">0.25×</button>
+      <button data-sp="0.5">0.5×</button>
+      <button data-sp="1" class="on">1×</button>
+      <div class="sep"></div>
+      <button id="btnDbg">除錯顯示</button>
+      <button id="btnFlip">全體轉身</button>
+      <button id="btnClr">清空</button>
+      <span class="cnt"><b id="cnt">0</b> 隻 · <span id="fps">–</span> fps</span>
+    </div>
+
+    <div class="legend" style="margin:-4px 0 8px">
+      <b>面向</b>：出場時朝原圖的預設方向，<b>往哪走就轉哪邊</b>（點畫布走過去試試）。
+      <b>表情</b>：Idle／Move → 開心　　攻擊蓄力／受傷 → 痛苦　　死亡 → 大哭；
+      三種表情都是「頭頂小圖示 ＋ 身體周圍特效」呈現，不再把淚水/汗滴畫在臉上。
+    </div>
+
+    <canvas id="game" width="960" height="576"></canvas>
+
+    <div class="strip">
+      <h2>表情總表（8 隻 × 開心／痛苦／大哭，全部 1× 靜止帧）</h2>
+      <div class="faces" id="faceGrid"></div>
+    </div>
+
+    <div class="strip">
+      <h2>縮到遊戲內尺寸（左：52px 高／40px／右：26px ＝ 手機上的實際大小）</h2>
+      <div class="row" id="stripRow"></div>
+      <div class="legend">
+        切分線：<b>頸線</b>在內容高度 38%~55%（每隻不同）、<b>胯線</b>在 72%~84%。
+        切線處上下各留 16px 重疊，轉頭或抬腿時不會露縫。
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+/*__SRC__*/
+/*__DATA__*/
+
+window.__err = [];
+window.addEventListener('error', function (e) { window.__err.push(e.message + ' @' + e.lineno); });
+
+var W = 960, H = 576, TILE = 64, COLS = 15, ROWS = 9;
+var cv = document.getElementById('game'), ctx = cv.getContext('2d');
+var dpr = Math.min(2, window.devicePixelRatio || 1);
+cv.width = W * dpr; cv.height = H * dpr;
+ctx.scale(dpr, dpr);
+
+var IMGS = {}, missing = [];
+Object.keys(SRC).forEach(function (k) {
+  var im = new Image();
+  im.addEventListener('load', function () { IMGS[k] = im; });
+  im.addEventListener('error', function () { missing.push(k); });
+  im.src = SRC[k];
+});
+
+var heroes = [], sel = null, showDebug = false, speed = 1, forceExpr = 'auto';
+var DUR = { idle: 1.8, move: 1.1, attack: .92, hurt: .56, die: 1.1 };
+var clock = 0, lastFps = 0, frames = 0;
+
+/* ---------------- 場景（棋盤式草地） ---------------- */
+function hash(x, y) { var n = x * 374761393 + y * 668265263; n = (n ^ (n >> 13)) * 1274126177; return ((n ^ (n >> 16)) >>> 0) / 4294967295; }
+function isWall(cx, cy) { return cx === 0 || cy === 0 || cx === COLS - 1 || cy === ROWS - 1; }
+
+var floorCv = null;
+function bakeFloor() {
+  floorCv = document.createElement('canvas');
+  floorCv.width = W; floorCv.height = H;
+  var c = floorCv.getContext('2d');
+  for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) {
+    if (isWall(x, y)) continue;
+    var h = hash(x, y);
+    var g = c.createLinearGradient(x * TILE, y * TILE, x * TILE, y * TILE + TILE);
+    var l = 0.94 + h * 0.12;
+    g.addColorStop(0, 'rgb(' + Math.round(96 * l) + ',' + Math.round(146 * l) + ',' + Math.round(86 * l) + ')');
+    g.addColorStop(1, 'rgb(' + Math.round(74 * l) + ',' + Math.round(120 * l) + ',' + Math.round(68 * l) + ')');
+    c.fillStyle = g;
+    c.fillRect(x * TILE, y * TILE, TILE, TILE);
+    // 草叢
+    c.strokeStyle = 'rgba(150,205,120,.20)';
+    c.lineWidth = 1.4;
+    for (var i = 0; i < 5; i++) {
+      var px = x * TILE + hash(x * 7 + i, y * 3) * TILE;
+      var py = y * TILE + hash(x, y * 5 + i) * TILE;
+      c.beginPath(); c.moveTo(px, py); c.lineTo(px - 1.6, py - 4.2); c.stroke();
+      c.beginPath(); c.moveTo(px, py); c.lineTo(px + 2, py - 3.4); c.stroke();
+    }
+  }
+  // 邊界牆
+  for (y = 0; y < ROWS; y++) for (x = 0; x < COLS; x++) {
+    if (!isWall(x, y)) continue;
+    var wg = c.createLinearGradient(x * TILE, y * TILE, x * TILE, y * TILE + TILE);
+    wg.addColorStop(0, '#5a5140'); wg.addColorStop(.6, '#463f31'); wg.addColorStop(1, '#332d23');
+    c.fillStyle = wg; c.fillRect(x * TILE, y * TILE, TILE, TILE);
+    c.strokeStyle = 'rgba(0,0,0,.28)'; c.lineWidth = 1;
+    c.strokeRect(x * TILE + .5, y * TILE + .5, TILE - 1, TILE - 1);
+    c.fillStyle = 'rgba(255,235,190,.07)';
+    c.fillRect(x * TILE + 4, y * TILE + 4, TILE - 8, 3);
+  }
+}
+
+/* ---------------- 朝向（每隻原圖的預設面向；移動時翻轉） ---------------- */
+// 使用者確認的預設面向：1＝面朝右、-1＝面朝左
+var BASE_DIR = {
+  '01-rabbit': 1, '02-bear': -1, '03-dog': 1, '04-cat': -1,
+  '05-pig': -1, '06-panda': 1, '07-frog': -1, '08-chick': -1
+};
+
+/* ---------------- 姿態（每狀態回傳各層 transform） ---------------- */
+// 座標系＝「角色空間」：+x 永遠是「面朝的方向」（由 drawHero 的 flip 決定），
+// 所以前衝／後仰／擺手都只寫正數，換方向時自動正確。
+function pose(id, st, t, cyc) {
+  var p = { dx: 0, dy: 0, alpha: 1, gray: false, rot: 0,
+            torso: {}, head: {}, legL: {}, legR: {}, armL: {}, armR: {}, tail: {}, fx: [] };
+  var w = t * Math.PI * 2 / cyc;
+
+  if (st === 'idle') {
+    var b = Math.sin(w);
+    p.torso = { sy: 1 + .032 * b, sx: 1 - .020 * b };
+    p.head  = { dy: -2.8 * b, rot: Math.sin(w * .5) * .030 };
+    p.armL  = { rot: -.07 - .10 * b, dy: -1.2 * b };      // 手臂隨呼吸微張（真的用 armL 層）
+    p.armR  = { rot: .07 + .10 * b, dy: -1.2 * b };
+    p.legL  = { sy: 1 + .014 * b };
+    p.legR  = { sy: 1 + .014 * b };
+    p.tail  = { rot: Math.sin(w * .7) * .18 };
+  } else if (st === 'move') {
+    var s = Math.sin(w), s2 = Math.sin(w * 2);
+    p.dy = -Math.abs(s2) * 11;                            // 彈跳 11px
+    p.rot = s * .05;
+    p.torso = { sy: 1 + .06 * Math.abs(s2), sx: 1 - .04 * Math.abs(s2), rot: s * .06 };
+    // 腿：繞髖關節前後擺 ±.46rad（±26°）＋抬腳 17px —— 這是「真的在走路」
+    p.legL = { rot: s * .46, dy: -Math.max(0, s) * 17, dx: s * 3 };
+    p.legR = { rot: -s * .46, dy: -Math.max(0, -s) * 17, dx: -s * 3 };
+    // 手：與同側腿反向擺（左腿往前 → 左臂往後）
+    p.armL = { rot: -s * .55, dy: -Math.abs(s) * 2 };
+    p.armR = { rot: s * .55, dy: -Math.abs(s) * 2 };
+    p.head = { dy: -Math.abs(s2) * 3.4, rot: -s * .085 };
+    p.tail = { rot: Math.sin(w * 1.6) * .34 };
+  } else if (st === 'attack') {
+    var kk = t / DUR.attack;
+    if (kk < .34) {                                       // 蓄力：深蹲後仰、雙手拉到身後
+      var e = Math.pow(kk / .34, 1.6);
+      p.dx = -10 * e; p.dy = 6 * e;
+      p.torso = { sy: 1 - .14 * e, sx: 1 + .11 * e, rot: -.22 * e };
+      p.head = { rot: -.17 * e, dy: 2 * e };
+      p.legL = { rot: -.18 * e, dy: 2 * e }; p.legR = { rot: .18 * e, dy: 2 * e };
+      p.armL = { rot: -.95 * e }; p.armR = { rot: -.95 * e };
+    } else if (kk < .56) {                                // 前衝：整隻彈出去 30px
+      var q2 = (kk - .34) / .22;
+      var lg = Math.sin(q2 * Math.PI * .92);
+      p.dx = 38 * lg; p.dy = -13 * Math.sin(q2 * Math.PI);
+      p.torso = { sy: 1 + .10 * lg, sx: 1 - .08 * lg, rot: .32 * lg };
+      p.head = { rot: .22 * lg, dy: -5 * lg };
+      p.legL = { rot: .34 * lg }; p.legR = { rot: -.34 * lg };
+      p.armL = { rot: 1.15 * lg }; p.armR = { rot: 1.15 * lg };
+      p.fx.push({ type: 'slash', a: q2 });
+    } else {                                              // 收招
+      var e3 = 1 - (kk - .56) / .44;
+      p.dx = 10 * e3; p.torso = { rot: .09 * e3, sy: .97 + .03 * e3 };
+      p.head = { rot: .07 * e3 };
+      p.armL = { rot: .35 * e3 }; p.armR = { rot: .35 * e3 };
+    }
+  } else if (st === 'hurt') {
+    var k2 = t / DUR.hurt;
+    var sh = (1 - k2) * (1 - k2);
+    p.dx = -7 * sh + Math.sin(t * 70) * 6 * sh;            // 被打退 ＋ 抖
+    p.rot = Math.sin(t * 52) * .10 * sh;
+    p.torso = { rot: -.16 * sh, sy: 1 - .08 * sh, sx: 1 + .06 * sh };
+    p.head = { rot: -.22 * sh, dy: 2.5 * sh };
+    p.armL = { rot: -.70 * sh }; p.armR = { rot: -.70 * sh };   // 兩手往上甩護頭
+    p.legL = { rot: -.14 * sh }; p.legR = { rot: .14 * sh };
+    if (t < .14) p.flash = 1 - t / .14;
+  } else if (st === 'die') {
+    // 死亡＝「癱軟」而不是「側翻」：翻倒會讓身體繞腳底甩出去、看起來浮空。
+    var k3 = Math.min(1, t / DUR.die);
+    var ed = 1 - Math.pow(1 - k3, 3);
+    p.alpha = 1 - .5 * ed;
+    p.gray = true;
+    p.torso = { sy: 1 - .44 * ed, sx: 1 + .34 * ed };
+    p.head = { rot: -.26 * ed, dy: 10 * ed };
+    p.legL = { rot: -.38 * ed, dx: -4 * ed, sy: 1 - .40 * ed };
+    p.legR = { rot: .38 * ed, dx: 4 * ed, sy: 1 - .40 * ed };
+    p.armL = { rot: -.32 * ed }; p.armR = { rot: .32 * ed };
+    p.tail = { rot: .34 * ed };
+  }
+  return p;
+}
+
+/* ---------------- 繪製 ---------------- */
+function tf(pv, o) {
+  if (!o) return;
+  if (o.dx || o.dy) ctx.translate(o.dx || 0, o.dy || 0);
+  var r = o.rot || 0, sx = o.sx || 1, sy = o.sy || 1;
+  if (r || sx !== 1 || sy !== 1) {
+    ctx.translate(pv[0], pv[1]); ctx.rotate(r); ctx.scale(sx, sy); ctx.translate(-pv[0], -pv[1]);
+  }
+}
+
+function rgba(c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+
+// 臉：**只做不依賴眼位的著色**（腮紅／漲紅），眼淚汗滴星星全部移到身體外部特效。
+// 原因：自動標定的眼位對豬鼻、青蛙凸眼、熊貓黑眼罩會偏，畫在臉上一定歪掉。
+function drawFace(id, expr) {
+  var F = FACE[id]; if (!F) return;
+  var r = F.eyeD * 0.30;
+  if (expr === 'happy') {
+    ctx.fillStyle = 'rgba(255,120,145,.26)';
+    [F.eyeL, F.eyeR].forEach(function (e) {
+      ctx.beginPath(); ctx.ellipse(e[0], e[1] + r * 1.15, r * .70, r * .42, 0, 0, 7); ctx.fill();
+    });
+  } else if (expr === 'pain') {
+    ctx.fillStyle = 'rgba(150,90,220,.20)';                // 痛苦的紫
+    ctx.beginPath(); ctx.ellipse(F.cx, F.cy + r * .5, F.eyeD * .70, F.eyeD * .52, 0, 0, 7); ctx.fill();
+  }
+}
+
+function star(x, y, r, col) {
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  for (var i = 0; i < 8; i++) {
+    var a = i * Math.PI / 4, rr = i % 2 ? r * .42 : r;
+    ctx[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+  }
+  ctx.closePath(); ctx.fill();
+}
+
+function drop(x, y, r) {
+  ctx.fillStyle = 'rgba(140,205,255,.95)';
+  ctx.beginPath();
+  ctx.moveTo(x, y - r * 1.5);
+  ctx.quadraticCurveTo(x + r, y + r * .2, x, y + r);
+  ctx.quadraticCurveTo(x - r, y + r * .2, x, y - r * 1.5);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  ctx.beginPath(); ctx.arc(x - r * .28, y, r * .22, 0, 7); ctx.fill();
+}
+
+/* ---------------- 頭頂表情圖示（跟小怪頭上的生氣圖示同一個意思） ---------------- */
+function emoteIcon(kind, x, y, r, tt, a) {
+  if (a <= .02) return;
+  var pop = Math.min(1, tt / .24);
+  var e = 1 - Math.pow(1 - pop, 3);
+  var rr = r * e * (1 + Math.sin(pop * Math.PI) * .22);    // 彈出回彈
+  if (rr < 1) return;
+  var bob = Math.sin(tt * 3.6) * r * .09;
+  var ink = kind === 'happy' ? '#8A5410' : kind === 'pain' ? '#4C2E7A' : '#14507A';
+
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.translate(x, y + bob);
+
+  // 指向頭部的小尖角
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.moveTo(-rr * .34, rr * .72); ctx.lineTo(rr * .34, rr * .72);
+  ctx.lineTo(0, rr * 1.38); ctx.closePath(); ctx.fill();
+  // 白外框
+  ctx.beginPath(); ctx.arc(0, 0, rr * 1.16, 0, 7); ctx.fill();
+  // 底色
+  var A = kind === 'happy' ? ['#FFE783', '#F5B231']
+        : kind === 'pain' ? ['#E2CDFB', '#A374E6']
+        : ['#B4E4FF', '#59B4F0'];
+  var g = ctx.createRadialGradient(-rr * .30, -rr * .38, rr * .08, 0, 0, rr * 1.2);
+  g.addColorStop(0, A[0]); g.addColorStop(1, A[1]);
+  ctx.beginPath(); ctx.arc(0, 0, rr * 1.02, 0, 7); ctx.fillStyle = g; ctx.fill();
+
+  ctx.strokeStyle = ink; ctx.fillStyle = ink;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  if (kind === 'happy') {
+    ctx.lineWidth = rr * .19;
+    [-1, 1].forEach(function (s) {                         // ^ ^ 彎眼
+      ctx.beginPath();
+      ctx.arc(s * rr * .38, rr * .04, rr * .24, Math.PI * 1.12, Math.PI * 1.88); ctx.stroke();
+    });
+    ctx.lineWidth = rr * .17;
+    ctx.beginPath(); ctx.arc(0, rr * .06, rr * .50, .28 * Math.PI, .72 * Math.PI); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,105,135,.45)';
+    [-1, 1].forEach(function (s) {
+      ctx.beginPath(); ctx.ellipse(s * rr * .60, rr * .34, rr * .17, rr * .11, 0, 0, 7); ctx.fill();
+    });
+  } else if (kind === 'pain') {
+    ctx.lineWidth = rr * .17;
+    [-1, 1].forEach(function (s) {                          // ＞＜ 閉眼
+      var cx2 = s * rr * .38;
+      ctx.beginPath();
+      ctx.moveTo(cx2 - s * rr * .16, -rr * .20);
+      ctx.lineTo(cx2 + s * rr * .13, -rr * .02);
+      ctx.lineTo(cx2 - s * rr * .16, rr * .16);
+      ctx.stroke();
+    });
+    ctx.lineWidth = rr * .15;                               // 波浪嘴
+    ctx.beginPath();
+    ctx.moveTo(-rr * .26, rr * .46);
+    ctx.quadraticCurveTo(-rr * .09, rr * .30, 0, rr * .46);
+    ctx.quadraticCurveTo(rr * .09, rr * .62, rr * .26, rr * .44);
+    ctx.stroke();
+    // 汗滴
+    ctx.fillStyle = 'rgba(120,190,250,.95)';
+    ctx.beginPath();
+    ctx.moveTo(rr * .92, -rr * .72);
+    ctx.quadraticCurveTo(rr * 1.16, -rr * .34, rr * .92, -rr * .26);
+    ctx.quadraticCurveTo(rr * .68, -rr * .34, rr * .92, -rr * .72);
+    ctx.fill();
+    // 三條線（經典的「汗線」）畫在圖示左上
+    ctx.strokeStyle = 'rgba(120,80,190,.95)'; ctx.lineWidth = rr * .13;
+    for (var i2 = 0; i2 < 3; i2++) {
+      var lx = -rr * (1.62 + i2 * .34);
+      ctx.beginPath(); ctx.moveTo(lx, -rr * 1.05); ctx.lineTo(lx, -rr * .52); ctx.stroke();
+    }
+  } else {
+    ctx.lineWidth = rr * .17;
+    [-1, 1].forEach(function (s) {                          // 緊閉的 ＞＜
+      var cx2 = s * rr * .40;
+      ctx.beginPath();
+      ctx.moveTo(cx2 - s * rr * .15, -rr * .22);
+      ctx.lineTo(cx2 + s * rr * .12, -rr * .04);
+      ctx.lineTo(cx2 - s * rr * .15, rr * .14);
+      ctx.stroke();
+    });
+    // 張嘴大哭
+    ctx.fillStyle = '#2E1B33';
+    ctx.beginPath(); ctx.ellipse(0, rr * .44, rr * .30, rr * .26, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(230,120,150,.9)';
+    ctx.beginPath(); ctx.ellipse(0, rr * .56, rr * .16, rr * .09, 0, 0, 7); ctx.fill();
+    // 兩行淚
+    ctx.strokeStyle = 'rgba(150,215,255,.95)'; ctx.lineWidth = rr * .16;
+    [-1, 1].forEach(function (s) {
+      ctx.beginPath();
+      ctx.moveTo(s * rr * .42, rr * .18);
+      ctx.quadraticCurveTo(s * rr * .58, rr * .62, s * rr * .50, rr * 1.02);
+      ctx.stroke();
+    });
+  }
+  ctx.restore();
+}
+
+/* ---------------- 身體周圍的情緒特效 ---------------- */
+function drawVfx(kind, px, py, size, t, a, face) {
+  if (a <= .02) return;
+  ctx.save();
+  ctx.globalAlpha = a;
+
+  if (kind === 'happy') {
+    // 周圍很多零星小亮光（繞著身體慢慢轉＋閃爍）
+    for (var i = 0; i < 14; i++) {
+      var ph = i / 14 * Math.PI * 2;
+      var ang = t * .8 + ph;
+      var rx = size * (.34 + .16 * Math.sin(t * 1.3 + i * 1.7));
+      var x = px + Math.cos(ang) * rx * 1.25;
+      var y = py - size * .48 + Math.sin(ang) * rx * .82;
+      var tw = .30 + .70 * Math.abs(Math.sin(t * 3.4 + i * 2.1));
+      star(x, y, size * (.024 + .030 * tw), 'rgba(255,247,205,' + (.9 * tw * a) + ')');
+    }
+    ctx.globalAlpha = a;
+  } else if (kind === 'pain') {
+    // 紫色霧氣往上飄
+    for (var j = 0; j < 7; j++) {
+      var pj = ((t * .55) + j / 7) % 1;
+      var xj = px + Math.sin(t * 2.1 + j * 2.4) * size * .30;
+      var yj = py - size * (.10 + pj * .95);
+      var rj = size * (.05 + .05 * pj);
+      var gg = ctx.createRadialGradient(xj, yj, 0, xj, yj, rj * 2.4);
+      gg.addColorStop(0, 'rgba(168,120,235,' + (.34 * (1 - pj) * a) + ')');
+      gg.addColorStop(1, 'rgba(168,120,235,0)');
+      ctx.fillStyle = gg;
+      ctx.beginPath(); ctx.arc(xj, yj, rj * 2.4, 0, 7); ctx.fill();
+    }
+  } else if (kind === 'cry') {
+    // 頭部兩側往外灑「水條」：沿二次貝茲曲線密排圓點 → 讀成一道連續水幕
+    var hy = py - size * .74;
+    [-1, 1].forEach(function (dir, si) {
+      var wob = Math.sin(t * 6.4 + si * 1.7) * size * .018;
+      var x0 = px + dir * size * .22, y0 = hy;
+      var cx1 = px + dir * size * .40, cy1 = y0 + size * .04 + wob;
+      var x1 = px + dir * (size * .58 + Math.sin(t * 3.1 + si) * size * .02), y1 = y0 + size * .30 + wob;
+      for (var q = 0; q <= 16; q++) {
+        var kq = q / 16, ik = 1 - kq;
+        var bx = ik * ik * x0 + 2 * ik * kq * cx1 + kq * kq * x1;
+        var by = ik * ik * y0 + 2 * ik * kq * cy1 + kq * kq * y1;
+        var rad = size * (.062 - .030 * kq);
+        ctx.fillStyle = 'rgba(146,210,255,' + ((.92 - kq * .45) * a) + ')';
+        ctx.beginPath(); ctx.arc(bx, by, rad, 0, 7); ctx.fill();
+        if (q % 3 === 0) {
+          ctx.fillStyle = 'rgba(255,255,255,' + ((.55 - kq * .35) * a) + ')';
+          ctx.beginPath(); ctx.arc(bx - dir * rad * .3, by - rad * .35, rad * .30, 0, 7); ctx.fill();
+        }
+      }
+      for (var m = 0; m < 3; m++) {
+        var pm = ((t * 1.15) + m * .33 + si * .17) % 1;
+        drop(x1 + dir * pm * size * .10, y1 + pm * pm * size * .22, size * (.032 - pm * .012));
+      }
+    });
+    // 地上小水花
+    for (var n2 = 0; n2 < 4; n2++) {
+      var pn = ((t * .9) + n2 * .25) % 1;
+      ctx.globalAlpha = a * (1 - pn) * .55;
+      ctx.strokeStyle = 'rgba(160,220,255,1)'; ctx.lineWidth = size * .012;
+      ctx.beginPath();
+      ctx.ellipse(px, py, size * (.10 + pn * .30), size * (.03 + pn * .09), 0, Math.PI, 0);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/* ---------------- 角色（分層拼裝） ---------------- */
+function drawHero(id, px, py, size, st, t, expr, cyc, face, exprT) {
+  var L = LAYERS[id], F = FACE[id];
+  if (!L || !F) return;
+  var bb = L.bbox, bH = bb[3] - bb[1], bW = bb[2] - bb[0];
+  var k = size / bH;
+  var s = pose(id, st, t, cyc || DUR[st] || 1);
+  var base = BASE_DIR[id] || 1;
+  var dir = face || base;
+  var flip = (dir === base) ? 1 : -1;                       // 與原圖同向就不翻
+  var P = L.pivots || {};
+  var pv = {
+    head: [L.mid, L.neck],
+    torso: [L.mid, L.hip],
+    torsoB: [L.mid, L.hip],
+    legL: [L.mid - bW * .11, L.hip],
+    legR: [L.mid + bW * .11, L.hip],
+    tail: [bb[2] - bW * .30, bb[1] + bH * .52],
+    armL: P.armL || [L.mid - bW * .42, L.neck + bH * .14],
+    armR: P.armR || [L.mid + bW * .42, L.neck + bH * .14]
+  };
+
+  function lay(name, o) {
+    var ly = L.layers[name], im = IMGS[id + '_' + name];
+    if (!ly || !im || !im.complete) return;
+    ctx.save(); tf(pv[name], o || {});
+    ctx.drawImage(im, ly.x, ly.y, ly.w, ly.h);
+    ctx.restore();
+  }
+
+  var dxW = (s.dx || 0) * flip;                             // 世界座標的前後位移
+  var headY = L.layers.head.y;
+  var headTopY = py + (s.dy || 0) - (bb[3] - headY) * k + (s.head.dy || 0) * k;
+  var headTopX = px + dxW + (s.head.dx || 0) * k * flip;
+
+  // 影子
+  ctx.save();
+  ctx.globalAlpha = .26 * s.alpha;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(px + dxW * .45, py + 2, bW * k * (.44 + Math.abs(s.dx || 0) / 90), bW * k * .13, 0, 0, 7);
+  ctx.fill();
+  ctx.restore();
+
+  // 痛苦的紫色底光（在身體後面）
+  if (expr === 'pain') {
+    ctx.save();
+    ctx.globalAlpha = s.alpha * .9;
+    var au = ctx.createRadialGradient(px + dxW, py - size * .45, size * .05, px + dxW, py - size * .45, size * .78);
+    au.addColorStop(0, 'rgba(160,110,235,.44)');
+    au.addColorStop(1, 'rgba(160,110,235,0)');
+    ctx.fillStyle = au;
+    ctx.beginPath(); ctx.arc(px + dxW, py - size * .45, size * .78, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.globalAlpha = s.alpha;
+  if (s.gray) ctx.filter = 'grayscale(.85) brightness(.9)';
+  ctx.translate(px + dxW, py + (s.dy || 0));
+  ctx.scale(flip * k, k);                                   // flip：面向另一側時整隻鏡像
+  ctx.translate(-(bb[0] + bb[2]) / 2, -bb[3]);
+  if (s.rot) ctx.rotate(s.rot);
+
+  lay('tail', s.tail);
+  lay('legL', s.legL);
+  lay('legR', s.legR);
+  lay(L.layers.torsoB ? 'torsoB' : 'torso', s.torso);
+  lay('armL', s.armL);                                      // 手臂在軀幹之上（含 6px socket）
+  lay('armR', s.armR);
+
+  var ly = L.layers.head, im = IMGS[id + '_head'];
+  if (ly && im && im.complete) {
+    ctx.save(); tf(pv.head, s.head);
+    ctx.drawImage(im, ly.x, ly.y, ly.w, ly.h);
+    drawFace(id, expr);
+    ctx.restore();
+  }
+  ctx.filter = 'none';
+
+  if (s.flash) {                                            // 受傷白閃
+    ctx.globalAlpha = s.alpha * s.flash * .8;
+    ctx.filter = 'brightness(0) invert(1)';
+    lay(L.layers.torsoB ? 'torsoB' : 'torso', s.torso);
+    if (ly && im && im.complete) { ctx.save(); tf(pv.head, s.head); ctx.drawImage(im, ly.x, ly.y, ly.w, ly.h); ctx.restore(); }
+    ctx.filter = 'none';
+  }
+  ctx.restore();
+
+  // 情緒：身體周圍特效 ＋ 頭頂圖示（世界座標，不隨鏡像翻轉）
+  drawVfx(expr, px + dxW, py + (s.dy || 0) * .35, size, t, s.alpha, flip);
+  emoteIcon(expr, headTopX, headTopY - size * .30,
+            size * .175, (exprT == null ? t : exprT), s.alpha);
+
+  // 攻擊弧光：新月形揮擊（外圈橘光 + 內圈白熱），隨前衝轉過去
+  if (st === 'attack') {
+    (s.fx || []).forEach(function (f) {
+      if (f.type !== 'slash') return;
+      var a = Math.max(0, Math.min(1, f.a));
+      var al = Math.sin(a * Math.PI);
+      if (al <= .02) return;
+      var cx2 = px + size * .22 * flip, cy2 = py - size * .52;
+      var ang = (-1.18 + a * 1.42) * flip;
+      var sw = 1.05, r0 = size * .40;
+      function crescent(rr, w, col) {
+        ctx.beginPath();
+        ctx.arc(cx2, cy2, rr + w * .5, ang - sw * .5, ang + sw * .5);
+        ctx.arc(cx2, cy2, rr - w * .5, ang + sw * .5, ang - sw * .5, true);
+        ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+      }
+      ctx.save();
+      ctx.globalAlpha = al;
+      crescent(r0, size * .105, 'rgba(255,196,96,.34)');
+      crescent(r0, size * .042, 'rgba(255,252,232,.97)');
+      crescent(r0 * .86, size * .016, 'rgba(255,150,48,.55)');
+      // 前緣星芒
+      var ex2 = cx2 + Math.cos(ang + sw * .5 * flip) * r0;
+      var ey2 = cy2 + Math.sin(ang + sw * .5 * flip) * r0;
+      ctx.strokeStyle = 'rgba(255,240,180,' + (.85 * al) + ')';
+      ctx.lineWidth = size * .022; ctx.lineCap = 'round';
+      for (var q = 0; q < 4; q++) {
+        var ang2 = ang + sw * .5 * flip + (q - 1.5) * .34 * flip;
+        ctx.beginPath();
+        ctx.moveTo(cx2 + Math.cos(ang2) * r0 * .95, cy2 + Math.sin(ang2) * r0 * .95);
+        ctx.lineTo(cx2 + Math.cos(ang2) * r0 * 1.28, cy2 + Math.sin(ang2) * r0 * 1.28);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+  }
+
+  // 死亡：靈魂光點上飄
+  if (st === 'die') {
+    var gk = Math.min(1, t / DUR.die);
+    ctx.save();
+    for (var gi = 0; gi < 3; gi++) {
+      var ph = (gk * 1.4 + gi * 0.33) % 1;
+      ctx.globalAlpha = (1 - ph) * .75;
+      ctx.fillStyle = 'rgba(210,235,255,.95)';
+      ctx.beginPath();
+      ctx.arc(px + Math.sin(ph * 6 + gi) * size * .18, py - size * (.55 + ph * .75),
+              3.2 * (1 - ph * .5), 0, 7);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  return { bW: bW * k, bH: bH * k, headTopY: headTopY };
+}
+
+/* ---------------- 更新 ---------------- */
+function spawn(id, cx, cy) {
+  if (heroes.length >= 12) return;
+  var h = {
+    id: id, x: (cx + .5) * TILE, y: (cy + .9) * TILE,
+    tx: null, ty: null, state: 'idle', stT: 0, expr: 'auto',
+    face: BASE_DIR[id] || 1,            // 出場時面向原圖的預設方向
+    exprT: 0, lastExpr: null
+  };
+  heroes.push(h); sel = h; refreshCards(); return h;
+}
+
+function setState(h, s) {
+  h.state = s; h.stT = 0;
+  if (s === 'attack' || s === 'hurt') h.tx = null;
+}
+
+var ATTRACT = { '01-rabbit': '兔兔BIBI', '02-bear': '小熊BOBO', '03-dog': '柴犬KIKI', '04-cat': '貓咪NANA',
+                '05-pig': '豬豬MOMO', '06-panda': '熊貓ZUZU', '07-frog': '青蛙GUGU', '08-chick': '小雞DODO' };
+var TAGS = { '01-rabbit': '美貌的', '02-bear': '非常有特色的', '03-dog': '有個性的', '04-cat': '賤賤的',
+             '05-pig': '非常可愛的', '06-panda': '膽小的', '07-frog': '獨特的', '08-chick': '特別的' };
+
+function exprOf(h) {
+  if (forceExpr !== 'auto') return forceExpr;
+  if (h.state === 'die' || h.state === 'hurt') return h.state === 'die' ? 'cry' : 'pain';
+  if (h.state === 'attack') return h.stT < DUR.attack * .55 ? 'pain' : 'happy';
+  return 'happy';
+}
+
+function update(dt) {
+  clock += dt;
+  heroes.forEach(function (h) {
+    h.stT += dt;
+    if (h.state === 'attack' && h.stT > DUR.attack) setState(h, 'idle');
+    if (h.state === 'hurt' && h.stT > DUR.hurt) setState(h, 'idle');
+    if (h.state === 'die' && h.stT > DUR.die) { h.stT = DUR.die; }
+
+    if (h.tx != null) {
+      var dx = h.tx - h.x, dy = h.ty - h.y;
+      var d = Math.hypot(dx, dy);
+      if (d < 3) { h.tx = h.ty = null; if (h.state === 'move') setState(h, 'idle'); }
+      else {
+        var sp = 150 * dt;
+        h.x += dx / d * sp; h.y += dy / d * sp;
+        if (Math.abs(dx) > 8) h.face = dx > 0 ? 1 : -1;     // 面向移動方向
+        if (h.state !== 'move') setState(h, 'move');
+      }
+    }
+
+    // 表情一換就重播「頭上圖示彈出」動畫
+    var ex = exprOf(h);
+    if (ex !== h.lastExpr) { h.lastExpr = ex; h.exprT = 0; } else { h.exprT += dt; }
+  });
+}
+
+function render() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.drawImage(floorCv, 0, 0);
+
+  // 目標點
+  heroes.forEach(function (h) {
+    if (h.tx == null) return;
+    ctx.strokeStyle = 'rgba(255,230,150,.55)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(h.tx, h.ty, 7, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.arc(h.tx, h.ty, 2.4, 0, 7); ctx.fillStyle = 'rgba(255,230,150,.8)'; ctx.fill();
+  });
+
+  // 依 y 排序（後面的先畫）
+  var list = heroes.slice().sort(function (a, b) { return a.y - b.y; });
+  list.forEach(function (h) {
+    var sz = TILE * 1.52;
+    var r = drawHero(h.id, h.x, h.y, sz, h.state, h.stT, exprOf(h), DUR[h.state], h.face, h.exprT);
+    if (showDebug && r) {
+      ctx.font = '600 10px ui-monospace,Consolas,monospace';
+      var lab = h.state.toUpperCase() + ' · ' + exprOf(h).toUpperCase() +
+        ' · ' + (h.face > 0 ? '面右▶' : '◀面左');
+      var tw = ctx.measureText(lab).width;
+      var ly2 = h.y - r.bH - 10;
+      ctx.fillStyle = h.state === 'die' ? 'rgba(80,20,80,.92)' : h.state === 'hurt' ? 'rgba(150,40,40,.92)'
+        : h.state === 'attack' ? 'rgba(150,90,0,.94)' : 'rgba(10,18,30,.72)';
+      ctx.fillRect(h.x - tw / 2 - 4, ly2 - 11, tw + 8, 14);
+      ctx.fillStyle = '#e8eef8';
+      ctx.fillText(lab, h.x - tw / 2, ly2);
+      // 分層樞紐點
+      var L = LAYERS[h.id], bb = L.bbox, k = sz / (bb[3] - bb[1]);
+      var top = h.y - sz;
+      ctx.strokeStyle = 'rgba(110,224,106,.55)'; ctx.lineWidth = 1;
+      [L.neck, L.hip].forEach(function (yy) {
+        var py2 = top + (yy - bb[1]) * k;
+        ctx.beginPath(); ctx.moveTo(h.x - 4, py2); ctx.lineTo(h.x + 4, py2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(h.x, py2 - 4); ctx.lineTo(h.x, py2 + 4); ctx.stroke();
+      });
+      if (h === sel) {
+        ctx.strokeStyle = 'rgba(255,209,102,.55)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(h.x, h.y - sz * .5, sz * .5, 0, 7); ctx.stroke();
+      }
+    }
+  });
+}
+
+/* ---------------- 卡片 / 工具列 ---------------- */
+function refreshCards() {
+  document.getElementById('cnt').textContent = heroes.length;
+}
+
+function buildCards() {
+  var html = '';
+  Object.keys(ATTRACT).forEach(function (id) {
+    html += '<div class="card" data-id="' + id + '">' +
+      '<div class="th"><img src="' + (THUMB[id] || '') + '" alt="' + ATTRACT[id] + '"></div>' +
+      '<div><div class="nm">' + ATTRACT[id] + '<small>' + TAGS[id] + '</small></div>' +
+      '<div class="st">頭/軀幹/腿' + (LAYERS[id].layers.tail ? '/尾' : '') +
+      (LAYERS[id].layers.armL ? '/手' : '') + ' 分層 · 預設面' +
+      (BASE_DIR[id] > 0 ? '右' : '左') + '</div></div>' +
+      '<div class="btns"><button data-a="attack">攻擊</button><button data-a="hurt">受傷</button><button data-a="die">死亡</button></div>' +
+      '</div>';
+  });
+  document.getElementById('cards').innerHTML = html;
+  document.querySelectorAll('.card').forEach(function (el) {
+    el.addEventListener('click', function (ev) {
+      var id = el.getAttribute('data-id');
+      var a = ev.target.getAttribute && ev.target.getAttribute('data-a');
+      if (a) {
+        ev.stopPropagation();
+        var h = heroes.filter(function (x) { return x.id === id; }).pop();
+        if (!h) h = spawn(id, 3 + Math.floor(Math.random() * 8), 2 + Math.floor(Math.random() * 5));
+        setState(h, a); sel = h; return;
+      }
+      var cx = 3 + Math.floor(Math.random() * 8), cy = 2 + Math.floor(Math.random() * 5);
+      spawn(id, cx, cy);
+    });
+  });
+}
+
+function buildFaceGrid() {
+  var EX = [['happy', '開心'], ['pain', '痛苦'], ['cry', '大哭']];
+  var html = '';
+  Object.keys(ATTRACT).forEach(function (id) {
+    html += '<div class="fr"><div class="fn">' + ATTRACT[id].slice(0, 2) + '</div>';
+    EX.forEach(function (e) {
+      html += '<canvas width="112" height="132" data-id="' + id + '" data-ex="' + e[0] + '"></canvas>' +
+        '<div class="fl">' + e[1] + '</div>';
+    });
+    html += '</div>';
+  });
+  var box = document.getElementById('faceGrid');
+  box.innerHTML = html;
+  box.querySelectorAll('canvas').forEach(function (c) {
+    var id = c.getAttribute('data-id'), ex = c.getAttribute('data-ex');
+    var cc = c.getContext('2d'), old = ctx;
+    ctx = cc;
+    drawHero(id, 56, 126, 74, 'idle', .35, ex, DUR.idle, BASE_DIR[id], 1);
+    ctx = old;
+  });
+}
+
+function buildStrip() {
+  var row = document.getElementById('stripRow');
+  var html = '';
+  Object.keys(ATTRACT).forEach(function (id) {
+    html += '<div class="grp"><span class="gn">' + ATTRACT[id].slice(0, 2) + '</span>' +
+      '<canvas width="52" height="52" data-s="52" data-id="' + id + '"></canvas>' +
+      '<canvas width="40" height="40" data-s="40" data-id="' + id + '"></canvas>' +
+      '<canvas width="26" height="26" data-s="26" data-id="' + id + '"></canvas></div>';
+  });
+  row.innerHTML = html;
+  document.querySelectorAll('#stripRow canvas').forEach(function (c) {
+    var id = c.getAttribute('data-id'), sz = +c.getAttribute('data-s');
+    var cc = c.getContext('2d');
+    var save = ctx;
+    ctx = cc;
+    drawHeroStatic(cc, id, sz / 2, sz - 1, sz * .96);
+    ctx = save;
+  });
+}
+
+// 靜態繪製（給縮圖用，不依賴全域 ctx 狀態）
+function drawHeroStatic(cc, id, px, py, size) {
+  var L = LAYERS[id];
+  if (!L) return;
+  var bb = L.bbox, bH = bb[3] - bb[1], k = size / bH;
+  var old = ctx; ctx = cc;
+  cc.save();
+  cc.translate(px, py);
+  cc.scale(k, k);
+  cc.translate(-(bb[0] + bb[2]) / 2, -bb[3]);
+  ['tail', 'legL', 'legR', 'torsoB', 'armL', 'armR', 'head'].forEach(function (n) {
+    var ly = L.layers[n], im = IMGS[id + '_' + n];
+    if (!ly || !im || !im.complete) return;
+    cc.drawImage(im, ly.x, ly.y, ly.w, ly.h);
+  });
+  cc.restore();
+  ctx = old;
+}
+
+/* ---------------- 事件 ---------------- */
+cv.addEventListener('click', function (e) {
+  var r = cv.getBoundingClientRect();
+  var x = (e.clientX - r.left) / r.width * W;
+  var y = (e.clientY - r.top) / r.height * H;
+  if (sel) { sel.tx = x; sel.ty = y; }
+});
+
+document.getElementById('btnAll').onclick = function () {
+  heroes = [];
+  var grid = [[2,2],[4,2],[6,2],[8,2],[10,2],[3,4],[7,4],[11,4]];
+  Object.keys(ATTRACT).forEach(function (id, i) {
+    spawn(id, grid[i][0], grid[i][1]);
+  });
+};
+document.getElementById('btnMove').onclick = function () {
+  if (!heroes.length) document.getElementById('btnAll').click();
+  heroes.forEach(function (h) {
+    h.tx = 80 + Math.random() * (W - 160);
+    h.ty = 120 + Math.random() * (H - 220);
+    setState(h, 'move');
+  });
+};
+document.getElementById('btnAtk').onclick = function () { heroes.forEach(function (h) { setState(h, 'attack'); }); };
+document.getElementById('btnHurt').onclick = function () { heroes.forEach(function (h) { setState(h, 'hurt'); }); };
+document.getElementById('btnDie').onclick = function () { heroes.forEach(function (h) { setState(h, 'die'); }); };
+document.getElementById('btnFlip').onclick = function () { heroes.forEach(function (h) { h.face = -h.face; }); };
+document.getElementById('btnClr').onclick = function () { heroes = []; sel = null; refreshCards(); };
+document.getElementById('btnDbg').onclick = function (e) { showDebug = !showDebug; e.target.classList.toggle('on', showDebug); };
+
+document.querySelectorAll('[data-sp]').forEach(function (b) {
+  b.onclick = function () {
+    speed = +b.getAttribute('data-sp');
+    document.querySelectorAll('[data-sp]').forEach(function (x) { x.classList.toggle('on', x === b); });
+  };
+});
+document.querySelectorAll('.exp').forEach(function (b) {
+  b.onclick = function () {
+    forceExpr = b.getAttribute('data-ex');
+    document.querySelectorAll('.exp').forEach(function (x) { x.classList.toggle('on', x === b); });
+  };
+});
+
+/* ---------------- 主循環 ---------------- */
+var prev = performance.now();
+function loop(now) {
+  var dt = Math.min(.05, (now - prev) / 1000) * speed;
+  prev = now;
+  update(dt);
+  render();
+  frames++;
+  if (now - lastFps > 500) {
+    document.getElementById('fps').textContent = Math.round(frames * 1000 / (now - lastFps));
+    lastFps = now; frames = 0;
+  }
+  requestAnimationFrame(loop);
+}
+
+bakeFloor();
+buildCards();
+buildStrip();
+buildFaceGrid();
+document.getElementById('btnAll').click();
+// 等圖片載入後重畫縮圖條
+setTimeout(function () { buildStrip(); buildFaceGrid(); }, 900);
+requestAnimationFrame(loop);
+
+window.__heroes = function () {
+  return heroes.map(function (h) {
+    return { id: h.id, state: h.state, t: +h.stT.toFixed(2), expr: exprOf(h), x: Math.round(h.x), y: Math.round(h.y) };
+  });
+};
+window.__setState = function (s) { heroes.forEach(function (h) { setState(h, s); }); };
+window.__expr = function (e) { forceExpr = e; };
+// 測試用：讓全部角色同時往同一個方向走（驗證「面朝移動方向」）
+window.__walk = function (dir) {
+  heroes.forEach(function (h, i) {
+    h.tx = dir > 0 ? W - 100 - (i % 3) * 80 : 100 + (i % 3) * 80;
+    h.ty = h.y;
+    setState(h, 'move');
+  });
+};
+</script>
+</body>
+</html>

@@ -670,7 +670,7 @@ ok(!/\brequire\s*\(/.test(html) && !/^\s*import\s/m.test(html), '沒有 node 專
 ok(/<\/html>\s*$/.test(html.trim()), '檔案結尾完整（</html>）');
 const bytes = fs.statSync(__dirname + '/../index.html').size;
 // v4.21：多了提示卡／離場卡／10 語言文案 → 上限放寬到 2.2MB（單檔遊戲，仍在合理範圍）
-ok(bytes > 900000 && bytes < 2800000, '檔案大小合理（' + (bytes / 1024).toFixed(0) + ' KB）');   // v4.30：8 隻主角 + 6 隻小怪美術內嵌 → 上限放寬
+ok(bytes > 900000 && bytes < 3250000, '檔案大小合理（' + (bytes / 1024).toFixed(0) + ' KB）');   // v4.34：8 隻主角 + 48 隻小怪 + 2 龍坐騎內嵌 → 上限 3.25MB
 ok(!!BH && !!BH.Game && !!BH.startSolo, '__BH 正常匯出（腳本沒有中途爆掉）');
 ok(typeof BH.render === 'function' && typeof BH.updateSolo === 'function', '主迴圈函式都在');
 

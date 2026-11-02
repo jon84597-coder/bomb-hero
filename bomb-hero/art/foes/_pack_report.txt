@@ -1,0 +1,8 @@
+01-rabbit   rabbit asp 0.6333  canvas 182x288  parts 6  26 KB
+02-bear     bear   asp 0.6695  canvas 193x288  parts 6  67 KB
+03-dog      dog    asp 0.6716  canvas 193x288  parts 7  107 KB
+04-cat      cat    asp 0.6908  canvas 199x288  parts 6  148 KB
+05-pig      pig    asp 0.7173  canvas 207x288  parts 6  178 KB
+06-panda    panda  asp 0.6218  canvas 179x288  parts 4  207 KB
+07-frog     frog   asp 0.7393  canvas 213x288  parts 6  250 KB
+08-chick    chick  asp 0.6503  canvas 187x288  parts 6  277 KB
