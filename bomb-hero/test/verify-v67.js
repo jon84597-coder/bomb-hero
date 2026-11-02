@@ -167,13 +167,16 @@ head('6. 寒冰地圖：四種元件分得出來');
 head('7. 版號與 SW');
 {
   ok(/^\d+\.\d+$/.test(P.VERSION), '版號格式 = ' + P.VERSION);
-  ok(P.VERSION === '4.23', '版號 = 4.23');
+  // v4.24：改成不綁死版號（否則每次升版都要回頭改舊測試）
   ok(html.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 ' + P.VERSION);
-  ok(P.VERSION_LOG[0].v === '4.23' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 4.23（now）');
-  const items = P.VERSION_LOG[0].items.join(' ');
-  ok(items.indexOf('一起壞掉') >= 0, '更新內容寫了「模組隔離」');
-  ok(items.indexOf('寒冰') >= 0, '更新內容寫了寒冰地圖');
-  ok(P.VERSION_LOG[1].v === '4.22' && P.VERSION_LOG[1].now === false, '4.22 已不是 now');
+  ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = 目前版號（now）');
+  // 舊條目（3.x）根本沒有 now 欄位 → 用 !== true 判斷（否則 undefined 會誤判失敗）
+  ok(P.VERSION_LOG.slice(1).every(function (e) { return e.now !== true; }), '只有第一筆是 now');
+  const e423 = P.VERSION_LOG.filter(function (e) { return e.v === '4.23'; })[0] || { items: [] };
+  ok(e423.items.join(' ').indexOf('一起壞掉') >= 0, '4.23 更新內容寫了「模組隔離」');
+  ok(e423.items.join(' ').indexOf('寒冰') >= 0, '4.23 更新內容寫了寒冰地圖');
+  ok(P.VERSION_LOG.filter(function (e) { return e.v === '4.22'; }).every(function (e) { return e.now === false; }),
+    '4.22 已不是 now');
   ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')),
     'sw.js = v' + P.VERSION + '.0');
 }

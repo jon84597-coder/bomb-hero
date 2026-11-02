@@ -374,7 +374,12 @@ G.flames.push({ cx: bc.x, cy: bc.y, owner: null, type: 'center', t: .46 });
 P.updateBoss(boss, 1 / 60);
 ok(boss.hp === 10, '自己的火焰燒不到自己（hp ' + boss.hp + '）');
 G.flames.length = 0;
-G.flames.push({ cx: bc.x, cy: bc.y, owner: G.players[0], type: 'center', t: .46 });
+// v4.24：① 先清掉受擊無敵 —— 前面幾段（躲火）可能讓 BOSS 吃到火、還卡在 i-frame 裡；
+//        ② 火焰要用「現在」的格子 —— updateBoss 會讓 BOSS 走位，用上面算好的 bc 常常打空，
+//           導致這 3 項時好時壞（火焰傷害是比對火焰格與 BOSS 所在格，位置一偏就完全沒判定）。
+boss.hitT = -9;
+const cc = cellOf(boss);
+G.flames.push({ cx: cc.x, cy: cc.y, owner: G.players[0], type: 'center', t: .46 });
 P.updateBoss(boss, 1 / 60);
 ok(boss.hp === 9, '玩家的火焰才扣得到 BOSS 的血（hp ' + boss.hp + '）');
 ok(boss.hitT > 0, '受擊後有 0.8 秒無敵（hitT=' + boss.hitT.toFixed(2) + '）');
