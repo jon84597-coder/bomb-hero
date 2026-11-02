@@ -44,7 +44,7 @@ const OUT = path.join(__dirname, '_v421');
     P.startSolo(3,false); G.state='play';
     document.getElementById('ovIn').classList.add('hide');
     P.render();
-    P.doorHintCard('🚪', '敵人清光了！', '炸開剩下的軟磚，找出藏起來的傳送門 🚪', 2.6);
+    P.doorHintCard('🚪', '敵人清光了！', '炸開剩下的軟磚，找出藏起來的傳送門', 2.6);
     return JSON.stringify({v:P.VERSION, screen:P.Screen.current});
   })()`);
   console.log('HINT', r);
