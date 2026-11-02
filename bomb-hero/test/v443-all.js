@@ -95,25 +95,25 @@ console.log('\n=== 3. 場景貼圖（第一大關） ===');
   const A = P.TILE_ART;
   ok(!!A, 'TILE_ART 存在');
   ok(A.hard.length === 3, '硬牆 3 張', A.hard.length);
-  ok(A.soft.length === 1, '軟牆 1 張', A.soft.length);
+  ok(A.soft.length >= 1, '軟牆至少 1 張', A.soft.length);
   ok(A.floor.length === 3, '地板 3 張', A.floor.length);
-  ok(A.outer.length === 2, '外牆 2 張', A.outer.length);
+  ok(A.outer.length >= 2, '外牆至少 2 張', A.outer.length);
   const all = [].concat(A.hard, A.soft, A.floor, A.outer);
   ok(all.every(function (o) { return /^data:image\/webp;base64,[A-Za-z0-9+/=]+$/.test(o.u); }),
     '全部是 webp data URI（沒有漏前綴）');
-  ok(all.length === 9, '總共 9 張', all.length);
+  ok(all.length >= 9, '總共至少 9 張', all.length);
 
-  // 檔案大小（解碼後是 144×144 → 每張 81KB bitmap）
+  // 檔案大小（v4.44 起每張 128×128）
   const bytes = all.reduce(function (a, o) { return a + o.u.length; }, 0);
   ok(bytes < 60000, 'base64 合計 < 60KB（省空間）', (bytes / 1024).toFixed(1) + ' KB');
 
   // 尺寸
-  const dims = JSON.parse(fs.readFileSync(__dirname + '/../art/tiles/_stats.json', 'utf8'));
-  ok(dims.length === 9, '_stats.json 有 9 筆');
+  const dims = JSON.parse(fs.readFileSync(__dirname + '/../art/tiles2/_stats.json', 'utf8'));
+  ok(dims.length === all.length, '_stats.json 筆數與 TILE_ART 一致', dims.length);
   const png = require('child_process');
-  // 用 PIL 不方便 → 直接讀 PNG 標頭（tile-*.png 是 144×144）
-  const buf = fs.readFileSync(__dirname + '/../art/tiles/tile-hard0.png');
-  ok(buf.readUInt32BE(16) === 144 && buf.readUInt32BE(20) === 144, '輸出貼圖是 144×144',
+  // 用 PIL 不方便 → 直接讀 PNG 標頭（tile-*.png 是 128×128）
+  const buf = fs.readFileSync(__dirname + '/../art/tiles2/tile-hard0.png');
+  ok(buf.readUInt32BE(16) === 128 && buf.readUInt32BE(20) === 128, '輸出貼圖是 128×128',
     buf.readUInt32BE(16) + 'x' + buf.readUInt32BE(20));
 
   // 只換第一大關

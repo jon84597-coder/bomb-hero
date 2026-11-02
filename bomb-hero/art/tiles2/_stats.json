@@ -1,0 +1,62 @@
+[
+ {
+  "kind": "hard",
+  "i": 0,
+  "kb": 1.7
+ },
+ {
+  "kind": "hard",
+  "i": 1,
+  "kb": 1.7
+ },
+ {
+  "kind": "hard",
+  "i": 2,
+  "kb": 1.7
+ },
+ {
+  "kind": "soft",
+  "i": 0,
+  "kb": 2.8
+ },
+ {
+  "kind": "soft",
+  "i": 1,
+  "kb": 3.1
+ },
+ {
+  "kind": "soft",
+  "i": 2,
+  "kb": 3.0
+ },
+ {
+  "kind": "floor",
+  "i": 0,
+  "kb": 2.0
+ },
+ {
+  "kind": "floor",
+  "i": 1,
+  "kb": 2.0
+ },
+ {
+  "kind": "floor",
+  "i": 2,
+  "kb": 1.9
+ },
+ {
+  "kind": "outer",
+  "i": 0,
+  "kb": 1.2
+ },
+ {
+  "kind": "outer",
+  "i": 1,
+  "kb": 1.2
+ },
+ {
+  "kind": "outer",
+  "i": 2,
+  "kb": 1.3
+ }
+]

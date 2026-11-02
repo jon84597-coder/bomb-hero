@@ -46,3 +46,15 @@ bomb-hero/art/tiles/_raw/
 bomb-hero/art/tiles/_raw2/
 bomb-hero/art/tiles/_sheet*.png
 bomb-hero/art/tiles/_preview_*.png
+
+# v4.44 場景貼圖 v2：中間檢查圖不進版控（交付版 art/tiles2/tile-*.png）
+bomb-hero/art/tiles2/_raw/
+bomb-hero/art/tiles2/_test_*.png
+bomb-hero/art/tiles2/_sheet_*.png
+bomb-hero/art/tiles2/_zoom_check.png
+bomb-hero/art/tiles2/_floor_flat.png
+bomb-hero/art/tiles2/_t[0-9][0-9].png
+bomb-hero/test/_v444/
+
+# AI 生成原圖（不進版控）
+generated-images/
