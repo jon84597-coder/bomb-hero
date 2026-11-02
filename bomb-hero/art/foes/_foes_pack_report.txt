@@ -1,0 +1,6 @@
+slime    bbox 498x493  asp 1.010  out 170x168   13.3 KB  dir +1  hs 1.95  jelly
+bunny    bbox 497x603  asp 0.824  out 138x168   14.2 KB  dir +1  hs 2.30  hop
+frog     bbox 499x406  asp 1.229  out 206x168   18.7 KB  dir -1  hs 1.88  hop
+cater    bbox 498x532  asp 0.936  out 157x168   13.5 KB  dir -1  hs 1.92  inch
+mush     bbox 499x492  asp 1.014  out 170x168   12.6 KB  dir +1  hs 1.95  sway
+beetle   bbox 500x373  asp 1.340  out 225x168   23.7 KB  dir -1  hs 1.74  skitter

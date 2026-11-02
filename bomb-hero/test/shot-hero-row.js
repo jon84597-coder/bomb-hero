@@ -23,20 +23,20 @@ const URL = 'file:///' + path.resolve(FILE).replace(/\\/g, '/');
       var ids = ['rabbit','bear','dog','cat','pig','panda','frog','chick'];
       var H = 150, W = 8 * 108 + 20;
       var c = document.createElement('canvas');
-      c.width = W; c.height = 300;
+      c.width = W; c.height = 470;
       var g = c.getContext('2d');
-      var bg = g.createLinearGradient(0,0,0,300);
+      var bg = g.createLinearGradient(0,0,0,470);
       bg.addColorStop(0,'#2c4a2a'); bg.addColorStop(1,'#1d331c');
-      g.fillStyle = bg; g.fillRect(0,0,W,300);
+      g.fillStyle = bg; g.fillRect(0,0,W,470);
       g.strokeStyle = 'rgba(255,255,255,.10)'; g.lineWidth = 1;
-      for (var yy = 300 - H; yy <= 300; yy += H/3) { g.beginPath(); g.moveTo(0,yy); g.lineTo(W,yy); g.stroke(); }
+      for (var yy = 60; yy <= 470; yy += 50) { g.beginPath(); g.moveTo(0,yy); g.lineTo(W,yy); g.stroke(); }
       var ready = [];
       ids.forEach(function(id, i){
         var box = 78 + i * 108;
         // 站姿
-        var r1 = BH.drawRigChar(g, id, box, 210, H, { walk: 0, moving: false, facing: 'down', idle: 0 });
+        var r1 = BH.drawRigChar(g, id, box, 205, H, { walk: 0, moving: false, facing: 'down', idle: 0 });
         // 走路中（抬腳＋擺手）
-        BH.drawRigChar(g, id, box, 295, H, { walk: 1.2, moving: true, facing: 'right', idle: 0 });
+        BH.drawRigChar(g, id, box, 440, H, { walk: 1.2, moving: true, facing: 'right', idle: 0 });
         ready.push([id, !!r1, r1 ? Math.round(r1.W) + 'x' + Math.round(r1.H) : 'null']);
       });
       g.font = '11px sans-serif'; g.textAlign = 'center'; g.fillStyle = '#cfe8c8';
