@@ -122,7 +122,11 @@ ok(/id="segTeams"/.test(css) && /組隊對戰（隊數 2～4，同隊不會互�
 head('4. 可躲人的地形：樹叢／破屋');
 ok(/function hideTileAt\(x, y\)/.test(css) && /function playerHiding\(p\)/.test(css), '有 hideTileAt() / playerHiding()');
 ok(typeof P.playerHiding === 'function' && typeof P.placeHideTiles === 'function', '__BH 有匯出躲點函式');
-ok(/HIDE|樹叢/.test(css) && /kind: R2\(\) < \.58 \? 'bush' : 'hut'/.test(css), '兩種躲點：樹叢（bush）與破屋（hut）');
+// v4.40：躲點從兩種（bush／hut）擴充成五種場景物件，依主題挑
+ok(/HIDE|樹叢/.test(css) && /const HIDE_KINDS = \['bush', 'hut', 'rock', 'jar', 'crate'\]/.test(css),
+  '五種躲點：灌木叢／破木屋／石堆／陶甕／木箱堆');
+ok(/const HIDE_THEME_POOL = \[/.test(css) && /function hidePool\(\)/.test(css),
+  '每一大關有自己的躲點組合（hidePool 依主題挑）');
 
 {
   P.startSolo(1, false);
@@ -134,7 +138,8 @@ ok(/HIDE|樹叢/.test(css) && /kind: R2\(\) < \.58 \? 'bush' : 'hut'/.test(css),
   }
   ok(cells.length >= 3, '第 1 關有躲點（' + cells.length + ' 個）');
   ok(cells.every(function (c) { return G.grid[c.y][c.x] === 0; }), '躲點都在空地上（走得到、不是牆）');
-  ok(cells.every(function (c) { return c.hz.kind === 'bush' || c.hz.kind === 'hut'; }), '每個躲點都有 bush／hut 類型');
+  ok(cells.every(function (c) { return P.HIDE_KINDS.indexOf(c.hz.kind) >= 0; }),
+    '每個躲點都是五種合法類型之一（' + cells.map(function (c) { return c.hz.kind; }).join(',') + '）');
   ok(cells.every(function (c) { return !(G.door && G.door.x === c.x && G.door.y === c.y); }), '躲點不會蓋在出口門上');
 
   // 走進去 → 躲起來
@@ -167,8 +172,11 @@ ok(/HIDE|樹叢/.test(css) && /kind: R2\(\) < \.58 \? 'bush' : 'hut'/.test(css),
   ok(/q !== p && q\.alive && !playerHiding\(q\)/.test(css), 'AI 對手挑目標時跳過躲起來的人');
   ok(/if \(playerHiding\(p\) && !isMyPlayer\(p\)\) return;/.test(css),
     '躲在裡面的「別人」完全不畫（看不到人也看不到名字）');
-  ok(/let alpha = mine \? \.34 : 1;/.test(css) && /hz\.kind === 'hut' \? '🏚️' : '🌿'/.test(css),
-    '自己躲進去時葉子降到 34% 並留一個小標記（找得到自己）');
+  ok(/let alpha = mine \? \.34 : 1;/.test(css) && /HIDE_UI_ICON\[hz\.kind\]/.test(css),
+    '自己躲進去時物件降到 34% 並留一個小標記（找得到自己）');
+  ok(/function drawHideTile\(px, py, T, alpha, kind, seed\)/.test(css) &&
+     /const HIDE_ART_SCALE = 1\.26;/.test(css),
+    '躲點用美術貼圖畫（寬 1.26 格，比一格大一點）');
   ok(/const hidNow = !!\(hz && hz\.type === 'hide'\)/.test(css) && /toast\(t\('hide\.in'\)/.test(css),
     '躲進去會跳一句提示（hide.in）');
   ['hide.in'].forEach(function (k) {
@@ -227,7 +235,7 @@ ok(/HIDE|樹叢/.test(css) && /kind: R2\(\) < \.58 \? 'bush' : 'hut'/.test(css),
   let back = 0;
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
     const hz = G.hazards[y] && G.hazards[y][x];
-    if (hz && hz.type === 'hide' && (hz.kind === 'bush' || hz.kind === 'hut')) back++;
+    if (hz && hz.type === 'hide' && P.HIDE_KINDS.indexOf(hz.kind) >= 0) back++;
   }
   ok(back === hideReal, '客人端套用快照後躲點原樣還原（' + back + '/' + hideReal + '）');
 }

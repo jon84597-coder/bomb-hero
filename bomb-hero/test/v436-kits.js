@@ -86,7 +86,7 @@ ok(G.enemies.length <= 12, '大張地圖也不會超過 12 隻', G.enemies.lengt
 P.settings.size = 'M';
 
 // ==================================================================
-console.log('\n=== 4. 龍吐火：3 格扇形、斜一格也燒得到 ===');
+console.log('\n=== 4. 龍吐火：2 格扇形（v4.38 調回 2 格）、斜一格也燒得到 ===');
 let p = freshSolo(1);
 const [cx, cy] = openCell();
 put(p, cx, cy);
@@ -94,7 +94,7 @@ G.flames.length = 0; G.bombs.length = 0;
 p.dino = true; p.redDragon = false; p.fireCd = 0; p.facing = 'right';
 P.fireBreath(p);
 const straight = G.flames.filter(f => f.cy === cy && f.cx > cx).map(f => f.cx - cx).sort();
-ok(straight.join(',') === '1,2,3', '正前方燒 3 格（v4.36 從 2 格改 3 格）', straight.join(','));
+ok(straight.join(',') === '1,2', '正前方燒 2 格（v4.38 把範圍調回 DINO_FIRE_RANGE=' + P.DINO_FIRE_RANGE + '）', straight.join(','));
 const side = G.flames.filter(f => f.cy !== cy).length;
 ok(side >= 2, '左右各溢一格（扇形）', side);
 ok(G.flames.some(f => f.src === 'dino'), '火焰標記為坐騎火（不會燒到自己）');
@@ -144,13 +144,20 @@ const fr = P.makeEnemy(sx, sy, 'frog', 1, 1);
 const fx1 = placeVisible(p, sx + 2, sy);
 fr.aggro = true; fr.skCd = 0;
 G.enemies.push(fr);
+// v4.40：不再看到人就射 → 先集氣（全身抖動＋落點預告），時間到才真的吐出去
 P.enemySkillTick(fr, 0.016);
-ok(G.bolts.length === 1, '青蛙吐出水彈', G.bolts.length);
+ok(G.bolts.length === 0 && fr.castT > 0,
+  '青蛙先集氣、還沒射（castT=' + (fr.castT || 0).toFixed(2) + '）', G.bolts.length);
+ok(fr.castT === P.FOE_CAST_WINDUP, '集氣時間 = FOE_CAST_WINDUP（' + P.FOE_CAST_WINDUP + 's）');
+for (let i = 0; i < 80 && G.bolts.length === 0; i++) P.enemySkillTick(fr, 1 / 60);
+ok(G.bolts.length === 1, '集氣結束 → 青蛙吐出水彈', G.bolts.length);
 ok(G.bolts[0] && G.bolts[0].cx === fx1, '水彈瞄準玩家那一格', G.bolts[0] && G.bolts[0].cx);
+ok(G.bolts[0] && Math.abs(G.bolts[0].dur - P.BOLT_TRAVEL) < 1e-6,
+  '彈體飛行時間放慢到 ' + (G.bolts[0] ? G.bolts[0].dur : '-') + 's（原本 .55 → 速度砍半）');
 
 // 6-3 水彈命中會死人
 const hpBefore = p.lives;
-for (let i = 0; i < 60; i++) P.updateBolts(1 / 60);
+for (let i = 0; i < 120; i++) P.updateBolts(1 / 60);
 ok(p.alive === false || p.lives < hpBefore, '水彈打到玩家會扣命', p.lives);
 
 // 6-4 衝撞
@@ -229,7 +236,10 @@ G.enemies.length = 0;
 let err = null;
 try {
   P.drawEnemy(G.enemies[0], G.T);
-  G.bolts = [{ sx: 100, sy: 100, tx: 200, ty: 200, cx: 3, cy: 3, t: .2, dur: .55, kind: 'fire', owner: null }];
+  G.bolts = [{ sx: 100, sy: 100, tx: 200, ty: 200, cx: 3, cy: 3, t: .2, dur: P.BOLT_TRAVEL, kind: 'fire', owner: null }];
+  // 集氣特效也要能畫（新函式不能拋錯）
+  G.enemies[0].castT = P.FOE_CAST_WINDUP * .5;
+  G.enemies[0].castX = 3; G.enemies[0].castY = 4;
   P.render();
 } catch (e) { err = e; }
 ok(!err, '元素特效與元素彈繪製不拋錯', err && err.message);

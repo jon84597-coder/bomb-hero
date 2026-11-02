@@ -72,7 +72,9 @@ console.log('\n=== 2. 縮圈中 AI 會躲「快要爆的」對方炸彈 ===');
 {
   // 隨機地圖上 AI 的走位有機率性，單一場景偶爾會被卡住 → 最多試 3 個場景，任一次躲開就通過
   let maxAway = 0, alive = false, tries = 0;
-  for (let att = 0; att < 3 && maxAway < 2; att++) {
+  // 註：條件原本是「maxAway < 2 就繼續試」→ 只要躲開 2 格但被炸死就直接判紅不再重試，
+  //   隨機地圖上有 ~30% 假紅。改成「躲開而且還活著」才停。
+  for (let att = 0; att < 6; att++) {
     tries++;
     const T = setup();
     const ai = G.players[1];
