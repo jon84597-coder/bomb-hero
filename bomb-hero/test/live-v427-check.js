@@ -1,4 +1,4 @@
-// v4.27 線上活體驗證：48 隻小怪 / 投擲（直線越牆、落空地）/ 縮放（鍵盤＋雙指）
+// v4.27/4.28 線上活體驗證：48 隻小怪 / 投擲落點（推車用，角色本身沒有）/ 縮放（鍵盤＋雙指）
 const path = require('path');
 const { launch, sleep } = require('./cdp');
 const URL = process.env.BH_LIVE_URL || 'https://bomb-hero-game.onrender.com/';
@@ -21,7 +21,7 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
     if (!ready) { console.log('結果：' + pass + ' 通過 / ' + (fail + 1) + ' 失敗'); await b.close(); return; }
 
     const ver = await p.eval('window.__BH.VERSION');
-    ok(ver === '4.27', '線上版本是 4.27（實際 ' + ver + '）');
+    ok(ver === '4.28', '線上版本是 4.28（實際 ' + ver + '）');
     const n = await p.eval('window.__BH.ENEMY_SPECIES.length');
     ok(n === 48, '線上小怪 48 隻（實際 ' + n + '）');
     const blocks = await p.eval('window.__BH.STAGE_ROSTER.length');
@@ -38,7 +38,13 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
     for (let i = 0; i < 60; i++) { if (await p.eval("window.__BH.Game.state==='play'")) break; await sleep(250); }
     ok(await p.eval("window.__BH.Game.state==='play'"), '倒數結束、進入遊戲');
 
-    // 投擲：站在右邊連續 4 格空地
+    // 角色【不該】有投擲能力（v4.27 誤加、v4.28 撤除；投擲是場外復仇推車的專利）
+    const noThrow = await p.eval("JSON.stringify({fn:typeof window.__BH.throwBomb, btn:!!document.querySelector('#touchUI .tthrow'), cd:('throwCd' in window.__BH.Game.players[0]), sch:!!(window.__BH.Game.players[0].scheme&&window.__BH.Game.players[0].scheme.throwBomb)})");
+    const nt = JSON.parse(noThrow);
+    ok(nt.fn === 'undefined' && !nt.btn && !nt.cd && !nt.sch,
+      '角色沒有投擲能力（無函式／無按鈕／無冷卻／無輸入綁定）');
+
+    // 落點演算法（保留給場外推車）：找一段「前方連續 4 格空地」
     const setup = await p.eval(`(function(){
       var P=window.__BH,G=P.Game,pl=G.players[0];
       for (var y=1;y<G.rows-1;y++){
@@ -46,8 +52,8 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
           var okk=true;
           for (var k=1;k<=4;k++) if (P.cellAt(x+k,y)!==0) okk=false;
           if (!okk) continue;
-          pl.x=x*G.T+G.T/2; pl.y=y*G.T+G.T/2; pl.facing='right'; pl.throwCd=0; pl.invuln=0;
-          G.bombs.length=0;
+          pl.invuln=0;
+          G.bombs.length=0; G.enemies.length=0;
           return JSON.stringify({cx:x,cy:y});
         }
       }
@@ -55,24 +61,25 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
     })()`);
     ok(setup !== 'none', '場上找得到「前方 4 格空地」（' + setup + '）');
     const from = JSON.parse(setup);
-    const threw = await p.eval('window.__BH.throwBomb(window.__BH.Game.players[0])');
-    const bomb = await p.eval('JSON.stringify((window.__BH.Game.bombs[0]||{}).thrown?{x:window.__BH.Game.bombs[0].cx,y:window.__BH.Game.bombs[0].cy,dur:window.__BH.Game.bombs[0].flying.dur}:null)');
-    ok(threw === true, 'Q／🤾 投擲成功（回傳 true）');
-    ok(!!bomb && JSON.parse(bomb).x === from.cx + 1, '炸彈落在前方第一格空地（' + bomb + '）');
+    const land1 = await p.eval(`(function(){
+      var P=window.__BH,G=P.Game;
+      var l=P.findThrowLanding(${from.cx},${from.cy},1,0,16);
+      return l? l.x : -1;
+    })()`);
+    ok(land1 === from.cx + 1, '前方是空地 → 就落在第 1 格（實際 ' + land1 + '）');
 
     // 越牆：正前方塞兩顆硬牆，落點要往後跳
     const jump = await p.eval(`(function(){
       var P=window.__BH,G=P.Game;
       var cx=${from.cx}, cy=${from.cy};
-      G.enemies.length=0;          // 有怪擋在落點前面時 findThrowLanding 會回 null，這裡只驗「越牆」
-      G.bombs.length=0;
+      G.bombs.length=0; G.enemies.length=0;
       G.grid[cy][cx+1]=1; G.grid[cy][cx+2]=1;
       var land=P.findThrowLanding(cx,cy,1,0,16);
       var r = land? land.x : -1;
       G.grid[cy][cx+1]=0; G.grid[cy][cx+2]=0;
       return r;
     })()`);
-    ok(jump === from.cx + 3, '前方兩格是牆 → 越過去落在第 3 格（實際 ' + jump + '）');
+    ok(jump === from.cx + 3, '前方兩格是牆 → 彈跳過去落在第 3 格（實際 ' + jump + '）');
 
     // 縮放：鍵盤 1 / 2 / 0
     const z0 = await p.eval('window.__BH.Game.zoomTarget');
@@ -100,6 +107,6 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
     await b.close();
   }
   console.log('----------------------------------------');
-  console.log('線上 v4.27：' + pass + ' 通過 / ' + fail + ' 失敗');
+  console.log('線上 v4.28：' + pass + ' 通過 / ' + fail + ' 失敗');
   process.exit(fail ? 1 : 0);
 })();

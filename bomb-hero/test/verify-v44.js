@@ -62,14 +62,12 @@ ok(/--tb-edge: rgba\(186,66,34/.test(html), '吐火鈕是火紅色框');
 console.log('\n=== 3. JS：paintTouchIcons ===');
 ok(typeof P.paintTouchIcons === 'function', '__BH 導出 paintTouchIcons');
 ok(typeof P.TICON_BASE === 'object' && P.TICON_BASE.bomb === 92 &&
-   P.TICON_BASE.remote === 62 && P.TICON_BASE.flame === 62 &&
-   P.TICON_BASE.throw === 92,   // v4.27：投擲鈕跟放彈鈕同尺寸（同一顆炸彈圖）
-  'TICON_BASE 尺寸正確（放彈 92／遙控 62／吐火 62／投擲 92）');
+   P.TICON_BASE.remote === 62 && P.TICON_BASE.flame === 62,
+  'TICON_BASE 尺寸正確（放彈 92／遙控 62／吐火 62）');
 let threw = null;
 try { P.paintTouchIcons(0); } catch (e) { threw = e; }
 ok(threw === null, 'paintTouchIcons(0) 在無頭環境也不會炸（' + (threw ? threw.message : 'OK') + '）');
-// v4.27：常數多了 throw，改成逐項比對（不要綁死整行字串）
-ok(/const TICON_BASE = \{[^}]*bomb: 92[^}]*remote: 62[^}]*flame: 62[^}]*\};/.test(html), 'TICON_BASE 常數存在');
+ok(/const TICON_BASE = \{ bomb: 92, remote: 62, flame: 62 \};/.test(html), 'TICON_BASE 常數存在');
 ok(/let iconT = 0;/.test(html) && /Game\.gameT = iconT;/.test(html),
   '圖示有自己的時鐘（選單裡火苗也會抖）');
 ok(/finally \{ Game\.gameT = saved; \}/.test(html), '畫完一定把 gameT 還回去（不污染遊戲時間）');
