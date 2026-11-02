@@ -40,7 +40,7 @@ const v47 = (P.VERSION_LOG.filter(function (x) { return x.v === '4.7'; })[0] || 
 console.log('\n=== 1. 飛行小怪基礎速度調降 ===');
 const FLY = { bat: 30, ghost: 26, bee: 36, eye: 29 };
 const flying = P.ENEMY_SPECIES.filter(function (s) { return s.kind === 'fly'; });
-ok(flying.length === 6, '飛行怪仍是 6 種');
+ok(flying.length === 13, '飛行怪仍是 13 種（v4.27 新增的飛行怪也一起驗）');
 Object.keys(FLY).forEach(function (id) {
   const sp = P.speciesOf(id);
   ok(sp.spd === FLY[id], id + ' 基礎速度 = ' + FLY[id], sp.spd);
@@ -48,7 +48,7 @@ Object.keys(FLY).forEach(function (id) {
 // v4.13：舊四隻仍維持 v4.7 的降速；新兩隻（鬼火／大黃蜂）本來就快
 ok(flying.filter(function (s) { return ['bat','ghost','bee','eye'].indexOf(s.id) >= 0; })
      .every(function (s) { return s.spd <= 36; }), '舊四隻飛行怪仍 ≤ 36（原本 40~56）');
-ok(flying.length === 6, '共 6 隻飛行怪');
+ok(flying.length === 13, '共 13 隻飛行怪');
 ok(flying.filter(function (s) { return ['bat','ghost','bee','eye'].indexOf(s.id) >= 0; })
      .every(function (s) { return s.spd < 40; }), '舊四隻都比最慢的舊值（40）還慢');
 

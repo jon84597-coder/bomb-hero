@@ -47,6 +47,15 @@ function opHash(list) {
   const uniq = Array.from(new Set(names)).sort();
   return uniq.join(',');
 }
+// v4.27：小怪改成「15 種身體原型 ＋ 配件」後，同原型的兩隻用「方法名」看起來一樣，
+//   但顏色與幾何參數其實不同 → 指紋改成「方法名＋參數」（數字取 2 位）。
+function opHashFull(list) {
+  return list.map(function (c) {
+    return c[0] + '(' + c.slice(1).map(function (v) {
+      return typeof v === 'number' ? v.toFixed(2) : String(v);
+    }).join(',') + ')';
+  }).join(';');
+}
 
 // =====================================================================
 console.log('=== 1. 每一頁都有明顯的「← 上一頁」 ===');
@@ -142,10 +151,12 @@ ok(/musicGain\.gain\.value\s*=\s*0\.32\s*\*\s*settings\.bgm/.test(html) && /sfxG
 // =====================================================================
 console.log('\n=== 3. 小怪種類變多、變兇 ===');
 const SP = BH.ENEMY_SPECIES;
-ok(Array.isArray(SP) && SP.length === 20, '小怪共 20 種（' + (SP || []).length + '）');
-ok(SP.filter(s => s.wing).length === 6, '天空飛的 6 種（有翅膀）');
-ok(SP.filter(s => !s.wing).length === 14, '地上走的 14 種（沒翅膀）');
-ok(new Set(SP.map(s => s.id)).size === 20, '每種 id 都不重複');
+// v4.27：八個大關 × 6 隻 = 48 隻
+ok(Array.isArray(SP) && SP.length === 48, '小怪共 48 種（' + (SP || []).length + '）');
+const wingN = SP.filter(s => s.wing).length;
+ok(wingN === 13, '天空飛的 13 種（有翅膀）');
+ok(SP.filter(s => !s.wing).length === 35, '地上走的 35 種（沒翅膀）');
+ok(new Set(SP.map(s => s.id)).size === 48, '每種 id 都不重複');
 ok(SP.every(s => s.name && s.name.length >= 2), '每種都有中文名');
 ok(new Set(SP.map(s => s.color)).size >= 8, '顏色至少 8 種不同（外型辨識度）');
 ok(SP.every(s => s.r >= 12 && s.r <= 18), '體型半徑 12～18（不會大小失衡）');
@@ -162,7 +173,14 @@ function typesOfStage(stage) {
 const t1 = typesOfStage(1), t4 = typesOfStage(4), t7 = typesOfStage(7);
 ok(t1.size >= 2, '第 1 關就有 2 種以上小怪（' + t1.size + '）');
 ok(t4.size > t1.size, '第 4 關種類比第 1 關多（' + t4.size + ' > ' + t1.size + '）');
-ok(t7.size >= 7, '第 7 關種類最多（' + t7.size + ' 種）');
+// v4.27：每關只會出現「所屬大關」那 6 隻 → 後段關卡最多就是 6 種
+ok(t7.size >= 6, '第 7 關種類最多（' + t7.size + ' 種）');
+const rosterBad = [];
+for (let st = 1; st <= 32; st++) {
+  const roster = P.stageRoster(st) || [];
+  typesOfStage(st).forEach(function (id) { if (roster.indexOf(id) < 0) rosterBad.push(st + ':' + id); });
+}
+ok(rosterBad.length === 0, '每一關的小怪都來自它自己的生態表' + (rosterBad.length ? '（' + rosterBad.join(',') + '）' : ''));
 
 // 兩段血的小怪
 const beetle = P.makeEnemy(2, 2, 'beetle', 5, 1);
@@ -550,12 +568,12 @@ SP.forEach(function (sp) {
   artHashes[sp.id] = null;
   rec.calls.length = 0;
   try { P.drawEnemyArt(e, 100, 100, false, 0); } catch (err) { artHashes[sp.id] = 'ERR:' + err.message; }
-  artHashes[sp.id] = opHash(rec.calls) + '|' + rec.calls.length;
+  artHashes[sp.id] = opHashFull(rec.calls);
 });
 const artFails = Object.entries(artHashes).filter(([k, v]) => String(v).indexOf('ERR') === 0);
-ok(artFails.length === 0, '10 種小怪都能畫出來不報錯' + (artFails.length ? '（' + artFails.map(f => f[0]).join(',') + '）' : ''));
+ok(artFails.length === 0, SP.length + ' 隻小怪都能畫出來不報錯' + (artFails.length ? '（' + artFails.map(f => f[0]).join(',') + '）' : ''));
 const uniqArt = new Set(Object.values(artHashes));
-ok(uniqArt.size === 20, '20 種外型的繪圖指令都不同（' + uniqArt.size + ' / 20）');
+ok(uniqArt.size === SP.length, SP.length + ' 種外型的繪圖指令都不同（' + uniqArt.size + ' / ' + SP.length + '）');
 
 // 翅膀會拍（時間不同 → 指令不同）
 const bat = P.makeEnemy(3, 3, 'bat', 5, 1);

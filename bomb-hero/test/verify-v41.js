@@ -96,8 +96,9 @@ ok(/輸送帶/.test(hStage) && /冰面滑行/.test(hStage) && /傳送門/.test(h
 ok(/突死縮圈/.test(hStage) && /復仇推車/.test(hStage), '場景頁：突死縮圈與復仇推車');
 
 const hFoe = tabHtml('foe');
-ok(cnt(hFoe, /data-sp="foe:/g) === 21, '怪物頁：20 小怪 ＋ 1 BOSS 共 21 張圖');
-ok(/地面怪（會被牆擋住）/.test(hFoe) && /飛行怪（有翅膀/.test(hFoe), '怪物頁：地面／飛行分類');
+ok(cnt(hFoe, /data-sp="foe:/g) === 49, '怪物頁：48 小怪 ＋ 1 BOSS 共 49 張圖');
+ok(/🌱 地面/.test(hFoe) && /🕊️ 穿牆/.test(hFoe), '怪物頁：地面／穿牆分類');
+ok(/綠野草原/.test(hFoe) && /暗黑魔王城/.test(hFoe), '怪物頁：八大關卡分組（第 1 關到第 8 關）');
 ok(/穿牆/.test(hFoe), '怪物頁：飛行怪穿牆提示');
 ok(/暗黑魔王/.test(hFoe) && /40%/.test(hFoe), '怪物頁：BOSS 與爆走機制');
 

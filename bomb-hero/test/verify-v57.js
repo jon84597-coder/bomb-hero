@@ -23,10 +23,10 @@ G.state = 'play';
 // ================================================================
 head('① 小怪 10 隻 → 20 隻');
 const species = P.ENEMY_SPECIES;
-ok(species.length === 20, 'ENEMY_SPECIES 有 20 隻（原本 10）');
+ok(species.length === 48, 'ENEMY_SPECIES 有 48 隻（v4.27：八關 × 6 隻）');
 const ids = species.map(function (s) { return s.id; });
 const uniq = ids.filter(function (v, i) { return ids.indexOf(v) === i; });
-ok(uniq.length === 20, '20 隻的 id 都不重複');
+ok(uniq.length === 48, '48 隻的 id 都不重複');
 // 每隻都有顏色 / 半徑 / 速度 / 名稱
 let allOk = true;
 species.forEach(function (s) {
@@ -38,8 +38,19 @@ const artIds = [];
 const re = /if \(sp === '([a-z]+)'\)/g;
 let m;
 while ((m = re.exec(html))) artIds.push(m[1]);
-const noArt = ids.filter(function (i) { return artIds.indexOf(i) < 0; });
-ok(noArt.length <= 1, '每隻都有專屬美術（共用分支的：' + (noArt.join(',') || '無') + '）');
+// v4.27：新怪走「參數化原型」→ 有 art 欄位也算有專屬美術（15 種身體＋配件）
+const ART_KINDS = ['blob', 'worm', 'critter', 'humanoid', 'bug', 'crystal', 'golem',
+  'machine', 'sprite', 'bird', 'shell', 'jelly', 'spike', 'ghost', 'ship'];
+// eye 沒有 `if (sp === 'eye')` 分支 —— 它是 drawEnemyArt 最後那段【無條件】繪製的預設款
+//   （任何未知 id 都長成眼球），所以不算「缺專屬美術」。
+const DEFAULT_ART = ['eye'];
+const noArt = species.filter(function (s) {
+  if (DEFAULT_ART.indexOf(s.id) >= 0) return false;
+  return artIds.indexOf(s.id) < 0 && ART_KINDS.indexOf(s.art) < 0;
+}).map(function (s) { return s.id; });
+ok(noArt.length === 0, '每隻都有專屬美術（缺的：' + (noArt.join(',') || '無') + '）');
+const badArt = species.filter(function (s) { return s.art && ART_KINDS.indexOf(s.art) < 0; });
+ok(badArt.length === 0, 'art 原型都在實作清單內' + (badArt.length ? '（' + badArt.map(function (s) { return s.id + ':' + s.art; }).join(',') + '）' : ''));
 // 新種都在關卡怪池裡
 ok(/'scavenger', 'sapper', 'bomber', 'wizard'/.test(html), '四隻有技能的怪都在怪池中');
 ok(/'panda', 'penguin', 'octopus', 'robot'/.test(html), '四隻新的地面怪在怪池中');

@@ -91,7 +91,10 @@ head('2. 中階／高階小怪分類');
   ok(P.isAngryFoe({ type: 'beetle' }) === true, '鐵甲蟲會生氣');
   ok(P.isAngryFoe({ type: 'slime' }) === false, '史萊姆不會生氣');
   ok(P.isAngryFoe({ type: 'boss', boss: true }) === true, 'BOSS 被惹到也會生氣');
-  ok(Object.keys(P.FOE_TIER).length === 20, '20 種小怪都有階級（' + Object.keys(P.FOE_TIER).length + '）');
+  ok(Object.keys(P.FOE_TIER).length === 48, '48 種小怪都有階級（' + Object.keys(P.FOE_TIER).length + '）');
+  // v4.27：每一隻在生態表裡的小怪都要查得到階級（漏了會變成 low → 不會生氣）
+  const noTier = P.ENEMY_SPECIES.filter(function (s) { return !P.FOE_TIER[s.id]; });
+  ok(noTier.length === 0, '沒有漏階級的小怪' + (noTier.length ? '（' + noTier.map(function (s) { return s.id; }).join(',') + '）' : ''));
 }
 
 head('3. 2 格內才算被發現（3 格不算）');

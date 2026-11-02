@@ -150,12 +150,14 @@ head('4. 第 2 關＝沙漠遺跡、第 4 關＝熔岩洞窟');
 
 head('5. 版號');
 {
-  ok(P.VERSION === '4.26', '版號 = ' + P.VERSION);
-  ok(P.VERSION_LOG[0].v === '4.26', 'VERSION_LOG 第一筆是 4.26');
-  const e = P.VERSION_LOG[0];
-  ok(e.items.length >= 4, '更新內容寫了 ' + e.items.length + ' 條');
-  const t = e.items.join(' ');
-  ok(t.indexOf('沙漠') >= 0 && t.indexOf('熔岩') >= 0, '更新內容提到沙漠／熔岩互換');
+  ok(/^4\.\d+$/.test(P.VERSION), '版號格式正確（' + P.VERSION + '）');
+  ok(P.VERSION_LOG[0].v === P.VERSION, 'VERSION_LOG 第一筆 = 目前版號');
+  // v4.27 起不再綁死版號：用版號 filter 找 4.26 那一筆（索引會一直往下移）
+  const e = P.VERSION_LOG.filter(function (x) { return x.v === '4.26'; })[0];
+  ok(!!e, '找得到 4.26 的版本紀錄');
+  ok(e && e.items.length >= 4, 'v4.26 更新內容寫了 ' + (e ? e.items.length : 0) + ' 條');
+  const t = e ? e.items.join(' ') : '';
+  ok(t.indexOf('沙漠') >= 0 && t.indexOf('熔岩') >= 0, 'v4.26 更新內容提到沙漠／熔岩互換');
   ok(/牆|地板|材質/.test(t), '更新內容提到牆／地板材質');
 }
 
