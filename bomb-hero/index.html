@@ -14556,9 +14556,10 @@ function gdecorHash(x, y) {
   return (h ^ (h >> 16)) >>> 0;
 }
 function paintGroundDecor(x, y, px, py, T, st) {
-  if (st === 'forest' || st === 'sand') return;          // 草地/沙地保持乾淨
   var h = gdecorHash(x, y);
-  if (h % 4 !== 0) return;
+  // 草地／沙地的裝飾更稀（每 7 格 1 個）：花一多就是規律花紋壁紙（v4.45 踩過）
+  var step = (st === 'forest' || st === 'sand') ? 7 : 4;
+  if (h % step !== 0) return;
   var k = (h >> 4) % 3;
   var cx = px + T * (0.30 + 0.40 * ((h >> 8) % 100) / 100);
   var cy = py + T * (0.32 + 0.36 * ((h >> 20) % 100) / 100);
@@ -14743,6 +14744,68 @@ function paintGroundDecor(x, y, px, py, T, st) {
       g4.addColorStop(1, 'rgba(146,64,120,0)');
       ctx.fillStyle = g4;
       ctx.beginPath(); ctx.arc(cx, cy, r7, 0, 6.2832); ctx.fill();
+    }
+  } else if (st === 'forest') {
+    if (k === 0) {                              // 小草叢：幾根深淺交錯的短草
+      var n3 = 3 + (h % 3);
+      ctx.lineCap = 'round';
+      for (i = 0; i < n3; i++) {
+        d = i - (n3 - 1) / 2;
+        var hh3 = T * (0.09 + 0.07 * ((h >> (i + 2)) % 100) / 100);
+        var sw3 = ((h >> (i + 6)) % 100) / 100 - 0.5;
+        ctx.strokeStyle = i % 2 ? 'rgba(88,142,62,0.95)' : 'rgba(126,180,80,0.95)';
+        ctx.lineWidth = Math.max(1, T * 0.018);
+        ctx.beginPath();
+        ctx.moveTo(cx + d * T * 0.05, cy + T * 0.05);
+        ctx.quadraticCurveTo(cx + d * T * 0.05 + sw3 * T * 0.05, cy - hh3 * 0.6,
+                             cx + d * T * 0.05 + sw3 * T * 0.09, cy - hh3);
+        ctx.stroke();
+      }
+    } else if (k === 1) {                        // 小白花（三～五瓣＋黃心）
+      var pf = 4 + (h % 2), rp = Math.max(1.6, T * 0.032);
+      ctx.fillStyle = 'rgba(252,252,246,0.96)';
+      for (i = 0; i < pf; i++) {
+        var ap = i / pf * 6.2832;
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(ap) * rp, cy + Math.sin(ap) * rp, rp * 0.78, 0, 6.2832);
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(246,206,92,0.98)';
+      ctx.beginPath(); ctx.arc(cx, cy, rp * 0.62, 0, 6.2832); ctx.fill();
+    } else {                                     // 小石子＋接觸陰影
+      var rs = T * 0.045;
+      ctx.fillStyle = 'rgba(46,74,38,0.32)';
+      ctx.beginPath(); ctx.ellipse(cx + rs * 0.3, cy + rs * 0.75, rs * 1.15, rs * 0.55, 0, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(178,172,156,0.95)';
+      ctx.beginPath(); ctx.ellipse(cx, cy, rs, rs * 0.72, 0.2, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(214,210,196,0.9)';
+      ctx.beginPath(); ctx.ellipse(cx - rs * 0.22, cy - rs * 0.26, rs * 0.5, rs * 0.32, 0.2, 0, 6.2832); ctx.fill();
+    }
+  } else if (st === 'sand') {
+    if (k === 0) {                              // 細砂礫斑（比沙地略深，不成點）
+      ctx.fillStyle = 'rgba(186,160,116,0.40)';
+      ctx.beginPath(); ctx.ellipse(cx, cy, T * 0.15, T * 0.08, ((h >> 5) % 100) / 100 * 3.14, 0, 6.2832); ctx.fill();
+    } else if (k === 1) {                        // 小石子（暖灰＋陰影）
+      var rs2 = T * 0.05;
+      ctx.fillStyle = 'rgba(120,96,64,0.30)';
+      ctx.beginPath(); ctx.ellipse(cx + rs2 * 0.3, cy + rs2 * 0.8, rs2 * 1.2, rs2 * 0.55, 0, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(198,180,152,0.96)';
+      ctx.beginPath(); ctx.ellipse(cx, cy, rs2, rs2 * 0.74, 0.3, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(226,212,188,0.9)';
+      ctx.beginPath(); ctx.ellipse(cx - rs2 * 0.22, cy - rs2 * 0.26, rs2 * 0.5, rs2 * 0.3, 0.3, 0, 6.2832); ctx.fill();
+    } else {                                     // 枯枝：兩三節折線
+      ctx.strokeStyle = 'rgba(126,96,62,0.8)';
+      ctx.lineWidth = Math.max(1, T * 0.016);
+      ctx.lineCap = 'round';
+      var bx2 = cx - T * 0.10, by2 = cy + T * 0.06, ang2 = -0.6;
+      ctx.beginPath(); ctx.moveTo(bx2, by2);
+      for (i = 0; i < 3; i++) {
+        ang2 += (((h >> (i * 4 + 3)) % 100) / 100 - 0.5) * 1.1;
+        bx2 += Math.cos(ang2) * T * 0.075;
+        by2 += Math.sin(ang2) * T * 0.075;
+        ctx.lineTo(bx2, by2);
+      }
+      ctx.stroke();
     }
   }
   ctx.restore();
