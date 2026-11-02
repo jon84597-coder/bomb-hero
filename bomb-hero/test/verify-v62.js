@@ -355,8 +355,11 @@ ok(/function drawCart\(p, T\)/.test(css), '有 drawCart');
   ok(/集氣 ' \+ Math\.round\(q \* 100\)/.test(body), '集氣條顯示百分比');
   ok(/ctx\.setLineDash\(\[T \* \.26, T \* \.14\]\)/.test(body), '落點用跑動的粗虛線框');
   ok(/lineDashOffset = -Game\.gameT \* T \* 1\.1/.test(body), '虛線會跑（很明顯）');
-  ok(/ctx\.moveTo\(x, y\); ctx\.lineTo\(cxp, cyp\)/.test(body), '有一條從推車到落點的瞄準線');
-  ok(/CART_LV\[lvNow\]\.edge/.test(body), '落點中央標「第幾格」');
+  // v4.38：瞄準線改成「沿實際飛行路徑」的折線（會跨過被跳過的牆格）
+  ok(/const fp = land\.path \|\| \[\]/.test(body), '瞄準線沿飛行路徑畫（不是直線兩點）');
+  ok(/for \(let k = 1; k < fp\.length; k\+\+\) ctx\.lineTo\(fp\[k\]\.x \* T \+ T \/ 2/.test(body),
+    '有一條從推車到落點的瞄準折線');
+  ok(/ctx\.fillText\(String\(land\.dist\), cxp, cyp\)/.test(body), '落點中央標「第幾格」（實際距離）');
   ok(/冷卻 ' \+ Math\.max\(0, p\.cartCd\)\.toFixed\(1\)/.test(body), '冷卻時顯示剩餘秒數');
 }
 

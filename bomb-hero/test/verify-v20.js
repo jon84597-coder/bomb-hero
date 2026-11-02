@@ -282,13 +282,17 @@ cartP.x = T8 / 2; cartP.y = 6 * T8 + T8 / 2;      // 場外左側軌道
 const okThrow = P.cartThrowBomb(cartP);
 ok(okThrow === true, '推車可以丟彈入場');
 const nb = G8.bombs[G8.bombs.length - 1];
-const edge = Math.min(nb.cx, nb.cy, G8.cols - 1 - nb.cx, G8.rows - 1 - nb.cy);
-ok(edge === 2, '落點在「外牆往內第 2 格」（edge=' + edge + '）');
+// v4.38：落點改成「推車垂直射線上、飛滿集氣距離」（不再是離外牆第 2 格）
+const dn20 = P.cartThrowDir(cartP).dn;
+ok(nb.cy === 6 && nb.cx === P.CART_LV[1].reach,
+  '落點在推車的垂直射線上（往' + dn20 + '，炸在 ' + nb.cx + ',' + nb.cy + '）');
 ok(nb.flying && nb.flying.fx !== nb.cx, '炸彈是從推車飛進場（拋物線）');
 
 // ================================================================
 console.log('=== 9. 場外推車移動變快 ===');
-ok(html.indexOf('const sp = (rev ? 150 * .42 : 150) * dt;') >= 0, '推車速度 105 → 150 px/s');
+ok(html.indexOf('const CART_SPEED = 250;') >= 0 &&
+  html.indexOf('const sp = (rev ? CART_SPEED * .42 : CART_SPEED) * dt;') >= 0,
+  '推車速度 105 → 250 px/s（滑冰鞋 5 級）');
 freshBattle();
 clearAll();
 const G9 = P.Game, T9 = G9.T;
@@ -340,10 +344,11 @@ G10.flames.length = 0;
 const before = G10.flames.length;
 const fired = P.fireBreath(pd);
 ok(fired === true, '恐龍可以吐火');
-// v4.36：吐火改成「前 3 格 ＋ 左右各溢一格」的扇形 → 格數變多
-ok(G10.flames.length >= 5, '吐火燒到前方 3 格＋左右扇形（實際 ' + G10.flames.length + ' 格）');
+// v4.38：吐火範圍調回 2 格（前 2 格 ＋ 左右各溢一格），第 3 格不再燒到
+ok(G10.flames.length >= 4, '吐火燒到前方 2 格＋左右扇形（實際 ' + G10.flames.length + ' 格）');
 const fxs = G10.flames.map(function (f) { return f.cx; });
-ok(fxs.indexOf(5) >= 0 && fxs.indexOf(6) >= 0 && fxs.indexOf(7) >= 0, '正前方 3 格都有火（x=5,6,7）');
+ok(fxs.indexOf(5) >= 0 && fxs.indexOf(6) >= 0 && fxs.indexOf(7) < 0,
+  '正前方 2 格有火、第 3 格沒有（x=5,6 有、x=7 沒有）');
 ok(Math.abs(pd.fireCd - P.DINO_FIRE_CD) < 1e-6, '吐火後冷卻 ' + pd.fireCd.toFixed(1) + ' 秒');
 const again = P.fireBreath(pd);
 ok(again === false, '冷卻中不能再吐火');

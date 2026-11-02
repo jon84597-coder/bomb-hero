@@ -127,8 +127,8 @@ head('4. 「我」＝ 頭上圖示徽章（推車也套用，名牌沒有文字�
 ok(/const ME_BADGE_TXT = '我'/.test(html), '「我」徽章是圖示（ME_BADGE_TXT）');
 ok(/function drawMeBadge/.test(html), 'drawMeBadge 存在');
 const codeNoLog = html.slice(0, html.indexOf('const VERSION_LOG = ['));
-ok(codeNoLog.indexOf('⭐我') < 0, '程式碼裡沒有「⭐我」文字（只剩版本紀錄敘述）');ok(/const label = pname\(p\) \+ '🛒' \+ \(p\.ai \? '🤖' : ''\);/.test(html),
-  '推車名牌只有名字＋🛒＋🤖，沒有「⭐我」文字');
+ok(codeNoLog.indexOf('⭐我') < 0, '程式碼裡沒有「⭐我」文字（只剩版本紀錄敘述）');ok(/const label = \(small \? '' : pname\(p\) \+ '🛒'\) \+ \(p\.ai && !small \? '🤖' : ''\) \|\| '🛒';/.test(html),
+  '推車名牌只有名字＋🛒＋🤖（小螢幕省略文字），沒有「⭐我」文字');
 ok(/if \(Game\.mode === 'battle' && p\.alive && isMyPlayer\(p\)\) drawMeBadge/.test(html),
   '場內活著時頭上畫「我」徽章');
 ok(/if \(Game\.mode === 'battle' && isMyPlayer\(p\)\) drawMeBadge\(x, y - T \* \.30/.test(html),

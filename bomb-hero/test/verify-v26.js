@@ -217,12 +217,14 @@ G.eggs.length = 0;
 G.eggs.push({ x: pcx, y: pcy, bob: 0, wob: 0 });
 ok(P.takeEgg(p7) === true, '吃到第一顆蛋');
 ok(p7.dino === true && !p7.redDragon, '第一次只是騎上小龍（還不是紅龍）');
-// 吐火：v4.36 改成「扇形 3 格」——正的 3 格 ＋ 前 2 格左右各溢 1 格
+// 吐火：v4.38 把範圍調回 2 格 —— 使用者回報「對戰時燒不到人」的真正原因是判定
+//   （flameCovers 用 floor 對格線位置判錯）＋「龍一被打掉就無敵」，不是距離，
+//   所以距離回到 2 格，判定另外修（見 test/v438-dino.js）。
 G.flames.length = 0; p7.fireCd = 0; p7.facing = 'right';
 P.fireBreath(p7);
 const oneDir = cellsOfFlames();
 const RANGE26 = P.DINO_FIRE_RANGE;
-ok(RANGE26 >= 3, '小龍吐火範圍 ≥ 3 格（DINO_FIRE_RANGE=' + RANGE26 + '）');
+ok(RANGE26 === 2, '小龍吐火範圍 2 格（DINO_FIRE_RANGE=' + RANGE26 + '）');
 const straight26 = [];
 for (let i = 1; i <= RANGE26; i++) straight26.push((pcx + i) + ',' + pcy);
 ok(straight26.every(function (k) { return oneDir.indexOf(k) >= 0; }),
@@ -246,7 +248,7 @@ const around = {
 let covered = 0;
 Object.keys(around).forEach(function (k) { if (fourDir.indexOf(around[k]) >= 0) covered++; });
 ok(covered === 8, '紅龍吐火涵蓋上下左右各 2 格（' + covered + '/8）');
-ok(fourDir.length >= 24, '紅龍火焰鋪滿四方向扇形（' + fourDir.length + ' 格）');
+ok(fourDir.length >= 20, '紅龍火焰鋪滿四方向扇形（' + fourDir.length + ' 格）');
 ok(fourDir.indexOf(pcx + ',' + pcy) < 0, '自己腳下不會著火');
 // 不管朝哪個方向都一樣是四方向
 ['up', 'down', 'left'].forEach(function (dn) {
@@ -257,7 +259,7 @@ ok(fourDir.indexOf(pcx + ',' + pcy) < 0, '自己腳下不會著火');
     (pcx + 1) + ',' + pcy, (pcx - 1) + ',' + pcy,
     pcx + ',' + (pcy + 1), pcx + ',' + (pcy - 1)
   ].filter(function (k) { return fc26.indexOf(k) >= 0; }).length;
-  ok(hit26 === 4 && fc26.length >= 24,
+  ok(hit26 === 4 && fc26.length >= 20,
     '朝 ' + dn + ' 時一樣是四方向（四格都燒到、共 ' + fc26.length + ' 格）');
 });
 // 被炸一下龍還是不見
@@ -294,13 +296,20 @@ const cp = G.players[0];
 G.players.forEach(function (q, i) { if (i) { q.alive = false; q.cart = false; } });
 cp.cart = true; cp.alive = false; cp.cartDir = null; cp.cartCd = 0; cp.cartCharge = 0;
 cp.x = T8 / 2; cp.y = 4 * T8 + T8 / 2;              // 場外左側軌道
-// 每一段的落點真的落在指定的那一格
+// 每一段的落點都必須在「同一條垂直射線」上（列不變），距離等於該等級的 reach
+//   v4.38：不再有「離外牆第幾格」的邊緣帶，改成推車自己往外丟的直線距離
+ok(P.cartThrowDir(cp).dn === 'right', '推車在最左邊 → 只能往右射（不會斜 45 度）');
+ok(P.cartLandingDir(cp) === 'right', 'cartLandingDir 相容層回傳方向字串');
 [0, 1, 2].forEach(function (lv) {
-  const want = P.CART_LV[lv].edge;
+  const want = P.CART_LV[lv].reach;
   const land = P.cartPickLanding(cp, lv);
-  const edge = land ? Math.min(land.x, land.y, G.cols - 1 - land.x, G.rows - 1 - land.y) : -1;
-  ok(edge === want, '第 ' + want + ' 格：集氣等級 ' + lv + ' 的落點在離外牆 ' + edge + ' 格');
+  ok(!!land && land.y === 4 && land.x === want,
+    'lv' + lv + '：落點在同一列第 ' + want + ' 格（實際 ' +
+    (land ? land.x + ',' + land.y : 'null') + '）');
 });
+// 集氣＝力量：三段的 reach 必須遞增，而且真的越丟越遠
+ok(P.CART_LV[2].reach > P.CART_LV[1].reach && P.CART_LV[1].reach > P.CART_LV[0].reach,
+  '集氣三段距離遞增（' + P.CART_LV.map(function (l) { return l.reach; }).join(' → ') + ' 格）');
 // 人類：按住動作鍵集氣，放開才丟出去
 const hold = { on: false };
 cp.scheme = {
@@ -314,30 +323,32 @@ function chargeThrow(frames) {
   hold.on = true;
   for (let i = 0; i < frames; i++) BH.updateCart(cp, 1 / 60);
   const charging = cp.cartCharge;
-  const edgeNow = P.cartChargeLevel(charging);
+  const lvNow = P.cartChargeLevel(charging);
   ok(G.bombs.length === 0, '按住 ' + frames + ' 幀期間還沒丟出去（集氣中 ' + charging.toFixed(2) + 's）');
   hold.on = false;
   BH.updateCart(cp, 1 / 60);
   const b = G.bombs[0];
-  const edge = b ? Math.min(b.cx, b.cy, G.cols - 1 - b.cx, G.rows - 1 - b.cy) : -1;
-  return { edge: edge, lv: edgeNow, hasBomb: !!b };
+  return {
+    hasBomb: !!b, lv: lvNow,
+    dist: b ? Math.abs(b.cx) : -1, row: b ? b.cy : -1
+  };
 }
 const r1 = chargeThrow(3);
-ok(r1.hasBomb && r1.edge === 1, '輕按一下 → 丟到第 1 格（edge ' + r1.edge + '）');
+ok(r1.hasBomb && r1.dist === 3 && r1.row === 4, '輕按一下 → 丟到第 3 格（dist ' + r1.dist + '）');
 const r2 = chargeThrow(Math.round(P.CART_CHARGE_MAX * .6 * 60));
-ok(r2.lv === 1, '按到一半時畫面顯示「第 2 格」');
-ok(r2.hasBomb && r2.edge === 2, '集氣一半 → 丟到第 2 格（edge ' + r2.edge + '）');
+ok(r2.lv === 1, '按到一半時畫面顯示「中 6 格」');
+ok(r2.hasBomb && r2.dist === 6, '集氣一半 → 丟到第 6 格（dist ' + r2.dist + '）');
 const r3 = chargeThrow(Math.round(P.CART_CHARGE_MAX * 60) + 6);
-ok(r3.lv === 2, '按到滿時畫面顯示「第 3 格」');
-ok(r3.hasBomb && r3.edge === 3, '集滿 → 丟到第 3 格（edge ' + r3.edge + '）');
-ok(r3.edge > r2.edge && r2.edge > r1.edge, '集越多丟越遠（' + r1.edge + ' → ' + r2.edge + ' → ' + r3.edge + '）');
+ok(r3.lv === 2, '按到滿時畫面顯示「遠 10 格」');
+ok(r3.hasBomb && r3.dist === 10, '集滿 → 丟到第 10 格（dist ' + r3.dist + '）');
+ok(r3.dist > r2.dist && r2.dist > r1.dist, '集越多丟越遠（' + r1.dist + ' → ' + r2.dist + ' → ' + r3.dist + '）');
 // 集氣時的操作提示與畫面顏色
 cp.cartCharge = P.CART_CHARGE_MAX; cp.cartCd = 0;
 clearRec();
 const g8 = mk();
 try { P.drawCart(cp, T8); } catch (e) { console.log('  ! drawCart 例外：' + e.message); }
 const texts8 = callsNamed('fillText').map(function (c) { return String(c[1]); });
-ok(texts8.some(function (t) { return t.indexOf('第 3 格') >= 0; }), '集滿時頭上顯示「第 3 格」（' + texts8.join('|') + '）');
+ok(texts8.some(function (t) { return t.indexOf('遠 10 格') >= 0; }), '集滿時頭上顯示「遠 10 格」（' + texts8.join('|') + '）');
 [0, 1, 2].forEach(function (lv) {
   ok(styleUsed(P.CART_LV[lv].color), '第 ' + (lv + 1) + ' 格用專屬顏色 ' + P.CART_LV[lv].color);
 });
@@ -345,8 +356,8 @@ clearRec();
 cp.cartCharge = P.CART_CHARGE_MAX * .5;
 const g8b = mk();
 try { P.drawCart(cp, T8); } catch (e) {}
-ok(callsNamed('fillText').some(function (c) { return String(c[1]).indexOf('第 2 格') >= 0; }), '集一半時顯示「第 2 格」');
-ok(P.cartThrowBomb(cp) !== undefined, '沒給等級時預設第 2 格（舊行為相容）');
+ok(callsNamed('fillText').some(function (c) { return String(c[1]).indexOf('中 6 格') >= 0; }), '集一半時顯示「中 6 格」');
+ok(P.cartThrowBomb(cp) !== undefined, '沒給等級時預設第 2 段（舊行為相容）');
 // AI 推車也會隨機選等級
 freshBattle();
 openField();
