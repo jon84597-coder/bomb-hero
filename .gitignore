@@ -61,3 +61,8 @@ generated-images/
 bomb-hero/art/tiles2/_preview_*.png
 bomb-hero/art/scene/style/_raw/
 bomb-hero/art/scene/style/_sheet.png
+bomb-hero/art/blocks/*/_raw/
+
+bomb-hero/art/*/_raw/
+bomb-hero/art/ground/ingame-*.png
+bomb-hero/art/ground/zoom-*.png
