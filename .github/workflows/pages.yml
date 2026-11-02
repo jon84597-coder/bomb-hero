@@ -1,14 +1,18 @@
 # 把 public/ 丟上 GitHub Pages（靜態鏡像：單人闖關／本機對戰可玩）
 #
-# ⚠️ 重要：這個 repo 的 GitHub Pages **從來沒有啟用過**（API 查 /pages 回 404），
-#    所以 configure-pages 一定失敗 —— 之前那 30 次紅叉全部都是這個原因，
-#    跟 `npm run build` 無關（這個 workflow 根本沒有 npm 步驟，本專案是純靜態單檔）。
+# 這個 repo 的 GitHub Pages 從來沒有啟用過（API 查 /pages 回 404）。
+# 以前的寫法是直接呼叫 actions/configure-pages —— 它在「Pages 沒開」時會 throw，
+# 於是整個 workflow 紅叉，看起來像是程式碼壞掉，其實跟程式碼、跟 npm 都無關。
 #
-# 要真的部署到 Pages，只需要 repo 主人做一次（API 的 enablement 需要 PAT，不接受預設 GITHUB_TOKEN）：
-#   Repo → Settings → Pages → Build and deployment → Source 選「GitHub Actions」→ 之後 push 就會自動上線
+# 現在改成兩段式：
+#   1. 先用 API 探測 /pages（回 200/404/其他）→ 判斷 Pages 是否已啟用、來源是不是 GitHub Actions
+#   2. **只有確認已啟用才呼叫 configure-pages**（沒開就整段跳過，連 annotation 都不會產生）
+# 結果：
+#   - Pages 沒開  → job 綠燈、deploy 跳過、summary 寫清楚怎麼開（零紅叉、零 error annotation）
+#   - Pages 已開  → 照常自動部署
 #
-# 在那之前，這個 workflow 會「成功但跳過部署」，並在 summary 留下明確提示，
-# 不會再讓人以為是程式碼壞掉。正式站（Render）完全不受影響。
+# 要真的上線只需 repo 主人做一次：
+#   Repo → Settings → Pages → Build and deployment → Source 選「GitHub Actions」
 name: Deploy to GitHub Pages
 
 on:
@@ -29,54 +33,97 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      pages: ${{ steps.pages.outcome }}
+      ready: ${{ steps.pages.outcome }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: 確認 GitHub Pages 是否已啟用
-        id: pages
-        uses: actions/configure-pages@v5
-        # 沒啟用時這一步會 throw（Get Pages site failed）→ 不要讓它把整個 workflow 判死
-        continue-on-error: true
-
-      - name: Pages 未啟用 → 給明確說明（不算失敗）
-        if: steps.pages.outcome != 'success'
+      # ── 1. 探測：Pages 有沒有開？來源是不是「GitHub Actions」？ ──────────────
+      - name: 探測 GitHub Pages 狀態
+        id: probe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "::warning title=GitHub Pages 尚未啟用::請到 Settings → Pages → Source 選「GitHub Actions」，靜態鏡像才會上線。正式站（Render）不受影響。"
+          set -u
+          api="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/pages"
+          code=$(curl -s -o /tmp/pages.json -w '%{http_code}' \
+                   -H "Authorization: Bearer ${GH_TOKEN}" \
+                   -H "Accept: application/vnd.github+json" \
+                   "$api" || echo 000)
+          echo "GET ${api} → HTTP ${code}"
+
+          state=unknown
+          build_type=""
+          if [ "$code" = "200" ]; then
+            build_type=$(python3 -c "import json;print(json.load(open('/tmp/pages.json')).get('build_type',''))" 2>/dev/null || echo "")
+            if [ "$build_type" = "workflow" ]; then state=workflow
+            else state=legacy; fi
+            python3 -c "import json;d=json.load(open('/tmp/pages.json'));print('  html_url:',d.get('html_url'));print('  build_type:',d.get('build_type'));print('  status:',d.get('status'))" 2>/dev/null || true
+          elif [ "$code" = "404" ]; then
+            state=missing
+          fi
+
+          echo "state=${state}" >> "$GITHUB_OUTPUT"
+          echo "build_type=${build_type}" >> "$GITHUB_OUTPUT"
+          echo "code=${code}" >> "$GITHUB_OUTPUT"
+
+      # ── 2. 讓「Build」這一步真的有意義（純靜態專案也要驗一致性）─────────────
+      - name: 驗證靜態檔（版本號 / sw.js / public 齊全）
+        run: node tools/build-static.js
+
+      # ── 3. Pages 未開啟（或來源不是 Actions）→ 說明，不紅叉 ─────────────────
+      - name: Pages 未就緒 → 寫入說明（不是程式碼錯誤）
+        if: steps.probe.outputs.state != 'workflow'
+        env:
+          STATE: ${{ steps.probe.outputs.state }}
+          CODE: ${{ steps.probe.outputs.code }}
+          BUILD_TYPE: ${{ steps.probe.outputs.build_type }}
+        run: |
+          set -u
+          case "$STATE" in
+            missing)  headline="GitHub Pages 尚未啟用，這次沒有部署"        ; detail="從未啟用（GET /pages 回 HTTP ${CODE}）" ;;
+            legacy)   headline="Pages 已啟用，但來源不是 GitHub Actions"    ; detail="目前來源是分支（build_type=${BUILD_TYPE}），這個 workflow 不負責部署" ;;
+            *)        headline="無法確認 Pages 狀態，這次沒有部署"          ; detail="GET /pages 回 HTTP ${CODE}（可能是 token 權限不足）" ;;
+          esac
+
+          echo "::warning title=${headline}::${detail}。正式站 Render 不受影響。"
           {
-            echo "### ⚠️ GitHub Pages 尚未啟用，這次沒有部署（不是程式碼錯誤）"
+            echo "### ✅ 建置通過（本專案是純靜態單檔，不需要打包）"
             echo ""
             echo "| 項目 | 狀態 |"
             echo "|---|---|"
-            echo "| 建置（本專案是純靜態，沒有 npm run build） | ✅ 不需要 |"
-            echo "| GitHub Pages 站台 | ❌ 從未啟用（API /pages 回 404） |"
-            echo "| 正式站 Render | ✅ 正常 |"
+            echo "| 版本／sw.js／public 一致性 | ✅ 已驗證（\`node tools/build-static.js\`） |"
+            echo "| GitHub Pages | ⚠️ ${detail} |"
+            echo "| 正式站 Render | ✅ 正常（https://bomb-hero-game.onrender.com/） |"
             echo ""
-            echo "**開啟方式（只需一次）**：Repo → Settings → Pages → Build and deployment → Source 選 **GitHub Actions**，再回來重跑這個 workflow。"
+            echo "### ⚠️ ${headline}"
             echo ""
-            echo "> 註：actions/configure-pages 的 enablement: true 需要 PAT，預設的 GITHUB_TOKEN 不能用，"
-            echo "> 因此這一步無法由 workflow 自己完成。"
+            echo "**開啟方式（只需一次）**：[Settings → Pages](https://github.com/${GITHUB_REPOSITORY}/settings/pages)"
+            echo ""
+            echo "1. Build and deployment → **Source** 選 \`GitHub Actions\`"
+            echo "2. 回到 [Actions](https://github.com/${GITHUB_REPOSITORY}/actions/workflows/pages.yml) → **Run workflow** 重跑一次"
+            echo ""
+            echo "> 註：\`actions/configure-pages\` 的 \`enablement: true\` 需要 PAT（預設 \`GITHUB_TOKEN\` 不能用），"
+            echo "> 所以「啟用 Pages」這一步無法由 workflow 自己完成。"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: 檢查靜態檔是否齊全
-        if: steps.pages.outcome == 'success'
-        run: |
-          for f in public/index.html public/sw.js public/manifest.json; do
-            if [ ! -f "$f" ]; then echo "::error file=$f::缺少靜態檔，請先同步部署副本"; exit 1; fi
-          done
+      # ── 4. 確認已就緒才呼叫 configure-pages（否則它會 throw → 產生 error annotation）
+      - name: 設定 Pages
+        id: pages
+        if: steps.probe.outputs.state == 'workflow'
+        uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         if: steps.pages.outcome == 'success'
         with:
           path: ./public
 
   deploy:
     needs: build
-    if: needs.build.outputs.pages == 'success'
+    if: needs.build.outputs.ready == 'success'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

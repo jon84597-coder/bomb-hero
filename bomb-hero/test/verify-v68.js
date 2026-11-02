@@ -84,18 +84,25 @@ const iHint = boot.indexOf('updateCountHint()');
 ok(iReset > 0 && iHint > iReset, 'resetSlots() 排在 updateCountHint() 之前');
 
 // ---------------------------------------------------------------
-head('4. GitHub Pages workflow：沒啟用也不紅叉');
+head('4. GitHub Pages workflow：先探測才設定（沒啟用不會產生任何紅叉）');
 const wf = fs.readFileSync(__dirname + '/../../.github/workflows/pages.yml', 'utf8');
-ok(/continue-on-error:\s*true/.test(wf), 'configure-pages 有 continue-on-error（Pages 沒開不會讓 workflow 死）');
-ok(/if:\s*steps\.pages\.outcome\s*==\s*'success'/.test(wf), '打包／上傳都加上「Pages 已啟用」條件');
-ok(/if:\s*steps\.pages\.outcome\s*!=\s*'success'/.test(wf), '沒啟用時會印出明確說明');
+ok(/id:\s*probe/.test(wf), '有一步 id: probe 先探測 Pages 狀態');
+ok(/\/repos\/\$\{GITHUB_REPOSITORY\}\/pages/.test(wf), '探測用的是官方 API /repos/{owner}/{repo}/pages');
+ok(/if:\s*steps\.probe\.outputs\.state == 'workflow'/.test(wf),
+  '只有「已啟用且來源是 GitHub Actions」才呼叫 configure-pages（沒開就不會 throw、不會留 error annotation）');
+ok(/if:\s*steps\.probe\.outputs\.state != 'workflow'/.test(wf), '沒就緒時會印出明確說明');
+ok(/if:\s*steps\.pages\.outcome\s*==\s*'success'/.test(wf), '打包／上傳都加上「configure-pages 成功」條件');
 ok(/GITHUB_STEP_SUMMARY/.test(wf), '說明會寫進 job summary（不用點 log 也看得到）');
 ok(/pages: write/.test(wf), '仍有 pages: write 權限（啟用後才部署得上去）');
-ok(/outputs:[\s\S]*pages: \$\{\{ steps\.pages\.outcome \}\}/.test(wf), 'build job 把 Pages 狀態輸出給 deploy');
-ok(/needs\.build\.outputs\.pages == 'success'/.test(wf), 'deploy 只在 Pages 啟用時才跑');
+ok(/outputs:[\s\S]*ready: \$\{\{ steps\.pages\.outcome \}\}/.test(wf), 'build job 把 Pages 狀態輸出給 deploy');
+ok(/needs\.build\.outputs\.ready == 'success'/.test(wf), 'deploy 只在 Pages 就緒時才跑');
+ok(/actions\/checkout@v7/.test(wf) && /actions\/configure-pages@v6/.test(wf) &&
+   /actions\/upload-pages-artifact@v5/.test(wf) && /actions\/deploy-pages@v5/.test(wf),
+  'action 全升到 Node 24 版本（不再有 Node 20 淘汰警告）');
 // 只檢查「真的會被執行的指令」，不要去抓註解裡說明用的字（v4.24 踩過註解誤判）
 const wfRuns = wf.split('\n').filter(function (l) { return !/^\s*#/.test(l); }).join('\n');
 ok(!/run:\s*npm\b/.test(wfRuns), 'workflow 裡沒有任何 npm 指令（本專案是純靜態單檔）');
+ok(/run:\s*node tools\/build-static\.js/.test(wfRuns), 'Build 這一步真的跑 node tools/build-static.js（不再只是空殼）');
 ok(/path:\s*\.\/public/.test(wf), '上傳路徑仍是 ./public');
 
 console.log('\n結果：' + pass + ' 通過 / ' + fail + ' 失敗');
