@@ -131,7 +131,8 @@ p0.x = 3 * T + T / 2; p0.y = 3 * T + T / 2;
 
 ok(BH.beltMulFor(p0, 1, 0) === BH.BELT_FAST, '順行（往右走）→ 速度倍率 ' + BH.beltMulFor(p0, 1, 0) + '（加速）');
 ok(BH.beltMulFor(p0, -1, 0) === BH.BELT_SLOW, '逆行（往左走）→ 速度倍率 ' + BH.beltMulFor(p0, -1, 0) + '（減速）');
-ok(BH.beltMulFor(p0, 0, 1) < 1, '垂直穿越 → 速度略減（' + BH.beltMulFor(p0, 0, 1) + '）');
+// v4.39：垂直穿越改成「會被皮帶甩出去」→ 比 1 大（舊版是 .95，站在帶子上幾乎走不掉）
+ok(BH.beltMulFor(p0, 0, 1) > 1.15, '垂直穿越 → 甩得比平常快（' + BH.beltMulFor(p0, 0, 1) + '）');
 
 function runAxis(mul, frames) {
   p0.x = 2 * T + T / 2; p0.y = 3 * T + T / 2;
