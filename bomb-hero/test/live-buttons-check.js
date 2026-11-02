@@ -1,5 +1,6 @@
 // v4.21 線上活體驗證：首頁每顆按鈕都能真的點進去（PC 滑鼠 + 手機觸控）
 // 用法：node test/live-buttons-check.js [url]
+const fs = require('fs');
 const { launch, sleep } = require('./cdp');
 const URL = process.argv[2] || 'https://bomb-hero-game.onrender.com/';
 
@@ -34,7 +35,9 @@ const HIT = id => `(function(){
   await sleep(1600);
 
   const ver = await p.eval("window.__BH ? window.__BH.VERSION : 'none'");
-  ok('線上版本是 4.21', ver === '4.21', ver);
+  // 跟本機版號比對（升版後不用再改這支腳本）
+  const localVer = (fs.readFileSync(__dirname + '/../index.html', 'utf8').match(/const VERSION = '([^']+)'/) || [])[1];
+  ok('線上版本 = 本機版本 ' + localVer, ver === localVer, '線上 ' + ver);
 
   // 首頁九顆主選單按鈕
   const ids = ['btnSolo', 'btnRpg', 'btnBoss', 'btnBattle', 'btnOnline', 'btnStore', 'btnSettings', 'btnQuit'];
