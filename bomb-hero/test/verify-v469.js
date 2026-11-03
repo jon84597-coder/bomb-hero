@@ -61,7 +61,7 @@ head('1. 源碼檢查');
   ok(/Math\.abs\(px2 - sp\.x\) < 2 && Math\.abs\(py2 - sp\.y\) < 2/.test(src), '岩柱只避開出生點半徑 1');
   ok(/return stageTypes\(stage\)\.slice\(\);/.test(src), 'RPG 怪池 = 單人八大關卡生態表');
   ok(/const n = lay \? lay\.foes : Math\.max\(2, Math\.min\(FOE_MAX_LIVE,/.test(src), 'RPG 怪量跟單人同曲線（隨機模式用 T 怪量）');
-  ok(/function buyTicket\(\)/.test(src) && /let owned = \[\], gold = 0, tickets = 0;/.test(src), '商店有門票狀態與購買');
+  ok(/function buyTicket\(\)/.test(src) && /let owned = \[\], gold = 0, tickets = 0/.test(src), '商店有門票狀態與購買');
   ok(/const TK = 'bombhero-br-ticket', TICKET_PRICE = 2000;/.test(src), '門票存檔 key 與價格 2000');
   ok(/data-buy-ticket="1"/.test(src), '商店有門票卡片按鈕');
   ok(/teams: teamCount\(\),/.test(src), '線上推送帶隊數');
