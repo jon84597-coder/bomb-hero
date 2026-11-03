@@ -62,7 +62,9 @@ function makeEnv(opts) {
         if (!qmap[k]) qmap[k] = getId(k);
         return qmap[k];
       },
-      getBoundingClientRect: () => ({ left: 0, top: 0, width: 720, height: 540 }),
+      // v4.71：跟著 clientWidth/clientHeight 走 —— 真瀏覽器兩者一致，
+      //   而 tileSize()/canvasSize() 現在會讀 rect（舊版固定 720×540，測試設了尺寸也量不到）
+      getBoundingClientRect: () => ({ left: 0, top: 0, width: el.clientWidth || 720, height: el.clientHeight || 540 }),
       setAttribute(n, v) { el.attrs[n] = String(v); },
       getAttribute(n) { return n in el.attrs ? el.attrs[n] : null; },
       setPointerCapture() {}, releasePointerCapture() {},

@@ -44,12 +44,12 @@ ok(/const se = document\.scrollingElement \|\| document\.documentElement;\s*\n\s
 console.log('\n=== 2. 遊戲畫面：手機只裝 60%（v2.6） ===');
 
 ok(/const MOBILE_VIEW_FRAC = 0\.6;/.test(html), '有「手機可視比例」常數 0.6');
-ok(/const fw = VIEW_W \/ Game\.cols, fh = VIEW_H \/ Game\.rows;/.test(html),
-   '先算寬／高各自的基準格子（v4.47：兩個方向要分開算）');
-ok(/return clamp\(Math\.round\(Math\.floor\(Math\.min\(fw, fh\)\) \/ MOBILE_VIEW_FRAC\), 24, 62\);/.test(html),
-   '橫放：再放大到只裝 60%（clamp 24~62）');
-ok(/if \(VIEW_H > VIEW_W\) \{[\s\S]*?return clamp\(Math\.round\(Math\.min\(fh, VIEW_W \/ 7\.2\)\), 24, 62\);/.test(html),
-   '直放：高度優先 ＋ 至少留 7.2 格寬（v4.47 滿版，不能出現上下深色空帶）');
+ok(/const sh = Math\.min\(sz2\.w, sz2\.h\), lg = Math\.max\(sz2\.w, sz2\.h\);/.test(html),
+   'v4.71：格子大小只由「短邊／長邊」決定（不再分直放／橫放兩套公式）');
+ok(/return clamp\(Math\.round\(Math\.min\(lg \/ Math\.max\(1, Game\.rows\), sh \/ 7\.2\)\), 24, 62\);/.test(html),
+   '公式：min(長邊/排數, 短邊/7.2) ＋ clamp 24~62');
+ok(/if \(Game\.bigMap\) \{[\s\S]*?sh \/ 11[\s\S]*?\n  \}/.test(html),
+   '大圖用同一條公式（至少留 11 格寬），橫放不再退回 18px／格');
 ok(/if \(document\.body && document\.body\.classList\.contains\('touch'\)\) \{/.test(html),
    '只影響手機（touch），桌機維持原本手感');
 
@@ -94,9 +94,11 @@ ok(/if \(document\.body && document\.body\.classList\.contains\('touch'\)\) \{/.
   const xBefore = p.x, yBefore = p.y, TBefore = G.T;
   const vi = P.resizeView();
   const TAfter = G.T, k = TAfter / TBefore;
-  const fit = Math.floor(Math.min(vi.w / G.cols, vi.h / G.rows));
-  ok(TAfter !== TBefore && TAfter === Math.min(62, Math.max(24, Math.round(fit / 0.6))),
-     'resizeView 後 T 重算（' + TBefore + ' → ' + TAfter + '）');
+  // v4.71：640×480 → 短邊 480、長邊 640 → min(640/13, 480/7.2) = 49
+  const want = Math.min(62, Math.max(24, Math.round(Math.min(Math.max(vi.w, vi.h) / G.rows,
+                                                              Math.min(vi.w, vi.h) / 7.2))));
+  ok(TAfter !== TBefore && TAfter === want,
+     'resizeView 後 T 重算（' + TBefore + ' → ' + TAfter + '，預期 ' + want + '）');
   ok(Math.abs(p.x - xBefore * k) < 0.01 && Math.abs(p.y - yBefore * k) < 0.01,
      '玩家世界座標等比重貼（' + Math.round(xBefore) + '→' + Math.round(p.x) + '）');
   ok(G.camSnap === true, '相機直接歸位（不會從舊位置滑過來）');
