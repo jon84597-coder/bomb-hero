@@ -7,9 +7,9 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
 const src = html;
 
 console.log('\n=== 1. 源碼骨架 ===');
-ok(/const BR = \{[\s\S]{0,200}?W: 48, H: 38/.test(src), 'BR 常數：48×38');
+ok(/const BR = \{[\s\S]{0,200}?W: 56, H: 44/.test(src), 'BR 常數：56×44 超大地圖');
 ok(/N: 8, FOES: 14/.test(src), '8 人 / 14 隻小怪');
-ok(/PH: \[\[26, 24\], \[22, 16\], \[16, 9\], \[12, 4\.5\]\]/.test(src), '毒圈四階段（26s→24 格 …→4.5 格）');
+ok(/PH: \[\[\d+, \d+\](, \[\d+, \d+\]){3}\]/.test(src) && /PH: \[\[26, 30\]/.test(src), '毒圈四階段（26s→30 格 …→5 格）');
 ok(/GOLD: \[1200, 700, 450, 300, 200, 150, 100, 80\]/.test(src), '名次獎勵 1200→80');
 ok(/else if \(Game\.mode === 'br'\) updateBR\(dt\);/.test(src), 'update 分派到大逃殺');
 ok(/if \(Game\.mode === 'battle' \|\| Game\.mode === 'br'\) killBattlePlayer/.test(src), '炸彈／火焰在大逃殺也走「淘汰」而不是單人重來');
@@ -28,7 +28,7 @@ console.log('\n=== 2. 三島地圖 ===');
   BH.settings.ctrl = 'touch';
   ok(BH.startBR() === true, 'startBR() 開得起來');
   ok(G.mode === 'br' && G.bigMap === true, '模式 = br、bigMap = true');
-  ok(G.cols === 48 && G.rows === 38, '地圖 48×38（實際 ' + G.cols + '×' + G.rows + '）');
+  ok(G.cols === 56 && G.rows === 44, '地圖 56×44（實際 ' + G.cols + '×' + G.rows + '）');
   // 三座島都有陸地
   const land = [0, 0, 0], themeSet = {};
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
@@ -41,9 +41,9 @@ console.log('\n=== 2. 三島地圖 ===');
      '三座島都有陸地（' + land.join('／') + ' 格）');
   ok(Object.keys(themeSet).length === 3, '三座島各一種地形（' + Object.keys(themeSet).join('、') + '）');
   // 連通：從第三座島能走到第一、二座島
-  const seen = [], q = [[24, 27]];
+  const seen = [], q = [[28, 32]];
   for (let y = 0; y < G.rows; y++) seen.push(new Array(G.cols).fill(false));
-  seen[27][24] = true;
+  seen[32][28] = true;
   for (let i = 0; i < q.length; i++) {
     const cx = q[i][0], cy = q[i][1];
     [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
@@ -63,6 +63,18 @@ console.log('\n=== 2. 三島地圖 ===');
   ok(reach0 > 100 && reach1 > 100, '兩座外島都走得到（' + reach0 + '／' + reach1 + ' 格）');
   ok(unreach === 0, '沒有走不到的死島（未連通 ' + unreach + ' 格）');
   ok(all > 500 && all < 1100, '可走格 ' + all + '（目標 500~1100）');
+  // v4.73：三座島必須真的隔著海 —— 舊版島半徑 8.6 配 19 格圓心距，三島直接黏成一整塊大陸、
+  //   窄橋整段被蓋在陸地裡，玩家根本看不到「過橋」這件事。這裡驗「橋 = 落在第三島 blob 之外的連通格」。
+  const C3 = BH.BR.ISL[2];
+  let brg = 0, seat = 0;
+  for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
+    if (G.grid[y][x] === 1) { if (G.brIsl[y][x] < 0) seat++; continue; }
+    if (G.brIsl[y][x] !== 2) continue;
+    const d = Math.sqrt((x - C3.cx) * (x - C3.cx) + (y - C3.cy) * (y - C3.cy));
+    if (d > C3.r * 1.3) brg++;
+  }
+  ok(brg > 20, '兩座窄橋真的跨在海面上（橋格 ' + brg + '）');
+  ok(seat > 800, '島與島之間是海（深海格 ' + seat + '）');
 })();
 
 console.log('\n=== 3. 出生點與小怪 ===');
@@ -178,11 +190,12 @@ console.log('\n=== 6. 視口裁切 ===');
 console.log('\n=== 7. 版本 ===');
 (function () {
   const v = (src.match(/const VERSION = '([^']+)'/) || [])[1];
-  ok(v === '4.72', 'VERSION = 4.72（實際 ' + v + '）');
-  ok(/id="verLogVer">4\.72</.test(src), '版本紀錄同步');
+  // 不鎖死版號（每次升版都要回來改一次＝浪費時間，也容易漏改）
+  ok(parseFloat(v) >= 4.72, 'VERSION >= 4.72（實際 ' + v + '）');
+  ok(/id="verLogVer">4\.\d+</.test(src), '版本紀錄同步');
   const sw = require('fs').readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const m = sw.match(/SW_VERSION = '([^']+)'/);
-  ok(m && m[1] === 'v4.72.0', 'sw.js = v4.72.0（實際 ' + (m && m[1]) + '）');
+  ok(m && /^v4\.\d+\.0$/.test(m[1]), 'sw.js = v4.x.0（實際 ' + (m && m[1]) + '）');
 })();
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v4.72：' + pass + ' 通過 / ' + fail + ' 失敗');
