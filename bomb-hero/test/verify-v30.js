@@ -176,10 +176,11 @@ ok(P.SOLO_DIFF.easy.eggs === 3 && P.SOLO_DIFF.hard.eggs === 1, '難度差異保�
 // ================================================================
 console.log('\n=== 3. 小怪體積放大 ===');
 
-ok(typeof P.ENEMY_ART_MUL === 'number' && P.ENEMY_ART_MUL >= 1.35,
-   '小怪外型放大倍率 ENEMY_ART_MUL = ' + P.ENEMY_ART_MUL + '（≥1.35）');
-ok(/function enemyArtR\(e\) \{[\s\S]{0,200}base \* ENEMY_ART_MUL \* tileArtK\(\)/.test(html),
-   '有 enemyArtR()：外型半徑 = 判定半徑 × 倍率 × 格子縮放（v2.6）');
+ok(typeof P.ENEMY_ART_BASE === 'number' && P.ENEMY_ART_BASE > 0 &&
+   typeof P.ENEMY_ART_SLOPE === 'number' && P.ENEMY_ART_SLOPE > 0,
+   '小怪外型以格子為單位（base ' + P.ENEMY_ART_BASE + ' / slope ' + P.ENEMY_ART_SLOPE + '）');
+ok(/function enemyArtR\(e\) \{[\s\S]{0,400}ENEMY_ART_BASE \+ \(base - 12\) \* ENEMY_ART_SLOPE/.test(html),
+   '有 enemyArtR()：外型高度 = 格子 × (0.85 + (r-12)×0.11)，大隻的更大、小隻的更小');
 ok(/const R = enemyArtR\(e\), sp = e\.spec/.test(html), 'drawEnemyArt 用放大後的半徑繪製');
 ok(/const ar = enemyArtR\(e\);/.test(html) && /const sr = e\.boss \? e\.r \* \(e\.sizeMul \|\| 1\) \* tileArtK\(\) : ar;/.test(html),
    '影子也跟著放大（小怪看起來更結實，BOSS 影子也跟著格子縮放）');
@@ -198,39 +199,34 @@ ok(/drawDizzyMark\(x, y - ar \* 1\.15, T\)/.test(html), '頭暈標記跟著體�
 
   const e = P.makeEnemy(3, 3, 'slime', 1, 1);
   ok(e.r === P.speciesOf('slime').r, 'makeEnemy 產生的判定半徑 e.r 仍然是 ' + e.r);
-  // v4.31：外型再放大 15%（ENEMY_ART_GROW），乘在最後結果上
-  ok(Math.abs(P.enemyArtR(e) - e.r * P.ENEMY_ART_MUL * (P.ENEMY_ART_GROW || 1)) < 1e-9,
-     '外型半徑 = ' + P.enemyArtR(e).toFixed(1) + '（e.r ' + e.r + ' × ' + P.ENEMY_ART_MUL +
-     ' × ' + (P.ENEMY_ART_GROW || 1) + '）');
+  // v4.60：外型高度 = R × hs，下限是判定直徑 2r
+  const hs = (P.FOE_ART.slime && P.FOE_ART.slime.hs) || 1.9;
+  ok(P.enemyArtR(e) * hs >= e.r * 2 - 1e-9,
+     '外型高度 = ' + (P.enemyArtR(e) * hs).toFixed(1) + ' ≥ 判定直徑 ' + (e.r * 2));
 })();
 
-// 真的畫出來：同一隻怪「舊尺寸 vs 新尺寸」的實際圖形半徑
+// v4.60：48 種小怪的「顯示高度 / 格子」比例，在 PC 大格子與手機小格子之間不失控
 (function () {
-  function maxRadiusOf(e) {
-    rec.calls.length = 0;
-    P.drawEnemyArt(e, 200, 200, false, 0);
-    let mx = 0;
-    rec.calls.forEach(function (c) {
-      if (c[0] === 'arc') mx = Math.max(mx, Math.abs(c[3] || 0));
-      else if (c[0] === 'ellipse') mx = Math.max(mx, Math.abs(c[3] || 0), Math.abs(c[4] || 0));
-      else if (c[0] === 'fillRect' || c[0] === 'strokeRect') mx = Math.max(mx, Math.abs(c[3] || 0) / 2, Math.abs(c[4] || 0) / 2);
-    });
-    return mx;
-  }
   const ids = P.ENEMY_SPECIES.map(function (s) { return s.id; });
-  let allBigger = true, worst = { id: '', ratio: 99 };
-  ids.forEach(function (id) {
+  function hOverT(id, T) {
+    const old = G.T; G.T = T;
     const e = P.makeEnemy(3, 3, id, 1, 1);
-    const now = maxRadiusOf(e);                               // v2.4 放大後
-    const old = JSON.parse(JSON.stringify(e));
-    old.r = e.r / P.ENEMY_ART_MUL;                            // 還原成 v2.3 的畫法
-    const before = maxRadiusOf(old);
-    const ratio = before > 0 ? now / before : 99;
-    if (!(ratio > 1.3)) allBigger = false;
-    if (ratio < worst.ratio) worst = { id: id, ratio: ratio };
+    const hs = (P.FOE_ART[id] && P.FOE_ART[id].hs) || 1.9;
+    const v = P.enemyArtR(e) * hs / T;
+    G.T = old;
+    return v;
+  }
+  let lo = 99, hi = 0, hi20 = 0, worst20 = '';
+  ids.forEach(function (id) {
+    const r = hOverT(id, 50);
+    lo = Math.min(lo, r); hi = Math.max(hi, r);
+    const q = hOverT(id, 20);
+    if (q > hi20) { hi20 = q; worst20 = id; }
   });
-  ok(allBigger, '全部 ' + ids.length + ' 種小怪畫面體型都放大 1.4 倍左右（最小的一種：' +
-     worst.id + ' ×' + worst.ratio.toFixed(2) + '）');
+  ok(lo >= 0.8 && hi <= 1.5,
+     'PC 大格子（T=50）小怪佔 ' + lo.toFixed(2) + '~' + hi.toFixed(2) + ' 格');
+  ok(hi20 <= 2.0,
+     '手機大圖（T=20）最大也只佔 ' + hi20.toFixed(2) + ' 格（' + worst20 + '，舊版 3.77 格）');
 })();
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v2.4：' + pass + ' 通過 / ' + fail + ' 失敗');

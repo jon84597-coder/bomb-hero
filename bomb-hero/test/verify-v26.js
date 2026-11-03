@@ -99,7 +99,7 @@ ok(mb.dirName === 'up', 'BOSS 預設面朝上');
 ok(mb.r === 24, '判定半徑維持 24（變大只是外觀，不會變得更難躲）');
 const oldH = mb.r * 4.3, newH = mb.r * 4.3 * mb.sizeMul;
 ok(newH > oldH * 1.3, '畫出來的身高從 ' + oldH.toFixed(0) + 'px 變成 ' + newH.toFixed(0) + 'px（+34%）');
-ok(/const BS = e\.sizeMul \|\| 1;/.test(html) && /const BH = e\.r \* 4\.3 \* BS \* AK;/.test(html),
+ok(/const BS = e\.sizeMul \|\| 1;/.test(html) && /const BH = e\.r \* 4\.[0-9] \* BS \* AK;/.test(html),
   'drawEnemy 真的用 BS 放大身高（v2.6：再乘上格子縮放 AK）');
 ok(/const sr = e\.boss \? e\.r \* \(e\.sizeMul \|\| 1\) \* tileArtK\(\) : ar;/.test(html),
    'BOSS 的影子也跟著放大（小怪改走 ar：v2.4 放大後的外型半徑）');

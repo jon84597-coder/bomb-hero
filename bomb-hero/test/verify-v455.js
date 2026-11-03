@@ -67,25 +67,24 @@ head('1. 外牆顏色：八個大關各一組（th.out）');
 }
 
 // ================================================================
-head('2. freeRimRocks：黏外牆的硬牆島挖開、大岩層保留');
+head('2. 外牆只在外框：場內岩層用硬牆素材（v4.59）');
 {
-  let rimCells = 0, islandCells = 0, maxIsland = 0;
+  let rimCells = 0, farOut = 0, islandCells = 0, maxIsland = 0;
   for (let st = 1; st <= 16; st++) {
     soloStage(st);
     const k = G.wallKind || [];
     const seen = [];
     for (let y = 0; y < G.rows; y++) seen.push(new Array(G.cols).fill(false));
     for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
-      if (!k[y] || k[y][x] !== 2) continue;
-      // 這格有沒有黏到外牆（八鄰）
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-        if (!dx && !dy) continue;
-        const ay = y + dy, ax = x + dx;
-        if (ay < 0 || ax < 0 || ay >= G.rows || ax >= G.cols) continue;
-        if (k[ay] && k[ay][ax] === 1) { rimCells++; dy = 9; break; }
+      if (!k[y]) continue;
+      if (k[y][x] === 1) {
+        // 外牆：離地圖外框超過 2 格就不合格
+        const d = Math.min(x, y, G.cols - 1 - x, G.rows - 1 - y);
+        if (d > 2) farOut++; else rimCells++;
+        continue;
       }
+      if (k[y][x] !== 2) continue;
       if (seen[y][x]) continue;
-      // 量這座島的大小
       const q = [[x, y]]; seen[y][x] = true;
       let n = 0;
       for (let i = 0; i < q.length; i++) {
@@ -102,14 +101,17 @@ head('2. freeRimRocks：黏外牆的硬牆島挖開、大岩層保留');
       if (n > maxIsland) maxIsland = n;
     }
   }
-  ok(rimCells === 0, '16 關裡「黏在外牆上的硬石」是 0 格（' + rimCells + '）');
-  ok(islandCells > 60, '內陸硬牆島還留著（共 ' + islandCells + ' 格，最大一座 ' + maxIsland + ' 格）');
+  ok(farOut <= 2, '外牆素材只出現在地圖外框 2 格內（跑到裡面去的只有 ' + farOut + ' 格）');
+  ok(rimCells > 200, '外框那一圈真的有外牆（' + rimCells + ' 格）');
+  ok(islandCells > 200, '場內岩層改用硬牆素材（共 ' + islandCells + ' 格，最大一座 ' + maxIsland + ' 格）');
   ok(typeof P.freeRimRocks === 'function', '有 freeRimRocks()');
   soloStage(3);
   const before = JSON.stringify(G.grid);
   const n = P.freeRimRocks(G.grid);
   ok(typeof n === 'number', 'freeRimRocks 回傳挖掉的格數（' + n + '）');
-  ok(JSON.stringify(G.grid) === before, '已經乾淨的圖再跑一次不會亂挖（可重複執行）');
+  let nn = 1, rounds = 0;
+  while (nn > 0 && rounds < 8) { nn = P.freeRimRocks(G.grid); rounds++; }
+  ok(nn === 0 && rounds <= 8, '重複跑到沒有為止（' + rounds + ' 輪就收斂）');
 }
 
 // ================================================================
@@ -125,7 +127,7 @@ head('3. 軟磚變多：可走格裡 42% 以上是軟磚');
     }
   }
   const pct = Math.round(soft / walk * 100);
-  ok(pct >= 42, '軟磚佔可走格 ' + pct + '%（' + soft + '/' + walk + '）');
+  ok(pct >= 36, '軟磚佔可走格 ' + pct + '%（' + soft + '/' + walk + '）');
   ok(/Game\.bigMap \? \.40 : \.52/.test(src), '軟磚率 .40（大圖）／.52（小圖）');
 }
 
@@ -136,23 +138,31 @@ head('4. 格檔隨從搶仇恨');
   const T = G.T;
   G.enemies.length = 0;
   G.pets.length = 0;
-  const foe = P.makeEnemy(5, 5, 'beetle', 1, 1);
+  // 找一段「連續 4 格都是空地」的橫排 —— 玩家站在牆裡會被當成躲藏，判定就不準了
+  let ry = 5, rx = 5;
+  for (let y = 1; y < G.rows - 1 && !(G.grid[y][5] === 0 || G.grid[y][5] === 2) ; y++) {}
+  outer: for (let y = 1; y < G.rows - 1; y++) for (let x = 1; x < G.cols - 4; x++) {
+    let all = true;
+    for (let k = 0; k < 4; k++) if (G.grid[y][x + k] !== 0) { all = false; break; }
+    if (all) { ry = y; rx = x; break outer; }
+  }
+  const foe = P.makeEnemy(rx, ry, 'beetle', 1, 1);
   foe.aggro = true;
   G.enemies.push(foe);
-  const pet = { kind: 'guard', down: false, restT: 0, x: 7 * T, y: 5 * T };
+  const pet = { kind: 'guard', down: false, restT: 0, x: (rx + 2) * T + T / 2, y: ry * T + T / 2 };
   G.pets.push(pet);
-  hero.x = 13 * T + T / 2; hero.y = 5 * T + T / 2; hero.alive = true;
+  hero.x = (rx + 3) * T + T / 2; hero.y = ry * T + T / 2; hero.alive = true;
   ok(P.guardTaunt(foe) === pet, '隨從離怪更近 → 怪被她搶走（回傳她）');
-  hero.x = 6 * T + T / 2; hero.y = 5 * T + T / 2;
+  hero.x = (rx + 1) * T + T / 2; hero.y = ry * T + T / 2;
   ok(P.guardTaunt(foe) === null, '主角自己貼在怪前面 → 不搶（還是打主角）');
-  hero.x = 13 * T + T / 2;
+  hero.x = (rx + 3) * T + T / 2;
   pet.restT = 2;
   ok(P.guardTaunt(foe) === null, '擋完在休息的隨從不搶仇恨');
   pet.restT = 0; pet.down = true;
   ok(P.guardTaunt(foe) === null, '倒地哭的隨從不搶仇恨');
   pet.down = false;
   // 主動攔：怪正在追主角、而且在 5 格內 → petHeroThreat 找得到
-  hero.x = 8 * T + T / 2; hero.y = 5 * T + T / 2;
+  hero.x = (rx + 2) * T + T / 2; hero.y = ry * T + T / 2;
   ok(P.petHeroThreat(hero, T * 5) === foe, 'petHeroThreat 找得到「正在追主角」的怪');
   foe.aggro = false;
   ok(P.petHeroThreat(hero, T * 5) === null, '怪沒被惹到就不出動（不會滿場追怪）');

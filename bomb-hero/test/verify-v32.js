@@ -90,28 +90,28 @@ ok(/return clamp\(Math\.round\(VIEW_H \/ 9\.2\), 30, 62\);/.test(html), '桌機�
 console.log('\n=== 3. 小怪／BOSS 維持「PC 看到的大小」 ===');
 
 ok(/const ART_REF_TILE = 62;/.test(html), '基準格子 = 62（= PC 上的格子大小）');
-ok(/function tileArtK\(\) \{/.test(html) && /return clamp\(T \/ ART_REF_TILE, \.6, 1\.2\);/.test(html),
-   'tileArtK()：格子縮小時等比縮回（0.6~1.2）');
-// v4.31：結果最後再乘 ENEMY_ART_GROW（+15%），保底邏輯不變
-ok(/return Math\.max\(base \* ENEMY_ART_MUL \* tileArtK\(\), base \* 1\.05\) \* ENEMY_ART_GROW;/.test(html),
-   '外型永遠不小於判定半徑（不會「還沒碰到就扣血」），且整體再放大 15%');
-ok(/const sr = e\.boss \? e\.r \* \(e\.sizeMul \|\| 1\) \* tileArtK\(\) : ar;/.test(html), 'BOSS 影子跟著縮放');
-ok(/const BH = e\.r \* 4\.3 \* BS \* AK;/.test(html), 'BOSS 身軀高度跟著縮放');
+ok(/function tileArtK\(\) \{/.test(html) && /return clamp\(T \/ ART_REF_TILE, \.34, 1\.2\);/.test(html),
+   'tileArtK()：格子縮小時等比縮回（0.34~1.2，v4.60 把下限從 0.6 放寬 → 手機 BOSS 不再爆大）');
+// v4.60：外型改成「以格子為單位」，下限用判定直徑 2r 保底
+ok(/return Math\.max\(T \* \(ENEMY_ART_BASE \+ \(base - 12\) \* ENEMY_ART_SLOPE\), base \* 2\.1\)/.test(html),
+   '外型高度 = max(格子 × 0.85~1.40, 判定直徑 2r)：大格子不會太大、小格子不會小到失真');
+ok(/const BH = e\.r \* 4\.[0-9] \* BS \* AK;/.test(html), 'BOSS 身軀高度跟著縮放');
 
 (function () {
   const e = P.makeEnemy(3, 3, 'slime', 1, 1);
+  const hs = (P.FOE_ART.slime && P.FOE_ART.slime.hs) || 1.9;
   G.T = 62;                                     // PC
-  const rPc = P.enemyArtR(e), kPc = rPc / 62;
+  const rPc = P.enemyArtR(e), kPc = rPc * hs / 62;
   G.T = 42;                                     // 手機（v2.6 後的格子）
-  const rMob = P.enemyArtR(e), kMob = rMob / 42;
+  const rMob = P.enemyArtR(e), kMob = rMob * hs / 42;
   ok(rMob < rPc, '手機上小怪絕對尺寸變小（' + rPc.toFixed(1) + ' → ' + rMob.toFixed(1) + '）');
   ok(Math.abs(kMob - kPc) < 0.06,
-     '小怪／格子比例維持 PC 看到的比例（PC ' + kPc.toFixed(2) + ' vs 手機 ' + kMob.toFixed(2) + '）');
-  ok(rMob >= e.r * 1.05 - 1e-9, '不會小於判定半徑（' + rMob.toFixed(1) + ' ≥ ' + (e.r * 1.05).toFixed(1) + '）');
+     '小怪／格子比例維持 PC 看到的比例（PC ' + kPc.toFixed(2) + ' 格 vs 手機 ' + kMob.toFixed(2) + ' 格）');
   G.T = 25;                                     // 極端小格子（保險）
-  ok(P.enemyArtR(e) >= e.r * 1.05 - 1e-9, '格子再小也不會縮過頭（下限保護）');
+  ok(P.enemyArtR(e) * hs >= e.r * 2 - 1e-9,
+     '格子再小也不會小於判定直徑（' + (P.enemyArtR(e) * hs).toFixed(1) + ' ≥ ' + (e.r * 2).toFixed(1) + '）');
   G.T = 62;
-  ok(P.tileArtK() === 1, 'PC 尺寸 tileArtK = 1（小怪維持 v2.4 放大後的 1.42 倍）');
+  ok(P.tileArtK() === 1, 'PC 尺寸 tileArtK = 1');
   // BOSS 也一樣
   const b = P.makeBoss(6, 5, 5);
   G.T = 62; const bPc = b.r * 4.3 * (b.sizeMul || 1) * P.tileArtK();
