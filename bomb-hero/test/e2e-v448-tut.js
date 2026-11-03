@@ -118,6 +118,16 @@ function ok(c, n, extra) { if (c) { pass++; console.log('  ✓ ' + n + (extra ? 
     ok(await p.eval("window.__BH.Screen.current==='game'"), '按「開始第 1 關」進正式遊戲');
     ok(await p.eval("window.__BH.Game.mode==='solo' && (window.__BH.Game.stage===1)"), '進的是第 1 關');
     ok(await p.eval("JSON.parse(localStorage.getItem('bombhero-tut2')||'{}').play===1"), '完成狀態已記錄');
+
+    // 回首頁：按鈕要立刻變「已完成」外觀（不能等重新整理）
+    await p.eval("window.__BH.Screen.show('title')");
+    await sleep(500);
+    const look = await p.eval("(function(){var b=document.getElementById('btnLearn');var t=document.getElementById('learnTag');" +
+      "var s=b.querySelector('small');return JSON.stringify({tagHide:t?t.classList.contains('hide'):null," +
+      "sub:s?s.textContent:'',pulse:b.classList.contains('newbie')});})()");
+    ok(/"tagHide":true/.test(look) && /一步一步帶你玩/.test(look) && /"pulse":false/.test(look),
+      '回首頁：推薦標籤收起、副標改為已完成', look);
+
     ok(await p.eval("(window.__BHB.errs||[]).length===0"), '整段流程沒有 JS 錯誤');
 
     console.log('\n========================================');

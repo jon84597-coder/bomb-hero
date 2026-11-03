@@ -2,8 +2,9 @@
 # v4.48：新手教學（首頁導覽 ＋ 實戰演練 ＋ 功能總覽）
 import io, sys
 
-P = 'index.html'
-s = io.open(P, encoding='utf-8', newline='').read()
+P = 'index.html'            # 產出
+SRC = '_bak_v448_pre.html'  # 乾淨基線（可重複執行）
+s = io.open(SRC, encoding='utf-8', newline='').read()
 orig = s
 
 def rep(old, new, n=1):
@@ -166,7 +167,11 @@ const Tut = (function () {
       let on = false, part = '', i = 0, goal = 0, baseN = 0, flags = {}, doneP = {}, advT = 0, pausedHide = false;
       try { doneP = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { doneP = {}; }
 
-      function saveDone() { try { localStorage.setItem(KEY, JSON.stringify(doneP)); } catch (e) {} }
+      // 進度一變就同步首頁／進度卡（完成後回首頁，按鈕的「推薦先玩」與副標要立刻消失）
+      function saveDone() {
+        try { localStorage.setItem(KEY, JSON.stringify(doneP)); } catch (e) {}
+        try { syncTag(); } catch (e) {}
+      }
       function isDone() { return !!(doneP.home && doneP.play); }
       function syncTag() {
         const tag = $id('learnTag'); if (tag) tag.classList.toggle('hide', isDone());
