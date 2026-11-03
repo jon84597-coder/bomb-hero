@@ -32,10 +32,23 @@ const FIT = process.argv[4] !== 'zoom';
         if (kk === 1) cnt.w1++; else if (kk === 2) cnt.w2++;
       }
     }
+    var art = [];
+    for (var yy = 0; yy < G.rows; yy++) {
+      var row = '';
+      for (var xx = 0; xx < G.cols; xx++) {
+        var gg = G.grid[yy][xx], kk2 = G.wallKind && G.wallKind[yy] ? G.wallKind[yy][xx] : 0;
+        row += (gg !== 1) ? (gg === 0 ? '.' : 's') : (kk2 === 1 ? '#' : kk2 === 2 ? 'H' : 'o');
+      }
+      art.push(row);
+    }
+    window.__ART = art.join(String.fromCharCode(10));
     return { stage: G.stage, T: G.T, cols: G.cols, rows: G.rows, cnt: cnt, foes: (G.enemies || []).length,
              theme: (BH.THEMES[(Math.ceil(G.stage/4)-1)] || {}).name };
   })()`);
   console.log(TAG, JSON.stringify(info));
+  const art = await p.eval('window.__ART');
+  console.log(art);
+  require('fs').writeFileSync(path.join(__dirname, '_v459', 'stage-' + TAG + '.txt'), art);
 
   const r = await p.eval(`(function(){var cv=document.getElementById('cv');var q=cv.getBoundingClientRect();return {l:q.left,t:q.top,w:q.width,h:q.height};})()`);
   const shot = await p.send('Page.captureScreenshot', { format: 'png', clip: { x: r.l, y: r.t, width: r.w, height: r.h, scale: 1 } });

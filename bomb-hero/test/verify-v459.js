@@ -25,7 +25,7 @@ function soloStage(n) {
 // ================================================================
 head('1. 外牆判定：離外框幾格 ＋ 一路到地圖邊（v4.61）');
 {
-  ok(/const wk = \[\], dist = \[\], ed = \[\];/.test(src), '多了一張 ed 表（離外框的距離）');
+  ok(/const wk = \[\], dist = \[\], ed = \[\], conn = \[\];/.test(src), '多了一張 ed 表（離外框幾格）＋ conn 表（有沒有連到外框）');
   ok(!/if \(out\[y\]\[x\] \|\| g\[y\]\[x\] !== 1\) continue;/.test(src), '舊的「連到外框就算外牆」BFS 已移除');
   ok(/if \(d < 2\) q2\.push\(\[x \+ 1, y, d \+ 1\]/.test(src), '外框 BFS 只走 2 步（外牆帶就這麼厚）');
   ok(/let out = ed\[y\]\[x\] >= 0;/.test(src), '外框帶（ed>=0）仍然是外牆');
@@ -34,6 +34,10 @@ head('1. 外牆判定：離外框幾格 ＋ 一路到地圖邊（v4.61）');
   ok(/if \(ax < 0 \|\| ay < 0 \|\| ax >= cols \|\| ay >= rows\) out = true;/.test(src),
      '走到地圖邊 → 外牆；中途撞到空地 → 場內的牆（硬牆）');
   ok(/wk\[y\]\[x\] = out \? 1 : 2;/.test(src), '其餘才是硬牆');
+  ok(/if \(dist\[y\]\[x\] > 1 && conn\[y\]\[x\]\) continue;/.test(src),
+     'v4.61：只有「連到外框的岩體內層」才不畫；場內厚牆的內層照畫（否則中央會露出底色＝破洞）');
+  ok(!/if \(dist\[y\]\[x\] < 0 \|\| dist\[y\]\[x\] > 1\) continue;/.test(src),
+     '舊的「所有牆的內層都不畫」已移除（那條會把場內厚牆挖出洞）');
 }
 
 // ================================================================
@@ -65,6 +69,37 @@ head('2. 實跑：外牆只在外緣、場內還有硬牆（v4.61）');
   ok(badOuter === 0, '場內孤立的岩塊不會被套上外牆素材（' + badOuter + ' 格）');
   ok(rim > 400, '外緣那一圈真的有外牆（' + rim + ' 格）');
   ok(inner > 150, '場內岩層還是硬牆素材（' + inner + ' 格）');
+}
+
+// ================================================================
+head('2b. 32 關掃一遍：不畫的牆格不能形成「封閉破洞」');
+{
+  let closed = 0, worst = '';
+  for (let st = 1; st <= 32; st++) {
+    soloStage(st);
+    const k = G.wallKind || [];
+    if (!k.length) continue;
+    // 從陣列外圍 flood fill「沒畫的牆格」；走不到的 = 被畫好的牆整個包住的洞
+    const seen = [], q = [];
+    for (let y = 0; y < G.rows; y++) {
+      seen.push([]);
+      for (let x = 0; x < G.cols; x++) seen[y].push(G.grid[y][x] !== 1 || k[y][x] !== 0);
+    }
+    for (let x = 0; x < G.cols; x++) { q.push([x, 0]); q.push([x, G.rows - 1]); }
+    for (let y = 0; y < G.rows; y++) { q.push([0, y]); q.push([G.cols - 1, y]); }
+    for (let i = 0; i < q.length; i++) {
+      const x = q[i][0], y = q[i][1];
+      if (x < 0 || y < 0 || x >= G.cols || y >= G.rows) continue;
+      if (seen[y][x]) continue;
+      seen[y][x] = true;
+      q.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+    }
+    for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
+      if (G.grid[y][x] !== 1 || k[y][x] !== 0) continue;
+      if (!seen[y][x]) { closed++; worst = 'st' + st + ' (' + x + ',' + y + ')'; }
+    }
+  }
+  ok(closed === 0, '沒有被封閉的破洞（' + closed + ' 格）' + (worst ? '：' + worst : ''));
 }
 
 // ================================================================
