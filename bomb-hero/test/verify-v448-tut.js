@@ -68,6 +68,22 @@ ok(T.on === false, '教學已關閉');
 ok(G.state === 'idle', '遊戲狀態歸零');
 ok(BH.Screen.current === 'title', '回到首頁');
 
+// ===== v4.50：使用者反映「提示標題縮小後，不知道可以點開」＋「沒教手機捏合縮放」=====
+console.log('\n=== v4.50 提示可點開 / 捏合手勢 ===');
+ok(/id="tutMiniTap"/.test(html), '窄條有「點開」文案節點 #tutMiniTap');
+ok(/<i class="tap">/.test(html), '窄條右端是手指徽章（.tap），不是純 ⌃ 箭頭');
+ok(/@keyframes tapPulse/.test(html), '手指徽章有脈動動畫 tapPulse');
+ok(/id="tutFoldTxt"/.test(html), '收起鍵加了文字 #tutFoldTxt（不是只有 ⌄）');
+ok(/@keyframes miniPeek/.test(html), '第一次收成窄條時有 peek 動畫把注意力帶過去');
+ok(/id="zoomHint"/.test(html), '有捏合手勢提示卡 #zoomHint');
+ok(/class="zh"/.test(html), '縮放百分比旁有小型手勢圖示');
+ok(/@keyframes zfL/.test(html) && /@keyframes zfR/.test(html), '兩根手指有靠攏／分開動畫');
+ok(/bombhero-zoomtip/.test(html), '手勢提示只彈一次（localStorage 記錄）');
+ok(/function showZoomHint/.test(html), '有 showZoomHint()');
+ok(/Game\.state === 'play' && Screen\.current === 'game' && !paused/.test(html),
+  '手勢提示要真正開打、且不在暫停／開場覆蓋層時才彈');
+ok(/typeof Tut === 'undefined' \|\| !Tut\.on/.test(html), '教學中不打擾（第 7 步本來就在教縮放）');
+
 console.log('\n========================================');
 console.log('通過 ' + pass + ' / 失敗 ' + fail);
 process.exit(fail ? 1 : 0);
