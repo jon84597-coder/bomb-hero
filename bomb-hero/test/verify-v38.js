@@ -21,8 +21,7 @@ ok(html.indexOf('id="verTxt">' + P.VERSION) > 0, '徽章版本號同步 ' + P.VE
 console.log('\n=== 1. pkrow 改釘工具列左側 ===');
 ok(/\/\* v3\.2：玩家卡改釘在最上面工具列（navBar）同一條的左側空位[\s\S]*?\.pkrow \{\s*\n\s*position: fixed; top: calc\(5px \+ env\(safe-area-inset-top, 0px\)\); left: 10px;\s*\n\s*z-index: 1100;/.test(html),
    '.pkrow position:fixed，top 對齊 navBar（5px＋safe-area）、left:10px');
-ok(html.indexOf('max-width: calc(100vw - 340px);   /* 讓開右上的工具列按鈕 */') > 0,
-   'max-width 讓開右上工具列按鈕');
+ok(/max-width: calc\(100vw - 340px\);/.test(html), 'max-width 讓開右上工具列按鈕');
 ok(/overflow-x: auto; scrollbar-width: none;\s*\n\s*\}\s*\n\s*\.pkrow::-(webkit-scrollbar) \{ display: none; \}/.test(html) ||
    html.indexOf('.pkrow::-webkit-scrollbar { display: none; }') > 0,
    '超出寬度時列內可橫向捲動且不顯示捲軸');

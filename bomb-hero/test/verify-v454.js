@@ -76,19 +76,18 @@ head('2. 分類規則：外牆一定連到地圖外框，硬牆島一定沒連')
 }
 
 // ================================================================
-head('3. 外牆顏色：由該關硬牆基底混沙金，每關都不一樣');
+head('3. 外牆顏色：每個大關自己一組（th.out），八關都不一樣');
 {
-  const f = P.mixHex;
-  ok(typeof f === 'function', '有 mixHex（顏色混合）');
-  const a = f(P.THEMES[0].hard, '#e8cf9c', .55);
-  const b = f(P.THEMES[5].hard, '#e8cf9c', .55);
-  ok(a !== b, '兩個主題的外牆色不同（' + a + ' vs ' + b + '）');
-  ok(/^rgb\(\d+,\d+,\d+\)$/.test(a), '回傳 rgb() 字串');
-  // 沙色要比原硬牆亮（明度提升）→ 用 RGB 總和粗略比
-  const sum = function (c) { return c.match(/\d+/g).reduce(function (s, v) { return s + (+v); }, 0); };
-  ok(sum(a) > sum('rgb' + P.THEMES[0].hard.slice(3).replace(/^(..)(..)(..)$/, function (m, r, g2, b2) {
-    return '(' + parseInt(r, 16) + ',' + parseInt(g2, 16) + ',' + parseInt(b2, 16) + ')';
-  })), '外牆比原硬牆更亮（沙色）');
+  ok(typeof P.mixHex === 'function', '有 mixHex（顏色混合）');
+  const outs = P.THEMES.map(function (t) { return t.out; });
+  ok(outs.every(function (c) { return /^#[0-9a-f]{6}$/i.test(c || ''); }), '八個主題都有 out 色（' + outs.join(' ') + '）');
+  const uniq = outs.filter(function (c, i) { return outs.indexOf(c) === i; });
+  ok(uniq.length === outs.length, '八個外牆色彼此不同（' + uniq.length + '/' + outs.length + '）');
+  ok(/const base = \(th && \(th\.out \|\| th\.hard\)\)/.test(html), 'drawOuterWall 吃 th.out（不是固定沙金）');
+  ok(!/mixHex\(hard, '#e8cf9c'/.test(html), '舊的「一律混沙金」已移除');
+  // 比硬牆大：往外擴的比例要比 v4.54 的 4.5% 大
+  const e = parseFloat('0.' + (html.match(/const e = T \* \.(\d+);/) || [0, '0'])[1]);
+  ok(e >= .09, '外牆往外擴 ' + Math.round(e * 100) + '%（比硬牆大一點點）');
 }
 
 // ================================================================
@@ -105,7 +104,7 @@ head('5. 分類失效：換地圖 / 縮圈落石');
   ok(G.wallKind === null || G.wallKind, '換關卡後分類會重建');
   P.startSolo(3, false);
   ok(G.wallKind === null || G.wallKind, '再換一關也不會殘留舊表');
-  ok(/Game\.grid = g;\n  Game\.wallKind = null;/.test(html), 'buildOrganicMap 建完圖會清掉分類');
+  ok(/Game\.grid = g;\n[\s\S]{0,120}?Game\.wallKind = null;/.test(html), 'buildOrganicMap 建完圖會清掉分類');
   ok(/Game\.wallKind = null;                   \/\/ v4\.54：落石也會改牆/.test(html), '縮圈落石改格子也會清掉分類');
 }
 

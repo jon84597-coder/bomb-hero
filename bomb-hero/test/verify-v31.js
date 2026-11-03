@@ -20,7 +20,7 @@ ok(html.indexOf('id="verTxt">' + P.VERSION) > 0, '徽章版本號同步 ' + P.VE
 console.log('\n=== 1. 手機橫放：選單重排＋拖曳捲動 ===');
 
 ok(/@media \(orientation: landscape\) \{/.test(html), '有橫式 media query');
-ok(/\/\* ===== v2\.5：手機橫放/.test(html), '橫式版面區塊存在（v2.5 註解）');
+ok(/\/\* v2\.5：手機橫放/.test(html), '橫式版面區塊存在（v2.5 註解）');
 ok(/body\.touch #scr-title \.menu \{\s*\n\s*display: grid; grid-template-columns: repeat\(3, 1fr\);/.test(html),
    '首頁選單改 3 欄（6 個項目兩排放得下）');
 ok(/body\.touch #scr-title \.title-card \.title-logo \{ width: clamp\(160px, min\(86vw, 108vh\), 480px\); \}/.test(html),

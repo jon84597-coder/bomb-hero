@@ -67,16 +67,16 @@ head('2. 對戰／線上配對標「測試版」');
 ok(/id="btnBattle"[^>]*>對戰模式<span class="betaTag">測試版 Beta<\/span>/.test(html), '對戰鈕標測試版 Beta');
 ok(/id="btnOnline"[^>]*>線上配對<span class="betaTag">測試版 Beta<\/span>/.test(html), '線上配對鈕標測試版 Beta');
 ok(/id="btnRpg"[^>]*>RPG 模式<span class="betaTag">測試版 Beta<\/span>/.test(html), 'RPG 鈕原本就有標');
-eq((html.match(/class="betaTag"/g) || []).length, 3, '總共 3 顆測試版標籤');
+eq((html.match(/class="betaTag"/g) || []).length, 4, '總共 4 顆標籤（3 Beta ＋ 大逃殺未開放）');
 
 head('3. 首頁大按鈕：統一外型与四種狀態');
-['btnLearn', 'btnSolo', 'btnRpg', 'btnBoss', 'btnStore', 'btnAcctBig', 'btnBattle', 'btnOnline', 'btnHelp', 'btnSettings', 'btnQuit']
+['btnLearn', 'btnSolo', 'btnRpg', 'btnBoss', 'btnBR', 'btnStore', 'btnAcctBig', 'btnBattle', 'btnOnline', 'btnHelp', 'btnSettings', 'btnQuit']
   .forEach(function (id) {
     const re = new RegExp('<button class="mbtn (c-[a-z]+)[^"]*" id="' + id + '" data-ico="[^"]+"');
     ok(re.test(html), id + ' 有統一 class ＋ data-ico');
   });
-eq((html.match(/data-ico="/g) || []).length, 11, '11 顆按鈕都有 icon');
-eq((html.match(/ has-beta"/g) || []).length, 3, '3 顆測試版按鈕預留標籤空間');
+eq((html.match(/data-ico="/g) || []).length, 12, '12 顆按鈕都有 icon');
+eq((html.match(/class="mbtn[^"]*has-beta/g) || []).length, 4, '4 顆帶標籤的按鈕都預留空間');
 ok(css.indexOf('content: attr(data-ico)') > 0, 'icon 由 ::before 統一產生');
 ok(css.indexOf('#scr-title .menu .mbtn:hover {') > 0, '有滑過狀態');
 ok(css.indexOf('#scr-title .menu .mbtn:active {') > 0, '有按下狀態');

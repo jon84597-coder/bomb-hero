@@ -38,7 +38,7 @@ ok(!src(/max-width: 46%/), '沒有 max-width: 46% 的舊規則');
 ok(!src(/position: absolute; top: 12px; left: 12px/), '沒有 top/left 12px 貼左上角的舊規則');
 ok(!src(/#toast \{[^}]*position: absolute/), '#toast 不再是 absolute');
 ok(src(/#toast \{[^}]*position: fixed/), '#toast 改成 fixed（貼視窗、不隨畫布捲動）');
-ok(src(/\/\* ===== v4\.4：道具／坐騎提示＝輕量 Toast 橫幅/), '有 v4.4 樣式註解');
+ok(src(/\/\* v4\.4：道具／坐騎提示/), '有 v4.4 樣式註解');
 
 // ------------------------------------------------------------------
 console.log('\n=== 2. 橫幅外觀：半透明＋毛玻璃＋細長 ===');

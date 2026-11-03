@@ -19,7 +19,7 @@ ok(html.indexOf('id="verTxt">' + P.VERSION) > 0, '徽章版本號同步 ' + P.VE
 // ================================================================
 console.log('\n=== 1. 坐騎招式鈕（🔥）改到遙控引爆的左邊 ===');
 
-ok(/\/\* v2\.6：坐騎招式（🔥）改排在「遙控引爆」的左邊/.test(html), '有 v2.6 的換位註解');
+ok(/\/\* v2\.6：坐騎招式（🔥）排在遙控引爆左邊/.test(html), '有 v2.6 的換位註解');
 ok(/#touchUI \.tfire \{\s*\n\s*left: var\(--act-left2\); right: var\(--act-right2\); bottom: 126px;/.test(html),
    '🔥 改用自己的偏移變數（--act-left2 / --act-right2），且跟 🧨 同一個 bottom');
 ok(/#touchUI \.tdet \{\s*\n\s*left: var\(--act-left\); right: var\(--act-right\); bottom: 126px;/.test(html),

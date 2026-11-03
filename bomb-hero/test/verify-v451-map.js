@@ -1,6 +1,6 @@
 // v4.51 專屬測試：大型不規則地圖生成器 ＋ 不對外測試關
 //   使用者定調的五條保護一定逐條驗：
-//     ① 出生點半徑 3 內無怪  ② 出生點旁邊不能全是牆  ③ 傳送門周圍至少一格可走
+//     ① 出生點半徑 2 內無怪（v4.55 從 3 改成 2）  ② 出生點旁邊不能全是牆  ③ 傳送門周圍至少一格可走
 //     ④ 不能有硬牆圍出「進不去也炸不開」的空地  ⑤ 至少 2 個「一圈硬牆＋2~3 塊軟磚」怪物房
 const fs = require('fs');
 const { makeEnv, html } = require('./_sandbox');
@@ -121,13 +121,13 @@ const p0 = G.players[0];
 const pc = Math.floor(p0.x / G.T), pr = Math.floor(p0.y / G.T);
 ok(pc === G.spawnCell.x && pr === G.spawnCell.y, '玩家真的站在出生格上');
 
-// ① 出生點半徑 3 內無怪
+// ① 出生點半徑 2 內無怪（v4.55 收窄一格）
 let near = 0;
 G.enemies.forEach(function (e) {
   const ex = Math.floor(e.x / G.T), ey = Math.floor(e.y / G.T);
-  if (Math.abs(ex - G.spawnCell.x) <= 3 && Math.abs(ey - G.spawnCell.y) <= 3) near++;
+  if (Math.abs(ex - G.spawnCell.x) <= 2 && Math.abs(ey - G.spawnCell.y) <= 2) near++;
 });
-eq(near, 0, '① 出生點半徑 3 內沒有怪');
+eq(near, 0, '① 出生點半徑 2 內沒有怪');
 
 // 怪數
 eq(G.enemies.filter(function (e) { return !e.boss; }).length, P.MAPTEST[0].foes, 'T1 場上 6 隻怪');
