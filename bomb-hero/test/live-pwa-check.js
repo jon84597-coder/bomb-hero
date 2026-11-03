@@ -129,11 +129,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok(bee !== null && bee <= 40, '毒蜂第 1 關速度已降（' + bee + '，原本 58.6）');
 
   console.log('\n=== 7. 帳號彈窗的密碼眼睛 ===');
+  // v4.61：帳號小卡是「登入狀態解析完」才動態注入的 → 先等它出現（Pages 會比 Render 慢）
+  for (let i = 0; i < 30; i++) {
+    const ready = await evalJs(`!!document.querySelector('[data-acct="open"], #acctBtn, #btnAcctBig') || !!(window.__BH.Acct && window.__BH.Acct.open)`);
+    if (ready) break;
+    await sleep(200);
+  }
   const opened = await evalJs(`(function(){
     try {
       if (window.__BH.Acct && window.__BH.Acct.open) { window.__BH.Acct.open(); return 'acct.open'; }
     } catch (e) {}
-    var b = document.querySelector('[data-acct="open"], #acctBtn');
+    var b = document.querySelector('[data-acct="open"], #acctBtn, #btnAcctBig');
     if (b) { b.click(); return 'click'; }
     return 'none';
   })()`);
