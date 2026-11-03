@@ -266,7 +266,8 @@ head('9. 小怪變多、血量回升、AI 更聰明');
     'v4.36：小怪量改成隨關卡平滑成長（4 + stage × .25）');
   ok(/Math\.min\(FOE_MAX_LIVE, Math\.round\(base \* diff\.enemy/.test(css),
     '每場都夾在 FOE_MAX_LIVE（12 隻）以內');
-  ok(/Math\.round\(\(7 \+ stage \* \.95\)/.test(css), 'RPG 小怪量公式也往上調');
+  ok(/Math\.round\(Math\.round\(4 \+ stage \* \.25\)/.test(css),
+    'v4.69：RPG 小怪量改成跟單人同一條曲線（4 + stage×.25；隨機地圖模式用 T 圖的怪量）');
   ok(P.FOE_HP.slime === 3 && P.FOE_HP.beetle === 4 && P.FOE_HP.lizard === 5, 'RPG 血量回升（3／4／5）');
   ok(P.FOE_HP.bat === 3 && P.FOE_HP.eye === 4, '飛行怪血量也回升');
   const liz = P.ENEMY_SPECIES.filter(function (s) { return s.id === 'lizard'; })[0];

@@ -730,6 +730,7 @@ function relayPub(room) {
     phase: room.phase,
     host: room.host,
     count: room.count,
+    teams: room.teams | 0,
     roster: room.roster.map(function (p) {
       return { pid: p.pid, name: p.name, ch: p.ch, slot: p.slot, entry: p.entry, host: p.pid === room.host };
     })
@@ -758,7 +759,7 @@ function handleRelayCreate(body, res) {
   // v4.15：房主可以設 2～8 人（原本只收 4／8）
   const count = clampCount(body.count);
   const room = {
-    id: code, created: Date.now(), host: pid, phase: 'wait', count: count,
+    id: code, created: Date.now(), host: pid, phase: 'wait', count: count, teams: 0,
     roster: [{ pid: pid, name: name, ch: 0, slot: 0, entry: 1, lastSeen: Date.now() }],
     snap: null, v: 1, inputs: {}
   };
@@ -830,6 +831,7 @@ function handleRelayPush(body, res) {
     });
   }
   if (typeof body.count === 'number') room.count = clampCount(body.count);
+  if (typeof body.teams === 'number') room.teams = [0, 2, 3, 4].indexOf(body.teams | 0) >= 0 ? (body.teams | 0) : 0;
   if (body.snap) { room.snap = body.snap; }
   room.v++;
   sendJSON(res, 200, { ok: true, v: room.v });

@@ -113,8 +113,8 @@ head('3. 場內硬岩柱：打散擺、不堵走道');
     '柱子數量跟著空地走（關卡圖不變：空地 11%，2~10 根；v4.66 只有隨機大圖改成 18%）');
   ok(/for \(let dy = -1; dy <= 1 && ok2; dy\+\+\)[\s\S]{0,160}g\[py2 \+ dy\]\[px2 \+ dx\] !== 0/.test(src),
     '3×3 全空才放 → 一定散得開、也不會堵死走道');
-  ok(/if \(Math\.abs\(px2 - sp\.x\) < 3 && Math\.abs\(py2 - sp\.y\) < 3\) continue;/.test(src),
-    '出生點 3 格內不放柱子');
+  ok(/if \(Math\.abs\(px2 - sp\.x\) < 2 && Math\.abs\(py2 - sp\.y\) < 2\) continue;/.test(src),
+    'v4.69：出生點半徑 1 內不放柱子（第 2 格起就可以有牆，使用者要求）');
 
   let withPillar = 0, total = 0, minWalk = 999;
   for (let st = 1; st <= 8; st++) {
