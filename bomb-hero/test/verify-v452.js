@@ -1,7 +1,7 @@
 // test/verify-v452.js —— v4.52：首頁按鈕統一 ＋ 四項玩法修正
 //   ① 隨從 5000 金幣（含 10 國語系）  ② 對戰／線上配對標測試版
 //   ③ 首頁大按鈕統一外型＋四態（一般／滑過／按下／發亮）  ④ 首頁移除操作提示白框
-//   ⑤ 拳擊打彈真的越過牆壁飛到對面  ⑥ 推車丟軟磚也繼續彈  ⑦ 輸送帶馬上帶走推車炸彈
+//   ⑤ 拳擊打彈跨過一道牆就落地（v4.53）  ⑥ 推車丟軟磚也繼續彈  ⑦ 輸送帶馬上帶走推車炸彈
 //   ⑧ 火焰／隨從都會破壞骷髏頭（其他道具不破壞）
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
@@ -99,23 +99,33 @@ ok(titleBlock.indexOf('class="menu"') > 0, '選單還在');
 
 ok(css.indexOf('.title-card .hint { display: none; }') > 0, '舊的矮螢幕隱藏規則保留（v22 基線）');
 
-head('5. 拳擊打彈：越過牆壁飛到最遠空地');
+head('5. 拳擊打彈：跨過一道牆就落地（v4.53 改手感）');
 {
   const pl = soloStage(1);
   clearAll();
   pl.punch = true; pl.kick = false; pl.alive = true; pl.dizzy = 0; pl.skull = null;
-  G.grid[5][7] = 1; G.grid[5][10] = 2;                 // 石牆 ＋ 軟磚
+  G.grid[5][5] = 1;                                    // 炸彈右邊第一格是石牆
   pl.x = 4.5 * T; pl.y = 5.5 * T;
   P.placeBomb(pl);
   const bomb = G.bombs[G.bombs.length - 1];
   pl.x = 3.5 * T;
   const okp = P.punchBomb(pl, 'right');
   ok(okp === true, '拳擊有打出去');
-  eq(bomb.cx, G.cols - 2, '炸彈飛到最右邊的內圈格（越過石牆與軟磚）');
+  eq(bomb.cx, 6, '跨過一道石牆就落在牆後那一格');
   eq(bomb.cy, 5, '同一列');
   const path = bomb.flying ? bomb.flying.path : [];
-  ok(path.length >= 9, '飛行路徑是一格一格跳（' + path.length + ' 節點）');
-  ok(path.filter(function (q) { return q.w; }).length === 2, '兩格障礙標記為「要跳過去」');
+  ok(path.filter(function (q) { return q.w; }).length === 1, '只有這一格障礙標記為「要跳過去」');
+}
+{
+  const pl = G.players[0];
+  clearAll();
+  G.grid[5][5] = 1; G.grid[5][6] = 2; G.grid[5][7] = 1;   // 連三道牆
+  pl.x = 4.5 * T; pl.y = 5.5 * T;
+  P.placeBomb(pl);
+  const bomb = G.bombs[G.bombs.length - 1];
+  pl.x = 3.5 * T;
+  P.punchBomb(pl, 'right');
+  eq(bomb.cx, 8, '三連牆一路彈過去，落在第 8 格');
 }
 {
   const pl = G.players[0];
@@ -125,9 +135,8 @@ head('5. 拳擊打彈：越過牆壁飛到最遠空地');
   const bomb = G.bombs[G.bombs.length - 1];
   pl.x = 2.5 * T;
   P.punchBomb(pl, 'right');
-  ok(bomb.cx > 4, '沒有牆時也不會只飛一格（飛到 ' + bomb.cx + '）');
+  eq(bomb.cx, 4, '前面沒牆就只飛一格（不再一路滑到底）');
 }
-
 head('6. 推車：丟到軟磚也要再彈一格');
 {
   const pl = G.players[0];
