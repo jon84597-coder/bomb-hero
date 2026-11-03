@@ -23,7 +23,9 @@ function ok(c, n, extra) { if (c) { pass++; console.log('  ✓ ' + n + (extra ? 
     await p.eval("document.getElementById('btnLearn').click()");
     await sleep(400);
     ok(await p.eval("window.__BH.Screen.current==='learn'"), '點「新手教學」進教學主頁');
-    ok(await p.eval("document.querySelectorAll('#learnChapters details').length===8"), '功能總覽 8 章都渲染出來');
+    const chN = await p.eval("window.__BH.Tut.CH.length");
+    ok(await p.eval("document.querySelectorAll('#learnChapters details').length===" + chN),
+      '功能總覽 ' + chN + ' 章都渲染出來');
     await p.eval("document.getElementById('btnTourAll').click()");
     await sleep(700);
     ok(await part() === 'home', '開始首頁導覽');
@@ -69,7 +71,16 @@ function ok(c, n, extra) { if (c) { pass++; console.log('  ✓ ' + n + (extra ? 
 
     await p.eval("document.getElementById('tutNext').click()");
     await sleep(500);
-    ok(await step() === 6, '進第 7 步（踢彈）');
+    ok(await step() === 6, '進第 7 步（放大縮小）');
+
+    // 第 7 步：縮放（使用者反映「很多人不知道可以縮放」）
+    await p.eval("window.__BH.Zoom.by(0.14)");
+    await sleep(1400);
+    ok(Math.abs(await p.eval("window.__BH.Game.zoomTarget - 1")) > .02,
+      '畫面已縮放（' + (await p.eval("Math.round(window.__BH.Game.zoomTarget*100)")) + '%）');
+    ok(await step() === 7, '縮放 → 進第 8 步（踢彈）', await title());
+    await p.eval("window.__BH.Zoom.reset()");
+    await sleep(400);
     ok(await p.eval("window.__BH.Game.players[0].kick===true"), '自動送踢彈鞋');
 
     // 踢彈：炸彈放 (3,1)、人站 (2,1) 往右踢
@@ -82,7 +93,7 @@ function ok(c, n, extra) { if (c) { pass++; console.log('  ✓ ' + n + (extra ? 
     const kicked = await p.eval("(function(){var BH=window.__BH,G=BH.Game;return BH.kickBomb(G.players[0],'right');})()");
     ok(kicked === true, '踢彈函式回 true');
     await sleep(1400);
-    ok(await step() === 7, '踢走炸彈 → 進第 8 步（遙控）', await title());
+    ok(await step() === 8, '踢走炸彈 → 進第 9 步（遙控）', await title());
     ok(await p.eval("window.__BH.Game.players[0].remote===true"), '自動送遙控器');
 
     // 遙控：放一顆，走遠，引爆
@@ -92,23 +103,35 @@ function ok(c, n, extra) { if (c) { pass++; console.log('  ✓ ' + n + (extra ? 
     await sleep(400);
     await p.eval("window.__BH.detonateRemote(window.__BH.Game.players[0])");
     await sleep(1300);
-    ok(await step() === 8, '引爆 → 進第 9 步（打怪）', await title());
+    ok(await step() === 9, '引爆 → 進第 10 步（手套搬彈）', await title());
+
+    // 第 10 步：手套搬彈穿牆（使用者反映「沒教到」）
+    ok(await p.eval("window.__BH.Game.players[0].glove===true"), '自動送搬彈手套');
+    ok(await p.eval("window.__BH.Game.bombs.length>=1"), '腳下已先放好一顆可撿的炸彈');
+    const pick = await p.eval("(function(){var B=window.__BH,p=B.Game.players[0];" +
+      "var okp=B.tryGlovePickup(p);return JSON.stringify({ok:okp,carry:!!p.carry});})()");
+    ok(/"ok":true/.test(pick) && /"carry":true/.test(pick), '撿起炸彈', pick);
+    await p.eval("window.__BH.throwCarried(window.__BH.Game.players[0])");
+    await sleep(1400);
+    ok(await step() === 10, '丟出炸彈 → 進第 11 步（打小怪）', await title());
+    ok(await p.eval("window.__BH.Game.players[0].glove===false && window.__BH.Game.players[0].remote===false"),
+      '教學道具已收回（炸彈恢復 2.4 秒自爆）');
     ok(await p.eval("window.__BH.Game.enemies.length>=1"), '場上有小怪');
 
     // 打怪：直接把小怪標記死亡，讓主迴圈清掉
     await p.eval("(function(){var G=window.__BH.Game;G.enemies.forEach(function(e){e.dead=true;});})()");
     await sleep(1400);
-    ok(await step() === 9, '炸掉小怪 → 進第 10 步（找出口）', await title());
+    ok(await step() === 11, '炸掉小怪 → 進第 12 步（找出口）', await title());
 
     // 找門：把 (10,8) 的軟磚炸開
     await p.eval("(function(){var G=window.__BH.Game;G.grid[8][10]=0;if(G.hidden['8,10']==='door'){delete G.hidden['8,10'];G.door.revealed=true;}})()");
     await sleep(1300);
-    ok(await step() === 10, '找到出口 → 進第 11 步（走進門）', await title());
+    ok(await step() === 12, '找到出口 → 進第 13 步（走進門）', await title());
 
     // 走進門：直接呼叫門的判定（模擬玩家踩到門）
     await p.eval("(function(){var G=window.__BH.Game,T=G.T,p=G.players[0];p.x=G.door.x*T+T/2;p.y=G.door.y*T+T/2;})()");
     await sleep(1500);
-    ok(await step() === 11, '走進門 → 進最後一步（完成）', await title());
+    ok(await step() === 13, '走進門 → 進最後一步（完成）', await title());
     ok(await p.eval("window.__BH.Game.state==='play'"), '教學中不會進結算畫面');
     await p.shot(path.join(__dirname, '_v448', 'e2e-end.png'));
 

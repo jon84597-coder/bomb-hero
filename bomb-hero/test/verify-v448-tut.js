@@ -9,8 +9,13 @@ function ok(c, n) { if (c) { pass++; console.log('  ✓ ' + n); } else { fail++;
 console.log('=== 1. 模組與入口 ===');
 ok(!!T, 'Tut 模組存在');
 ok(Array.isArray(T.HOME) && T.HOME.length >= 12, '首頁導覽步驟 ' + (T.HOME || []).length + ' 步（≥12）');
-ok(Array.isArray(T.PLAY) && T.PLAY.length >= 10, '實戰步驟 ' + (T.PLAY || []).length + ' 步（≥10）');
-ok(Array.isArray(T.CH) && T.CH.length === 8, '功能總覽 8 章');
+ok(Array.isArray(T.PLAY) && T.PLAY.length >= 14, '實戰步驟 ' + (T.PLAY || []).length + ' 步（≥14）');
+ok(Array.isArray(T.CH) && T.CH.length >= 9, '功能總覽 ' + (T.CH || []).length + ' 章（≥9）');
+// v4.49：使用者反映「沒教縮放／手套穿牆／推車集氣」→ 這幾項一定要在資料裡
+ok((T.PLAY || []).some(function (x) { return x.key === 'zoom'; }), '實戰有「放大縮小」步驟');
+ok((T.PLAY || []).some(function (x) { return x.key === 'glove' && x.give === 'glove'; }), '實戰有「手套搬彈」步驟（會送手套）');
+ok(JSON.stringify(T.CH || []).indexOf('推車') >= 0, '功能總覽有講推車集氣');
+ok(JSON.stringify(T.CH || []).indexOf('捏合') >= 0, '功能總覽有講手機兩指捏合');
 ok(/id="btnLearn"/.test(html), '首頁有 #btnLearn');
 ok(/id="scr-learn"/.test(html), '有教學主頁 #scr-learn');
 ok(/id="tutMask"/.test(html) && /id="tutCard"/.test(html), '有遮罩與說明卡');
