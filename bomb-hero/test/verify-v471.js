@@ -117,13 +117,14 @@ console.log('\n=== 7. 新關卡把極端縮放收回 100% ===');
 console.log('\n=== 8. 版本 ===');
 (function () {
   const v = (src.match(/const VERSION = '([^']+)'/) || [])[1];
-  ok(v === '4.71', 'VERSION = 4.71（實際 ' + v + '）');
-  ok(/id="verTxt">4\.71<\/span>/.test(src), '首頁版本文字同步（verTxt = 4.71）');
-  ok(/id="verLogVer">4\.71<\/span>/.test(src), '版本紀錄標題同步（verLogVer = 4.71）');
-  ok(/\{ v: '4\.71', date: '[^']+', now: true/.test(src), 'VERSION_LOG 第一筆是 4.71 且 now:true');
+  // v4.71 之後版本還會往上加 → 只驗「有沒有跟上 4.71 以上」，不鎖死版號
+  ok(parseFloat(v) >= 4.71, 'VERSION ≥ 4.71（實際 ' + v + '）');
+  ok(new RegExp('id="verTxt">' + v.replace('.', '\\.') + '<\\/span>').test(src), '首頁版本文字同步（' + v + '）');
+  ok(new RegExp('id="verLogVer">' + v.replace('.', '\\.') + '<\\/span>').test(src), '版本紀錄標題同步（' + v + '）');
+  ok(/\{ v: '4\.71', date: '[^']+', now: false/.test(src), 'VERSION_LOG 收了 4.71（後續版本已接手 now:true）');
   const sw = require('fs').readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const m = sw.match(/SW_VERSION = '([^']+)'/);
-  ok(m && m[1] === 'v4.71.0', 'sw.js = v4.71.0（實際 ' + (m && m[1]) + '）');
+  ok(m && /^v4\.\d+\.0$/.test(m[1]), 'sw.js 版本格式正確且已升版（實際 ' + (m && m[1]) + '）');
 })();
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v4.71：' + pass + ' 通過 / ' + fail + ' 失敗');
