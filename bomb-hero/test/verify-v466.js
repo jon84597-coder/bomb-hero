@@ -18,7 +18,8 @@ function ok(cond, name, extra) {
 
   // ================= 1. 版本 / 靜態 =================
   console.log('[1] 版本與關鍵程式碼');
-  ok(/const VERSION = '4\.66';/.test(SRC), 'VERSION = 4.66');
+  const vv = SRC.match(/const VERSION = '([\d.]+)';/);
+  ok(vv && parseFloat(vv[1]) >= 4.66, 'VERSION >= 4.66（目前 ' + (vv && vv[1]) + '，不寫死版號）');
   ok(SRC.includes('const NET_SNAP_DT = .1;'), '快照間隔常數 NET_SNAP_DT');
   ok(/function humanMoveDirs\(p, dirs, dt\)/.test(SRC), '走路邏輯抽成 humanMoveDirs（單機／客人共用）');
   ok(/humanMoveDirs\(p, dirs, dt\);\n  if \(dirs\.length\) \{/.test(SRC), 'controlHuman 改用 humanMoveDirs');

@@ -58,7 +58,7 @@ ok(P.FLY_SPEED_CAP === 78, 'FLY_SPEED_CAP = 78（原本 118）', P.FLY_SPEED_CAP
 ok(P.FLY_SPEED_CAP < 146, '上限 78 < 玩家基礎 146 → 玩家一定跑得掉');
 ok(src(/speed: \(sp\.spd \+ stage \* \(sp\.kind === 'fly' \? 1\.2 : 2\.6\)\) \* M/),
   '飛行怪成長斜率 2.6 → 1.2，地面怪維持 2.6');
-ok(src(/if \(sp\.kind === 'fly'\) e\.speed = Math\.min\(e\.speed, FLY_SPEED_CAP \* M\);/),
+ok(src(/if \(sp\.kind === 'fly'\) e\.speed = Math\.min\(e\.speed, FLY_SPEED_CAP \* M \* \(Game\.spdK \|\| 1\)\);/),
   '封頂邏輯仍保留');
 
 (function () {

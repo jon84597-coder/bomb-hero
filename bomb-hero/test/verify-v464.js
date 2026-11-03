@@ -58,8 +58,9 @@ head('1. 換地圖一定會重算牆分類（源碼）');
     'render 除了「沒算過」，尺寸對不上也會重算（換圖忘記清也不會掉圖）');
   ok(/Game\.wallSize = cols \+ 'x' \+ rows;/.test(src), 'markWallKinds 會記下自己是給多大的圖算的');
   ok(/Game\.sdRock\[c\[1\] \* Game\.cols \+ c\[0\]\] = 1;/.test(src), '縮圈落石會記進 sdRock');
-  ok(/const rock = \(sdRock && sdRock\[y \* cols \+ x\]\) \|\| Game\.sdActive;/.test(src),
-    '縮圈落石（含縮圈後的外圍岩層）一律整片畫，不會露出一片背景色');
+  // v4.67：改成「連到外框的岩體整片畫、場內硬牆保持石材」——素材不再被 sdActive 整片蓋掉
+  ok(/const mass = rock \|\| \(Game\.sdActive && conn\[y\]\[x\]\);/.test(src),
+    '縮圈期間外圍岩體整片畫（不會露出一片背景色），場內硬牆仍用石材');
 }
 
 // ================================================================

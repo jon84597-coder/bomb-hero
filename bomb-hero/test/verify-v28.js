@@ -106,7 +106,7 @@ ok(/@media \(max-width: 520px\)[\s\S]{0,200}#btnFull b, #btnMail b \{ display: n
 console.log('\n=== 2. 飛行怪物比玩家慢 ===');
 
 ok(P.FLY_SPEED_CAP === 78, 'v4.7 飛行怪速度上限 FLY_SPEED_CAP = 78');
-ok(/if \(sp\.kind === 'fly'\) e\.speed = Math\.min\(e\.speed, FLY_SPEED_CAP \* M\);/.test(html),
+ok(/if \(sp\.kind === 'fly'\) e\.speed = Math\.min\(e\.speed, FLY_SPEED_CAP \* M \* \(Game\.spdK \|\| 1\)\);/.test(html),
   '飛行怪一律封頂（不會隨關卡越飛越快追著你跑）');
 const PLAYER_BASE = 146;                      // playerSpeed() 的基礎值
 ok(P.FLY_SPEED_CAP < PLAYER_BASE, '上限 78 < 玩家基礎 146 → 一定比玩家慢');

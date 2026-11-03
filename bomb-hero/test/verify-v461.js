@@ -101,7 +101,8 @@ head('3. 消失中碰不到人（以前站在隱形怪身上就直接死）');
   p.x = e.x; p.y = e.y;                    // 就站在牠原本的位置上
   P.updateSolo(1 / 60);
   ok(p.alive === true, '隱形／鑽地中站在牠身上也不會死');
-  ok(/if \(e\.blinkT > 0\) continue;/.test(src), '碰撞判定有跳過消失中的小怪');
+  ok(/if \(e\.blinkT > 0 \|\| e\.emergeT > 0\) continue;/.test(src),
+    '碰撞判定有跳過消失中（v4.67 再加上「剛冒出」）的小怪');
 
   const p2 = soloStage(1); openField();
   const e2 = onlyFoe('imp', 5, 5);
