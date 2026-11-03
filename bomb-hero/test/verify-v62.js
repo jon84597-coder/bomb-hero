@@ -1,5 +1,5 @@
 // test/verify-v62.js —— v4.17
-//   ① 商店開放：三種隨從各 1000 金幣（金幣、購買、已擁有、餘額不足）
+//   ① 商店開放：三種隨從各 5000 金幣（v4.52 調漲）（金幣、購買、已擁有、餘額不足）
 //   ② 隨從：跟隨 / 怪物 2 格才動手 / 三種行為 / 單人一擊倒（格檔三下）/ RPG 有 HP
 //   ③ 隨從倒地 → 哭臉＋Help → 主角靠近 5 秒救回
 //   ④ 隨從只出現在單人／RPG，對戰不會有
@@ -43,9 +43,9 @@ function addFoe(x, y, type) {
 }
 
 // ================================================================
-head('1. 商店：三種隨從各 1000');
+head('1. 商店：三種隨從各 5000');
 ok(Array.isArray(P.PET_KINDS) && P.PET_KINDS.length === 3, '三種隨從（實測 ' + P.PET_KINDS.length + '）');
-ok(P.PET_KINDS.every(function (k) { return k.price === 1000; }), '每一隻都是 1000 金幣');
+ok(P.PET_KINDS.every(function (k) { return k.price === 5000; }), '每一隻都是 5000 金幣（v4.52 調漲）');
 ok(P.PET_KINDS.map(function (k) { return k.key; }).join(',') === 'blade,bomber,guard',
   '順序：刀客 / 投彈 / 格檔（' + P.PET_KINDS.map(function (k) { return k.key; }).join(',') + '）');
 ok(css.indexOf('id="scr-shop"') > 0, '有商店畫面 #scr-shop');
@@ -59,21 +59,21 @@ ok(P.Shop.gold() === 0, '重置後金幣 0');
 {
   const r0 = P.Shop.buy('blade');
   ok(r0.ok === false && r0.err === 'GOLD', '沒錢不能買（' + r0.err + '）');
-  P.Shop.addGold(2500);
-  ok(P.Shop.gold() === 2500, '加金幣 → 2500');
+  P.Shop.addGold(12000);
+  ok(P.Shop.gold() === 12000, '加金幣 → 12000');
   const r1 = P.Shop.buy('blade');
   ok(r1.ok === true, '買刀客成功');
-  ok(P.Shop.gold() === 1500, '扣 1000 → 1500（' + P.Shop.gold() + '）');
+  ok(P.Shop.gold() === 7000, '扣 5000 → 7000（' + P.Shop.gold() + '）');
   const r2 = P.Shop.buy('blade');
   ok(r2.ok === false && r2.err === 'OWNED', '同一種不能買第二次（' + r2.err + '）');
   const r3 = P.Shop.buy('bomber');
-  ok(r3.ok === true && P.Shop.gold() === 500, '買投彈 → 剩 500');
+  ok(r3.ok === true && P.Shop.gold() === 2000, '買投彈 → 剩 2000');
   const r4 = P.Shop.buy('guard');
-  ok(r4.ok === false && r4.err === 'GOLD' && r4.need === 500, '錢不夠時告訴你還差多少（' + r4.need + '）');
+  ok(r4.ok === false && r4.err === 'GOLD' && r4.need === 3000, '錢不夠時告訴你還差多少（' + r4.need + '）');
   ok(P.Shop.active().length === 2, '目前擁有 2 隻隨從');
   ok(P.Shop.active().every(function (o) { return typeof o.ch === 'number' && o.ch >= 0 && o.ch < 8; }),
     '每隻都有隨機動物外觀（0~7）');
-  P.Shop.addGold(1000);
+  P.Shop.addGold(3000);
   ok(P.Shop.buy('guard').ok === true && P.Shop.active().length === 3, '補錢之後買滿三隻');
 }
 

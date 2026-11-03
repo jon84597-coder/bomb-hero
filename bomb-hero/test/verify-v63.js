@@ -25,9 +25,9 @@ head('1. 開發者金幣無限');
   CloudRef.isDev = function () { return false; };
   ok(P.Shop.dev() === false, '一般玩家 dev() = false');
   P.Shop.reset();
-  P.Shop.addGold(1500);
+  P.Shop.addGold(5000);
   const r0 = P.Shop.buy('blade');
-  ok(r0.ok === true && P.Shop.gold() === 500, '一般玩家照規矩扣錢（1500 − 1000 = 500）');
+  ok(r0.ok === true && P.Shop.gold() === 0, '一般玩家照規矩扣錢（5000 − 5000 = 0）');
   P.Shop.reset();
 
   CloudRef.isDev = function () { return true; };

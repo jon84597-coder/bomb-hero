@@ -16,7 +16,7 @@ ok(/^\d+\.\d+$/.test(P.VERSION), 'VERSION 格式正確（' + P.VERSION + '）');
 ok(html.indexOf('id="verTxt">' + P.VERSION) > 0, '徽章版本號同步 ' + P.VERSION);
 
 console.log('\n=== 1. 首頁：RPG 模式鈕（含 Beta 標籤）===');
-ok(/<button class="mbtn rpgbtn" id="btnRpg">/.test(html), '有「RPG 模式」選單鈕（rpgbtn）');
+ok(/<button class="mbtn c-rpg[^"]*" id="btnRpg"/.test(html), '有「RPG 模式」選單鈕（c-rpg）');
 ok(/class="betaTag">測試版 Beta</.test(html) || html.indexOf('測試版 Beta') > 0, '按鈕標示「測試版 Beta」');
 ok(/\.mbtn\.rpgbtn \.betaTag \{/.test(html), 'Beta 標籤有樣式');
 

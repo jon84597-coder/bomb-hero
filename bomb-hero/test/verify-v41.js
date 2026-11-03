@@ -24,7 +24,7 @@ ok(/v3\.5：改成 let/.test(html), '有 v3.5 註解說明為什麼改');
 console.log('\n=== 2. 頁面骨架 ===');
 ok(/<div class="screen" id="scr-help">/.test(html), '有 #scr-help 畫面');
 ok(/id="helpTabs"/.test(html) && /id="helpBody"/.test(html), '有分頁列與內容區');
-ok(/<button class="mbtn helpbtn" id="btnHelp">/.test(html), '首頁有「📖 遊戲說明」按鈕');
+ok(/<button class="mbtn [a-z-]+" id="btnHelp" data-ico="📖">/.test(html), '首頁有「📖 遊戲說明」按鈕（v4.52 icon 走 data-ico）');
 ok(cnt(html, /data-ht="/g) === 6, '6 個分頁按鈕（basic/item/ride/stage/foe/tip）');
 ok(/id="scr-help"[\s\S]{0,900}data-back="1"/.test(html), '說明頁有「← 回主選單」');
 

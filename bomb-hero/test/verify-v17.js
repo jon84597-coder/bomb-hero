@@ -171,7 +171,9 @@ ok(onRay17 && dist17 >= 1 && dist17 <= want17 + BH.CART_BOUNCE_MAX,
 // v4.41：撞到石牆就停 —— 落點前面不能有石牆，落點自己也不能是石牆
 ok(b.onWall === (G.grid[b.cy][b.cx] === 1), '牆上的落點有標 onWall（畫在牆頂）',
   'cell=' + G.grid[b.cy][b.cx] + ' onWall=' + b.onWall);
-ok(dist17 <= 3, '距離不超過 3 格（石牆不再讓它多飛）', dist17);
+// v4.52：軟磚也會彈跳 → 上限改成「集氣距離 + 彈跳上限」，不再是死板的 3 格
+ok(dist17 <= want17 + BH.CART_BOUNCE_MAX, '距離不超過 集氣距離＋彈跳上限 ' +
+  (want17 + BH.CART_BOUNCE_MAX) + ' 格', dist17);
 // 推車人（aiP 自己在外圈）不會被瞄準：落點一定在內場
 ok(b.cx >= 1 && b.cy >= 1 && b.cx <= G.cols - 2 && b.cy <= G.rows - 2, '落點在內場（不會丟在外圈推車區）');
 // 人類玩家（非 AI）走舊規則：朝場內丟

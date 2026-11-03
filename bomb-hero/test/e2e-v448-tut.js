@@ -148,7 +148,7 @@ function ok(c, n, extra) { if (c) { pass++; console.log('  ✓ ' + n + (extra ? 
     const look = await p.eval("(function(){var b=document.getElementById('btnLearn');var t=document.getElementById('learnTag');" +
       "var s=b.querySelector('small');return JSON.stringify({tagHide:t?t.classList.contains('hide'):null," +
       "sub:s?s.textContent:'',pulse:b.classList.contains('newbie')});})()");
-    ok(/"tagHide":true/.test(look) && /一步一步帶你玩/.test(look) && /"pulse":false/.test(look),
+    ok(/"tagHide":true/.test(look) && /想複習再玩一次/.test(look) && /"pulse":false/.test(look),
       '回首頁：推薦標籤收起、副標改為已完成', look);
 
     ok(await p.eval("(window.__BHB.errs||[]).length===0"), '整段流程沒有 JS 錯誤');

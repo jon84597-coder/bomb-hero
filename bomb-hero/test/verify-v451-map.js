@@ -46,8 +46,8 @@ function borderOk(g) {
 }
 
 console.log('\n=== 0. 版本與匯出 ===');
-eq(P.VERSION, '4.51', 'VERSION 是 4.51');
-ok(/id="verTxt">4\.51/.test(html), '徽章版本同步 4.51');
+ok(/^\d+\.\d+$/.test(P.VERSION), 'VERSION 格式正確（' + P.VERSION + '）');
+ok(html.indexOf('id="verTxt">' + P.VERSION) > 0, '徽章版本同步 ' + P.VERSION);
 eq(typeof P.bigGrid, 'function', 'bigGrid 已匯出');
 eq(typeof P.startMapTest, 'function', 'startMapTest 已匯出');
 eq(P.MAPTEST.length, 5, '測試關 5 檔');
@@ -204,11 +204,11 @@ ok(/id="mapTestRow"/.test(html), '說明頁有測試關入口容器');
 ok(/q\.get\('maptest'\)/.test(html), '支援 ?maptest=N 直開');
 
 console.log('\n=== 8. 版本 ===');
-eq(P.VERSION_LOG[0].v, '4.51', 'VERSION_LOG 第一筆是 4.51');
+ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆就是當前版本');
 ok(P.VERSION_LOG[0].now === true, '第一筆 now = true');
 ok(P.VERSION_LOG[0].items.length >= 3, '本版寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
 ok(P.VERSION_LOG[1].now === false, '上一版已取消 now');
-ok(fs.readFileSync(__dirname + '/../sw.js', 'utf8').indexOf('v4.51.0') >= 0, 'sw.js = v4.51.0');
+ok(fs.readFileSync(__dirname + '/../sw.js', 'utf8').indexOf('v' + P.VERSION + '.0') >= 0, 'sw.js 跟著版本升（v' + P.VERSION + '.0）');
 
 console.log('\n========================================');
 console.log('v4.51 地圖生成：' + pass + ' 通過 / ' + fail + ' 失敗');
