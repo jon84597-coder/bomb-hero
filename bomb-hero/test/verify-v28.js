@@ -189,7 +189,7 @@ console.log('\n=== 4. 標題：拿掉大光暈，改成字型外凸的紅底形�
 ok(!/repeating-conic-gradient/.test(html), '一整圈的放射狀光芒已完全移除');
 ok(!/@keyframes bh-rays/.test(html), '旋轉光芒的動畫也移除');
 ok(!/content: attr\(data-t\)/.test(html) && !/paint-order: stroke fill/.test(html), 'v2.1：紅底外凸層（data-t 複本）已整個移除');
-ok(/<img class="title-logo" id="titleLogo"[^>]*src="data:image\/png;base64,/.test(html), 'v2.1：標題換成美術 LOGO 圖（data URI 內嵌）');
+ok(/<img class="title-logo" id="titleLogo"[^>]*src="data:image\/(webp|png);base64,/.test(html), 'v2.1：標題換成美術 LOGO 圖（data URI 內嵌）');
 ok(/\.title-logo \{[^}]*width: clamp\(250px, 64vw, 560px\)/.test(html), 'v2.1：LOGO 桌面寬度 clamp(250px, 64vw, 560px)');
 ok(html.indexOf('width: clamp(220px, 95vw, 500px); max-width: none;') > 0, 'v2.8：手機直放 LOGO 放大到 95vw（快貼齊左右邊）');
 ok(!/title-en/.test(html) && !/title-zh/.test(html), 'v2.1：舊文字標題的 class 全部清除');

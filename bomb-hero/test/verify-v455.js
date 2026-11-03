@@ -67,43 +67,40 @@ head('1. 外牆顏色：八個大關各一組（th.out）');
 }
 
 // ================================================================
-head('2. 外牆只在外框：場內岩層用硬牆素材（v4.59）');
+head('2. 外牆只在外緣：場內岩層用硬牆素材（v4.59 幾何判定 → v4.61 補「背對岩層」）');
 {
-  let rimCells = 0, farOut = 0, islandCells = 0, maxIsland = 0;
+  let rimCells = 0, islandCells = 0, badInner = 0, badOuter = 0, worst = '';
   for (let st = 1; st <= 16; st++) {
     soloStage(st);
     const k = G.wallKind || [];
-    const seen = [];
-    for (let y = 0; y < G.rows; y++) seen.push(new Array(G.cols).fill(false));
     for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
-      if (!k[y]) continue;
+      if (!k[y] || !k[y][x]) continue;
+      let floor4 = 0, backSolid = false;
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+        const ax = x + d[0], ay = y + d[1];
+        if (ax >= 0 && ay >= 0 && ax < G.cols && ay < G.rows && G.grid[ay][ax] === 1) return;
+        floor4++;
+        // 背對空地那一側：兩格都是實心
+        const bx = x - d[0], by = y - d[1], cx2 = x - d[0] * 2, cy2 = y - d[1] * 2;
+        const solidAt = function (px, py) {
+          if (px < 0 || py < 0 || px >= G.cols || py >= G.rows) return true;
+          return G.grid[py][px] === 1;
+        };
+        if (solidAt(bx, by) && solidAt(cx2, cy2)) backSolid = true;
+      });
       if (k[y][x] === 1) {
-        // 外牆：離地圖外框超過 2 格就不合格
-        const d = Math.min(x, y, G.cols - 1 - x, G.rows - 1 - y);
-        if (d > 2) farOut++; else rimCells++;
-        continue;
+        rimCells++;
+        if (floor4 === 4) { badOuter++; worst = 'st' + st + ' (' + x + ',' + y + ')'; }
+      } else {
+        islandCells++;
+        if (backSolid) { badInner++; worst = 'st' + st + ' (' + x + ',' + y + ')'; }
       }
-      if (k[y][x] !== 2) continue;
-      if (seen[y][x]) continue;
-      const q = [[x, y]]; seen[y][x] = true;
-      let n = 0;
-      for (let i = 0; i < q.length; i++) {
-        n++;
-        const cx = q[i][0], cy = q[i][1];
-        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
-          const ax = cx + d[0], ay = cy + d[1];
-          if (ax < 0 || ay < 0 || ax >= G.cols || ay >= G.rows) return;
-          if (seen[ay][ax] || !k[ay] || k[ay][ax] !== 2) return;
-          seen[ay][ax] = true; q.push([ax, ay]);
-        });
-      }
-      islandCells += n;
-      if (n > maxIsland) maxIsland = n;
     }
   }
-  ok(farOut <= 2, '外牆素材只出現在地圖外框 2 格內（跑到裡面去的只有 ' + farOut + ' 格）');
-  ok(rimCells > 200, '外框那一圈真的有外牆（' + rimCells + ' 格）');
-  ok(islandCells > 200, '場內岩層改用硬牆素材（共 ' + islandCells + ' 格，最大一座 ' + maxIsland + ' 格）');
+  ok(badInner === 0, '沒有任何硬牆頂在外緣（背對空地那側是實心就一定是外牆）' + (worst ? '：' + worst : ''));
+  ok(badOuter === 0, '四面都是空地的孤立岩塊不會被當成外牆（' + badOuter + ' 格）');
+  ok(rimCells > 400, '外牆那一圈真的有外牆（16 關共 ' + rimCells + ' 格）');
+  ok(islandCells > 100, '場內岩層還是硬牆素材（16 關共 ' + islandCells + ' 格）');
   ok(typeof P.freeRimRocks === 'function', '有 freeRimRocks()');
   soloStage(3);
   const before = JSON.stringify(G.grid);

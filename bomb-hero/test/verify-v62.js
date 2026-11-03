@@ -249,10 +249,11 @@ head('8. 隨從幫忙撿道具');
   for (let i = 0; i < 10; i++) P.updatePets(1 / 60);
   ok(G.items.length === 0, '道具被撿走了');
   ok(p.power === pw0 + 1, '撿到的道具直接算主角的（火力 ' + pw0 + ' → ' + p.power + '）');
-  // 骷髏頭不撿
-  G.items.push({ cx: 5, cy: 5, type: 'skull', bob: 0 });
-  for (let i = 0; i < 10; i++) P.updatePets(1 / 60);
-  ok(G.items.length === 1, '骷髏頭不會撿（留給主角自己踩）');
+  // 骷髏頭：v4.52 起隨從踩上去會「踩碎」，不會交給主角
+  const scx = Math.floor(pet.x / T), scy = Math.floor(pet.y / T);
+  G.items.push({ cx: scx, cy: scy, type: 'skull', bob: 0 });
+  for (let i = 0; i < 3; i++) P.updatePets(1 / 60);
+  ok(G.items.length === 0, '隨從踩到骷髏頭直接踩碎（不會交給主角）');
 }
 
 // ================================================================

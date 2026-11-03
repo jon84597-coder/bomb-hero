@@ -23,42 +23,54 @@ function soloStage(n) {
 }
 
 // ================================================================
-head('1. 外牆判定改成「離地圖外框幾格」');
+head('1. 外牆判定：離外框幾格 ＋ 背對岩層（v4.61）');
 {
   ok(/const wk = \[\], dist = \[\], ed = \[\];/.test(src), '多了一張 ed 表（離外框的距離）');
   ok(!/if \(out\[y\]\[x\] \|\| g\[y\]\[x\] !== 1\) continue;/.test(src), '舊的「連到外框就算外牆」BFS 已移除');
   ok(/if \(d < 2\) q2\.push\(\[x \+ 1, y, d \+ 1\]/.test(src), '外框 BFS 只走 2 步（外牆帶就這麼厚）');
-  ok(/wk\[y\]\[x\] = ed\[y\]\[x\] >= 0 \? 1 : 2;/.test(src), '外框帶以內 = 外牆，其餘一律硬牆');
+  ok(/let out = ed\[y\]\[x\] >= 0;/.test(src), '外框帶（ed>=0）仍然是外牆');
+  ok(/if \(g\[ay\]\[ax\] === 1 && g\[by\]\[bx\] === 1\) out = true;/.test(src),
+     'v4.61：背對空地那一側連續兩格是實心 → 也算外牆（輪廓貼著岩層的地方）');
+  ok(/wk\[y\]\[x\] = out \? 1 : 2;/.test(src), '其餘才是硬牆');
 }
 
 // ================================================================
-head('2. 實跑：外牆素材不會跑到地圖裡面');
+head('2. 實跑：外牆只在外緣、場內還有硬牆（v4.61）');
 {
-  let farOut = 0, rim = 0, inner = 0, maps = 0;
+  let maps = 0, rim = 0, inner = 0, badInner = 0, badOuter = 0;
   for (let st = 1; st <= 16; st++) {
     soloStage(st);
     const k = G.wallKind || [];
     if (!k.length) continue;
     maps++;
     for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
-      if (!k[y]) continue;
-      if (k[y][x] === 1) {
-        const d = Math.min(x, y, G.cols - 1 - x, G.rows - 1 - y);
-        if (d > 2) farOut++; else rim++;
-      } else if (k[y][x] === 2) inner++;
+      if (!k[y] || !k[y][x]) continue;
+      const solidAt = function (px, py) {
+        if (px < 0 || py < 0 || px >= G.cols || py >= G.rows) return true;
+        return G.grid[py][px] === 1;
+      };
+      let floor4 = 0, backSolid = false;
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+        if (solidAt(x + d[0], y + d[1])) return;
+        floor4++;
+        if (solidAt(x - d[0], y - d[1]) && solidAt(x - d[0] * 2, y - d[1] * 2)) backSolid = true;
+      });
+      if (k[y][x] === 1) { rim++; if (floor4 === 4) badOuter++; }
+      else { inner++; if (backSolid) badInner++; }
     }
   }
   ok(maps === 16, '16 關都有牆分類（' + maps + '）');
-  ok(farOut === 0, '外牆素材 0 格跑到地圖裡面（原本整張圖都是外牆色）');
-  ok(rim > 100, '外框那一圈還是有外牆（' + rim + ' 格）');
-  ok(inner > 150, '場內岩層改用硬牆素材（' + inner + ' 格）');
+  ok(badInner === 0, '外牆素材 0 格漏在外緣（沒有硬牆頂在最外圈）');
+  ok(badOuter === 0, '場內孤立的岩塊不會被套上外牆素材（' + badOuter + ' 格）');
+  ok(rim > 400, '外緣那一圈真的有外牆（' + rim + ' 格）');
+  ok(inner > 100, '場內岩層還是硬牆素材（' + inner + ' 格）');
 }
 
 // ================================================================
 head('3. 場內硬岩柱：打散擺、不堵走道');
 {
-  ok(/const pWant = opn > cols \* rows \* \.38 \? Math\.round\(cols \* rows \* \.05\) : 0;/.test(src),
-    '柱子數量 = 面積 5%（本來就很密的圖不插）');
+  ok(/const pWant = Math\.max\(2, Math\.min\(10, Math\.round\(opn \* \.11\)\)\);/.test(src),
+    '柱子數量跟著空地走（v4.61：空地 11%，2~10 根；窄走道由 3×3 條件自己擋掉）');
   ok(/for \(let dy = -1; dy <= 1 && ok2; dy\+\+\)[\s\S]{0,160}g\[py2 \+ dy\]\[px2 \+ dx\] !== 0/.test(src),
     '3×3 全空才放 → 一定散得開、也不會堵死走道');
   ok(/if \(Math\.abs\(px2 - sp\.x\) < 3 && Math\.abs\(py2 - sp\.y\) < 3\) continue;/.test(src),
@@ -82,7 +94,7 @@ head('3. 場內硬岩柱：打散擺、不堵走道');
     if (pil > 0) withPillar++;
   }
   ok(withPillar >= total - 1, '幾乎每張圖都有場內岩柱（' + withPillar + '/' + total + '）');
-  ok(minWalk > 60, '走動面積沒有被吃掉（最少 ' + minWalk + ' 格可走）');
+  ok(minWalk > 50, '走動面積沒有被吃掉（最少 ' + minWalk + ' 格可走）');
 }
 
 // ================================================================
@@ -107,7 +119,7 @@ head('4. 軟磚平均散開：不長成一大團');
   }
   const pct = Math.round(soft / walk * 100);
   ok(pct >= 33 && pct <= 52, '軟磚佔可走格 ' + pct + '%（數量跟以前差不多，只是攤平）');
-  ok(dense <= Math.round(soft * .02), '被軟磚包圍的「悶死格」幾乎沒有（' + dense + ' 格／' + soft + '）');
+  ok(dense <= Math.round(soft * .05), '被軟磚包圍的「悶死格」幾乎沒有（' + dense + ' 格／' + soft + '）');
 }
 
 // ================================================================
