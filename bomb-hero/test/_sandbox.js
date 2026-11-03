@@ -13,7 +13,9 @@ const html = fs.readFileSync(HTML_PATH, 'utf8');
 
 function makeEnv(opts) {
   opts = opts || {};
-  const m = html.match(/<script>([\s\S]*?)<\/script>/);
+  // v4.68：可指定其他檔案（A/B 對照舊版行為用；不給就讀 index.html）
+  const src = opts.file ? fs.readFileSync(opts.file, 'utf8') : html;
+  const m = src.match(/<script>([\s\S]*?)<\/script>/);
   if (!m) throw new Error('no script');
   const code = m[1];
 
@@ -126,7 +128,7 @@ function makeEnv(opts) {
 
   const BH = sandbox.window.__BH;
   if (!BH) throw new Error('no __BH');
-  return { html, sandbox, BH, rec, mkCtx2D, getId, listeners, storage, els,
+  return { html: src, sandbox, BH, rec, mkCtx2D, getId, listeners, storage, els,
            G: BH.Game, P: BH, fakeImg: (w, h) => ({ naturalWidth: w, naturalHeight: h, __fake: true }) };
 }
 

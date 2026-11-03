@@ -29,7 +29,8 @@ const OLD = 'file:///' + path.join(__dirname, '_v466/old.html').replace(/\\/g, '
       await sleep(700);
       await p.eval(`(function(){
         var G=__BH.Game, e=document.getElementById('rotHint'); if(e) e.remove();
-        var ov=document.getElementById('overlay'); if(ov) ov.style.display='none';
+        var ov=document.getElementById('ovIn'); if(ov) ov.classList.add('hide');
+        var rc=document.querySelector('.rotcard,.rot-card,#rotCard'); if(rc) rc.remove();
         var bn=document.getElementById('banner'); if(bn) bn.style.display='none';
         G.state='play'; G.zoom=G.zoomTarget=1; G.camSnap=true;
         G.players[0].x = (G.spawnCell.x+.5)*G.T; G.players[0].y=(G.spawnCell.y+.5)*G.T;
