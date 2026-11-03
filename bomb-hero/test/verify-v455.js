@@ -60,7 +60,9 @@ head('1. 外牆顏色：八個大關各一組（th.out）');
   ok(sameHue === 8, '八組外牆色都跟該關硬牆同色系（色相差 ≤30°）：' + sameHue + '/8');
   ok(diffLum === 8, '但明度都跟硬牆拉開（≥12 階）→ 看得出來是兩種牆：' + diffLum + '/8');
   ok(/const base = \(th && \(th\.out \|\| th\.hard\)\)/.test(src), 'drawOuterWall 用 th.out');
-  ok(/const e = T \* \.10;/.test(src), '外牆往外擴 10%（比硬牆大 20%）');
+  ok(/artSet\(artStyle\(\)\)\.outer/.test(src), '外牆走自己的 outer 圖組（不是硬牆調色）');
+  ok(/function paintOuterTile\(/.test(src), '有 paintOuterTile（外牆專屬貼圖烘焙）');
+  ok(!/const e = T \* \.10;/.test(src) && !/T \+ e \* 2/.test(src), '外牆尺寸回到與硬牆同一個 T×T（v4.55 的往外擴已取消）');
   ok(/if \(!isOut\(gx, gy - 1\)\) ctx\.fillRect/.test(src), '外牆外緣會壓暗邊（看起來更厚）');
 }
 
@@ -201,7 +203,7 @@ head('7. 首頁大逃殺（未開放）');
   ok(/br\.innerHTML = '大逃殺/.test(src), '文案由 JS 注入（靜態 HTML 只留空殼，i18n 覆蓋率才不會掉）');
   ok(/\$id\('btnBR'\)\.addEventListener/.test(src), '點下去有事件');
   ok(/大逃殺（未開放）/.test(src) && /30～50/.test(src), '說明裡寫清楚玩法與人數');
-  ok(P.VERSION_LOG[0].items.join(' ').indexOf('大逃殺') >= 0, '版本紀錄有提到大逃殺');
+  ok(P.VERSION_LOG.some(function (e) { return e.items.join(' ').indexOf('大逃殺') >= 0; }), '版本紀錄有提到大逃殺');
 }
 
 console.log('\n結果：' + pass + ' 通過 / ' + fail + ' 失敗');

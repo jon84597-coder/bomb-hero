@@ -85,9 +85,9 @@ head('3. 外牆顏色：每個大關自己一組（th.out），八關都不一�
   ok(uniq.length === outs.length, '八個外牆色彼此不同（' + uniq.length + '/' + outs.length + '）');
   ok(/const base = \(th && \(th\.out \|\| th\.hard\)\)/.test(html), 'drawOuterWall 吃 th.out（不是固定沙金）');
   ok(!/mixHex\(hard, '#e8cf9c'/.test(html), '舊的「一律混沙金」已移除');
-  // 比硬牆大：往外擴的比例要比 v4.54 的 4.5% 大
-  const e = parseFloat('0.' + (html.match(/const e = T \* \.(\d+);/) || [0, '0'])[1]);
-  ok(e >= .09, '外牆往外擴 ' + Math.round(e * 100) + '%（比硬牆大一點點）');
+  // v4.56：外牆不再往外擴，改成「獨立貼圖 + 與硬牆同一個格子尺寸」
+  ok(!/const e = T \* \.10;/.test(html), '外牆不再往外擴（尺寸與硬牆一致）');
+  ok(/paintOuterTile/.test(html) && /outer: \[\]/.test(html), '外牆有自己的貼圖素材（paintOuterTile + artSet.outer）');
 }
 
 // ================================================================
