@@ -67,7 +67,7 @@ head('1. 外牆顏色：八個大關各一組（th.out）');
 }
 
 // ================================================================
-head('2. 外牆只在外緣：場內岩層用硬牆素材（v4.59 幾何判定 → v4.61 補「背對岩層」）');
+head('2. 外牆只在外緣：場內岩層用硬牆素材（v4.59 幾何判定 → v4.61 一路到地圖邊）');
 {
   let rimCells = 0, islandCells = 0, badInner = 0, badOuter = 0, worst = '';
   for (let st = 1; st <= 16; st++) {
@@ -75,32 +75,29 @@ head('2. 外牆只在外緣：場內岩層用硬牆素材（v4.59 幾何判定 �
     const k = G.wallKind || [];
     for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
       if (!k[y] || !k[y][x]) continue;
-      let floor4 = 0, backSolid = false;
+      let floor4 = 0, backEdge = false;
       [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
-        const ax = x + d[0], ay = y + d[1];
-        if (ax >= 0 && ay >= 0 && ax < G.cols && ay < G.rows && G.grid[ay][ax] === 1) return;
+        const nx = x + d[0], ny = y + d[1];
+        if (nx >= 0 && ny >= 0 && nx < G.cols && ny < G.rows && G.grid[ny][nx] === 1) return;
         floor4++;
-        // 背對空地那一側：兩格都是實心
-        const bx = x - d[0], by = y - d[1], cx2 = x - d[0] * 2, cy2 = y - d[1] * 2;
-        const solidAt = function (px, py) {
-          if (px < 0 || py < 0 || px >= G.cols || py >= G.rows) return true;
-          return G.grid[py][px] === 1;
-        };
-        if (solidAt(bx, by) && solidAt(cx2, cy2)) backSolid = true;
+        // 背對空地那側：一路都是實心、直到撞上地圖邊 → 它擋在場地外圍
+        let ax = x - d[0], ay = y - d[1];
+        while (ax >= 0 && ay >= 0 && ax < G.cols && ay < G.rows && G.grid[ay][ax] === 1) { ax -= d[0]; ay -= d[1]; }
+        if (ax < 0 || ay < 0 || ax >= G.cols || ay >= G.rows) backEdge = true;
       });
       if (k[y][x] === 1) {
         rimCells++;
         if (floor4 === 4) { badOuter++; worst = 'st' + st + ' (' + x + ',' + y + ')'; }
       } else {
         islandCells++;
-        if (backSolid) { badInner++; worst = 'st' + st + ' (' + x + ',' + y + ')'; }
+        if (backEdge) { badInner++; worst = 'st' + st + ' (' + x + ',' + y + ')'; }
       }
     }
   }
-  ok(badInner === 0, '沒有任何硬牆頂在外緣（背對空地那側是實心就一定是外牆）' + (worst ? '：' + worst : ''));
+  ok(badInner === 0, '沒有任何硬牆頂在外緣（擋在場地外圍的一律算外牆）' + (worst ? '：' + worst : ''));
   ok(badOuter === 0, '四面都是空地的孤立岩塊不會被當成外牆（' + badOuter + ' 格）');
   ok(rimCells > 400, '外牆那一圈真的有外牆（16 關共 ' + rimCells + ' 格）');
-  ok(islandCells > 100, '場內岩層還是硬牆素材（16 關共 ' + islandCells + ' 格）');
+  ok(islandCells > 150, '場內岩層還是硬牆素材（16 關共 ' + islandCells + ' 格）');
   ok(typeof P.freeRimRocks === 'function', '有 freeRimRocks()');
   soloStage(3);
   const before = JSON.stringify(G.grid);

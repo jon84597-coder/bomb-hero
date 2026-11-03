@@ -15059,16 +15059,16 @@ function markWallKinds() {
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
     if (g[y][x] !== 1) continue;
     if (dist[y][x] < 0 || dist[y][x] > 1) continue;              // 牆的內部 → 不畫
-    // v4.61：外框帶以外，再補「背對空地那一側連續兩格都是實心」＝ 貼著岩層的外緣。
-    //   有機地圖的輪廓常常離陣列外框 3 格以上，只靠 ed 會留一堆淺色磚頂在外緣。
+    // v4.61：外框帶以外，再往「背對空地」的方向一路看 —— 一路都是實心、直到撞上地圖邊，
+    //   代表它擋在場地外圍（有機地圖的凹角常常離陣列外框 3 格以上）；中途撞到空地就是場內的一道牆。
     let out = ed[y][x] >= 0;
     for (let k = 0; k < 4 && !out; k++) {
       const dx = D4[k][0], dy = D4[k][1];
       const nx = x + dx, ny = y + dy;
-      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows || g[ny][nx] === 1) continue;   // 這側不是空地
-      const ax = x - dx, ay = y - dy, bx = x - dx * 2, by = y - dy * 2;
-      if (bx < 0 || by < 0 || bx >= cols || by >= rows) { out = true; break; }          // 貼著陣列邊
-      if (g[ay][ax] === 1 && g[by][bx] === 1) out = true;
+      if (nx >= 0 && ny >= 0 && nx < cols && ny < rows && g[ny][nx] === 1) continue;   // 這側不是空地
+      let ax = x - dx, ay = y - dy;
+      while (ax >= 0 && ay >= 0 && ax < cols && ay < rows && g[ay][ax] === 1) { ax -= dx; ay -= dy; }
+      if (ax < 0 || ay < 0 || ax >= cols || ay >= rows) out = true;
     }
     wk[y][x] = out ? 1 : 2;
   }

@@ -23,21 +23,23 @@ function soloStage(n) {
 }
 
 // ================================================================
-head('1. 外牆判定：離外框幾格 ＋ 背對岩層（v4.61）');
+head('1. 外牆判定：離外框幾格 ＋ 一路到地圖邊（v4.61）');
 {
   ok(/const wk = \[\], dist = \[\], ed = \[\];/.test(src), '多了一張 ed 表（離外框的距離）');
   ok(!/if \(out\[y\]\[x\] \|\| g\[y\]\[x\] !== 1\) continue;/.test(src), '舊的「連到外框就算外牆」BFS 已移除');
   ok(/if \(d < 2\) q2\.push\(\[x \+ 1, y, d \+ 1\]/.test(src), '外框 BFS 只走 2 步（外牆帶就這麼厚）');
   ok(/let out = ed\[y\]\[x\] >= 0;/.test(src), '外框帶（ed>=0）仍然是外牆');
-  ok(/if \(g\[ay\]\[ax\] === 1 && g\[by\]\[bx\] === 1\) out = true;/.test(src),
-     'v4.61：背對空地那一側連續兩格是實心 → 也算外牆（輪廓貼著岩層的地方）');
+  ok(/while \(ax >= 0 && ay >= 0 && ax < cols && ay < rows && g\[ay\]\[ax\] === 1\)/.test(src),
+     'v4.61：往「背對空地」的方向一路走實心格，直到撞上地圖邊 → 這段也算外牆');
+  ok(/if \(ax < 0 \|\| ay < 0 \|\| ax >= cols \|\| ay >= rows\) out = true;/.test(src),
+     '走到地圖邊 → 外牆；中途撞到空地 → 場內的牆（硬牆）');
   ok(/wk\[y\]\[x\] = out \? 1 : 2;/.test(src), '其餘才是硬牆');
 }
 
 // ================================================================
 head('2. 實跑：外牆只在外緣、場內還有硬牆（v4.61）');
 {
-  let maps = 0, rim = 0, inner = 0, badInner = 0, badOuter = 0;
+  let maps = 0, rim = 0, inner = 0, badOuter = 0, badInner = 0;
   for (let st = 1; st <= 16; st++) {
     soloStage(st);
     const k = G.wallKind || [];
@@ -45,25 +47,24 @@ head('2. 實跑：外牆只在外緣、場內還有硬牆（v4.61）');
     maps++;
     for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
       if (!k[y] || !k[y][x]) continue;
-      const solidAt = function (px, py) {
-        if (px < 0 || py < 0 || px >= G.cols || py >= G.rows) return true;
-        return G.grid[py][px] === 1;
-      };
-      let floor4 = 0, backSolid = false;
+      let floor4 = 0, edgeRay = false;
       [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
-        if (solidAt(x + d[0], y + d[1])) return;
+        const nx = x + d[0], ny = y + d[1];
+        if (nx >= 0 && ny >= 0 && nx < G.cols && ny < G.rows && G.grid[ny][nx] === 1) return;
         floor4++;
-        if (solidAt(x - d[0], y - d[1]) && solidAt(x - d[0] * 2, y - d[1] * 2)) backSolid = true;
+        let ax = x - d[0], ay = y - d[1];
+        while (ax >= 0 && ay >= 0 && ax < G.cols && ay < G.rows && G.grid[ay][ax] === 1) { ax -= d[0]; ay -= d[1]; }
+        if (ax < 0 || ay < 0 || ax >= G.cols || ay >= G.rows) edgeRay = true;
       });
       if (k[y][x] === 1) { rim++; if (floor4 === 4) badOuter++; }
-      else { inner++; if (backSolid) badInner++; }
+      else { inner++; if (edgeRay) badInner++; }
     }
   }
   ok(maps === 16, '16 關都有牆分類（' + maps + '）');
-  ok(badInner === 0, '外牆素材 0 格漏在外緣（沒有硬牆頂在最外圈）');
+  ok(badInner === 0, '外牆素材 0 格漏在外緣（擋在外圍的牆都判成外牆了）');
   ok(badOuter === 0, '場內孤立的岩塊不會被套上外牆素材（' + badOuter + ' 格）');
   ok(rim > 400, '外緣那一圈真的有外牆（' + rim + ' 格）');
-  ok(inner > 100, '場內岩層還是硬牆素材（' + inner + ' 格）');
+  ok(inner > 150, '場內岩層還是硬牆素材（' + inner + ' 格）');
 }
 
 // ================================================================
