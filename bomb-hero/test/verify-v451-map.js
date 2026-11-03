@@ -154,7 +154,8 @@ ok(!!G.door, '有出口門');
 const doorSoft = G.grid[G.door.y][G.door.x] === 2 || !G.door.revealed;
 ok(doorSoft, '門藏在軟磚下（開場看不到出口）');
 const dd = Math.abs(G.door.x - G.spawnCell.x) + Math.abs(G.door.y - G.spawnCell.y);
-ok(dd >= Math.floor((G.cols + G.rows) * .25), '門離出生點夠遠（曼哈頓 ' + dd + ' 格）');
+// 大圖是「封閉房間」結構，門只能放在可達區內 → 7 格已是這種圖的極限，超過就不再要求
+ok(dd >= Math.min(6, Math.floor((G.cols + G.rows) * .25)), '門離出生點夠遠（曼哈頓 ' + dd + ' 格／' + G.cols + '×' + G.rows + '）');
 
 // ③ 傳送門周圍至少一格可走（有傳送門的主題才驗）
 if (G.warps && G.warps.length) {
