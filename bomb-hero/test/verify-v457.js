@@ -124,9 +124,9 @@ head('6. 數量與強度：淡淡的、偶爾同時 2~3 個');
 // ================================================================
 head('7. 版本與接線');
 {
-  ok(P.VERSION === '4.57', 'VERSION = 4.57');
-  ok(P.VERSION_LOG[0].v === '4.57', '版本記錄第一條是 4.57');
-  ok(P.VERSION_LOG[0].items.join(' ').indexOf('氛圍') >= 0, '版本記錄說明了場景氛圍');
+  ok(/^\d+\.\d+$/.test(P.VERSION), 'VERSION 是 x.y 格式（' + P.VERSION + '）');
+  ok(P.VERSION_LOG[0].v === P.VERSION, '版本記錄第一條等於當前版本');
+  ok(P.VERSION_LOG.some(function (e) { return e.items.join(' ').indexOf('氛圍') >= 0; }), '版本記錄說明了場景氛圍');
   ok(P.VERSION_LOG[1].now === false, '上一版已取消 now');
   ok(typeof P.drawAmbient === 'function' && typeof P.AMB === 'object', '__BH 有匯出（可被後續版本驗證）');
 }
