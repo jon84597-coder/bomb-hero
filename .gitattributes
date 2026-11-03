@@ -1,0 +1,8 @@
+# 主檔一律 LF（Windows 上 core.autocrlf=true 會把工作檔轉成 CRLF，
+# 每個換行 +1 字元 → 單檔體積會多出 ~1.3KB，verify-v34 的 3,350,000 上限就爆了）
+bomb-hero/index.html text eol=lf
+public/index.html text eol=lf
+bomberman-online/public/index.html text eol=lf
+bomb-hero/sw.js text eol=lf
+public/sw.js text eol=lf
+bomberman-online/public/sw.js text eol=lf
