@@ -122,7 +122,8 @@ head('3. 軟磚變多：可走格裡 42% 以上是軟磚');
   }
   const pct = Math.round(soft / walk * 100);
   ok(pct >= 36, '軟磚佔可走格 ' + pct + '%（' + soft + '/' + walk + '）');
-  ok(/Game\.bigMap \? \.40 : \.52/.test(src), '軟磚率 .40（大圖）／.52（小圖）');
+  ok(/const softRate = opts\.softRate == null \? \.52 : opts\.softRate;/.test(src),
+    '軟磚率 .52（v4.66：隨機大圖從 .40 提到 .52，跟 32 關一致）');
 }
 
 // ================================================================

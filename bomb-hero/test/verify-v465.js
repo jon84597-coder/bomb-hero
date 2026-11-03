@@ -17,7 +17,8 @@ function ok(cond, name, extra) {
 
   // ---- 靜態：版本與關鍵程式碼 ----
   console.log('[1] 版本 / 程式碼');
-  ok(/const VERSION = '4\.65';/.test(SRC), 'VERSION = 4.65');
+  const vm = SRC.match(/const VERSION = '([\d.]+)';/);
+  ok(vm && parseFloat(vm[1]) >= 4.65, 'VERSION >= 4.65（目前 ' + (vm && vm[1]) + '，不寫死版號）');
   ok(SRC.includes('const gk = hostT > 0 ? Game.T / hostT : 1;'), '快照座標有換算係數 gk');
   ok(SRC.includes('Game.T = clamp(Math.round(tileSize() || hostT), 12, 62);'), '客人的格子大小由自己螢幕決定');
   ok(/const ZOOM_MIN = \.42, ZOOM_MAX = 2\.10/.test(SRC), '縮放範圍 42%~210%');

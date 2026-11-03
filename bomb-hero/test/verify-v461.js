@@ -151,8 +151,8 @@ head('5. 落點警示圈的繪製');
 // ================================================================
 head('6. 場內硬岩柱：變多、還是打散擺');
 {
-  ok(/const pWant = Math\.max\(2, Math\.min\(10, Math\.round\(opn \* \.11\)\)\);/.test(src),
-     '柱子數量跟著空地走（11%，2~10 根）');
+  ok(/Math\.max\(2, Math\.min\(10, Math\.round\(opn \* \.11\)\)\)/.test(src),
+     '柱子數量跟著空地走（關卡圖 11%，2~10 根；v4.66 隨機大圖另給 18%）');
   let total = 0, withP = 0, maxP = 0, sumP = 0;
   for (let st = 1; st <= 8; st++) {
     soloStage(st);
