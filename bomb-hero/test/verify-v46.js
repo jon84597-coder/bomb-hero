@@ -81,8 +81,8 @@ ok(hazardOk, '主題專屬機關（冰面／輸送帶／傳送門）真的有鋪
 ok(new Set(Object.values(seenColors)).size === 8, '8 大主題彼此顏色都不同（場景辨識度）');
 ok(M.every(function (m, i) { return m.theme === Math.floor(i / 4); }), 'MAP32 依序每 4 張同一主題');
 
-console.log('\n=== 3. 4 種尺寸上限（小 13×11 / 中 15×13 / 大 17×15 / 超大 21×15）===');
-const LIMIT = { S: [13, 11], M: [15, 13], L: [17, 15], XL: [21, 15] };
+console.log('\n=== 3. 地圖尺寸（v4.51 起單人／RPG 不再看「地圖尺寸」設定，固定 15×13）===');
+const LIMIT = { S: [15, 13], M: [15, 13], L: [15, 13], XL: [15, 13] };
 let sizeOk = true, sizeDetail = '';
 Object.keys(LIMIT).forEach(function (k) {
   P.settings.size = k;
@@ -99,7 +99,7 @@ Object.keys(LIMIT).forEach(function (k) {
   }
 });
 P.settings.size = 'M';
-ok(sizeOk, '4 種尺寸都精準符合規格、邊界封閉' + (sizeDetail ? '（' + sizeDetail + '）' : ''));
+ok(sizeOk, '不論設定哪個尺寸都是 15×13、邊界封閉' + (sizeDetail ? '（' + sizeDetail + '）' : ''));
 
 console.log('\n=== 4. 不規則地形：不是制式棋盤 ===');
 P.buildRpgStage(9, false);           // 第 3 主題（冰雪原）

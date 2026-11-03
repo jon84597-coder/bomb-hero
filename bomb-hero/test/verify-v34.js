@@ -84,7 +84,7 @@ P.startSolo(8, true);
 ok(G.enemies.length === 1 && G.enemies[0].boss, '挑戰 BOSS：仍然只有魔王、沒有小怪');
 
 console.log('\n=== 5. 道具微量增加 ===');
-ok(/items: Math\.min\(18, 14 \+ Math\.round\(stage \* \.15\)\)/.test(html),
+ok(/Math\.min\(18, 14 \+ Math\.round\(stage \* \.15\)\)/.test(html),
   'v4.14：單人道具量改成 14 → 18 的連續曲線（32 關才不會每塊磚都有道具）');
 ok(/items: 18, emptyRate: \.35/.test(html), '對戰道具：14 → 18');
 ok(/ITEM_POOL = \[/.test(html), '道具池仍在（種類不變，只是數量變多）');

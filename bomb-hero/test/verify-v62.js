@@ -153,6 +153,8 @@ head('5. 投彈隨從：冷卻 3 秒、一次一顆、不炸主人');
   clearEnemies();
   G.pets = [pet];
   G.bombs.length = 0;
+  // v4.51：這幾格必須是空地，否則落點會被牆擋住（地圖一改這條就紅）
+  [5, 6, 7].forEach(function (x) { G.grid[5][x] = 0; });
   pet.x = 5 * T + T / 2; pet.y = 5 * T + T / 2;
   p.x = 3 * T + T / 2; p.y = 3 * T + T / 2;
   const foe = addFoe(7, 5);
