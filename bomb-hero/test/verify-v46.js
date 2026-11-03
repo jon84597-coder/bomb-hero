@@ -109,7 +109,9 @@ for (let y = 1; y < G.rows - 1; y++) for (let x = 1; x < G.cols - 1; x++) {
   if (G.grid[y][x] !== 1) floors++;
 }
 ok(wall > 0 && wallEven / wall < .8, '牆不是全落在偶數×偶數（' + Math.round(wallEven / wall * 100) + '%，棋盤會是 100%）');
-ok(floors / (G.cols * G.rows) > .3, '可走地面佔 ' + Math.round(floors / (G.cols * G.rows) * 100) + '%（不會擠成一條線）');
+// v4.63：以前會把「斜角才碰到空地」的小岩塊挖成地板，那些格子其實走不到（是死格）；
+//   現在不挖了 → 可走面積合法地少掉幾格，門檻從 30% 調到 25%。
+ok(floors / (G.cols * G.rows) > .25, '可走地面佔 ' + Math.round(floors / (G.cols * G.rows) * 100) + '%（不會擠成一條線）');
 // 4 個子地圖彼此長得不同（非同模板換色）
 const g1 = JSON.stringify((P.buildRpgStage(9, false), G.grid));
 const g2 = JSON.stringify((P.buildRpgStage(10, false), G.grid));
