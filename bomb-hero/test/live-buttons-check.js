@@ -40,8 +40,8 @@ const HIT = id => `(function(){
   const localVer = (fs.readFileSync(__dirname + '/../index.html', 'utf8').match(/const VERSION = '([^']+)'/) || [])[1];
   ok('線上版本 = 本機版本 ' + localVer, ver === localVer, '線上 ' + ver);
 
-  // 首頁九顆主選單按鈕
-  const ids = ['btnSolo', 'btnRpg', 'btnBoss', 'btnBattle', 'btnOnline', 'btnStore', 'btnSettings', 'btnQuit'];
+  // 首頁主選單按鈕（v4.48 起多了「新手教學」）
+  const ids = ['btnLearn', 'btnSolo', 'btnRpg', 'btnBoss', 'btnBattle', 'btnOnline', 'btnStore', 'btnSettings', 'btnQuit'];
   const geo = {};
   for (const id of ids) {
     geo[id] = JSON.parse(await p.eval(HIT(id)) || '{}');
@@ -81,6 +81,7 @@ const HIT = id => `(function(){
     return s;
   }
 
+  await clickGo('btnLearn', ['learn', 'tut'], '點「新手教學」進得去');
   await clickGo('btnSolo', ['solo', 'game'], '點「單人闖關」進得去');
   await clickGo('btnRpg', ['rpg'], '點「RPG 模式」進得去');
   await clickGo('btnBoss', ['game'], '點「挑戰 BOSS」進得去');
@@ -170,7 +171,7 @@ const HIT = id => `(function(){
   const isTouch = await m.eval("document.body.classList.contains('touch')");
   ok('手機模式顯示觸控按鈕', isTouch === true);
 
-  const mids = ['btnSolo', 'btnRpg', 'btnBoss', 'btnBattle'];
+  const mids = ['btnLearn', 'btnSolo', 'btnRpg', 'btnBoss', 'btnBattle'];
   for (const id of mids) {
     const g = JSON.parse(await m.eval(HIT(id)) || '{}');
     ok('手機 #' + id + ' 沒被蓋住', g.isSelf === true, g.isSelf === true ? '' : (g.err || ('蓋住的是 ' + g.hit)));
