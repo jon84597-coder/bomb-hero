@@ -43,9 +43,9 @@ const { launch, sleep } = require('./cdp.js');
     return __BH.Admin.refresh().then(function(){
       window.fetch = real;
       return {
-        loginBox: !!document.querySelector('.adlogin'),
-        btn: (document.querySelector('.adlogin button')||{}).textContent || '',
-        warn: (document.getElementById('adWarn')||{}).textContent || ''
+        loginBox: !!document.querySelector('.bhlogin'),
+        btn: (document.querySelector('.bhlogin button')||{}).textContent || '',
+        warn: (document.getElementById('bhWarn')||{}).textContent || ''
       };
     });
   })()`);

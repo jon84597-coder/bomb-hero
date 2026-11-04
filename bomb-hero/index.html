@@ -2464,115 +2464,115 @@ cursor: pointer; padding: 2px 4px; line-height: 1;
 }
 
 /* ===== v4.90：開發者後台（桌機雙欄／手機分頁）===== */
-#adminModal { position: fixed; inset: 0; z-index: 1250; display: none; align-items: center; justify-content: center; padding: 12px; background: rgba(6,8,16,.80); }
-#adminModal.on { display: flex; }
-.adcard {
+#bhModal { position: fixed; inset: 0; z-index: 1250; display: none; align-items: center; justify-content: center; padding: 12px; background: rgba(6,8,16,.80); }
+#bhModal.on { display: flex; }
+.bhcard {
 width: 100%; max-width: 1220px; height: min(94vh, 1020px); display: flex; flex-direction: column;
 background: #0e131c; border: 2px solid #2a3348; border-radius: 16px; padding: 10px 12px 12px;
 color: #d8e2f5; box-shadow: 0 20px 60px rgba(0,0,0,.65); overflow: hidden;
 }
-.adhead { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex: 0 0 auto; flex-wrap: wrap; }
-.adhead h3 { font-size: 15px; font-weight: 900; margin: 0; color: #ffd9b0; white-space: nowrap; }
-.adsub { font-size: 10px; color: #7b8aa8; font-weight: 700; }
-.adheadr { margin-left: auto; display: flex; gap: 6px; }
-.adheadr button { width: 30px; height: 30px; border-radius: 9px; border: 1.5px solid #2f3b52; background: #18202e; color: #9db0d0; font-size: 13px; cursor: pointer; }
-.adheadr button:hover { background: #1f2a3d; }
-.adtabs { display: flex; gap: 3px; background: #141b27; border: 1px solid #202a3b; border-radius: 11px; padding: 3px; }
-.adtabs button { border: 0; background: transparent; color: #8ea3c6; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
-.adtabs button.on { background: #2b3a55; color: #eaf2ff; box-shadow: inset 0 0 0 1px #3d5273; }
-.adpane { display: none; flex: 1 1 auto; min-height: 0; }
-.adpane.on { display: flex; flex-direction: column; gap: 7px; overflow: auto; }
-.adwarn { flex: 0 0 auto; background: rgba(120,70,20,.22); border: 1.5px solid #a8763a; color: #ffd9a8; border-radius: 10px; padding: 7px 10px; margin-bottom: 8px; font-size: 11.5px; font-weight: 700; line-height: 1.5; }
-.adwarn.hide { display: none; }
+.bhhead { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex: 0 0 auto; flex-wrap: wrap; }
+.bhhead h3 { font-size: 15px; font-weight: 900; margin: 0; color: #ffd9b0; white-space: nowrap; }
+.bhsub { font-size: 10px; color: #7b8aa8; font-weight: 700; }
+.bhheadr { margin-left: auto; display: flex; gap: 6px; }
+.bhheadr button { width: 30px; height: 30px; border-radius: 9px; border: 1.5px solid #2f3b52; background: #18202e; color: #9db0d0; font-size: 13px; cursor: pointer; }
+.bhheadr button:hover { background: #1f2a3d; }
+.bhtabs { display: flex; gap: 3px; background: #141b27; border: 1px solid #202a3b; border-radius: 11px; padding: 3px; }
+.bhtabs button { border: 0; background: transparent; color: #8ea3c6; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.bhtabs button.on { background: #2b3a55; color: #eaf2ff; box-shadow: inset 0 0 0 1px #3d5273; }
+.bhpane { display: none; flex: 1 1 auto; min-height: 0; }
+.bhpane.on { display: flex; flex-direction: column; gap: 7px; overflow: auto; }
+.bhwarn { flex: 0 0 auto; background: rgba(120,70,20,.22); border: 1.5px solid #a8763a; color: #ffd9a8; border-radius: 10px; padding: 7px 10px; margin-bottom: 8px; font-size: 11.5px; font-weight: 700; line-height: 1.5; }
+.bhwarn.hide { display: none; }
 /* v4.92：後台讀不到資料時，直接告訴使用者「要登入哪一種帳號」，不要只閃一句 toast */
-.adlogin { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+.bhlogin { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
   background: rgba(90,60,20,.28); border: 1.5px solid #b98a4a; border-radius: 12px; padding: 12px 14px; }
-.adlogin b { font-size: 13px; font-weight: 900; color: #ffe0b0; }
-.adlogin span { font-size: 11.5px; line-height: 1.65; color: #e8d6bb; }
-.adlogin button { font-family: inherit; font-size: 12.5px; font-weight: 900; cursor: pointer;
+.bhlogin b { font-size: 13px; font-weight: 900; color: #ffe0b0; }
+.bhlogin span { font-size: 11.5px; line-height: 1.65; color: #e8d6bb; }
+.bhlogin button { font-family: inherit; font-size: 12.5px; font-weight: 900; cursor: pointer;
   background: linear-gradient(#5fd08a, #2f9c5c); color: #06210f; border: 0; border-radius: 10px; padding: 8px 16px; }
-.adlogin button:active { transform: translateY(1px); }
-.adstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 6px; flex: 0 0 auto; }
-.adstat { background: #161e2b; border: 1.5px solid #253045; border-radius: 10px; padding: 6px 8px; text-align: center; }
-.adstat b { display: block; font-size: 17px; color: #7ee0a5; font-variant-numeric: tabular-nums; }
-.adstat span { font-size: 10px; color: #7b8aa8; }
-.adsec2 { flex: 0 0 auto; font-size: 11px; font-weight: 900; color: #8ea3c6; letter-spacing: .04em; margin-top: 2px; }
-.adsec2::before { content: ''; display: inline-block; width: 3px; height: 11px; background: #3d5273; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
-.adann, .adsearch, .adbtnrow, .adrow2 { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #9db0d0; flex: 0 0 auto; flex-wrap: wrap; }
-.adann input[type=text], .adann input[type=number], .adsearch input, .adrow2 select {
+.bhlogin button:active { transform: translateY(1px); }
+.bhstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 6px; flex: 0 0 auto; }
+.bhstat { background: #161e2b; border: 1.5px solid #253045; border-radius: 10px; padding: 6px 8px; text-align: center; }
+.bhstat b { display: block; font-size: 17px; color: #7ee0a5; font-variant-numeric: tabular-nums; }
+.bhstat span { font-size: 10px; color: #7b8aa8; }
+.bhsec2 { flex: 0 0 auto; font-size: 11px; font-weight: 900; color: #8ea3c6; letter-spacing: .04em; margin-top: 2px; }
+.bhsec2::before { content: ''; display: inline-block; width: 3px; height: 11px; background: #3d5273; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.bhann, .bhsearch, .bhbtnrow, .bhrow2 { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #9db0d0; flex: 0 0 auto; flex-wrap: wrap; }
+.bhann input[type=text], .bhann input[type=number], .bhsearch input, .bhrow2 select {
 background: #0c1017; border: 1.5px solid #2a3348; border-radius: 9px; color: #d8e2f5;
 font-family: inherit; font-size: 12.5px; padding: 7px 9px; outline: none;
 }
-.adann input[type=text], .adsearch input { flex: 1 1 160px; min-width: 0; }
-.adann input[type=number] { width: 64px; }
-.adann button, .adsearch button, .adbtnrow button, .adrow2 button {
+.bhann input[type=text], .bhsearch input { flex: 1 1 160px; min-width: 0; }
+.bhann input[type=number] { width: 64px; }
+.bhann button, .bhsearch button, .bhbtnrow button, .bhrow2 button {
 background: #2b3a55; border: 1.5px solid #3d5273; color: #cfe0ff; border-radius: 9px;
 padding: 7px 12px; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
 }
-.adann button:active, .adsearch button:active, .adbtnrow button:active { transform: translateY(1px); }
-.adsplit { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(290px, .92fr) minmax(360px, 1.4fr); gap: 8px; }
-.adlist { min-height: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; }
-.addetail { min-height: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; padding: 9px 11px; }
-.adrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; padding: 7px 9px; border-bottom: 1px solid #1a2331; cursor: pointer; }
-.adrow:hover { background: #141d29; }
-.adrow.on { background: #1b2637; box-shadow: inset 3px 0 0 #5b8def; }
-.adrow .adnm { font-size: 12.5px; font-weight: 800; color: #e6eeff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.adrow .aduid { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #6f7f9c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.adrow .admt { grid-column: 1 / 2; font-size: 10.5px; color: #8ea3c6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.adrow .adst { grid-column: 2 / 3; grid-row: 1 / 3; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
-.adpill { font-size: 9.5px; font-weight: 900; border-radius: 999px; padding: 1px 6px; white-space: nowrap; }
-.adpill.g { background: #2a3448; color: #9db0d0; }
-.adpill.p { background: #1e3a2c; color: #7ee0a5; }
-.adpill.d { background: #3a2a5c; color: #d9cdff; }
-.adpill.b { background: #4a1f24; color: #ff9a9a; }
-.adpill.ok { background: #1e3a2c; color: #7ee0a5; }
-.adempty { padding: 16px; text-align: center; color: #6f7f9c; font-size: 12px; }
-.adback { display: none; }
-.adwho { font-size: 13px; margin-bottom: 7px; line-height: 1.6; }
-.adkv { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 3px 12px; }
-.adkv > div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11px; border-bottom: 1px dashed #1f2a3c; padding: 3px 0; min-width: 0; }
-.adkv span { color: #7b8aa8; flex: 0 0 auto; }
-.adkv b { color: #d8e2f5; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.adkv b.mono { font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; color: #a9bcd8; }
-.adsec { margin-top: 8px; font-size: 11px; color: #8ea3c6; }
-.adsec > span { display: block; font-weight: 800; color: #7b8aa8; margin-bottom: 3px; }
-.adactions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 9px; }
-.adactions button { background: #2b3a55; border: 1.5px solid #3d5273; color: #cfe0ff; border-radius: 9px; padding: 6px 10px; font-family: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; }
-.adactions button[data-adm=ban] { background: #4a1f24; border-color: #7a3038; color: #ffb3b3; }
-.adgrant { font-size: 11px; color: #8ea3c6; display: flex; align-items: center; gap: 5px; }
-.adgrant input { width: 76px; background: #0c1017; border: 1.5px solid #2a3348; border-radius: 8px; color: #d8e2f5; font-family: inherit; font-size: 11.5px; padding: 5px 7px; }
-.adev { display: flex; gap: 8px; align-items: center; font-size: 11px; padding: 3px 0; border-bottom: 1px dashed #1f2a3c; color: #c3d0e6; }
-.adev .mono { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #6f7f9c; flex: 0 0 auto; }
-.adev b { color: #7ee0a5; font-weight: 800; }
-.adpre { flex: 1 1 auto; min-height: 120px; margin: 0; padding: 9px 10px; background: #080c12; border: 1.5px solid #1f2a3c; border-radius: 10px; color: #9fd4b4; font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; line-height: 1.5; overflow: auto; white-space: pre; }
-.adtag { display: inline-block; font-size: 9.5px; font-weight: 900; padding: 1px 6px; border-radius: 999px; background: #1e3a2c; color: #7ee0a5; margin-left: 4px; }
-.adtag.w { background: #4a3a1a; color: #ffd9a8; }
+.bhann button:active, .bhsearch button:active, .bhbtnrow button:active { transform: translateY(1px); }
+.bhsplit { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(290px, .92fr) minmax(360px, 1.4fr); gap: 8px; }
+.bhlist { min-height: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; }
+.bhdetail { min-height: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; padding: 9px 11px; }
+.bhrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; padding: 7px 9px; border-bottom: 1px solid #1a2331; cursor: pointer; }
+.bhrow:hover { background: #141d29; }
+.bhrow.on { background: #1b2637; box-shadow: inset 3px 0 0 #5b8def; }
+.bhrow .bhnm { font-size: 12.5px; font-weight: 800; color: #e6eeff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bhrow .bhuid { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #6f7f9c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bhrow .bhmt { grid-column: 1 / 2; font-size: 10.5px; color: #8ea3c6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bhrow .bhst { grid-column: 2 / 3; grid-row: 1 / 3; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.bhpill { font-size: 9.5px; font-weight: 900; border-radius: 999px; padding: 1px 6px; white-space: nowrap; }
+.bhpill.g { background: #2a3448; color: #9db0d0; }
+.bhpill.p { background: #1e3a2c; color: #7ee0a5; }
+.bhpill.d { background: #3a2a5c; color: #d9cdff; }
+.bhpill.b { background: #4a1f24; color: #ff9a9a; }
+.bhpill.ok { background: #1e3a2c; color: #7ee0a5; }
+.bhempty { padding: 16px; text-align: center; color: #6f7f9c; font-size: 12px; }
+.bhback { display: none; }
+.bhwho { font-size: 13px; margin-bottom: 7px; line-height: 1.6; }
+.bhkv { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 3px 12px; }
+.bhkv > div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11px; border-bottom: 1px dashed #1f2a3c; padding: 3px 0; min-width: 0; }
+.bhkv span { color: #7b8aa8; flex: 0 0 auto; }
+.bhkv b { color: #d8e2f5; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bhkv b.mono { font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; color: #a9bcd8; }
+.bhsec { margin-top: 8px; font-size: 11px; color: #8ea3c6; }
+.bhsec > span { display: block; font-weight: 800; color: #7b8aa8; margin-bottom: 3px; }
+.bhactions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 9px; }
+.bhactions button { background: #2b3a55; border: 1.5px solid #3d5273; color: #cfe0ff; border-radius: 9px; padding: 6px 10px; font-family: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; }
+.bhactions button[data-adm=ban] { background: #4a1f24; border-color: #7a3038; color: #ffb3b3; }
+.bhgrant { font-size: 11px; color: #8ea3c6; display: flex; align-items: center; gap: 5px; }
+.bhgrant input { width: 76px; background: #0c1017; border: 1.5px solid #2a3348; border-radius: 8px; color: #d8e2f5; font-family: inherit; font-size: 11.5px; padding: 5px 7px; }
+.bhev { display: flex; gap: 8px; align-items: center; font-size: 11px; padding: 3px 0; border-bottom: 1px dashed #1f2a3c; color: #c3d0e6; }
+.bhev .mono { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #6f7f9c; flex: 0 0 auto; }
+.bhev b { color: #7ee0a5; font-weight: 800; }
+.bhpre { flex: 1 1 auto; min-height: 120px; margin: 0; padding: 9px 10px; background: #080c12; border: 1.5px solid #1f2a3c; border-radius: 10px; color: #9fd4b4; font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; line-height: 1.5; overflow: auto; white-space: pre; }
+.bhtag { display: inline-block; font-size: 9.5px; font-weight: 900; padding: 1px 6px; border-radius: 999px; background: #1e3a2c; color: #7ee0a5; margin-left: 4px; }
+.bhtag.w { background: #4a3a1a; color: #ffd9a8; }
 @media (max-width: 880px) {
-#adminModal { padding: 0; background: #0e131c; }
-.adcard { height: 100%; max-width: none; border: 0; border-radius: 0; padding: calc(6px + env(safe-area-inset-top)) 9px calc(8px + env(safe-area-inset-bottom)); }
-.adhead { gap: 6px; }
-.adhead h3 { font-size: 13.5px; }
-.adsub { display: none; }
-.adtabs { order: 4; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.adtabs::-webkit-scrollbar { display: none; }
-.adtabs button { flex: 1 0 auto; padding: 7px 10px; font-size: 11.5px; }
-.adsplit { grid-template-columns: 1fr; grid-template-rows: 1fr; }
-.addetail { display: none; }
-.adsplit.show-detail .adlist { display: none; }
-.adsplit.show-detail .addetail { display: block; }
-.adpane.detail-on .adsearch { display: none; }
-.adback { display: block; width: 100%; margin-bottom: 8px; background: #1b2637; border: 1.5px solid #2f3b52; color: #cfe0ff; border-radius: 9px; padding: 8px; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
-.adstats { grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); }
-.adstat b { font-size: 15px; }
-.adactions button { flex: 1 1 auto; padding: 9px 10px; }
-.adkv { grid-template-columns: 1fr; }
-.adann input[type=text] { flex: 1 1 100%; }
-.adsearch input { flex: 1 1 auto; min-width: 0; }
-.adann button { flex: 1 1 auto; padding: 9px 10px; }
-.adsearch button { flex: 0 0 auto; padding: 9px 12px; }
+#bhModal { padding: 0; background: #0e131c; }
+.bhcard { height: 100%; max-width: none; border: 0; border-radius: 0; padding: calc(6px + env(safe-area-inset-top)) 9px calc(8px + env(safe-area-inset-bottom)); }
+.bhhead { gap: 6px; }
+.bhhead h3 { font-size: 13.5px; }
+.bhsub { display: none; }
+.bhtabs { order: 4; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.bhtabs::-webkit-scrollbar { display: none; }
+.bhtabs button { flex: 1 0 auto; padding: 7px 10px; font-size: 11.5px; }
+.bhsplit { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+.bhdetail { display: none; }
+.bhsplit.show-detail .bhlist { display: none; }
+.bhsplit.show-detail .bhdetail { display: block; }
+.bhpane.detail-on .bhsearch { display: none; }
+.bhback { display: block; width: 100%; margin-bottom: 8px; background: #1b2637; border: 1.5px solid #2f3b52; color: #cfe0ff; border-radius: 9px; padding: 8px; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.bhstats { grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); }
+.bhstat b { font-size: 15px; }
+.bhactions button { flex: 1 1 auto; padding: 9px 10px; }
+.bhkv { grid-template-columns: 1fr; }
+.bhann input[type=text] { flex: 1 1 100%; }
+.bhsearch input { flex: 1 1 auto; min-width: 0; }
+.bhann button { flex: 1 1 auto; padding: 9px 10px; }
+.bhsearch button { flex: 0 0 auto; padding: 9px 12px; }
 }
 @media (max-width: 400px) {
-.adstat span { font-size: 9px; }
+.bhstat span { font-size: 9px; }
 }
 .vlog-item.devitem { border-left: 3px solid #6b5aa8; }
 .tagdev { font-size: 9px; font-weight: 900; background: #4a3a6b; color: #d9cdff; border-radius: 999px; padding: 1px 6px; margin-right: 5px; }
@@ -3515,7 +3515,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.93</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.94</span></span>
     </button>
     <!-- v4.93：開發者後台入口（DEV_BUILD 或白名單帳號才顯示） -->
     <button class="verlogbtn devbtn" id="devBtn" type="button" title="開發者後台">🛠</button>
@@ -3558,7 +3558,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.93</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.94</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4234,7 +4234,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.93';
+const VERSION = '4.94';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -26886,7 +26886,11 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.93', date: '2026-11-05', now: true, items: [
+  { v: '4.94', date: '2026-11-05', now: true, items: [
+    '🛡️ 修正廣告封鎖類擴充功能會誤判、把某些面板整塊隱藏的問題（按了看起來沒反應）',
+    '🎨 內部樣式命名整理：不再和常見的廣告元素名稱撞名',
+    '🔧 版面穩定性修正，不影響遊戲內容' ] },
+  { v: '4.93', date: '2026-11-05', now: false, items: [
     '🔧 修正首頁部分入口在舊快取頁面上完全沒反應的問題（重新整理一次就會恢復）',
     '🧩 診斷面板補上看得見的入口，不必再記手勢或快捷鍵',
     '🔄 新版偵測更積極：背景發現有更新時，自動換掉還停在舊版的頁面' ] },
@@ -30148,7 +30152,7 @@ const Admin = (function () {
   const A = { open: false, data: null, dump: null, health: null, q: '', sel: null,
     tab: 'home', lb: null, lbMode: 'daily', busy: false, err: '',
     // v4.93：entryWired＝入口監聽（鍵盤／連點／#admin／🛠 鈕）已綁
-    //        wiredModal＝#adminModal 內部按鈕已綁（那塊 HTML 寫在 script 標籤之後，會晚一步）
+    //        wiredModal＝#bhModal 內部按鈕已綁（那塊 HTML 寫在 script 標籤之後，會晚一步）
     entryWired: false, wiredModal: false, pending: false };
 
   function e2(s) {
@@ -30178,11 +30182,11 @@ const Admin = (function () {
     } catch (e) { return '—'; }
   }
   function srcLabel(a) {
-    if (a.kind === 'guest') return '<span class="adpill g">遊客</span>';
+    if (a.kind === 'guest') return '<span class="bhpill g">遊客</span>';
     const p = a.provider || 'web';
     const name = p === 'google' ? 'Google' : p === 'facebook' ? 'Facebook'
       : p === 'line' ? 'LINE' : '帳密';
-    return '<span class="adpill p">' + e2(name) + '</span>';
+    return '<span class="bhpill p">' + e2(name) + '</span>';
   }
   function kv(rows) {
     return rows.map(function (r) {
@@ -30195,14 +30199,14 @@ const Admin = (function () {
   /* ---------- 頁籤 ---------- */
   function setTab(name) {
     A.tab = name;
-    const bar = $id('adTabs');
+    const bar = $id('bhTabs');
     if (bar) {
       const bs = bar.querySelectorAll('button[data-tab]');
       for (let i = 0; i < bs.length; i++) {
         bs[i].classList.toggle('on', bs[i].getAttribute('data-tab') === name);
       }
     }
-    const panes = document.querySelectorAll('#adminModal .adpane');
+    const panes = document.querySelectorAll('#bhModal .bhpane');
     for (let i = 0; i < panes.length; i++) {
       panes[i].classList.toggle('on', panes[i].getAttribute('data-pane') === name);
     }
@@ -30213,7 +30217,7 @@ const Admin = (function () {
 
   /* ---------- 總覽 ---------- */
   function renderStats(st) {
-    const box = $id('adStats');
+    const box = $id('bhStats');
     if (!box || !st) return;
     const cells = [
       ['總帳號', st.accounts], ['正式會員', st.members], ['遊客', st.guests],
@@ -30222,20 +30226,20 @@ const Admin = (function () {
       ['綁定', st.bindings], ['竄改攔阻', st.tamper], ['限流攔阻', st.rateLimited]
     ];
     box.innerHTML = cells.map(function (c) {
-      return '<div class="adstat"><b>' + (c[1] == null ? 0 : c[1]) + '</b><span>' + c[0] + '</span></div>';
+      return '<div class="bhstat"><b>' + (c[1] == null ? 0 : c[1]) + '</b><span>' + c[0] + '</span></div>';
     }).join('');
   }
 
   function renderHealth() {
-    const box = $id('adHealth'), tag = $id('adHealthTag');
+    const box = $id('bhHealth'), tag = $id('bhHealthTag');
     if (!box) return;
     const h = A.health;
     if (!h) {
       box.innerHTML = '<div><span>狀態</span><b>讀不到 /api/health</b></div>';
-      if (tag) { tag.textContent = '離線'; tag.className = 'adtag w'; }
+      if (tag) { tag.textContent = '離線'; tag.className = 'bhtag w'; }
       return;
     }
-    if (tag) { tag.textContent = h.ok ? '正常' : '異常'; tag.className = 'adtag' + (h.ok ? '' : ' w'); }
+    if (tag) { tag.textContent = h.ok ? '正常' : '異常'; tag.className = 'bhtag' + (h.ok ? '' : ' w'); }
     const d = h.storageDiag || {};
     const rows = [
       ['房間 / 中繼', (h.rooms | 0) + ' / ' + (h.relay | 0)],
@@ -30258,18 +30262,18 @@ const Admin = (function () {
   }
 
   function renderRecent() {
-    const box = $id('adRecent');
+    const box = $id('bhRecent');
     if (!box || !A.data) return;
     const rows = (A.data.accounts || []).slice().sort(function (x, y) {
       return (y.lastSeen || 0) - (x.lastSeen || 0);
     }).slice(0, 40);
-    if (!rows.length) { box.innerHTML = '<div class="adempty">還沒有任何帳號</div>'; return; }
+    if (!rows.length) { box.innerHTML = '<div class="bhempty">還沒有任何帳號</div>'; return; }
     box.innerHTML = rows.map(function (a) {
-      return '<div class="adrow" data-id="' + e2(a.id) + '">' +
-        '<div class="adnm">' + e2(a.name) + (a.dev ? ' <span class="adpill d">DEV</span>' : '') + '</div>' +
-        '<div class="adst">' + srcLabel(a) +
-        (a.banned ? '<span class="adpill b">停權</span>' : '') + '</div>' +
-        '<div class="admt">最後上線 ' + e2(a.lastSeenStr || dt(a.lastSeen)) +
+      return '<div class="bhrow" data-id="' + e2(a.id) + '">' +
+        '<div class="bhnm">' + e2(a.name) + (a.dev ? ' <span class="bhpill d">DEV</span>' : '') + '</div>' +
+        '<div class="bhst">' + srcLabel(a) +
+        (a.banned ? '<span class="bhpill b">停權</span>' : '') + '</div>' +
+        '<div class="bhmt">最後上線 ' + e2(a.lastSeenStr || dt(a.lastSeen)) +
         '　關卡 ' + (a.cleared | 0) + '/32　💰' + (a.gold | 0) + '</div>' +
         '</div>';
     }).join('');
@@ -30286,28 +30290,28 @@ const Admin = (function () {
     });
   }
   function renderList() {
-    const box = $id('adList');
+    const box = $id('bhList');
     if (!box) return;
-    if (!A.data) { box.innerHTML = '<div class="adempty">載入中…</div>'; return; }
+    if (!A.data) { box.innerHTML = '<div class="bhempty">載入中…</div>'; return; }
     const rows = rowsFiltered();
-    if (!rows.length) { box.innerHTML = '<div class="adempty">沒有符合的帳號</div>'; return; }
+    if (!rows.length) { box.innerHTML = '<div class="bhempty">沒有符合的帳號</div>'; return; }
     box.innerHTML = rows.map(function (a) {
-      return '<div class="adrow' + (A.sel === a.id ? ' on' : '') + '" data-id="' + e2(a.id) + '">' +
-        '<div class="adnm">' + e2(a.name) + (a.dev ? ' <span class="adpill d">DEV</span>' : '') + '</div>' +
-        '<div class="adst">' + srcLabel(a) +
-        (a.banned ? '<span class="adpill b">停權</span>' : '') + '</div>' +
-        '<div class="aduid">' + e2(a.id) + '</div>' +
-        '<div class="admt">關卡 ' + (a.cleared | 0) + '/32　💰' + (a.gold | 0) +
+      return '<div class="bhrow' + (A.sel === a.id ? ' on' : '') + '" data-id="' + e2(a.id) + '">' +
+        '<div class="bhnm">' + e2(a.name) + (a.dev ? ' <span class="bhpill d">DEV</span>' : '') + '</div>' +
+        '<div class="bhst">' + srcLabel(a) +
+        (a.banned ? '<span class="bhpill b">停權</span>' : '') + '</div>' +
+        '<div class="bhuid">' + e2(a.id) + '</div>' +
+        '<div class="bhmt">關卡 ' + (a.cleared | 0) + '/32　💰' + (a.gold | 0) +
         '　登入 ' + (a.logins | 0) + '　' + e2(a.createdStr || dt(a.created)) + '</div>' +
         '</div>';
     }).join('');
   }
 
   function renderDetail(a) {
-    const box = $id('adDetail');
+    const box = $id('bhDetail');
     if (!box) return;
     if (!a) {
-      box.innerHTML = '<div class="adempty">← 從左邊選一個帳號看完整資料</div>';
+      box.innerHTML = '<div class="bhempty">← 從左邊選一個帳號看完整資料</div>';
       return;
     }
     const al = a.alloc || {};
@@ -30315,22 +30319,22 @@ const Admin = (function () {
     const stgTxt = Object.keys(stg).sort(function (x, y) { return x - y; })
       .map(function (k) { return k + '×' + stg[k]; }).join('、') || '（無）';
     const evs = (a.events || []).map(function (e) {
-      return '<div class="adev"><span class="mono">' + e2(e.str || dt(e.t)) + '</span>' +
+      return '<div class="bhev"><span class="mono">' + e2(e.str || dt(e.t)) + '</span>' +
         '<b>' + e2(e.type) + '</b>' +
-        (e.stage ? ' <span class="adpill g">關 ' + e.stage + '</span>' : '') +
-        (e.cleared != null ? ' <span class="adpill g">cleared=' + e.cleared + '</span>' : '') +
+        (e.stage ? ' <span class="bhpill g">關 ' + e.stage + '</span>' : '') +
+        (e.cleared != null ? ' <span class="bhpill g">cleared=' + e.cleared + '</span>' : '') +
         '</div>';
-    }).join('') || '<div class="adempty">（沒有足跡）</div>';
+    }).join('') || '<div class="bhempty">（沒有足跡）</div>';
 
     const ips = (a.ips || []).join('、') || a.ip || '—';
     box.innerHTML =
-      '<button class="adback" type="button" data-adm="back">← 返回名單</button>' +
-      '<div class="adwho"><b>' + e2(a.name) + '</b> <span class="mono" style="font-size:10.5px;color:#6f7f9c">' +
+      '<button class="bhback" type="button" data-adm="back">← 返回名單</button>' +
+      '<div class="bhwho"><b>' + e2(a.name) + '</b> <span class="mono" style="font-size:10.5px;color:#6f7f9c">' +
       e2(a.id) + '</span>' +
-      (a.dev ? ' <span class="adpill d">DEVELOPER</span>' : '') +
-      (a.banned ? ' <span class="adpill b">已停權</span>' : '') +
-      (a.hasPass ? ' <span class="adpill g">有密碼</span>' : '') + '</div>' +
-      '<div class="adkv">' + kv([
+      (a.dev ? ' <span class="bhpill d">DEVELOPER</span>' : '') +
+      (a.banned ? ' <span class="bhpill b">已停權</span>' : '') +
+      (a.hasPass ? ' <span class="bhpill g">有密碼</span>' : '') + '</div>' +
+      '<div class="bhkv">' + kv([
         ['Email / 帳號', e2(a.email || a.username || '—')],
         ['登入來源', e2(a.provider || 'guest')],
         ['帳號種類', e2(a.kind || '—')],
@@ -30348,20 +30352,20 @@ const Admin = (function () {
         ['累計遊玩', fmtDur(a.playSec || 0)],
         ['停權資訊', a.banned ? (e2(a.banned.reason || '未填') + '　' + dt(a.banned.at)) : '正常']
       ]) + '</div>' +
-      '<div class="adsec"><span>各關卡遊玩次數</span><div>' + e2(stgTxt) + '</div></div>' +
-      '<div class="adactions">' +
+      '<div class="bhsec"><span>各關卡遊玩次數</span><div>' + e2(stgTxt) + '</div></div>' +
+      '<div class="bhactions">' +
       '<button data-adm="ban" data-id="' + e2(a.id) + '" data-on="' + (a.banned ? '0' : '1') + '">' +
       (a.banned ? '♻️ 解除停權' : '🚫 停權') + '</button>' +
       '<button data-adm="grant" data-id="' + e2(a.id) + '">💾 套用下方進度／金幣</button>' +
       '<button data-adm="reset" data-id="' + e2(a.id) + '">🧹 配點歸零</button>' +
-      '<span class="adgrant">關卡 <input id="adCleared" type="number" min="0" max="32" value="' + (a.cleared | 0) + '">' +
-      '金幣 <input id="adGold" type="number" min="0" value="' + (a.gold | 0) + '"></span>' +
+      '<span class="bhgrant">關卡 <input id="bhCleared" type="number" min="0" max="32" value="' + (a.cleared | 0) + '">' +
+      '金幣 <input id="bhGold" type="number" min="0" value="' + (a.gold | 0) + '"></span>' +
       '</div>' +
-      '<div class="adsec"><span>最近操作足跡（最多 30 筆）</span>' + evs + '</div>' +
-      '<div class="adsec"><span>這個帳號的原始 JSON</span></div>' +
-      '<pre class="adpre" style="min-height:90px">' + e2(JSON.stringify(a, null, 2)) + '</pre>';
-    const split = $id('adSplit');
-    const pane = document.querySelector('.adpane[data-pane=members]');
+      '<div class="bhsec"><span>最近操作足跡（最多 30 筆）</span>' + evs + '</div>' +
+      '<div class="bhsec"><span>這個帳號的原始 JSON</span></div>' +
+      '<pre class="bhpre" style="min-height:90px">' + e2(JSON.stringify(a, null, 2)) + '</pre>';
+    const split = $id('bhSplit');
+    const pane = document.querySelector('.bhpane[data-pane=members]');
     if (split && window.matchMedia && window.matchMedia('(max-width: 880px)').matches) {
       split.classList.add('show-detail');
       if (pane) pane.classList.add('detail-on');   // 手機看詳情時把搜尋列收起來（省空間）
@@ -30370,7 +30374,7 @@ const Admin = (function () {
 
   /* ---------- 系統 ---------- */
   function renderSys() {
-    const box = $id('adSys'), raw = $id('adRaw');
+    const box = $id('bhSys'), raw = $id('bhRaw');
     const d = A.dump;
     if (!d) {
       if (box) box.innerHTML = '<div><span>資料</span><b>尚未載入（按 🔄）</b></div>';
@@ -30393,12 +30397,12 @@ const Admin = (function () {
 
   /* ---------- 排行榜 ---------- */
   function loadLb() {
-    const box = $id('adLbList'), meta = $id('adLbMeta');
+    const box = $id('bhLbList'), meta = $id('bhLbMeta');
     const mode = A.lbMode || 'daily';
-    if (box) box.innerHTML = '<div class="adempty">讀取中…</div>';
+    if (box) box.innerHTML = '<div class="bhempty">讀取中…</div>';
     return api('/api/lb/top?mode=' + encodeURIComponent(mode) + '&limit=100').then(function (r) {
       if (!r || !r.ok) {
-        if (box) box.innerHTML = '<div class="adempty">讀不到排行榜：' + e2((r && r.err) || 'NET') + '</div>';
+        if (box) box.innerHTML = '<div class="bhempty">讀不到排行榜：' + e2((r && r.err) || 'NET') + '</div>';
         return;
       }
       A.lb = r;
@@ -30409,12 +30413,12 @@ const Admin = (function () {
       const list = r.list || [];
       if (box) {
         box.innerHTML = list.length ? list.map(function (it, i) {
-          return '<div class="adrow" style="cursor:default">' +
-            '<div class="adnm">#' + (i + 1) + '　' + e2(it.name || it.id || '匿名') + '</div>' +
-            '<div class="adst"><span class="adpill p">' + (it.score == null ? '—' : it.score) + '</span></div>' +
-            '<div class="admt">' + e2(it.at ? dt(it.at) : '') +
+          return '<div class="bhrow" style="cursor:default">' +
+            '<div class="bhnm">#' + (i + 1) + '　' + e2(it.name || it.id || '匿名') + '</div>' +
+            '<div class="bhst"><span class="bhpill p">' + (it.score == null ? '—' : it.score) + '</span></div>' +
+            '<div class="bhmt">' + e2(it.at ? dt(it.at) : '') +
             (it.mode ? '　' + e2(it.mode) : '') + '</div></div>';
-        }).join('') : '<div class="adempty">這一天還沒有人上榜</div>';
+        }).join('') : '<div class="bhempty">這一天還沒有人上榜</div>';
       }
     });
   }
@@ -30438,16 +30442,16 @@ const Admin = (function () {
         const code = (r && r.err) || 'NET';
         const needLogin = code === 'NO_SESSION' || code === 'NOT_DEV';
         if (needLogin) {
-          const box = $id('adStats');
+          const box = $id('bhStats');
           if (box) box.innerHTML =
-            '<div class="adlogin">' +
+            '<div class="bhlogin">' +
             '<b>' + (code === 'NOT_DEV' ? '這個帳號沒有後台權限' : '還沒登入，所以讀不到資料') + '</b>' +
             '<span>' + (code === 'NOT_DEV'
               ? '後台只開放給白名單裡的開發者帳號。請換成開發者帳號登入，或請管理員把這個 Email 加進白名單。'
               : '後台資料需要登入才能讀取。請先用開發者帳號登入，登入後按右上角 🔄 重新整理即可。') + '</span>' +
             '<button type="button" data-adm="login">' + (code === 'NOT_DEV' ? '切換帳號' : '前往登入') + '</button>' +
             '</div>';
-          const w = $id('adWarn');
+          const w = $id('bhWarn');
           if (w) { w.textContent = '⚠️ ' + (code === 'NOT_DEV' ? '目前帳號不是開發者' : '尚未登入'); w.classList.remove('hide'); }
         } else if (code === 'NOT_FOUND') {
           toast('後端還是舊版：/api/admin/dump 不存在，重啟後就有了', 3.4);
@@ -30463,16 +30467,16 @@ const Admin = (function () {
       renderRecent();
       renderList();
       renderSys();
-      const mail = $id('adDevMail');
+      const mail = $id('bhDevMail');
       if (mail) mail.textContent = (r.devEmails || []).join(' / ');
-      const annText = $id('adAnnText');
+      const annText = $id('bhAnnText');
       if (annText) annText.value = (r.announce && r.announce.text) || '';
-      const w = $id('adWarn');
+      const w = $id('bhWarn');
       if (w) {
         if (r.persistWarning) { w.textContent = '⚠️ ' + r.persistWarning; w.classList.remove('hide'); }
         else w.classList.add('hide');
       }
-      const help = $id('adHelp');
+      const help = $id('bhHelp');
       if (help) {
         help.innerHTML =
           '<div>· <b>總覽</b>：帳號統計 ＋ <code>/api/health</code> 全部欄位（儲存後端、金鑰指紋、容器啟動時間、運行秒數）。</div>' +
@@ -30507,7 +30511,7 @@ const Admin = (function () {
     let devOk = DEV_BUILD;
     if (!devOk) { try { devOk = !!(Cloud && Cloud.isDev && Cloud.isDev()); } catch (e) { devOk = false; } }
     if (!devOk) { toast('只有開發者帳號可以開啟後台', 2.6); return false; }
-    const m = $id('adminModal');
+    const m = $id('bhModal');
     if (!m) { toast(t('acct.adminFail'), 3.2); return false; }
     m.classList.add('on');
     A.open = true;
@@ -30518,7 +30522,7 @@ const Admin = (function () {
     return true;
   }
   function close() {
-    const m = $id('adminModal');
+    const m = $id('bhModal');
     if (m) m.classList.remove('on');
     A.open = false;
   }
@@ -30536,11 +30540,11 @@ const Admin = (function () {
   }
 
   function wire() {
-    // v4.93：原本第一行是 `const m = $id('adminModal'); if (!m) return;`。
-    //   #adminModal 的 HTML 寫在 script 標籤之後；只要 wire() 比 DOM 早一步被叫到，
+    // v4.93：原本第一行是 `const m = $id('bhModal'); if (!m) return;`。
+    //   #bhModal 的 HTML 寫在 script 標籤之後；只要 wire() 比 DOM 早一步被叫到，
     //   m 就是 null → 整個函式直接 return → 連點／快捷鍵／#admin 三條入口一條都沒綁上。
     //   入口監聽跟那個元素無關，必須先綁；modal 專屬的綁定等元素出現再補。
-    const m = $id('adminModal');
+    const m = $id('bhModal');
     if (!A.entryWired) {
     A.entryWired = true;
     // v4.92：後台入口「三保險」——任何一條通就能開，不再押在單一快捷鍵上。
@@ -30610,7 +30614,7 @@ const Admin = (function () {
       if (want()) setTimeout(function () { try { if (!A.open) open(); } catch (e) {} }, 800);
       window.addEventListener('hashchange', function () { try { if (want()) toggle(); } catch (e) {} });
     })();
-    }   // ← 入口監聽結束：只綁一次，且完全不依賴 #adminModal
+    }   // ← 入口監聽結束：只綁一次，且完全不依賴 #bhModal
 
     if (!m) {
       if (!A.pending) {
@@ -30624,7 +30628,7 @@ const Admin = (function () {
     if (A.wiredModal) return;
     A.wiredModal = true;
 
-    const cl = $id('adClose'); if (cl) cl.addEventListener('click', function () { close(); });
+    const cl = $id('bhClose'); if (cl) cl.addEventListener('click', function () { close(); });
     m.addEventListener('click', function (e) { if (e.target === m) close(); });
     // v4.92：總覽頁的「前往登入／切換帳號」→ 關掉後台、直接打開帳號視窗
     m.addEventListener('click', function (e) {
@@ -30634,17 +30638,17 @@ const Admin = (function () {
       close();
       try { if (Cloud && Cloud.open) Cloud.open(); } catch (err) {}
     });
-    const rf = $id('adRefresh'); if (rf) rf.addEventListener('click', function () { refresh(); });
+    const rf = $id('bhRefresh'); if (rf) rf.addEventListener('click', function () { refresh(); });
 
-    const tabs = $id('adTabs');
+    const tabs = $id('bhTabs');
     if (tabs) tabs.addEventListener('click', function (e) {
       const b = e.target && e.target.closest ? e.target.closest('button[data-tab]') : null;
       if (b) setTab(b.getAttribute('data-tab'));
     });
 
-    const qg = $id('adQGo');
+    const qg = $id('bhQGo');
     const doQ = function () {
-      const q = $id('adQ');
+      const q = $id('bhQ');
       A.q = q ? q.value : '';
       renderList();
       if (A.q && A.data) {
@@ -30653,12 +30657,12 @@ const Admin = (function () {
       }
     };
     if (qg) qg.addEventListener('click', doQ);
-    const qi = $id('adQ');
+    const qi = $id('bhQ');
     if (qi) qi.addEventListener('keydown', function (e) { if (e.key === 'Enter') doQ(); });
 
-    const ag = $id('adAnnGo');
+    const ag = $id('bhAnnGo');
     if (ag) ag.addEventListener('click', function () {
-      const t1 = $id('adAnnText'), h1 = $id('adAnnHours');
+      const t1 = $id('bhAnnText'), h1 = $id('bhAnnHours');
       api('/api/admin/announce', {
         text: t1 ? t1.value : '',
         hours: h1 ? Number(h1.value) || 0 : 24
@@ -30671,28 +30675,28 @@ const Admin = (function () {
       });
     });
 
-    const lg = $id('adLbGo');
+    const lg = $id('bhLbGo');
     if (lg) lg.addEventListener('click', function () {
-      const sel = $id('adLbMode');
+      const sel = $id('bhLbMode');
       A.lbMode = sel ? sel.value : 'daily';
       loadLb();
     });
-    const lm = $id('adLbMode');
+    const lm = $id('bhLbMode');
     if (lm) lm.addEventListener('change', function () {
       A.lbMode = lm.value; A.lb = null; loadLb();
     });
 
-    const ex1 = $id('adExportAcc');
+    const ex1 = $id('bhExportAcc');
     if (ex1) ex1.addEventListener('click', function () {
       if (!A.data) return toast('還沒載入', 2);
       download('bombhero-accounts-' + Date.now() + '.json', JSON.stringify(A.data.accounts, null, 2));
     });
-    const ex2 = $id('adExportRaw');
+    const ex2 = $id('bhExportRaw');
     if (ex2) ex2.addEventListener('click', function () {
       if (!A.dump) return toast('還沒載入', 2);
       download('bombhero-dump-' + Date.now() + '.json', JSON.stringify(A.dump, null, 2));
     });
-    const cp = $id('adCopyRaw');
+    const cp = $id('bhCopyRaw');
     if (cp) cp.addEventListener('click', function () {
       if (!A.dump) return toast('還沒載入', 2);
       const txt = JSON.stringify(A.dump, null, 2);
@@ -30703,29 +30707,29 @@ const Admin = (function () {
       } catch (e) { toast('複製失敗', 2); }
     });
 
-    const list = $id('adList');
+    const list = $id('bhList');
     if (list) list.addEventListener('click', function (e) {
-      const row = e.target && e.target.closest ? e.target.closest('.adrow[data-id]') : null;
+      const row = e.target && e.target.closest ? e.target.closest('.bhrow[data-id]') : null;
       if (row) pick(row.getAttribute('data-id'));
     });
-    const recent = $id('adRecent');
+    const recent = $id('bhRecent');
     if (recent) recent.addEventListener('click', function (e) {
-      const row = e.target && e.target.closest ? e.target.closest('.adrow[data-id]') : null;
+      const row = e.target && e.target.closest ? e.target.closest('.bhrow[data-id]') : null;
       if (!row) return;
       const id = row.getAttribute('data-id');
       setTab('members');
       pick(id);
     });
 
-    const det = $id('adDetail');
+    const det = $id('bhDetail');
     if (det) det.addEventListener('click', function (e) {
       const b = e.target && e.target.closest ? e.target.closest('[data-adm]') : null;
       if (!b) return;
       const act = b.getAttribute('data-adm'), id = b.getAttribute('data-id');
       if (act === 'back') {
-        const sp = $id('adSplit');
+        const sp = $id('bhSplit');
         if (sp) sp.classList.remove('show-detail');
-        const pn = document.querySelector('.adpane[data-pane=members]');
+        const pn = document.querySelector('.bhpane[data-pane=members]');
         if (pn) pn.classList.remove('detail-on');
         AudioSys.sfx('click');
         return;
@@ -30737,7 +30741,7 @@ const Admin = (function () {
         api('/api/admin/reset-alloc', { id: id })
           .then(function (r) { toast(r && r.ok ? '配點已歸零' : '操作失敗', 2); pick(id); refresh(); });
       } else if (act === 'grant') {
-        const c = $id('adCleared'), g = $id('adGold');
+        const c = $id('bhCleared'), g = $id('bhGold');
         api('/api/admin/grant', {
           id: id,
           cleared: c ? Number(c.value) : undefined,
@@ -31154,7 +31158,7 @@ function rpgAdjust(k, d) {
     try { setupWebViewGuard(); } catch (e) {}
     try { Cloud.wireUi(); } catch (e) {}
     try { PadEdit.wire(); } catch (e) {}       // v4.2：#padEdit 的 HTML 也在 script 之後
-    try { Admin.wire(); } catch (e) {}         // v4.3：#adminModal 的 HTML 也在 script 之後
+    try { Admin.wire(); } catch (e) {}         // v4.3：#bhModal 的 HTML 也在 script 之後
     try { Cloud.init(); } catch (e) {}
     // v4.85：已經有 session（例如自動登入）就直接開同步；沒有的話等 adopt() 再觸發
     try { Save.onBoot(); } catch (e) {}
@@ -31393,77 +31397,77 @@ document.addEventListener('pointerdown', function once() {
 <div id="webViewBar" class="hide"></div>
 
 <!-- v4.3：開發者後台（只有 jon84597@gmail.com 登入後看得到按鈕） -->
-<div id="adminModal" role="dialog" aria-modal="true" aria-label="開發者後台">
-  <div class="adcard">
-    <div class="adhead">
-      <h3>🛠 開發者後台 <span class="adsub" id="adDevMail"></span></h3>
-      <div class="adtabs" id="adTabs">
+<div id="bhModal" role="dialog" aria-modal="true" aria-label="開發者後台">
+  <div class="bhcard">
+    <div class="bhhead">
+      <h3>🛠 開發者後台 <span class="bhsub" id="bhDevMail"></span></h3>
+      <div class="bhtabs" id="bhTabs">
         <button type="button" data-tab="home" class="on">總覽</button>
         <button type="button" data-tab="members">會員</button>
         <button type="button" data-tab="live">即時</button>
         <button type="button" data-tab="system">系統</button>
         <button type="button" data-tab="tools">工具</button>
       </div>
-      <div class="adheadr">
-        <button id="adRefresh" type="button" title="重新整理">🔄</button>
-        <button id="adClose" type="button" aria-label="關閉">✕</button>
+      <div class="bhheadr">
+        <button id="bhRefresh" type="button" title="重新整理">🔄</button>
+        <button id="bhClose" type="button" aria-label="關閉">✕</button>
       </div>
     </div>
-    <div class="adwarn hide" id="adWarn"></div>
+    <div class="bhwarn hide" id="bhWarn"></div>
 
-    <div class="adpane on" data-pane="home">
-      <div class="adstats" id="adStats"></div>
-      <div class="adsec2">伺服器即時狀態<span class="adtag" id="adHealthTag">讀取中</span></div>
-      <div class="adkv" id="adHealth"></div>
-      <div class="adsec2">最近活動的帳號</div>
-      <div class="adlist" id="adRecent"></div>
+    <div class="bhpane on" data-pane="home">
+      <div class="bhstats" id="bhStats"></div>
+      <div class="bhsec2">伺服器即時狀態<span class="bhtag" id="bhHealthTag">讀取中</span></div>
+      <div class="bhkv" id="bhHealth"></div>
+      <div class="bhsec2">最近活動的帳號</div>
+      <div class="bhlist" id="bhRecent"></div>
     </div>
 
-    <div class="adpane" data-pane="members">
-      <div class="adsearch">
-        <input id="adQ" type="text" placeholder="搜尋 UID / Email / 名稱 / IP（Enter 直接查）">
-        <button id="adQGo" type="button">查詢</button>
+    <div class="bhpane" data-pane="members">
+      <div class="bhsearch">
+        <input id="bhQ" type="text" placeholder="搜尋 UID / Email / 名稱 / IP（Enter 直接查）">
+        <button id="bhQGo" type="button">查詢</button>
       </div>
-      <div class="adsplit" id="adSplit">
-        <div class="adlist" id="adList"></div>
-        <div class="addetail" id="adDetail"></div>
+      <div class="bhsplit" id="bhSplit">
+        <div class="bhlist" id="bhList"></div>
+        <div class="bhdetail" id="bhDetail"></div>
       </div>
     </div>
 
-    <div class="adpane" data-pane="live">
-      <div class="adrow2">
+    <div class="bhpane" data-pane="live">
+      <div class="bhrow2">
         <span>排行榜</span>
-        <select id="adLbMode">
+        <select id="bhLbMode">
           <option value="daily">每日挑戰</option>
           <option value="weekly">每週榜</option>
         </select>
-        <button id="adLbGo" type="button">讀取</button>
-        <span class="adsub" id="adLbMeta"></span>
+        <button id="bhLbGo" type="button">讀取</button>
+        <span class="bhsub" id="bhLbMeta"></span>
       </div>
-      <div class="adlist" id="adLbList"></div>
+      <div class="bhlist" id="bhLbList"></div>
     </div>
 
-    <div class="adpane" data-pane="system">
-      <div class="adsec2">後端資料摘要</div>
-      <div class="adkv" id="adSys"></div>
-      <div class="adsec2">原始 JSON（全部資料，可複製／匯出）</div>
-      <pre class="adpre" id="adRaw">按右上角 🔄 載入</pre>
+    <div class="bhpane" data-pane="system">
+      <div class="bhsec2">後端資料摘要</div>
+      <div class="bhkv" id="bhSys"></div>
+      <div class="bhsec2">原始 JSON（全部資料，可複製／匯出）</div>
+      <pre class="bhpre" id="bhRaw">按右上角 🔄 載入</pre>
     </div>
 
-    <div class="adpane" data-pane="tools">
-      <div class="adann">
+    <div class="bhpane" data-pane="tools">
+      <div class="bhann">
         <span>📢 全服公告</span>
-        <input id="adAnnText" type="text" maxlength="300" placeholder="留空＝清除公告">
-        <input id="adAnnHours" type="number" min="0" max="720" value="24" title="顯示時數（0＝永久）">
-        <button id="adAnnGo" type="button">發布</button>
+        <input id="bhAnnText" type="text" maxlength="300" placeholder="留空＝清除公告">
+        <input id="bhAnnHours" type="number" min="0" max="720" value="24" title="顯示時數（0＝永久）">
+        <button id="bhAnnGo" type="button">發布</button>
       </div>
-      <div class="adbtnrow">
-        <button id="adExportAcc" type="button">⬇ 匯出帳號 JSON</button>
-        <button id="adExportRaw" type="button">⬇ 匯出完整 dump</button>
-        <button id="adCopyRaw" type="button">📋 複製原始資料</button>
+      <div class="bhbtnrow">
+        <button id="bhExportAcc" type="button">⬇ 匯出帳號 JSON</button>
+        <button id="bhExportRaw" type="button">⬇ 匯出完整 dump</button>
+        <button id="bhCopyRaw" type="button">📋 複製原始資料</button>
       </div>
-      <div class="adsec2">這個後台看得到什麼</div>
-      <div class="adsec" id="adHelp"></div>
+      <div class="bhsec2">這個後台看得到什麼</div>
+      <div class="bhsec" id="bhHelp"></div>
     </div>
   </div>
 </div>

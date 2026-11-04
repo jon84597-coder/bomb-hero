@@ -144,7 +144,7 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   ok(src(/if \(!devOk\) \{ toast\('只有開發者帳號可以開啟後台'/) && src(/let devOk = DEV_BUILD;/),
     '前端先擋一次（非開發者開不了）');
   ok(src(/Admin: Admin,/) && typeof P.Admin === 'object', '__BH 有匯出 Admin（測試與除錯用）');
-  ok(src(/id="adminModal"/) && src(/id="adList"/) && src(/id="adDetail"/), '後台版面（名單／詳情）存在');
+  ok(src(/id="bhModal"/) && src(/id="bhList"/) && src(/id="bhDetail"/), '後台版面（名單／詳情）存在');
   ok(src(/加入時間/) && src(/註冊 IP/) && src(/第三方平台 ID/), '詳情欄位：加入時間／註冊 IP／第三方平台 ID');
 
   console.log('\n=== 10. 開發者全關卡解鎖 ===');

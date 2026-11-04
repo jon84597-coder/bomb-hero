@@ -118,3 +118,7 @@
 | | 🧱 **修掉 `wire()` 的早退陷阱**：原本第一行是 `const m = 取 #adminModal; if (!m) return;`，但 `#adminModal` 的 HTML 寫在 script 結束標籤之後 —— 只要 `wire()` 比 DOM 早一步被叫到，整個函式直接 return，**連點／快捷鍵／`#admin` 三條監聽器一條都沒綁上**。改成入口監聽（不依賴 DOM）先綁一次（`A.entryWired`），modal 內部按鈕等元素出現再用 `A.pending` 補綁（`A.wiredModal`）。 |
 | | ⚠️ **踩到的坑**：新加的註解裡寫了字面的 script 結束標籤，HTML 解析器直接把它當成真的結束標籤 → 整份 JS 被截斷，`node --check` 報 `Unexpected end of input`。之後註解提到它一律寫成「script 標籤」。 |
 | | 🔄 SW 版本 `v4.93.0`（三份副本）＋ `package.json` 4.93.0；遊戲內 `VERSION_LOG` 只寫「舊快取頁面／診斷面板入口／新版偵測」，**不含後台字樣**。 |
+| **v4.94** | 🛡️ **AdBlock 一開，後台面板整塊消失** —— 面板的 id／class 全是 `ad` 開頭（`.adcard`／`.adrow`／`.adpane`／`#adminModal`），而廣告封鎖清單（尤其中文清單）有 `[id^="ad"]`／`[class^="ad"]` 這種規則，會把整批元素 `display:none !important`。元素被隱藏 → 按鈕按下去「看起來完全沒反應」，其實 `open()` 已經回 `true`。 |
+| | 🔤 **改名**：34 個 class ＋ 30 個 id 全部 `ad*` → `bh*`（`.adcard`→`.bhcard`、`#adminModal`→`#bhModal`），`index.html` 內共 274 處；測試腳本同步 606 處。改完 CSS 無新衝突、`_runall` 101 支全綠。 |
+| | 🧪 **新增 `verify-v494`（17 項）**：CSS 不得再有 `.ad*` 類別、JS 不得再 `$id("ad*")`、每個 `bh*` 樣式都要真的被用到、`$id()` 取的 id 都必須存在於 HTML、四個入口都還在。 |
+| | 📌 **教訓**：`#adminModal` 這種「admin 剛好也是 ad 開頭」的命名，是 AdBlock 誤殺的高風險區。以後後台 UI 一律用 `bh` 前綴。另外 `verify-v492`／`verify-v493` 原本把版號寫死，改成跟著 `VERSION` 走，升版不會再整支紅。 |

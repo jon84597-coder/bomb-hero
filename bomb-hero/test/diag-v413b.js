@@ -78,7 +78,7 @@ srv.stderr.on('data', d => { const s = String(d); if (/Error/.test(s)) console.e
   } else {
     // 真的點下去
     const before = await page.eval(`(function(){
-      return { modal: document.getElementById('adminModal').className,
+      return { modal: document.getElementById('bhModal').className,
                acctModal: document.getElementById('acctModal').className };
     })()`);
     console.log('點擊前：' + JSON.stringify(before));
@@ -94,16 +94,16 @@ srv.stderr.on('data', d => { const s = String(d); if (/Error/.test(s)) console.e
     await sleep(1500);
 
     const after = await page.eval(`(function(){
-      var m = document.getElementById('adminModal');
-      var card = m ? m.querySelector('.adcard') : null;
+      var m = document.getElementById('bhModal');
+      var card = m ? m.querySelector('.bhcard') : null;
       var r = card ? card.getBoundingClientRect() : null;
       return {
         adminModalCls: m ? m.className : 'MISSING',
         adminModalDisplay: m ? getComputedStyle(m).display : '-',
         acctModalCls: document.getElementById('acctModal').className,
         cardRect: r ? (Math.round(r.width)+'x'+Math.round(r.height)+' @'+Math.round(r.left)+','+Math.round(r.top)) : '-',
-        statsChildren: (document.getElementById('adStats')||{children:[]}).children.length,
-        listChildren: (document.getElementById('adList')||{children:[]}).children.length,
+        statsChildren: (document.getElementById('bhStats')||{children:[]}).children.length,
+        listChildren: (document.getElementById('bhList')||{children:[]}).children.length,
         bodyCls: document.body.className
       };
     })()`);

@@ -11,7 +11,7 @@ const { launch, sleep } = require('./cdp.js');
     for (let i = 0; i < 80; i++) { if (await p.eval('typeof window.__BH === "object" && !!window.__BH')) break; await sleep(300); }
     await sleep(1000);
   }
-  const st = `JSON.stringify({ open: __BH.Admin.state.open, cls: document.getElementById('adminModal').className })`;
+  const st = `JSON.stringify({ open: __BH.Admin.state.open, cls: document.getElementById('bhModal').className })`;
 
   // ---- 桌機：🛠 按鈕 ----
   const d = await b.newPage();

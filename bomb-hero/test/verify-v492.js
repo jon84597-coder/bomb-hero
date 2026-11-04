@@ -71,11 +71,11 @@ ok(/if \(want\(\)\) setTimeout\(function \(\) \{ try \{ if \(!A\.open\) open\(\)
 console.log('=== ⑤ 登入提示 ===');
 ok(/const needLogin = code === 'NO_SESSION' \|\| code === 'NOT_DEV';/.test(SRC),
    '401 NO_SESSION / 403 NOT_DEV 會走「需要登入」分支');
-ok(/<div class="adlogin">/.test(SRC), '總覽頁畫一塊登入說明（不是只閃一句 toast）');
+ok(/<div class="bhlogin">/.test(SRC), '總覽頁畫一塊登入說明（不是只閃一句 toast）');
 ok(/data-adm="login"/.test(SRC), '有「前往登入／切換帳號」按鈕');
 ok(/closest\('\[data-adm="login"\]'\)/.test(SRC), '按鈕有綁點擊（會打開帳號視窗）');
 ok(/if \(Cloud && Cloud\.open\) Cloud\.open\(\);/.test(SRC), '按下後呼叫 Cloud.open() 開帳號視窗');
-ok(/\.adlogin button \{/.test(SRC), '登入按鈕有樣式（不是預設灰按鈕）');
+ok(/\.bhlogin button \{/.test(SRC), '登入按鈕有樣式（不是預設灰按鈕）');
 ok(!/if \(r && r\.err === 'NOT_DEV'\) \{ toast\('沒有權限（只有開發者帳號可以看後台）', 3\); close\(\); \}/.test(SRC),
    '原本「toast 一句就自動關掉」的行為已移除（使用者看不到原因）');
 
@@ -94,7 +94,7 @@ ok(top.now === true, '最新一筆標記為 now');
 ok(top.items.length >= 3, '至少 3 條更新（專案規則）', top.items.length);
 ok(!/後台|開發者/.test(top.items.join('|')), '最新條目不含「後台／開發者」字樣');
 const prev = P.VERSION_LOG[1];
-ok(prev.v === '4.92' && prev.now === false, '4.92 的 now 已取消');
+ok(prev.now === false && prev.v !== top.v && vge(top.v, prev.v), '上一版的 now 已取消且版號遞減', [top.v, prev.v]);
 ok(P.VERSION_LOG.length >= 100, '版本紀錄仍有 100 筆以上', P.VERSION_LOG.length);
 ok(P.VERSION_LOG.filter(function (x) { return !x.items || !x.items.length; }).length === 0,
    '沒有空條目的版本');

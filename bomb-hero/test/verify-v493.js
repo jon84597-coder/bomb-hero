@@ -16,7 +16,10 @@ const SRC = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 /* ================= ① 原始碼健康度 ================= */
 console.log('=== ① 原始碼健康度 ===');
 ok(SRC.indexOf('\r') < 0, '整檔 LF（0 個 CR）');
-ok((SRC.match(/const VERSION = '4\.93'/) || []).length === 1, "VERSION = '4.93'");
+const VERSION = (SRC.match(/const VERSION = '([0-9.]+)'/) || [])[1] || '';
+function vnum(v) { return String(v).split('.').map(Number); }
+function vge(a, b) { const x = vnum(a), y = vnum(b); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return true; }
+ok(/const VERSION = '[0-9.]+'/.test(SRC) && vge(VERSION, '4.93'), 'VERSION >= 4.93', VERSION);
 
 // 字面的 script 結束標籤會截斷整份 JS —— 這個坑 v4.93 真的踩過
 const scriptEnd = '<' + '/script>';
@@ -42,8 +45,8 @@ const wireBody = (function () {
   return i < 0 ? '' : SRC.slice(i, i + 7000);
 })();
 ok(wireBody.length > 0, '找得到 wire()');
-ok(!/function wire\(\) \{\s*const m = \$id\('adminModal'\);\s*if \(!m\) return;/.test(wireBody),
-   '不再「拿不到 #adminModal 就整個 return」（會讓三條入口全部沒綁）');
+ok(!/function wire\(\) \{\s*const m = \$id\('bhModal'\);\s*if \(!m\) return;/.test(wireBody),
+   '不再「拿不到 #bhModal 就整個 return」（會讓三條入口全部沒綁）');
 ok(/if \(!A\.entryWired\) \{/.test(wireBody), '入口監聽用 A.entryWired 只綁一次');
 ok(/if \(!m\) \{[\s\S]{0,400}?A\.pending = true/.test(wireBody), '拿不到 modal 時改登記 DOMContentLoaded 再補，而不是放棄');
 ok(/if \(A\.wiredModal\) return;/.test(wireBody), 'modal 內部按鈕只綁一次（A.wiredModal）');
@@ -63,10 +66,10 @@ sws.forEach(function (rel) {
   const f = path.join(__dirname, rel);
   if (!fs.existsSync(f)) return;
   const s = fs.readFileSync(f, 'utf8');
-  ok(/var SW_VERSION = 'v4\.93\.0';/.test(s), rel + ' SW_VERSION = v4.93.0');
+  ok(new RegExp("var SW_VERSION = 'v" + VERSION.replace(/\./g, '\\.') + "\\.0';").test(s), rel + ' SW_VERSION = v' + VERSION + '.0');
 });
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8'));
-ok(pkg.version === '4.93.0', 'package.json 4.93.0', pkg.version);
+ok(pkg.version === VERSION + '.0', 'package.json = VERSION.0', pkg.version);
 
 // 遊戲內版本紀錄不得出現後台／開發者字樣
 const log = (function () {
@@ -74,7 +77,7 @@ const log = (function () {
   const j = SRC.indexOf('];', i);
   return SRC.slice(i, j);
 })();
-ok(/v: '4\.93'/.test(log), 'VERSION_LOG 有 4.93');
+ok(new RegExp("v: '" + VERSION.replace(/\./g, '\\.') + "'").test(log), 'VERSION_LOG 有最新版號', VERSION);
 ok(log.indexOf('後台') < 0, 'VERSION_LOG 不含「後台」');
 ok(log.indexOf('開發者') < 0, 'VERSION_LOG 不含「開發者」');
 
@@ -83,5 +86,5 @@ console.log('=== ⑥ 副本同步 ===');
 const pub = path.join(__dirname, '..', '..', 'public', 'index.html');
 if (fs.existsSync(pub)) ok(fs.readFileSync(pub, 'utf8') === SRC, 'public/index.html 與主檔一致');
 
-console.log('\n--- v4.93: ' + pass + ' 通過, ' + fail + ' 失敗 ---');
+console.log('\n--- v4.93+: ' + pass + ' 通過, ' + fail + ' 失敗 ---');
 process.exit(fail ? 1 : 0);

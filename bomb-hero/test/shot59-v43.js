@@ -227,11 +227,11 @@ async function waitUp() {
   await click('#acctBody [data-acct="admin"]');
   await sleep(1400);
   r = await p.eval(`(function(){
-    const m=document.getElementById('adminModal');
+    const m=document.getElementById('bhModal');
     return { on: m.classList.contains('on'),
-      stats: document.querySelectorAll('#adStats .adstat').length,
-      rows: document.querySelectorAll('#adList tbody tr').length,
-      txt: (document.getElementById('adStats')||{}).textContent }; })()`);
+      stats: document.querySelectorAll('#bhStats .bhstat').length,
+      rows: document.querySelectorAll('#bhList tbody tr').length,
+      txt: (document.getElementById('bhStats')||{}).textContent }; })()`);
   console.log('    ' + JSON.stringify(r));
   ok(r.on === true, '後台開啟');
   ok(r.stats >= 8, '上方統計卡片有資料', r.stats);
@@ -240,15 +240,15 @@ async function waitUp() {
 
   // 點第一個非 dev 的玩家列 → 詳情
   const hit = await p.eval(`(function(){
-    const trs=[].slice.call(document.querySelectorAll('#adList tbody tr'));
+    const trs=[].slice.call(document.querySelectorAll('#bhList tbody tr'));
     const tr=trs.filter(function(t){ return !/DEV/.test(t.textContent); })[0];
     if(!tr) return null;
     tr.click();
     return tr.getAttribute('data-id');
   })()`);
   await sleep(900);
-  r = await p.eval(`(function(){ const d=document.getElementById('adDetail');
-    return { id: d.querySelector('.adwho')? 'ok':'no', txt: d.textContent.slice(0,400) }; })()`);
+  r = await p.eval(`(function(){ const d=document.getElementById('bhDetail');
+    return { id: d.querySelector('.bhwho')? 'ok':'no', txt: d.textContent.slice(0,400) }; })()`);
   ok(!!r.id, '點了列就顯示玩家詳情');
   ok(/加入時間/.test(r.txt) && /2026-\d\d-\d\d \d\d:\d\d:\d\d/.test(r.txt), '詳情有「精確到秒」的加入時間');
   ok(/註冊 IP/.test(r.txt) && /127\.0\.0\.1|::1|1\.2\.3\.4/.test(r.txt), '詳情有註冊 IP');
@@ -259,41 +259,41 @@ async function waitUp() {
 
   console.log('\n=== 9. 停權 / 解除 ===');
   await p.eval(`(function(){
-    const b=document.querySelector('#adDetail [data-adm="ban"]'); if(b) b.click(); })()`);
+    const b=document.querySelector('#bhDetail [data-adm="ban"]'); if(b) b.click(); })()`);
   await sleep(1200);
   r = await p.eval(`(function(){
-    const tr=document.querySelector('#adList tbody tr[data-id="'+${JSON.stringify(hit)}+'"]');
+    const tr=document.querySelector('#bhList tbody tr[data-id="'+${JSON.stringify(hit)}+'"]');
     return tr? tr.textContent : ''; })()`);
   ok(/停權/.test(r), '該玩家在名單上變成「停權」', (r || '').slice(0, 40));
   await p.eval(`(function(){
-    const b=document.querySelector('#adDetail [data-adm="ban"]'); if(b) b.click(); })()`);
+    const b=document.querySelector('#bhDetail [data-adm="ban"]'); if(b) b.click(); })()`);
   await sleep(1200);
   r = await p.eval(`(function(){
-    const tr=document.querySelector('#adList tbody tr[data-id="'+${JSON.stringify(hit)}+'"]');
+    const tr=document.querySelector('#bhList tbody tr[data-id="'+${JSON.stringify(hit)}+'"]');
     return tr? tr.textContent : ''; })()`);
   ok(/正常/.test(r), '解除停權後恢復「正常」');
 
   console.log('\n=== 10. 客服修存檔 ===');
   await p.eval(`(function(){
-    const c=document.getElementById('adCleared'); if(c){ c.value='12'; }
-    const g=document.getElementById('adGold'); if(g){ g.value='777'; }
-    const b=document.querySelector('#adDetail [data-adm="grant"]'); if(b) b.click(); })()`);
+    const c=document.getElementById('bhCleared'); if(c){ c.value='12'; }
+    const g=document.getElementById('bhGold'); if(g){ g.value='777'; }
+    const b=document.querySelector('#bhDetail [data-adm="grant"]'); if(b) b.click(); })()`);
   await sleep(1200);
-  r = await p.eval(`(function(){ const d=document.getElementById('adDetail'); return d.textContent; })()`);
+  r = await p.eval(`(function(){ const d=document.getElementById('bhDetail'); return d.textContent; })()`);
   ok(/12 \/ 32/.test(r), '後台改完關卡進度立刻反映', (/12 \/ 32[^）]*/.exec(r) || [''])[0]);
   ok(/777/.test(r), '金幣也照著改成 777');
 
   console.log('\n=== 11. 全服公告 ===');
   await p.eval(`(function(){
-    document.getElementById('adAnnText').value='今晚 23:00 停機維護';
-    document.getElementById('adAnnGo').click(); })()`);
+    document.getElementById('bhAnnText').value='今晚 23:00 停機維護';
+    document.getElementById('bhAnnGo').click(); })()`);
   await sleep(1200);
   r = await p.eval(`(function(){ const b=document.getElementById('annBar');
     return { hide: b.classList.contains('hide'), txt: b.textContent }; })()`);
   ok(r.hide === false, '玩家端公告條出現');
   ok(/停機維護/.test(r.txt || ''), '公告內容正確', (r.txt || '').slice(0, 30));
   await p.shot('test/v43-5-announce.png');
-  await p.eval(`(function(){ document.getElementById('adAnnText').value=''; document.getElementById('adAnnGo').click(); })()`);
+  await p.eval(`(function(){ document.getElementById('bhAnnText').value=''; document.getElementById('bhAnnGo').click(); })()`);
   await sleep(1000);
 
   console.log('\n=== 12. 版本紀錄豁免 ===');
@@ -316,7 +316,7 @@ async function waitUp() {
   console.log('\n=== 13. 非開發者進不了後台 ===');
   // 先登出 → 回到遊客身分（真正的「一般玩家」）
   await p.eval(`(function(){
-    document.getElementById('adminModal').classList.remove('on');
+    document.getElementById('bhModal').classList.remove('on');
     __BH.Cloud.logout(); })()`);
   await sleep(1400);
   const den = await p.eval(`(function(){

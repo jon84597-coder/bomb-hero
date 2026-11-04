@@ -18557,16 +18557,16 @@ const Admin = (function () {
     return h + 'h' + (m < 10 ? '0' : '') + m + 'm';
   }
   function srcLabel(a) {
-    if (a.kind === 'guest') return '<span class="adpill g">遊客</span>';
+    if (a.kind === 'guest') return '<span class="bhpill g">遊客</span>';
     const p = a.provider || 'web';
     const name = p === 'google' ? 'Google' : p === 'facebook' ? 'Facebook'
       : p === 'line' ? 'LINE' : '帳密';
-    return '<span class="adpill p">' + e2(name) + '</span>';
+    return '<span class="bhpill p">' + e2(name) + '</span>';
   }
 
   /* ---------- 畫面 ---------- */
   function renderStats(st) {
-    const box = $id('adStats');
+    const box = $id('bhStats');
     if (!box) return;
     const cells = [
       ['總帳號', st.accounts], ['正式會員', st.members], ['遊客', st.guests],
@@ -18575,12 +18575,12 @@ const Admin = (function () {
       ['竄改攔阻', st.tamper], ['限流攔阻', st.rateLimited]
     ];
     box.innerHTML = cells.map(function (c) {
-      return '<div class="adstat"><b>' + c[1] + '</b><span>' + c[0] + '</span></div>';
+      return '<div class="bhstat"><b>' + c[1] + '</b><span>' + c[0] + '</span></div>';
     }).join('');
   }
 
   function renderList() {
-    const box = $id('adList');
+    const box = $id('bhList');
     if (!box || !A.data) return;
     const q = A.q.trim().toLowerCase();
     let rows = A.data.accounts;
@@ -18589,28 +18589,28 @@ const Admin = (function () {
         return (a.id + ' ' + a.name + ' ' + a.email + ' ' + a.username + ' ' + a.ip).toLowerCase().indexOf(q) >= 0;
       });
     }
-    if (!rows.length) { box.innerHTML = '<div class="adempty">沒有符合的帳號</div>'; return; }
+    if (!rows.length) { box.innerHTML = '<div class="bhempty">沒有符合的帳號</div>'; return; }
     let html = '<table class="adtab"><thead><tr>' +
       '<th>UID</th><th>名稱</th><th>來源</th><th>IP</th><th>加入時間</th>' +
       '<th>最後上線</th><th>登入</th><th>關卡</th><th>狀態</th></tr></thead><tbody>';
     rows.forEach(function (a) {
       html += '<tr data-id="' + e2(a.id) + '"' + (A.sel === a.id ? ' class="on"' : '') + '>' +
         '<td class="mono">' + e2(a.id) + '</td>' +
-        '<td>' + e2(a.name) + (a.dev ? ' <span class="adpill d">DEV</span>' : '') + '</td>' +
+        '<td>' + e2(a.name) + (a.dev ? ' <span class="bhpill d">DEV</span>' : '') + '</td>' +
         '<td>' + srcLabel(a) + '</td>' +
         '<td class="mono">' + e2(a.ip || '-') + '</td>' +
         '<td class="mono">' + e2(a.createdStr) + '</td>' +
         '<td class="mono">' + e2(a.lastSeenStr) + '</td>' +
         '<td class="num">' + a.logins + '</td>' +
         '<td class="num">' + a.cleared + '/32</td>' +
-        '<td>' + (a.banned ? '<span class="adpill b">停權</span>' : '<span class="adpill ok">正常</span>') + '</td>' +
+        '<td>' + (a.banned ? '<span class="bhpill b">停權</span>' : '<span class="bhpill ok">正常</span>') + '</td>' +
         '</tr>';
     });
     box.innerHTML = html + '</tbody></table>';
   }
 
   function renderDetail(a) {
-    const box = $id('adDetail');
+    const box = $id('bhDetail');
     if (!box) return;
     if (!a) { box.innerHTML = ''; return; }
     const al = a.alloc || {};
@@ -18618,16 +18618,16 @@ const Admin = (function () {
     const stgTxt = Object.keys(stg).sort(function (x, y) { return x - y; })
       .map(function (k) { return k + '×' + stg[k]; }).join('、') || '（無）';
     const evs = (a.events || []).map(function (e) {
-      return '<div class="adev"><span class="mono">' + e2(e.str) + '</span>' +
+      return '<div class="bhev"><span class="mono">' + e2(e.str) + '</span>' +
         '<b>' + e2(e.type) + '</b>' +
-        (e.stage ? ' <span class="adpill g">關 ' + e.stage + '</span>' : '') +
-        (e.cleared != null ? ' <span class="adpill g">cleared=' + e.cleared + '</span>' : '') +
+        (e.stage ? ' <span class="bhpill g">關 ' + e.stage + '</span>' : '') +
+        (e.cleared != null ? ' <span class="bhpill g">cleared=' + e.cleared + '</span>' : '') +
         '</div>';
-    }).join('') || '<div class="adempty">（沒有足跡）</div>';
+    }).join('') || '<div class="bhempty">（沒有足跡）</div>';
     box.innerHTML =
-      '<div class="adwho"><b>' + e2(a.name) + '</b> <span class="mono">' + e2(a.id) + '</span>' +
-      (a.dev ? ' <span class="adpill d">DEVELOPER</span>' : '') +
-      (a.banned ? ' <span class="adpill b">已停權</span>' : '') + '</div>' +
+      '<div class="bhwho"><b>' + e2(a.name) + '</b> <span class="mono">' + e2(a.id) + '</span>' +
+      (a.dev ? ' <span class="bhpill d">DEVELOPER</span>' : '') +
+      (a.banned ? ' <span class="bhpill b">已停權</span>' : '') + '</div>' +
       '<div class="adgrid">' +
       '<div><span>Email / 帳號</span><b>' + e2(a.email || a.username || '—') + '</b></div>' +
       '<div><span>登入來源</span><b>' + e2(a.provider || 'guest') + '</b></div>' +
@@ -18642,16 +18642,16 @@ const Admin = (function () {
       '<div><span>配點</span><b>❤️' + (al.hp | 0) + ' 🛡️' + (al.def | 0) + ' 👟' + (al.spd | 0) + ' 💥' + (al.atk | 0) + '</b></div>' +
       '<div><span>累計遊玩</span><b>' + fmtDur(a.playSec) + '</b></div>' +
       '</div>' +
-      '<div class="adsec"><span>各關卡遊玩次數</span><div>' + e2(stgTxt) + '</div></div>' +
-      '<div class="adactions">' +
+      '<div class="bhsec"><span>各關卡遊玩次數</span><div>' + e2(stgTxt) + '</div></div>' +
+      '<div class="bhactions">' +
       '<button data-adm="ban" data-id="' + e2(a.id) + '" data-on="' + (a.banned ? '0' : '1') + '">' +
       (a.banned ? '♻️ 解除停權' : '🚫 停權') + '</button>' +
       '<button data-adm="grant" data-id="' + e2(a.id) + '">💾 套用下方的進度／金幣</button>' +
       '<button data-adm="reset" data-id="' + e2(a.id) + '">🧹 配點歸零</button>' +
-      '<span class="adgrant">關卡 <input id="adCleared" type="number" min="0" max="32" value="' + a.cleared + '">' +
-      '金幣 <input id="adGold" type="number" min="0" value="' + (a.gold | 0) + '"></span>' +
+      '<span class="bhgrant">關卡 <input id="bhCleared" type="number" min="0" max="32" value="' + a.cleared + '">' +
+      '金幣 <input id="bhGold" type="number" min="0" value="' + (a.gold | 0) + '"></span>' +
       '</div>' +
-      '<div class="adsec"><span>最近操作足跡（最多 30 筆）</span>' + evs + '</div>';
+      '<div class="bhsec"><span>最近操作足跡（最多 30 筆）</span>' + evs + '</div>';
   }
 
   /* ---------- 行為 ---------- */
@@ -18665,10 +18665,10 @@ const Admin = (function () {
       A.data = r;
       renderStats(r.stats);
       renderList();
-      const t = $id('adAnnText');
+      const t = $id('bhAnnText');
       if (t) t.value = (r.announce && r.announce.text) || '';
       // v4.13：後台把「資料會不會被清掉」的警告顯示出來（避免改版後帳號消失而不知情）
-      const w = $id('adWarn');
+      const w = $id('bhWarn');
       if (w) {
         if (r.persistWarning) { w.textContent = '⚠️ ' + r.persistWarning; w.classList.remove('hide'); }
         else w.classList.add('hide');
@@ -18686,7 +18686,7 @@ const Admin = (function () {
   }
   function open() {
     if (!Cloud.isDev()) { toast('只有開發者帳號可以開啟後台', 2.6); return false; }
-    const m = $id('adminModal');
+    const m = $id('bhModal');
     // v4.13：找不到後台元素時要說清楚（原本靜默 return false → 使用者只看到空白）
     if (!m) { toast(t('acct.adminFail'), 3.2); return false; }
     m.classList.add('on');
@@ -18697,20 +18697,20 @@ const Admin = (function () {
     return true;
   }
   function close() {
-    const m = $id('adminModal');
+    const m = $id('bhModal');
     if (m) m.classList.remove('on');
     A.open = false;
   }
 
   function wire() {
-    const m = $id('adminModal');
+    const m = $id('bhModal');
     if (!m) return;
-    const cl = $id('adClose'); if (cl) cl.addEventListener('click', function () { close(); });
+    const cl = $id('bhClose'); if (cl) cl.addEventListener('click', function () { close(); });
     m.addEventListener('click', function (e) { if (e.target === m) close(); });
-    const rf = $id('adRefresh'); if (rf) rf.addEventListener('click', function () { refresh(); });
-    const qg = $id('adQGo');
+    const rf = $id('bhRefresh'); if (rf) rf.addEventListener('click', function () { refresh(); });
+    const qg = $id('bhQGo');
     const doQ = function () {
-      const q = $id('adQ');
+      const q = $id('bhQ');
       A.q = q ? q.value : '';
       renderList();
       if (A.q && A.data) {
@@ -18722,11 +18722,11 @@ const Admin = (function () {
       }
     };
     if (qg) qg.addEventListener('click', doQ);
-    const qi = $id('adQ');
+    const qi = $id('bhQ');
     if (qi) qi.addEventListener('keydown', function (e) { if (e.key === 'Enter') doQ(); });
-    const ag = $id('adAnnGo');
+    const ag = $id('bhAnnGo');
     if (ag) ag.addEventListener('click', function () {
-      const t1 = $id('adAnnText'), h1 = $id('adAnnHours');
+      const t1 = $id('bhAnnText'), h1 = $id('bhAnnHours');
       api('/api/admin/announce', {
         text: t1 ? t1.value : '',
         hours: h1 ? Number(h1.value) || 0 : 24
@@ -18738,12 +18738,12 @@ const Admin = (function () {
         } else toast('發布失敗：' + ((r && r.err) || 'NET'), 2.6);
       });
     });
-    const list = $id('adList');
+    const list = $id('bhList');
     if (list) list.addEventListener('click', function (e) {
       const tr = e.target && e.target.closest ? e.target.closest('tr[data-id]') : null;
       if (tr) pick(tr.getAttribute('data-id'));
     });
-    const det = $id('adDetail');
+    const det = $id('bhDetail');
     if (det) det.addEventListener('click', function (e) {
       const b = e.target && e.target.closest ? e.target.closest('[data-adm]') : null;
       if (!b) return;
@@ -18755,7 +18755,7 @@ const Admin = (function () {
         api('/api/admin/reset-alloc', { id: id })
           .then(function (r) { toast(r && r.ok ? '配點已歸零' : '操作失敗', 2); pick(id); refresh(); });
       } else if (act === 'grant') {
-        const c = $id('adCleared'), g = $id('adGold');
+        const c = $id('bhCleared'), g = $id('bhGold');
         api('/api/admin/grant', {
           id: id,
           cleared: c ? Number(c.value) : undefined,
@@ -18871,7 +18871,7 @@ function rpgAdjust(k, d) {
     try { setupWebViewGuard(); } catch (e) {}
     try { Cloud.wireUi(); } catch (e) {}
     try { PadEdit.wire(); } catch (e) {}       // v4.2：#padEdit 的 HTML 也在 script 之後
-    try { Admin.wire(); } catch (e) {}         // v4.3：#adminModal 的 HTML 也在 script 之後
+    try { Admin.wire(); } catch (e) {}         // v4.3：#bhModal 的 HTML 也在 script 之後
     try { Cloud.init(); } catch (e) {}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

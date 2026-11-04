@@ -74,25 +74,25 @@ const FAKE = `(function(){
 const PROBE = `(function(){
   const q = function (s) { return document.querySelector(s); };
   const qa = function (s) { return document.querySelectorAll(s); };
-  const card = q('.adcard');
-  const list = q('#adList');
+  const card = q('.bhcard');
+  const list = q('#bhList');
   return {
-    on: !!(q('#adminModal') && q('#adminModal').classList.contains('on')),
-    tabs: qa('#adTabs button[data-tab]').length,
-    panes: qa('#adminModal .adpane').length,
-    activePanes: qa('#adminModal .adpane.on').length,
-    rows: qa('#adList .adrow').length,
-    stats: qa('#adStats .adstat').length,
-    healthRows: qa('#adHealth > div').length,
-    recentRows: qa('#adRecent .adrow').length,
+    on: !!(q('#bhModal') && q('#bhModal').classList.contains('on')),
+    tabs: qa('#bhTabs button[data-tab]').length,
+    panes: qa('#bhModal .bhpane').length,
+    activePanes: qa('#bhModal .bhpane.on').length,
+    rows: qa('#bhList .bhrow').length,
+    stats: qa('#bhStats .bhstat').length,
+    healthRows: qa('#bhHealth > div').length,
+    recentRows: qa('#bhRecent .bhrow').length,
     cardW: card ? Math.round(card.getBoundingClientRect().width) : 0,
     cardH: card ? Math.round(card.getBoundingClientRect().height) : 0,
     listH: list ? Math.round(list.getBoundingClientRect().height) : 0,
     docW: Math.round(document.documentElement.scrollWidth),
     winW: window.innerWidth,
-    detailShown: !!(q('#adDetail') && q('#adDetail').getBoundingClientRect().height > 40),
-    splitDetail: !!(q('#adSplit') && q('#adSplit').classList.contains('show-detail')),
-    rawLen: (q('#adRaw') ? q('#adRaw').textContent.length : 0)
+    detailShown: !!(q('#bhDetail') && q('#bhDetail').getBoundingClientRect().height > 40),
+    splitDetail: !!(q('#bhSplit') && q('#bhSplit').classList.contains('show-detail')),
+    rawLen: (q('#bhRaw') ? q('#bhRaw').textContent.length : 0)
   };
 })()`;
 
@@ -112,37 +112,37 @@ const PROBE = `(function(){
   await p.shot('test/_smoke490-desktop-home.png');
 
   // 會員頁：左清單 + 右詳情
-  await p.eval("(function(){document.querySelector('#adTabs button[data-tab=members]').click();return 1;})()");
+  await p.eval("(function(){document.querySelector('#bhTabs button[data-tab=members]').click();return 1;})()");
   await sleep(200);
-  await p.eval("(function(){var r=document.querySelector('#adList .adrow'); if(r) r.click(); return 1;})()");
+  await p.eval("(function(){var r=document.querySelector('#bhList .bhrow'); if(r) r.click(); return 1;})()");
   await sleep(300);
   const mem = await p.eval(PROBE);
   console.log('desktop-members', JSON.stringify(mem));
   await p.shot('test/_smoke490-desktop-members.png');
 
   // 系統頁：原始 JSON 要出來
-  await p.eval("(function(){document.querySelector('#adTabs button[data-tab=system]').click();return 1;})()");
+  await p.eval("(function(){document.querySelector('#bhTabs button[data-tab=system]').click();return 1;})()");
   await sleep(250);
   const sys = await p.eval(PROBE);
   console.log('desktop-system', JSON.stringify({ rawLen: sys.rawLen, activePanes: sys.activePanes }));
   await p.shot('test/_smoke490-desktop-system.png');
 
   // 即時頁：排行榜
-  await p.eval("(function(){document.querySelector('#adTabs button[data-tab=live]').click();return 1;})()");
+  await p.eval("(function(){document.querySelector('#bhTabs button[data-tab=live]').click();return 1;})()");
   await sleep(500);
-  console.log('lb rows', await p.eval("document.querySelectorAll('#adLbList .adrow').length"));
+  console.log('lb rows', await p.eval("document.querySelectorAll('#bhLbList .bhrow').length"));
 
   // ---------- 手機 ----------
   await p.resize(390, 844, true);
   await sleep(400);
-  await p.eval("(function(){document.querySelector('#adTabs button[data-tab=members]').click();return 1;})()");
+  await p.eval("(function(){document.querySelector('#bhTabs button[data-tab=members]').click();return 1;})()");
   await sleep(250);
-  await p.eval("(function(){var s=document.querySelector('#adSplit'); if(s) s.classList.remove('show-detail'); return 1;})()");
+  await p.eval("(function(){var s=document.querySelector('#bhSplit'); if(s) s.classList.remove('show-detail'); return 1;})()");
   const m1 = await p.eval(PROBE);
   console.log('mobile-list', JSON.stringify(m1));
   await p.shot('test/_smoke490-mobile-list.png');
 
-  await p.eval("(function(){var r=document.querySelector('#adList .adrow'); if(r) r.click(); return 1;})()");
+  await p.eval("(function(){var r=document.querySelector('#bhList .bhrow'); if(r) r.click(); return 1;})()");
   await sleep(350);
   const m2 = await p.eval(PROBE);
   console.log('mobile-detail', JSON.stringify({ splitDetail: m2.splitDetail, detailShown: m2.detailShown, docW: m2.docW, winW: m2.winW }));
@@ -151,7 +151,7 @@ const PROBE = `(function(){
   // 返回名單
   await p.eval("(function(){var b=document.querySelector('[data-adm=back]'); if(b) b.click(); return 1;})()");
   await sleep(250);
-  console.log('back to list', await p.eval("!(document.querySelector('#adSplit').classList.contains('show-detail'))"));
+  console.log('back to list', await p.eval("!(document.querySelector('#bhSplit').classList.contains('show-detail'))"));
 
   // ---------- 手把面板（無手把時要有說明文字） ----------
   await p.eval("(function(){ __BH.Admin.close(); __BH.Screen.show('settings'); return 1; })()");

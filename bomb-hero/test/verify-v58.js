@@ -143,7 +143,7 @@ srv.stderr.on('data', d => { const s = String(d); if (/Error/.test(s)) console.e
   ok(/keep: !!keep/.test(html), '登入會把 keep 送到伺服器');
   ok(/else if \(act === 'admin'\) \{\s*close\(\);[\s\S]{0,400}catch \(err\) \{[\s\S]{0,200}console\.error\('\[admin\]'/.test(html),
     '後台開啟失敗會把錯誤講出來（不再靜默 try/catch 吞掉）');
-  ok(/id="adWarn"/.test(html), '後台有「資料會不會被清掉」的警告列');
+  ok(/id="bhWarn"/.test(html), '後台有「資料會不會被清掉」的警告列');
   ok(/r\.persistWarning/.test(html), '後台會顯示伺服器回的 persistWarning');
 
   await br_close(srv);

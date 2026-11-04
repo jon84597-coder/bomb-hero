@@ -57,7 +57,7 @@ ok(v43.items.join('|').indexOf('開發者') < 0, 'v4.3 已無「開發者」');
 /* ================= ③ 後台本身沒被改壞 ================= */
 console.log('\n=== ③ 後台功能未受影響 ===');
 ok((SRC.match(/<button type="button" data-tab="/g) || []).length === 5, '五個分頁仍在');
-ok(/id="adminModal"/.test(SRC), '後台容器仍在');
+ok(/id="bhModal"/.test(SRC), '後台容器仍在');
 ok(/function wire\(\)/.test(SRC) && /Admin\.wire\(\)/.test(SRC), 'wire() 仍會被呼叫');
 ok(/data-acct="admin"/.test(SRC), '帳號彈窗的後台按鈕仍在');
 

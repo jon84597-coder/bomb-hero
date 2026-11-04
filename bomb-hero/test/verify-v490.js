@@ -18,26 +18,26 @@ const tabCount = (SRC.match(/<button type="button" data-tab="/g) || []).length;
 ok(tabCount === 5, '五個分頁（總覽／會員／即時／系統／工具）', tabCount);
 const paneCount = (SRC.match(/data-pane="/g) || []).length;
 ok(paneCount === 5, '五個頁面容器', paneCount);
-ok(/id="adStats"/.test(SRC), '總覽統計容器存在');
-ok(/id="adHealth"/.test(SRC), '伺服器即時狀態容器存在（/api/health 全部欄位）');
-ok(/id="adRecent"/.test(SRC), '最近活動帳號清單存在');
-ok(/id="adSplit"/.test(SRC) && /id="adList"/.test(SRC) && /id="adDetail"/.test(SRC),
+ok(/id="bhStats"/.test(SRC), '總覽統計容器存在');
+ok(/id="bhHealth"/.test(SRC), '伺服器即時狀態容器存在（/api/health 全部欄位）');
+ok(/id="bhRecent"/.test(SRC), '最近活動帳號清單存在');
+ok(/id="bhSplit"/.test(SRC) && /id="bhList"/.test(SRC) && /id="bhDetail"/.test(SRC),
   '會員頁是「左清單／右詳情」雙欄');
-ok(/id="adRaw"/.test(SRC) && /<pre[^>]*id="adRaw"/.test(SRC), '系統頁有原始 JSON 區塊');
-ok(/id="adLbList"/.test(SRC) && /id="adLbMode"/.test(SRC), '即時頁可切換每日／每週榜');
-ok(/id="adExportAcc"/.test(SRC) && /id="adExportRaw"/.test(SRC), '工具頁可匯出帳號／完整 dump');
+ok(/id="bhRaw"/.test(SRC) && /<pre[^>]*id="bhRaw"/.test(SRC), '系統頁有原始 JSON 區塊');
+ok(/id="bhLbList"/.test(SRC) && /id="bhLbMode"/.test(SRC), '即時頁可切換每日／每週榜');
+ok(/id="bhExportAcc"/.test(SRC) && /id="bhExportRaw"/.test(SRC), '工具頁可匯出帳號／完整 dump');
 ok(!/class="adtab"/.test(SRC), '舊的 9 欄表格已移除（手機不再被截斷）');
-ok(/\.adrow \{/.test(SRC) && /\.adsplit \{/.test(SRC), '改用卡片列 ＋ 雙欄容器');
-ok(/@media \(max-width: 880px\)[\s\S]{0,1400}\.adsplit\.show-detail/.test(SRC),
+ok(/\.bhrow \{/.test(SRC) && /\.bhsplit \{/.test(SRC), '改用卡片列 ＋ 雙欄容器');
+ok(/@media \(max-width: 880px\)[\s\S]{0,1400}\.bhsplit\.show-detail/.test(SRC),
   '手機（<880px）走「清單→詳情」換頁，不是硬擠兩欄');
-ok(/\.adcard \{[^}]*height: min\(94vh/.test(SRC), '桌機後台吃滿高度（不再 34vh／32vh 兩條小窗）');
+ok(/\.bhcard \{[^}]*height: min\(94vh/.test(SRC), '桌機後台吃滿高度（不再 34vh／32vh 兩條小窗）');
 ok(/function setTab\(name\)/.test(SRC) && /setTab: setTab/.test(SRC), '分頁切換有對外匯出');
 ok(/api\('\/api\/admin\/dump'\)/.test(SRC), '前端會抓 /api/admin/dump');
 ok(CLOUD.indexOf("p === '/api/admin/dump'") > 0, '後端有 /api/admin/dump 端點');
 ok(/accounts: all,/.test(CLOUD) && /devices: db\.devices/.test(CLOUD) && /lb: db\.lb/.test(CLOUD),
   'dump 真的把帳號／裝置／排行榜整包吐出來');
 ok(/不含密碼雜湊/.test(CLOUD), 'dump 不含密碼雜湊（只給 hasPass）');
-ok(SRC.indexOf("'#adminModal .adpane'") > 0 || SRC.indexOf('#adminModal .adpane') > 0,
+ok(SRC.indexOf("'#bhModal .bhpane'") > 0 || SRC.indexOf('#bhModal .bhpane') > 0,
   '分頁切換是真的切 DOM 頁面');
 
 /* ================= ② 手把 ================= */

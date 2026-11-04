@@ -86,8 +86,8 @@ srv.stderr.on('data', d => { const s = String(d); if (/Error/.test(s)) console.e
     return {
       acc: (window.__BH && window.__BH.Cloud) ? !!window.__BH.Cloud.acc() : 'no Cloud.acc',
       isDev: (window.__BH && window.__BH.Cloud) ? window.__BH.Cloud.isDev() : 'no isDev',
-      hasModal: !!document.getElementById('adminModal'),
-      modalCls: (document.getElementById('adminModal')||{}).className
+      hasModal: !!document.getElementById('bhModal'),
+      modalCls: (document.getElementById('bhModal')||{}).className
     };
   })()`);
   console.log('  前端狀態：' + JSON.stringify(state));
@@ -106,10 +106,10 @@ srv.stderr.on('data', d => { const s = String(d); if (/Error/.test(s)) console.e
   await sleep(1400);
 
   const dom = await page.eval(`(function(){
-    var m = document.getElementById('adminModal');
-    var card = m ? m.querySelector('.adcard') : null;
-    var stats = document.getElementById('adStats');
-    var list = document.getElementById('adList');
+    var m = document.getElementById('bhModal');
+    var card = m ? m.querySelector('.bhcard') : null;
+    var stats = document.getElementById('bhStats');
+    var list = document.getElementById('bhList');
     function vis(el){ if(!el) return 'MISSING';
       var r = el.getBoundingClientRect(); var cs = getComputedStyle(el);
       return { w: Math.round(r.width), h: Math.round(r.height), top: Math.round(r.top),
