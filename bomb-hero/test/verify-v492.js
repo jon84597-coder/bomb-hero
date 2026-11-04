@@ -79,18 +79,22 @@ ok(/\.adlogin button \{/.test(SRC), '登入按鈕有樣式（不是預設灰按�
 ok(!/if \(r && r\.err === 'NOT_DEV'\) \{ toast\('沒有權限（只有開發者帳號可以看後台）', 3\); close\(\); \}/.test(SRC),
    '原本「toast 一句就自動關掉」的行為已移除（使用者看不到原因）');
 
-/* ================= ⑥ 版號與版本紀錄 ================= */
+/* ================= ⑥ 版號與版本紀錄 =================
+   v4.93：這裡原本把 '4.92' 寫死，改一次版就整支紅。
+   改成「元組 >= 4.92」＋「跟 VERSION 對得上」，之後升版不用再回頭改。 */
+function vnum(v) { return String(v).split('.').map(Number); }
+function vge(a, b) { const x = vnum(a), y = vnum(b); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return true; }
 console.log('=== ⑤ 版號／紀錄 ===');
-ok(P.VERSION === '4.92', 'VERSION = 4.92', P.VERSION);
+ok(vge(P.VERSION, '4.92'), 'VERSION >= 4.92', P.VERSION);
 ok(new RegExp('id="verTxt">' + P.VERSION.replace(/\./g, '\\.') + '<').test(SRC), '首頁版本標籤同步');
 ok(new RegExp('id="verLogVer">' + P.VERSION.replace(/\./g, '\\.') + '<').test(SRC), '版本面板標題同步');
 const top = P.VERSION_LOG[0];
-ok(top.v === '4.92', '版本紀錄第一筆是 4.92', top.v);
-ok(top.now === true, '4.92 標記為 now');
+ok(top.v === P.VERSION, '版本紀錄第一筆 = VERSION', top.v);
+ok(top.now === true, '最新一筆標記為 now');
 ok(top.items.length >= 3, '至少 3 條更新（專案規則）', top.items.length);
-ok(!/後台|開發者/.test(top.items.join('|')), '4.92 條目不含「後台／開發者」字樣');
+ok(!/後台|開發者/.test(top.items.join('|')), '最新條目不含「後台／開發者」字樣');
 const prev = P.VERSION_LOG[1];
-ok(prev.v === '4.91' && prev.now === false, '4.91 的 now 已取消');
+ok(prev.v === '4.92' && prev.now === false, '4.92 的 now 已取消');
 ok(P.VERSION_LOG.length >= 100, '版本紀錄仍有 100 筆以上', P.VERSION_LOG.length);
 ok(P.VERSION_LOG.filter(function (x) { return !x.items || !x.items.length; }).length === 0,
    '沒有空條目的版本');

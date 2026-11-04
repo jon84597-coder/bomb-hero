@@ -389,6 +389,10 @@ font-size: 10.5px; font-weight: 900; color: #fff;
 background: #f4703c; border-radius: 999px; padding: 1px 7px;
 }
 body.touch .verlogbtn { font-size: 11px; padding: 5px 10px; }
+/* v4.93：開發者後台入口 —— 預設不顯示，只有 devbtn.on 才現身（一般玩家看不到） */
+.devbtn { display: none; padding: 5px 9px; font-size: 13px; line-height: 1; }
+.devbtn.on { display: inline-flex; }
+body.touch .devbtn.on { padding: 5px 9px; }
 /* v4.0：版本更新面板（全螢幕遮罩 ＋ 可捲動卡片） */
 .vlog {
 position: fixed; inset: 0; z-index: 1400; display: flex; align-items: center; justify-content: center;
@@ -3511,8 +3515,10 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.92</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.93</span></span>
     </button>
+    <!-- v4.93：開發者後台入口（DEV_BUILD 或白名單帳號才顯示） -->
+    <button class="verlogbtn devbtn" id="devBtn" type="button" title="開發者後台">🛠</button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
       <button class="annhead" id="annHead" type="button" title="點一下展開／收起作者公告">
@@ -3552,7 +3558,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.92</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.93</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4228,7 +4234,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.92';
+const VERSION = '4.93';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -26880,7 +26886,11 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.92', date: '2026-11-05', now: true, items: [
+  { v: '4.93', date: '2026-11-05', now: true, items: [
+    '🔧 修正首頁部分入口在舊快取頁面上完全沒反應的問題（重新整理一次就會恢復）',
+    '🧩 診斷面板補上看得見的入口，不必再記手勢或快捷鍵',
+    '🔄 新版偵測更積極：背景發現有更新時，自動換掉還停在舊版的頁面' ] },
+  { v: '4.92', date: '2026-11-05', now: false, items: [
     '🧭 主畫面版本號可以連點 3 下，回報問題時直接開啟診斷面板（手機也支援）',
     '⌨️ 桌機診斷快捷鍵改為 Ctrl+Alt+D：原本那組會被瀏覽器本身攔截，按了沒反應',
     '🧹 程式碼整理與穩定性修正，不影響遊戲內容' ] },
@@ -30136,7 +30146,10 @@ const Admin = (function () {
      五個頁籤：總覽（統計＋伺服器狀態）／會員（名單＋詳情）／
      即時（排行榜）／系統（dump 摘要＋原始 JSON）／工具（公告、匯出）。 */
   const A = { open: false, data: null, dump: null, health: null, q: '', sel: null,
-    tab: 'home', lb: null, lbMode: 'daily', busy: false, err: '' };
+    tab: 'home', lb: null, lbMode: 'daily', busy: false, err: '',
+    // v4.93：entryWired＝入口監聽（鍵盤／連點／#admin／🛠 鈕）已綁
+    //        wiredModal＝#adminModal 內部按鈕已綁（那塊 HTML 寫在 script 標籤之後，會晚一步）
+    entryWired: false, wiredModal: false, pending: false };
 
   function e2(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -30523,8 +30536,13 @@ const Admin = (function () {
   }
 
   function wire() {
+    // v4.93：原本第一行是 `const m = $id('adminModal'); if (!m) return;`。
+    //   #adminModal 的 HTML 寫在 script 標籤之後；只要 wire() 比 DOM 早一步被叫到，
+    //   m 就是 null → 整個函式直接 return → 連點／快捷鍵／#admin 三條入口一條都沒綁上。
+    //   入口監聽跟那個元素無關，必須先綁；modal 專屬的綁定等元素出現再補。
     const m = $id('adminModal');
-    if (!m) return;
+    if (!A.entryWired) {
+    A.entryWired = true;
     // v4.92：後台入口「三保險」——任何一條通就能開，不再押在單一快捷鍵上。
     //   為什麼要改：v4.91 只用 Ctrl+Shift+D，但那是 **Chrome 內建的「書籤全部開啟」**，
     //   瀏覽器層級的快速鍵不會傳給網頁 → 按了百分之百沒反應（不是程式沒寫對）。
@@ -30532,6 +30550,22 @@ const Admin = (function () {
     //   ② Ctrl+Alt+D / Ctrl+Shift+D → 前者 Chrome 沒佔用
     //   ③ 網址加 #admin 或 ?admin=1 → 可存成書籤，冷啟動也能直接進
     const toggle = function () { if (A.open) close(); else open(); };
+
+    // ⓪ v4.93：看得見的入口。原本線上版只有「帳號彈窗裡的白名單按鈕」，
+    //   開發者帳號旗標一掉、或那一版被瀏覽器快取黏住，就完全沒有辦法進後台。
+    //   這顆只有開發者版（DEV_BUILD）或白名單帳號才會顯示，一般玩家看不到。
+    (function () {
+      const bd = $id('devBtn');
+      if (!bd) return;
+      let showIt = DEV_BUILD;
+      if (!showIt) { try { showIt = !!(Cloud && Cloud.isDev && Cloud.isDev()); } catch (e) { showIt = false; } }
+      if (showIt) bd.classList.add('on');
+      bd.addEventListener('click', function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        if (e && e.stopPropagation) e.stopPropagation();
+        toggle();
+      });
+    })();
 
     document.addEventListener('keydown', function (e) {
       const isD = (e.code === 'KeyD') || e.key === 'd' || e.key === 'D';
@@ -30576,6 +30610,19 @@ const Admin = (function () {
       if (want()) setTimeout(function () { try { if (!A.open) open(); } catch (e) {} }, 800);
       window.addEventListener('hashchange', function () { try { if (want()) toggle(); } catch (e) {} });
     })();
+    }   // ← 入口監聽結束：只綁一次，且完全不依賴 #adminModal
+
+    if (!m) {
+      if (!A.pending) {
+        A.pending = true;
+        const again = function () { A.pending = false; try { wire(); } catch (e) {} };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', again);
+        else setTimeout(again, 0);
+      }
+      return;
+    }
+    if (A.wiredModal) return;
+    A.wiredModal = true;
 
     const cl = $id('adClose'); if (cl) cl.addEventListener('click', function () { close(); });
     m.addEventListener('click', function (e) { if (e.target === m) close(); });
