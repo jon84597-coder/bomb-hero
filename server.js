@@ -983,7 +983,8 @@ const server = http.createServer(function (req, res) {
       storageLoaded: cs.storageLoaded,   // 有沒有真的從雲端讀到資料
       storageError: cs.storageError || '',   // 連不上時的原因（給人看的）
       storageWrites: cs.storageWrites,
-      storageFails: cs.storageFails
+      storageFails: cs.storageFails,
+      storageDiag: cs.storageDiag      // v4.85f：遮罩過的 URL/金鑰指紋（不含金鑰本體）
     });
   }
 

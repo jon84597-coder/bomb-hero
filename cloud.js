@@ -751,9 +751,17 @@ function createCloud(options) {
   const persist = opt.persist !== false;
   const dir = opt.dir || env.BH_DATA_DIR || path.join(__dirname, 'data');
   // v4.85：遠端資料庫（Supabase）優先；沒設就退回本機檔案（會警告）
+  // v4.85f：環境變數常常被「貼上時多帶引號／前後空白」弄壞 → Supabase 會回 401 Invalid API key。
+  //   這裡一律剝掉外層引號與不可見字元，並在 /api/health 留一組遮罩過的指紋，方便遠端核對。
+  function cleanEnvKey(v) {
+    let s = String(v == null ? '' : v).replace(/[\u200b-\u200d\ufeff]/g, '').trim();
+    if ((s.charAt(0) === '"' && s.charAt(s.length - 1) === '"') ||
+        (s.charAt(0) === "'" && s.charAt(s.length - 1) === "'")) s = s.slice(1, -1);
+    return s.replace(/\s+/g, '');
+  }
   const remote = {
-    url: String(env.BH_SUPABASE_URL || '').trim(),
-    key: String(env.BH_SUPABASE_KEY || '').trim(),
+    url: String(env.BH_SUPABASE_URL || '').trim().replace(/\/+$/, ''),
+    key: cleanEnvKey(env.BH_SUPABASE_KEY),
     table: String(env.BH_SUPABASE_TABLE || 'bh_kv').trim()
   };
   const store = createStore(dir, persist, remote);
@@ -1978,6 +1986,22 @@ function createCloud(options) {
       storageWrites: store.state.writes,
       storageFails: store.state.fails,
       storageSkipped: store.state.skipped,
+      // v4.85f：遮罩過的設定指紋 —— 用來判斷「Render 上那把 key 跟正確的是不是同一把」
+      //   只露前綴（sb_secret_ / sb_publishable_）、長度與 sha256 前 8 碼，不外洩金鑰本身。
+      storageDiag: (function () {
+        const k = String(remote.key || '');
+        const pfx = k.slice(0, 10);
+        let h = '';
+        try { h = crypto.createHash('sha256').update(k).digest('hex').slice(0, 8); } catch (e) {}
+        return {
+          urlHost: String(remote.url || '').replace(/^https?:\/\//, '').split('/')[0],
+          table: remote.table,
+          keyLen: k.length,
+          keyPfx: pfx,
+          keyHash: h,
+          keySet: !!k
+        };
+      })(),
       dir: dir
     };
   }
