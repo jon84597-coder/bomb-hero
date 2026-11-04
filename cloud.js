@@ -487,10 +487,12 @@ function createStore(dir, persist, remote) {
     }, extra || {});
   }
 
-  /* 把 db 切成三個分片：accounts（含裝置）／lb（排行榜）／meta（公告、竄改計數） */
+  /* 把 db 切成三個分片：accounts（含裝置）／lb（排行榜）／meta（公告、竄改計數、session 密鑰） */
   function parts() {
+    // v4.85e：sec = session 簽章密鑰。放在 meta 分片裡，重新部署／休眠喚醒後仍然同一把，
+    //   否則每換一個容器就重新生成 secret.key → 所有玩家的 cookie 立刻失效（被迫重新登入）。
     return {
-      meta: { v: db.v, tamper: db.tamper, created: db.created, announce: db.announce },
+      meta: { v: db.v, tamper: db.tamper, created: db.created, announce: db.announce, sec: db.sec || '' },
       accounts: { accounts: db.accounts, devices: db.devices },
       lb: db.lb
     };
@@ -508,6 +510,7 @@ function createStore(dir, persist, remote) {
       db.tamper = val.tamper || 0;
       db.created = val.created || db.created;
       db.announce = val.announce || null;
+      db.sec = typeof val.sec === 'string' ? val.sec : '';
       return true;
     }
     return false;
@@ -524,6 +527,7 @@ function createStore(dir, persist, remote) {
       db.tamper = obj.tamper || 0;
       db.created = obj.created || db.created;
       db.announce = obj.announce || null;      // v4.3：全服公告
+      db.sec = typeof obj.sec === 'string' ? obj.sec : '';
       db.lb = obj.lb && obj.lb.days ? obj.lb : { v: 1, days: {} };   // v4.80：排行榜
     } catch (e) {
       // 壞檔 → 備份起來再看，不要讓伺服器起不來
@@ -771,18 +775,40 @@ function createCloud(options) {
       : '沒有設定 BH_SUPABASE_URL／BH_SUPABASE_KEY → 只存在本機檔案，平台一旦清空容器就沒了');
 
   let secret = opt.secret || env.BH_AUTH_SECRET || '';
+  const secretFromEnv = !!secret;
+  const secretFile = path.join(dir, 'secret.key');
   if (!secret) {
-    // 沒設環境變數 → 自己生一組並存檔（重啟後 session 仍然有效）
-    const sf = path.join(dir, 'secret.key');
+    // 沒設環境變數 → 自己生一組並存檔（同一容器內重啟後 session 仍然有效）
     try {
-      if (persist && fs.existsSync(sf)) secret = fs.readFileSync(sf, 'utf8').trim();
+      if (persist && fs.existsSync(secretFile)) secret = fs.readFileSync(secretFile, 'utf8').trim();
     } catch (e) {}
     if (!secret) {
       secret = rid(32);
       try {
-        if (persist) { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(sf, secret); }
+        if (persist) { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(secretFile, secret); }
       } catch (e) {}
     }
+  }
+  /* v4.85e：Supabase 模式下，session 密鑰也存雲端（meta 分片的 sec）
+   *   Render 免費實例 15 分鐘沒流量就休眠，喚醒時是一個全新的容器 —— secret.key 不見了，
+   *   於是每次冷啟動都換一把密鑰，所有玩家的 cookie 立刻失效（會被退回登入）。
+   *   這裡在「遠端載入完成後、開始接請求前」把密鑰對齊雲端那一把，並寫回本機檔，
+   *   這樣下次遠端暫時連不上時，本機那份也還是正確的。
+   *   注意：只在沒設 BH_AUTH_SECRET、且真的讀到雲端時才動，避免拿空值蓋掉本機。 */
+  let readyAll = store.ready;
+  if (store.remoteOn && !secretFromEnv) {
+    readyAll = store.ready.then(function () {
+      if (!store.state.loaded) return true;      // 沒讀到雲端 → 保持本機這把，不要亂寫
+      if (store.db.sec) {
+        secret = store.db.sec;
+        try { if (persist) fs.writeFileSync(secretFile, secret); } catch (e) {}
+      } else {
+        store.db.sec = secret;
+        store.touch();
+        console.log('[cloud] 已把 session 密鑰寫進 Supabase（重啟後不會再被登出）');
+      }
+      return true;
+    });
   }
   if (opt.fetch) fetchImpl = opt.fetch;
 
@@ -1960,9 +1986,10 @@ function createCloud(options) {
     handle: handle,
     stats: statsOut,
     flush: store.flush,
-    ready: store.ready,
+    ready: readyAll,
     storage: store.state,
-    secret: secret,
+    // v4.85e：密鑰可能在 cloud.ready 之後才從 Supabase 換成雲端那一把 → 用 getter 讀最新值
+    get secret() { return secret; },
     db: db,
     _internals: {
       session: session, publicAccount: publicAccount, findById: findById,

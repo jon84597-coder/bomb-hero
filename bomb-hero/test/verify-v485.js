@@ -108,6 +108,17 @@ ok(chars < 3900000, '字元 ' + chars.toLocaleString() + ' < 3.9M');
 ok(bytes < 4250000, '位元組 ' + bytes.toLocaleString() + ' < 4.25M');
 ok(!/\r/.test(src), '整檔 LF（CR 0）');
 
+// ─────────────────────────────────────────────────────────────
+head('⑧ session 密鑰也存雲端（休眠喚醒後不再被登出）');
+ok(/sec: db\.sec \|\| ''/.test(cloud), 'meta 分片帶上 sec');
+ok(/db\.sec = typeof val\.sec === 'string' \? val\.sec : ''/.test(cloud), '從遠端還原 sec');
+ok(/get secret\(\) \{ return secret; \}/.test(cloud), 'secret 改成 getter（雲端載入後才定案）');
+ok(/if \(store\.db\.sec\) \{\s*\n\s*secret = store\.db\.sec;/.test(cloud), '雲端已有密鑰就用那一把');
+ok(/fs\.writeFileSync\(secretFile, secret\)/.test(cloud), '並寫回本機 secret.key（遠端斷線時仍是對的）');
+ok(/const secretFromEnv = !!secret/.test(cloud), '有設 BH_AUTH_SECRET 時不被雲端覆蓋');
+ok(/let readyAll = store\.ready;/.test(cloud) && /ready: readyAll,/.test(cloud),
+   'cloud.ready 等到密鑰對齊後才算完成（server 才開始接請求）');
+
 console.log('\n========================================');
 console.log('v4.85 雲端存檔：' + pass + ' 通過 / ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);
