@@ -12,7 +12,7 @@
      · /api/ 一律不攔（帳號、雲端存檔、線上配對都必須即時）
    ================================================================ */
 
-var SW_VERSION = 'v4.78.0';
+var SW_VERSION = 'v4.79.0';
 var CORE_CACHE = 'bh-core-' + SW_VERSION;   // 遊戲本體（離線也要開得起來）
 var ASSET_CACHE = 'bh-asset-' + SW_VERSION; // 圖示等靜態資源
 var NAV_TIMEOUT = 2200;   // v4.22：Render 冷啟動一定超過，早點回快取讓畫面先出來
@@ -21,6 +21,7 @@ var CORE = [
   './',
   './index.html',
   './bg/title.webp',
+  './spr/title-logo.webp',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -31,6 +32,37 @@ var CORE = [
   './icons/favicon-32.png'
 ];
 
+/* v4.79：美術拆成 175 個 spr/*.webp。
+   安裝時只抓首頁必需的那張（CORE），其餘在啟用後「背景慢慢預熱」——
+   不阻塞啟用，也不讓玩家第一次進關卡時看到程式繪製的替代圖。
+   預熱狀態記在 ASSET_CACHE 裡：已經有 150 張以上就不再抓。 */
+function warmSprites() {
+  caches.open(ASSET_CACHE).then(function (cache) {
+    return Promise.all([cache.keys(), fetch('./spr/_list.json').then(function (r) { return r.json(); }).catch(function () { return null; })])
+      .then(function (res) {
+        var keys = res[0] || [], list = res[1];
+        if (!list || !list.length) return;
+        var have = 0;
+        keys.forEach(function (k) { if (k.url.indexOf('/spr/') >= 0) have++; });
+        if (have >= 150) return;
+        var i = 0;
+        function next() {
+          if (i >= list.length) return;
+          var batch = list.slice(i, i + 6);
+          i += 6;
+          Promise.all(batch.map(function (f) {
+            var url = './spr/' + f;
+            return cache.match(url).then(function (hit) {
+              if (hit) return null;
+              return fetch(url).then(function (r) { if (r && r.ok) return cache.put(url, r); return null; }).catch(function () { return null; });
+            });
+          })).then(next, next);
+        }
+        next();
+      });
+  }).catch(function () {});
+}
+
 /* ---------- 安裝：先把本體抓下來（單一檔案失敗不影響其他） ---------- */
 self.addEventListener('install', function (e) {
   e.waitUntil(
@@ -39,7 +71,8 @@ self.addEventListener('install', function (e) {
         return cache.add(new Request(url, { cache: 'reload' })).catch(function () { return null; });
       }));
     }).then(function () {
-      return self.skipWaiting();   // 新版立刻接手，不用關掉所有分頁
+      self.skipWaiting();   // 新版立刻接手，不用關掉所有分頁
+      warmSprites();        // v4.79：背景預熱 spr/*.webp（不阻塞）
     })
   );
 });

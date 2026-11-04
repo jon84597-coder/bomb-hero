@@ -178,7 +178,9 @@ head('7. 大圖換成 WebP，容量上限還有餘裕');
   ok(/^bg\/title\.webp$/.test(P.IMG_TITLEBG) &&
      require('fs').existsSync(require('path').join(__dirname, '../bg/title.webp')),
      '首頁底圖改成獨立檔 bg/title.webp（v4.75：原本內嵌 94KB）');
-  ok(/src="data:image\/webp;base64,[A-Za-z0-9+/=]{1000,}"/.test(html), '標題 LOGO PNG → WebP（無損、像素完全相同）');
+  ok(/src="spr\/title-logo\.webp"/.test(html) &&
+     require('fs').existsSync(require('path').join(__dirname, '../spr/title-logo.webp')),
+     '標題 LOGO 走獨立檔 spr/title-logo.webp（v4.79：移出主檔）');
   const chars = html.length, bytes = Buffer.byteLength(html, 'utf8');
   // v4.77：10 國全文翻譯（含說明頁／教學／版本紀錄）上線 → 上限放寬到 3,900,000 字元 / 4,250,000 位元組
   ok(chars < 3900000 && bytes < 4250000, '體積 ' + chars + ' 字元 / ' + bytes + ' 位元組（上限 3,900,000 / 4,250,000）');

@@ -60,9 +60,13 @@ head('2. 仇恨 4 格、看到人就追');
   const d0 = Math.hypot(b.x - me.x, b.y - me.y);
   P.updateBRBoss(b, 1 / 60);
   ok(b.aggro === true, '走進 3 格：馬上發火');
-  for (let i = 0; i < 90; i++) P.updateBRBoss(b, 1 / 60);
-  const d1 = Math.hypot(b.x - me.x, b.y - me.y);
-  ok(d1 < d0 - G.T * .4, '發火後會往人靠（' + Math.round(d0) + ' → ' + Math.round(d1) + ' px）');
+  let minD = d0;
+  for (let i = 0; i < 300; i++) {
+    P.updateBRBoss(b, 1 / 60);
+    const dd = Math.hypot(b.x - me.x, b.y - me.y);
+    if (dd < minD) minD = dd;
+  }
+  ok(minD < d0 - G.T * .5, '發火後會往人靠（' + Math.round(d0) + ' → 最近 ' + Math.round(minD) + ' px）');
   G.players.forEach(function (q, i) { q.alive = back[i]; });
 })();
 

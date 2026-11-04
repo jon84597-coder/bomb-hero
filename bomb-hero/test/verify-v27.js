@@ -8,6 +8,7 @@
 //   7. 自己的坐騎火焰不會燒到自己（只燒別人）
 //   8. BOSS 火焰改成 3 格
 const { makeEnv, html } = require('./_sandbox');
+const ART = require('./_artcheck');
 
 const env = makeEnv();
 const BH = env.BH, G = BH.Game, P = BH, rec = env.rec, els = env.els;
@@ -161,7 +162,7 @@ ok(/<button data-v="0\.8">小<\/button>/.test(html), '設定裡「小」的選�
 console.log('\n=== 4. 標題底下的深紅色噴發光芒 ===');
 
 ok(/<div class="titlewrap">\s*<img class="title-logo"/.test(html), 'v2.1：.titlewrap 裡是一張 LOGO 圖');
-ok(/src="data:image\/(webp|png);base64,/.test(html), 'v2.1：LOGO 用 data URI 內嵌（零外部請求）');
+ok(/src="spr\/title-logo\.webp"/.test(html), 'v2.1：LOGO 指向 spr/title-logo.webp（v4.79 外部化）');
 ok(!/data-t="BOMB HERO"/.test(html) && !/data-t="爆爆英雄"/.test(html), 'v2.1：舊的 data-t 文字複本已移除');
 ok(!/\.title-en::before/.test(html) && !/\.title-zh::before/.test(html), 'v2.1：紅底外凸層 CSS 已移除');
 ok(!/repeating-conic-gradient/.test(html), '一整圈放射狀大光暈維持拿掉');

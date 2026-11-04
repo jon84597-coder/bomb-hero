@@ -1,0 +1,877 @@
+[
+ {
+  "name": "title-logo",
+  "bytes": 94418,
+  "sha": "28ae67180138"
+ },
+ {
+  "name": "img-rabbit",
+  "bytes": 22702,
+  "sha": "43d3fed502b4"
+ },
+ {
+  "name": "img-bear",
+  "bytes": 16766,
+  "sha": "abbd93904346"
+ },
+ {
+  "name": "img-dog",
+  "bytes": 19090,
+  "sha": "a1f13d644d9f"
+ },
+ {
+  "name": "img-cat",
+  "bytes": 16908,
+  "sha": "2f6461461ad7"
+ },
+ {
+  "name": "img-pig",
+  "bytes": 14716,
+  "sha": "8fdb64b8d1d0"
+ },
+ {
+  "name": "img-panda",
+  "bytes": 15484,
+  "sha": "b5a0390a0ecb"
+ },
+ {
+  "name": "img-frog",
+  "bytes": 12526,
+  "sha": "233beeb02e6e"
+ },
+ {
+  "name": "img-chick",
+  "bytes": 12832,
+  "sha": "e84b67c16250"
+ },
+ {
+  "name": "hero-parts-rabbit-leg-l",
+  "bytes": 2142,
+  "sha": "25fdee091e73"
+ },
+ {
+  "name": "hero-parts-rabbit-leg-r",
+  "bytes": 2704,
+  "sha": "78d75ec27523"
+ },
+ {
+  "name": "hero-parts-rabbit-torso",
+  "bytes": 4650,
+  "sha": "348af27eed28"
+ },
+ {
+  "name": "hero-parts-rabbit-arm-l",
+  "bytes": 404,
+  "sha": "7f4e6f835d34"
+ },
+ {
+  "name": "hero-parts-rabbit-arm-r",
+  "bytes": 532,
+  "sha": "ace3d01ea88a"
+ },
+ {
+  "name": "hero-parts-rabbit-head",
+  "bytes": 9452,
+  "sha": "c553e7a0e879"
+ },
+ {
+  "name": "hero-parts-bear-leg-l",
+  "bytes": 3482,
+  "sha": "8e01449940af"
+ },
+ {
+  "name": "hero-parts-bear-leg-r",
+  "bytes": 3574,
+  "sha": "e03586c3d6d8"
+ },
+ {
+  "name": "hero-parts-bear-torso",
+  "bytes": 8392,
+  "sha": "fefaa0318e3a"
+ },
+ {
+  "name": "hero-parts-bear-arm-l",
+  "bytes": 2352,
+  "sha": "54cd3475e65d"
+ },
+ {
+  "name": "hero-parts-bear-arm-r",
+  "bytes": 1782,
+  "sha": "39f82ca6d0c7"
+ },
+ {
+  "name": "hero-parts-bear-head",
+  "bytes": 11672,
+  "sha": "f540fd3cacc0"
+ },
+ {
+  "name": "hero-parts-dog-tail",
+  "bytes": 3686,
+  "sha": "303144d1a845"
+ },
+ {
+  "name": "hero-parts-dog-leg-l",
+  "bytes": 2632,
+  "sha": "c56562a5fe5a"
+ },
+ {
+  "name": "hero-parts-dog-leg-r",
+  "bytes": 2782,
+  "sha": "7e1d78d6eb0d"
+ },
+ {
+  "name": "hero-parts-dog-torso",
+  "bytes": 8058,
+  "sha": "ac0b8fe467e6"
+ },
+ {
+  "name": "hero-parts-dog-arm-l",
+  "bytes": 2022,
+  "sha": "1ba38fd6fb01"
+ },
+ {
+  "name": "hero-parts-dog-arm-r",
+  "bytes": 1660,
+  "sha": "6771513d4d5a"
+ },
+ {
+  "name": "hero-parts-dog-head",
+  "bytes": 9882,
+  "sha": "e6e870fea204"
+ },
+ {
+  "name": "hero-parts-cat-tail",
+  "bytes": 4326,
+  "sha": "bdc9c38008f7"
+ },
+ {
+  "name": "hero-parts-cat-leg-l",
+  "bytes": 4018,
+  "sha": "d22e30195855"
+ },
+ {
+  "name": "hero-parts-cat-leg-r",
+  "bytes": 3110,
+  "sha": "26993692778a"
+ },
+ {
+  "name": "hero-parts-cat-torso",
+  "bytes": 11198,
+  "sha": "5925c4d5ca22"
+ },
+ {
+  "name": "hero-parts-cat-arm-l",
+  "bytes": 976,
+  "sha": "a3b825ac97e2"
+ },
+ {
+  "name": "hero-parts-cat-head",
+  "bytes": 8422,
+  "sha": "0ea485c0ebd6"
+ },
+ {
+  "name": "hero-parts-pig-leg-l",
+  "bytes": 2212,
+  "sha": "a5686f3e7a37"
+ },
+ {
+  "name": "hero-parts-pig-leg-r",
+  "bytes": 2414,
+  "sha": "880c2497aa4e"
+ },
+ {
+  "name": "hero-parts-pig-torso",
+  "bytes": 5950,
+  "sha": "83a622fb6909"
+ },
+ {
+  "name": "hero-parts-pig-arm-l",
+  "bytes": 1100,
+  "sha": "c5174d594094"
+ },
+ {
+  "name": "hero-parts-pig-arm-r",
+  "bytes": 1288,
+  "sha": "b6c98db4b7b4"
+ },
+ {
+  "name": "hero-parts-pig-head",
+  "bytes": 9486,
+  "sha": "636d2e9f005a"
+ },
+ {
+  "name": "hero-parts-panda-leg-l",
+  "bytes": 2558,
+  "sha": "854e900e5b4a"
+ },
+ {
+  "name": "hero-parts-panda-leg-r",
+  "bytes": 3078,
+  "sha": "3bd3713f6ef8"
+ },
+ {
+  "name": "hero-parts-panda-torso",
+  "bytes": 7190,
+  "sha": "ebcf6ec0db2b"
+ },
+ {
+  "name": "hero-parts-panda-head",
+  "bytes": 9542,
+  "sha": "6d1033041442"
+ },
+ {
+  "name": "hero-parts-frog-leg-l",
+  "bytes": 5720,
+  "sha": "67b17c48c241"
+ },
+ {
+  "name": "hero-parts-frog-leg-r",
+  "bytes": 5906,
+  "sha": "d5e942b4538f"
+ },
+ {
+  "name": "hero-parts-frog-torso",
+  "bytes": 9644,
+  "sha": "172c000e5d30"
+ },
+ {
+  "name": "hero-parts-frog-arm-l",
+  "bytes": 858,
+  "sha": "2e3df0b349e4"
+ },
+ {
+  "name": "hero-parts-frog-arm-r",
+  "bytes": 1230,
+  "sha": "e2c02527094e"
+ },
+ {
+  "name": "hero-parts-frog-head",
+  "bytes": 9740,
+  "sha": "6dc9a7ce602c"
+ },
+ {
+  "name": "hero-parts-chick-leg-l",
+  "bytes": 2790,
+  "sha": "b591e69761df"
+ },
+ {
+  "name": "hero-parts-chick-leg-r",
+  "bytes": 2658,
+  "sha": "387d28770fe4"
+ },
+ {
+  "name": "hero-parts-chick-torso",
+  "bytes": 5434,
+  "sha": "7fe933ebba1a"
+ },
+ {
+  "name": "hero-parts-chick-arm-l",
+  "bytes": 704,
+  "sha": "86a07aae1334"
+ },
+ {
+  "name": "hero-parts-chick-arm-r",
+  "bytes": 1030,
+  "sha": "10445ed015c3"
+ },
+ {
+  "name": "hero-parts-chick-head",
+  "bytes": 8438,
+  "sha": "e132cefb8557"
+ },
+ {
+  "name": "foe-art-slime",
+  "bytes": 8558,
+  "sha": "22521b5a2f05"
+ },
+ {
+  "name": "foe-art-bunny",
+  "bytes": 9218,
+  "sha": "9dfb32ddee63"
+ },
+ {
+  "name": "foe-art-frog",
+  "bytes": 12420,
+  "sha": "a134bdbda5cb"
+ },
+ {
+  "name": "foe-art-cater",
+  "bytes": 8472,
+  "sha": "208ff4c95a89"
+ },
+ {
+  "name": "foe-art-mush",
+  "bytes": 6964,
+  "sha": "8548a43d8459"
+ },
+ {
+  "name": "foe-art-beetle",
+  "bytes": 14642,
+  "sha": "7c9747115ad6"
+ },
+ {
+  "name": "foe-art-crab",
+  "bytes": 15100,
+  "sha": "0c94038e5582"
+ },
+ {
+  "name": "foe-art-mummy",
+  "bytes": 9744,
+  "sha": "656c8a306f34"
+ },
+ {
+  "name": "foe-art-eye",
+  "bytes": 11200,
+  "sha": "695e9e4f703a"
+ },
+ {
+  "name": "foe-art-sandworm",
+  "bytes": 5946,
+  "sha": "281a32dd987f"
+ },
+ {
+  "name": "foe-art-dune",
+  "bytes": 10532,
+  "sha": "03017c808fe5"
+ },
+ {
+  "name": "foe-art-scorp",
+  "bytes": 12388,
+  "sha": "5068b8e53e39"
+ },
+ {
+  "name": "foe-art-penguin",
+  "bytes": 8706,
+  "sha": "dc6f82eeefeb"
+ },
+ {
+  "name": "foe-art-crystal",
+  "bytes": 10014,
+  "sha": "8dd6483b7c7d"
+ },
+ {
+  "name": "foe-art-bat",
+  "bytes": 12064,
+  "sha": "11a01dca65d1"
+ },
+ {
+  "name": "foe-art-snowball",
+  "bytes": 10188,
+  "sha": "e9ac37a94f4f"
+ },
+ {
+  "name": "foe-art-seal",
+  "bytes": 10462,
+  "sha": "b621ada8f000"
+ },
+ {
+  "name": "foe-art-panda",
+  "bytes": 8850,
+  "sha": "31dc4db83e4a"
+ },
+ {
+  "name": "foe-art-lavaslime",
+  "bytes": 11230,
+  "sha": "6795a06f793e"
+ },
+ {
+  "name": "foe-art-lavaworm",
+  "bytes": 8488,
+  "sha": "d9e79bb4b4ea"
+ },
+ {
+  "name": "foe-art-bee",
+  "bytes": 11184,
+  "sha": "3658683dd11e"
+ },
+ {
+  "name": "foe-art-bomber",
+  "bytes": 9450,
+  "sha": "0311defcd63d"
+ },
+ {
+  "name": "foe-art-lizard",
+  "bytes": 16676,
+  "sha": "27665b90c36f"
+ },
+ {
+  "name": "foe-art-rockling",
+  "bytes": 10246,
+  "sha": "233ebe5f375f"
+ },
+ {
+  "name": "foe-art-wisp",
+  "bytes": 6314,
+  "sha": "a2a2704d50ad"
+ },
+ {
+  "name": "foe-art-scavenger",
+  "bytes": 10822,
+  "sha": "06ce95ca153a"
+ },
+ {
+  "name": "foe-art-robot",
+  "bytes": 10354,
+  "sha": "94005bd1c645"
+ },
+ {
+  "name": "foe-art-pulser",
+  "bytes": 9632,
+  "sha": "5cafb0041983"
+ },
+ {
+  "name": "foe-art-laserbee",
+  "bytes": 9562,
+  "sha": "845efda0d9b3"
+ },
+ {
+  "name": "foe-art-neonbot",
+  "bytes": 9978,
+  "sha": "8e49bcc61931"
+ },
+ {
+  "name": "foe-art-octopus",
+  "bytes": 11334,
+  "sha": "1af9d66fc134"
+ },
+ {
+  "name": "foe-art-angler",
+  "bytes": 9788,
+  "sha": "e3347a16307e"
+ },
+ {
+  "name": "foe-art-ghost",
+  "bytes": 6420,
+  "sha": "3d7ce8183100"
+ },
+ {
+  "name": "foe-art-hermit",
+  "bytes": 16606,
+  "sha": "c7d2fd5f4b1f"
+ },
+ {
+  "name": "foe-art-jelly",
+  "bytes": 10696,
+  "sha": "799760b86193"
+ },
+ {
+  "name": "foe-art-urchin",
+  "bytes": 13168,
+  "sha": "84705cb615f9"
+ },
+ {
+  "name": "foe-art-hornet",
+  "bytes": 11600,
+  "sha": "2511eef61940"
+ },
+ {
+  "name": "foe-art-airship",
+  "bytes": 9228,
+  "sha": "7a712528a46d"
+ },
+ {
+  "name": "foe-art-sapper",
+  "bytes": 9756,
+  "sha": "bf75a4eb39b3"
+ },
+ {
+  "name": "foe-art-thunder",
+  "bytes": 8192,
+  "sha": "221329e60f2b"
+ },
+ {
+  "name": "foe-art-windwisp",
+  "bytes": 6936,
+  "sha": "6fbc0b5a5d53"
+ },
+ {
+  "name": "foe-art-galehawk",
+  "bytes": 12142,
+  "sha": "b42fee23703f"
+ },
+ {
+  "name": "foe-art-skull",
+  "bytes": 9752,
+  "sha": "52c2c45c893a"
+ },
+ {
+  "name": "foe-art-imp",
+  "bytes": 8278,
+  "sha": "dd3e0b8dc00d"
+ },
+ {
+  "name": "foe-art-darkbat",
+  "bytes": 8456,
+  "sha": "d78c5e8f33d5"
+ },
+ {
+  "name": "foe-art-wizard",
+  "bytes": 9492,
+  "sha": "0cca1c35b369"
+ },
+ {
+  "name": "foe-art-royalguard",
+  "bytes": 11932,
+  "sha": "8ce10403b0d6"
+ },
+ {
+  "name": "foe-art-deathknight",
+  "bytes": 8556,
+  "sha": "b66e1d070004"
+ },
+ {
+  "name": "mount-art-green",
+  "bytes": 25510,
+  "sha": "1a31233de773"
+ },
+ {
+  "name": "mount-art-red",
+  "bytes": 24556,
+  "sha": "9824701ddee3"
+ },
+ {
+  "name": "img-parts-boss-head",
+  "bytes": 15060,
+  "sha": "bc0f1f05a598"
+ },
+ {
+  "name": "img-parts-boss-torso",
+  "bytes": 24868,
+  "sha": "9ce264befad1"
+ },
+ {
+  "name": "img-parts-boss-arm-l",
+  "bytes": 6948,
+  "sha": "89b3134a4743"
+ },
+ {
+  "name": "img-parts-boss-arm-r",
+  "bytes": 7302,
+  "sha": "1b58862fc679"
+ },
+ {
+  "name": "img-parts-boss-leg-l",
+  "bytes": 11520,
+  "sha": "14fc62fcec96"
+ },
+ {
+  "name": "img-parts-boss-leg-r",
+  "bytes": 12328,
+  "sha": "bf939ac4bcf2"
+ },
+ {
+  "name": "img-parts-dragon-head",
+  "bytes": 12190,
+  "sha": "b153c5426336"
+ },
+ {
+  "name": "img-parts-dragon-torso",
+  "bytes": 18728,
+  "sha": "f5ef85cd08b3"
+ },
+ {
+  "name": "img-parts-dragon-arm-l",
+  "bytes": 5522,
+  "sha": "87e693cccb7f"
+ },
+ {
+  "name": "img-parts-dragon-arm-r",
+  "bytes": 4702,
+  "sha": "e75a672e1564"
+ },
+ {
+  "name": "img-parts-dragon-leg-l",
+  "bytes": 9444,
+  "sha": "5d5210d0d072"
+ },
+ {
+  "name": "img-parts-dragon-leg-r",
+  "bytes": 8102,
+  "sha": "7defbfc84961"
+ },
+ {
+  "name": "tile-art-floor-1",
+  "bytes": 1462,
+  "sha": "05e849aaf148"
+ },
+ {
+  "name": "tile-art-floor-2",
+  "bytes": 1510,
+  "sha": "660815e7cf26"
+ },
+ {
+  "name": "tile-art-floor-3",
+  "bytes": 1566,
+  "sha": "9115fc45fc69"
+ },
+ {
+  "name": "tile-art-floor-4",
+  "bytes": 1564,
+  "sha": "a6723b4a69b5"
+ },
+ {
+  "name": "tile-art-floor-sand-1",
+  "bytes": 1024,
+  "sha": "548eb9a5a1fa"
+ },
+ {
+  "name": "tile-art-floor-sand-2",
+  "bytes": 982,
+  "sha": "1592c206a708"
+ },
+ {
+  "name": "tile-art-floor-sand-3",
+  "bytes": 1008,
+  "sha": "7633b3a03c31"
+ },
+ {
+  "name": "tile-art-floor-sand-4",
+  "bytes": 992,
+  "sha": "1c4ac274b434"
+ },
+ {
+  "name": "tile-art-floor-ice-1",
+  "bytes": 242,
+  "sha": "d0e414269f46"
+ },
+ {
+  "name": "tile-art-floor-ice-2",
+  "bytes": 226,
+  "sha": "33aed91f300d"
+ },
+ {
+  "name": "tile-art-floor-ice-3",
+  "bytes": 228,
+  "sha": "e3ddff05ac2e"
+ },
+ {
+  "name": "tile-art-floor-ice-4",
+  "bytes": 244,
+  "sha": "1c7e350872ac"
+ },
+ {
+  "name": "tile-art-floor-lava-1",
+  "bytes": 696,
+  "sha": "b04522ae068a"
+ },
+ {
+  "name": "tile-art-floor-lava-2",
+  "bytes": 652,
+  "sha": "1756e1597b5c"
+ },
+ {
+  "name": "tile-art-floor-lava-3",
+  "bytes": 674,
+  "sha": "249da9192807"
+ },
+ {
+  "name": "tile-art-floor-lava-4",
+  "bytes": 666,
+  "sha": "9c80628f4b32"
+ },
+ {
+  "name": "tile-art-floor-neon-1",
+  "bytes": 520,
+  "sha": "00a2323e0aa9"
+ },
+ {
+  "name": "tile-art-floor-neon-2",
+  "bytes": 498,
+  "sha": "9eb54b48eb0a"
+ },
+ {
+  "name": "tile-art-floor-neon-3",
+  "bytes": 524,
+  "sha": "8ebd7fbc122e"
+ },
+ {
+  "name": "tile-art-floor-neon-4",
+  "bytes": 504,
+  "sha": "d67fff2af490"
+ },
+ {
+  "name": "tile-art-floor-sea-1",
+  "bytes": 572,
+  "sha": "2a668cd6eceb"
+ },
+ {
+  "name": "tile-art-floor-sea-2",
+  "bytes": 602,
+  "sha": "3d2e0cdbc145"
+ },
+ {
+  "name": "tile-art-floor-sea-3",
+  "bytes": 584,
+  "sha": "46e711035ba6"
+ },
+ {
+  "name": "tile-art-floor-sea-4",
+  "bytes": 608,
+  "sha": "5a6c59aaf0da"
+ },
+ {
+  "name": "tile-art-floor-sky-1",
+  "bytes": 196,
+  "sha": "5da31b430349"
+ },
+ {
+  "name": "tile-art-floor-sky-2",
+  "bytes": 210,
+  "sha": "cba1db639e62"
+ },
+ {
+  "name": "tile-art-floor-sky-3",
+  "bytes": 218,
+  "sha": "064ff671703f"
+ },
+ {
+  "name": "tile-art-floor-sky-4",
+  "bytes": 232,
+  "sha": "fff63ca58942"
+ },
+ {
+  "name": "tile-art-floor-dark-1",
+  "bytes": 512,
+  "sha": "0543e0d0467c"
+ },
+ {
+  "name": "tile-art-floor-dark-2",
+  "bytes": 542,
+  "sha": "945419f3be01"
+ },
+ {
+  "name": "tile-art-floor-dark-3",
+  "bytes": 520,
+  "sha": "20cd1bdda88c"
+ },
+ {
+  "name": "tile-art-floor-dark-4",
+  "bytes": 514,
+  "sha": "33ebbc0ee70f"
+ },
+ {
+  "name": "boss-art-b1",
+  "bytes": 18192,
+  "sha": "e174445bfc54"
+ },
+ {
+  "name": "boss-art-b2",
+  "bytes": 16586,
+  "sha": "0371dd667c13"
+ },
+ {
+  "name": "boss-art-b3",
+  "bytes": 16682,
+  "sha": "f65c963ccb04"
+ },
+ {
+  "name": "boss-art-b4",
+  "bytes": 21426,
+  "sha": "666e67a11623"
+ },
+ {
+  "name": "boss-art-b5",
+  "bytes": 17082,
+  "sha": "acf95c2a81df"
+ },
+ {
+  "name": "boss-art-b6",
+  "bytes": 23608,
+  "sha": "77a4e303f58e"
+ },
+ {
+  "name": "boss-art-b7",
+  "bytes": 17982,
+  "sha": "d3c0d5e05380"
+ },
+ {
+  "name": "boss-art-b8",
+  "bytes": 19226,
+  "sha": "ce40c31457d8"
+ },
+ {
+  "name": "item-art-fire",
+  "bytes": 5830,
+  "sha": "c94336d78900"
+ },
+ {
+  "name": "item-art-bomb",
+  "bytes": 5520,
+  "sha": "cfd6f47c9238"
+ },
+ {
+  "name": "item-art-speed",
+  "bytes": 7376,
+  "sha": "09c81df4806a"
+ },
+ {
+  "name": "item-art-kick",
+  "bytes": 5912,
+  "sha": "032b464ddc81"
+ },
+ {
+  "name": "item-art-glove",
+  "bytes": 7196,
+  "sha": "e343239e29d7"
+ },
+ {
+  "name": "item-art-punch",
+  "bytes": 6730,
+  "sha": "15c1334f3e83"
+ },
+ {
+  "name": "item-art-remote",
+  "bytes": 5730,
+  "sha": "073ba8ca0d78"
+ },
+ {
+  "name": "item-art-pierce",
+  "bytes": 6218,
+  "sha": "f837bb965bd8"
+ },
+ {
+  "name": "item-art-heart",
+  "bytes": 5316,
+  "sha": "e6a308f9a3cd"
+ },
+ {
+  "name": "item-art-line",
+  "bytes": 5598,
+  "sha": "88d0c22ca476"
+ },
+ {
+  "name": "item-art-skull",
+  "bytes": 7078,
+  "sha": "ef73309fee0b"
+ },
+ {
+  "name": "egg-art-egg",
+  "bytes": 6224,
+  "sha": "ee5682ea2f6b"
+ },
+ {
+  "name": "hide-art-bush",
+  "bytes": 9880,
+  "sha": "ae0e57a81a4a"
+ },
+ {
+  "name": "hide-art-hut",
+  "bytes": 9378,
+  "sha": "c67af46e9d91"
+ },
+ {
+  "name": "hide-art-rock",
+  "bytes": 6110,
+  "sha": "2578d1cfdbe8"
+ },
+ {
+  "name": "hide-art-jar",
+  "bytes": 7138,
+  "sha": "8e61df9392de"
+ },
+ {
+  "name": "hide-art-crate",
+  "bytes": 9078,
+  "sha": "7b57089eaf4f"
+ }
+]

@@ -6,3 +6,6 @@ bomberman-online/public/index.html text eol=lf
 bomb-hero/sw.js text eol=lf
 public/sw.js text eol=lf
 bomberman-online/public/sw.js text eol=lf
+
+# v4.79：貼圖一律當二進位處理，避免 git 做任何換行轉換
+*.webp binary

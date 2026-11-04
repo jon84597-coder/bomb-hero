@@ -8,6 +8,7 @@
 //   7. BOSS 換成老虎國王插畫（部位骨架、含頭）
 //   8. 坐騎換成小龍插畫（部位骨架、含頭）
 const { makeEnv, html } = require('./_sandbox');
+const ART = require('./_artcheck');
 
 const env = makeEnv();
 const BH = env.BH, G = BH.Game, P = BH, rec = env.rec;
@@ -108,16 +109,16 @@ const allPartsOk = ipKeys.every(function (k) {
   return keys.every(function (pn) {
     const d = g.p[pn];
     // 層框可略超出 bbox（頭含耳朵、手含肩關節 6px 重疊）→ 允許 -0.3 ~ 1.4
-    return d && /^data:image\/webp;base64,/.test(d.u) && d.u.length > 200 &&
+    return d && ART.isArtOk(d.u) &&
       d.x >= -.3 && d.y >= -.3 && d.w > 0 && d.h > 0 && d.w <= 1.4 && d.h <= 1.4 &&
       d.px >= -.3 && d.px <= 1.3 && d.py >= -.3 && d.py <= 1.3;
   });
 });
-ok(allPartsOk, '每組至少 頭／身／左右腿（手與尾巴選用）都是合法 webp data URL + 座標');
+ok(allPartsOk, '每組至少 頭／身／左右腿（手與尾巴選用）都是合法的 spr/*.webp + 座標');
 let totalBytes = 0;
-ipKeys.forEach(k => Object.keys(IP[k].p).forEach(pn => { totalBytes += IP[k].p[pn].u.length; }));
-ok(totalBytes > 200000 && totalBytes < 700000,
-  '部位圖總量合理（' + Math.round(totalBytes / 1024) + 'KB base64，單檔仍可直接開）');
+ipKeys.forEach(k => Object.keys(IP[k].p).forEach(pn => { const b = ART.artFile(IP[k].p[pn].u); totalBytes += b ? b.length : 0; }));
+ok(totalBytes > 150000 && totalBytes < 700000,
+  '部位圖總量合理（' + Math.round(totalBytes / 1024) + 'KB 實際檔案，v4.79 起外部化）');
 ok(ipKeys.every(k => IP[k].asp > .3 && IP[k].asp < 1.6), '每組都有原圖長寬比（asp），畫的時候不變形');
 
 // ================================================================

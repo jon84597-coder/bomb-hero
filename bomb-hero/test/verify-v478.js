@@ -121,14 +121,14 @@ P.setLang('zh-TW');
 
 // ---------- 6. 版本與容量 ----------
 head('6. 版本與容量');
-ok(P.VERSION === '4.78', 'VERSION = ' + P.VERSION);
-ok(P.VERSION_LOG[0].v === '4.78' && P.VERSION_LOG[0].now === true, '版本紀錄最上面是 4.78（now）');
-ok(P.VERSION_LOG[1].v === '4.77' && P.VERSION_LOG[1].now === false, '4.77 已改成 now:false');
+ok(/^4\.(7[8-9]|[89]\d)$/.test(P.VERSION), 'VERSION ≥ 4.78（實際 ' + P.VERSION + '）');
+ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, '版本紀錄最上面是本版 ' + P.VERSION + '（now）');
+ok(P.VERSION_LOG[1].now === false, '上一版 ' + P.VERSION_LOG[1].v + ' 已改成 now:false');
 ok(!!P.I18N.en['ver.4.78.1'] && !!P.I18N.de['ver.4.78.2'], '4.78 的 2 條更新有 10 國翻譯');
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (f) {
   const p2 = path.join(__dirname, f);
   if (!fs.existsSync(p2)) { ok(false, f + ' 不存在'); return; }
-  ok(/SW_VERSION = 'v4\.78\.0'/.test(fs.readFileSync(p2, 'utf8')), f + ' 升到 v4.78.0');
+  ok(/SW_VERSION = 'v4\.\d+\.\d+'/.test(fs.readFileSync(p2, 'utf8')), f + ' 版本跟著升');
 });
 (function () {
   const chars = src.length, bytes = Buffer.byteLength(src, 'utf8');

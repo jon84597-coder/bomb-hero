@@ -1,0 +1,877 @@
+[
+ {
+  "i": 0,
+  "name": "title-logo",
+  "bytes": 125915
+ },
+ {
+  "i": 1,
+  "name": "img-rabbit",
+  "bytes": 30295
+ },
+ {
+  "i": 2,
+  "name": "img-bear",
+  "bytes": 22379
+ },
+ {
+  "i": 3,
+  "name": "img-dog",
+  "bytes": 25479
+ },
+ {
+  "i": 4,
+  "name": "img-cat",
+  "bytes": 22567
+ },
+ {
+  "i": 5,
+  "name": "img-pig",
+  "bytes": 19647
+ },
+ {
+  "i": 6,
+  "name": "img-panda",
+  "bytes": 20671
+ },
+ {
+  "i": 7,
+  "name": "img-frog",
+  "bytes": 16727
+ },
+ {
+  "i": 8,
+  "name": "img-chick",
+  "bytes": 17135
+ },
+ {
+  "i": 9,
+  "name": "hero-parts-rabbit-leg-l",
+  "bytes": 2879
+ },
+ {
+  "i": 10,
+  "name": "hero-parts-rabbit-leg-r",
+  "bytes": 3631
+ },
+ {
+  "i": 11,
+  "name": "hero-parts-rabbit-torso",
+  "bytes": 6223
+ },
+ {
+  "i": 12,
+  "name": "hero-parts-rabbit-arm-l",
+  "bytes": 563
+ },
+ {
+  "i": 13,
+  "name": "hero-parts-rabbit-arm-r",
+  "bytes": 735
+ },
+ {
+  "i": 14,
+  "name": "hero-parts-rabbit-head",
+  "bytes": 12627
+ },
+ {
+  "i": 15,
+  "name": "hero-parts-bear-leg-l",
+  "bytes": 4667
+ },
+ {
+  "i": 16,
+  "name": "hero-parts-bear-leg-r",
+  "bytes": 4791
+ },
+ {
+  "i": 17,
+  "name": "hero-parts-bear-torso",
+  "bytes": 11215
+ },
+ {
+  "i": 18,
+  "name": "hero-parts-bear-arm-l",
+  "bytes": 3159
+ },
+ {
+  "i": 19,
+  "name": "hero-parts-bear-arm-r",
+  "bytes": 2399
+ },
+ {
+  "i": 20,
+  "name": "hero-parts-bear-head",
+  "bytes": 15587
+ },
+ {
+  "i": 21,
+  "name": "hero-parts-dog-tail",
+  "bytes": 4939
+ },
+ {
+  "i": 22,
+  "name": "hero-parts-dog-leg-l",
+  "bytes": 3535
+ },
+ {
+  "i": 23,
+  "name": "hero-parts-dog-leg-r",
+  "bytes": 3735
+ },
+ {
+  "i": 24,
+  "name": "hero-parts-dog-torso",
+  "bytes": 10767
+ },
+ {
+  "i": 25,
+  "name": "hero-parts-dog-arm-l",
+  "bytes": 2719
+ },
+ {
+  "i": 26,
+  "name": "hero-parts-dog-arm-r",
+  "bytes": 2239
+ },
+ {
+  "i": 27,
+  "name": "hero-parts-dog-head",
+  "bytes": 13199
+ },
+ {
+  "i": 28,
+  "name": "hero-parts-cat-tail",
+  "bytes": 5791
+ },
+ {
+  "i": 29,
+  "name": "hero-parts-cat-leg-l",
+  "bytes": 5383
+ },
+ {
+  "i": 30,
+  "name": "hero-parts-cat-leg-r",
+  "bytes": 4171
+ },
+ {
+  "i": 31,
+  "name": "hero-parts-cat-torso",
+  "bytes": 14955
+ },
+ {
+  "i": 32,
+  "name": "hero-parts-cat-arm-l",
+  "bytes": 1327
+ },
+ {
+  "i": 33,
+  "name": "hero-parts-cat-head",
+  "bytes": 11255
+ },
+ {
+  "i": 34,
+  "name": "hero-parts-pig-leg-l",
+  "bytes": 2975
+ },
+ {
+  "i": 35,
+  "name": "hero-parts-pig-leg-r",
+  "bytes": 3243
+ },
+ {
+  "i": 36,
+  "name": "hero-parts-pig-torso",
+  "bytes": 7959
+ },
+ {
+  "i": 37,
+  "name": "hero-parts-pig-arm-l",
+  "bytes": 1491
+ },
+ {
+  "i": 38,
+  "name": "hero-parts-pig-arm-r",
+  "bytes": 1743
+ },
+ {
+  "i": 39,
+  "name": "hero-parts-pig-head",
+  "bytes": 12671
+ },
+ {
+  "i": 40,
+  "name": "hero-parts-panda-leg-l",
+  "bytes": 3435
+ },
+ {
+  "i": 41,
+  "name": "hero-parts-panda-leg-r",
+  "bytes": 4127
+ },
+ {
+  "i": 42,
+  "name": "hero-parts-panda-torso",
+  "bytes": 9611
+ },
+ {
+  "i": 43,
+  "name": "hero-parts-panda-head",
+  "bytes": 12747
+ },
+ {
+  "i": 44,
+  "name": "hero-parts-frog-leg-l",
+  "bytes": 7651
+ },
+ {
+  "i": 45,
+  "name": "hero-parts-frog-leg-r",
+  "bytes": 7899
+ },
+ {
+  "i": 46,
+  "name": "hero-parts-frog-torso",
+  "bytes": 12883
+ },
+ {
+  "i": 47,
+  "name": "hero-parts-frog-arm-l",
+  "bytes": 1167
+ },
+ {
+  "i": 48,
+  "name": "hero-parts-frog-arm-r",
+  "bytes": 1663
+ },
+ {
+  "i": 49,
+  "name": "hero-parts-frog-head",
+  "bytes": 13011
+ },
+ {
+  "i": 50,
+  "name": "hero-parts-chick-leg-l",
+  "bytes": 3743
+ },
+ {
+  "i": 51,
+  "name": "hero-parts-chick-leg-r",
+  "bytes": 3567
+ },
+ {
+  "i": 52,
+  "name": "hero-parts-chick-torso",
+  "bytes": 7271
+ },
+ {
+  "i": 53,
+  "name": "hero-parts-chick-arm-l",
+  "bytes": 963
+ },
+ {
+  "i": 54,
+  "name": "hero-parts-chick-arm-r",
+  "bytes": 1399
+ },
+ {
+  "i": 55,
+  "name": "hero-parts-chick-head",
+  "bytes": 11275
+ },
+ {
+  "i": 56,
+  "name": "foe-art-slime",
+  "bytes": 11435
+ },
+ {
+  "i": 57,
+  "name": "foe-art-bunny",
+  "bytes": 12315
+ },
+ {
+  "i": 58,
+  "name": "foe-art-frog",
+  "bytes": 16583
+ },
+ {
+  "i": 59,
+  "name": "foe-art-cater",
+  "bytes": 11319
+ },
+ {
+  "i": 60,
+  "name": "foe-art-mush",
+  "bytes": 9311
+ },
+ {
+  "i": 61,
+  "name": "foe-art-beetle",
+  "bytes": 19547
+ },
+ {
+  "i": 62,
+  "name": "foe-art-crab",
+  "bytes": 20159
+ },
+ {
+  "i": 63,
+  "name": "foe-art-mummy",
+  "bytes": 13015
+ },
+ {
+  "i": 64,
+  "name": "foe-art-eye",
+  "bytes": 14959
+ },
+ {
+  "i": 65,
+  "name": "foe-art-sandworm",
+  "bytes": 7951
+ },
+ {
+  "i": 66,
+  "name": "foe-art-dune",
+  "bytes": 14067
+ },
+ {
+  "i": 67,
+  "name": "foe-art-scorp",
+  "bytes": 16543
+ },
+ {
+  "i": 68,
+  "name": "foe-art-penguin",
+  "bytes": 11631
+ },
+ {
+  "i": 69,
+  "name": "foe-art-crystal",
+  "bytes": 13375
+ },
+ {
+  "i": 70,
+  "name": "foe-art-bat",
+  "bytes": 16111
+ },
+ {
+  "i": 71,
+  "name": "foe-art-snowball",
+  "bytes": 13607
+ },
+ {
+  "i": 72,
+  "name": "foe-art-seal",
+  "bytes": 13975
+ },
+ {
+  "i": 73,
+  "name": "foe-art-panda",
+  "bytes": 11823
+ },
+ {
+  "i": 74,
+  "name": "foe-art-lavaslime",
+  "bytes": 14999
+ },
+ {
+  "i": 75,
+  "name": "foe-art-lavaworm",
+  "bytes": 11343
+ },
+ {
+  "i": 76,
+  "name": "foe-art-bee",
+  "bytes": 14935
+ },
+ {
+  "i": 77,
+  "name": "foe-art-bomber",
+  "bytes": 12623
+ },
+ {
+  "i": 78,
+  "name": "foe-art-lizard",
+  "bytes": 22259
+ },
+ {
+  "i": 79,
+  "name": "foe-art-rockling",
+  "bytes": 13687
+ },
+ {
+  "i": 80,
+  "name": "foe-art-wisp",
+  "bytes": 8443
+ },
+ {
+  "i": 81,
+  "name": "foe-art-scavenger",
+  "bytes": 14455
+ },
+ {
+  "i": 82,
+  "name": "foe-art-robot",
+  "bytes": 13831
+ },
+ {
+  "i": 83,
+  "name": "foe-art-pulser",
+  "bytes": 12867
+ },
+ {
+  "i": 84,
+  "name": "foe-art-laserbee",
+  "bytes": 12775
+ },
+ {
+  "i": 85,
+  "name": "foe-art-neonbot",
+  "bytes": 13327
+ },
+ {
+  "i": 86,
+  "name": "foe-art-octopus",
+  "bytes": 15135
+ },
+ {
+  "i": 87,
+  "name": "foe-art-angler",
+  "bytes": 13075
+ },
+ {
+  "i": 88,
+  "name": "foe-art-ghost",
+  "bytes": 8583
+ },
+ {
+  "i": 89,
+  "name": "foe-art-hermit",
+  "bytes": 22167
+ },
+ {
+  "i": 90,
+  "name": "foe-art-jelly",
+  "bytes": 14287
+ },
+ {
+  "i": 91,
+  "name": "foe-art-urchin",
+  "bytes": 17583
+ },
+ {
+  "i": 92,
+  "name": "foe-art-hornet",
+  "bytes": 15491
+ },
+ {
+  "i": 93,
+  "name": "foe-art-airship",
+  "bytes": 12327
+ },
+ {
+  "i": 94,
+  "name": "foe-art-sapper",
+  "bytes": 13031
+ },
+ {
+  "i": 95,
+  "name": "foe-art-thunder",
+  "bytes": 10947
+ },
+ {
+  "i": 96,
+  "name": "foe-art-windwisp",
+  "bytes": 9271
+ },
+ {
+  "i": 97,
+  "name": "foe-art-galehawk",
+  "bytes": 16215
+ },
+ {
+  "i": 98,
+  "name": "foe-art-skull",
+  "bytes": 13027
+ },
+ {
+  "i": 99,
+  "name": "foe-art-imp",
+  "bytes": 11063
+ },
+ {
+  "i": 100,
+  "name": "foe-art-darkbat",
+  "bytes": 11299
+ },
+ {
+  "i": 101,
+  "name": "foe-art-wizard",
+  "bytes": 12679
+ },
+ {
+  "i": 102,
+  "name": "foe-art-royalguard",
+  "bytes": 15935
+ },
+ {
+  "i": 103,
+  "name": "foe-art-deathknight",
+  "bytes": 11431
+ },
+ {
+  "i": 104,
+  "name": "mount-art-green",
+  "bytes": 34039
+ },
+ {
+  "i": 105,
+  "name": "mount-art-red",
+  "bytes": 32767
+ },
+ {
+  "i": 106,
+  "name": "img-parts-boss-head",
+  "bytes": 20103
+ },
+ {
+  "i": 107,
+  "name": "img-parts-boss-torso",
+  "bytes": 33183
+ },
+ {
+  "i": 108,
+  "name": "img-parts-boss-arm-l",
+  "bytes": 9287
+ },
+ {
+  "i": 109,
+  "name": "img-parts-boss-arm-r",
+  "bytes": 9759
+ },
+ {
+  "i": 110,
+  "name": "img-parts-boss-leg-l",
+  "bytes": 15383
+ },
+ {
+  "i": 111,
+  "name": "img-parts-boss-leg-r",
+  "bytes": 16463
+ },
+ {
+  "i": 112,
+  "name": "img-parts-dragon-head",
+  "bytes": 16279
+ },
+ {
+  "i": 113,
+  "name": "img-parts-dragon-torso",
+  "bytes": 24995
+ },
+ {
+  "i": 114,
+  "name": "img-parts-dragon-arm-l",
+  "bytes": 7387
+ },
+ {
+  "i": 115,
+  "name": "img-parts-dragon-arm-r",
+  "bytes": 6295
+ },
+ {
+  "i": 116,
+  "name": "img-parts-dragon-leg-l",
+  "bytes": 12615
+ },
+ {
+  "i": 117,
+  "name": "img-parts-dragon-leg-r",
+  "bytes": 10827
+ },
+ {
+  "i": 118,
+  "name": "tile-art-floor-1",
+  "bytes": 1975
+ },
+ {
+  "i": 119,
+  "name": "tile-art-floor-2",
+  "bytes": 2039
+ },
+ {
+  "i": 120,
+  "name": "tile-art-floor-3",
+  "bytes": 2111
+ },
+ {
+  "i": 121,
+  "name": "tile-art-floor-4",
+  "bytes": 2111
+ },
+ {
+  "i": 122,
+  "name": "tile-art-floor-sand-1",
+  "bytes": 1391
+ },
+ {
+  "i": 123,
+  "name": "tile-art-floor-sand-2",
+  "bytes": 1335
+ },
+ {
+  "i": 124,
+  "name": "tile-art-floor-sand-3",
+  "bytes": 1367
+ },
+ {
+  "i": 125,
+  "name": "tile-art-floor-sand-4",
+  "bytes": 1347
+ },
+ {
+  "i": 126,
+  "name": "tile-art-floor-ice-1",
+  "bytes": 347
+ },
+ {
+  "i": 127,
+  "name": "tile-art-floor-ice-2",
+  "bytes": 327
+ },
+ {
+  "i": 128,
+  "name": "tile-art-floor-ice-3",
+  "bytes": 327
+ },
+ {
+  "i": 129,
+  "name": "tile-art-floor-ice-4",
+  "bytes": 351
+ },
+ {
+  "i": 130,
+  "name": "tile-art-floor-lava-1",
+  "bytes": 951
+ },
+ {
+  "i": 131,
+  "name": "tile-art-floor-lava-2",
+  "bytes": 895
+ },
+ {
+  "i": 132,
+  "name": "tile-art-floor-lava-3",
+  "bytes": 923
+ },
+ {
+  "i": 133,
+  "name": "tile-art-floor-lava-4",
+  "bytes": 911
+ },
+ {
+  "i": 134,
+  "name": "tile-art-floor-neon-1",
+  "bytes": 719
+ },
+ {
+  "i": 135,
+  "name": "tile-art-floor-neon-2",
+  "bytes": 687
+ },
+ {
+  "i": 136,
+  "name": "tile-art-floor-neon-3",
+  "bytes": 723
+ },
+ {
+  "i": 137,
+  "name": "tile-art-floor-neon-4",
+  "bytes": 695
+ },
+ {
+  "i": 138,
+  "name": "tile-art-floor-sea-1",
+  "bytes": 787
+ },
+ {
+  "i": 139,
+  "name": "tile-art-floor-sea-2",
+  "bytes": 827
+ },
+ {
+  "i": 140,
+  "name": "tile-art-floor-sea-3",
+  "bytes": 803
+ },
+ {
+  "i": 141,
+  "name": "tile-art-floor-sea-4",
+  "bytes": 835
+ },
+ {
+  "i": 142,
+  "name": "tile-art-floor-sky-1",
+  "bytes": 287
+ },
+ {
+  "i": 143,
+  "name": "tile-art-floor-sky-2",
+  "bytes": 303
+ },
+ {
+  "i": 144,
+  "name": "tile-art-floor-sky-3",
+  "bytes": 315
+ },
+ {
+  "i": 145,
+  "name": "tile-art-floor-sky-4",
+  "bytes": 335
+ },
+ {
+  "i": 146,
+  "name": "tile-art-floor-dark-1",
+  "bytes": 707
+ },
+ {
+  "i": 147,
+  "name": "tile-art-floor-dark-2",
+  "bytes": 747
+ },
+ {
+  "i": 148,
+  "name": "tile-art-floor-dark-3",
+  "bytes": 719
+ },
+ {
+  "i": 149,
+  "name": "tile-art-floor-dark-4",
+  "bytes": 711
+ },
+ {
+  "i": 150,
+  "name": "boss-art-b1",
+  "bytes": 24279
+ },
+ {
+  "i": 151,
+  "name": "boss-art-b2",
+  "bytes": 22139
+ },
+ {
+  "i": 152,
+  "name": "boss-art-b3",
+  "bytes": 22267
+ },
+ {
+  "i": 153,
+  "name": "boss-art-b4",
+  "bytes": 28591
+ },
+ {
+  "i": 154,
+  "name": "boss-art-b5",
+  "bytes": 22799
+ },
+ {
+  "i": 155,
+  "name": "boss-art-b6",
+  "bytes": 31503
+ },
+ {
+  "i": 156,
+  "name": "boss-art-b7",
+  "bytes": 23999
+ },
+ {
+  "i": 157,
+  "name": "boss-art-b8",
+  "bytes": 25659
+ },
+ {
+  "i": 158,
+  "name": "item-art-fire",
+  "bytes": 7799
+ },
+ {
+  "i": 159,
+  "name": "item-art-bomb",
+  "bytes": 7383
+ },
+ {
+  "i": 160,
+  "name": "item-art-speed",
+  "bytes": 9859
+ },
+ {
+  "i": 161,
+  "name": "item-art-kick",
+  "bytes": 7907
+ },
+ {
+  "i": 162,
+  "name": "item-art-glove",
+  "bytes": 9619
+ },
+ {
+  "i": 163,
+  "name": "item-art-punch",
+  "bytes": 8999
+ },
+ {
+  "i": 164,
+  "name": "item-art-remote",
+  "bytes": 7663
+ },
+ {
+  "i": 165,
+  "name": "item-art-pierce",
+  "bytes": 8315
+ },
+ {
+  "i": 166,
+  "name": "item-art-heart",
+  "bytes": 7111
+ },
+ {
+  "i": 167,
+  "name": "item-art-line",
+  "bytes": 7487
+ },
+ {
+  "i": 168,
+  "name": "item-art-skull",
+  "bytes": 9463
+ },
+ {
+  "i": 169,
+  "name": "egg-art-egg",
+  "bytes": 8323
+ },
+ {
+  "i": 170,
+  "name": "hide-art-bush",
+  "bytes": 13199
+ },
+ {
+  "i": 171,
+  "name": "hide-art-hut",
+  "bytes": 12527
+ },
+ {
+  "i": 172,
+  "name": "hide-art-rock",
+  "bytes": 8171
+ },
+ {
+  "i": 173,
+  "name": "hide-art-jar",
+  "bytes": 9543
+ },
+ {
+  "i": 174,
+  "name": "hide-art-crate",
+  "bytes": 12127
+ }
+]

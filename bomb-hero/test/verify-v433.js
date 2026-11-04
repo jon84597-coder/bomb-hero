@@ -1,6 +1,7 @@
 // test/verify-v433.js — v4.33：暫停選單「回關卡清單」＋ 主角再縮 10% ＋ 熊貓再放大 10%
 //   ＋ 第 4 大關（熔岩洞窟）6 隻手繪小怪 ＋ 龍坐騎換手繪圖（原色／紅色、體積 -15%、騎乘者 +20%、去紅光暈）
 const fs = require('fs');
+const ART = require('./_artcheck');
 const path = require('path');
 const { makeEnv } = require('./_sandbox');
 
@@ -79,8 +80,8 @@ S4.forEach(function (pair) {
   const m = P.FOE_ART[id];
   ok(!!m, id + ' 有貼圖資料');
   if (!m) return;
-  ok(/^data:image\/webp;base64,/.test(m.u), id + ' 是 webp data URI');
-  ok(m.u.length > 8000, id + ' 圖檔不是空殼（' + Math.round(m.u.length / 1024) + 'KB）');
+  ok(ART.isArtOk(m.u), id + ' 指向真實的 spr/*.webp');
+  ok(ART.artFile(m.u).length > 6000, id + ' 圖檔不是空殼（' + Math.round(ART.artFile(m.u).length / 1024) + 'KB）');
   ok(m.anim === anim, id + ' 動作 = ' + anim, m.anim);
   ok(m.hs > 1.2 && m.hs < 3.2, id + ' 顯示倍率合理（' + m.hs + '）');
   ok(Math.abs(m.dir) === 1, id + ' dir 是 ±1', m.dir);
@@ -99,8 +100,8 @@ ok(Object.keys(P.MOUNT_ART).length === 2, 'MOUNT_ART 有原色／紅色兩張', 
   const m = P.MOUNT_ART[k];
   ok(!!m, k + ' 有資料');
   if (!m) return;
-  ok(/^data:image\/webp;base64,/.test(m.u), k + ' 是 webp data URI');
-  ok(m.u.length > 20000, k + ' 圖檔不是空殼（' + Math.round(m.u.length / 1024) + 'KB）');
+  ok(ART.isArtOk(m.u), k + ' 指向真實的 spr/*.webp');
+  ok(ART.artFile(m.u).length > 20000, k + ' 圖檔不是空殼（' + Math.round(ART.artFile(m.u).length / 1024) + 'KB）');
   ok(m.dir === 1, k + ' 原圖朝右');
   ok(m.asp > 1.0 && m.asp < 1.4, k + ' 長寬比合理（' + m.asp + '）');
 });

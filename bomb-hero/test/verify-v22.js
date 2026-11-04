@@ -6,6 +6,7 @@
 //   5. 繪本風背景：木箱、草地、漸層底色（第一關改成插畫配色）
 //   6. 選單字級加大 + 圓體字 + 首頁插畫底圖
 const fs = require('fs');
+const ART = require('./_artcheck');
 const vm = require('vm');
 
 const html = fs.readFileSync(__dirname + '/../index.html', 'utf8');
@@ -134,10 +135,10 @@ ok(html.indexOf('id="verTxt">' + BH.VERSION + '<') > 0, '畫面上的版本文�
 
 const chars = BH.IMG_CHARS;
 ok(Object.keys(chars).length === 8, '內嵌 8 張角色精靈圖（' + Object.keys(chars).length + '）');
-ok(Object.keys(chars).every(function (k) { return chars[k].indexOf('data:image/webp;base64,') === 0; }),
-  '角色圖都是 webp data URL（透明背景）');
-ok(Object.keys(chars).every(function (k) { return chars[k].length > 4000; }),
-  '每張圖都有實際內容（> 4KB base64）');
+ok(Object.keys(chars).every(function (k) { return ART.isArtOk(chars[k]); }),
+  '角色圖都指向真實的 spr/*.webp（透明背景）');
+ok(Object.keys(chars).every(function (k) { const b = ART.artFile(chars[k]); return b && b.length > 3000; }),
+  '每張圖都有實際內容（> 3KB）');
 ok(/^bg\/title\.webp$/.test(BH.IMG_TITLEBG), '首頁底圖（使用者插畫）走獨立檔 bg/title.webp（v4.75：移出主檔）');
 ok(html.indexOf('id="titleBg"') > 0, '首頁有底圖容器 #titleBg');
 ok(html.indexOf("tb.style.backgroundImage") > 0, '啟動時把插畫設成首頁背景');
