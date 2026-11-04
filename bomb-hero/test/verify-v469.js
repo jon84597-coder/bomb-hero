@@ -55,7 +55,7 @@ head('1. 源碼檢查');
   ok(/if \(st <= 16\) return \(st - 1\) % 4;/.test(src), '1~16 關每 4 關循環 T1~T4');
   ok(/return \(\(st - 17\) % 4\) \+ 1;/.test(src), '17 關之後整段加一階（T2~T5）');
   ok(/function mapLayerFor\(stage\)/.test(src), '有 mapLayerFor（classic 回 null）');
-  ok(/if \(Game\.bossRush \|\| !mapModeRandom\(\)\) return null;/.test(src), 'BOSS 挑戰一律走原本地圖');
+  ok(/if \(Game\.bossRush\) return null;[\s\S]{0,140}?if \(!Game\.daily && !mapModeRandom\(\)\) return null;/.test(src), 'BOSS 挑戰一律走原本地圖（每日挑戰除外）');
   ok(/const lay = mt \|\| mapLayerFor\(stage\);/.test(src), '單人用 lay（測試關或隨機 T 圖）');
   ok(/const lay = mapLayerFor\(stage\);            \/\/ v4\.69：RPG 也能用隨機生成地圖/.test(src), 'RPG 也接上隨機地圖');
   ok(/const clearR = 1;/.test(src), '軟磚只在出生點半徑 1 留白');

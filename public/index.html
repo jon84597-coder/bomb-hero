@@ -2678,6 +2678,30 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
 .br-end i { display: block; font-style: normal; color: #b9c7e4; font-size: 12px; margin-bottom: 7px; }
 .br-end .br-end-row { display: flex; gap: 8px; justify-content: center; }
 .br-end .mbtn, .br-end .ghostbtn { width: auto; padding: 7px 14px; font-size: 13px; }
+/* ===== v4.80：每日挑戰 / 排行榜 ===== */
+#scr-title .menu .c-daily { --c1: #6fd3f5; --c2: #2a7fd4; --c3: #17457e; --g1: rgba(130,205,255,.55); --g0: rgba(130,205,255,0); }
+#scr-title .menu .c-lb    { --c1: #ffd873; --c2: #d99b1e; --c3: #8a5c06; --g1: rgba(255,220,130,.55); --g0: rgba(255,220,130,0); }
+.dailybox { margin: 10px 0 4px; display: grid; gap: 6px; }
+.dailyrow { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,.55);
+  border: 1px solid rgba(140,110,70,.20); font-size: 13.5px; }
+.dailyrow .dlab { color: #8a6a3e; font-weight: 700; }
+.dailyrow b { color: #3b2b16; font-weight: 900; font-variant-numeric: tabular-nums; }
+.dailyrow b.ok { color: #1f8a5a; }
+.lbhead { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 8px; }
+.lbhead b { font-size: 15px; color: #4a3a1e; }
+.lblist { display: grid; gap: 5px; min-height: 60px; max-width: 620px; width: 100%; margin: 0 auto; }
+#ovBox .lblist { max-height: 26vh; overflow-y: auto; margin-bottom: 6px; padding: 6px; border-radius: 12px; background: rgba(0,0,0,.20); }
+#ovBox .lblist .empty { color: #ffe6c2; }
+.lbrow { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px;
+  padding: 8px 11px; border-radius: 10px; background: rgba(255,255,255,.6);
+  border: 1px solid rgba(140,110,70,.18); font-size: 13.5px; }
+.lbrow.me { border-color: rgba(60,150,255,.55); background: rgba(214,236,255,.85); }
+.lbrow .rk { font-weight: 900; color: #a07a3a; text-align: center; font-variant-numeric: tabular-nums; }
+.lbrow .nm { font-weight: 800; color: #33261a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lbrow .tm { font-weight: 900; color: #b4531a; font-variant-numeric: tabular-nums; }
+.lblist .empty { text-align: center; color: #8a7350; font-size: 13px; padding: 18px 6px; line-height: 1.65; }
+@media (max-width: 640px) { .lbrow { font-size: 12.5px; } .dailyrow { font-size: 12.5px; } }
 </style>
 </head>
 <body>
@@ -2722,7 +2746,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.79</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.80</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -2755,7 +2779,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         <img class="title-logo" id="titleLogo" alt="BOMB HERO 爆爆英雄" draggable="false" src="spr/title-logo.webp">
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.79</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.80</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" style="margin:8px 0 4px;display:flex;flex-direction:column;gap:4px;align-items:center">
         <label for="playerName" style="font-size:13px;font-weight:600;color:#7a5a2e;text-shadow:0 1px 0 rgba(255,255,255,.65)">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -2764,8 +2788,10 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
       <div class="menu">
         <button class="mbtn c-learn" id="btnLearn" data-ico="🎓"></button>
         <button class="mbtn c-solo" id="btnSolo" data-ico="🎯">單人闖關<small>32 關 · 可調難度</small></button>
+        <button class="mbtn c-daily" id="btnDaily" data-ico="📅">每日挑戰<small>全世界同一張圖 · 比快</small></button>
         <button class="mbtn c-rpg has-beta" id="btnRpg" data-ico="🎲">RPG 模式<span class="betaTag">測試版 Beta</span><small>配點養成 · 血量防禦</small></button>
         <button class="mbtn c-boss" id="btnBoss" data-ico="👹">挑戰 BOSS<small>單挑暗黑魔王</small></button>
+        <button class="mbtn c-lb" id="btnLb" data-ico="🏆">排行榜<small>今日最快 · 全球連線</small></button>
         <button class="mbtn c-br has-beta" id="btnBR" data-ico="🏝️"></button>
         <!-- v4.23：商店／帳號往上挪到 BOSS 後面（原本要滑到第四屏才看得到，很多人根本沒發現） -->
         <button class="mbtn c-store" id="btnStore" data-ico="🛒">商店<small>隨從 5000 金幣</small></button>
@@ -2796,6 +2822,30 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
       </div>
       <div class="hint" id="shopHint"></div>
       <div class="rowbtns"><button class="ghostbtn" data-back="1">← 回主選單</button></div>
+    </div>
+  </div>
+
+  <!-- 每日挑戰 / 排行榜（v4.80） -->
+  <div class="screen" id="scr-daily">
+    <div class="card">
+      <h2 id="dailyTitle">📅 每日挑戰</h2>
+      <div class="desc" id="dailyDesc"></div>
+      <div class="dailybox">
+        <div class="dailyrow"><span class="dlab" id="dailyDayLab">今天的日期</span><b id="dailyDay">—</b></div>
+        <div class="dailyrow"><span class="dlab" id="dailySeedLab">地圖種子</span><b id="dailySeed">—</b></div>
+        <div class="dailyrow"><span class="dlab" id="dailyStageLab">今天的關卡</span><b id="dailyStage">—</b></div>
+        <div class="dailyrow"><span class="dlab" id="dailyBestLab">我的最佳</span><b id="dailyBest">—</b></div>
+      </div>
+      <div class="rowbtns">
+        <button class="biggo" id="btnDailyGo" type="button">開始挑戰 →</button>
+      </div>
+      <div class="lbhead">
+        <b id="lbTitle">🏆 今日排行榜</b>
+        <button class="ghostbtn" id="btnLbReload" type="button">↻ 重新整理</button>
+      </div>
+      <div class="lblist" id="lbList"></div>
+      <div class="hint" id="lbHint"></div>
+      <div class="backrow"><button class="ghostbtn" data-back="1">← 回主選單</button></div>
     </div>
   </div>
 
@@ -2839,6 +2889,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         <button type="button" data-ht="ride">🦖 坐騎招式</button>
         <button type="button" data-ht="stage">🗺️ 場景機關</button>
         <button type="button" data-ht="br">🏝️ 大逃殺</button>
+        <button type="button" data-ht="daily">📅 每日挑戰</button>
         <button type="button" data-ht="foe">👾 怪物圖鑑</button>
         <button type="button" data-ht="tip">💡 實戰訣竅</button>
       </div>
@@ -3337,7 +3388,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.79';
+const VERSION = '4.80';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4491,7 +4542,50 @@ z481|突死縮圈|突死缩圈|Sudden Death|サドンデス縮小|서든데스 �
 z482|，外圈開始落石 → 快往中間跑；淘汰後還能坐|，外圈开始落石 → 快往中间跑；淘汰后还能坐|; rocks fall on the outer ring → run for the middle. Even knocked out you can ride the|。外周に落石 → 中央へ急げ。脱落後も| 바깥 고리가 낙석 → 가운데로 뛰어라. 탈락해도| วงนอกจะมีหินร่วง → รีบวิ่งเข้ากลาง ถูกคัดออกแล้วยังนั่ง|; vòng ngoài rơi đá → chạy vào giữa. Bị loại vẫn có thể ngồi|; на внешнем кольце падают камни → бегите в центр. Даже выбыв, можно сесть на|; außen fallen Felsen → ab in die Mitte. Auch ausgeschieden kannst du noch|; sull'anello esterno cadono massi → corri al centro. Anche eliminato puoi usare
 z483|復仇推車|复仇推车|Revenge Cart|復讐カート|복수 카트|รถล้างแค้น|Xe Trả Thù|Тележка мести|Rachekarren|Carretto della Vendetta
 z484|繼續丟彈。|继续丢弹。|and keep throwing bombs.|に乗って爆弾を投げ続けられる。|. 복수 카트를 타고 계속 폭탄을 던질 수 있다.| แล้วขว้างระเบิดต่อ| và tiếp tục ném bom.| и продолжать бросать бомбы.| und weiter Bomben werfen.| e continuare a lanciare bombe.
-`;
+
+menu.daily|每日挑戰|每日挑战|Daily Challenge|デイリーチャレンジ|데일리 챌린지|ภารกิจรายวัน|Thử thách ngày|Ежедневный вызов|Tagesherausforderung|Sfida giornaliera
+menu.daily.sub|全世界同一張圖 · 比快|全世界同一张图 · 比快|Same map worldwide · beat the clock|世界中が同じマップ · タイム勝負|전 세계가 같은 맵 · 속도 대결|แมพเดียวกันทั่วโลก · วัดความเร็ว|Cùng một bản đồ toàn cầu · đua tốc độ|Одна карта для всех · гонка со временем|Weltweit dieselbe Karte · schneller sein|Stessa mappa per tutti · sfida a tempo
+menu.lb|排行榜|排行榜|Leaderboard|ランキング|리더보드|อันดับ|Bảng xếp hạng|Таблица лидеров|Rangliste|Classifica
+menu.lb.sub|今日最快 · 全球連線|今日最快 · 全球连线|Fastest today · global|今日最速 · 世界と接続|오늘 최고 기록 · 전 세계|เร็วสุดวันนี้ · ทั่วโลก|Nhanh nhất hôm nay · toàn cầu|Быстрейшие сегодня · весь мир|Heute am schnellsten · weltweit|Più veloci oggi · globale
+daily.title|📅 每日挑戰|📅 每日挑战|📅 Daily Challenge|📅 デイリーチャレンジ|📅 데일리 챌린지|📅 ภารกิจรายวัน|📅 Thử thách ngày|📅 Ежедневный вызов|📅 Tagesherausforderung|📅 Sfida giornaliera
+daily.desc|每天一張新圖：用「日期」算出種子，全世界當天玩到完全相同的地圖。規則固定（普通難度、3 分鐘、3 條命），所以能比 —— 比誰先走到出口。同一天想重打幾次都可以，只取你最快的那一次。|每天一张新图：用「日期」算出种子，全世界当天玩到完全相同的地图。规则固定（普通难度、3 分钟、3 条命），所以能比 —— 比谁先走到出口。同一天想重打几次都可以，只取你最快的那一次。|A new map every day: the seed comes from today's date, so everyone on Earth plays exactly the same map. Rules are fixed (normal difficulty, 3 minutes, 3 lives) so times are comparable — it is a race to the exit. Retry as often as you like; only your fastest run counts.|毎日新しいマップ：日付からシードを作るので、世界中の人がその日まったく同じマップで遊べます。ルールは固定（ふつう難易度・3分・残機3）なので、出口までの速さを競えます。同じ日に何度でも再挑戦でき、一番速い記録だけが残ります。|매일 새로운 맵: 날짜로 시드를 만들어 전 세계가 그날 완전히 같은 맵을 플레이합니다. 규칙은 고정(보통 난이도, 3분, 목숨 3)이라 출구까지 누가 빠른지 겨룰 수 있습니다. 같은 날 몇 번이든 다시 도전할 수 있고 가장 빠른 기록만 남습니다.|แมพใหม่ทุกวัน: สร้างซีดจากวันที่ ทุกคนบนโลกจึงได้แผนที่เดียวกันในวันนั้น กติกาคงที่ (ความยากปกติ 3 นาที 3 ชีวิต) จึงวัดกันได้ว่าใครถึงประตูก่อน เล่นซ้ำได้ไม่จำกัดในวันเดียว เอาเฉพาะเวลาที่เร็วที่สุด|Mỗi ngày một bản đồ mới: hạt giống sinh từ ngày, nên cả thế giới chơi đúng cùng một bản đồ. Luật cố định (độ khó thường, 3 phút, 3 mạng) nên so được ai tới cửa trước. Chơi lại bao nhiêu lần cũng được, chỉ tính lần nhanh nhất.|Новая карта каждый день: сид берётся из даты, поэтому все в мире играют на одной и той же карте. Правила фиксированы (обычная сложность, 3 минуты, 3 жизни), так что можно сравнивать — кто быстрее дойдёт до выхода. Переигрывать можно сколько угодно, засчитывается лучший результат.|Jeden Tag eine neue Karte: Der Seed kommt vom Datum, also spielt weltweit jeder exakt dieselbe Karte. Die Regeln sind fest (normale Schwierigkeit, 3 Minuten, 3 Leben), daher sind Zeiten vergleichbar — ein Rennen zum Ausgang. So oft wiederholen, wie du willst; nur der schnellste Lauf zählt.|Una mappa nuova ogni giorno: il seed deriva dalla data, quindi tutti nel mondo giocano la stessa identica mappa. Le regole sono fisse (difficoltà normale, 3 minuti, 3 vite), così i tempi sono confrontabili — è una corsa all'uscita. Riprova quanto vuoi: conta solo il giro più veloce.
+daily.labDay|今天的日期|今天的日期|Today's date|今日の日付|오늘 날짜|วันที่วันนี้|Ngày hôm nay|Дата|Datum|Data
+daily.labSeed|地圖種子|地图种子|Map seed|マップシード|맵 시드|ซีดแผนที่|Hạt giống bản đồ|Сид карты|Karten-Seed|Seed mappa
+daily.labStage|今天的關卡|今天的关卡|Today's stage|今日のステージ|오늘의 스테이지|ด่านวันนี้|Màn hôm nay|Уровень дня|Level des Tages|Livello del giorno
+daily.labBest|我的最佳|我的最佳|My best|自分のベスト|내 최고 기록|สถิติของฉัน|Kỷ lục của tôi|Мой рекорд|Mein Rekord|Il mio record
+daily.stageVal|第 {n} 關 · {name}|第 {n} 关 · {name}|Stage {n} · {name}|ステージ {n} · {name}|{n} 스테이지 · {name}|ด่าน {n} · {name}|Màn {n} · {name}|Уровень {n} · {name}|Level {n} · {name}|Livello {n} · {name}
+daily.noBest|還沒有紀錄|还没有记录|No record yet|まだ記録なし|기록 없음|ยังไม่มีสถิติ|Chưa có kỷ lục|Пока нет рекорда|Noch kein Rekord|Nessun record
+daily.go|開始挑戰（{t}）→|开始挑战（{t}）→|Start the run ({t}) →|チャレンジ開始（{t}）→|도전 시작 ({t}) →|เริ่มท้าทาย ({t}) →|Bắt đầu ({t}) →|Начать ({t}) →|Start ({t}) →|Inizia ({t}) →
+daily.ovTitle|📅 每日挑戰 · {d}|📅 每日挑战 · {d}|📅 Daily Challenge · {d}|📅 デイリーチャレンジ · {d}|📅 데일리 챌린지 · {d}|📅 ภารกิจรายวัน · {d}|📅 Thử thách ngày · {d}|📅 Ежедневный вызов · {d}|📅 Tagesherausforderung · {d}|📅 Sfida giornaliera · {d}
+daily.ovSub|今天的地圖是第 {n} 關「{name}」|今天的地图是第 {n} 关「{name}」|Today's map is stage {n}, "{name}"|今日のマップは第 {n} 面「{name}」|오늘의 맵은 {n} 스테이지 "{name}"|แมพวันนี้คือด่าน {n} "{name}"|Bản đồ hôm nay là màn {n} "{name}"|Карта дня — уровень {n} «{name}»|Die Karte von heute ist Level {n}, „{name}"|La mappa di oggi è il livello {n}, "{name}"
+daily.ovRule|　·　{t} 內走到出口，比誰快|　·　{t} 内走到出口，比谁快|　·　reach the exit within {t} — fastest wins|　·　{t} 以内に出口へ、速さ勝負|　·　{t} 안에 출구 도착, 빠른 사람 승리|　·　ถึงประตูภายใน {t} ใครเร็วกว่าชนะ|　·　tới cửa trong {t}, ai nhanh hơn thắng|　·　дойти до выхода за {t} — кто быстрее|　·　in {t} zum Ausgang — der Schnellste gewinnt|　·　arriva all'uscita in {t} — vince il più veloce
+daily.fixedDiff|📅 每日固定|📅 每日固定|📅 Daily fixed|📅 デイリー固定|📅 데일리 고정|📅 คงที่รายวัน|📅 Cố định hằng ngày|📅 Фиксировано|📅 Täglich fest|📅 Fisso giornaliero
+daily.winTitle|🎉 過關！|🎉 过关！|🎉 Cleared!|🎉 クリア！|🎉 클리어!|🎉 ผ่านด่าน!|🎉 Qua màn!|🎉 Пройдено!|🎉 Geschafft!|🎉 Superato!
+daily.loseTitle|💀 挑戰失敗|💀 挑战失败|💀 Run failed|💀 チャレンジ失敗|💀 도전 실패|💀 ล้มเหลว|💀 Thất bại|💀 Неудача|💀 Gescheitert|💀 Sfida fallita
+daily.winSub|你的時間 {t} · 本機最佳 {b}|你的时间 {t} · 本机最佳 {b}|Your time {t} · local best {b}|タイム {t} · 自己ベスト {b}|기록 {t} · 내 최고 {b}|เวลาของคุณ {t} · สถิติเครื่องนี้ {b}|Thời gian {t} · kỷ lục máy này {b}|Ваше время {t} · лучший результат {b}|Deine Zeit {t} · lokaler Rekord {b}|Il tuo tempo {t} · record locale {b}
+daily.loseSub|第 {n} 關失敗 · 存活 {t}|第 {n} 关失败 · 存活 {t}|Failed on stage {n} · survived {t}|第 {n} 面で失敗 · 生存 {t}|{n} 스테이지 실패 · 버틴 시간 {t}|พลาดที่ด่าน {n} · รอด {t}|Thất bại ở màn {n} · trụ được {t}|Провал на уровне {n} · продержались {t}|Auf Level {n} gescheitert · überlebt {t}|Fallito al livello {n} · sopravvissuto {t}
+daily.rankLine|你的時間 {t} · 今日第 {r} 名（共 {n} 人）|你的时间 {t} · 今日第 {r} 名（共 {n} 人）|Time {t} · rank #{r} of {n} today|タイム {t} · 今日 {r} 位（{n} 人中）|기록 {t} · 오늘 {r}위 (총 {n}명)|เวลา {t} · อันดับ {r} จาก {n} วันนี้|Thời gian {t} · hạng {r}/{n} hôm nay|Время {t} · место {r} из {n} сегодня|Zeit {t} · Platz {r} von {n} heute|Tempo {t} · posizione {r} su {n} oggi
+daily.again|🔄 再挑戰一次|🔄 再挑战一次|🔄 Try again|🔄 もう一度|🔄 다시 도전|🔄 ลองอีกครั้ง|🔄 Thử lại|🔄 Ещё раз|🔄 Nochmal|🔄 Riprova
+lb.titleToday|🏆 今日排行榜|🏆 今日排行榜|🏆 Today's leaderboard|🏆 今日のランキング|🏆 오늘의 리더보드|🏆 อันดับวันนี้|🏆 Bảng xếp hạng hôm nay|🏆 Таблица за сегодня|🏆 Rangliste heute|🏆 Classifica di oggi
+lb.open|🏆 看排行榜|🏆 看排行榜|🏆 View leaderboard|🏆 ランキングを見る|🏆 리더보드 보기|🏆 ดูอันดับ|🏆 Xem bảng xếp hạng|🏆 Таблица лидеров|🏆 Rangliste|🏆 Classifica
+lb.empty|今天還沒有人上榜 —— 你可以是第一個|今天还没有人上榜 —— 你可以是第一个|Nobody has made the board today — be the first|今日はまだ誰もいません — 一番乗りしよう|오늘 아직 아무도 없습니다 — 첫 번째가 되어보세요|วันนี้ยังไม่มีใครติดอันดับ — เป็นคนแรกเลย|Hôm nay chưa có ai — hãy là người đầu tiên|Сегодня ещё никого нет — станьте первым|Heute ist noch niemand dabei — sei der Erste|Oggi nessuno è ancora in classifica — sii il primo
+lb.loading|讀取中…|读取中…|Loading…|読み込み中…|불러오는 중…|กำลังโหลด…|Đang tải…|Загрузка…|Lädt…|Caricamento…
+lb.online|已連上伺服器|已连上伺服器|Connected to server|サーバー接続済み|서버 연결됨|เชื่อมต่อเซิร์ฟเวอร์แล้ว|Đã kết nối máy chủ|Сервер подключён|Mit Server verbunden|Connesso al server
+lb.cached|離線 · 顯示上次的榜單|离线 · 显示上次的榜单|Offline · showing the last saved board|オフライン · 前回のランキングを表示|오프라인 · 지난 목록 표시|ออฟไลน์ · แสดงอันดับล่าสุด|Ngoại tuyến · hiển thị bảng cũ|Офлайн · показан прошлый список|Offline · letzte Liste wird angezeigt|Offline · mostro l'ultima classifica
+lb.offline|（離線，成績只留在這台裝置）|（离线，成绩只留在这台装置）|(offline — score kept on this device only)|（オフライン・記録はこの端末のみ）|（오프라인, 기록은 이 기기에만 저장）|(ออฟไลน์ — บันทึกไว้ในเครื่องนี้เท่านั้น)|(ngoại tuyến — chỉ lưu trên máy này)|(офлайн — результат только на этом устройстве)|(offline — Ergebnis nur auf diesem Gerät)|(offline — record solo su questo dispositivo)
+lb.reload|↻ 重新整理|↻ 重新整理|↻ Refresh|↻ 更新する|↻ 새로고침|↻ รีเฟรช|↻ Làm mới|↻ Обновить|↻ Aktualisieren|↻ Aggiorna
+help.tab.daily|📅 每日挑戰|📅 每日挑战|📅 Daily|📅 デイリー|📅 데일리|📅 รายวัน|📅 Hằng ngày|📅 Ежедневно|📅 Täglich|📅 Giornaliero
+help.daily.lead|每天一張新圖，全世界同一張。比誰先走到出口 —— 沒有裝備差距、沒有運氣成分，只有你熟不熟這張圖。|每天一张新图，全世界同一张。比谁先走到出口 —— 没有装备差距、没有运气成分，只有你熟不熟这张图。|A new map every day, identical for everyone. It is a race to the exit — no gear advantage, no luck, just how well you know the map.|毎日新しいマップを、世界中のみんなで同じ条件で。出口までの速さ勝負 —— 装備差も運もなく、このマップをどれだけ知っているかだけ。|매일 새 맵을 전 세계가 같은 조건으로. 출구까지 누가 빠른지 겨루는 대결 — 장비 차이도 운도 없고, 이 맵을 얼마나 아느냐만 남습니다.|แมพใหม่ทุกวัน ทุกคนทั่วโลกได้แผนที่เดียวกัน แข่งกันว่าใครถึงประตูก่อน — ไม่มีความต่างของอุปกรณ์ ไม่มีดวง มีแค่ว่าคุณรู้แผนที่นี้ดีแค่ไหน|Mỗi ngày một bản đồ mới, cả thế giới cùng một bản. Đua xem ai tới cửa trước — không chênh lệch trang bị, không may mắn, chỉ là bạn thuộc bản đồ này tới đâu.|Каждый день новая карта, одинаковая для всех. Гонка до выхода — без преимуществ в снаряжении и без везения, только знание карты.|Jeden Tag eine neue Karte, für alle dieselbe. Ein Rennen zum Ausgang — kein Ausrüstungsvorteil, kein Glück, nur wie gut du die Karte kennst.|Una mappa nuova ogni giorno, identica per tutti. Una corsa all'uscita — nessun vantaggio di equipaggiamento, nessuna fortuna, solo quanto conosci la mappa.
+help.daily.goal|🎯 目標｜3 分鐘內炸開軟磚、走進出口門。秒數越少排名越前面；陣亡或超時就不列入。|🎯 目标｜3 分钟内炸开软砖、走进出口门。秒数越少排名越前；阵亡或超时就不列入。|🎯 Goal — blast through the bricks and reach the exit within 3 minutes. The fewer seconds, the higher the rank; dying or timing out does not count.|🎯 目標｜3分以内に軟らかいブロックを壊して出口へ。秒数が短いほど上位。やられた／時間切れは記録なし。|🎯 목표 — 3분 안에 벽돌을 부수고 출구로. 초가 짧을수록 상위. 사망하거나 시간 초과면 기록 없음.|🎯 เป้าหมาย — ระเบิดอิฐและไปถึงประตูภายใน 3 นาที วินาทียิ่งน้อยอันดับยิ่งสูง ตายหรือหมดเวลาไม่นับ|🎯 Mục tiêu — phá gạch và tới cửa trong 3 phút. Ít giây hơn thì hạng cao hơn; chết hoặc quá giờ thì không tính.|🎯 Цель — пробиться через блоки и дойти до выхода за 3 минуты. Чем меньше секунд, тем выше место; смерть или просрочка не считаются.|🎯 Ziel — innerhalb von 3 Minuten durch die Ziegel zum Ausgang. Weniger Sekunden heißt besserer Platz; Tod oder Zeitablauf zählen nicht.|🎯 Obiettivo — sfonda i mattoni e raggiungi l'uscita entro 3 minuti. Meno secondi, più in alto; morire o finire il tempo non conta.
+help.daily.seed|🔑 種子｜地圖由「今天的日期」算出來，所以不用約朋友：同一天進來就是同一張圖、同一批怪物。|🔑 种子｜地图由「今天的日期」算出来，所以不用约朋友：同一天进来就是同一张图、同一批怪物。|🔑 Seed — the map is derived from today's date, so there is nothing to arrange: same day means the same map and the same monsters for everyone.|🔑 シード｜マップは「今日の日付」から作られます。だから待ち合わせ不要：同じ日に開けば同じマップ・同じモンスター。|🔑 시드 — 맵은 "오늘 날짜"로 만들어집니다. 약속할 필요 없이 같은 날 접속하면 같은 맵, 같은 몬스터.|🔑 ซีด — แผนที่สร้างจาก "วันที่วันนี้" จึงไม่ต้องนัดกัน เปิดวันเดียวกันได้แผนที่และมอนสเตอร์ชุดเดียวกัน|🔑 Hạt giống — bản đồ sinh từ "ngày hôm nay", nên không cần hẹn ai: cùng ngày là cùng bản đồ, cùng bầy quái.|🔑 Сид — карта строится из сегодняшней даты, договариваться не нужно: в один день у всех одна карта и те же монстры.|🔑 Seed — die Karte entsteht aus dem heutigen Datum, also nichts zu verabreden: gleicher Tag, gleiche Karte, gleiche Monster.|🔑 Seed — la mappa deriva dalla data di oggi, quindi niente da organizzare: stesso giorno, stessa mappa e stessi mostri.
+help.daily.rules|📏 規則｜固定普通難度、3 分鐘、3 條命。難度與時間不能自己調 —— 這樣大家的秒數才能比。|📏 规则｜固定普通难度、3 分钟、3 条命。难度与时间不能自己调 —— 这样大家的秒数才能比。|📏 Rules — normal difficulty, 3 minutes, 3 lives, all fixed. You cannot change difficulty or time, otherwise the times would not be comparable.|📏 ルール｜ふつう難易度・3分・残機3で固定。難易度と時間は変更できません —— それでこそ秒数を比べられます。|📏 규칙 — 보통 난이도, 3분, 목숨 3으로 고정. 난이도와 시간은 바꿀 수 없습니다. 그래야 초를 비교할 수 있으니까요.|📏 กติกา — ความยากปกติ 3 นาที 3 ชีวิต คงที่ เปลี่ยนความยากหรือเวลาไม่ได้ เพื่อให้เทียบเวลาได้จริง|📏 Luật — độ khó thường, 3 phút, 3 mạng, cố định. Không đổi được độ khó hay thời gian, có vậy mới so giây được.|📏 Правила — обычная сложность, 3 минуты, 3 жизни, всё фиксировано. Менять сложность и время нельзя, иначе секунды не сравнить.|📏 Regeln — normale Schwierigkeit, 3 Minuten, 3 Leben, alles fest. Schwierigkeit und Zeit lassen sich nicht ändern, sonst wären Zeiten nicht vergleichbar.|📏 Regole — difficoltà normale, 3 minuti, 3 vite, tutto fisso. Non puoi cambiare difficoltà o tempo, altrimenti i tempi non sarebbero confrontabili.
+help.daily.rank|🏆 排行榜｜主選單的「排行榜」隨時可看今天最快的 50 個人。同一個裝置只保留你最快的一次。|🏆 排行榜｜主菜单的「排行榜」随时可看今天最快的 50 个人。同一个装置只保留你最快的一次。|🏆 Leaderboard — open it from the main menu to see today's 50 fastest at any time. Each device keeps only its own best run.|🏆 ランキング｜メインメニューの「ランキング」で今日の最速50人をいつでも確認。同じ端末は自分のベスト1回だけ残ります。|🏆 리더보드 — 메인 메뉴에서 오늘 가장 빠른 50명을 언제든 확인. 한 기기당 자신의 최고 기록 하나만 남습니다.|🏆 อันดับ — เปิดจากเมนูหลักดู 50 คนที่เร็วที่สุดของวันนี้ได้ตลอด หนึ่งเครื่องเก็บไว้เพียงสถิติที่ดีที่สุดของคุณ|🏆 Bảng xếp hạng — mở từ menu chính để xem 50 người nhanh nhất hôm nay bất cứ lúc nào. Mỗi máy chỉ giữ thành tích tốt nhất của bạn.|🏆 Таблица лидеров — открывается из главного меню: 50 самых быстрых за сегодня. С одного устройства учитывается только лучший результат.|🏆 Rangliste — jederzeit im Hauptmenü: die 50 Schnellsten von heute. Pro Gerät zählt nur dein bester Lauf.|🏆 Classifica — apribile dal menu principale: i 50 più veloci di oggi. Per ogni dispositivo conta solo il tuo miglior giro.
+help.daily.offline|📴 離線｜連不到排行榜伺服器時照樣可以玩，只是成績只留在這台裝置、不會上榜。|📴 离线｜连不到排行榜伺服器时照样可以玩，只是成绩只留在这台装置、不会上榜。|📴 Offline — if the leaderboard server cannot be reached you can still play; the result just stays on this device and is not ranked.|📴 オフライン｜ランキングサーバーに繋がらなくても遊べます。記録はこの端末に残るだけで、ランキングには入りません。|📴 오프라인 — 리더보드 서버에 연결되지 않아도 플레이할 수 있습니다. 기록은 이 기기에만 남고 순위에는 들지 않습니다.|📴 ออฟไลน์ — ถ้าต่อเซิร์ฟเวอร์อันดับไม่ได้ก็ยังเล่นได้ แค่ผลจะอยู่เฉพาะเครื่องนี้และไม่ติดอันดับ|📴 Ngoại tuyến — không kết nối được máy chủ xếp hạng vẫn chơi được; kết quả chỉ lưu trên máy này và không lên bảng.|📴 Офлайн — если сервер рейтинга недоступен, играть всё равно можно; результат останется только на этом устройстве и не попадёт в таблицу.|📴 Offline — ohne Verbindung zum Ranglisten-Server lässt sich trotzdem spielen; das Ergebnis bleibt nur auf diesem Gerät und wird nicht gewertet.|📴 Offline — senza connessione al server della classifica puoi comunque giocare; il risultato resta su questo dispositivo e non entra in classifica.
+help.daily.tip|💡 訣竅｜先炸出一條直線衝到門口。每日挑戰比的是秒數，不是把小怪清光。|💡 诀窍｜先炸出一条直线冲到门口。每日挑战比的是秒数，不是把小怪清光。|💡 Tip — carve one straight line to the exit first. The daily is a race against the clock, not a clearance job.|💡 コツ｜まず出口までの一直線を開けること。デイリーは秒数勝負で、全滅させる競技ではありません。|💡 요령 — 먼저 출구까지 일직선을 뚫으세요. 데일리는 초 싸움이지 몬스터를 다 잡는 대회가 아닙니다.|💡 เคล็ดลับ — เปิดทางตรงไปประตูก่อน รายวันแข่งกันที่เวลา ไม่ใช่เก็บมอนสเตอร์ให้หมด|💡 Mẹo — mở một đường thẳng tới cửa trước. Thử thách ngày là đua thời gian, không phải dọn sạch quái.|💡 Совет — сначала прорубите прямую дорогу к выходу. Ежедневный вызов — гонка на время, а не зачистка карты.|💡 Tipp — bahne zuerst eine gerade Linie zum Ausgang. Beim Täglichen zählt die Zeit, nicht das Ausräumen der Karte.|💡 Consiglio — apri prima una linea retta verso l'uscita. La sfida giornaliera è una gara a tempo, non una caccia ai mostri.
+ver.4.80.1|📅 每日挑戰：每天用「日期」算出一張地圖，全世界當天玩到<b>完全相同</b>的圖；規則固定（普通難度、3 分鐘、3 條命），比誰先走到出口|📅 每日挑战：每天用「日期」算出一张地图，全世界当天玩到<b>完全相同</b>的图；规则固定（普通难度、3 分钟、3 条命），比谁先走到出口|📅 Daily Challenge: the map is derived from the date, so everyone plays the <b>exact same</b> map that day. Rules are fixed (normal, 3 minutes, 3 lives) — it is a race to the exit|📅 デイリーチャレンジ：日付からマップを作るので、その日は世界中が<b>まったく同じ</b>マップで遊べます。ルール固定（ふつう・3分・残機3）で出口までの速さ勝負|📅 데일리 챌린지: 날짜로 맵을 만들어 그날 전 세계가 <b>완전히 같은</b> 맵을 플레이합니다. 규칙 고정(보통·3분·목숨 3)으로 출구까지 속도 대결|📅 ภารกิจรายวัน: สร้างแผนที่จากวันที่ ทุกคนจึงได้แผนที่<b>เดียวกันเป๊ะ</b>ในวันนั้น กติกาคงที่ (ปกติ 3 นาที 3 ชีวิต) แข่งกันว่าใครถึงประตูก่อน|📅 Thử thách ngày: bản đồ sinh từ ngày, nên hôm đó ai cũng chơi <b>đúng cùng một</b> bản đồ. Luật cố định (thường, 3 phút, 3 mạng) — đua tới cửa|📅 Ежедневный вызов: карта строится из даты, поэтому в этот день у всех <b>одна и та же</b> карта. Правила фиксированы (обычная, 3 минуты, 3 жизни) — гонка до выхода|📅 Tagesherausforderung: Die Karte entsteht aus dem Datum, alle spielen an dem Tag <b>exakt dieselbe</b> Karte. Feste Regeln (normal, 3 Minuten, 3 Leben) — ein Rennen zum Ausgang|📅 Sfida giornaliera: la mappa deriva dalla data, quindi quel giorno tutti giocano la <b>stessa identica</b> mappa. Regole fisse (normale, 3 minuti, 3 vite) — corsa all'uscita
+ver.4.80.2|🏆 排行榜：主選單新增入口，看今天最快的 50 個人。成績存在伺服器，換手機也看得到；連不到時退回本機快取，至少看得到自己|🏆 排行榜：主菜单新增入口，看今天最快的 50 个人。成绩存在伺服器，换手机也看得到；连不到时退回本机缓存，至少看得到自己|🏆 Leaderboard: a new main-menu entry shows today's 50 fastest. Scores live on the server, so another phone sees them too; when offline it falls back to a local cache|🏆 ランキング：メインメニューから今日の最速50人を確認。記録はサーバー保存なので別の端末でも見られます。繋がらない時は端末のキャッシュを表示|🏆 리더보드: 메인 메뉴에서 오늘 가장 빠른 50명을 확인. 기록은 서버에 저장되어 다른 기기에서도 보입니다. 연결이 안 되면 기기 캐시를 표시|🏆 อันดับ: เมนูหลักมีทางเข้าใหม่ ดู 50 คนเร็วสุดของวันนี้ สถิติเก็บบนเซิร์ฟเวอร์จึงดูจากเครื่องอื่นได้ ถ้าต่อไม่ได้จะใช้แคชในเครื่อง|🏆 Bảng xếp hạng: mục mới ở menu chính, xem 50 người nhanh nhất hôm nay. Điểm lưu trên máy chủ nên đổi máy vẫn thấy; mất mạng thì dùng bộ nhớ tạm|🏆 Таблица лидеров: новый пункт меню — 50 самых быстрых за сегодня. Результаты хранятся на сервере, их видно и с другого телефона; без сети показывается локальный кэш|🏆 Rangliste: neuer Eintrag im Hauptmenü mit den 50 Schnellsten von heute. Ergebnisse liegen auf dem Server, also auch auf einem anderen Handy sichtbar; offline greift ein lokaler Cache|🏆 Classifica: nuova voce nel menu principale con i 50 più veloci di oggi. I risultati stanno sul server, quindi si vedono anche da un altro telefono; offline usa la cache locale
+ver.4.80.3|⏱️ 每日挑戰結算：過關直接顯示秒數、名次與今日前 5 名。同一天想重打幾次都可以，只取你最快的一次|⏱️ 每日挑战结算：过关直接显示秒数、名次与今日前 5 名。同一天想重打几次都可以，只取你最快的一次|⏱️ Daily results: clearing the map shows your time, rank and today's top 5 right away. Retry as often as you like — only your fastest run counts|⏱️ デイリー結果：クリアすると秒数・順位・今日のトップ5をすぐ表示。同じ日に何度でも再挑戦でき、最速の1回だけが記録されます|⏱️ 데일리 결산: 클리어하면 초·순위·오늘의 톱5를 바로 표시. 같은 날 몇 번이든 다시 도전할 수 있고 가장 빠른 기록만 남습니다|⏱️ สรุปผลรายวัน: ผ่านด่านแล้วเห็นเวลา อันดับ และ 5 อันดับแรกของวันทันที เล่นซ้ำได้ไม่จำกัด เอาเฉพาะครั้งที่เร็วที่สุด|⏱️ Kết quả ngày: qua màn là thấy ngay thời gian, thứ hạng và top 5 hôm nay. Chơi lại bao nhiêu lần cũng được, chỉ tính lần nhanh nhất|⏱️ Итоги дня: после прохождения сразу видно время, место и топ-5 за сегодня. Переигрывать можно сколько угодно — считается лучший забег|⏱️ Tagesergebnis: nach dem Ausgang sofort Zeit, Platz und die Top 5 von heute. Beliebig oft wiederholen — nur der schnellste Lauf zählt|⏱️ Risultato giornaliero: superata la mappa vedi subito tempo, posizione e i primi 5 di oggi. Riprova quanto vuoi: conta il giro più veloce
+ver.4.80.4|📖 說明頁新增每日挑戰分頁：種子怎麼來、規則為什麼固定、排行榜怎麼算，一次看懂（10 國語系）|📖 说明页新增每日挑战分页：种子怎么来、规则为什么固定、排行榜怎么算，一次看懂（10 国语系）|📖 New help tab for the daily challenge: where the seed comes from, why the rules are fixed and how the board is ranked (10 languages)|📖 説明ページにデイリーチャレンジのタブを追加：シードの作り方、ルールを固定する理由、ランキングの仕組みをまとめて解説（10言語）|📖 설명 페이지에 데일리 챌린지 탭 추가: 시드가 어떻게 만들어지는지, 규칙이 고정된 이유, 순위 계산법을 한 번에 (10개 언어)|📖 หน้าช่วยเหลือมีแท็บภารกิจรายวันแล้ว: ซีดมาจากไหน ทำไมกติกาถึงคงที่ และอันดับคิดอย่างไร (10 ภาษา)|📖 Trang hướng dẫn có thêm tab Thử thách ngày: hạt giống từ đâu, vì sao luật cố định và bảng xếp hạng tính thế nào (10 ngôn ngữ)|📖 В справке появилась вкладка ежедневного вызова: откуда берётся сид, почему правила фиксированы и как считается рейтинг (10 языков)|📖 Neue Hilfe-Registerkarte für die Tagesherausforderung: Woher der Seed kommt, warum die Regeln fest sind und wie die Rangliste zählt (10 Sprachen)|📖 Nuova scheda nella guida per la sfida giornaliera: da dove viene il seed, perché le regole sono fisse e come funziona la classifica (10 lingue)`;
 (function () {
   const L = ["zh-TW","zh-CN","en","ja","ko","th","vi","ru","de","it"];
   for (let i = 0; i < L.length; i++) I18N[L[i]] = {};
@@ -4817,6 +4911,8 @@ function refreshI18NUI() {
   // v4.77：這幾個區塊是「初始化時寫一次」的（首頁新手教學／大逃殺入口、帳號膠囊）→ 換語言要重注入
   try { if (typeof Tut !== 'undefined' && Tut && Tut.fillUI) Tut.fillUI(); } catch (e) {}
   try { if (typeof Cloud !== 'undefined' && Cloud && Cloud.paint) Cloud.paint(); } catch (e) {}
+  // v4.80：每日挑戰／排行榜的文字是 JS 注入的（不是靜態節點）→ 換語言要重畫
+  try { if (typeof renderDailyScreen === 'function' && typeof Screen !== 'undefined' && Screen.current === 'daily') renderDailyScreen(); } catch (e) {}
 }
 function updateLangBtn() {
   const el = typeof $id === 'function' ? $id('btnLang') : null;
@@ -8363,15 +8459,21 @@ const SOLO_DIFF = {
   normal: { enemy: 1,   speed: 1,   bossHp: BOSS_HITS, eggs: 2, label: '🙂 普通' },
   hard:   { enemy: 1.45, speed: 1.22, bossHp: BOSS_HITS, eggs: 1, label: '😈 困難' }
 };
-function soloDiffCfg() { return SOLO_DIFF[settings.soloDiff] || SOLO_DIFF.normal; }
+function soloDiffCfg() {
+  // v4.80：每日挑戰固定難度（不然排行榜就變成比誰調得簡單）
+  if (Game.daily) return SOLO_DIFF[DAILY_DIFF] || SOLO_DIFF.normal;
+  return SOLO_DIFF[settings.soloDiff] || SOLO_DIFF.normal;
+}
 // v4.77：難易度名稱跟著語言走（原本只有中文）
 function diffLabel(id) {
+  if (Game.daily) return t('daily.fixedDiff');
   const k = settings.soloDiff || 'normal';
   const v = t('diff.' + k);
   return (v && v !== 'diff.' + k) ? v : soloDiffCfg().label;
 }
 // 單人關卡時間（0 = 無限）
 function soloTimeVal() {
+  if (Game.daily) return DAILY_TIME;         // v4.80：每日挑戰固定 3 分鐘
   const t = parseInt(settings.soloTime, 10);
   return t > 0 ? t : 0;
 }
@@ -8396,7 +8498,182 @@ function pickBossCell(bx, by, cols, rows) {
   Game.grid[by][bx] = 0;                       // 整張圖都沒空地（不該發生）→ 照舊硬挖
   return { x: bx, y: by };
 }
-function startSolo(stage, bossRush) {
+
+/* =====================================================================
+   v4.80：每日挑戰 ＋ 排行榜
+   ---------------------------------------------------------------------
+   玩法：每天用「日期」算出一個種子 → 全世界當天長出同一張圖。
+        規則固定（普通難度、3 分鐘、3 條命），所以能比：比通關秒數。
+        同一天重開幾次都是同一張圖（種子只跟日期有關，不看時鐘）。
+   排行榜：匿名（暱稱 + 秒數），後端 /api/lb/*，前端從 GitHub Pages 也能跨網域打。
+        後端不在線時退回本機快取 —— 至少看得到自己的成績，不會變成一塊空白。
+   ===================================================================== */
+const DAILY_TIME = 180;          // 每日挑戰固定 3 分鐘
+const DAILY_DIFF = 'normal';     // 固定普通難度（要公平就不能讓玩家自己調）
+
+/* UTC+8 換日（跟後端 cloud.js 的 lbToday 一致；跨時區最多差一天，不影響同一天的人互相比） */
+function dailyDayKey(d) {
+  const t = d ? new Date(d) : new Date();
+  const u = new Date(t.getTime() + 8 * 3600000);
+  const p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+  return u.getUTCFullYear() + '-' + p2(u.getUTCMonth() + 1) + '-' + p2(u.getUTCDate());
+}
+/* 字串 → 32 位元種子（FNV-1a，夠散且完全確定） */
+function dailySeedOf(day) {
+  let h = 2166136261;
+  const s = 'bh-daily-' + String(day || '');
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) | 0;
+}
+/* 種子 → 今天的關卡（1~31；第 32 關是純魔王關，排進去只會變成抽卡） */
+function dailyStageOf(seed) { return 1 + (((seed >>> 7) >>> 0) % 31); }
+function seedCodeOf(seed) {
+  let c = (seed >>> 0).toString(36).toUpperCase();
+  while (c.length < 5) c = '0' + c;
+  return c.slice(-5);
+}
+/* 毫秒 → 3:24.7（排行榜用；小數一位，夠分勝負又不會太長） */
+function fmtMs(ms) {
+  const v = Math.max(0, Math.round(ms || 0));
+  const m = Math.floor(v / 60000), s = Math.floor((v % 60000) / 1000), d = Math.floor((v % 1000) / 100);
+  return m + ':' + (s < 10 ? '0' : '') + s + '.' + d;
+}
+
+const Daily = {
+  KEY: 'bombhero-daily-best',
+  MAX_KEEP: 30,
+  /* 本機最佳紀錄：{ 'YYYY-MM-DD': ms } */
+  all() {
+    try {
+      const o = JSON.parse(localStorage.getItem(Daily.KEY) || '{}');
+      return (o && typeof o === 'object') ? o : {};
+    } catch (e) { return {}; }
+  },
+  best(day) {
+    const v = Daily.all()[day || dailyDayKey()];
+    return (typeof v === 'number' && v > 0) ? v : 0;
+  },
+  saveBest(day, ms) {
+    const o = Daily.all();
+    if (!o[day] || ms < o[day]) o[day] = Math.round(ms);
+    // 只留最近 30 天，免得 localStorage 愈長愈大
+    const keys = Object.keys(o).sort();
+    while (keys.length > Daily.MAX_KEEP) delete o[keys.shift()];
+    try { localStorage.setItem(Daily.KEY, JSON.stringify(o)); } catch (e) {}
+    return o[day];
+  },
+  today() { return dailyDayKey(); },
+  seed() { return dailySeedOf(dailyDayKey()); },
+  stage() { return dailyStageOf(dailySeedOf(dailyDayKey())); },
+  /* 開始今天的挑戰（規則固定，不讓玩家改難度／時間） */
+  begin() {
+    AudioSys.ensure(); AudioSys.sfx('click');
+    ensureNickname();
+    const day = Daily.today();
+    const st = {
+      day: day,
+      seed: dailySeedOf(day),
+      stage: dailyStageOf(dailySeedOf(day)),
+      ms: 0,
+      done: false,
+      sent: false
+    };
+    try { startSolo(st.stage, false, st); } catch (e) {
+      console.error('[daily]', e);
+      try { toast('⚠️ ' + ((e && e.message) || e), 3.2); } catch (e2) {}
+    }
+  }
+};
+
+/* ---------------- 排行榜（前端） ---------------- */
+const Lb = {
+  TIMEOUT: 9000,
+  last: null,             // { day, list, online, at }
+  _busy: false,
+  /* 後端位址：靜態空間（GitHub Pages／file://）沒有 /api，直接打 Render 那台 */
+  origin() {
+    let h = '', proto = '';
+    try { h = location.hostname || ''; proto = location.protocol || ''; } catch (e) {}
+    if (proto === 'file:') return 'https://bomb-hero-game.onrender.com';
+    if (/^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/.test(h)) return '';
+    if (/\.onrender\.com$/i.test(h)) return '';
+    if (/\.github\.(io|com)$/i.test(h)) return 'https://bomb-hero-game.onrender.com';
+    return '';
+  },
+  cacheKey(day) { return 'bombhero-lb-' + day; },
+  readCache(day) {
+    try {
+      const o = JSON.parse(localStorage.getItem(Lb.cacheKey(day)) || 'null');
+      return (o && o.list) ? o : null;
+    } catch (e) { return null; }
+  },
+  writeCache(day, list) {
+    try { localStorage.setItem(Lb.cacheKey(day), JSON.stringify({ at: Date.now(), list: list })); } catch (e) {}
+  },
+  /* 這台裝置的匿名指紋：跟 Cloud 的遊客 id 共用，換裝置就是另一個人 */
+  deviceId() {
+    const K = 'bombhero-device';
+    let id = '';
+    try { id = localStorage.getItem(K) || ''; } catch (e) {}
+    if (!id || id.length < 8) {
+      id = 'dev-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+      try { localStorage.setItem(K, id); } catch (e) {}
+    }
+    return id;
+  },
+  _get(url) {
+    return new Promise(function (resolve) {
+      let done = false;
+      const fin = function (v) { if (!done) { done = true; resolve(v); } };
+      const ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      const tm = setTimeout(function () {
+        try { if (ctl) ctl.abort(); } catch (e) {}
+        fin({ ok: false, err: 'TIMEOUT' });
+      }, Lb.TIMEOUT);
+      fetch(url, { method: 'GET', cache: 'no-store', signal: ctl ? ctl.signal : undefined }).then(function (r) {
+        return r.json().then(function (j) { fin(j || { ok: false }); }, function () { fin({ ok: false, err: 'BAD_JSON' }); });
+      }).catch(function () { fin({ ok: false, err: 'NET' }); }).then(function () { clearTimeout(tm); });
+    });
+  },
+  _post(url, body) {
+    return new Promise(function (resolve) {
+      let done = false;
+      const fin = function (v) { if (!done) { done = true; resolve(v); } };
+      const tm = setTimeout(function () { fin({ ok: false, err: 'TIMEOUT' }); }, Lb.TIMEOUT);
+      fetch(url, {
+        method: 'POST', cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {})
+      }).then(function (r) {
+        return r.json().then(function (j) { fin(j || { ok: false }); }, function () { fin({ ok: false, err: 'BAD_JSON' }); });
+      }).catch(function () { fin({ ok: false, err: 'NET' }); }).then(function () { clearTimeout(tm); });
+    });
+  },
+  top(day) {
+    const d = day || dailyDayKey();
+    return Lb._get(Lb.origin() + '/api/lb/top?mode=daily&day=' + encodeURIComponent(d) + '&limit=50')
+      .then(function (j) {
+        if (j && j.ok && j.list) {
+          Lb.last = { day: d, list: j.list, online: true, at: Date.now() };
+          Lb.writeCache(d, j.list);
+        } else {
+          const c = Lb.readCache(d);
+          Lb.last = { day: d, list: (c && c.list) || [], online: false, at: Date.now() };
+        }
+        return Lb.last;
+      });
+  },
+  submit(day, name, ms) {
+    return Lb._post(Lb.origin() + '/api/lb/submit', {
+      mode: 'daily', day: day, name: name || '', ms: Math.round(ms), deviceId: Lb.deviceId(),
+      ver: VERSION
+    });
+  }
+};
+function startSolo(stage, bossRush, daily) {
   // v4.3：行為足跡（後台客服核對「卡在哪一關」用）
   try { if (typeof Cloud !== 'undefined' && Cloud.track) Cloud.track(bossRush ? 'boss' : 'play', stage); } catch (e) {}
   Game.mode = 'solo';
@@ -8405,6 +8682,18 @@ function startSolo(stage, bossRush) {
   Game.rpg = false;
   Game.pets = [];
   Game.bossRush = !!bossRush;
+  // v4.80：每日挑戰 —— 難度／時間／種子全部由日期決定，玩家不能自己調（要公平就要固定）
+  const hadDailySeed = !!(Game._seed && Game._dailySeedFlag);
+  Game.daily = daily || null;
+  if (Game.daily) {
+    Game.bossRush = false;
+    Game._seed = Game.daily.seed;
+    Game._seedStage = Game.daily.stage;
+    Game._dailySeedFlag = true;
+  } else if (hadDailySeed) {
+    // 從每日挑戰回到一般模式：把借來的種子還回去，讓 stageRandSeed 重新取一個
+    Game._seed = null; Game._seedStage = 0; Game._dailySeedFlag = false;
+  }
   // v4.14：單人闖關變成 32 張地圖 → 先把關號夾在合法範圍，主題改成看 MAP32
   stage = Math.max(1, Math.min(SOLO_STAGES, stage || 1));
   Game.stage = stage;
@@ -8426,11 +8715,18 @@ function startSolo(stage, bossRush) {
   resizeView();                 // 先量測實際畫面尺寸，地圖格子大小才正確
   buildSoloStage(stage, true);
   const tSec = soloTimeVal();
-  showOverlay({
-    title: Game.bossRush ? t('solo.ovBossTitle', { name: mapName(soloInfo(stage)) }) : t('solo.ovTitle', { n: stage, name: mapName(soloInfo(stage)) }),
-    sub: (Game.bossRush ? t('solo.ovBossSub') : (soloIsBoss(stage) ? t('solo.ovBossSub2') : t('solo.ovSub'))) +
+  const ovT = Game.daily
+    ? t('daily.ovTitle', { d: Game.daily.day })
+    : (Game.bossRush ? t('solo.ovBossTitle', { name: mapName(soloInfo(stage)) }) : t('solo.ovTitle', { n: stage, name: mapName(soloInfo(stage)) }));
+  const ovS = Game.daily
+    ? t('daily.ovSub', { n: stage, name: mapName(soloInfo(stage)) }) +
+      t('daily.ovRule', { t: fmtTime(tSec) }) + '　🔑 ' + seedCodeOf(Game.daily.seed)
+    : (Game.bossRush ? t('solo.ovBossSub') : (soloIsBoss(stage) ? t('solo.ovBossSub2') : t('solo.ovSub'))) +
       t('solo.ovTime', { d: diffLabel(), t: (tSec ? fmtTime(tSec) : t('time.inf')) }) +
-      seedTag(),
+      seedTag();
+  showOverlay({
+    title: ovT,
+    sub: ovS,
     btn: t('solo.ovGo'),
     action: function () { beginCountdown('battle'); }
   });
@@ -8465,7 +8761,9 @@ function stageTileIdx(stage) {
 function mapModeRandom() { return settings.mapMode === 'random'; }
 // 這一關要用的隨機地圖參數（null = 走原本的手工地圖）
 function mapLayerFor(stage) {
-  if (Game.bossRush || !mapModeRandom()) return null;
+  if (Game.bossRush) return null;
+  // v4.80：每日挑戰一律用「隨機地形」層 —— 同一顆種子長出同一張圖，不管玩家自己的地圖模式設定
+  if (!Game.daily && !mapModeRandom()) return null;
   return MAPTEST[stageTileIdx(stage)] || MAPTEST[0];
 }
 // 同一關重試沿用同一張圖（換關才換）；classic 模式不影響
@@ -8477,6 +8775,7 @@ function seedCode() {
   return c.slice(-5);
 }
 function seedTag() {
+  if (Game.daily) return '　🔑 ' + seedCodeOf(Game.daily.seed);
   if (!mapModeRandom() || !Game._seed) return '';
   const c = seedCode();
   return c ? '　🔑 ' + c : '';
@@ -8536,7 +8835,16 @@ function nearSpawn(x, y, d) {
   return Math.abs(x - s2.x) <= d && Math.abs(y - s2.y) <= d;
 }
 
+// v4.80：每日挑戰要「同一張圖」→ 蓋掉 Math.random 讓整段建圖（含小怪落點、道具、BOSS 站位）
+//   完全由種子決定。只在建圖期間替換，遊戲中的粒子／掉落仍然用真正的隨機（不影響公平性，
+//   也不會有「玩到一半 RNG 序列被 UI 吃掉」的走鐘問題）。
 function buildSoloStage(stage, fresh) {
+  if (!Game.daily) return buildSoloStageInner(stage, fresh);
+  const orig = Math.random;
+  Math.random = rngFrom((Game.daily.seed ^ 0x9E3779B9) >>> 0);
+  try { return buildSoloStageInner(stage, fresh); } finally { Math.random = orig; }
+}
+function buildSoloStageInner(stage, fresh) {
   const mt = Game.mapTest;
   const lay = mt || mapLayerFor(stage);      // v4.69：maptest 關 / 隨機生成模式的 T 圖
   const size = SIZES.M;
@@ -8550,7 +8858,8 @@ function buildSoloStage(stage, fresh) {
   Game.foeCap = lay ? lay.foes : 0;
   // v4.14：單人闖關跟 RPG 一樣走「有機地形」（洞穴／迷宮／環形／樑柱…）。
   //   固定種子 → 同一張地圖每次進去長得都一樣，玩家可以記圖、練路線。
-  const seed = mt ? Game.mapTestSeed
+  const seed = Game.daily ? Game.daily.seed
+    : mt ? Game.mapTestSeed
     : lay ? stageRandSeed(stage)
     : (3000 + info.idx * 6151 + cols * 31 + rows * 13);
   // v4.14：道具量也改成連續曲線（32 關不能沿用「13 + 關號×1.5」，後段會多到每塊磚都有）
@@ -9600,10 +9909,15 @@ function drawPet(pt, T) {
 function updateSolo(dt) {
   const p = Game.players[0];
   if (Game.state === 'play') {
+    // v4.80：每日挑戰用「實際遊玩時間」計時 —— 暫停、開覆蓋層、看說明都不算，才能公平比快
+    if (Game.daily && !Game.daily.done) Game.daily.ms += dt * 1000;
     // 無限時間：倒數停在 ∞，不會時間到就陣亡
     if (isFinite(Game.timer)) {
       Game.timer -= dt;
-      if (Game.timer <= 0) { Game.timer = soloTimeVal() || 180; killPlayer(p, true); }
+      if (Game.timer <= 0) {
+        if (Game.daily) { Game.timer = 0; dailyTimeUp(p); }
+        else { Game.timer = soloTimeVal() || 180; killPlayer(p, true); }
+      }
     }
     // 玩家控制
     if (p.alive) controlHuman(p, dt);
@@ -9657,6 +9971,8 @@ function updateSolo(dt) {
         // v4.1：RPG 過關回報後端（伺服器驗證「只能依序過關」，金幣也由後端算）
         try { if (Game.mode === 'rpg' && typeof Cloud !== 'undefined') Cloud.clearStage(cleared); } catch (e) {}
         try { if (typeof Cloud !== 'undefined' && Cloud.track) Cloud.track('clear', cleared); } catch (e) {}
+        // v4.80：每日挑戰 → 到門就結束（不進下一關），結算秒數並送排行榜
+        if (Game.daily) { dailyClear(p); return; }
         const maxStage = SOLO_STAGES;   // v4.14：單人與 RPG 都是 32 關
         if (Game.mode === 'solo' && cleared >= Solo.unlocked && cleared < maxStage) {
           Solo.unlocked = cleared + 1;
@@ -9712,6 +10028,13 @@ function updateSolo(dt) {
             toast('💰 本關賺到的 ' + coins + ' 金幣已放進商店錢包', 2.8);
           }
         } catch (e) {}
+        // v4.80：每日挑戰三條命用完 → 直接結算（不進一般「再來一次」流程，那裡會丟掉每日狀態）
+        if (Game.daily) {
+          Game.daily.done = true;
+          battleEndFx(false);
+          showDailyResult(false);
+          return;
+        }
         showEnd(t('solo.overTitle'), t('solo.overSub', { n: Game.stage, s: p.score }) + '　·　' + diffLabel(), false);
         battleEndFx(false);
       } else {
@@ -10264,6 +10587,7 @@ const Battle = {
 
 function startBattle() {
   Game.mode = 'battle';
+  Game.daily = null;                 // v4.80：離開每日挑戰的狀態，免得被殘留旗標影響
   Game.pets = [];                    // v4.17：隨從只在單人／RPG 出場
   // v4.15：位子數量一定要跟「對戰人數」一致（例如剛從存檔還原設定、還沒點過分段按鈕）
   if (!Battle.slots || Battle.slots.length !== clampCount(settings.count) ||
@@ -11153,6 +11477,7 @@ function brBossDown(e, killer) {
 }
 
 function startBR() {
+  Game.daily = null;                 // v4.80：大逃殺不吃每日挑戰的固定規則
   // 門票：每場消耗一張（開發者帳號不扣）
   //   v4.74：正式測試結束前免費（BR.FREE）—— 只要把 FREE 改回 false 就恢復收票
   let dev = false;
@@ -13442,6 +13767,169 @@ function showEnd(title, sub, good, chIdx) {
     Screen.show('title');
   });
   ovShow();
+}
+
+/* =====================================================================
+   v4.80：每日挑戰 —— 結算 / 榜單
+   ===================================================================== */
+function dailyClear(p) {
+  const d = Game.daily;
+  if (!d || d.done) return;
+  d.done = true;
+  d.ms = Math.round(d.ms || 0);
+  Daily.saveBest(d.day, d.ms);
+  try { AudioSys.stopBGM(); } catch (e) {}
+  battleEndFx(true, p ? p.x : 0, p ? p.y - Game.T : 0);
+  setTimeout(function () { showDailyResult(true); }, 620);
+}
+function dailyTimeUp(p) {
+  const d = Game.daily;
+  if (!d || d.done) return;
+  d.done = true;
+  Game.state = 'over';
+  try { AudioSys.stopBGM(); } catch (e) {}
+  showDailyResult(false);
+}
+function dailyLbRow(e, i, me) {
+  const medal = i < 3 ? ['🥇', '🥈', '🥉'][i] : String(i + 1);
+  return '<div class="lbrow' + (me ? ' me' : '') + '">' +
+    '<span class="rk">' + medal + '</span>' +
+    '<span class="nm"></span>' +
+    '<span class="tm">' + fmtMs(e.ms) + '</span></div>';
+}
+/* 把名字用 textContent 塞回去（暱稱可能含 < > & 之類，不能直接拼進 HTML） */
+function fillLbNames(root, list) {
+  if (!root) return;
+  const rows = root.querySelectorAll('.lbrow .nm');
+  for (let i = 0; i < rows.length && i < list.length; i++) rows[i].textContent = list[i].n || '';
+}
+function showDailyResult(ok) {
+  const d = Game.daily || { day: Daily.today(), ms: 0 };
+  const ms = Math.max(0, Math.round(d.ms || 0));
+  const best = Daily.best(d.day);
+  Game.endShown = true;
+  const box = $id('ovBox');
+  if (!box) return;
+  box.innerHTML =
+    '<h3></h3><p></p>' +
+    '<div class="lblist" id="dailyMini" style="margin:10px 0 4px"></div>' +
+    '<div class="row" style="justify-content:center;gap:10px;flex-wrap:wrap;">' +
+    '<button class="mbtn warm" id="btnDailyAgain" style="width:auto;padding:11px 22px;"></button>' +
+    '<button class="ghostbtn" id="btnDailyLb"></button>' +
+    '<button class="ghostbtn" id="btnHome"></button></div>';
+  box.querySelector('h3').textContent = t(ok ? 'daily.winTitle' : 'daily.loseTitle');
+  const pEl = box.querySelector('p');
+  pEl.textContent = ok
+    ? t('daily.winSub', { t: fmtMs(ms), b: fmtMs(best) })
+    : t('daily.loseSub', { n: Game.stage, t: fmtMs(ms) });
+
+  const mini = $id('dailyMini');
+  const paint = function (list) {
+    if (!mini) return;
+    if (!list || !list.length) { mini.innerHTML = '<div class="empty">' + t('lb.empty') + '</div>'; return; }
+    const me = settings.playerName || '';
+    const cut = list.slice(0, 5);
+    mini.innerHTML = cut.map(function (e, i) { return dailyLbRow(e, i, me && e.n === me); }).join('');
+    fillLbNames(mini, cut);
+  };
+  const cached = Lb.readCache(d.day);
+  paint((cached && cached.list) || (Lb.last && Lb.last.day === d.day ? Lb.last.list : null));
+
+  // 只有真的走完（有時間）才送榜 —— 陣亡不進榜，避免有人用「快速自殺」刷記錄
+  if (ok && ms >= 1000) {
+    Lb.submit(d.day, settings.playerName || '', ms).then(function (j) {
+      if (j && j.ok) {
+        if (j.list && j.list.length) {
+          Lb.last = { day: d.day, list: j.list, online: true, at: Date.now() };
+          Lb.writeCache(d.day, j.list);
+          paint(j.list);
+        }
+        if (j.rank) pEl.textContent = t('daily.rankLine', { r: j.rank, n: j.total, t: fmtMs(ms) });
+      } else {
+        pEl.textContent += '　·　' + t('lb.offline');
+      }
+    });
+  }
+
+  const again = $id('btnDailyAgain');
+  if (again) {
+    again.textContent = t('daily.again');
+    again.addEventListener('click', function () {
+      AudioSys.sfx('click'); Game.endShown = false; hideOverlay(); paused = false; Daily.begin();
+    });
+  }
+  const toLb = $id('btnDailyLb');
+  if (toLb) {
+    toLb.textContent = t('lb.open');
+    toLb.addEventListener('click', function () {
+      AudioSys.sfx('click'); Game.endShown = false; hideOverlay(); paused = false;
+      AudioSys.startBGM('menu');
+      Screen.show('daily');
+      renderDailyScreen();
+    });
+  }
+  const home = $id('btnHome');
+  if (home) {
+    home.textContent = t('over.home');
+    home.addEventListener('click', function () {
+      AudioSys.sfx('click'); Game.endShown = false; hideOverlay(); paused = false;
+      AudioSys.startBGM('menu');
+      Screen.show('title');
+    });
+  }
+  ovShow();
+}
+
+/* 每日挑戰畫面：日期、種子、今天的關卡、我的最佳 ＋ 今日榜 */
+function renderDailyScreen() {
+  const day = Daily.today();
+  const seed = dailySeedOf(day);
+  const stage = dailyStageOf(seed);
+  const set = function (id, v) { const e = $id(id); if (e) e.textContent = v; };
+  set('dailyTitle', t('daily.title'));
+  set('dailyDesc', t('daily.desc'));
+  set('dailyDayLab', t('daily.labDay'));
+  set('dailySeedLab', t('daily.labSeed'));
+  set('dailyStageLab', t('daily.labStage'));
+  set('dailyBestLab', t('daily.labBest'));
+  set('dailyDay', day);
+  set('dailySeed', seedCodeOf(seed));
+  set('dailyStage', t('daily.stageVal', { n: stage, name: mapName(soloInfo(stage)) }));
+  const best = Daily.best(day);
+  const bEl = $id('dailyBest');
+  if (bEl) { bEl.textContent = best ? fmtMs(best) : t('daily.noBest'); bEl.className = best ? 'ok' : ''; }
+  const go = $id('btnDailyGo');
+  if (go) go.textContent = t('daily.go', { t: fmtTime(DAILY_TIME) });
+  set('lbTitle', t('lb.titleToday'));
+  set('btnLbReload', t('lb.reload'));
+  renderLbList();
+}
+function renderLbList() {
+  const box = $id('lbList');
+  if (!box) return;
+  const day = Daily.today();
+  const me = settings.playerName || '';
+  const paint = function (list) {
+    if (!list || !list.length) { box.innerHTML = '<div class="empty">' + t('lb.empty') + '</div>'; return; }
+    box.innerHTML = list.slice(0, 20).map(function (e, i) { return dailyLbRow(e, i, me && e.n === me); }).join('');
+    fillLbNames(box, list);
+  };
+  const c = Lb.readCache(day);
+  if (c && c.list) paint(c.list);
+  else box.innerHTML = '<div class="empty">' + t('lb.loading') + '</div>';
+  const hint = $id('lbHint');
+  if (hint) hint.textContent = '';
+  const st = Lb.last;
+  if (st && st.day === day) {
+    paint(st.list);
+    if (hint) hint.textContent = st.online ? t('lb.online') : t('lb.cached');
+  } else {
+    Lb.top(day).then(function (res) {
+      if (Screen.current !== 'daily') return;      // 玩家已經離開，不要回頭改畫面
+      paint(res.list);
+      if (hint) hint.textContent = res.online ? t('lb.online') : t('lb.cached');
+    });
+  }
 }
 
 // ----- HUD -----
@@ -20932,6 +21420,19 @@ $id('btnSolo').addEventListener('click', function () {
   Screen.show('solo');
   Solo.renderGrid(); Solo.renderChar();
 });
+// v4.80：每日挑戰 / 排行榜
+$id('btnDaily').addEventListener('click', function () {
+  AudioSys.ensure(); AudioSys.sfx('click');
+  if (!ensureNickname()) return;
+  Screen.show('daily');
+  renderDailyScreen();
+});
+$id('btnLb').addEventListener('click', function () {
+  AudioSys.ensure(); AudioSys.sfx('click');
+  Screen.show('daily');
+  renderDailyScreen();
+});
+$id('btnDailyGo').addEventListener('click', function () { Daily.begin(); });
 // v4.8：固定暱稱（首次玩必須先命名，之後都用這個）
   try {
 (function () {
@@ -21025,13 +21526,14 @@ updateSoloHints();
    道具、怪物、坐騎的小圖示直接用「遊戲自己的畫法」畫在小畫布上：
    暫時把全域 ctx 指向該畫布（畫完立刻換回來）→ 圖示跟遊戲裡長得一模一樣。
    ================================================================ */
-const HELP_TABS = ['basic', 'item', 'ride', 'stage', 'br', 'foe', 'tip'];
+const HELP_TABS = ['basic', 'item', 'ride', 'stage', 'br', 'daily', 'foe', 'tip'];
 const HELP_TAB_TXT = {
   basic: { tw: '🎮 基本操作', cn: '🎮 基本操作', en: '🎮 Controls' },
   item:  { tw: '🎁 道具總覽', cn: '🎁 道具总览', en: '🎁 Items' },
   ride:  { tw: '🦖 坐騎招式', cn: '🦖 坐骑招式', en: '🦖 Mounts' },
   stage: { tw: '🗺️ 場景機關', cn: '🗺️ 场景机关', en: '🗺️ Stages' },
   br:    { tw: '🏝️ 大逃殺', cn: '🏝️ 大逃杀', en: '🏝️ Battle Royale' },
+  daily: { tw: '📅 每日挑戰', cn: '📅 每日挑战', en: '📅 Daily' },
   foe:   { tw: '👾 怪物圖鑑', cn: '👾 怪物图鉴', en: '👾 Monsters' },
   tip:   { tw: '💡 實戰訣竅', cn: '💡 实战诀窍', en: '💡 Tips' }
 };
@@ -21452,6 +21954,15 @@ const Help = (function () {
     h += '</div>';
     return h;
   }
+  function buildDaily() {
+    let h = '<div class="hlead">' + t('help.daily.lead') + '</div>';
+    h += '<div class="hgrid">';
+    ['goal', 'seed', 'rules', 'rank', 'offline', 'tip'].forEach(function (id) {
+      h += '<div class="hcard"><div class="htx"><div class="hd">' + t('help.daily.' + id) + '</div></div></div>';
+    });
+    h += '</div>';
+    return h;
+  }
   function buildItems() {
     let h = '<div class="hlead">道具藏在<b>軟磚</b>裡，炸開就掉出來，走上去自動撿起。<b>火焰不會把道具燒掉</b>（只會亮一下），放心炸。</div>';
     h += '<div class="hgrid">';
@@ -21621,6 +22132,7 @@ try { buildMapTestRow(); } catch (__e) { __bootFail('mapTestRow', __e); }
     else if (tab === 'ride') h = buildRides();
     else if (tab === 'stage') h = buildStages();
     else if (tab === 'br') h = buildBR();
+    else if (tab === 'daily') h = buildDaily();
     else if (tab === 'foe') h = buildFoes();
     else if (tab === 'tip') h = buildTips();
     else h = buildBasic();
@@ -23709,7 +24221,12 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.79', date: '2026-11-04', now: true, items: [
+  { v: '4.80', date: '2026-11-04', now: true, items: [
+    '📅 每日挑戰：每天用「日期」算出一張地圖，全世界當天玩到<b>完全相同</b>的圖；規則固定（普通難度、3 分鐘、3 條命），比誰先走到出口',
+    '🏆 排行榜：主選單新增入口，看今天最快的 50 個人。成績存在伺服器，換手機也看得到；連不到時退回本機快取，至少看得到自己',
+    '⏱️ 每日挑戰結算：過關直接顯示秒數、名次與今日前 5 名。同一天想重打幾次都可以，只取你最快的一次',
+    '📖 說明頁新增每日挑戰分頁：種子怎麼來、規則為什麼固定、排行榜怎麼算，一次看懂（10 國語系）' ] },
+  { v: '4.79', date: '2026-11-04', now: false, items: [
     '⚡ 美術全面外部化：175 張圖從內嵌 base64 改成獨立檔案 spr/*.webp，主檔從 3.34 MB 降到 1.47 MB（壓縮後 640 KB），第二次開啟直接走瀏覽器快取幾乎瞬開',
     '📦 Service Worker 會在背景把 175 張貼圖慢慢預熱，之後就算離線也能完整開起來',
     '📈 單檔容量上限（3.9M 字元）不再是瓶頸：主檔只剩 1.47M，之後加內容不用再擠空間' ] },
@@ -25794,6 +26311,7 @@ function startRpg(stage) {
   Game.mode = 'rpg';
   Game.rpg = true;
   Game.bossRush = false;
+  Game.daily = null;         // v4.80：RPG 不受每日挑戰的固定難度／時間影響
   // v4.1：有雲端身分時只能玩到已解鎖的關卡（避免前端直接改 stage 跳關）
   let st = stage || 1;
   try { if (typeof Cloud !== 'undefined' && Cloud.online() && st > RPG.unlocked) st = RPG.unlocked; } catch (e) {}
@@ -27081,6 +27599,11 @@ function rpgAdjust(k, d) {
 
 window.__BH = {
   Game: Game, Solo: Solo, Battle: Battle, Screen: Screen, settings: settings, SIZES: SIZES, Input: Input, IS_TOUCH: IS_TOUCH,
+  // v4.80：每日挑戰 / 排行榜
+  Daily: Daily, Lb: Lb, dailyDayKey: dailyDayKey, dailySeedOf: dailySeedOf, dailyStageOf: dailyStageOf,
+  fmtMs: fmtMs, seedCodeOf: seedCodeOf, DAILY_TIME: DAILY_TIME, DAILY_DIFF: DAILY_DIFF,
+  buildSoloStageInner: buildSoloStageInner, dailyClear: dailyClear, dailyTimeUp: dailyTimeUp,
+  showDailyResult: showDailyResult, renderDailyScreen: renderDailyScreen, renderLbList: renderLbList,
   ctrlMode: ctrlMode, touchEnabled: touchEnabled, applyCtrl: applyCtrl, applyTouchLayout: applyTouchLayout,
   schemeForPlayer: schemeForPlayer, applyCtrlToPlayers: applyCtrlToPlayers,
   touchLayoutVars: touchLayoutVars, keyName: keyName, renderKeyRow: renderKeyRow, updateTips: updateTips,

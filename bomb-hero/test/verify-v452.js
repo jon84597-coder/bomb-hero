@@ -76,7 +76,13 @@ head('3. 首頁大按鈕：統一外型与四種狀態');
     const re = new RegExp('<button class="mbtn (c-[a-z]+)[^"]*" id="' + id + '" data-ico="[^"]+"');
     ok(re.test(html), id + ' 有統一 class ＋ data-ico');
   });
-eq((html.match(/data-ico="/g) || []).length, 12, '12 顆按鈕都有 icon');
+{
+  const menuHtml = (/<div class="menu">([\s\S]*?)<\/div>/).exec(html);
+  const seg = menuHtml ? menuHtml[1] : '';
+  const btns = (seg.match(/<button\b/g) || []).length;
+  const icos = (seg.match(/data-ico="/g) || []).length;
+  ok(btns >= 12 && btns === icos, '主選單每顆按鈕都有 icon（' + icos + '/' + btns + '）');
+}
 eq((html.match(/class="mbtn[^"]*has-beta/g) || []).length, 4, '4 顆帶標籤的按鈕都預留空間');
 ok(css.indexOf('content: attr(data-ico)') > 0, 'icon 由 ::before 統一產生');
 ok(css.indexOf('#scr-title .menu .mbtn:hover {') > 0, '有滑過狀態');

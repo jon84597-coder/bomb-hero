@@ -986,6 +986,7 @@ const server = http.createServer(function (req, res) {
   if (url.pathname.indexOf('/api/auth/') === 0 ||
       url.pathname.indexOf('/api/rpg/') === 0 ||
       url.pathname.indexOf('/api/admin/') === 0 ||
+      url.pathname.indexOf('/api/lb/') === 0 ||        // v4.80：每日挑戰排行榜
       url.pathname.indexOf('/api/share/') === 0) {
     cloud.handle(req, res, url).then(function (done) {
       if (!done) sendJSON(res, 404, { ok: false, err: 'no such api' });

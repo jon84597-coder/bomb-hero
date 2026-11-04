@@ -52,11 +52,28 @@ head('2. 仇恨 4 格、看到人就追');
   }
   if (sx < 0) { sx = 8; sy = 8; }
   b.x = (sx + .5) * G.T; b.y = (sy + .5) * G.T; b.hitT = 0; b.bombT = 999;
+  // 玩家站在「真的走得過去」的格子：沿四個方向找距離 3／2／1 且中間全空的位置，
+  //   否則石頭擋住路線，王根本走不過來 → 斷言會隨機失敗（不是程式的錯）
+  function freeCell(fromX, fromY, dist) {
+    const D4b = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    for (let i = 0; i < D4b.length; i++) {
+      const dx = D4b[i][0], dy = D4b[i][1];
+      let good = true;
+      for (let k = 1; k <= dist; k++) {
+        const cx = fromX + dx * k, cy = fromY + dy * k;
+        if (cx < 1 || cy < 1 || cx >= G.cols - 1 || cy >= G.rows - 1) { good = false; break; }
+        if (G.grid[cy][cx] !== 0) { good = false; break; }
+      }
+      if (good) return { x: fromX + dx * dist, y: fromY + dy * dist };
+    }
+    return null;
+  }
   me.x = b.x + G.T * 5; me.y = b.y;
   P.updateBRBoss(b, 1 / 60);
   ok(b.aggro === false, '5 格外：不會發火（仇恨 4 格）');
 
-  me.x = b.x + G.T * 3; me.y = b.y;
+  const near = freeCell(sx, sy, 3) || freeCell(sx, sy, 2) || { x: sx + 1, y: sy };
+  me.x = (near.x + .5) * G.T; me.y = (near.y + .5) * G.T;
   const d0 = Math.hypot(b.x - me.x, b.y - me.y);
   P.updateBRBoss(b, 1 / 60);
   ok(b.aggro === true, '走進 3 格：馬上發火');

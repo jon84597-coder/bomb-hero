@@ -33,7 +33,7 @@ head('1. 源碼檢查');
   ok(/const MM_FOE_R = 7;/.test(src), '小地圖怪物只顯示附近 7 格（不是全圖開圖）');
   ok(/if \(Game\.mode !== 'battle'\) return;/.test(src), '隊色 HUD 只在對戰類模式出現');
   ok(/function seedCode\(\)/.test(src) && /function seedTag\(\)/.test(src), '有地圖種子碼函式');
-  ok(/t\('solo\.ovTime'[\s\S]{0,160}seedTag\(\),/.test(src), '出發前的關卡說明會帶種子碼');
+  ok(/t\('solo\.ovTime'[\s\S]{0,160}seedTag\(\)/.test(src), '出發前的關卡說明會帶種子碼');
 }
 
 // ================================================================

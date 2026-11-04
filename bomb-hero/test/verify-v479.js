@@ -79,10 +79,10 @@ ok(/\.\/spr\/title-logo\.webp/.test(swSrc), 'CORE 預載首頁 logo');
 ok(/function warmSprites\(/.test(swSrc), '有背景預熱函式 warmSprites');
 ok(/warmSprites\(\)/.test(swSrc.replace(/function warmSprites\(\)/, '')), 'install 會呼叫 warmSprites');
 ok(/spr\/_list\.json/.test(swSrc), '預熱讀 _list.json');
-ok(/SW_VERSION = 'v4\.79\.0'/.test(swSrc), 'sw.js 版本 v4.79.0');
+ok(/SW_VERSION = 'v4\.(79|8\d)\.\d+'/.test(swSrc), 'sw.js 版本 ≥ 4.79（實際 ' + (/SW_VERSION = '(v[^']+)'/.exec(swSrc) || [])[1] + '）');
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (p) {
   const t = fs.readFileSync(path.join(__dirname, p), 'utf8');
-  ok(/SW_VERSION = 'v4\.79\.0'/.test(t), p + ' 同步');
+  ok(/SW_VERSION = 'v4\.(79|8\d)\.\d+'/.test(t), p + ' 同步');
 });
 
 // ---------- 7. 載入守衛（沒載完不會破圖） ----------
@@ -97,11 +97,11 @@ ok(/spr\/title-logo\.webp/.test(src), 'HTML 的 logo 直接指向 spr/');
 // ---------- 8. 版本 ----------
 head('8. 版本');
 const V = /const VERSION = '([^']+)'/.exec(src)[1];
-ok(V === '4.79', 'VERSION = ' + V);
+ok(/^4\.(79|8\d)$/.test(V), 'VERSION ≥ 4.79（實際 ' + V + '）');
 ok(new RegExp('id="verTxt">' + V.replace(/\./g, '\\.')).test(src), '徽章文字同步 ' + V);
 ok(P.VERSION_LOG[0].v === V, '版本紀錄最上面是本版 ' + V);
-ok(P.VERSION_LOG[0].items.length === 3, '本版 3 條紀錄');
-ok(P.VERSION_LOG[1].v === '4.78', '第二筆是 4.78');
+ok(P.VERSION_LOG[0].items.length >= 3, '本版至少 3 條紀錄（' + P.VERSION_LOG[0].items.length + '）');
+ok(P.VERSION_LOG[1].now === false, '第二筆 ' + P.VERSION_LOG[1].v + ' 已非 now');
 const dl = P.I18N['zh-TW'];
 ['ver.4.79.1', 'ver.4.79.2', 'ver.4.79.3'].forEach(function (k) {
   ok(!!dl[k], '字典有 ' + k);

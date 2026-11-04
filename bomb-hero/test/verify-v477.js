@@ -121,7 +121,7 @@ P.setLang('zh-TW');
 
 // ---------- 3. 說明頁：大逃殺分頁 ----------
 head('3. 說明頁新增大逃殺分頁');
-ok(/HELP_TABS = \['basic', 'item', 'ride', 'stage', 'br', 'foe', 'tip'\]/.test(src), '分頁 7 個（多了 br）');
+ok(/HELP_TABS = \['basic', 'item', 'ride', 'stage', 'br', 'daily', 'foe', 'tip'\]/.test(src), '分頁含 br 與 daily（v4.77 加 br、v4.80 加 daily）');
 ok(/<button[^>]*data-ht="br"/.test(src), '說明頁有「大逃殺」分頁按鈕');
 ok(/data-ht="basic"[\s\S]{0,400}?data-ht="br"[\s\S]{0,400}?data-ht="tip"/.test(src), '分頁順序：基本→道具→坐騎→場景→大逃殺→怪物→訣竅');
 ok(/HELP_TAB_TXT\s*=\s*\{[\s\S]{0,600}?br:\s*\{/.test(src), 'br 分頁有 10 國標題');

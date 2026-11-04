@@ -394,7 +394,8 @@ function makeLimiter() {
 
 function createStore(dir, persist) {
   const file = path.join(dir, 'accounts.json');
-  const db = { v: 1, accounts: {}, devices: {}, tamper: 0, created: Date.now() };
+  // v4.80：lb = 每日挑戰排行榜（跟帳號同一份檔案，一起 flush）
+  const db = { v: 1, accounts: {}, devices: {}, tamper: 0, created: Date.now(), lb: { v: 1, days: {} } };
   let timer = null;
   let dirty = false;
 
@@ -410,6 +411,7 @@ function createStore(dir, persist) {
           db.tamper = obj.tamper || 0;
           db.created = obj.created || db.created;
           db.announce = obj.announce || null;      // v4.3：全服公告
+          db.lb = obj.lb && obj.lb.days ? obj.lb : { v: 1, days: {} };   // v4.80：排行榜
         }
       }
     } catch (e) {
@@ -836,16 +838,78 @@ function createCloud(options) {
     return String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
       (req.socket && req.socket.remoteAddress) || 'unknown';
   }
-  function gate(req, res, name, cap, perSec) {
+  function gate(req, res, name, cap, perSec, extra) {
     const acct = session(req);
     const key = name + ':' + (acct ? acct.id : 'ip:' + ip(req));
     const r = limiter.take(key, cap, perSec);
     if (!r.ok) {
       stats.rateLimited++;
-      send(res, 429, { ok: false, err: 'RATE_LIMIT', retry: r.retry }, { 'Retry-After': String(r.retry) });
+      send(res, 429, { ok: false, err: 'RATE_LIMIT', retry: r.retry },
+        Object.assign({ 'Retry-After': String(r.retry) }, extra || {}));
       return false;
     }
     return true;
+  }
+
+  /* ---------------- v4.80：每日挑戰排行榜 ----------------
+   * 設計原則：
+   *   1. 排行榜是「匿名」的（只存暱稱 + 毫秒數 + 裝置雜湊），不碰帳號系統 →
+   *      前端從 GitHub Pages 也能跨網域讀寫（純 ACAO:* 、不帶 cookie）。
+   *   2. 每天一張圖（種子由日期決定），排行榜以「當天」分桶；主榜是通關秒數，
+   *      秒數小者在前。沒通關（陣亡／逾時）不進榜。
+   *   3. 同一個裝置只保留它自己的最佳成績 → 洗榜沒意義，也讓新手不會被自己擠掉。
+   *   4. 只信合理範圍：3 秒 ~ 60 分鐘。超出視為無效。
+   *      真正防作弊要靠伺服器重跑地圖，那是另一個量級的工程；這裡走「信任 + 限流」。
+   */
+  const LB_MODES = { daily: 1 };
+  const LB_KEEP_DAYS = 21;         // 保留三週（跨月也還看得到舊榜）
+  const LB_MAX_DAY = 300;          // 每天最多存 300 筆
+  const LB_MAX_MS = 3600000, LB_MIN_MS = 3000;
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  /* 以 UTC+8 為換日線（主要玩家在台灣／東南亞；跨時區最多差一天，不影響公平性） */
+  function lbToday() {
+    const t = new Date(Date.now() + 8 * 3600000);
+    return t.getUTCFullYear() + '-' + pad2(t.getUTCMonth() + 1) + '-' + pad2(t.getUTCDate());
+  }
+  function lbDayOk(s) { return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')); }
+  function lbCleanName(s) {
+    let n = String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, '');
+    n = n.replace(/[<>&"'`]/g, '').trim();
+    if (!n) n = '匿名';
+    return n.slice(0, 14);
+  }
+  /* 把太久以前的榜砍掉，避免檔案一直長大 */
+  function lbPrune() {
+    const days = db.lb && db.lb.days;
+    if (!days) return;
+    const keys = Object.keys(days).sort();
+    while (keys.length > LB_KEEP_DAYS) {
+      const k = keys.shift();
+      delete days[k];
+    }
+  }
+  function lbBucket(mode, day, create) {
+    if (!db.lb) db.lb = { v: 1, days: {} };
+    if (!db.lb.days) db.lb.days = {};
+    const key = mode + ':' + day;
+    if (!db.lb.days[key] && create) db.lb.days[key] = { list: [] };
+    return db.lb.days[key] || null;
+  }
+  function lbSort(list) {
+    // 注意：at 是 Date.now()（毫秒，13 位），不能寫 e.at | 0 —— 會溢位成負數
+    list.sort(function (a, b) { return (a.ms | 0) - (b.ms | 0) || (Number(a.at) || 0) - (Number(b.at) || 0); });
+    return list;
+  }
+  function lbList(mode, day, limit) {
+    const b = lbBucket(mode, day, false);
+    const arr = (b && b.list) ? lbSort(b.list.slice()) : [];
+    const out = [];
+    for (let i = 0; i < arr.length && out.length < (limit || 50); i++) {
+      const e = arr[i];
+      out.push({ n: e.n, ms: e.ms | 0, at: Number(e.at) || 0 });
+    }
+    return out;
   }
 
   function providerInfo(p) {
@@ -920,7 +984,8 @@ function createCloud(options) {
     const isRpg = p.indexOf('/api/rpg/') === 0;
     const isAdmin = p.indexOf('/api/admin/') === 0;
     const isShare = p.indexOf('/api/share/') === 0;
-    if (!isAuth && !isRpg && !isAdmin && !isShare) return false;
+    const isLb = p.indexOf('/api/lb/') === 0;              // v4.80：每日挑戰排行榜
+    if (!isAuth && !isRpg && !isAdmin && !isShare && !isLb) return false;
 
     /* ---- 共用：全域 IP 限流（每分鐘 300 次，避免被腳本掃） ---- */
     if (!limiter.take('ip:' + ip(req), 300, 5).ok) {
@@ -929,6 +994,63 @@ function createCloud(options) {
     }
 
     try {
+      /* ---------------- v4.80：每日挑戰排行榜 ---------------- */
+      // 這兩個端點刻意「不帶 cookie」：前端從 GitHub Pages（純靜態）也能直接跨網域讀寫，
+      // 所以一定要回 Access-Control-Allow-Origin；帳號相關的端點完全不受影響。
+      const CORS_LB = { 'Access-Control-Allow-Origin': '*' };
+
+      if (p === '/api/lb/top' && req.method === 'GET') {
+        const mode = String(url.searchParams.get('mode') || 'daily');
+        if (!LB_MODES[mode]) return fail(res, 400, 'BAD_MODE', CORS_LB), true;
+        const qd = String(url.searchParams.get('day') || '');
+        const day = lbDayOk(qd) ? qd : lbToday();
+        const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get('limit'), 10) || 50));
+        const list = lbList(mode, day, limit);
+        return send(res, 200, { ok: true, mode: mode, day: day, today: lbToday(), list: list, count: list.length }, CORS_LB), true;
+      }
+
+      if (p === '/api/lb/submit' && req.method === 'POST') {
+        if (!gate(req, res, 'lb', 40, 0.25, CORS_LB)) return true;
+        const body = await readJson(req, 2048);
+        if (!body) return fail(res, 400, 'BAD_BODY', CORS_LB), true;
+        const mode = String(body.mode || 'daily');
+        if (!LB_MODES[mode]) return fail(res, 400, 'BAD_MODE', CORS_LB), true;
+        const day = String(body.day || '');
+        const today = lbToday();
+        if (!lbDayOk(day) || day !== today) {
+          return fail(res, 409, 'WRONG_DAY', Object.assign({ today: today }, CORS_LB)), true;
+        }
+        const deviceId = String(body.deviceId || '').slice(0, 128);
+        if (deviceId.length < 8) return fail(res, 400, 'BAD_DEVICE', CORS_LB), true;
+        const ms = Math.round(Number(body.ms));
+        if (!isFinite(ms) || ms < LB_MIN_MS || ms > LB_MAX_MS) return fail(res, 400, 'BAD_TIME', CORS_LB), true;
+        const name = lbCleanName(body.name);
+        const dev = sha256(deviceId + '|lb|' + secret).slice(0, 20);
+
+        const b = lbBucket(mode, day, true);
+        if (!b.list) b.list = [];
+        let mine = null;
+        for (let i = 0; i < b.list.length; i++) { if (b.list[i].d === dev) { mine = b.list[i]; break; } }
+        const improved = !mine || ms < (mine.ms | 0);
+        if (improved) {
+          if (mine) { mine.ms = ms; mine.n = name; mine.at = Date.now(); }
+          else b.list.push({ d: dev, n: name, ms: ms, at: Date.now() });
+          lbSort(b.list);
+          if (b.list.length > LB_MAX_DAY) b.list.length = LB_MAX_DAY;
+          lbPrune();
+          store.touch();
+        }
+        lbSort(b.list);
+        let rank = 0, best = ms, total = b.list.length;
+        for (let i = 0; i < b.list.length; i++) {
+          if (b.list[i].d === dev) { rank = i + 1; best = b.list[i].ms | 0; break; }
+        }
+        return send(res, 200, {
+          ok: true, day: day, improved: improved, best: best, rank: rank, total: total,
+          list: lbList(mode, day, 50)
+        }, CORS_LB), true;
+      }
+
       /* ---------------- v4.18：分享拿金幣 ---------------- */
       if (p === '/api/share/prepare' && req.method === 'POST') {
         if (!gate(req, res, 'share', 12, 3)) return true;
