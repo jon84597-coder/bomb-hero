@@ -47,10 +47,42 @@
     });
     try { console.error('[boot:' + mod + ']', e); } catch (e2) {}
   };
+  /* v4.83：LOGO 破圖就換成文字標題。inline onerror 先觸發，這裡是備援
+     （有些環境 onerror 不會跑，例如圖片在解析到 inline 屬性之前就失敗）。 */
+  window.__titleLogoFail = function () {
+    try {
+      var img = document.getElementById('titleLogo');
+      var fb = document.getElementById('titleFallback');
+      if (fb) fb.classList.add('on');
+      if (img) {
+        img.style.display = 'none';
+        img.setAttribute('aria-hidden', 'true');
+      }
+      if (window.__BHTitleFailed !== true) {
+        window.__BHTitleFailed = true;
+        try { console.warn('[art] 標題 LOGO 沒有載入 —— 已改用文字標題。' +
+          '若是直接開啟單一 index.html，旁邊需要整個 spr 資料夾。'); } catch (e3) {}
+      }
+    } catch (e) {}
+  };
+  /* 補檢查：onerror 沒跑到、但圖其實已經壞了（naturalWidth 0）也要補救 */
+  (function () {
+    var chk = function () {
+      try {
+        var img = document.getElementById('titleLogo');
+        if (img && img.complete && img.naturalWidth === 0) window.__titleLogoFail();
+      } catch (e) {}
+    };
+    try {
+      document.addEventListener('DOMContentLoaded', chk);
+      window.addEventListener('load', function () { setTimeout(chk, 120); });
+    } catch (e) {}
+  })();
   window.addEventListener('error', function (ev) {
     var t = ev.target;
     if (t && t !== window && t.tagName && (t.src || t.href)) {
       _push({ mod: 'resource', msg: (t.tagName + ' ' + (t.src || t.href)).slice(0, 220) });
+      if (t.id === 'titleLogo') { try { window.__titleLogoFail(); } catch (e4) {} }
       return;
     }
     _push({
@@ -221,6 +253,20 @@ overflow-x: hidden;
 .title-logo {
 display: block; margin: 0 auto; width: clamp(250px, 64vw, 560px); height: auto;
 user-select: none; -webkit-user-drag: none;
+}
+/* v4.83：LOGO 抓不到時的替身標題。單獨打開 index.html（旁邊沒有 spr/）就會走這條，
+   至少首頁還是完整的，不會露出破圖圖示和 alt 文字。 */
+.title-fallback { display: none; flex-direction: column; align-items: center; padding: 6px 0 2px; }
+.title-fallback.on { display: flex; }
+.title-fallback .tf-en {
+  font-weight: 900; line-height: .98; letter-spacing: .02em;
+  font-size: clamp(34px, 10.5vw, 72px); color: #fff6d8;
+  text-shadow: 0 2px 0 #ffb347, 0 5px 0 #f4703c, 0 8px 0 #b8351a, 0 13px 16px rgba(60,26,8,.42);
+}
+.title-fallback .tf-cn {
+  margin-top: 7px; font-size: clamp(13px, 3.6vw, 20px); font-weight: 900;
+  letter-spacing: .40em; text-indent: .40em; color: #8a5f35;
+  text-shadow: 0 1px 0 rgba(255,255,255,.70);
 }
 .ver.beta { font-size: clamp(9px, 2.4vw, 11.5px); letter-spacing: .16em; opacity: .9; }
 .title-card .sub { color: #7d8db0; letter-spacing: .34em; font-size: 13px; font-weight: 700; margin-top: 8px; }
@@ -3157,7 +3203,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.82</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.83</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -3187,10 +3233,16 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     </div>
     <div class="title-card">
       <div class="titlewrap">
-        <img class="title-logo" id="titleLogo" alt="BOMB HERO 爆爆英雄" draggable="false" src="spr/title-logo.webp">
+        <img class="title-logo" id="titleLogo" alt="BOMB HERO 爆爆英雄" draggable="false" src="spr/title-logo.webp" onerror="window.__titleLogoFail&&window.__titleLogoFail()">
+        <!-- v4.83：LOGO 抓不到時的替身。單獨打開 index.html（旁邊沒有 spr/）就會走這條，
+             至少首頁還是完整的，不會露出破圖和 alt 文字。 -->
+        <div class="title-fallback" id="titleFallback" aria-hidden="true">
+          <span class="tf-en">BOMB HERO</span>
+          <span class="tf-cn">爆爆英雄</span>
+        </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.82</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.83</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" style="margin:8px 0 4px;display:flex;flex-direction:column;gap:4px;align-items:center">
         <label for="playerName" style="font-size:13px;font-weight:600;color:#7a5a2e;text-shadow:0 1px 0 rgba(255,255,255,.65)">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -3719,8 +3771,17 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         const mods = Object.keys(mp).filter(function (k) { return k !== 'resource'; });
         const msg = $id('bootDiagMsg');
         if (msg) {
-          msg.textContent = (mods.length ? ('出問題的模組：' + mods.join(' · ')) : '頁面有資源載入失敗') +
-            '。按「強制更新」通常就能救回來。';
+          /* v4.83：「只缺美術圖」和「模組掛掉」是兩件不同的事，講清楚才不會瞎按強制更新。
+             最常見的成因就是把 index.html 單獨打開 —— 旁邊沒有 spr/ 資料夾。 */
+          const resTxt = list.filter(function (x) { return x.mod === 'resource'; })
+            .map(function (x) { return String(x.msg || ''); }).join(' ');
+          const artOnly = !mods.length && /(\.webp|spr\/)/.test(resTxt);
+          msg.textContent = mods.length
+            ? ('出問題的模組：' + mods.join(' · ') + '。按「強制更新」通常就能救回來。')
+            : (artOnly
+              ? '美術圖沒有載入 —— 這份 index.html 旁邊少了 spr/ 資料夾（直接點開單一檔案就會這樣）。' +
+                '改開線上版，或在這個資料夾執行 python -m http.server 後用 localhost 開，就會恢復正常。'
+              : '頁面有資源載入失敗。按「強制更新」通常就能救回來。');
         }
         const pre = $id('bootDiagPre');
         if (pre) pre.textContent = list.map(function (x) {
@@ -3817,7 +3878,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.82';
+const VERSION = '4.83';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -5036,6 +5097,9 @@ ver.4.81.1|🧹 首頁大掃除：14 顆按鈕縮成 6 張玩法卡＋「更多�
 ver.4.81.2|🎯 入口合併：挑戰 BOSS 併進單人闖關、排行榜併進每日挑戰、對戰與線上配對合成「多人對戰」|🎯 入口合并：挑战 BOSS 并入单人闯关、排行榜并入每日挑战、对战与在线配对合成「多人对战」|🎯 Entrances merged: Boss Raid sits inside Solo Quest, the leaderboard inside Daily Challenge, Battle and Online became one Multiplayer entry|🎯 入口を統合：ボス討伐は一人で挑戦へ、ランキングはデイリーチャレンジへ、対戦とオンラインは「マルチ対戦」に|🎯 입구 통합: 보스 토벌은 싱글 모험에, 랭킹은 데일리 챌린지에, 대전과 온라인 매치는 멀티플레이 하나로|🎯 รวมทางเข้า: ล่าบอสอยู่ในโหมดผจญภัยคนเดียว อันดับอยู่ในภารกิจรายวัน ต่อสู้กับออนไลน์รวมเป็น ผู้เล่นหลายคน|🎯 Gộp lối vào: Đánh BOSS trong Chơi đơn, bảng xếp hạng trong Thử thách ngày, Đối chiến và Online gộp thành Nhiều người chơi|🎯 Объединены входы: охота на босса — в одиночной игре, рейтинг — в ежедневном вызове, битва и онлайн — в одном «Мультиплеере»|🎯 Einstiege zusammengelegt: Boss-Raid steckt im Einzelspieler, die Rangliste in der Tagesherausforderung, Kampf und Online wurden zu Mehrspieler|🎯 Ingressi uniti: Assalto al BOSS dentro Giocatore singolo, classifica dentro Sfida giornaliera, Battaglia e Online diventano Multigiocatore
 ver.4.81.3|👤 帳號入口只留右上角那一顆（首頁原本還有一顆重複的）|👤 账号入口只留右上角那颗（首页原本还有一颗重复的）|👤 Only one account entry now — the chip in the top-right corner (the home screen used to have a duplicate)|👤 アカウント入口は右上の1か所だけ（ホームにも重複がありました）|👤 계정 입구는 오른쪽 위 하나만 (홈에 중복 버튼이 있었습니다)|👤 เหลือทางเข้าบัญชีเดียวที่มุมขวาบน (เดิมมีซ้ำบนหน้าหลัก)|👤 Chỉ còn một lối vào tài khoản ở góc phải trên (trước đây có thêm một nút trùng)|👤 Вход в аккаунт теперь один — плашка справа сверху (на главном был дубль)|👤 Nur noch ein Konto-Einstieg oben rechts (auf dem Startbildschirm gab es einen doppelten)|👤 Un solo accesso all'account, in alto a destra (prima ce n'era un doppione nella home)
 ver.4.81.4|📖 首頁導覽重寫：每一步都對得上新位置，講到抽屜裡的按鈕會自動展開|📖 首页导览重写：每一步都对得上新位置，讲到抽屉里的按钮会自动展开|📖 Home tour rewritten: every step matches the new layout, and the drawer opens by itself when needed|📖 ホームのガイドを書き直し：各ステップが新しい配置に対応し、ドロワー内のボタンでは自動で開きます|📖 홈 가이드 다시 작성: 각 단계가 새 배치와 맞고, 서랍 안 버튼을 설명할 때 자동으로 열립니다|📖 เขียนไกด์หน้าหลักใหม่: ทุกขั้นตรงกับตำแหน่งใหม่ และเปิดลิ้นชักอัตโนมัติเมื่อถึงปุ่มข้างใน|📖 Viết lại hướng dẫn trang chủ: mỗi bước khớp vị trí mới, tự mở ngăn khi nói tới nút bên trong|📖 Тур по главному экрану переписан: каждый шаг соответствует новой раскладке, шторка открывается сама|📖 Tour durch den Startbildschirm neu geschrieben: jeder Schritt passt zum neuen Layout, die Schublade öffnet sich automatisch|📖 Tour della home riscritta: ogni passo corrisponde al nuovo layout e il cassetto si apre da solo
+ver.4.83.1|🖼️ 標題 LOGO 抓不到時自動換成文字標題 —— 單獨打開 index.html（旁邊沒有 spr/）也不會再露出破圖和一片 alt 文字|🖼️ 标题 LOGO 抓不到时自动换成文字标题 —— 单独打开 index.html（旁边没有 spr/）也不会再露出破图和一片 alt 文字|🖼️ If the title logo cannot load, a text logo takes its place — opening index.html on its own (no spr/ folder) no longer shows a broken image and raw alt text|🖼️ タイトル LOGO が読み込めないときは文字ロゴに自動で切り替わります — index.html を単体で開いても（spr/ フォルダがなくても）壊れた画像や alt テキストが出なくなりました|🖼️ 타이틀 로고를 불러오지 못하면 글자 로고로 자동 전환됩니다 — index.html만 단독으로 열어도(spr/ 폴더 없이도) 깨진 이미지와 alt 텍스트가 더 이상 보이지 않습니다|🖼️ ถ้าโหลดโลโก้หัวเรื่องไม่ได้ จะสลับเป็นโลโก้ตัวอักษรให้อัตโนมัติ — เปิด index.html เดี่ยว ๆ (ไม่มีโฟลเดอร์ spr/) ก็ไม่เห็นรูปแตกและข้อความ alt แล้ว|🖼️ Nếu không tải được logo tiêu đề, logo chữ sẽ tự thay thế — mở riêng index.html (không có thư mục spr/) không còn thấy ảnh hỏng và chữ alt nữa|🖼️ Если логотип не загрузился, вместо него автоматически появляется текстовый — при открытии одного index.html (без папки spr/) больше не видно битой картинки и текста alt|🖼️ Lädt das Titel-Logo nicht, erscheint automatisch ein Text-Logo — eine einzeln geöffnete index.html (ohne spr/-Ordner) zeigt kein kaputtes Bild und keinen alt-Text mehr|🖼️ Se il logo del titolo non si carica, subentra automaticamente un logo testuale — aprendo index.html da solo (senza cartella spr/) non si vedono più immagine rotta e testo alt
+ver.4.83.2|🧭 載入失敗的提示講清楚了：只缺美術圖會直接說「旁邊要有 spr/ 資料夾」或「跑本機伺服器」，不再叫人亂按「強制更新」|🧭 加载失败的提示讲清楚了：只缺美术图会直接说「旁边要有 spr/ 文件夹」或「跑本地服务器」，不再叫人乱按「强制更新」|🧭 The load-failure notice is specific now: if only artwork is missing it tells you to keep the spr/ folder next to the file or run a local server, instead of telling you to force-refresh|🧭 読み込み失敗の案内を具体的にしました。画像だけ足りない場合は「spr/ フォルダを一緒に置く」「ローカルサーバーで開く」と案内し、むやみに「強制更新」を押させる案内はやめました|🧭 로딩 실패 안내가 구체적이 되었습니다. 그림만 없으면 spr/ 폴더를 함께 두거나 로컬 서버로 열라고 알려 주고, 무작정 강제 새로고침을 누르라고 하지 않습니다|🧭 ข้อความแจ้งโหลดไม่สำเร็จชัดเจนขึ้น: ถ้าขาดแค่รูปภาพ จะบอกให้วางโฟลเดอร์ spr/ ไว้ข้างไฟล์ หรือรันเซิร์ฟเวอร์ในเครื่อง ไม่ใช่บอกให้กดบังคับอัปเดตมั่ว ๆ|🧭 Thông báo lỗi tải rõ ràng hơn: nếu chỉ thiếu hình, sẽ bảo bạn để thư mục spr/ cạnh tệp hoặc chạy máy chủ cục bộ, thay vì bảo bấm cập nhật cưỡng bức|🧭 Сообщение об ошибке загрузки стало конкретным: если не хватает только картинок, оно подскажет положить папку spr/ рядом с файлом или запустить локальный сервер, а не жать принудительное обновление|🧭 Der Ladefehler-Hinweis ist jetzt konkret: Fehlen nur Bilder, sagt er, den spr/-Ordner daneben zu legen oder einen lokalen Server zu starten — statt hart neu zu laden|🧭 L'avviso di caricamento fallito è più preciso: se mancano solo le immagini dice di tenere la cartella spr/ accanto al file o di avviare un server locale, invece di premere aggiorna forzatamente
+ver.4.83.3|📦 只多一個小函式和兩段 CSS，沒有新增任何檔案或網路請求 —— 主檔仍然是一個 HTML 加 spr/ 美術|📦 只多一个小函数和两段 CSS，没有新增任何文件或网络请求 —— 主档仍然是一个 HTML 加 spr/ 美术|📦 Just one small function and two CSS blocks — no new files, no new network requests; the game is still one HTML file plus the spr/ artwork|📦 小さな関数ひとつと CSS ふたつだけ。新しいファイルも通信も増えていません — 本体は今まで通り HTML 1 枚と spr/ の画像だけです|📦 작은 함수 하나와 CSS 두 블록만 추가했습니다. 새 파일도 네트워크 요청도 없습니다 — 본체는 여전히 HTML 하나와 spr/ 이미지입니다|📦 เพิ่มแค่ฟังก์ชันเล็ก ๆ หนึ่งอันกับ CSS สองบล็อก ไม่มีไฟล์ใหม่ ไม่มีคำขอใหม่ — ตัวเกมยังเป็น HTML ไฟล์เดียวกับภาพใน spr/|📦 Chỉ thêm một hàm nhỏ và hai khối CSS, không có tệp mới, không có yêu cầu mạng mới — game vẫn là một tệp HTML và thư mục ảnh spr/|📦 Добавлены лишь одна небольшая функция и два блока CSS — ни новых файлов, ни новых запросов; игра по-прежнему один HTML плюс папка spr/|📦 Nur eine kleine Funktion und zwei CSS-Blöcke — keine neuen Dateien, keine neuen Requests; das Spiel bleibt eine HTML-Datei plus spr/-Grafiken|📦 Solo una piccola funzione e due blocchi CSS — nessun nuovo file, nessuna nuova richiesta; il gioco resta un HTML più la cartella spr/
 ver.4.82.1|💎 全站按鈕換成<b>水晶高光</b>：弧形鏡面、上緣銳光、底部厚度，看起來像一塊打磨過的玻璃而不是平面色塊|💎 全站按钮换成<b>水晶高光</b>：弧形镜面、上缘锐光、底部厚度，看起来像一块打磨过的玻璃而不是平面色块|💎 <b>Crystal gloss</b> on every button: curved specular arc, sharp top rim, solid bottom edge — polished glass instead of flat colour blocks|💎 全サイトのボタンを<b>クリスタル光沢</b>に：曲面の鏡面ハイライト・上端のシャープな反射・底の厚みで、平面の色ではなく磨かれたガラスに見えます|💎 모든 버튼을 <b>크리스탈 광택</b>으로: 곡면 반사 하이라이트, 날카로운 상단 윤곽, 두꺼운 하단 — 평면 색이 아니라 갈아낸 유리처럼 보입니다|💎 เปลี่ยนทุกปุ่มเป็น<b>คริสตัลเงา</b>: ไฮไลต์โค้งบนผิว ขอบบนคม และความหนาด้านล่าง — ดูเหมือนกระจกขัด ไม่ใช่บล็อกสีแบน|💎 Đổi toàn bộ nút sang <b>thuỷ tinh bóng</b>: vệt sáng cong trên mặt, viền trên sắc, đáy dày — trông như kính đánh bóng chứ không phải mảng màu phẳng|💎 Все кнопки теперь <b>глянцевые, как хрусталь</b>: дуговой блик, резкая верхняя кромка, толстое днище — полированное стекло, а не плоское цветное пятно|💎 Alle Buttons mit <b>Kristallglanz</b>: gewölbter Lichtbogen, scharfe Oberkante, solide Unterkante — geschliffenes Glas statt flacher Farbflächen|💎 Tutti i pulsanti in <b>stile cristallo</b>: arco di luce curvo, bordo superiore netto, fondo solido — vetro levigato invece di blocchi di colore piatti
 ver.4.82.2|🎨 高光用多層漸層疊在按鈕自己的背景上（不是貼圖、不是偽元素）—— 文字永遠清楚、可翻譯、放大不糊|🎨 高光用多层渐变叠在按钮自己的背景上（不是贴图、不是伪元素）—— 文字永远清楚、可翻译、放大不糊|🎨 The gloss is stacked gradients on each button's own background — no images, no pseudo-elements, so text stays crisp, translatable and sharp at any size|🎨 ハイライトはボタン自身の背景に重ねた多層グラデーション（画像でも疑似要素でもありません）—— 文字は常にくっきり、翻訳可能、拡大してもボケません|🎨 하이라이트는 버튼 자체 배경에 겹친 다층 그라데이션입니다(이미지도, 의사 요소도 아님) — 글자는 항상 선명하고 번역되며 확대해도 흐려지지 않습니다|🎨 ไฮไลต์คือไล่ระดับหลายชั้นบนพื้นหลังของปุ่มเอง — ไม่ใช่รูปภาพ ไม่ใช่ pseudo-element ข้อความจึงคมชัด แปลได้ และขยายแล้วไม่แตก|🎨 Hiệu ứng bóng là các lớp gradient chồng trên nền của chính nút — không phải ảnh, không phải pseudo-element, nên chữ luôn rõ, dịch được và phóng to không nhoè|🎨 Блик — это слои градиентов на фоне самой кнопки, без картинок и псевдоэлементов: текст остаётся чётким, переводимым и не мылится при увеличении|🎨 Der Glanz sind gestapelte Verläufe auf dem Hintergrund des Buttons selbst — keine Bilder, keine Pseudo-Elemente. Text bleibt scharf, übersetzbar und sauber in jeder Größe|🎨 La lucentezza è fatta di gradienti sovrapposti sullo sfondo del pulsante — niente immagini, niente pseudo-elementi: il testo resta nitido, traducibile e pulito a ogni dimensione
 ver.4.82.3|🪟 首頁卡片、抽屜、彈窗、開始遊戲、關卡數字、角色卡、分段鈕、對戰小鈕全部同一套光學，不再有平掉的按鈕|🪟 首页卡片、抽屉、弹窗、开始游戏、关卡数字、角色卡、分段钮、对战小钮全部同一套光学，不再有平掉的按钮|🪟 Home cards, drawer, dialogs, Start Game, stage numbers, character cards, segmented controls and lobby buttons all share the same optics — nothing is flat any more|🪟 ホームのカード、ドロワー、ダイアログ、ゲーム開始、ステージ番号、キャラカード、セグメントボタン、対戦の小ボタンまで全部同じ光沢に — 平らなボタンはもうありません|🪟 홈 카드, 서랍, 대화상자, 게임 시작, 스테이지 번호, 캐릭터 카드, 구간 버튼, 대전 소형 버튼까지 모두 같은 광학 — 이제 평평한 버튼은 없습니다|🪟 การ์ดหน้าหลัก ลิ้นชัก หน้าต่างโต้ตอบ ปุ่มเริ่มเกม เลขด่าน การ์ดตัวละคร ปุ่มแบ่งช่วง และปุ่มเล็กในห้องเล่น ใช้ผิวแสงชุดเดียวกันหมด — ไม่มีปุ่มแบนเหลือแล้ว|🪟 Thẻ trang chủ, ngăn kéo, hộp thoại, nút Bắt đầu, số màn, thẻ nhân vật, nút phân đoạn và nút nhỏ trong phòng đều cùng một hệ quang học — không còn nút phẳng nữa|🪟 Карточки главного экрана, шторка, диалоги, «Начать игру», номера уровней, карточки героев, сегментные и мелкие кнопки лобби — всё с одним бликом, плоских кнопок больше нет|🪟 Startkarten, Schublade, Dialoge, Spiel starten, Levelnummern, Heldenkarten, Segment- und Lobby-Knöpfe teilen dieselbe Optik — nichts ist mehr flach|🪟 Card della home, cassetto, finestre, Avvia partita, numeri dei livelli, card dei personaggi, pulsanti a segmenti e pulsanti piccoli della lobby usano la stessa ottica — niente più pulsanti piatti
@@ -24768,7 +24832,11 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.82', date: '2026-11-04', now: true, items: [
+  { v: '4.83', date: '2026-11-04', now: true, items: [
+    '🖼️ 標題 LOGO 抓不到時自動換成文字標題 —— 單獨打開 index.html（旁邊沒有 spr/）也不會再露出破圖和一片 alt 文字',
+    '🧭 載入失敗的提示講清楚了：只缺美術圖會直接說「旁邊要有 spr/ 資料夾」或「跑本機伺服器」，不再叫人亂按「強制更新」',
+    '📦 只多一個小函式和兩段 CSS，沒有新增任何檔案或網路請求 —— 主檔仍然是一個 HTML 加 spr/ 美術' ] },
+  { v: '4.82', date: '2026-11-04', now: false, items: [
     '💎 全站按鈕換成<b>水晶高光</b>：弧形鏡面、上緣銳光、底部厚度，看起來像一塊打磨過的玻璃而不是平面色塊',
     '🎨 高光用多層漸層疊在按鈕自己的背景上（不是貼圖、不是偽元素）—— 文字永遠清楚、可翻譯、放大不糊',
     '🪟 首頁卡片、抽屜、彈窗、開始遊戲、關卡數字、角色卡、分段鈕、對戰小鈕全部同一套光學，不再有平掉的按鈕',

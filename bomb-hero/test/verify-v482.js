@@ -140,17 +140,18 @@ for (let n = 1; n <= 4; n++) {
 ok(itemCount >= 3, '4.82 至少 3 條更新項目（' + itemCount + ' 條）');
 
 head('⑧ 版本與容量');
-ok(/const VERSION = '4\.82'/.test(src), 'VERSION = 4.82');
-ok(/id="verTxt">4\.82</.test(src), 'verTxt 顯示 4.82');
-ok(/v: '4\.82', date: '2026-11-04', now: true/.test(src), 'VERSION_LOG 首位是 4.82 且 now:true');
-ok(/v: '4\.81'[\s\S]{0,60}now: false/.test(src), '4.81 已改 now:false');
+ok(/^4\.(8[2-9]|9\d)$/.test(env.BH.VERSION), 'VERSION 至少 4.82（實際 ' + env.BH.VERSION + '）');
+ok(new RegExp('id="verTxt">' + env.BH.VERSION.replace(/\./g, '\\.') + '<').test(src), 'verTxt 跟著 VERSION 走');
+ok(env.BH.VERSION_LOG[0].v === env.BH.VERSION && env.BH.VERSION_LOG[0].now === true, 'VERSION_LOG 首位是當前版號且 now:true');
+ok(env.BH.VERSION_LOG[1].now === false, '上一版（' + env.BH.VERSION_LOG[1].v + '）已改 now:false');
 const chars = src.length;
 ok(chars < 3900000, '字元 ' + chars + ' < 3.9M');
 ok((src.match(/\r/g) || []).length === 0, '整檔 LF（CR 0）');
 for (const f of ['sw.js', '../public/sw.js', '../bomberman-online/public/sw.js']) {
   const p = path.join(ROOT, f);
   if (!fs.existsSync(p)) { ok(false, f + ' 不存在'); continue; }
-  ok(/v4\.82\.0/.test(fs.readFileSync(p, 'utf8')), f + ' 是 v4.82.0');
+  const sv = (fs.readFileSync(p, 'utf8').match(/SW_VERSION = '(v[\d.]+)'/) || [])[1] || '';
+  ok(/^v4\.(8[2-9]|9\d)\.\d+$/.test(sv), f + ' 版本跟得上主檔（' + sv + '）');
 }
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' ' + pass + ' 通過 / ' + fail + ' 失敗');
