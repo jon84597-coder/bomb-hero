@@ -10,6 +10,11 @@ __pycache__/
 data/
 *.bad-*
 
+# v4.90：本機憑證檔（Render API key 等），絕對不要進 git
+.render_key
+.env
+.env.*
+
 # 本地建置 / 工作階段產物（不要進 git）
 dist/
 .tools/
