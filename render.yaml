@@ -19,6 +19,10 @@ services:
     name: bomb-hero-game
     runtime: node
     plan: free
+    # v4.90：Auto-Deploy 開關。後台 Settings → Build & Deploy 如果是灰的
+    #（服務由 Blueprint 管理時會唯讀），就靠這一行；push 到 main 即自動部署。
+    # 只想改文件不想重啟時，commit 訊息加 [skip render]。
+    autoDeploy: true
     buildCommand: ""
     startCommand: node server.js
     healthCheckPath: /api/health
