@@ -53,7 +53,9 @@ ok(/PetPanel\.available\(\)/.test(src), '沒有隨從／不是單人或 RPG 就�
 ok(/\$id\('petBtn'\) && \$id\('petBtn'\)\.addEventListener\('click', function \(\) \{ PetPanel\.open\(\); \}\)/.test(src),
   '🐾 按鈕有綁 click（不是只有 id 沒有行為）');
 ok(/id="petTouchBtn"/.test(src), '手機另外有一顆浮動 🐾（不佔 HUD 兩排額度）');
-ok(/#touchUI \.tpet \{ right: 16px; top: 116px/.test(src), '手機 🐾 排在 ⏸／⛶ 下面，不會疊到');
+const petCss = (/#touchUI \.tpet \{([\s\S]*?)\}/.exec(src) || [])[1] || '';
+ok(/right:\s*16px/.test(petCss) && /top:\s*116px/.test(petCss), '手機 🐾 排在 ⏸／⛶ 下面，不會疊到');
+ok(/--tb-face:/.test(petCss), 'v4.87：🐾 按鈕有不透明底盤，不會被場景顏色吃掉');
 ok(/body\.touch \.chip\.petchip \{ display: none; \}/.test(src), '手機隱藏 HUD 那顆，避免 HUD 變第三排');
 ok(/petBtn2\.classList\.toggle\('on', PetPanel\.available\(\)\)/.test(src), '每帧同步手機 🐾 的顯示狀態');
 

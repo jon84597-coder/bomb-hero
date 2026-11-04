@@ -1,6 +1,6 @@
 // test/verify-v479.js —— v4.79 美術外部化
 //   ① index.html 不再內嵌任何 base64 圖
-//   ② 175 個 spr/*.webp 全部存在、檔頭合法、位元組與原始 base64 解碼一致（由 _x_report.json 對照）
+//   ② 177 個 spr/*.webp 全部存在、檔頭合法、位元組與原始 base64 解碼一致（由 _x_report.json 對照）
 //   ③ 命名不重複、可追溯（spr/_list.json 與實際檔案一致）
 //   ④ 主檔大幅縮小、gzip 後 < 900KB
 //   ⑤ Service Worker：CORE 有首頁 logo、有背景預熱、版本跟著升
@@ -20,16 +20,16 @@ head('1. 主檔已無內嵌圖');
 const inline = src.match(/data:image\/[a-z+]+;base64,/g) || [];
 ok(inline.length === 0, 'index.html 內嵌 base64 圖 = ' + inline.length + '（應為 0）');
 const refs = src.match(/spr\/[A-Za-z0-9_\-]+\.webp/g) || [];
-ok(refs.length === 175, 'spr/ 引用 ' + refs.length + ' 處（應為 175）');
+ok(refs.length === 177, 'spr/ 引用 ' + refs.length + ' 處（應為 177）');
 const uniq = Array.from(new Set(refs));
 ok(uniq.length === uniq.length, '引用名稱可去重');
-ok(uniq.length === 175, '175 個不同的貼圖檔名');
+ok(uniq.length === 177, '177 個不同的貼圖檔名');
 
 // ---------- 2. 檔案都存在且合法 ----------
 head('2. 貼圖檔案');
 const SPR = path.join(ROOT, 'spr');
 const files = fs.readdirSync(SPR).filter(function (f) { return /\.webp$/.test(f); });
-ok(files.length === 175, 'spr/ 內有 ' + files.length + ' 個 .webp');
+ok(files.length === 177, 'spr/ 內有 ' + files.length + ' 個 .webp');
 const missing = uniq.filter(function (u) { return !fs.existsSync(path.join(ROOT, u)); });
 ok(missing.length === 0, '每個引用都找得到檔案' + (missing.length ? '（缺 ' + missing.slice(0, 3) + '）' : ''));
 let badMagic = 0, total = 0;
@@ -50,13 +50,13 @@ rep.forEach(function (r) {
   const b = fs.readFileSync(path.join(SPR, r.name + '.webp'));
   if (b.length !== r.bytes || sha(b).slice(0, 12) !== r.sha) mismatch++;
 });
-ok(rep.length === 175, '對照表 175 筆');
+ok(rep.length === 175, '對照表 175 筆（v4.87 兩張新圖不在抽取清單裡）');
 ok(mismatch === 0, '全部位元組／雜湊與抽取當下一致（不一致 ' + mismatch + '）');
 
 // ---------- 4. 清單與檔案一致 ----------
 head('4. 預熱清單');
 const list = JSON.parse(fs.readFileSync(path.join(SPR, '_list.json'), 'utf8'));
-ok(Array.isArray(list) && list.length === 175, '_list.json 有 175 筆');
+ok(Array.isArray(list) && list.length === 177, '_list.json 有 177 筆（v4.87 多了鴕鳥＋紫蛋）');
 const notInList = files.filter(function (f) { return list.indexOf(f) < 0; });
 ok(notInList.length === 0, '每個檔案都在清單裡' + (notInList.length ? '（漏 ' + notInList.slice(0, 3) + '）' : ''));
 const missingFile = list.filter(function (f) { return !fs.existsSync(path.join(SPR, f)); });

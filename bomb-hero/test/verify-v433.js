@@ -95,7 +95,7 @@ ok(P.STAGE_ROSTER[3].join(',') === 'lavaslime,lavaworm,bee,bomber,lizard,rocklin
 // ==================================================================
 console.log('\n=== 5. 龍坐騎換手繪圖 ===');
 ok(!!P.MOUNT_ART, '有 MOUNT_ART');
-ok(Object.keys(P.MOUNT_ART).length === 2, 'MOUNT_ART 有原色／紅色兩張', Object.keys(P.MOUNT_ART).join(','));
+ok(Object.keys(P.MOUNT_ART).length === 3, 'MOUNT_ART 有三張（綠龍／紅龍／鴕鳥 v4.87）', Object.keys(P.MOUNT_ART).join(','));
 ['green', 'red'].forEach(function (k) {
   const m = P.MOUNT_ART[k];
   ok(!!m, k + ' 有資料');

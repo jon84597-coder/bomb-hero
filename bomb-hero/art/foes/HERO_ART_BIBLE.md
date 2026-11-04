@@ -431,3 +431,78 @@ node   bomb-hero/test/shot-hero-closeup.js 07-frog   # 單隻特寫（凍結時�
 - 表情圖示目前是「同一組畫法 × 8 隻」，若要更貼角色性格（例如柴犬的圖示要有尖牙）可以再客製。
 - 手臂只有肩關節 1 個 pivot，沒有肘關節；若要「揮拳」需要再切前臂。
 - 尚未接進 `index.html` 的 `drawRigChar()`。
+
+---
+
+# 附錄 v4（坐騎與蛋：圖生圖 Style Lock）
+
+> v4.87 的**鴕鳥神獸**第一版走鐘（水彩繪本感、平塗、黑底、右下角還帶 AI 浮水印），
+> 原因是 Prompt 只寫「一隻帥氣的鴕鳥」—— 沒有鎖風格。這一節把「坐騎類」的做法固定下來，
+> 之後任何新坐騎／新蛋都照這個流程，就不會再出現「風格跟其他美術不一樣」的問題。
+
+## A. 兩條規則
+
+1. **一律 image-to-image，不要純 text-to-image**
+   參考圖用**已經在遊戲裡跑的美術**（同類別最接近的那張）：
+   | 要生成的東西 | 參考圖 | `input_fidelity` |
+   |---|---|---|
+   | 坐騎 | `spr/mount-art-green.webp`（綠龍） | medium |
+   | 蛋 | `spr/egg-art-egg.webp`（恐龍蛋） | high |
+
+   → 參考圖本身就是「這個遊戲的長相」，模型會被拉回同一個渲染家族。
+
+2. **Prompt 直接抄 §1 的咒語，不要自己改寫**
+   「必加咒語」與「必加 Negative」**整段照貼**，再補「這次要畫什麼」。
+
+## B. 坐騎 Prompt 範本（鴕鳥神獸，v4.87 實測一次過）
+
+```
+Repaint this creature as a completely different animal: a tall, proud STRIDING OSTRICH
+(wind spirit mount) — same rendering style, same camera, same lighting, same level of
+detail as the reference image.
+
+MUST keep from reference: 2.5D semi-3D painterly render, hand-painted PBR materials,
+top-left 45° warm white key light 5200K 100%, cool fill from lower-right 25%,
+rim light from the opposite 135° side 35%, ambient occlusion 30-40% in every crevice,
+crisp readable silhouette, isolated on pure transparent background, no ground shadow,
+three-quarter front view facing right, full body head to toe.
+
+Subject: long S-curved neck with layered cream feathers, compact feathered body,
+two thick powerful legs with visible scaly texture, small head with bright amber eye,
+soft violet-and-cream feather palette with a warm ochre saddle blanket and leather straps,
+small wind-swirl motif on the saddle.
+
+crisp readable silhouette, sculpted volume, hand-painted PBR, strong warm rim light from
+upper-left backlight, soft ambient occlusion in every crevice, individual feathers catching the rim light
+
+NEGATIVE: flat vector icon, sticker, emoji, mobile game icon, simple gradient, chibi logo mascot,
+plastic toy, low-poly, blurry, text, logo, watermark, frame, ground plane, T-pose, symmetric,
+extra limbs, extra fingers, deformed anatomy, watercolor, ink outline, paper texture,
+children's book illustration, plain black background
+```
+
+蛋的版本只換主體描述（`same size, same silhouette, same painterly shell texture, but
+deep violet shell with faint indigo marbling and a soft inner glow`），其餘照抄。
+
+## C. 生圖回來一定要做的三件事
+
+1. **去背**：回來的圖是**黑底 RGB**（不是真透明）。跑 `python art/mounts/make_ostrich.py`
+   的 `cut_black()`：四邊泛洪吃 near-black（`BLACK_TOL = 56`）→ 只留最大前景連通塊
+   （順手丟掉右下角的 AI 浮水印）→ `MaxFilter(3) + GaussianBlur(0.8)` 羽化 →
+   **去黑前乘**（unpremultiply，否則縮圖邊緣會有一圈黑）→ bbox 裁切。
+2. **尺寸對齊既有資產**：坐騎縮到高 **256px**（`mount-art-green` 同級）、
+   蛋縮到 **160×160** 正方形（透明補邊）；`asp` 要記進 `MOUNT_ART`（`enemyArtR` 會除它）。
+3. **目檢**：`art/mount/ostrich-cut.png` 打開看三件事 —— 腳邊沒有黑影碎屑、
+   身體內部（眼珠／鞍布深色）沒被挖洞、喙與腿沒被吃掉。
+
+## D. 落地檔案
+
+| 產物 | 位置 | 說明 |
+|---|---|---|
+| 處理腳本 | `art/mounts/make_ostrich.py` | 去背＋裁切＋縮圖一條龍，可重跑（輸出雜湊一致） |
+| 原始生圖 | `art/mounts/_raw/`、`art/eggs/_raw/` | 已被 .gitignore 忽略，保留是為了能重跑 |
+| 切割中間檔 | `art/mounts/ostrich-cut.png`、`art/eggs/egg-purple-cut.png` | 去背後的 RGBA 全尺寸圖，方便目檢 |
+| 遊戲用圖 | `spr/mount-art-ostrich.webp`(200×256)、`spr/egg-art-purple.webp`(160×160) | 三份副本都要同步 |
+
+**新增任何 spr/ 檔都要同步 `spr/_list.json`**（離線預熱清單），
+`test/verify-v479.js` 會數檔案數量，忘了加就會紅。

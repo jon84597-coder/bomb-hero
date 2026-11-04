@@ -56,7 +56,7 @@ head('1. 打死 BOSS 當場騎上坐騎');
 })();
 ok(/function brBossDown\(e, killer\)/.test(src), 'brBossDown 有紀錄是誰打死的');
 ok(/const k = \(killer && killer\.alive\) \? killer/.test(src), '先用擊殺者、再退回 lastHitBy');
-ok(/rideDino\(k, up\)/.test(src), 'brBossDown 內直接 rideDino（不經過蛋）');
+ok(/if \(up\) rideDino\(k, true\);\s*else rideOstrich\(k\);/.test(src), 'brBossDown 內直接上坐騎（紅龍／鴕鳥，不經過蛋）');
 ok(/br\.mountPop|br\.mountRed/.test(src), '上龍有飄字提示（10 國語系）');
 ok(/e\.lastHitBy\s*=/.test(src), '命中時會記 lastHitBy');
 

@@ -336,6 +336,39 @@ function sanitizeSave(obj) {
 
   const seen = clampInt(o.seen, 0, 4102444800000, 0);
   if (seen > 0) out.seen = seen;
+
+  /* ---------------- v4.87：簽到／每日任務／關卡三星／每週最佳 ----------------
+     伺服器只存狀態、不發獎勵（獎勵在前端領，領完才寫進這份存檔），
+     所以這裡的責任是「格式合法 + 數值夾回合理範圍」，擋掉改前端刷出來的離譜值：
+       · streak 連續天數 0~7、last/mday 必須是 YYYY-MM-DD
+       · mis 最多 3 筆、id 必須在任務池內、p 不超過 n
+       · stars 每關 1~3 顆（0 等於沒打過，不存）
+       · wbest 必須是 2026-W45:12345 這種格式 */
+  out.gift = { streak: 0, last: '', mday: '', mis: [], stars: {}, wbest: '' };
+  const gf = (o.gift && typeof o.gift === 'object') ? o.gift : {};
+  out.gift.streak = clampInt(gf.streak, 0, 7, 0);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(gf.last || ''))) out.gift.last = String(gf.last);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(gf.mday || ''))) out.gift.mday = String(gf.mday);
+  const MIS_N = { kill: 20, brick: 40, item: 8, clear: 2, jump: 12, perfect: 1 };
+  if (Array.isArray(gf.mis)) {
+    const seenM = {};
+    for (let i = 0; i < gf.mis.length && out.gift.mis.length < 3; i++) {
+      const m = gf.mis[i];
+      if (!m || typeof m.id !== 'string' || !MIS_N[m.id] || seenM[m.id]) continue;
+      seenM[m.id] = 1;
+      const n = clampInt(m.n, 1, 99, MIS_N[m.id]);
+      out.gift.mis.push({ id: m.id, n: n, p: clampInt(m.p, 0, n, 0), got: !!m.got });
+    }
+  }
+  if (gf.stars && typeof gf.stars === 'object') {
+    const ks = Object.keys(gf.stars).slice(0, MAX_STAGE + 1);
+    for (let i = 0; i < ks.length; i++) {
+      const st = clampInt(ks[i], 0, MAX_STAGE, 0);
+      const v = clampInt(gf.stars[ks[i]], 0, 3, 0);
+      if (st >= 1 && v > 0) out.gift.stars[String(st)] = v;
+    }
+  }
+  if (/^\d{4}-W\d{2}:\d{1,9}$/.test(String(gf.wbest || ''))) out.gift.wbest = String(gf.wbest);
   return out;
 }
 
@@ -1137,7 +1170,7 @@ function createCloud(options) {
    *   4. 只信合理範圍：3 秒 ~ 60 分鐘。超出視為無效。
    *      真正防作弊要靠伺服器重跑地圖，那是另一個量級的工程；這裡走「信任 + 限流」。
    */
-  const LB_MODES = { daily: 1 };
+  const LB_MODES = { daily: 1, weekly: 1 };   // v4.87：weekly = 每週榜（同一週同一關比秒數）
   const LB_KEEP_DAYS = 21;         // 保留三週（跨月也還看得到舊榜）
   const LB_MAX_DAY = 300;          // 每天最多存 300 筆
   const LB_MAX_MS = 3600000, LB_MIN_MS = 3000;
@@ -1149,21 +1182,39 @@ function createCloud(options) {
     return t.getUTCFullYear() + '-' + pad2(t.getUTCMonth() + 1) + '-' + pad2(t.getUTCDate());
   }
   function lbDayOk(s) { return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')); }
+  /* v4.87：每週榜的 key 是「UTC+8 的 ISO 週」→ 2026-W45（星期一為一週第一天）
+     刻意跟 lbToday() 用同一條時區換算，前端 Gift.weekKey() 也是同一套公式。 */
+  function lbThisWeek() {
+    const u = new Date(Date.now() + 8 * 3600000);
+    const dow = (u.getUTCDay() + 6) % 7;
+    const thu = new Date(Date.UTC(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate() - dow + 3));
+    const jan1 = new Date(Date.UTC(thu.getUTCFullYear(), 0, 1));
+    const week = 1 + Math.floor((thu - jan1) / 86400000 / 7);
+    return thu.getUTCFullYear() + '-W' + pad2(week);
+  }
+  function lbWeekOk(s) { return /^\d{4}-W\d{2}$/.test(String(s || '')); }
   function lbCleanName(s) {
     let n = String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, '');
     n = n.replace(/[<>&"'`]/g, '').trim();
     if (!n) n = '匿名';
     return n.slice(0, 14);
   }
-  /* 把太久以前的榜砍掉，避免檔案一直長大 */
+  /* 把太久以前的榜砍掉，避免檔案一直長大
+     v4.87：改成「每種模式各留 N 筆」—— 每日榜每天多一筆，混在一起算會把每週榜擠掉。 */
   function lbPrune() {
     const days = db.lb && db.lb.days;
     if (!days) return;
-    const keys = Object.keys(days).sort();
-    while (keys.length > LB_KEEP_DAYS) {
-      const k = keys.shift();
-      delete days[k];
-    }
+    const byMode = {};
+    Object.keys(days).forEach(function (k) {
+      const mode = k.split(':')[0] || 'daily';
+      (byMode[mode] || (byMode[mode] = [])).push(k);
+    });
+    Object.keys(byMode).forEach(function (mode) {
+      const keys = byMode[mode].sort();
+      while (keys.length > LB_KEEP_DAYS) {
+        delete days[keys.shift()];
+      }
+    });
   }
   function lbBucket(mode, day, create) {
     if (!db.lb) db.lb = { v: 1, days: {} };
@@ -1279,11 +1330,18 @@ function createCloud(options) {
       if (p === '/api/lb/top' && req.method === 'GET') {
         const mode = String(url.searchParams.get('mode') || 'daily');
         if (!LB_MODES[mode]) return fail(res, 400, 'BAD_MODE', CORS_LB), true;
+        const weekly = mode === 'weekly';
         const qd = String(url.searchParams.get('day') || '');
-        const day = lbDayOk(qd) ? qd : lbToday();
+        const day = weekly
+          ? (lbWeekOk(qd) ? qd : lbThisWeek())
+          : (lbDayOk(qd) ? qd : lbToday());
         const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get('limit'), 10) || 50));
         const list = lbList(mode, day, limit);
-        return send(res, 200, { ok: true, mode: mode, day: day, today: lbToday(), list: list, count: list.length }, CORS_LB), true;
+        return send(res, 200, {
+          ok: true, mode: mode, day: day,
+          today: weekly ? lbThisWeek() : lbToday(),
+          list: list, count: list.length
+        }, CORS_LB), true;
       }
 
       if (p === '/api/lb/submit' && req.method === 'POST') {
@@ -1292,9 +1350,14 @@ function createCloud(options) {
         if (!body) return fail(res, 400, 'BAD_BODY', CORS_LB), true;
         const mode = String(body.mode || 'daily');
         if (!LB_MODES[mode]) return fail(res, 400, 'BAD_MODE', CORS_LB), true;
+        const weekly = mode === 'weekly';
         const day = String(body.day || '');
-        const today = lbToday();
-        if (!lbDayOk(day) || day !== today) {
+        const today = weekly ? lbThisWeek() : lbToday();
+        // 每日榜只收「今天」；每週榜只收「本週」（跨週後舊成績自動失效，不能補交）
+        if (weekly ? !lbWeekOk(day) : !lbDayOk(day)) {
+          return fail(res, 400, 'BAD_DAY', Object.assign({ today: today }, CORS_LB)), true;
+        }
+        if (day !== today) {
           return fail(res, 409, 'WRONG_DAY', Object.assign({ today: today }, CORS_LB)), true;
         }
         const deviceId = String(body.deviceId || '').slice(0, 128);

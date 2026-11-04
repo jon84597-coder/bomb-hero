@@ -955,9 +955,93 @@ pointer-events: none; z-index: 6; white-space: nowrap;
 #zoomPill b { font-size: 12.5px; color: #ffe6a6; }
 #zoomPill span.zl { opacity: .7; font-weight: 700; }
 /* ===== v4.86：遊戲中「隨從」面板（HUD 上那顆 🐾 按鈕打開） ===== */
-.chip.petchip { pointer-events: auto; cursor: pointer; border: 1px solid rgba(150,190,255,.30); background: rgba(20,28,46,.72); }
-.chip.petchip:hover { border-color: rgba(255,214,102,.55); }
+.chip.petchip {
+  pointer-events: auto; cursor: pointer;
+  border: 1px solid rgba(255,206,120,.55);
+  /* v4.87：原本深藍底在草地上夠用，但在淺色／花俏場景整顆會「融掉」——
+     改成自帶暖色底的實心徽章，🐾 永遠有東西墊著 */
+  background: linear-gradient(180deg, #6b4a1f, #3d2a10);
+  box-shadow: 0 0 0 1px rgba(255,236,190,.22), 0 2px 6px rgba(0,0,0,.35);
+}
+.chip.petchip .ic { text-shadow: 0 1px 2px rgba(0,0,0,.65); }
+.chip.petchip:hover { border-color: rgba(255,224,150,.9); background: linear-gradient(180deg, #8a6127, #4a3314); }
 .chip.petchip b { color: #ffe6a6; }
+
+/* ===== v4.87：每日簽到 / 每日任務 / 每週榜 ===== */
+#giftBtn {
+  position: fixed; left: 10px; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 57; width: 52px; height: 52px; border-radius: 50%; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+  background: radial-gradient(circle at 50% 34%, #6b4a1f 0%, #3a2810 72%);
+  box-shadow: 0 0 0 2px rgba(255,226,168,.55), 0 0 0 5px rgba(126,74,20,.72),
+              0 0 18px -2px rgba(255,180,72,.55), 0 10px 20px -10px rgba(0,0,0,.6);
+  -webkit-tap-highlight-color: transparent;
+}
+#giftBtn:active { transform: scale(.94); }
+#giftBtn .gdot {
+  position: absolute; right: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%;
+  background: #ff4d6d; border: 2px solid #2a1a08; display: none;
+  animation: gdotPulse 1.6s ease-in-out infinite;
+}
+#giftBtn.alert .gdot { display: block; }
+@keyframes gdotPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.25); opacity: .78; } }
+#giftBk { position: fixed; inset: 0; z-index: 1490; display: none; background: rgba(6,10,20,.55); }
+#giftBk.on { display: block; }
+#giftPanel {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.97);
+  z-index: 1500; display: none; width: min(420px, calc(100vw - 24px));
+  max-height: min(84vh, 660px); overflow: auto; box-sizing: border-box;
+  background: linear-gradient(180deg, #24314f, #151e31);
+  border: 2px solid rgba(150,190,255,.30); border-radius: 18px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6); padding: 13px 14px 14px;
+  color: #e8f0ff; font-size: 13px;
+}
+#giftPanel.on { display: block; transform: translate(-50%, -50%) scale(1); }
+#giftPanel .gsec { font-size: 12px; font-weight: 800; color: #cfdcf5; margin: 14px 0 8px;
+  display: flex; align-items: center; justify-content: space-between; }
+#giftPanel .gsec:first-of-type { margin-top: 4px; }
+#giftPanel .gsec span.gtag { font-size: 10.5px; font-weight: 700; color: #8fa2c6; }
+#giftPanel .gdays { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+#giftPanel .gday {
+  position: relative; border-radius: 11px; padding: 7px 4px 6px; text-align: center;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(150,190,255,.16);
+  font-size: 10.5px; color: #a9b8d6; line-height: 1.35;
+}
+#giftPanel .gday b { display: block; font-size: 10px; color: #8fa2c6; margin-bottom: 2px; }
+#giftPanel .gday .gr { font-size: 11.5px; font-weight: 800; color: #ffe0a0; }
+#giftPanel .gday.got { background: rgba(120,200,150,.14); border-color: rgba(140,230,175,.42); color: #9fe6b8; }
+#giftPanel .gday.got .gr { color: #9fe6b8; }
+#giftPanel .gday.now { border-color: rgba(255,214,120,.9); box-shadow: 0 0 0 2px rgba(255,214,120,.28) inset; }
+#giftPanel .gday .gk { position: absolute; right: 4px; top: 3px; font-size: 11px; color: #7ee0a0; }
+#giftPanel .gmis { display: flex; flex-direction: column; gap: 7px; }
+#giftPanel .gmrow { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 12px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(150,190,255,.14); }
+#giftPanel .gmrow.done { background: rgba(120,200,150,.13); border-color: rgba(140,230,175,.40); }
+#giftPanel .gmrow .gmtxt { flex: 1 1 auto; min-width: 0; }
+#giftPanel .gmrow .gmn { font-size: 12.5px; font-weight: 800; }
+#giftPanel .gmrow .gmp { font-size: 10.5px; color: #9fb0cf; margin-top: 3px; }
+#giftPanel .gmrow .gmbar { height: 4px; border-radius: 3px; background: rgba(255,255,255,.12); margin-top: 4px; overflow: hidden; }
+#giftPanel .gmrow .gmbar i { display: block; height: 100%; background: linear-gradient(90deg, #7fd8ff, #6ee7a8); }
+#giftPanel .gmrow .gmgo { flex: 0 0 auto; border: 0; cursor: pointer; border-radius: 10px; padding: 7px 11px;
+  font-size: 11.5px; font-weight: 800; min-height: 32px; color: #12203a;
+  background: linear-gradient(180deg, #ffe08a, #f2b53c); }
+#giftPanel .gmrow .gmgo:disabled { opacity: .45; cursor: default; filter: grayscale(.4); }
+#giftPanel .gweek { background: rgba(255,255,255,.05); border: 1px solid rgba(150,190,255,.14);
+  border-radius: 12px; padding: 9px 11px; }
+#giftPanel .gweek .gwtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#giftPanel .gweek .gwstage { font-size: 12.5px; font-weight: 800; }
+#giftPanel .gweek .gwbest { font-size: 11px; color: #ffd166; margin-top: 3px; }
+#giftPanel .gweek .gwlist { margin-top: 7px; padding-top: 6px; font-size: 11.5px; color: #c6d3ea;
+  border-top: 1px solid rgba(150,190,255,.14); }
+#giftPanel .gweek .gwrow { display: flex; justify-content: space-between; padding: 2px 0; }
+#giftPanel .gweek .gwrow.me { color: #ffe08a; font-weight: 800; }
+#giftPanel .gft { display: flex; gap: 8px; margin-top: 12px; }
+#giftPanel .gnote { font-size: 10.5px; color: #8294b5; line-height: 1.6; margin-top: 10px; }
+@media (max-width: 640px) {
+#giftPanel .gday { padding: 6px 3px 5px; font-size: 10px; }
+}
+/* 首頁選單底部留白：🎁 是 fixed 浮動鈕，捲到底時最後一排卡片不會被壓在它下面 */
+#scr-title .menu { padding-bottom: 58px; }
 #petBk { position: fixed; inset: 0; z-index: 1490; display: none; background: rgba(6,10,20,.52); }
 #petBk.on { display: block; }
 #petPanel {
@@ -970,11 +1054,11 @@ box-shadow: 0 24px 64px rgba(0,0,0,.6); padding: 13px 14px 12px;
 color: #e8f0ff; font-size: 13px; transition: opacity .16s ease, transform .18s ease;
 }
 #petPanel.on { display: block; }
-#petPanel .pphd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
-#petPanel .pphd b { font-size: 15px; letter-spacing: .02em; }
-#petPanel .ppx { border: 0; background: rgba(255,255,255,.08); color: #cfdcf5; width: 28px; height: 28px;
+#petPanel .pphd, #giftPanel .pphd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+#petPanel .pphd b, #giftPanel .pphd b { font-size: 15px; letter-spacing: .02em; }
+#petPanel .ppx, #giftPanel .ppx { border: 0; background: rgba(255,255,255,.08); color: #cfdcf5; width: 28px; height: 28px;
 border-radius: 9px; font-size: 14px; font-weight: 800; cursor: pointer; }
-#petPanel .ppsub { font-size: 11.5px; line-height: 1.6; color: #9fb0cf; margin: 2px 0 10px; }
+#petPanel .ppsub, #giftPanel .ppsub { font-size: 11.5px; line-height: 1.6; color: #9fb0cf; margin: 2px 0 10px; }
 #petPanel .petrow { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 13px;
 background: rgba(255,255,255,.05); border: 1px solid rgba(150,190,255,.14); margin-bottom: 8px; }
 #petPanel .petrow.out { background: rgba(120,200,150,.13); border-color: rgba(140,230,175,.42); }
@@ -987,9 +1071,9 @@ font-size: 12px; font-weight: 800; min-height: 34px; color: #12203a;
 background: linear-gradient(180deg, #ffe08a, #f2b53c); }
 #petPanel .petrow.out .pgo { background: linear-gradient(180deg, #7fb8f0, #4b86c8); color: #08182c; }
 #petPanel .ppft { display: flex; gap: 8px; margin-top: 4px; }
-#petPanel .ppbtn { flex: 1 1 0; border: 0; cursor: pointer; border-radius: 11px; padding: 10px 8px;
+#petPanel .ppbtn, #giftPanel .ppbtn { flex: 1 1 0; border: 0; cursor: pointer; border-radius: 11px; padding: 10px 8px;
 font-size: 12.5px; font-weight: 800; color: #12203a; background: linear-gradient(180deg, #cfe2ff, #9dbce4); min-height: 40px; }
-#petPanel .ppbtn.ghost { background: rgba(255,255,255,.09); color: #cfdcf5; border: 1px solid rgba(150,190,255,.24); }
+#petPanel .ppbtn.ghost, #giftPanel .ppbtn.ghost { background: rgba(255,255,255,.09); color: #cfdcf5; border: 1px solid rgba(150,190,255,.24); }
 #petPanel .pnone { text-align: center; color: #9fb0cf; font-size: 12px; padding: 16px 6px 18px; line-height: 1.8; }
 .tips { color: #55648a; font-size: 11.5px; text-align: center; margin-top: 10px; line-height: 1.9; }
 /* ===== 手機觸控介面（僅「手機觸控模式」顯示，電腦不顯示） ===== */
@@ -1101,7 +1185,22 @@ transform: scale(var(--tscale)); transform-origin: var(--act-origin);
 #touchUI .tpause { right: 16px; top: 12px; width: 46px; height: 46px; font-size: 17px; }
 #touchUI .tfs { right: 16px; top: 64px; width: 44px; height: 44px; font-size: 15px; }
 /* v4.86：手機的隨從鈕 —— 接在 ⏸／⛶ 下面，不佔用已經很擠的 HUD 標籤列 */
-#touchUI .tpet { right: 16px; top: 116px; width: 44px; height: 44px; font-size: 19px; display: none; }
+/* v4.87：盤面改成不透明暖色底 —— 透明盤面時 🐾 直接壓在草地上，綠色場景會把它吃掉 */
+#touchUI .tpet {
+right: 16px; top: 116px; width: 44px; height: 44px; font-size: 19px; display: none;
+--tb-face: rgba(58,38,16,.90);       /* 深琥珀實心，襯出 🐾 */
+--tb-ring: rgba(255,212,132,.72);
+--tb-edge: rgba(126,74,20,.86);
+--tb-glow: rgba(255,180,72,.42);
+text-shadow: 0 1px 2px rgba(0,0,0,.72);
+border: 0;
+box-shadow:
+  0 0 0 1.5px rgba(255,240,206,.62),
+  0 0 0 4.5px var(--tb-edge),
+  0 0 18px -2px var(--tb-glow),
+  0 10px 20px -10px rgba(0,0,0,.55),
+  inset 0 6px 12px rgba(255,206,132,.26);
+}
 #touchUI .tpet.on { display: flex; }
 /* 手機用浮動鈕，HUD 那顆 🐾 只在電腦顯示（手機 HUD 只准兩排） */
 body.touch .chip.petchip { display: none; }
@@ -1690,6 +1789,15 @@ color: #cfe0ff; transition: all .12s; min-width: 0; overflow: hidden;
 .stg:disabled { opacity: .35; cursor: not-allowed; }
 .stg.done { border-color: #46d68c; }
 .stg { position: relative; }
+/* v4.87：關卡三星 —— 掛在關號下面一行（手機把 .stg span 藏起來時星星還在） */
+.stgstar {
+display: block; font-style: normal; margin-top: 1px;
+font-size: 9px; line-height: 1; letter-spacing: 1px; color: #ffb84d;
+text-shadow: 0 1px 0 rgba(0,0,0,.25);
+}
+@media (max-width: 640px) {
+.stgstar { font-size: 8px; letter-spacing: 0; }
+}
 /* v4.15b：窄螢幕（手機直放）—— 選角更精簡（4 個一排、8 人只要兩排）， */
 @media (max-width: 640px) {
 #pSlots, .slotgrid { grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 6px; }
@@ -3327,7 +3435,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.86</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.87</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -3346,6 +3454,8 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
       </div>
     </div>
     </div><!-- /toprow -->
+    <!-- v4.87：每日簽到／每日任務／每週榜（固定在左下角，不佔用 2×3 選單格） -->
+    <button id="giftBtn" type="button" title="每日簽到"><span class="gico">🎁</span><i class="gdot" id="giftDot"></i></button>
     <div class="bootdiag hide" id="bootDiag">
       <b>⚠️ 這個裝置有部分功能沒有載入成功</b>
       <p id="bootDiagMsg">商店／帳號／RPG／BOSS 可能按了沒反應。</p>
@@ -3366,7 +3476,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.86</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.87</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -3794,6 +3904,18 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
       <button id="petAllIn" class="ppbtn ghost" type="button">全部召回</button>
     </div>
   </div>
+  <!-- v4.87：每日簽到 ＋ 每日任務 ＋ 每週榜 -->
+  <div id="giftBk"></div>
+  <div id="giftPanel" role="dialog" aria-modal="true">
+    <div class="pphd"><b id="giftTitle">每日簽到</b><button id="giftClose" class="ppx" type="button" aria-label="close">✕</button></div>
+    <div class="ppsub" id="giftSub"></div>
+    <div id="giftBody"></div>
+    <div class="gft">
+      <button id="giftClaim" class="ppbtn" type="button">領取今天的獎勵</button>
+      <button id="giftGoWeek" class="ppbtn ghost" type="button">去打本週關卡</button>
+    </div>
+    <div class="gnote" id="giftNote"></div>
+  </div>
 
   <!-- v4.21：離開遊戲（手機／內建瀏覽器關不掉視窗時，留在這張離場卡上，不會變黑畫面） -->
   <div id="quitModal" role="dialog" aria-modal="true" aria-label="離開遊戲">
@@ -4023,7 +4145,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.86';
+const VERSION = '4.87';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4332,6 +4454,11 @@ toast.redDino|🔥 進化成紅龍！吐火一次燒上下左右各 2 格（被�
 toast.redDinoBanner|紅龍來啦！|红龙来啦！|Red Dragon!|赤竜だ！|붉은 용이다!|มังกรแดงมาแล้ว!|Rồng đỏ tới!|Красный Дракон!|Roter Drache!|Drago Rosso!
 toast.dino|🦖 孵出恐龍並騎上！多擋一次傷害 · 按 F／🔥 吐火 2 格（冷卻 3 秒）|🦖 孵出恐龙并骑上！多挡一次伤害 · 按 F／🔥 吐火 2 格（冷却 3 秒）|🦖 A dino hatched and you are riding it! Blocks one hit · press F / 🔥 for a 2-tile flame (3s cooldown)|🦖 恐竜が孵って騎乗！ダメージを 1 回防ぐ · F／🔥 で 2 マス炎（クール 3 秒）|🦖 공룡이 부화해 탑승! 피해 1회 방어 · F／🔥 로 2칸 화염 (쿨타임 3초)|🦖 ฟักไดโนและขี่แล้ว! กันความเสียหาย 1 ครั้ง · กด F／🔥 พ่นไฟ 2 ช่อง (คูลดาวน์ 3 วินาที)|🦖 Khủng long nở và bạn đã cưỡi lên! Chặn thêm 1 lần sát thương · bấm F／🔥 phun lửa 2 ô (hồi 3 giây)|🦖 Динозавр вылупился, и вы на нём! Блокирует один урон · F／🔥 — огонь на 2 клетки (откат 3 с)|🦖 Ein Dino ist geschlüpft und du reitest ihn! Blockt einen Treffer · F／🔥 für 2 Felder Feuer (3 s Abklingzeit)|🦖 È nato un dinosauro e lo cavalchi! Blocca un colpo · F／🔥 per 2 caselle di fuoco (recupero 3 s)
 toast.dinoBanner|衝啊！|冲啊！|Charge!|突撃！|돌격!|บุก!|Xông lên!|Вперёд!|Angriff!|All attacco!
+toast.ostrich|🪶 紫蛋孵出鴕鳥神獸！移動 1.45 倍速 · 按 F／🦶 跳躍（跨一格牆、落地震波）|🪶 紫蛋孵出鸵鸟神兽！移动 1.45 倍速 · 按 F／🦶 跳跃（跨一格墙、落地震波）|🪶 A purple egg hatched the Wind Ostrich! 1.45× speed · press F / 🦶 to leap (clears one wall, shockwave on landing)|🪶 紫の卵から風のダチョウが孵化！移動 1.45 倍 · F／🦶 でジャンプ（壁 1 枚を飛び越え、着地で衝撃波）|🪶 보라 알에서 바람 타조 부화! 이동 1.45배 · F／🦶 점프 (벽 1칸 넘고 착지 충격파)|🪶 ไข่สีม่วงฟักนกกระจอกเทศวายุ! ความเร็ว 1.45 เท่า · กด F／🦶 เพื่อกระโดด (ข้ามกำแพง 1 ช่อง กระแทกพื้นเป็นคลื่น)|🪶 Trứng tím nở Đà điểu Phong! Tốc độ 1.45× · nhấn F／🦶 để nhảy (vượt 1 ô tường, chấn động khi tiếp đất)|🪶 Из фиолетового яйца вылупился штормовой страус! Скорость 1.45× · F／🦶 — прыжок (перепрыгивает 1 стену, ударная волна при посадке)|🪶 Aus dem violetten Ei schlüpft der Wind-Strauß! 1,45× Tempo · F／🦶 zum Springen (überspringt 1 Wand, Schockwelle bei Landung)|🪶 Dal guscio viola nasce lo Struzzo del Vento! Velocità 1,45× · F／🦶 per saltare (supera 1 muro, onda d'urto all'atterraggio)
+toast.ostrichBanner|神獸降臨！|神兽降临！|Beast!|神獣！|신수!|อสูรเทพ!|Thần thú!|Зверь!|Bestie!|Fiera!
+mount.jump|跳！|跳！|LEAP!|跳！|점프!|กระโดด!|NHẢY!|ПРЫЖОК!|SPRUNG!|SALTA!
+mount.cd|跳 {n}s|跳 {n}s|LEAP {n}s|跳 {n}s|점프 {n}s|กระโดด {n}s|NHẢY {n}s|ПРЫЖОК {n}с|SPRUNG {n}s|SALTA {n}s
+mount.jumpFire|恐龍吐火|恐龙吐火|Dragon flame|竜の火吹き|용 화염|พ่นไฟมังกร|Rồng phun lửa|Огонь дракона|Drachenfeuer|Fuoco del drago
 toast.dinoGuard|恐龍幫我擋了一下！|恐龙帮我挡了一下！|The dino took the hit for you!|恐竜が身代わりになってくれた！|공룡이 대신 맞아주었다!|ไดโนช่วยรับแทนแล้ว!|Khủng long đã đỡ giúp bạn!|Динозавр принял удар на себя!|Der Dino hat den Treffer abgefangen!|Il dinosauro ha preso il colpo al posto tuo!
 toast.fire1|紅龍吐火 |红龙吐火 |Dragon breath |赤竜の炎 |용의 화염 |ไฟมังกรแดง |Lửa rồng đỏ |Огонь дракона |Drachenfeuer |Soffio del drago 
 toast.fire2|紅龍吐火 OK（四方向）|红龙吐火 OK（四方向）|Dragon breath OK (4 ways)|赤竜の炎 OK（四方向）|용의 화염 OK (4방향)|ไฟมังกรแดง OK (4 ทิศทาง)|Lửa rồng đỏ OK (4 hướng)|Огонь дракона OK (4 стороны)|Drachenfeuer OK (4 Richtungen)|Soffio del drago OK (4 direzioni)
@@ -4566,6 +4693,8 @@ boot.more|顯示細節|显示细节|Show details|詳細を表示|세부 정보 �
 nav.forceUpd|強制更新|强制更新|Force update|強制更新|강제 업데이트|บังคับอัปเดต|Cập nhật bắt buộc|Обновить принудительно|Neu laden|Aggiorna ora
 pwa.already|已經是捷徑開啟了 🙌|已经是快捷方式打开了 🙌|Already running as an app 🙌|すでにアプリとして起動中です 🙌|이미 앱으로 실행 중입니다 🙌|เปิดเป็นแอปอยู่แล้ว 🙌|Đang chạy dạng ứng dụng rồi 🙌|Уже запущено как приложение 🙌|Läuft bereits als App 🙌|È già in esecuzione come app 🙌
 br.mountPop|騎乘！|骑乘！|Mounted!|乗った！|탑승!|ขี่แล้ว!|Lên cưỡi!|Верхом!|Aufgesessen!|In sella!
+br.mountOstrich|鴕鳥神獸！|鸵鸟神兽！|Wind Ostrich!|風のダチョウ！|바람 타조!|นกกระจอกเทศวายุ!|Đà điểu Phong!|Штормовой страус!|Wind-Strauß!|Struzzo del Vento!
+br.bossGetOstrich|打倒第 {n} 關 BOSS！鴕鳥神獸直接上身（1.45 倍速＋跳躍跨牆）|打倒第 {n} 关 BOSS！鸵鸟神兽直接上身（1.45 倍速＋跳跃跨墙）|Stage {n} boss down! You're on the Wind Ostrich (1.45× speed + wall-clearing leap)|ステージ {n} のボス撃破！風のダチョウに騎乗（1.45 倍速＋壁を飛び越えるジャンプ）|{n}스테이지 보스 격파! 바람 타조 탑승 (1.45배속 + 벽 넘는 점프)|ล้มบอสด่าน {n}! ได้ขี่นกกระจอกเทศวายุ (เร็ว 1.45 เท่า + กระโดดข้ามกำแพง)|Hạ boss ải {n}! Cưỡi Đà điểu Phong (tốc độ 1.45× + nhảy qua tường)|Босс {n}-го уровня повержен! Вы на штормовом страусе (1.45× скорость + прыжок через стену)|Boss von Level {n} besiegt! Du reitest den Wind-Strauß (1,45× Tempo + Wand überspringen)|Boss del livello {n} sconfitto! Sullo Struzzo del Vento (1,45× velocità + salto oltre il muro)
 br.mountRed|進化紅龍！|进化红龙！|Red Dragon!|レッドドラゴン進化！|레드 드래곤 진화!|อัปเกรดเป็นมังกรแดง!|Tiến hoá Hồng Long!|Эволюция в красного дракона!|Roter Drache!|Drago rosso!
 br.bossGet|打倒第 {n} 關 BOSS！恐龍坐騎直接上身（多擋一次傷害）|打倒第 {n} 关 BOSS！恐龙坐骑直接上身（多挡一次伤害）|Stage {n} boss down! You're on the dino right away (blocks one hit).|ステージ {n} のボス撃破！その場で恐竜に騎乗（ダメージを 1 回防ぐ）。|{n}스테이지 보스 격파! 바로 공룡에 탑승 (피해 1회 방어).|ล้มบอสด่าน {n} แล้ว! ขึ้นไดโนทันที (กันดาเมจได้ 1 ครั้ง)|Hạ boss ải {n}! Cưỡi khủng long ngay (chắn 1 lần sát thương).|Босс {n}-го уровня повержен! Вы сразу на динозавре (блокирует один удар).|Boss von Level {n} besiegt! Du sitzt sofort auf dem Dino (blockt einen Treffer).|Boss del livello {n} sconfitto! Subito sul dinosauro (para un colpo).
 br.bossGetRed|打倒第 {n} 關 BOSS！坐騎進化成紅龍（四方向吐火）|打倒第 {n} 关 BOSS！坐骑进化成红龙（四方向吐火）|Stage {n} boss down! Your mount evolves into the Red Dragon (4-way flame).|ステージ {n} のボス撃破！乗り物がレッドドラゴンに進化（4 方向に炎）。|{n}스테이지 보스 격파! 탈것이 레드 드래곤으로 진화 (4방향 화염).|ล้มบอสด่าน {n}! พาหนะอัปเกรดเป็นมังกรแดง (พ่นไฟ 4 ทิศ)|Hạ boss ải {n}! Thú cưỡi tiến hoá thành Hồng Long (phun lửa 4 hướng).|Босс {n}-го уровня повержен! Ездовой зверь стал красным драконом (огонь в 4 стороны).|Boss von Level {n} besiegt! Dein Reittier wird zum roten Drachen (Feuer in 4 Richtungen).|Boss del livello {n} sconfitto! La cavalcatura diventa Drago rosso (fuoco in 4 direzioni).
@@ -5279,7 +5408,44 @@ ver.4.82.3|🪟 首頁卡片、抽屜、彈窗、開始遊戲、關卡數字、�
 ver.4.82.4|⚡ 只多幾層 CSS 漸層，沒有圖片、沒有 backdrop-filter，手機不會掉幀|⚡ 只多几层 CSS 渐变，没有图片、没有 backdrop-filter，手机不会掉帧|⚡ Only a few extra CSS gradients — no images, no backdrop-filter, so phones keep their frame rate|⚡ 増えたのは CSS グラデーション数層だけ。画像も backdrop-filter も使わないので、スマホでもフレームレートが落ちません|⚡ CSS 그라데이션 몇 겹만 추가했습니다. 이미지도 backdrop-filter도 없어 휴대폰 프레임이 떨어지지 않습니다|⚡ เพิ่มแค่ไล่ระดับ CSS อีกไม่กี่ชั้น ไม่มีรูปภาพ ไม่มี backdrop-filter เฟรมเรตบนมือถือจึงไม่ตก|⚡ Chỉ thêm vài lớp gradient CSS, không ảnh, không backdrop-filter, nên điện thoại không tụt khung hình|⚡ Добавлено лишь несколько слоёв CSS-градиентов — без картинок и backdrop-filter, частота кадров на телефоне не падает|⚡ Nur ein paar zusätzliche CSS-Verläufe — keine Bilder, kein backdrop-filter, die Bildrate auf dem Handy bleibt stabil|⚡ Solo qualche gradiente CSS in più — niente immagini, niente backdrop-filter, il frame rate sul telefono non cala
 home.daily|每日挑戰|每日挑战|Daily Challenge|デイリーチャレンジ|데일리 챌린지|ภารกิจรายวัน|Thử thách ngày|Ежедневный вызов|Tages-Challenge|Sfida giornaliera
 home.solo.sub|32 關 · 難度自選|32 关 · 难度可选|32 levels · any difficulty|全32面 · 難易度自由|32개 · 난이도 자유|32 ด่าน · เลือกความยาก|32 màn · chọn độ khó|32 уровня · любая сложность|32 Level · freie Wahl|32 livelli · difficoltà libera
-home.namePh|可留空，系統自動取名字|可留空，系统自动取名字|Optional — we will name you|空でもOK・自動で名前をつけます|비워도 됨 · 자동으로 이름 지어줌|เว้นว่างได้ ระบบตั้งชื่อให้|Có thể để trống, hệ thống tự đặt tên|Можно оставить пустым — имя дадим сами|Leer lassen — wir vergeben einen Namen|Puoi lasciare vuoto — il nome lo scegliamo noi`;
+home.namePh|可留空，系統自動取名字|可留空，系统自动取名字|Optional — we will name you|空でもOK・自動で名前をつけます|비워도 됨 · 자동으로 이름 지어줌|เว้นว่างได้ ระบบตั้งชื่อให้|Có thể để trống, hệ thống tự đặt tên|Можно оставить пустым — имя дадим сами|Leer lassen — wir vergeben einen Namen|Puoi lasciare vuoto — il nome lo scegliamo noi
+help.ostrich.lead|🪶 新增<b>鴕鳥神獸</b>：紫色蛋孵化，跑得比恐龍快，還能<b>跳過一格牆</b>，落地震一圈打怪。|🪶 新增<b>鸵鸟神兽</b>：紫色蛋孵化，跑得比恐龙快，还能<b>跳过一格墙</b>，落地震一圈打怪。|🪶 New <b>Wind Ostrich</b>: hatches from the purple egg — faster than the dino, <b>leaps over a wall</b>, and stuns foes with a landing shock.|🪶 新<b>風のダチョウ</b>：紫の卵から孵化。竜より速く、<b>壁 1 枚を飛び越え</b>、着地で衝撃波。|🪶 새 <b>바람 타조</b>: 보라 알에서 부화. 공룡보다 빠르고 <b>벽 한 칸을 뛰어넘으며</b> 착지 충격파를 냅니다.|🪶 <b>นกกระจอกเทศวายุ</b>ใหม่: ฟักจากไข่สีม่วง เร็วกว่าไดโน <b>กระโดดข้ามกำแพงหนึ่งชั้น</b> และสร้างคลื่นกระแทกตอนลง|🪶 <b>Đà điểu Phong</b> mới: nở từ trứng tím — nhanh hơn khủng long, <b>nhảy qua một lớp tường</b>, tiếp đất tạo sóng xung kích.|🪶 Новый <b>штормовой страус</b>: вылупляется из фиолетового яйца — быстрее динозавра, <b>перепрыгивает стену</b> и бьёт врагов ударной волной.|🪶 Neu: der <b>Wind-Strauß</b> schlüpft aus dem lila Ei — schneller als der Dino, <b>springt über eine Wand</b> und schleudert beim Landen eine Welle.|🪶 Nuovo <b>Struzzo del Vento</b>: nasce dall'uovo viola — più veloce del dino, <b>salta oltre un muro</b> e crea un'onda atterrando.
+help.ostrich.s1|1️⃣ 吃到<b>紫色蛋</b>就騎上鴕鳥：原本的 <b>🔥 鍵</b>（電腦 <b>F</b>）換成<b>爪子鍵</b>，按下去是跳躍。|1️⃣ 吃到<b>紫色蛋</b>就骑上鸵鸟：原本的 <b>🔥 键</b>（电脑 <b>F</b>）换成<b>爪子键</b>，按下去是跳跃。|1️⃣ Eat the <b>purple egg</b> to mount the ostrich: the <b>🔥 button</b> (<b>F</b> on keyboard) turns into a <b>claw</b> that leaps.|1️⃣ <b>紫の卵</b>を食べるとダチョウに騎乗。<b>🔥 ボタン</b>（PC は <b>F</b>）が<b>爪ボタン</b>に変わり、押すとジャンプ。|1️⃣ <b>보라 알</b>을 먹으면 타조 탑승. <b>🔥 버튼</b>(PC는 <b>F</b>)이 <b>발톱 버튼</b>으로 바뀌어 점프합니다.|1️⃣ กิน<b>ไข่สีม่วง</b>เพื่อขี่นกกระจอกเทศ <b>ปุ่ม 🔥</b> (คอม <b>F</b>) กลายเป็น<b>ปุ่มกรงเล็บ</b> กดแล้วกระโดด|1️⃣ Ăn <b>trứng tím</b> để cưỡi đà điểu: nút <b>🔥</b> (PC là <b>F</b>) đổi thành <b>nút móng vuốt</b>, bấm là nhảy.|1️⃣ Съешьте <b>фиолетовое яйцо</b> — и вы на страусе: кнопка <b>🔥</b> (на ПК <b>F</b>) становится <b>когтём</b> и даёт прыжок.|1️⃣ <b>Lila Ei</b> essen und auf den Strauß steigen: aus <b>🔥</b> (<b>F</b> am PC) wird eine <b>Klauen-Taste</b> für den Sprung.|1️⃣ Mangi l'<b>uovo viola</b> e sali sullo struzzo: il pulsante <b>🔥</b> (<b>F</b> su PC) diventa un <b>artiglio</b> che fa saltare.
+help.ostrich.s2|2️⃣ 按下去<b>往前跳 2 格</b>：中間那格是牆也跳得過去，但<b>連續兩層牆跳不過</b>，而且落點必須是<b>空地</b>（有炸彈也算擋住）。|2️⃣ 按下去<b>往前跳 2 格</b>：中间那格是墙也跳得过去，但<b>连续两层墙跳不过</b>，而且落点必须是<b>空地</b>（有炸弹也算挡住）。|2️⃣ It <b>leaps 2 tiles forward</b>: one wall in between is fine, <b>two in a row are not</b>, and the landing tile must be <b>clear</b> (a bomb blocks it too).|2️⃣ <b>2 マス前へジャンプ</b>。間の 1 枚は越えられるが<b> 2 枚続きは無理</b>、着地点は<b>空きマス</b>限定（爆弾も不可）。|2️⃣ <b>앞으로 2칸 점프</b>. 중간 벽 1개는 넘지만 <b>벽 2개 연속은 불가</b>, 착지점은 <b>빈 칸</b>이어야 합니다(폭탄도 막힘).|2️⃣ <b>กระโดดไปข้างหน้า 2 ช่อง</b> กำแพงกั้นกลาง 1 ชั้นข้ามได้ แต่<b>สองชั้นติดกันข้ามไม่ได้</b> และจุดลงต้องเป็น<b>ช่องว่าง</b> (มีระเบิดก็นับว่ากั้น)|2️⃣ <b>Nhảy 2 ô về trước</b>: tường 1 lớp ở giữa thì qua được, <b>hai lớp liền thì không</b>, điểm rơi phải là <b>ô trống</b> (có bom cũng bị chặn).|2️⃣ <b>Прыжок на 2 клетки</b>: одна стена между — можно, <b>две подряд — нет</b>, приземление только на <b>свободную клетку</b> (бомба тоже мешает).|2️⃣ <b>2 Felder nach vorn</b>: eine Wand dazwischen geht, <b>zwei hintereinander nicht</b>, und das Landefeld muss <b>frei</b> sein (Bombe blockt auch).|2️⃣ <b>Salta 2 caselle avanti</b>: un muro in mezzo va bene, <b>due di fila no</b>, e la casella d'arrivo deve essere <b>libera</b> (anche una bomba blocca).
+help.ostrich.s3|3️⃣ 落地時<b>半徑 1 格震波</b>造成 2 點傷害（大逃殺／對戰也會打傷敵人，隊友除外），但<b>不會破壞任何牆或軟磚</b>。|3️⃣ 落地时<b>半径 1 格震波</b>造成 2 点伤害（大逃杀／对战也会打伤敌人，队友除外），但<b>不会破坏任何墙或软砖</b>。|3️⃣ Landing sends a <b>1-tile shockwave</b> for 2 damage (also hits enemy players in BR / versus, never teammates) but <b>breaks no walls or bricks</b>.|3️⃣ 着地で<b>半径 1 マスの衝撃波</b>、2 ダメージ（バトロワ／対戦でも敵プレイヤーに当たる・味方は除く）。<b>壁やブロックは壊しません</b>。|3️⃣ 착지 시 <b>반경 1칸 충격파</b>로 2 피해(배틀로얄/대전에서는 적 플레이어도 타격, 아군 제외). <b>벽과 벽돌은 부수지 않습니다</b>.|3️⃣ ตอนลงมี<b>คลื่นกระแทก半径 1 ช่อง</b> ดาเมจ 2 (แบทเทิลรอยัล/对战 ก็โดนศัตรู ยกเว้นเพื่อนร่วมทีม) แต่<b>ไม่ทำลายกำแพงหรืออิฐ</b>|3️⃣ Tiếp đất tạo <b>sóng xung kích bán kính 1 ô</b>, 2 sát thương (BR/đối kháng cũng đánh trúng địch, trừ đồng đội) nhưng <b>không phá tường hay gạch</b>.|3️⃣ При приземлении — <b>волна радиусом 1 клетка</b>, 2 урона (в королевской битве и дуэлях задевает врагов, но не союзников). <b>Стены и блоки не ломаются</b>.|3️⃣ Beim Landen eine <b>Welle mit Radius 1</b>, 2 Schaden (trifft in BR/Duell auch Gegner, nie Teamkollegen), <b>zerstört aber keine Wände</b>.|3️⃣ All'atterraggio un'<b>onda di raggio 1</b>, 2 danni (colpisce i nemici in BR/duello, mai i compagni) ma <b>non rompe muri o blocchi</b>.
+help.ostrich.s4|4️⃣ 整個滯空期間<b>完全免疫</b>炸彈與怪物；模式：單人／RPG／對戰都有，大逃殺則是<b>打倒 BOSS</b> 直接送你一隻。冷卻 <b>1.1 秒</b>。|4️⃣ 整个滞空期间<b>完全免疫</b>炸弹与怪物；模式：单人／RPG／对战都有，大逃杀则是<b>打倒 BOSS</b> 直接送你一只。冷却 <b>1.1 秒</b>。|4️⃣ <b>Fully immune</b> while airborne. Available in Solo / RPG / Versus; in Battle Royale, <b>down a boss</b> and one is yours. Cooldown <b>1.1s</b>.|4️⃣ 滞空中は<b>完全無敵</b>。ソロ／RPG／対戦で登場、バトロワでは<b>ボス撃破</b>で入手。クールダウン <b>1.1 秒</b>。|4️⃣ 공중에서는 <b>완전 무적</b>. 솔로/RPG/대전에 등장, 배틀로얄에서는 <b>보스 처치</b> 시 지급. 쿨다운 <b>1.1초</b>.|4️⃣ ระหว่างลอยตัว<b>อมตะเต็มที่</b> มีในโหมดเดี่ยว/RPG/对战 ส่วนแบทเทิลรอยัล<b>ล้มบอส</b>แล้วได้เลย คูลดาวน์ <b>1.1 วินาที</b>|4️⃣ Suốt lúc bay <b>miễn nhiễm hoàn toàn</b>. Có ở Solo/RPG/Đối kháng; ở BR thì <b>hạ boss</b> là có ngay. Hồi chiêu <b>1,1 giây</b>.|4️⃣ В полёте — <b>полная неуязвимость</b>. Есть в соло/RPG/дуэлях, в королевской битве выдаётся за <b>убийство босса</b>. Перезарядка <b>1,1 с</b>.|4️⃣ In der Luft <b>komplett unverwundbar</b>. In Solo/RPG/Duell verfügbar, in BR gibt es ihn für einen <b>Boss-Kill</b>. Abklingzeit <b>1,1 s</b>.|4️⃣ In aria <b>immune totale</b>. C'è in Solo/RPG/Duello; in BR te lo dà il <b>boss abbattuto</b>. Recupero <b>1,1 s</b>.
+gift.title|🎁 每日好禮與任務|🎁 每日好礼与任务|🎁 Daily gifts & missions|🎁 デイリー特典とミッション|🎁 일일 선물과 미션|🎁 ของขวัญและภารกิจรายวัน|🎁 Quà và nhiệm vụ hằng ngày|🎁 Награды и задания дня|🎁 Tägliche Gaben & Missionen|🎁 Regali e missioni del giorno
+gift.sub|今天簽到可拿第 {n} 天的獎勵|今天签到可拿第 {n} 天的奖励|Day {n} reward is ready for you|本日は {n} 日目の報酬が受け取れます|오늘 {n}일차 보상을 받을 수 있어요|วันนี้รับรางวัลวันที่ {n} ได้|Hôm nay nhận thưởng ngày {n}|Сегодня доступна награда за день {n}|Die Belohnung für Tag {n} wartet|Il premio del giorno {n} ti aspetta
+gift.subDone|已經連續簽到 {n} 天，明天再來|已经连续签到 {n} 天，明天再来|Day {n} streak — come back tomorrow|{n} 日連続ログイン中 — また明日|{n}일 연속 출석 중 — 내일 또 만나요|ต่อเนื่อง {n} วัน — พรุ่งนี้มาใหม่|Chuỗi {n} ngày — mai ghé lại|Серия {n} дней — заходите завтра|{n} Tage in Folge — bis morgen|{n} giorni di fila — torna domani
+gift.checkinSec|7 天簽到|7 天签到|7-day check-in|7 日間ログイン|7일 출석|เช็กอิน 7 วัน|Điểm danh 7 ngày|Отметки за 7 дней|7-Tage-Check-in|Check-in di 7 giorni
+gift.misSec|每日任務|每日任务|Daily missions|デイリーミッション|일일 미션|ภารกิจรายวัน|Nhiệm vụ hằng ngày|Задания дня|Tagesmissionen|Missioni giornaliere
+gift.weekSec|每週榜|每周榜|Weekly board|週間ランキング|주간 순위|กระดานรายสัปดาห์|Bảng tuần|Рейтинг недели|Wochenrangliste|Classifica settimanale
+gift.day|第 {n} 天|第 {n} 天|Day {n}|{n} 日目|{n}일차|วันที่ {n}|Ngày {n}|День {n}|Tag {n}|Giorno {n}
+gift.streakTag|連續 {n} 天|连续 {n} 天|{n} in a row|{n} 日連続|{n}일 연속|ต่อเนื่อง {n} วัน|{n} ngày liên tiếp|{n} дней подряд|{n} Tage in Folge|{n} di fila
+gift.misTag|每天 0 點換新|每天 0 点换新|Resets at midnight|毎日 0 時に更新|매일 0시 갱신|รีเซ็ตเที่ยงคืน|Đổi mới 0 giờ|Сброс в полночь|Reset um 0 Uhr|Reset a mezzanotte
+gift.misKill|擊倒 {n} 隻小怪|击倒 {n} 只小怪|Defeat {n} enemies|敵を {n} 体たおす|적 {n}마리 처치|กำจัดศัตรู {n} ตัว|Hạ {n} kẻ địch|Победить {n} врагов|{n} Gegner besiegen|Sconfiggi {n} nemici
+gift.misBrick|炸掉 {n} 塊軟磚|炸掉 {n} 块软砖|Blow up {n} soft blocks|やわらかいブロックを {n} 個壊す|무른 벽돌 {n}개 파괴|ระเบิดอิฐอ่อน {n} ก้อน|Phá {n} khối gạch mềm|Взорвать {n} мягких блоков|{n} weiche Blöcke sprengen|Distruggi {n} blocchi morbidi
+gift.misItem|吃到 {n} 個道具|吃到 {n} 个道具|Pick up {n} items|アイテムを {n} 個取る|아이템 {n}개 획득|เก็บไอเทม {n} ชิ้น|Nhặt {n} vật phẩm|Подобрать {n} предметов|{n} Items einsammeln|Raccogli {n} oggetti
+gift.misClear|過關 {n} 次|过关 {n} 次|Clear {n} stages|ステージを {n} 回クリア|스테이지 {n}회 클리어|ผ่านด่าน {n} ครั้ง|Qua ải {n} lần|Пройти {n} уровней|{n} Level schaffen|Supera {n} livelli
+gift.misJump|騎鴕鳥跳躍 {n} 次|骑鸵鸟跳跃 {n} 次|Ostrich-leap {n} times|ダチョウで {n} 回ジャンプ|타조 점프 {n}회|กระโดดนกกระจอกเทศ {n} ครั้ง|Nhảy đà điểu {n} lần|Прыгнуть на страусе {n} раз|{n}× Straußensprung|Salta sullo struzzo {n} volte
+gift.misPerfect|無傷過關 {n} 次|无伤过关 {n} 次|Clear {n} stages unhurt|ノーダメージクリア {n} 回|무피해 클리어 {n}회|ผ่านด่านไม่โดน {n} ครั้ง|Qua ải không bị thương {n} lần|Пройти без урона {n} раз|{n}× ohne Schaden schaffen|Supera senza danni {n} volte
+gift.get|領取|领取|Claim|受け取る|받기|รับ|Nhận|Забрать|Abholen|Riscatta
+gift.got|已領|已领|Claimed|受取済|수령 완료|รับแล้ว|Đã nhận|Получено|Abgeholt|Riscattato
+gift.claim|🎁 領今天的簽到禮|🎁 领今天的签到礼|🎁 Claim today's gift|🎁 今日のログイン報酬|🎁 오늘 출석 보상 받기|🎁 รับของขวัญวันนี้|🎁 Nhận quà hôm nay|🎁 Забрать награду|🎁 Heutige Gabe|🎁 Riscatta il premio
+gift.claimed|今天已經領過了|今天已经领过了|Already claimed today|今日はもう受け取りました|오늘은 이미 받았어요|วันนี้รับแล้ว|Hôm nay đã nhận|Сегодня уже получено|Heute schon abgeholt|Già riscattato oggi
+gift.claimOk|簽到成功！💰{g}{t}|签到成功！💰{g}{t}|Checked in! 💰{g}{t}|ログイン完了！💰{g}{t}|출석 완료! 💰{g}{t}|เช็กอินสำเร็จ! 💰{g}{t}|Điểm danh xong! 💰{g}{t}|Отмечено! 💰{g}{t}|Eingecheckt! 💰{g}{t}|Check-in fatto! 💰{g}{t}
+gift.goldUnit|金幣|金币|gold|ゴールド|골드|เหรียญ|vàng|золота|Gold|oro
+gift.starGain|第 {n} 關 {s} 達成！|第 {n} 关 {s} 达成！|Stage {n}: {s}|ステージ {n} {s} 達成！|{n}스테이지 {s} 달성!|ด่าน {n} {s}!|Ải {n} {s}!|Уровень {n}: {s}|Level {n}: {s}|Livello {n}: {s}
+gift.starLeft|還差 {n} 顆星滿星|还差 {n} 颗星满星|{n} stars to go|あと {n} 個で満点|별 {n}개 남음|ขาดอีก {n} ดวง|Còn {n} sao nữa|До полного набора {n} звёзд|Noch {n} Sterne|Mancano {n} stelle
+gift.weekGo|去打本週關卡 →|去打本周关卡 →|Play this week's stage →|今週のステージへ →|이번 주 스테이지로 →|ไปด่านสัปดาห์นี้ →|Chơi ải tuần này →|На уровень недели →|Zum Wochenlevel →|Vai al livello settimanale →
+gift.weekStage|本週關卡　第 {n} 關「{name}」|本周关卡　第 {n} 关「{name}」|This week: stage {n} "{name}"|今週：ステージ {n}「{name}」|이번 주: {n}스테이지 「{name}」|สัปดาห์นี้: ด่าน {n}「{name}」|Tuần này: ải {n} "{name}"|Эта неделя: уровень {n} «{name}»|Diese Woche: Level {n} „{name}“|Questa settimana: livello {n} "{name}"
+gift.weekBest|我的本週最佳 {t}|我的本周最佳 {t}|My week best {t}|週間ベスト {t}|내 주간 최고 {t}|สถิติสัปดาห์นี้ {t}|Tốt nhất tuần {t}|Мой рекорд недели {t}|Wochenbestzeit {t}|Mio record {t}
+gift.weekNone|本週還沒有成績|本周还没有成绩|No time yet this week|今週はまだ記録なし|이번 주 기록 없음|สัปดาห์นี้ยังไม่มีสถิติ|Tuần này chưa có thành tích|На этой неделе пока нет|Diese Woche noch keine Zeit|Nessun tempo questa settimana
+gift.weekEmpty|本週還沒有人上榜|本周还没有人上榜|Nobody on the board yet|まだ誰もランクインしていません|아직 아무도 없어요|ยังไม่มีใครติดอันดับ|Chưa ai lên bảng|Пока никого нет|Noch niemand dabei|Ancora nessuno in classifica
+gift.weekLoading|讀取中…|读取中…|Loading…|読み込み中…|불러오는 중…|กำลังโหลด…|Đang tải…|Загрузка…|Lädt…|Caricamento…
+gift.weekRank|本週第 {r} 名！{t}|本周第 {r} 名！{t}|Rank {r} this week! {t}|週間 {r} 位！{t}|주간 {r}위! {t}|อันดับ {r} สัปดาห์นี้! {t}|Hạng {r} tuần này! {t}|{r}-е место за неделю! {t}|Platz {r} diese Woche! {t}|{r}° posto settimana! {t}
+gift.note|每天 00:00（UTC+8）換新 · 簽到只要斷一天就從第 1 天重來|每天 00:00（UTC+8）换新 · 签到只要断一天就从第 1 天重来|Resets 00:00 (UTC+8) · miss one day and the streak restarts|毎日 00:00（UTC+8）更新 · 1 日でも抜けたら 1 日目から|매일 00:00(UTC+8) 갱신 · 하루만 놓쳐도 1일차부터|รีเซ็ต 00:00 (UTC+8) · ขาดวันเดียวเริ่มนับใหม่|Đổi mới 00:00 (UTC+8) · nghỉ một ngày là đếm lại|Сброс в 00:00 (UTC+8) · пропуск дня — серия заново|Reset 00:00 (UTC+8) · ein Tag Pause setzt die Serie zurück|Reset alle 00:00 (UTC+8) · salta un giorno e riparte
+gift.soloTip|★★★ 沒被打到　★★ 剩餘時間夠　★ 通關|★★★ 没被打到　★★ 剩余时间够　★ 通关|★★★ unhurt · ★★ fast enough · ★ cleared|★★★ ノーダメージ · ★★ 時間内 · ★ クリア|★★★ 무피해 · ★★ 시간 충분 · ★ 클리어|★★★ ไม่โดน · ★★ ทันเวลา · ★ ผ่านด่าน|★★★ không bị thương · ★★ đủ nhanh · ★ qua ải|★★★ без урона · ★★ быстро · ★ пройдено|★★★ ohne Schaden · ★★ schnell genug · ★ geschafft|★★★ illeso · ★★ tempo ok · ★ superato`;
 (function () {
   const L = ["zh-TW","zh-CN","en","ja","ko","th","vi","ru","de","it"];
   for (let i = 0; i < L.length; i++) I18N[L[i]] = {};
@@ -5814,7 +5980,9 @@ const FOE_ART = {
 // 原色綠龍／紅色紅龍各一張；dir = 原圖朝向（+1 面右），asp = 寬/高。
 const MOUNT_ART = {
   green: { dir: +1, asp: 1.1686, u: "spr/mount-art-green.webp" },
-  red: { dir: +1, asp: 1.1732, u: "spr/mount-art-red.webp" }
+  red: { dir: +1, asp: 1.1732, u: "spr/mount-art-red.webp" },
+  // v4.87：鴕鳥神獸（紫蛋孵出來的坐騎）—— 高瘦、長腿，asp 比龍小很多
+  ostrich: { dir: +1, asp: 0.7812, u: "spr/mount-art-ostrich.webp" }
 };
 
 const IMG_PARTS = {
@@ -6134,6 +6302,10 @@ const AudioSys = (function () {
         tone(392, .30, 'triangle', .16, 260, 1.36);
         break;
       case 'warp': tone(300, .16, 'sine', .18, 1200); break;
+      // v4.87：鴕鳥跳躍（起跳的短促氣音 ＋ 落地的低頻悶響）
+      case 'hop': tone(420, .10, 'sine', .16, 900); tone(700, .07, 'triangle', .1, 1200, .02); break;
+      case 'land': boom(.22, .38); tone(110, .16, 'sawtooth', .18, 60); break;
+      case 'nope': tone(180, .10, 'square', .12, 120); break;
       case 'door': tone(520, .12, 'square', .15); tone(660, .12, 'square', .15, null, .1); tone(880, .2, 'square', .16, null, .2); break;
       // 出口開啟（清場）：上行琶音 + 亮片叮咚 + 低頻推力，跟一般過場音明顯不同
       case 'doorOpen':
@@ -6792,6 +6964,8 @@ const Screen = (function () {
     // v4.84：換頁後版面高度會變 → 重新判斷這一頁要不要顯示下滑提示
     try { if (window.ScrollHint) setTimeout(function () { window.ScrollHint.sync(); }, 60); } catch (e) {}
     try { if (typeof refreshers !== 'undefined') refreshers.forEach(function (f) { try { f(); } catch (e) {} }); } catch (e) {}
+    // v4.87：回到首頁就刷新 🎁 紅點（簽到／任務有沒有東西可領）
+    try { if (name === 'title') GiftUI.alertOn(); } catch (e) {}
   }
   function show(name) {
     if (!name || !$id('scr-' + name)) return;
@@ -8217,7 +8391,8 @@ function playerSpeed(p) {
   //   同一組數字在小格子裡等於每秒多走 1.5 倍的路。乘上 Game.spdK（格子比例）之後，
   //   「每秒走幾格」跟一般關卡一致，炸彈 2.5 秒的逃命距離也才對得上。
   const base = (146 + p.speedLv * 20) * (p.rpgSpd || 1) * (Game.spdK || 1);   // v4.0：RPG 的速度點數加成
-  return p.skull === 'slow' ? base * .45 : base;
+  const mountK = p.ostrich ? OSTRICH_SPD : 1;                                 // v4.87：鴕鳥 1.45 倍速
+  return (p.skull === 'slow' ? base * .45 : base) * mountK;
 }
 // 實際移動速度 = 基礎速度 × 輸送帶加成（順行加快／逆行變慢）
 function moveSpeed(p) { return playerSpeed(p) * (p.beltMul || 1); }
@@ -8226,6 +8401,7 @@ function resetPlayerStats(p) {
   p.power = 1; p.maxBombs = 1; p.speedLv = 0;
   p.kick = p.glove = p.punch = p.remote = p.pierce = p.mine = false;
   p.dino = false; p.redDragon = false; p.fireCd = 0;
+  p.ostrich = false; p.air = 0; p.jumpLift = 0;
   p.carry = null;
 }
 
@@ -8754,6 +8930,7 @@ function destroySoft(x, y) {
   const T = Game.T;
   burst(x * T + T / 2, y * T + T / 2, '#c98d4b', 8, 130);
   try { Tut.hit('soft'); } catch (e) {}
+  try { Gift.add('brick', 1); } catch (e) {}     // v4.87：每日任務「炸軟磚」
 }
 function spawnItem(x, y, type) {
   Game.items.push({ cx: x, cy: y, type: type, bob: Math.random() * 6.28 });
@@ -8766,6 +8943,7 @@ const HUD_OF_ITEM = {
   remote: ['g:remote', 'bomb'], pierce: 'g:pierce', line: 'g:line'
 };
 function applyItem(p, type) {
+  try { if (!p.ai && isMyPlayer(p)) Gift.add('item', 1); } catch (e) {}   // v4.87：每日任務「吃道具」
   switch (type) {
     case 'fire': p.power = Math.min(10, p.power + 1); break;
     case 'bomb': p.maxBombs = Math.min(8, p.maxBombs + 1); break;
@@ -8868,8 +9046,21 @@ function flameCovers(f, px, py, T) {
 // 騎乘時可以多擋一次傷害（炸到只會失去恐龍），按 F／🔥 近距離吐火 2 格，冷卻 3 秒。
 const DINO_FIRE_CD = 2;
 const DINO_FIRE_RANGE = 2;
+// ----- v4.87：鴕鳥神獸（紫蛋）-----
+//   移動 1.45 倍速；F／🦶 向前跳 2 格（中間那格可以是牆，牆有兩層或落點不是空地就跳不過去）；
+//   跳躍中免疫傷害；落地半徑 1 格震波打怪（只傷敵人，不破壞任何牆）。
+const OSTRICH_SPD = 1.45;         // 移動速度倍率
+const OSTRICH_JUMP_CD = 1.1;      // 跳躍冷卻（秒）
+const OSTRICH_JUMP_T = .42;       // 滯空時間（秒）
+const OSTRICH_JUMP_CELLS = 2;     // 往前幾格
+const OSTRICH_LAND_DMG = 2;       // 落地震波傷害
+const EGG_OSTRICH_P = .34;        // 每顆蛋有 34% 是紫蛋（鴕鳥），其餘是恐龍蛋
 //   地圖軟磚不夠（或全被道具／門佔走）才退回舊行為：直接生在空地。
 const EGG_HIDDEN = '__egg';
+// v4.87：蛋有兩種 —— 綠斑蛋孵恐龍（吐火、擋一次傷害），紫斑蛋孵鴕鳥（高速、可跳躍）
+function rollEggKind() {
+  return Math.random() < EGG_OSTRICH_P ? 'ostrich' : 'dino';
+}
 function spawnEggs(n) {
   Game.eggs = [];
   Game.eggsHidden = [];
@@ -8889,7 +9080,7 @@ function spawnEggs(n) {
   while (want > 0 && softs.length) {
     const sl = softs.splice(rand(softs.length), 1)[0];
     Game.hidden[sl.y + ',' + sl.x] = EGG_HIDDEN;
-    Game.eggsHidden.push({ x: sl.x, y: sl.y, bob: Math.random() * 6.28 });
+    Game.eggsHidden.push({ x: sl.x, y: sl.y, bob: Math.random() * 6.28, kind: rollEggKind() });
     want--;
   }
   let guard = 0;
@@ -8900,7 +9091,7 @@ function spawnEggs(n) {
     if (eggAt(x, y)) continue;
     if (Game.door && Game.door.x === x && Game.door.y === y) continue;
     if (p && Math.abs(p.x / T - x) + Math.abs(p.y / T - y) < 2.5) continue;   // 不要生在腳邊
-    Game.eggs.push({ x: x, y: y, bob: Math.random() * 6.28, wob: 0, born: 0, safeT: 0 });
+    Game.eggs.push({ x: x, y: y, bob: Math.random() * 6.28, wob: 0, born: 0, safeT: 0, kind: rollEggKind() });
     want--;
   }
   return Game.eggs.length + Game.eggsHidden.length;
@@ -8908,11 +9099,16 @@ function spawnEggs(n) {
 // 軟磚被打掉 → 藏在裡面的蛋冒出來（scale 彈一下，並且給 0.8 秒保護）
 function revealEgg(x, y) {
   if (!Game.eggs) Game.eggs = [];
-  Game.eggsHidden = (Game.eggsHidden || []).filter(function (e) { return !(e.x === x && e.y === y); });
+  // v4.87：蛋的種類在生成時就決定（藏在軟磚裡的那顆要沿用，不能破磚時才亂數重抽）
+  let kind = '';
+  Game.eggsHidden = (Game.eggsHidden || []).filter(function (e) {
+    if (e.x === x && e.y === y) { kind = e.kind || 'dino'; return false; }
+    return true;
+  });
   if (eggAt(x, y)) return;
   const T = Game.T;
-  Game.eggs.push({ x: x, y: y, bob: Math.random() * 6.28, wob: 0, born: .5, safeT: .8 });
-  burst(x * T + T / 2, y * T + T / 2, '#ffe9a8', 16, 170);
+  Game.eggs.push({ x: x, y: y, bob: Math.random() * 6.28, wob: 0, born: .5, safeT: .8, kind: kind || 'dino' });
+  burst(x * T + T / 2, y * T + T / 2, kind === 'ostrich' ? '#c9a7f2' : '#ffe9a8', 16, 170);
   AudioSys.sfx('item');
 }
 function eggAt(x, y) {
@@ -8924,6 +9120,7 @@ function eggAt(x, y) {
 }
 function rideDino(p, red) {
   p.dino = true; p.dinoT = 0; p.fireCd = 0;
+  p.ostrich = false; p.air = 0; p.jumpLift = 0;        // v4.87：換坐騎時把鴕鳥狀態清乾淨
   AudioSys.sfx('item');
   if (red) {
     // v1.8：已經騎著小龍再吃到第二顆蛋 → 進化成「紅龍」
@@ -8938,17 +9135,31 @@ function rideDino(p, red) {
     bubbleSay(p, t('toast.dinoBanner'), 'kill', Game.T * 1.9);
   }
 }
-// 吃到恐龍蛋（人類與 AI 共用）：第一次騎上小龍，已騎著 → 升級成紅龍
+// v4.87：紫蛋 → 鴕鳥神獸（不是恐龍的換色版：速度更快、招式是跳躍而不是吐火）
+function rideOstrich(p) {
+  p.dino = true; p.dinoT = 0; p.fireCd = 0;
+  p.ostrich = true; p.redDragon = false; p.air = 0; p.jumpLift = 0;
+  AudioSys.sfx('item');
+  if (isMyPlayer(p)) toast(t('toast.ostrich'), 2.6, 'g:ostrich');
+  burst(p.x, p.y, '#c9a7f2', 26, 220);
+  burst(p.x, p.y, '#ffe6a6', 10, 150);
+  bubbleSay(p, t('toast.ostrichBanner'), 'kill', Game.T * 1.9);
+}
+// 吃到蛋（人類與 AI 共用）：沒坐騎 → 依蛋種上坐騎；已有坐騎 → 升級成紅龍
 function takeEgg(p) {
   const T = Game.T;
   const eg = eggAt(Math.floor(p.x / T), Math.floor(p.y / T));
   if (!eg) return false;
   Game.eggs.splice(Game.eggs.indexOf(eg), 1);
-  rideDino(p, !!p.dino);
+  // 已經有坐騎 → 吃什麼蛋都是進化紅龍（紫蛋只是「第一隻」會給你鴕鳥）
+  if (p.dino) rideDino(p, true);
+  else if (eg.kind === 'ostrich') rideOstrich(p);
+  else rideDino(p, false);
   return true;
 }
 function breakDino(p) {
-  p.dino = false; p.redDragon = false; p.fireCd = 0;
+  const wasO = !!p.ostrich;
+  p.dino = false; p.redDragon = false; p.ostrich = false; p.air = 0; p.jumpLift = 0; p.fireCd = 0;
   //   剛好蓋過吐火冷卻（2 秒）→ 變成「一直有龍就一直打不死」。
   p.invuln = Math.max(p.invuln, .7);
   // v4.78：螢幕震動與音效只給自己 —— 別人的龍被打爆不該搖我的畫面
@@ -8956,11 +9167,12 @@ function breakDino(p) {
     AudioSys.sfx('hurt');
     Game.shake = Math.min(1, Game.shake + .35);
   }
-  burst(p.x, p.y, '#7ee08a', 24, 220);
+  burst(p.x, p.y, wasO ? '#c9a7f2' : '#7ee08a', 24, 220);
   bubbleSay(p, t('toast.dinoGuard'), 'dead', Game.T * 1.9);
 }
 function fireBreath(p) {
   if (!p || !p.alive || !p.dino || p.fireCd > 0) return false;
+  if (p.ostrich) return false;                     // v4.87：鴕鳥不會吐火，招式是跳躍
   const T = Game.T;
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
   // v1.8：紅龍一次燒「上下左右」四個方向，一般小龍只燒面前
@@ -9005,6 +9217,90 @@ function fireBreath(p) {
   return cells > 0;
 }
 
+
+// ----- v4.87：鴕鳥神獸的跳躍 -----
+//   往前跳 2 格；「中間那格」可以是硬牆或軟磚（等於跨過一格），
+//   但落點必須是站得住的空地 —— 所以連續兩層牆一定跳不過去。
+//   滯空期間完全免疫傷害；落地時半徑 1 格震波打怪，但一根牆都不會破壞。
+function mountJump(p) {
+  if (!p || !p.alive || !p.ostrich) return false;
+  if (p.air > 0 || (p.fireCd || 0) > 0) return false;
+  const T = Game.T;
+  const d = DIRS[p.facing] || DIRS.down;
+  const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
+  const lx = cx + d.x * OSTRICH_JUMP_CELLS, ly = cy + d.y * OSTRICH_JUMP_CELLS;
+  // 落點：地圖內、不是牆、不是炸彈（軟磚也算牆 → 不能落在軟磚上）
+  const out = (lx < 0 || ly < 0 || lx >= Game.cols || ly >= Game.rows);
+  if (out || cellAt(lx, ly) !== 0 || bombAt(lx, ly)) {
+    if (isMyPlayer(p)) AudioSys.sfx('nope');
+    return false;
+  }
+  p.air = OSTRICH_JUMP_T;
+  p.jumpDur = OSTRICH_JUMP_T;
+  p.jumpFrom = { x: p.x, y: p.y };
+  p.jumpTo = { x: lx * T + T / 2, y: ly * T + T / 2 };
+  p.jumpOver = cellAt(cx + d.x, cy + d.y) !== 0;    // 跨過去的是牆（給特效判斷用）
+  p.jumpLift = 0;
+  p.moving = false;
+  p.fireCd = OSTRICH_JUMP_CD;
+  p.invuln = Math.max(p.invuln || 0, OSTRICH_JUMP_T + .1);
+  if (isMyPlayer(p)) { AudioSys.sfx('hop'); try { Gift.add('jump', 1); } catch (e) {} }
+  burst(p.x, p.y + T * .34, '#e6dcff', 10, 130);
+  return true;
+}
+// 滯空插值（每個更新週期跑一次，人類／AI／大逃殺共用）
+function jumpTick(p, dt) {
+  const T = Game.T;
+  const dur = p.jumpDur || OSTRICH_JUMP_T;
+  p.air = Math.max(0, p.air - dt);
+  const k = clamp(1 - p.air / dur, 0, 1);
+  if (p.jumpFrom && p.jumpTo) {
+    p.x = p.jumpFrom.x + (p.jumpTo.x - p.jumpFrom.x) * k;
+    p.y = p.jumpFrom.y + (p.jumpTo.y - p.jumpFrom.y) * k;
+  }
+  p.jumpLift = Math.sin(Math.PI * k) * T * .95;      // 拋物線高度
+  if (p.air <= 0) {
+    if (p.jumpTo) { p.x = p.jumpTo.x; p.y = p.jumpTo.y; }
+    p.jumpLift = 0; p.air = 0;
+    ostrichLand(p);
+  }
+}
+// 落地震波：九宮格內的敵人各吃 OSTRICH_LAND_DMG 點（玩家只打敵人／別隊），牆一律不動
+function ostrichLand(p) {
+  const T = Game.T;
+  const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
+  Game.rings = Game.rings || [];
+  Game.rings.push({ x: p.x, y: p.y + T * .30, born: Game.gameT || 0, dur: .46, r: T * 1.75, color: '#d9c9ff' });
+  if (Game.rings.length > 24) Game.rings.splice(0, Game.rings.length - 24);
+  if (isMyPlayer(p)) {
+    AudioSys.sfx('land');
+    Game.shake = Math.min(1, Game.shake + .16);
+  }
+  const near = function (ex, ey) { return Math.abs(ex - cx) <= 1 && Math.abs(ey - cy) <= 1; };
+  (Game.enemies || []).forEach(function (e) {
+    if (!e || e.dead || e.hitT > 0) return;
+    if (!near(Math.floor(e.x / T), Math.floor(e.y / T))) return;
+    e.hp -= OSTRICH_LAND_DMG;
+    e.hitT = .55;
+    burst(e.x, e.y, '#fff', 12, 200);
+    if (e.hp <= 0) {
+      e.dead = true;
+      try { Gift.add('kill', 1); } catch (err) {}
+      burst(e.x, e.y, '#c9a7f2', 34, 280);
+      Game.players.forEach(function (q) { q.score += 1000; });
+      if (e.brBoss && typeof brBossDown === 'function') brBossDown(e, p);
+    }
+  });
+  // 對戰／大逃殺：震波也會打到別的玩家（自己隊友不會）
+  if (Game.mode === 'battle' || Game.mode === 'br') {
+    (Game.players || []).forEach(function (q) {
+      if (q === p || !q.alive) return;
+      if (Game.teamsOn >= 2 && q.team >= 0 && q.team === p.team) return;
+      if (!near(Math.floor(q.x / T), Math.floor(q.y / T))) return;
+      killBattlePlayer(q, p);
+    });
+  }
+}
 
 // ----- 粒子 / 震動 -----
 function burst(x, y, color, n, spread) {
@@ -9185,7 +9481,10 @@ const Solo = {
         b.setAttribute('data-stage', String(n));
         b.setAttribute('title', (m.theme + 1) + '-' + (m.sub + 1) + '　' + mapName(m) + (boss ? '　' + t('stage.bossTag') : ''));
       }
-      b.innerHTML = '<b>' + n + '</b><span>' + (boss ? '👑' : '') + mapName(m) + '</span>';
+      let ss = 0;
+      try { ss = Gift.stars(n) | 0; } catch (e) { ss = 0; }   // v4.87：這一關拿到幾顆星
+      b.innerHTML = '<b>' + n + '</b><span>' + (boss ? '👑' : '') + mapName(m) + '</span>' +
+        (ss > 0 ? '<i class="stgstar">' + '★★★'.slice(0, ss) + '☆☆☆'.slice(0, 3 - ss) + '</i>' : '');
       b.addEventListener('click', function () {
         AudioSys.sfx('click');
         if (Solo.sel === n) { Solo.go(); return; }   // 再點一次＝直接出發
@@ -9489,8 +9788,511 @@ const Lb = {
       mode: 'daily', day: day, name: name || '', ms: Math.round(ms), deviceId: Lb.deviceId(),
       ver: VERSION
     });
+  },
+  /* v4.87：每週榜（同一個後端，換 mode／key）*/
+  topWeek(week, limit) {
+    const w = week || Gift.weekKey();
+    const key = 'week:' + w;
+    return Lb._get(Lb.origin() + '/api/lb/top?mode=weekly&day=' + encodeURIComponent(w) +
+                   '&limit=' + (limit || 20))
+      .then(function (j) {
+        if (j && j.ok && j.list) { Lb.writeCache(key, j.list); return { list: j.list, online: true }; }
+        const c = Lb.readCache(key);
+        return { list: (c && c.list) || [], online: false };
+      }, function () {
+        const c = Lb.readCache(key);
+        return { list: (c && c.list) || [], online: false };
+      });
+  },
+  submitWeek(week, name, ms) {
+    return Lb._post(Lb.origin() + '/api/lb/submit', {
+      mode: 'weekly', day: week || Gift.weekKey(), name: name || '', ms: Math.round(ms),
+      deviceId: Lb.deviceId(), ver: VERSION
+    });
   }
 };
+// ============================================================================
+//  v4.87：每日簽到 ／ 每日 3 任務 ／ 關卡三星 ／ 每週榜
+//  設計原則：
+//   · 全部只依「本地日期（UTC+8）」判斷，不靠伺服器時間 → 離線也能用
+//   · 資料存在 localStorage，並跟著 v4.85 的統一存檔一起上 Supabase（Gift.state()）
+//   · 任務每天用日期種子抽 3 個 → 同一台裝置同一天固定，換裝置也一致
+// ============================================================================
+const Gift = (function () {
+  try {
+    return (function () {
+      const KEY = 'bombhero-gift-v1';
+      // 7 天簽到獎勵（第 3／5 天給票券，第 7 天雙票券＋大金幣）
+      const REWARDS = [
+        { g: 120, t: 0 }, { g: 180, t: 0 }, { g: 100, t: 1 },
+        { g: 260, t: 0 }, { g: 160, t: 1 }, { g: 320, t: 0 }, { g: 500, t: 2 }
+      ];
+      // 每日任務池（每天抽 3 個）
+      const POOL = [
+        { id: 'kill', n: 20, g: 120 },
+        { id: 'brick', n: 40, g: 100 },
+        { id: 'item', n: 8, g: 100 },
+        { id: 'clear', n: 2, g: 150 },
+        { id: 'jump', n: 12, g: 110 },
+        { id: 'perfect', n: 1, g: 180 }
+      ];
+      const MISSION_KINDS = {};
+      POOL.forEach(function (m) { MISSION_KINDS[m.id] = 1; });
+
+      let D = { streak: 0, last: '', mday: '', mis: [], stars: {}, wbest: '' };
+      let loaded = false;
+
+      function load() {
+        if (loaded) return;
+        loaded = true;
+        try {
+          const raw = localStorage.getItem(KEY);
+          if (raw) {
+            const o = JSON.parse(raw);
+            if (o && typeof o === 'object') {
+              D.streak = clamp(parseInt(o.streak, 10) || 0, 0, 7);
+              D.last = /^\d{4}-\d{2}-\d{2}$/.test(o.last || '') ? o.last : '';
+              D.mday = /^\d{4}-\d{2}-\d{2}$/.test(o.mday || '') ? o.mday : '';
+              D.mis = Array.isArray(o.mis) ? o.mis.filter(function (m) { return m && MISSION_KINDS[m.id]; }).slice(0, 3) : [];
+              D.stars = (o.stars && typeof o.stars === 'object') ? o.stars : {};
+              D.wbest = typeof o.wbest === 'string' ? o.wbest : '';
+            }
+          }
+        } catch (e) {}
+      }
+      function save() {
+        load();
+        try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {}
+        try { if (window.Save && Save.push) Save.push(); } catch (e) {}
+      }
+      /* 前一天（純本地日期，不做時區換算 —— 兩邊都用 dailyDayKey 的 UTC+8 字串） */
+      function prevDay(key) {
+        const p = String(key || '').split('-');
+        const d = new Date(Date.UTC(+p[0], (+p[1]) - 1, +p[2]));
+        d.setUTCDate(d.getUTCDate() - 1);
+        const p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+        return d.getUTCFullYear() + '-' + p2(d.getUTCMonth() + 1) + '-' + p2(d.getUTCDate());
+      }
+
+      /* ---------------- 簽到 ---------------- */
+      function checkin() {
+        load();
+        const today = dailyDayKey();
+        const done = D.last === today;
+        return {
+          streak: D.streak, last: D.last, today: today, done: done,
+          // 今天可以領 → 顯示「第幾天」；已經領過 → 顯示領到的那一天
+          day: done ? D.streak : nextStreak(),
+          rewards: REWARDS
+        };
+      }
+      function nextStreak() {
+        load();
+        const today = dailyDayKey();
+        if (D.last === prevDay(today)) return (D.streak % 7) + 1;   // 連續 → 下一格
+        return 1;                                                    // 斷了（或第一次）→ 從第 1 天
+      }
+      function claimCheckin() {
+        load();
+        const today = dailyDayKey();
+        if (D.last === today) return { ok: false, err: 'DONE' };
+        const day = nextStreak();
+        D.streak = day;
+        D.last = today;
+        const r = REWARDS[day - 1] || REWARDS[0];
+        try { if (r.g) Shop.addGold(r.g); } catch (e) {}
+        try { if (r.t) Shop.grantTicket(r.t); } catch (e) {}
+        save();
+        try { AudioSys.sfx('win'); } catch (e) {}
+        return { ok: true, day: day, gold: r.g || 0, tickets: r.t || 0 };
+      }
+
+      /* ---------------- 每日任務 ---------------- */
+      function rollMissions(day) {
+        const rnd = rngFrom(dailySeedOf('mis-' + day));
+        const pool = POOL.slice();
+        const out = [];
+        for (let i = 0; i < 3 && pool.length; i++) {
+          const k = Math.floor(rnd() * pool.length) % pool.length;
+          const m = pool.splice(k, 1)[0];
+          out.push({ id: m.id, n: m.n, p: 0, got: false, g: m.g });
+        }
+        return out;
+      }
+      function missions() {
+        load();
+        const day = dailyDayKey();
+        if (D.mday !== day) {
+          D.mday = day;
+          D.mis = rollMissions(day);
+          save();
+        }
+        // 舊資料可能缺 n／g → 補回來（改版後才不會顯示 undefined）
+        D.mis.forEach(function (m) {
+          const def = POOL.filter(function (x) { return x.id === m.id; })[0];
+          if (!def) return;
+          if (!m.n) m.n = def.n;
+          if (!m.g) m.g = def.g;
+          m.p = clamp(m.p | 0, 0, m.n);
+        });
+        return D.mis;
+      }
+      /* 遊戲事件 → 任務進度（只有當天抽到的任務才會累積） */
+      function add(kind, n) {
+        if (!kind) return;
+        load();
+        const list = missions();
+        let hit = false;
+        list.forEach(function (m) {
+          if (m.id !== kind || m.got) return;
+          if (m.p >= m.n) return;
+          m.p = Math.min(m.n, m.p + (n || 1));
+          hit = true;
+        });
+        if (hit) save();
+      }
+      function claimMission(i) {
+        const list = missions();
+        const m = list[i];
+        if (!m) return { ok: false, err: 'NONE' };
+        if (m.got) return { ok: false, err: 'GOT' };
+        if (m.p < m.n) return { ok: false, err: 'PROG' };
+        m.got = true;
+        try { Shop.addGold(m.g); } catch (e) {}
+        save();
+        try { AudioSys.sfx('item'); } catch (e) {}
+        return { ok: true, gold: m.g };
+      }
+
+      /* ---------------- 關卡三星 ---------------- */
+      function stars(n) { load(); return D.stars[String(n)] | 0; }
+      function setStars(n, v) {
+        load();
+        const key = String(n | 0);
+        const old = D.stars[key] | 0;
+        const val = clamp(v | 0, 0, 3);
+        if (val <= old) return false;
+        D.stars[key] = val;
+        save();
+        return true;
+      }
+      function totalStars() {
+        load();
+        let s = 0;
+        for (const k in D.stars) s += D.stars[k] | 0;
+        return s;
+      }
+      /* 過關當下結算：1 星=通關、2 星=剩餘時間 ≥40%（無限時間改判「沒死過」）、3 星=沒被打到 */
+      function judgeStars(timer, timerMax, hurt) {
+        let s = 1;
+        const inf = !isFinite(timerMax) || timerMax <= 0;
+        if (inf) { if (!hurt) s = 2; }
+        else if (timer > timerMax * .4) s = 2;
+        if (s >= 2 && !hurt) s = 3;
+        return s;
+      }
+
+      /* ---------------- 每週榜 ---------------- */
+      // 「本週」= UTC+8 的 ISO 週（星期一為一週第一天）
+      function weekKey(d) {
+        const base = d ? new Date(d) : new Date();
+        const u = new Date(base.getTime() + 8 * 3600000);
+        const day = (u.getUTCDay() + 6) % 7;                 // 一=0 … 日=6
+        const thu = new Date(Date.UTC(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate() - day + 3));
+        const year = thu.getUTCFullYear();
+        const jan1 = new Date(Date.UTC(year, 0, 1));
+        const week = 1 + Math.floor((thu - jan1) / 86400000 / 7);
+        const p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+        return year + '-W' + p2(week);
+      }
+      function weekStage() {
+        // 用週 key 當種子 → 每週換一關（32 關輪流，讓舊內容有第二次價值）
+        let h = 2166136261;
+        const s = 'bh-week-' + weekKey();
+        for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+        return 1 + ((((h >>> 0) >>> 9) % 31));
+      }
+      function weekBest() {
+        load();
+        if (D.wbest.split(':')[0] !== weekKey()) return 0;
+        return parseInt(D.wbest.split(':')[1], 10) || 0;
+      }
+      function weekSetBest(ms) {
+        load();
+        const w = weekKey(), cur = weekBest();
+        if (cur && ms >= cur) return false;
+        D.wbest = w + ':' + Math.round(ms);
+        save();
+        return true;
+      }
+
+      /* ---------------- 存檔（雲端同步用） ---------------- */
+      function state() {
+        load();
+        return {
+          streak: D.streak | 0, last: D.last || '', mday: D.mday || '',
+          mis: (D.mis || []).map(function (m) { return { id: m.id, p: m.p | 0, n: m.n | 0, got: !!m.got }; }),
+          stars: D.stars || {}, wbest: D.wbest || ''
+        };
+      }
+      function setState(s) {
+        if (!s || typeof s !== 'object') return;
+        load();
+        // 取「比較新」的那份：日期大者贏；同一天則連續天數大者贏
+        const newer = (!D.last) || String(s.last || '') > D.last;
+        if (newer) {
+          D.streak = clamp(s.streak | 0, 0, 7);
+          D.last = /^\d{4}-\d{2}-\d{2}$/.test(s.last || '') ? s.last : D.last;
+        }
+        if (String(s.mday || '') > String(D.mday || '')) {
+          D.mday = s.mday;
+          D.mis = (Array.isArray(s.mis) ? s.mis : []).filter(function (m) { return m && MISSION_KINDS[m.id]; }).slice(0, 3)
+            .map(function (m) {
+              const def = POOL.filter(function (x) { return x.id === m.id; })[0] || { n: 1, g: 0 };
+              return { id: m.id, n: clamp(m.n | 0, 1, 99) || def.n, p: clamp(m.p | 0, 0, 99), got: !!m.got, g: def.g };
+            });
+        }
+        if (s.stars && typeof s.stars === 'object') {
+          for (const k in s.stars) {
+            const v = clamp(s.stars[k] | 0, 0, 3);
+            if (v > (D.stars[k] | 0)) D.stars[k] = v;
+          }
+        }
+        if (typeof s.wbest === 'string' && s.wbest.split(':')[0] === weekKey()) D.wbest = s.wbest;
+        save();
+      }
+
+      return {
+        REWARDS: REWARDS, POOL: POOL,
+        checkin: checkin, claimCheckin: claimCheckin, nextStreak: nextStreak,
+        missions: missions, add: add, claimMission: claimMission,
+        stars: stars, setStars: setStars, totalStars: totalStars, judgeStars: judgeStars,
+        weekKey: weekKey, weekStage: weekStage, weekBest: weekBest, weekSetBest: weekSetBest,
+        state: state, setState: setState, _data: function () { return D; }
+      };
+    })();
+  } catch (__e) {
+    if (typeof __bootFail === 'function') __bootFail('Gift', __e);
+    const stub = { streak: 0, last: '', mis: [], stars: {} };
+    return {
+      REWARDS: [], POOL: [],
+      checkin: function () { return { day: 1, streak: 0, done: false, rewards: [] }; },
+      claimCheckin: function () { return { ok: false }; }, nextStreak: function () { return 1; },
+      missions: function () { return []; }, add: function () {}, claimMission: function () { return { ok: false }; },
+      stars: function () { return 0; }, setStars: function () { return false; }, totalStars: function () { return 0; },
+      judgeStars: function () { return 1; },
+      weekKey: function () { return ''; }, weekStage: function () { return 1; },
+      weekBest: function () { return 0; }, weekSetBest: function () { return false; },
+      state: function () { return stub; }, setState: function () {}, _data: function () { return stub; }
+    };
+  }
+})();
+
+// ----- v4.87：簽到／任務／每週榜的面板（首頁左下角 🎁） -----
+const GiftUI = (function () {
+  try {
+    return (function () {
+      const MKEY = {
+        kill: 'gift.misKill', brick: 'gift.misBrick', item: 'gift.misItem',
+        clear: 'gift.misClear', jump: 'gift.misJump', perfect: 'gift.misPerfect'
+      };
+      let bound = false, weekCache = null;
+
+      function hasReward() {
+        try {
+          if (!Gift.checkin().done) return true;
+          const list = Gift.missions();
+          for (let i = 0; i < list.length; i++) if (list[i].p >= list[i].n && !list[i].got) return true;
+        } catch (e) {}
+        return false;
+      }
+      function alertOn() {
+        const b = $id('giftBtn');
+        if (!b || !b.classList) return;
+        b.classList.toggle('alert', hasReward());
+      }
+
+      function dayCells() {
+        const st = Gift.checkin();
+        const today = st.done ? st.streak : st.day;
+        let h = '';
+        for (let i = 1; i <= 7; i++) {
+          const r = st.rewards[i - 1] || { g: 0, t: 0 };
+          const got = st.done ? i <= st.streak : i < st.day;
+          const now = i === today;
+          const prize = r.t ? ('🔑×' + r.t) : ('💰' + r.g);
+          h += '<div class="gday' + (got ? ' got' : '') + (now ? ' now' : '') + '">' +
+            (got ? '<span class="gk">✓</span>' : '') +
+            '<b>' + t('gift.day', { n: i }) + '</b>' +
+            '<div class="gr">' + prize + '</div></div>';
+        }
+        return h;
+      }
+
+      function missionRows() {
+        const list = Gift.missions();
+        if (!list.length) return '<div class="gnote">—</div>';
+        return list.map(function (m, i) {
+          const pct = Math.round(100 * Math.min(1, m.p / Math.max(1, m.n)));
+          const ready = m.p >= m.n && !m.got;
+          return '<div class="gmrow' + (m.got ? ' done' : '') + '">' +
+            '<div class="gmtxt">' +
+              '<div class="gmn">' + t(MKEY[m.id] || 'gift.misKill', { n: m.n }) + '</div>' +
+              '<div class="gmp">' + m.p + ' / ' + m.n + (m.g ? '　·　💰' + m.g : '') + '</div>' +
+              '<div class="gmbar"><i style="width:' + pct + '%"></i></div>' +
+            '</div>' +
+            '<button class="gmgo" type="button" data-mi="' + i + '"' +
+              ((m.got || !ready) ? ' disabled' : '') + '>' +
+              (m.got ? t('gift.got') : t('gift.get')) + '</button>' +
+          '</div>';
+        }).join('');
+      }
+
+      function weekStageName(n) {
+        try { return mapName(soloInfo(n)); } catch (e) { return ''; }
+      }
+
+      function weekBlock() {
+        const n = Gift.weekStage();
+        const best = Gift.weekBest();
+        const w = Gift.weekKey();
+        let rows = '';
+        const list = (weekCache && weekCache.week === w) ? weekCache.list : null;
+        if (list && list.length) {
+          const me = settings.playerName || '';
+          rows = list.slice(0, 8).map(function (e, i) {
+            return '<div class="gwrow' + (me && e.n === me ? ' me' : '') + '">' +
+              '<span>' + (i + 1) + '. ' + hesc(e.n || '匿名') + '</span><span>' + fmtMs(e.ms) + '</span></div>';
+          }).join('');
+        } else {
+          rows = '<div class="gwrow"><span>' + t(list ? 'gift.weekEmpty' : 'gift.weekLoading') + '</span><span></span></div>';
+        }
+        // 排行清單一律排在關卡資訊「下面」—— 舊版放在右邊，空榜時「本週還沒有人上榜」
+        // 會擠在「本週還沒有成績」旁邊，看起來像同一句話
+        return '<div class="gweek">' +
+          '<div class="gwstage">' + t('gift.weekStage', { n: n, name: weekStageName(n) }) + '</div>' +
+          '<div class="gwbest">' + (best ? t('gift.weekBest', { t: fmtMs(best) }) : t('gift.weekNone')) + '</div>' +
+          '<div class="gwlist">' + rows + '</div>' +
+        '</div>';
+      }
+
+      function render() {
+        const st = Gift.checkin();
+        const body = $id('giftBody');
+        const title = $id('giftTitle');
+        const sub = $id('giftSub');
+        const claim = $id('giftClaim');
+        const note = $id('giftNote');
+        const go = $id('giftGoWeek');
+        if (title) title.textContent = t('gift.title');
+        if (sub) {
+          sub.textContent = st.done
+            ? t('gift.subDone', { n: st.streak })
+            : t('gift.sub', { n: st.day });
+        }
+        if (body) {
+          body.innerHTML =
+            '<div class="gsec">🎁 ' + t('gift.checkinSec') + '<span class="gtag">' +
+              t('gift.streakTag', { n: st.done ? st.streak : st.day }) + '</span></div>' +
+            '<div class="gdays">' + dayCells() + '</div>' +
+            '<div class="gsec">📋 ' + t('gift.misSec') + '<span class="gtag">' + t('gift.misTag') + '</span></div>' +
+            '<div class="gmis">' + missionRows() + '</div>' +
+            '<div class="gsec">🏆 ' + t('gift.weekSec') + '<span class="gtag">' + Gift.weekKey() + '</span></div>' +
+            weekBlock();
+          body.querySelectorAll('.gmgo').forEach(function (b) {
+            b.addEventListener('click', function () {
+              const i = parseInt(b.getAttribute('data-mi'), 10);
+              const r = Gift.claimMission(i);
+              if (r.ok) {
+                try { toast('💰 +' + r.gold + ' ' + t('gift.goldUnit'), 1.8); } catch (e) {}
+                render(); alertOn();
+              }
+            });
+          });
+        }
+        if (claim) {
+          claim.disabled = !!st.done;
+          claim.textContent = st.done ? t('gift.claimed') : t('gift.claim');
+        }
+        if (go) go.textContent = t('gift.weekGo');
+        if (note) note.textContent = t('gift.note');
+        // 每週榜是非同步的：先畫本機快取，再補線上結果
+        const w = Gift.weekKey();
+        if (!weekCache || weekCache.week !== w) {
+          weekCache = { week: w, list: null };
+          Lb.topWeek(w, 20).then(function (res) {
+            if (!res) return;
+            weekCache = { week: w, list: res.list || [] };
+            const pn = $id('giftPanel');
+            if (pn && pn.classList && pn.classList.contains('on')) render();
+          }, function () {});
+        }
+      }
+
+      function open() {
+        render();
+        const p = $id('giftPanel'), bk = $id('giftBk');
+        if (bk) bk.classList.add('on');
+        if (p) p.classList.add('on');
+        try { AudioSys.sfx('click'); } catch (e) {}
+      }
+      function close() {
+        const p = $id('giftPanel'), bk = $id('giftBk');
+        if (bk) bk.classList.remove('on');
+        if (p) p.classList.remove('on');
+      }
+      function claim() {
+        const r = Gift.claimCheckin();
+        if (!r.ok) { try { toast(t('gift.claimed'), 1.6); } catch (e) {} return; }
+        try {
+          toast(t('gift.claimOk', { g: r.gold, t: r.tickets ? (' · 🔑×' + r.tickets) : '' }), 2.6);
+          if (r.tickets) AudioSys.sfx('win'); else AudioSys.sfx('item');
+        } catch (e) {}
+        render(); alertOn();
+      }
+      function goWeek() {
+        const n = Gift.weekStage();
+        close();
+        try {
+          Solo.sel = Math.max(1, Math.min(SOLO_STAGES, n));
+          if (Solo.renderGrid) Solo.renderGrid();
+          if (Solo.renderGo) Solo.renderGo();
+          Screen.show('solo');
+        } catch (e) {}
+      }
+
+      function wire() {
+        if (bound) return;
+        bound = true;
+        const btn = $id('giftBtn');
+        if (btn) {
+          btn.addEventListener('click', open);
+          // 短標籤（<6 字）即時翻譯層掃不到 → 直接注入，換語言才會跟著換
+          try { btn.setAttribute('title', t('gift.title')); } catch (e) {}
+        }
+        const cl = $id('giftClose');
+        if (cl) cl.addEventListener('click', close);
+        const bk = $id('giftBk');
+        if (bk) bk.addEventListener('click', close);
+        const cm = $id('giftClaim');
+        if (cm) cm.addEventListener('click', claim);
+        const gw = $id('giftGoWeek');
+        if (gw) gw.addEventListener('click', goWeek);
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') close();
+        });
+        setTimeout(alertOn, 600);
+      }
+
+      return { open: open, close: close, render: render, wire: wire, alertOn: alertOn, hasReward: hasReward };
+    })();
+  } catch (__e) {
+    if (typeof __bootFail === 'function') __bootFail('GiftUI', __e);
+    return { open: function () {}, close: function () {}, render: function () {}, wire: function () {},
+             alertOn: function () {}, hasReward: function () { return false; } };
+  }
+})();
+
 function startSolo(stage, bossRush, daily) {
   // v4.3：行為足跡（後台客服核對「卡在哪一關」用）
   try { if (typeof Cloud !== 'undefined' && Cloud.track) Cloud.track(bossRush ? 'boss' : 'play', stage); } catch (e) {}
@@ -9754,6 +10556,8 @@ function buildSoloStageInner(stage, fresh) {
   spawnEggs(Game.bossRush ? 2 : diff.eggs);
   const tSec = soloTimeVal();
   Game.timer = tSec > 0 ? tSec : Infinity;
+  Game.timerMax = Game.timer;          // v4.87：三星判定用（剩餘時間比例）
+  Game.hurtCount = 0;                  // v4.87：這一關被打到幾次（判斷「無傷」）
   Game.bombs = []; Game.flames = []; Game.items = []; Game.particles = [];
   Game.bolts = [];                          // v4.36：小怪的元素彈
   Game.pops = []; Game.edgeFx = 0;          // v4.5：換場清掉上次殘留的受傷反饋
@@ -10789,6 +11593,28 @@ function updateSolo(dt) {
         // v4.1：RPG 過關回報後端（伺服器驗證「只能依序過關」，金幣也由後端算）
         try { if (Game.mode === 'rpg' && typeof Cloud !== 'undefined') Cloud.clearStage(cleared); } catch (e) {}
         try { if (typeof Cloud !== 'undefined' && Cloud.track) Cloud.track('clear', cleared); } catch (e) {}
+        // v4.87：過關結算 —— 三星、每日任務、每週榜（每日挑戰不列入，避免污染正式進度）
+        try {
+          if (!Game.daily) {
+            const hurt = (Game.hurtCount | 0) > 0;
+            const stars = Gift.judgeStars(Game.timer, Game.timerMax, hurt);
+            if (Gift.setStars(cleared, stars)) {
+              toast(t('gift.starGain', { n: cleared, s: '★★★'.slice(0, stars) }), 2.4);
+            }
+            Gift.add('clear', 1);
+            if (!hurt) Gift.add('perfect', 1);
+            // 每週榜：本週指定關卡 → 送最速通關秒數
+            if (cleared === Gift.weekStage() && isFinite(Game.timerMax) && Game.timerMax > 0) {
+              const used = Math.round((Game.timerMax - Game.timer) * 1000);
+              if (used > 1000 && Gift.weekSetBest(used)) {
+                Lb.submitWeek(Gift.weekKey(), settings.playerName || '', used).then(function (res) {
+                  if (res && res.ok && res.rank) toast(t('gift.weekRank', { r: res.rank, t: fmtMs(used) }), 3);
+                }, function () {});
+              }
+            }
+            GiftUI.alertOn();
+          }
+        } catch (e) {}
         // v4.80：每日挑戰 → 到門就結束（不進下一關），結算秒數並送排行榜
         if (Game.daily) { dailyClear(p); return; }
         const maxStage = SOLO_STAGES;   // v4.14：單人與 RPG 都是 32 關
@@ -10874,7 +11700,9 @@ function killPlayer(p, silent, killer) {
   // v4.0：RPG 模式不是「炸一下就死」，改成扣生命／護甲
   if (Game.rpg) { rpgHurt(p, silent, killer); return; }
   if (!p.alive || p.invuln > 0) return;
+  if (p.air > 0) return;                    // v4.87：鴕鳥跳躍中完全免疫
   if (p.dino) { breakDino(p); return; }     // 騎著恐龍 → 恐龍先擋一次
+  if (p === Game.players[0]) Game.hurtCount = (Game.hurtCount | 0) + 1;   // v4.87：三星判定（沒被打到才有 3 星）
   if (p.carry) {   // 手上炸彈掉在原地
     const b = p.carry;
     b.held = false; p.carry = null;
@@ -11272,6 +12100,7 @@ function updateBoss(e, dt) {
       AudioSys.sfx('hurt');
       if (e.hp <= 0) {
         e.dead = true;
+        try { Gift.add('kill', 1); } catch (err2) {}      // v4.87：每日任務「擊殺」
         Game.players.forEach(function (p2) { p2.score += 1000; });
         burst(e.x, e.y, '#c93aff', 40, 300);
         Game.shake = 1;
@@ -11665,7 +12494,9 @@ function updateBattle(dt) {
 
 function killBattlePlayer(p, killer) {
   if (!p.alive || p.invuln > 0) return;
+  if (p.air > 0) return;                    // v4.87：鴕鳥跳躍中完全免疫
   if (p.dino) { breakDino(p); return; }     // 騎著恐龍 → 恐龍先擋一次
+  if (p === Game.players[0]) Game.hurtCount = (Game.hurtCount | 0) + 1;   // v4.87：三星判定
   // v4.72：大逃殺 3 點血 —— 單人／對戰是「一擊就死」，但 8 人搶一個冠軍時
   //   一開場就被一顆炸彈帶走太挫折，而且 AI 互炸會讓一整場 20 秒就結束。
   if (Game.mode === 'br') {
@@ -12275,15 +13106,17 @@ function brBossDown(e, killer) {
     : ((e.lastHitBy && e.lastHitBy.alive) ? e.lastHitBy : null);
   if (k) {
     const up = !!k.dino;
-    rideDino(k, up);
-    k.mountT = 1.8;                                    // 剛上龍的表演時間（這段時間不會被秒炸下來）
+    // v4.87：第一次打倒 BOSS → 鴕鳥神獸（高速＋跳躍）；已經有坐騎 → 進化紅龍
+    if (up) rideDino(k, true);
+    else rideOstrich(k);
+    k.mountT = 1.8;                                    // 剛上坐騎的表演時間（這段時間不會被秒炸下來）
     k.invuln = Math.max(k.invuln || 0, 1.2);
-    burst(k.x, k.y, up ? '#ff5e7e' : '#7ee08a', 34, 260);
+    burst(k.x, k.y, up ? '#ff5e7e' : '#c9a7f2', 34, 260);
     burst(k.x, k.y, '#fff', 12, 170);
-    pushPop(k.x, k.y - Game.T * .55, (up ? '🐲 ' : '🦖 ') + t(up ? 'br.mountRed' : 'br.mountPop'),
-      { color: up ? '#ff9fb4' : '#a6f5b0', size: 1.15, life: 1.6 });
+    pushPop(k.x, k.y - Game.T * .55, (up ? '🐲 ' : '🪶 ') + t(up ? 'br.mountRed' : 'br.mountOstrich'),
+      { color: up ? '#ff9fb4' : '#d9c9ff', size: 1.15, life: 1.6 });
     if (isMyPlayer(k)) {
-      brTip('🦖', t(up ? 'br.bossGetRed' : 'br.bossGet', { n: e.brStage || 1 }), 'good', 3.4);
+      brTip(up ? '🐲' : '🪶', t(up ? 'br.bossGetRed' : 'br.bossGetOstrich', { n: e.brStage || 1 }), 'good', 3.4);
     } else if ((Game.brTeam | 0) >= 2 && k.team >= 0 && k.team === me.team) {
       brTip('🦖', t('br.bossMate'), 'good', 2.6);
     } else {
@@ -13034,6 +13867,8 @@ function humanMoveDirs(p, dirs, dt) {
 function controlHuman(p, dt) {
   const T = Game.T;
   tickSkull(p, dt);
+  // v4.87：鴕鳥滯空中 —— 位置由 jumpTick 插值，不接受走位／放彈（避免半空中被牆吸住）
+  if (p.air > 0) { p.moving = false; return; }
   // v1.9：頭暈中 —— 完全停手（不能走、不能放彈），時間到自動恢復
   if (p.dizzy > 0) { p.dizzy -= dt; p.moving = false; return; }
   let dirs = p.scheme.dirs();
@@ -13066,8 +13901,11 @@ function controlHuman(p, dt) {
   }
   // E 鍵（手把 X／手機 🧨）：遙控引爆
   if (p.scheme.detonate && p.scheme.detonate()) detonateRemote(p);
-  // F 鍵（手把 Y／手機 🔥）：騎恐龍吐火
-  if (p.scheme.fire && p.scheme.fire()) fireBreath(p);
+  // F 鍵（手把 Y／手機 🔥）：騎恐龍吐火；騎鴕鳥時同一顆鍵變成跳躍
+  if (p.scheme.fire && p.scheme.fire()) {
+    if (p.ostrich) mountJump(p);
+    else fireBreath(p);
+  }
   // 撿道具
   for (let i = Game.items.length - 1; i >= 0; i--) {
     const it = Game.items[i];
@@ -13847,6 +14685,7 @@ function controlAI(p, dt) {
   const T = Game.T;
   const lv = BR_AI.on ? BR_AI.cfg(aiLevelCfg(), Game.brZone ? Game.brZone.phase : 0) : aiLevelCfg();
   tickSkull(p, dt);
+  if (p.air > 0) { p.moving = false; return; }      // v4.87：鴕鳥滯空中不思考
   if (p.lobCd > 0) p.lobCd -= dt;
   if (p.brBombCd > 0) p.brBombCd -= dt;
   // v1.9：頭暈中 —— AI 也一樣停手
@@ -14010,8 +14849,10 @@ function controlAI(p, dt) {
       if (foe && fd < T * 3.6) {
         const dx = foe.x - p.x, dy = foe.y - p.y;
         p.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-        fireBreath(p);
-        p.fireCd = DINO_FIRE_CD * (lv.dinoFireCd || 2.5);
+        // v4.87：電腦騎鴕鳥 → 朝對手跳過去（落地震波），跳不過去就當作沒這回事
+        if (p.ostrich) mountJump(p);
+        else fireBreath(p);
+        p.fireCd = (p.ostrich ? OSTRICH_JUMP_CD : DINO_FIRE_CD) * (lv.dinoFireCd || 2.5);
       }
     }
   }
@@ -14228,6 +15069,7 @@ function updateWorld(dt) {
     if (p.cheerT > 0) p.cheerT = Math.max(0, p.cheerT - dt); // v1.7 獲勝歡呼
     if (p.fireCd > 0) p.fireCd = Math.max(0, p.fireCd - dt);
     if (p.dino) p.dinoT += dt;
+    if (p.air > 0) jumpTick(p, dt);            // v4.87：鴕鳥跳躍插值（落地會觸發震波）
   });
   updateBolts(dt);
   // 火焰燒到恐龍蛋 → 蛋被炸掉（道具則不會消失，只會被震一下）
@@ -14765,6 +15607,8 @@ function updateHud() {
   if (fireBtn) {
     const me = Game.players.filter(function (q) { return !q.ai; })[0] || Game.players[0];
     fireBtn.classList.toggle('hide', !(me && me.dino));
+    // v4.87：同一顆鍵 —— 騎鴕鳥是跳躍、騎龍是吐火，標題跟著換
+    try { fireBtn.setAttribute('title', (me && me.ostrich) ? t('mount.jump') : t('mount.jumpFire')); } catch (e) {}
   }
   // v4.11：遙控引爆鍵只在拿到遙控器（計時炸彈）時出現
   const detBtn = document.querySelector('#touchUI .tdet');
@@ -17752,11 +18596,29 @@ function render() {
   ctx.fillStyle = lg;
   ctx.fillRect(0, 0, fw, fh);
   drawAmbient(T, 0);
+  // v4.87：鴕鳥落地震波 —— 往外擴散的雙層橢圓環（貼地，看得出是「震」不是「燒」）
+  if (Game.rings && Game.rings.length) {
+    for (let i = Game.rings.length - 1; i >= 0; i--) {
+      const rg = Game.rings[i];
+      const age = (Game.gameT || 0) - rg.born;
+      if (age < 0 || age > rg.dur) { Game.rings.splice(i, 1); continue; }
+      const k = age / rg.dur;
+      ctx.save();
+      ctx.globalAlpha = (1 - k) * .88;
+      ctx.strokeStyle = rg.color;
+      ctx.lineWidth = Math.max(2, T * .10 * (1 - k * .55));
+      ctx.beginPath(); ctx.ellipse(rg.x, rg.y, Math.max(2, rg.r * k), Math.max(1, rg.r * k * .44), 0, 0, 6.283); ctx.stroke();
+      ctx.globalAlpha = (1 - k) * .42;
+      ctx.beginPath(); ctx.ellipse(rg.x, rg.y, Math.max(2, rg.r * k * .70), Math.max(1, rg.r * k * .30), 0, 0, 6.283); ctx.stroke();
+      ctx.restore();
+    }
+  }
   // 恐龍蛋：藏在軟磚裡，打出來才看得到；會左右搖晃、蛋緣一直閃亮光
   if (Game.eggs) Game.eggs.forEach(function (eg) {
     const px = eg.x * T + T / 2;
     const py = eg.y * T + T / 2 + Math.sin(eg.bob) * 1.8;
-    const img = (typeof EggArt !== 'undefined') ? EggArt.get() : null;
+    const isOstrichEgg = eg.kind === 'ostrich';
+    const img = (typeof EggArt !== 'undefined') ? EggArt.get(eg.kind) : null;
     const sway = Math.sin(eg.bob * 1.35) * .105;        // 左右搖晃 ±6°
     const bk = eg.born > 0 ? clamp(1 - eg.born / .5, 0, 1) : 1;
     const sc = .55 + .45 * bk + Math.sin(bk * Math.PI) * .10;
@@ -17766,8 +18628,14 @@ function render() {
     ctx.translate(px, py);
     // 珍貴感：外圈暖金／翡翠呼吸光暈
     const gr = ctx.createRadialGradient(0, 0, T * .14, 0, 0, T * .64);
-    gr.addColorStop(0, 'rgba(255,238,168,' + (.26 + .16 * pw).toFixed(3) + ')');
-    gr.addColorStop(.55, 'rgba(150,240,182,' + (.14 + .09 * pw).toFixed(3) + ')');
+    if (isOstrichEgg) {
+      // 紫蛋：淡紫光暈（一眼分辨「這顆孵的是鴕鳥」）
+      gr.addColorStop(0, 'rgba(214,190,255,' + (.30 + .18 * pw).toFixed(3) + ')');
+      gr.addColorStop(.55, 'rgba(160,140,255,' + (.16 + .10 * pw).toFixed(3) + ')');
+    } else {
+      gr.addColorStop(0, 'rgba(255,238,168,' + (.26 + .16 * pw).toFixed(3) + ')');
+      gr.addColorStop(.55, 'rgba(150,240,182,' + (.14 + .09 * pw).toFixed(3) + ')');
+    }
     gr.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = gr;
     ctx.beginPath(); ctx.arc(0, 0, T * .64, 0, 6.283); ctx.fill();
@@ -17781,7 +18649,7 @@ function render() {
       ctx.beginPath(); ctx.ellipse(0, 0, T * .255, T * .325, 0, 0, 6.283); ctx.fill();
       ctx.fillStyle = 'rgba(120,90,60,.14)';
       ctx.beginPath(); ctx.ellipse(T * .05, T * .06, T * .20, T * .27, 0, 0, 6.283); ctx.fill();
-      ctx.fillStyle = '#7fc98f';
+      ctx.fillStyle = isOstrichEgg ? '#8d6bd8' : '#7fc98f';
       [[-.10, -.09, .052], [.09, .01, .042], [.01, .15, .046], [-.12, .10, .036]].forEach(function (d) {
         ctx.beginPath(); ctx.ellipse(d[0] * T, d[1] * T, d[2] * T, d[2] * T * .82, .4, 0, 6.283); ctx.fill();
       });
@@ -17793,7 +18661,7 @@ function render() {
     ctx.strokeStyle = 'rgba(255,252,214,.90)';
     ctx.lineWidth = Math.max(1.6, T * .042);
     ctx.beginPath(); ctx.ellipse(0, 0, T * .338, T * .418, 0, a0, a0 + 1.15); ctx.stroke();
-    ctx.strokeStyle = 'rgba(176,255,206,.52)';
+    ctx.strokeStyle = isOstrichEgg ? 'rgba(206,182,255,.58)' : 'rgba(176,255,206,.52)';
     ctx.lineWidth = Math.max(1.1, T * .028);
     ctx.beginPath(); ctx.ellipse(0, 0, T * .338, T * .418, 0, a0 + 2.55, a0 + 3.45); ctx.stroke();
     const spx = Math.cos(a0 + .55) * T * .338, spy = Math.sin(a0 + .55) * T * .418;
@@ -19474,7 +20342,8 @@ const ItemArt = (function () {
   }
 })();
 const EGG_ART = {
-  egg: { u: "spr/egg-art-egg.webp", w: 364, h: 438 }
+  egg: { u: "spr/egg-art-egg.webp", w: 364, h: 438 },
+  purple: { u: "spr/egg-art-purple.webp", w: 160, h: 160 }   // v4.87：鴕鳥蛋
 };
 
 //   中高飽和＋拉開明暗（自體陰影），矮胖（寬 > 高）→ 場上寬 1.14 格、高不超過 1.26 格
@@ -19522,21 +20391,29 @@ const HideArt = (function () {
 const EggArt = (function () {
   try {
     return (function () {
-      let img = null, ready = false;
+      const imgs = {}, ready = {};
+      // v4.87：兩種蛋各一張圖（綠斑 → 恐龍、紫斑 → 鴕鳥）
+      function keyOf(kind) { return kind === 'ostrich' ? 'purple' : 'egg'; }
       function load() {
         if (typeof Image === 'undefined' || typeof EGG_ART === 'undefined') return;
-        img = new Image();
-        img.onload = function () { ready = true; };
-        img.onerror = function () {};
-        try { img.src = EGG_ART.egg.u; } catch (e) {}
+        Object.keys(EGG_ART).forEach(function (k) {
+          const im = new Image();
+          im.onload = function () { ready[k] = true; };
+          im.onerror = function () { ready[k] = false; };
+          imgs[k] = im;
+          try { im.src = EGG_ART[k].u; } catch (e) {}
+        });
       }
-      function get() { return (ready && img && img.naturalWidth) ? img : null; }
-      function readyCount() { return ready ? 1 : 0; }
-      return { load: load, get: get, readyCount: readyCount };
+      function get(kind) {
+        const k = keyOf(kind);
+        return (ready[k] && imgs[k] && imgs[k].naturalWidth) ? imgs[k] : null;
+      }
+      function readyCount() { return Object.keys(ready).filter(function (k) { return ready[k]; }).length; }
+      return { load: load, get: get, readyCount: readyCount, keyOf: keyOf };
     })();
   } catch (__e) {
     if (typeof __bootFail === 'function') __bootFail('EggArt', __e);
-    return { load: function () {}, get: function () { return null; }, readyCount: function () { return 0; } };
+    return { load: function () {}, get: function () { return null; }, readyCount: function () { return 0; }, keyOf: function () { return 'egg'; } };
   }
 })();
 // 每個道具的代表色（外框／光暈用）
@@ -20540,6 +21417,7 @@ function drawMountSprite(g, key, x, footY, H, side, a) {
 
 // 騎乘中的小龍：用使用者提供的小龍插畫（頭／翅膀／腿都會動）
 function drawDino(p, T) {
+  if (p.ostrich) return drawOstrich(p, T);   // v4.87：紫蛋孵的是鴕鳥，不是換色的龍
   const x = p.x, y = p.y;
   const fx = DIRS[p.facing];
   const side = fx.x !== 0 ? fx.x : 1;
@@ -20598,6 +21476,64 @@ function drawDino(p, T) {
   else ctx.fillRect(x - tw / 2 - 6, y - T * 1.72, tw + 12, T * .36);
   ctx.fillStyle = cd > 0 ? '#ffd9a0' : '#ffe08a';
   ctx.fillText(label, x, y - T * 1.54);
+  ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+}
+
+// v4.87：鴕鳥神獸。高瘦長腿、跳躍時整隻離地，影子跟著縮小變淡。
+function drawOstrich(p, T) {
+  const x = p.x, y = p.y;
+  const fx = DIRS[p.facing];
+  const side = fx.x !== 0 ? fx.x : 1;
+  const lift = p.jumpLift || 0;
+  const DH = T * 1.86;                       // 鴕鳥比龍高一大截（長脖子）
+  const footY = y + T * .52 - lift;
+  const bob = p.moving ? Math.abs(Math.sin(p.walkT * 15)) * .6 : Math.sin((p.dinoT || 0) * 2.6) * .5;
+  const k = clamp(1 - lift / (T * 1.0), 0, 1);
+  softShadow(x, y + T * .54, T * .40 * (.55 + .45 * k), T * .12 * (.55 + .45 * k), .30 * (.30 + .70 * k));
+  const drew = drawMountSprite(ctx, 'ostrich', x, footY - bob, DH, side, {
+    walk: (p.walkT || 0) * 15, moving: !!p.moving, amp: 1.3, idle: p.dinoT || 0
+  });
+  if (!drew) {
+    // 圖還沒載入 → 用簡化剪影代替，不會開天窗
+    ctx.fillStyle = '#f3e8d2';
+    ctx.beginPath(); ctx.ellipse(x, footY - DH * .40, T * .34, T * .26, 0, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = '#e8a15c'; ctx.lineWidth = T * .07; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x + side * T * .16, footY - DH * .40);
+    ctx.quadraticCurveTo(x + side * T * .26, footY - DH * .62, x + side * T * .20, footY - DH * .74);
+    ctx.stroke();
+    ctx.fillStyle = '#c9a7f2';
+    ctx.beginPath(); ctx.arc(x + side * T * .20, footY - DH * .76, T * .12, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = '#e8a15c'; ctx.lineWidth = T * .055;
+    [-.10, .10].forEach(function (o) {
+      ctx.beginPath(); ctx.moveTo(x + o * T, footY - DH * .18); ctx.lineTo(x + o * T, footY - T * .04); ctx.stroke();
+    });
+  }
+  // 跳躍氣流：起跳／落地的白色弧線（只在離地時出現）
+  if (lift > 2) {
+    ctx.save();
+    ctx.globalAlpha = clamp(lift / (T * .9), 0, 1) * .55;
+    ctx.strokeStyle = '#efe4ff';
+    ctx.lineWidth = Math.max(1.5, T * .045);
+    for (let i = 0; i < 3; i++) {
+      const yy = footY + T * .34 + i * T * .13;
+      ctx.beginPath();
+      ctx.moveTo(x - side * T * (.16 + i * .05), yy);
+      ctx.lineTo(x - side * T * (.46 + i * .07), yy + T * .05);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  if (p.noLabel) return;
+  const cd = p.fireCd || 0;
+  const label = cd > 0 ? t('mount.cd', { n: cd.toFixed(1) }) : t('mount.jump');
+  ctx.font = '900 ' + Math.max(9, Math.round(T * .23)) + 'px "Microsoft JhengHei", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const tw = ctx.measureText(label).width;
+  ctx.fillStyle = cd > 0 ? 'rgba(28,20,44,.76)' : 'rgba(78,44,120,.84)';
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - tw / 2 - 6, y - T * 1.82, tw + 12, T * .36, T * .13); ctx.fill(); }
+  else ctx.fillRect(x - tw / 2 - 6, y - T * 1.82, tw + 12, T * .36);
+  ctx.fillStyle = cd > 0 ? '#d9c9ff' : '#f0e6ff';
+  ctx.fillText(label, x, y - T * 1.64);
   ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
 }
 
@@ -21416,8 +22352,9 @@ function drawPlayer(p, T) {
   if (p.dino) drawDino(p, T);
   // 騎乘時坐到小龍背上的鞍座（往頭的反方向偏一點，兩邊都看得到）
   const rideSide = (DIRS[p.facing] && DIRS[p.facing].x) || 1;
-  const x = p.x - (p.dino ? rideSide * T * .22 : 0);
-  const y = p.y - (p.carry ? T * .2 : 0) - (p.dino ? T * .50 : 0);
+  const rideX = (p.ostrich ? .16 : .22);
+  const x = p.x - (p.dino ? rideSide * T * rideX : 0);
+  const y = p.y - (p.carry ? T * .2 : 0) - (p.dino ? T * .50 : 0) - (p.jumpLift || 0);
   // v1.7：獲勝（或歡呼中）會開心地一直跳
   const jumpY = p.cheerT > 0 ? Math.abs(Math.sin(Game.gameT * 9)) * T * .30 : 0;
   const blink = p.invuln > 0 && Math.floor(Game.gameT * 10) % 2 === 0;
@@ -21892,8 +22829,33 @@ function touchLayoutVars() {
 //   bomb  ：黑亮圓球炸彈，引線已點燃（armed=true）
 //   remote：同一顆炸彈，但插著青色 LED 遙控面板、引線只剩暗紅餘燼（armed=false）
 //   flame ：四層水滴火舌（drawFlame 吃「格子座標」，所以餵一個假的 flame 物件）
-const TICON_BASE = { bomb: 92, remote: 62, flame: 62 };
+const TICON_BASE = { bomb: 92, remote: 62, flame: 62, claw: 62 };
 let iconT = 0;                                  // 圖示自己的時鐘（選單裡也會動）
+// v4.87：鴕鳥的招式鍵圖示 —— 三根奶油色利爪（跟吐火鍵同一個位置，換圖不換位）
+function drawClawOn(g, S) {
+  const cx = S / 2, cy = S / 2, sc = S / 62;
+  g.save();
+  g.lineCap = 'round';
+  // 腳掌墊
+  g.fillStyle = '#f3dcae';
+  g.strokeStyle = '#432a12';
+  g.lineWidth = 2.6 * sc;
+  g.beginPath(); g.ellipse(cx, cy + 13 * sc, 12.5 * sc, 8.5 * sc, 0, 0, 6.283); g.fill(); g.stroke();
+  // 三根爪子：先畫深色粗線當描邊，再疊一條奶油色細線 → 小尺寸也讀得出「爪」
+  const claws = [[-1, -1.05], [0, -1.30], [1, -0.95]];
+  claws.forEach(function (c) {
+    const mx = cx + c[0] * 15 * sc, my = cy - 3 * sc;
+    const tx = cx + c[0] * 12 * sc, ty = cy + c[1] * 19 * sc;
+    g.strokeStyle = '#432a12'; g.lineWidth = 8.5 * sc;
+    g.beginPath(); g.moveTo(cx + c[0] * 4 * sc, cy + 7 * sc); g.quadraticCurveTo(mx, my, tx, ty); g.stroke();
+    g.strokeStyle = '#fff3d4'; g.lineWidth = 5.0 * sc;
+    g.beginPath(); g.moveTo(cx + c[0] * 4 * sc, cy + 7 * sc); g.quadraticCurveTo(mx, my, tx, ty); g.stroke();
+  });
+  // 掌心的肉墊
+  g.fillStyle = '#e8b9a0';
+  g.beginPath(); g.ellipse(cx, cy + 12 * sc, 6 * sc, 4.4 * sc, 0, 0, 6.283); g.fill();
+  g.restore();
+}
 function paintTouchIcons(dt) {
   const saved = Game.gameT;
   try {
@@ -21901,10 +22863,12 @@ function paintTouchIcons(dt) {
     Game.gameT = iconT;                         // 火苗／LED 的抖動都看這個值
     const sc = (settings.tpad && parseFloat(settings.tpad.size)) || 1;
     const dpr = Math.min(3, (window.devicePixelRatio || 1));
+    const meNow = (Game.players.filter(function (q) { return !q.ai; })[0]) || Game.players[0];
     const list = [
       { el: document.querySelector('#touchUI .tact canvas'), kind: 'bomb' },
       { el: document.querySelector('#touchUI .tdet canvas'), kind: 'remote' },
-      { el: document.querySelector('#touchUI .tfire canvas'), kind: 'flame' }
+      // v4.87：同一個位置 —— 騎綠龍／紅龍是火，騎鴕鳥是爪子
+      { el: document.querySelector('#touchUI .tfire canvas'), kind: (meNow && meNow.ostrich) ? 'claw' : 'flame' }
     ];
     list.forEach(function (it) {
       const cv = it.el;
@@ -21938,6 +22902,23 @@ function paintTouchIcons(dt) {
             g.strokeStyle = 'rgba(255,170,80,.9)'; g.lineWidth = Math.max(2, cssW * 0.06);
             g.beginPath(); g.arc(cssW / 2, cssW / 2, cssW * 0.44, 0, 6.283); g.stroke();
           }
+        }
+        return;
+      }
+      if (it.kind === 'claw') {
+        drawClawOn(g, cssW);
+        const cd = (meNow && meNow.fireCd) || 0;
+        if (cd > 0) {
+          g.globalAlpha = .55; g.fillStyle = '#180f26';
+          g.beginPath(); g.arc(cssW / 2, cssW / 2, cssW * 0.46, 0, 6.283); g.fill();
+          g.globalAlpha = 1; g.fillStyle = '#e7d6ff';
+          g.font = '900 ' + Math.round(cssW * 0.42) + 'px system-ui, "Microsoft JhengHei", sans-serif';
+          g.textAlign = 'center'; g.textBaseline = 'middle';
+          g.fillText(String(Math.ceil(cd)), cssW / 2, cssW / 2 + 1);
+          g.textAlign = 'start'; g.textBaseline = 'alphabetic';
+        } else {
+          g.strokeStyle = 'rgba(196,164,255,.92)'; g.lineWidth = Math.max(2, cssW * 0.06);
+          g.beginPath(); g.arc(cssW / 2, cssW / 2, cssW * 0.44, 0, 6.283); g.stroke();
         }
         return;
       }
@@ -22518,7 +23499,18 @@ const HELP_RIDES = [
     n: { tw: '紅龍（騎乘中再吃第 2 顆蛋）', cn: '红龙（骑乘中再吃第 2 颗蛋）', en: 'Red Dragon (2nd egg while riding)' },
     d: { tw: '體型更大、一身紅鱗；吐火升級成<b>上下左右四個方向各 2 格</b>。', cn: '体型更大、一身红鳞；吐火升级成<b>上下左右四个方向各 2 格</b>。', en: 'Bigger, all crimson scales; its breath hits <b>all four directions, 2 tiles each</b>.' },
     u: { tw: '一樣只能擋一次傷害，被炸到龍就消失。', cn: '一样只能挡一次伤害，被炸到龙就消失。', en: 'Still blocks only one hit — a blast and the dragon is gone.' },
-    k: { tw: '被怪包圍時按一下就清場，是闖關神技。', cn: '被怪包围时按一下就清场，是闯关神技。', en: 'Surrounded? One press clears the room. A run-saving move.' } }
+    k: { tw: '被怪包圍時按一下就清場，是闖關神技。', cn: '被怪包围时按一下就清场，是闯关神技。', en: 'Surrounded? One press clears the room. A run-saving move.' } },
+  /* v4.87：鴕鳥神獸 —— 紫色蛋與恐龍蛋一起隨機掉，跳躍型坐騎 */
+  { id: 'purple', ico: '🟣', sp: 'item:eggpurple',
+    n: { tw: '紫色蛋（鴕鳥神獸）', cn: '紫色蛋（鸵鸟神兽）', en: 'Purple Egg (Wind Ostrich)' },
+    d: { tw: '跟恐龍蛋<b>一起隨機掉在軟磚裡</b>（紫蛋約佔三分之一），打掉磚頭冒出來，<b>走上去就騎上鴕鳥神獸</b>。', cn: '跟恐龙蛋<b>一起随机掉在软砖里</b>（紫蛋约占三分之一），打掉砖头冒出来，<b>走上去就骑上鸵鸟神兽</b>。', en: 'Drops from soft blocks <b>alongside dino eggs</b> (about one in three); blast the block, then <b>walk on it to ride the ostrich</b>.' },
+    u: { tw: '移動速度 <b>1.45 倍</b>；原本的 🔥 鍵換成<b>爪子鍵</b>，按下去是跳躍。', cn: '移动速度 <b>1.45 倍</b>；原本的 🔥 键换成<b>爪子键</b>，按下去是跳跃。', en: '<b>1.45×</b> movement speed; the 🔥 button becomes a <b>claw</b> that makes the ostrich leap.' },
+    k: { tw: '⚠️ 落地震波<b>只打怪、不破壞任何牆</b>；騎乘中一樣只能擋一次傷害。', cn: '⚠️ 落地震波<b>只打怪、不破坏任何墙</b>；骑乘中一样只能挡一次伤害。', en: '⚠️ The landing shock <b>only hurts foes — never breaks walls</b>. Still blocks one hit for you.' } },
+  { id: 'ostrich', ico: '🪶', sp: 'ride:ostrich',
+    n: { tw: '鴕鳥神獸（跳躍型坐騎）', cn: '鸵鸟神兽（跳跃型坐骑）', en: 'Wind Ostrich (leaper)' },
+    d: { tw: '按 <b>F</b>／🔥（手機是<b>爪子鍵</b>）<b>往前跳 2 格</b>：中間那格是牆也跳得過去，但<b>連續兩層牆跳不過</b>，落點必須是空地。', cn: '按 <b>F</b>／🔥（手机是<b>爪子键</b>）<b>往前跳 2 格</b>：中间那格是墙也跳得过去，但<b>连续两层墙跳不过</b>，落点必须是空地。', en: 'Press <b>F</b> / 🔥 (a <b>claw</b> on mobile) to <b>leap 2 tiles</b>: a wall in between is fine, <b>two walls in a row are not</b>, and the landing tile must be clear.' },
+    u: { tw: '整段滯空<b>完全免疫</b>炸彈與怪物；落地<b>半徑 1 格震波</b>造成 2 點傷害（大逃殺／對戰也會打傷敵人，隊友除外）。', cn: '整段滞空<b>完全免疫</b>炸弹与怪物；落地<b>半径 1 格震波</b>造成 2 点伤害（大逃杀／对战也会打伤敌人，队友除外）。', en: '<b>Fully immune</b> while airborne; on landing a <b>1-tile shockwave</b> deals 2 damage (also hits enemy players in Battle Royale / versus, never teammates).' },
+    k: { tw: '冷卻 <b>1.1 秒</b>；跳躍距離固定，被炸彈或牆卡住時按了沒反應（會有提示音）。', cn: '冷却 <b>1.1 秒</b>；跳跃距离固定，被炸弹或墙卡住时按了没反应（会有提示音）。', en: 'Cooldown <b>1.1s</b>; the distance is fixed — blocked by a bomb or wall it simply won\'t fire (you\'ll hear a nope sound).' } }
 ];
 const HELP_RIDE_TABLE = {
   head: { tw: '項目', cn: '项目', en: '' },
@@ -22725,7 +23717,7 @@ const Help = (function () {
       if (typeof Game !== 'undefined') Game.T = 62;      // 讓美術尺寸跟 PC 上一致
       if (kind === 'item') drawHelpItem(g, w, h, id);
       else if (kind === 'foe') drawHelpFoe(g, w, h, id);
-      else if (kind === 'ride') drawHelpRide(g, w, h, id === 'red');
+      else if (kind === 'ride') drawHelpRide(g, w, h, id);
     } catch (e) {}
     ctx = oldCtx;
     if (typeof Game !== 'undefined') Game.T = oldT;
@@ -22742,6 +23734,18 @@ const Help = (function () {
   }
   function drawHelpItem(g, w, h, type) {
     const T = 62, cx = w / 2, cy = h / 2;
+    // v4.87：蛋（綠斑＝恐龍、紫斑＝鴕鳥）直接畫 EggArt 的真圖，不要退回替代圓
+    if (type === 'egg' || type === 'eggpurple') {
+      const eimg = (typeof EggArt !== 'undefined')
+        ? EggArt.get(type === 'eggpurple' ? 'ostrich' : 'dino') : null;
+      if (eimg) {
+        const s2 = Math.min(w, h) * .94;
+        const ar = (eimg.naturalWidth || 1) / (eimg.naturalHeight || 1);
+        const dh = s2, dw = Math.min(s2, s2 * ar);
+        g.drawImage(eimg, cx - dw / 2, cy - dh / 2, dw, dh);
+        return;
+      }
+    }
     const img = (typeof ItemArt !== 'undefined') ? ItemArt.get(type) : null;
     if (img) {
       const s2 = Math.min(w, h) * .90;
@@ -22798,10 +23802,11 @@ const Help = (function () {
     };
     drawEnemyArt(e, e.x, e.y, false, 0);
   }
-  function drawHelpRide(g, w, h, red) {
+  function drawHelpRide(g, w, h, id) {
     const p = {
-      x: w / 2, y: h * .68, facing: 'right', dino: true, redDragon: !!red, noLabel: true,
-      dinoT: 1.2, walkT: .3, moving: false, fireCd: 0, chIdx: 0
+      x: w / 2, y: h * .68, facing: 'right', dino: true,
+      redDragon: id === 'red', ostrich: id === 'ostrich',
+      noLabel: true, dinoT: 1.2, walkT: .3, moving: false, fireCd: 0, chIdx: 0, air: 0, jumpLift: 0
     };
     drawDino(p, 62);
   }
@@ -22894,11 +23899,14 @@ const Help = (function () {
   }
   function buildRides() {
     let h = '<div class="hlead">坐騎是這款遊戲最大的特色：<b>恐龍蛋孵化後騎上龍</b>，不只幫你擋傷害，還能<b>吐火</b>當招式用。</div>';
+    h += '<div class="hlead">' + t('help.ostrich.lead') + '</div>';
     h += '<div class="hride">';
     HELP_RIDES.forEach(function (r) {
       h += '<div class="hcard">';
       if (r.id === 'egg') {
         h += '<canvas class="hico" data-sp="item:egg" data-size="76"></canvas>';
+      } else if (r.id === 'purple') {
+        h += '<canvas class="hico" data-sp="item:eggpurple" data-size="76"></canvas>';
       } else {
         h += '<canvas class="hico" data-sp="' + r.sp + '" data-w="130" data-h="164"></canvas>';
       }
@@ -22922,6 +23930,14 @@ const Help = (function () {
     h += '<div class="hd">3️⃣ 冷卻 <b>3 秒</b>（龍頭上方會顯示倒數），冷卻中按了沒反應，等數字消失再按。</div>';
     h += '<div class="hd">4️⃣ 火焰會<b>炸掉恐龍蛋、點燃別的炸彈</b>，但<b>不會傷到自己</b> —— 可以放心邊跑邊噴。</div>';
     h += '<div class="hd">5️⃣ 龍<b>只能擋一次傷害</b>：被炸到龍就消失（有 1.8 秒無敵），想再騎要再吃一顆蛋。</div>';
+    h += '</div></div>';
+    // v4.87：鴕鳥神獸（紫蛋）的招式
+    h += '<div class="hsub">🪶 鴕鳥神獸：跳躍跨牆</div>';
+    h += '<div class="hcard wide"><div class="htx">';
+    h += '<div class="hd">' + t('help.ostrich.s1') + '</div>';
+    h += '<div class="hd">' + t('help.ostrich.s2') + '</div>';
+    h += '<div class="hd">' + t('help.ostrich.s3') + '</div>';
+    h += '<div class="hd">' + t('help.ostrich.s4') + '</div>';
     h += '</div></div>';
     return h;
   }
@@ -25133,7 +26149,12 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.86', date: '2026-11-04', now: true, items: [
+  { v: '4.87', date: '2026-11-04', now: true, items: [
+    '🪶 新坐騎<b>鴕鳥神獸</b>：紫色蛋跟恐龍蛋一起隨機掉，跑速 1.45 倍；原本的 🔥 鍵變成<b>爪子鍵</b>，按下去往前跳 2 格（中間一格是牆也跳得過去，兩層牆就不行）',
+    '💥 跳躍中<b>完全免疫</b>，落地<b>半徑 1 格震波</b>打怪 —— 但<b>不會破壞任何一堵牆</b>；單人、RPG、對戰都有，大逃殺打倒 BOSS 直接送你一隻',
+    '🎁 首頁左下角新增 <b>🎁 每日好禮</b>：7 天簽到（第 3／5 天送票券、第 7 天雙票券＋大金幣）＋<b>每天 3 個任務</b>，任務用日期抽籤，全球同一天同一組',
+    '⭐ 關卡<b>三星</b>：通關 ★、剩餘時間夠 ★★、沒被打到 ★★★（選關畫面直接看得到）＋ <b>每週榜</b>：每週換一關比秒數，成績上傳後看本週排名；進度全部跟著雲端存檔走' ] },
+  { v: '4.86', date: '2026-11-04', now: false, items: [
     '🐾 遊戲中多一顆 🐾 按鈕：打開就是隨從清單，想叫誰出來、想收回誰，都由你決定（只列已經雇用的）',
     '🔍 畫面放大上限 210% → <b>300%</b>，大地圖看細節、手機想看清楚都更好用',
     '🤏 手機雙指縮放變快：同樣的手指幅度，縮放變化約 1.75 倍，不用再放開重捏好幾次',
@@ -27287,7 +28308,9 @@ function drawHurtEdge() {
 function rpgHurt(p, silent, killer) {
   if (!Game.rpg) return;                             // 只有 RPG 模式走這條路
   if (!p || !p.alive || p.invuln > 0) return;
+  if (p.air > 0) return;                             // v4.87：鴕鳥跳躍中完全免疫
   if (p.dino) { breakDino(p); return; }              // 坐騎先擋一次
+  if (p === Game.players[0]) Game.hurtCount = (Game.hurtCount | 0) + 1;   // v4.87：三星判定
   let dmg = (killer && killer.type === 'boss') ? 2 : 1;
   let left = dmg;
   const hp0 = p.hpCur, ar0 = p.armorCur;             // v4.5：記錄扣血前的量，才知道實際掉多少
@@ -28712,7 +29735,7 @@ function rpgAdjust(k, d) {
     }
 
     function snapshot() {
-      const st = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {} };
+      const st = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {}, gift: null };
       try { st.stage = num(Solo.unlocked, 1, 1, SOLO_STAGES); } catch (e) {}
       try {
         const s = Shop.state ? Shop.state() : null;
@@ -28724,6 +29747,7 @@ function rpgAdjust(k, d) {
       } catch (e) {}
       try { st.tut = (Tut.state ? Tut.state() : null) || {}; } catch (e) {}
       try { st.daily = Daily.all() || {}; } catch (e) {}
+      try { st.gift = (typeof Gift !== 'undefined' && Gift.state) ? Gift.state() : null; } catch (e) {}
       return st;
     }
 
@@ -28734,10 +29758,51 @@ function rpgAdjust(k, d) {
       return num(s.stage, 1, 1, SOLO_STAGES) <= 1 && gold <= 0 && tk <= 0 && pets === 0;
     }
 
+    /* v4.87：簽到／任務／三星／每週最佳的另一邊合併
+       —— 這幾個資料「只會往前」或「以日期較新者為準」，不能整包蓋掉：
+          · 連續天數／最後簽到日：日期大的贏（同一天比天數）
+          · 每日任務：日期大的贏（任務是當天抽的，跨天就沒意義）
+          · 三星：逐關取大
+          · 每週最佳：同一週比秒數小，不同週取較新的那一週
+       ★ 任務進度「不累加」—— 兩台裝置各自打，取進度較多的那一份，避免靠換裝置刷獎勵。 */
+    function mergeGift(a, b) {
+      const A = (a && typeof a === 'object') ? a : null;
+      const B = (b && typeof b === 'object') ? b : null;
+      if (!A) return B;
+      if (!B) return A;
+      const dayOk = function (s) { return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')) ? String(s) : ''; };
+      const out = { streak: 0, last: '', mday: '', mis: [], stars: {}, wbest: '' };
+      const la = dayOk(A.last), lb = dayOk(B.last);
+      const srcSign = (la > lb) || (la === lb && (num(A.streak, 0, 0, 7) >= num(B.streak, 0, 0, 7))) ? A : B;
+      out.streak = num(srcSign.streak, 0, 0, 7);
+      out.last = la > lb ? la : lb;
+      const ma = dayOk(A.mday), mb = dayOk(B.mday);
+      const srcMis = (ma >= mb) ? A : B;
+      out.mday = ma >= mb ? ma : mb;
+      out.mis = (Array.isArray(srcMis.mis) ? srcMis.mis : []).map(function (m) {
+        return { id: String(m && m.id || ''), n: num(m && m.n, 1, 1, 99), p: num(m && m.p, 0, 0, 99), got: !!(m && m.got) };
+      });
+      [A.stars || {}, B.stars || {}].forEach(function (s) {
+        for (const k in s) {
+          const v = num(s[k], 0, 0, 3);
+          if (v > (out.stars[k] | 0)) out.stars[k] = v;
+        }
+      });
+      const wa = String(A.wbest || ''), wb = String(B.wbest || '');
+      const ka = wa.split(':')[0], kb = wb.split(':')[0];
+      if (ka && ka === kb) {
+        const ma2 = parseInt(wa.split(':')[1], 10) || 0, mb2 = parseInt(wb.split(':')[1], 10) || 0;
+        out.wbest = (ma2 > 0 && (!mb2 || ma2 <= mb2)) ? wa : wb;
+      } else {
+        out.wbest = ka > kb ? wa : wb;
+      }
+      return out;
+    }
+
     function merge(remote, local) {
       if (!remote) return local;
       if (!local) return remote;
-      const out = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {} };
+      const out = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {}, gift: null };
       // 進度只前進不後退
       out.stage = Math.max(num(remote.stage, 1, 1, SOLO_STAGES), num(local.stage, 1, 1, SOLO_STAGES));
       // 金幣／票券會花掉，不能取大 → 以「本地非空就用本地」為準（本地才是玩家眼前看到的）
@@ -28764,6 +29829,8 @@ function rpgAdjust(k, d) {
           if (!out.daily[k] || ms < out.daily[k]) out.daily[k] = ms;
         }
       });
+      // v4.87：簽到／任務／三星／每週最佳
+      out.gift = mergeGift(remote.gift, local.gift);
       return out;
     }
 
@@ -28780,6 +29847,10 @@ function rpgAdjust(k, d) {
       try { if (Shop.setState) Shop.setState({ gold: st.gold, tickets: st.tickets, pets: st.pets }); } catch (e) {}
       try { if (Tut.setState) Tut.setState(st.tut || {}); } catch (e) {}
       try { localStorage.setItem(K_DAILY, JSON.stringify(st.daily || {})); } catch (e) {}
+      try {
+        if (st.gift && typeof Gift !== 'undefined' && Gift.setState) Gift.setState(st.gift);
+        if (typeof GiftUI !== 'undefined' && GiftUI.alertOn) GiftUI.alertOn();
+      } catch (e) {}
       return true;
     }
 
@@ -28887,7 +29958,8 @@ function rpgAdjust(k, d) {
         pets: Array.isArray(o.pets) ? o.pets.slice(0, 8) : [],
         tut: (o.tut && typeof o.tut === 'object') ? o.tut : {},
         daily: (o.daily && typeof o.daily === 'object') ? o.daily : {},
-        stars: (o.stars && typeof o.stars === 'object') ? o.stars : {}
+        stars: (o.stars && typeof o.stars === 'object') ? o.stars : {},
+        gift: (o.gift && typeof o.gift === 'object') ? o.gift : null   // v4.87：簽到／任務／三星／每週最佳
       };
     }
 
@@ -28948,6 +30020,7 @@ function rpgAdjust(k, d) {
     // v4.85：已經有 session（例如自動登入）就直接開同步；沒有的話等 adopt() 再觸發
     try { Save.onBoot(); } catch (e) {}
     try { Save.wireBackup(); } catch (e) {}
+    try { GiftUI.wire(); } catch (e) {}        // v4.87：首頁左下角 🎁（簽到／任務／每週榜）
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
@@ -28958,6 +30031,8 @@ window.__BH = {
   Game: Game, Solo: Solo, Battle: Battle, Screen: Screen, settings: settings, SIZES: SIZES, Input: Input, IS_TOUCH: IS_TOUCH,
   // v4.80：每日挑戰 / 排行榜
   Daily: Daily, Lb: Lb, dailyDayKey: dailyDayKey, dailySeedOf: dailySeedOf, dailyStageOf: dailyStageOf,
+  // v4.87：簽到 / 每日任務 / 三星 / 每週榜
+  Gift: Gift, GiftUI: GiftUI,
   // v4.81：首頁分層
   homeFill: homeFill, setDrawer: setDrawer, showMultiPick: showMultiPick,
   goBoss: goBoss, openBattle: openBattle, openOnline: openOnline,
@@ -29022,6 +30097,7 @@ window.__BH = {
   flameHitDamage: flameHitDamage, drawRpgHud: drawRpgHud, rngFrom: rngFrom, map32Name: map32Name,
   // v4.1 帳號 / 雲端存檔
   Cloud: Cloud, rpgAdjust: rpgAdjust, Admin: Admin,
+  Save: Save,   // v4.87：測試要驗「gift 有沒有真的進存檔」
   rpgTotalPoints: function () { return RPG_POINTS_TOTAL; },
   deviceId: function () { try { return localStorage.getItem('bombhero-device'); } catch (e) { return null; } },
   HELP_ITEMS: (typeof HELP_ITEMS !== 'undefined' ? HELP_ITEMS : null),
@@ -29081,6 +30157,12 @@ window.__BH = {
   drawBossSprite: drawBossSprite, bossArtKey: bossArtKey,
   phonePortrait: phonePortrait, hasRotateHint: function () { return !!rotHintEl; },
   ITEM_POOL: ITEM_POOL, ITEMS: ITEMS, DINO_FIRE_CD: DINO_FIRE_CD, DINO_FIRE_RANGE: DINO_FIRE_RANGE,
+  // v4.87：鴕鳥神獸
+  OSTRICH_SPD: OSTRICH_SPD, OSTRICH_JUMP_CD: OSTRICH_JUMP_CD, OSTRICH_JUMP_T: OSTRICH_JUMP_T,
+  OSTRICH_JUMP_CELLS: OSTRICH_JUMP_CELLS, OSTRICH_LAND_DMG: OSTRICH_LAND_DMG, EGG_OSTRICH_P: EGG_OSTRICH_P,
+  rideOstrich: rideOstrich, mountJump: mountJump, jumpTick: jumpTick, ostrichLand: ostrichLand,
+  rollEggKind: rollEggKind, spawnEggs: spawnEggs, takeEgg: takeEgg, breakDino: breakDino, fireBreath: fireBreath,
+  playerSpeed: playerSpeed, drawOstrich: drawOstrich, drawClawOn: drawClawOn,
   // v1.3 新增：8 隻動物選角 + 共用角色畫法 + 結束畫面重開
   CHARACTERS: CHARACTERS, CharPreview: CharPreview, drawCharBody: drawCharBody,
   // v1.7 新增：每關專屬 BGM

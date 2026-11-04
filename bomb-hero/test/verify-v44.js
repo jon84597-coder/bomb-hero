@@ -67,7 +67,7 @@ ok(typeof P.TICON_BASE === 'object' && P.TICON_BASE.bomb === 92 &&
 let threw = null;
 try { P.paintTouchIcons(0); } catch (e) { threw = e; }
 ok(threw === null, 'paintTouchIcons(0) 在無頭環境也不會炸（' + (threw ? threw.message : 'OK') + '）');
-ok(/const TICON_BASE = \{ bomb: 92, remote: 62, flame: 62 \};/.test(html), 'TICON_BASE 常數存在');
+ok(/const TICON_BASE = \{ bomb: 92, remote: 62, flame: 62, claw: 62 \};/.test(html), 'TICON_BASE 常數存在');
 ok(/let iconT = 0;/.test(html) && /Game\.gameT = iconT;/.test(html),
   '圖示有自己的時鐘（選單裡火苗也會抖）');
 ok(/finally \{ Game\.gameT = saved; \}/.test(html), '畫完一定把 gameT 還回去（不污染遊戲時間）');
