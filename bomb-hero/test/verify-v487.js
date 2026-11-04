@@ -103,19 +103,21 @@ B.rideOstrich(p);
 console.log('=== ④ 落地震波 ===');
 G.grid[4][3] = 0;
 G.enemies = [
-  { x: 4 * 40 + 20, y: 4 * 40 + 20, hp: 9, hitT: 0, r: 10, color: '#fff' },   // 落點那格
-  { x: 5 * 40 + 20, y: 4 * 40 + 20, hp: 9, hitT: 0, r: 10, color: '#fff' },   // 隔壁 1 格
-  { x: 7 * 40 + 20, y: 4 * 40 + 20, hp: 9, hitT: 0, r: 10, color: '#fff' }    // 距離 2 格（不該被打）
+  { x: 4 * 40 + 20, y: 4 * 40 + 20, hp: 1, maxHp: 1, hitT: 0, r: 10, color: '#fff' },     // 落點那格（雜兵）
+  { x: 5 * 40 + 20, y: 4 * 40 + 20, hp: 20, maxHp: 20, hitT: 0, r: 10, color: '#fff' },   // 隔壁 1 格（有血條的大怪）
+  { x: 7 * 40 + 20, y: 4 * 40 + 20, hp: 20, maxHp: 20, hitT: 0, r: 10, color: '#fff' }    // 距離 2 格（不該被打）
 ];
 const before = G.grid.map(function (r) { return r.slice(); });
 p.x = 2 * 40 + 20; p.y = 4 * 40 + 20; p.air = 0; p.fireCd = 0; p.invuln = 0;
 G.rings = [];
 B.mountJump(p);
 guard = 0; while (p.air > 0 && guard++ < 200) B.jumpTick(p, 1 / 60);
-ok(G.enemies[0].hp === 9 - B.OSTRICH_LAND_DMG, '震波打到落點那隻怪（-' + B.OSTRICH_LAND_DMG + '）');
-ok(G.enemies[1].hp === 9 - B.OSTRICH_LAND_DMG, '半徑 1 格內的怪也吃到');
-ok(G.enemies[2].hp === 9, '距離 2 格的怪沒被打到');
-ok(G.rings.length >= 1, '有畫出震波環');
+ok(G.enemies[0].dead === true || G.enemies[0].hp <= 0, '雜兵落點那格 → 一擊踩扁');
+ok(G.enemies[1].hp > 0 && G.enemies[1].hp < 20, '有血條的大怪吃 35% 但沒被秒殺（hp ' + G.enemies[1].hp + '/20）');
+ok((G.enemies[1].dizzy || 0) > 0, '大怪被震暈 → 玩家有時間跑');
+ok(G.enemies[2].hp === 20, '距離 2 格的怪沒被打到');
+ok((p.slamGuard || 0) > 0, '落地有震攝保護（不是 invuln，不會一直閃）');
+ok(G.rings.length >= 3, '有畫出震波環（核心＋多圈）');
 let wallSame = true;
 for (let y = 0; y < 9; y++) for (let x = 0; x < 9; x++) if (G.grid[y][x] !== before[y][x]) wallSame = false;
 ok(wallSame, '震波一根牆都沒破壞（硬牆／軟磚原封不動）');
@@ -124,7 +126,7 @@ console.log('=== ⑤ 滯空免疫 ===');
 p.air = .2; p.invuln = 0; p.alive = true;
 B.killBattlePlayer(p);
 ok(p.alive === true, '跳躍中不吃傷害（生存）');
-p.air = 0; p.invuln = 0; p.dino = false; p.ostrich = false;
+p.air = 0; p.invuln = 0; p.dino = false; p.ostrich = false; p.slamGuard = 0;
 B.killBattlePlayer(p);
 ok(p.alive === false, '沒坐騎、腳踏實地 → 照正常規則會死');
 
@@ -141,7 +143,8 @@ ok(pe.ostrich === true && G.eggs.length === 0, '走到紫蛋格 → 孵鴕鳥並
 pe.x = 40 + 20;
 G.eggs.push({ x: 1, y: 1, kind: 'dino' });
 B.takeEgg(pe);
-ok(pe.redDragon === true && pe.ostrich === false, '已經有坐騎再吃蛋 → 進化紅龍（換掉鴕鳥）');
+// v4.89：異種蛋＝換騎（鴕鳥 → 恐龍，舊坐騎爆散），不再一律變紅龍
+ok(pe.ostrich === false && pe.dino === true && pe.redDragon === false, '騎鴕鳥吃到恐龍蛋 → 換成一般恐龍（不再變紅龍）');
 
 ok(/if \(up\) rideDino\(k, true\);\s*\n\s*else rideOstrich\(k\);/.test(SRC), '大逃殺：第一次打倒 BOSS 直接給鴕鳥');
 ok(/br\.bossGetOstrich\|/.test(SRC), '大逃殺提示有自己的字串（不是拿恐龍那句）');

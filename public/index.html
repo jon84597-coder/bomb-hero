@@ -3435,7 +3435,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.88</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.89</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -3476,7 +3476,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.88</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.89</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4145,7 +4145,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.88';
+const VERSION = '4.89';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4458,6 +4458,9 @@ toast.ostrich|🪶 紫蛋孵出鴕鳥神獸！移動 1.45 倍速 · 按 F／🦶
 toast.ostrichBanner|神獸降臨！|神兽降临！|Beast!|神獣！|신수!|อสูรเทพ!|Thần thú!|Зверь!|Bestie!|Fiera!
 mount.jump|跳！|跳！|LEAP!|跳！|점프!|กระโดด!|NHẢY!|ПРЫЖОК!|SPRUNG!|SALTA!
 mount.cd|跳 {n}s|跳 {n}s|LEAP {n}s|跳 {n}s|점프 {n}s|กระโดด {n}s|NHẢY {n}s|ПРЫЖОК {n}с|SPRUNG {n}s|SALTA {n}s
+mount.dive|俯衝！|俯冲！|DIVE!|急降下！|급강하!|ดิ่งลง!|BỔ NHÀO!|ПИКЕ!|STURZFLUG!|PICCHIATA!
+toast.storm|⚡ 風暴鴕鳥！1.62 倍速 · 跳 3 格 · 落地 5×5 震波可震碎軟磚 · 空中再按一次＝俯衝|⚡ 风暴鸵鸟！1.62 倍速 · 跳 3 格 · 落地 5×5 震波可震碎软砖 · 空中再按一次＝俯冲|⚡ Storm Ostrich! 1.62× speed · 3-tile leap · 5×5 landing shockwave shatters soft blocks · press again mid-air to dive|⚡ 嵐のダチョウ！1.62 倍速 · 3 マス跳躍 · 着地 5×5 衝撃波で軟らかい壁を破壊 · 空中でもう一度で急降下|⚡ 폭풍 타조! 1.62배속 · 3칸 점프 · 착지 5×5 충격파로 약한 벽 파괴 · 공중에서 한 번 더 = 급강하|⚡ นกกระจอกเทศพายุ! 1.62 เท่า · กระโดด 3 ช่อง · กระแทกพื้น 5×5 ทุบกำแพงอ่อนได้ · กดอีกครั้งกลางอากาศ = ดิ่ง|⚡ Đà điểu Bão! 1.62× · nhảy 3 ô · chấn động 5×5 phá tường mềm · nhấn lần nữa giữa không trung = bổ nhào|⚡ Штормовой страус! 1.62× · прыжок на 3 клетки · волна 5×5 ломает мягкие блоки · ещё нажатие в воздухе — пике|⚡ Sturm-Strauß! 1,62× Tempo · 3 Felder Sprung · 5×5 Schockwelle zertrümmert weiche Blöcke · in der Luft erneut = Sturzflug|⚡ Struzzo della Tempesta! 1,62× · salto di 3 caselle · onda 5×5 frantuma i blocchi teneri · in aria premi di nuovo = picchiata
+toast.stormBanner|⚡ 風暴鴕鳥！|⚡ 风暴鸵鸟！|⚡ STORM OSTRICH!|⚡ 嵐のダチョウ！|⚡ 폭풍 타조!|⚡ นกกระจอกเทศพายุ!|⚡ ĐÀ ĐIỂU BÃO!|⚡ ШТОРМОВОЙ СТРАУС!|⚡ STURM-STRAUSS!|⚡ STRUZZO DELLA TEMPESTA!
 mount.jumpFire|恐龍吐火|恐龙吐火|Dragon flame|竜の火吹き|용 화염|พ่นไฟมังกร|Rồng phun lửa|Огонь дракона|Drachenfeuer|Fuoco del drago
 toast.dinoGuard|恐龍幫我擋了一下！|恐龙帮我挡了一下！|The dino took the hit for you!|恐竜が身代わりになってくれた！|공룡이 대신 맞아주었다!|ไดโนช่วยรับแทนแล้ว!|Khủng long đã đỡ giúp bạn!|Динозавр принял удар на себя!|Der Dino hat den Treffer abgefangen!|Il dinosauro ha preso il colpo al posto tuo!
 toast.fire1|紅龍吐火 |红龙吐火 |Dragon breath |赤竜の炎 |용의 화염 |ไฟมังกรแดง |Lửa rồng đỏ |Огонь дракона |Drachenfeuer |Soffio del drago 
@@ -5412,8 +5415,9 @@ home.namePh|可留空，系統自動取名字|可留空，系统自动取名字|
 help.ostrich.lead|🪶 新增<b>鴕鳥神獸</b>：紫色蛋孵化，跑得比恐龍快，還能<b>跳過一格牆</b>，落地震一圈打怪。|🪶 新增<b>鸵鸟神兽</b>：紫色蛋孵化，跑得比恐龙快，还能<b>跳过一格墙</b>，落地震一圈打怪。|🪶 New <b>Wind Ostrich</b>: hatches from the purple egg — faster than the dino, <b>leaps over a wall</b>, and stuns foes with a landing shock.|🪶 新<b>風のダチョウ</b>：紫の卵から孵化。竜より速く、<b>壁 1 枚を飛び越え</b>、着地で衝撃波。|🪶 새 <b>바람 타조</b>: 보라 알에서 부화. 공룡보다 빠르고 <b>벽 한 칸을 뛰어넘으며</b> 착지 충격파를 냅니다.|🪶 <b>นกกระจอกเทศวายุ</b>ใหม่: ฟักจากไข่สีม่วง เร็วกว่าไดโน <b>กระโดดข้ามกำแพงหนึ่งชั้น</b> และสร้างคลื่นกระแทกตอนลง|🪶 <b>Đà điểu Phong</b> mới: nở từ trứng tím — nhanh hơn khủng long, <b>nhảy qua một lớp tường</b>, tiếp đất tạo sóng xung kích.|🪶 Новый <b>штормовой страус</b>: вылупляется из фиолетового яйца — быстрее динозавра, <b>перепрыгивает стену</b> и бьёт врагов ударной волной.|🪶 Neu: der <b>Wind-Strauß</b> schlüpft aus dem lila Ei — schneller als der Dino, <b>springt über eine Wand</b> und schleudert beim Landen eine Welle.|🪶 Nuovo <b>Struzzo del Vento</b>: nasce dall'uovo viola — più veloce del dino, <b>salta oltre un muro</b> e crea un'onda atterrando.
 help.ostrich.s1|1️⃣ 吃到<b>紫色蛋</b>就騎上鴕鳥：原本的 <b>🔥 鍵</b>（電腦 <b>F</b>）換成<b>爪子鍵</b>，按下去是跳躍。|1️⃣ 吃到<b>紫色蛋</b>就骑上鸵鸟：原本的 <b>🔥 键</b>（电脑 <b>F</b>）换成<b>爪子键</b>，按下去是跳跃。|1️⃣ Eat the <b>purple egg</b> to mount the ostrich: the <b>🔥 button</b> (<b>F</b> on keyboard) turns into a <b>claw</b> that leaps.|1️⃣ <b>紫の卵</b>を食べるとダチョウに騎乗。<b>🔥 ボタン</b>（PC は <b>F</b>）が<b>爪ボタン</b>に変わり、押すとジャンプ。|1️⃣ <b>보라 알</b>을 먹으면 타조 탑승. <b>🔥 버튼</b>(PC는 <b>F</b>)이 <b>발톱 버튼</b>으로 바뀌어 점프합니다.|1️⃣ กิน<b>ไข่สีม่วง</b>เพื่อขี่นกกระจอกเทศ <b>ปุ่ม 🔥</b> (คอม <b>F</b>) กลายเป็น<b>ปุ่มกรงเล็บ</b> กดแล้วกระโดด|1️⃣ Ăn <b>trứng tím</b> để cưỡi đà điểu: nút <b>🔥</b> (PC là <b>F</b>) đổi thành <b>nút móng vuốt</b>, bấm là nhảy.|1️⃣ Съешьте <b>фиолетовое яйцо</b> — и вы на страусе: кнопка <b>🔥</b> (на ПК <b>F</b>) становится <b>когтём</b> и даёт прыжок.|1️⃣ <b>Lila Ei</b> essen und auf den Strauß steigen: aus <b>🔥</b> (<b>F</b> am PC) wird eine <b>Klauen-Taste</b> für den Sprung.|1️⃣ Mangi l'<b>uovo viola</b> e sali sullo struzzo: il pulsante <b>🔥</b> (<b>F</b> su PC) diventa un <b>artiglio</b> che fa saltare.
 help.ostrich.s2|2️⃣ 按下去<b>往前跳 2 格</b>：中間那格是牆也跳得過去，但<b>連續兩層牆跳不過</b>，而且落點必須是<b>空地</b>（有炸彈也算擋住）。|2️⃣ 按下去<b>往前跳 2 格</b>：中间那格是墙也跳得过去，但<b>连续两层墙跳不过</b>，而且落点必须是<b>空地</b>（有炸弹也算挡住）。|2️⃣ It <b>leaps 2 tiles forward</b>: one wall in between is fine, <b>two in a row are not</b>, and the landing tile must be <b>clear</b> (a bomb blocks it too).|2️⃣ <b>2 マス前へジャンプ</b>。間の 1 枚は越えられるが<b> 2 枚続きは無理</b>、着地点は<b>空きマス</b>限定（爆弾も不可）。|2️⃣ <b>앞으로 2칸 점프</b>. 중간 벽 1개는 넘지만 <b>벽 2개 연속은 불가</b>, 착지점은 <b>빈 칸</b>이어야 합니다(폭탄도 막힘).|2️⃣ <b>กระโดดไปข้างหน้า 2 ช่อง</b> กำแพงกั้นกลาง 1 ชั้นข้ามได้ แต่<b>สองชั้นติดกันข้ามไม่ได้</b> และจุดลงต้องเป็น<b>ช่องว่าง</b> (มีระเบิดก็นับว่ากั้น)|2️⃣ <b>Nhảy 2 ô về trước</b>: tường 1 lớp ở giữa thì qua được, <b>hai lớp liền thì không</b>, điểm rơi phải là <b>ô trống</b> (có bom cũng bị chặn).|2️⃣ <b>Прыжок на 2 клетки</b>: одна стена между — можно, <b>две подряд — нет</b>, приземление только на <b>свободную клетку</b> (бомба тоже мешает).|2️⃣ <b>2 Felder nach vorn</b>: eine Wand dazwischen geht, <b>zwei hintereinander nicht</b>, und das Landefeld muss <b>frei</b> sein (Bombe blockt auch).|2️⃣ <b>Salta 2 caselle avanti</b>: un muro in mezzo va bene, <b>due di fila no</b>, e la casella d'arrivo deve essere <b>libera</b> (anche una bomba blocca).
-help.ostrich.s3|3️⃣ 落地時<b>半徑 1 格震波</b>造成 2 點傷害（大逃殺／對戰也會打傷敵人，隊友除外），但<b>不會破壞任何牆或軟磚</b>。|3️⃣ 落地时<b>半径 1 格震波</b>造成 2 点伤害（大逃杀／对战也会打伤敌人，队友除外），但<b>不会破坏任何墙或软砖</b>。|3️⃣ Landing sends a <b>1-tile shockwave</b> for 2 damage (also hits enemy players in BR / versus, never teammates) but <b>breaks no walls or bricks</b>.|3️⃣ 着地で<b>半径 1 マスの衝撃波</b>、2 ダメージ（バトロワ／対戦でも敵プレイヤーに当たる・味方は除く）。<b>壁やブロックは壊しません</b>。|3️⃣ 착지 시 <b>반경 1칸 충격파</b>로 2 피해(배틀로얄/대전에서는 적 플레이어도 타격, 아군 제외). <b>벽과 벽돌은 부수지 않습니다</b>.|3️⃣ ตอนลงมี<b>คลื่นกระแทก半径 1 ช่อง</b> ดาเมจ 2 (แบทเทิลรอยัล/对战 ก็โดนศัตรู ยกเว้นเพื่อนร่วมทีม) แต่<b>ไม่ทำลายกำแพงหรืออิฐ</b>|3️⃣ Tiếp đất tạo <b>sóng xung kích bán kính 1 ô</b>, 2 sát thương (BR/đối kháng cũng đánh trúng địch, trừ đồng đội) nhưng <b>không phá tường hay gạch</b>.|3️⃣ При приземлении — <b>волна радиусом 1 клетка</b>, 2 урона (в королевской битве и дуэлях задевает врагов, но не союзников). <b>Стены и блоки не ломаются</b>.|3️⃣ Beim Landen eine <b>Welle mit Radius 1</b>, 2 Schaden (trifft in BR/Duell auch Gegner, nie Teamkollegen), <b>zerstört aber keine Wände</b>.|3️⃣ All'atterraggio un'<b>onda di raggio 1</b>, 2 danni (colpisce i nemici in BR/duello, mai i compagni) ma <b>non rompe muri o blocchi</b>.
+help.ostrich.s3|3️⃣ 落地震波<b>一擊踩扁雜兵</b>（RPG 有血條的小怪也算）；大怪吃 <b>35% 生命</b>並被<b>震暈＋擊退</b>，落地後還有 <b>0.5 秒震攝</b>保護，跳進怪群不會馬上被反咬。大逃殺／對戰也會打傷敵人（隊友除外）。|3️⃣ 落地震波<b>一击踩扁杂兵</b>（RPG 有血条的小怪也算）；大怪吃 <b>35% 生命</b>并被<b>震晕＋击退</b>，落地后还有 <b>0.5 秒震慑</b>保护，跳进怪群不会马上被反咬。大逃杀／对战也会打伤敌人（队友除外）。|3️⃣ The landing shock <b>flattens ordinary foes in one hit</b> (RPG HP mooks too); tougher ones take <b>35% HP</b> plus <b>stun + knockback</b>, and you get <b>0.5s of poise</b> after landing, so diving into a mob will not cost you the mount. Also hurts enemy players in BR / Versus (never teammates).|3️⃣ 着地の衝撃波は<b>雑魚を一撃で踏み潰し</b>（RPG の HP 持ちも同じ）、強敵には<b>最大 HP の 35%</b>＋<b>スタン＋ノックバック</b>。着地後 <b>0.5 秒の踏ん張り</b>があるので、敵群に飛び込んですぐ乗り物を失うことはありません。バトロワ／対戦では敵プレイヤーにも当たります（味方は除く）。|3️⃣ 착지 충격파가 <b>잡몹을 한 방에 밟아 죽이고</b>(RPG 체력 몹 포함), 강적에게는 <b>최대 체력 35%</b> 피해 + <b>기절·넉백</b>. 착지 후 <b>0.5초 버티기</b>가 있어 적진에 뛰어들어도 바로 탈것을 잃지 않습니다. 배틀로얄／대전에서는 적 플레이어도 맞습니다(아군 제외).|3️⃣ คลื่นกระแทกตอนลง<b>เหยียบพวกกระจอกตายในทีเดียว</b> (รวมมอนสเตอร์มีเลือดในโหมด RPG) ตัวใหญ่โดน <b>35% ของเลือดสูงสุด</b> พร้อม<b>มึนงง＋กระเด็น</b> และมี<b>กันกระแทก 0.5 วินาที</b>หลังลงพื้น จะกระโดดเข้าฝูงศัตรูก็ไม่เสียพาหนะทันที (โหมด BR／对战 ก็โดนผู้เล่นศัตรูด้วย ยกเว้นเพื่อนร่วมทีม)|3️⃣ Sóng chấn khi tiếp đất <b>đè bẹp quái thường trong một đòn</b> (kể cả quái có máu ở RPG); quái mạnh ăn <b>35% máu</b> kèm <b>choáng + đẩy lùi</b>, và bạn có <b>0,5 giây trụ vững</b> sau khi tiếp đất nên nhảy vào giữa bầy không mất thú ngay. Chế độ BR／đối kháng cũng gây sát thương lên người chơi địch (trừ đồng đội).|3️⃣ Ударная волна при посадке <b>уничтожает обычных врагов с одного удара</b> (включая монстров с HP в RPG); сильные получают <b>35% здоровья</b> плюс <b>оглушение и отбрасывание</b>, а вы получаете <b>0,5 с устойчивости</b> после посадки — прыжок в толпу не отнимет скакуна сразу. В BR／Versus задевает и врагов-игроков (кроме союзников).|3️⃣ Die Landungsschockwelle <b>plättet normale Gegner mit einem Treffer</b> (auch RPG-Gegner mit HP); zähe Gegner nehmen <b>35% HP</b> plus <b>Betäubung + Rückstoß</b>, und du hast <b>0,5 s Standfestigkeit</b> nach der Landung — du verlierst das Reittier nicht sofort. In BR／Versus trifft sie auch gegnerische Spieler (nie Teammitglieder).|3️⃣ L'onda d'urto all'atterraggio <b>schiaccia i nemici normali in un colpo</b> (anche quelli con HP in RPG); i più resistenti subiscono <b>35% degli HP</b> più <b>stordimento e respinta</b>, e hai <b>0,5 s di stabilità</b> dopo l'atterraggio: tuffarti tra i nemici non ti costa subito la cavalcatura. In BR／Versus colpisce anche i giocatori avversari (mai i compagni).
 help.ostrich.s4|4️⃣ 整個滯空期間<b>完全免疫</b>炸彈與怪物；模式：單人／RPG／對戰都有，大逃殺則是<b>打倒 BOSS</b> 直接送你一隻。冷卻 <b>1.1 秒</b>。|4️⃣ 整个滞空期间<b>完全免疫</b>炸弹与怪物；模式：单人／RPG／对战都有，大逃杀则是<b>打倒 BOSS</b> 直接送你一只。冷却 <b>1.1 秒</b>。|4️⃣ <b>Fully immune</b> while airborne. Available in Solo / RPG / Versus; in Battle Royale, <b>down a boss</b> and one is yours. Cooldown <b>1.1s</b>.|4️⃣ 滞空中は<b>完全無敵</b>。ソロ／RPG／対戦で登場、バトロワでは<b>ボス撃破</b>で入手。クールダウン <b>1.1 秒</b>。|4️⃣ 공중에서는 <b>완전 무적</b>. 솔로/RPG/대전에 등장, 배틀로얄에서는 <b>보스 처치</b> 시 지급. 쿨다운 <b>1.1초</b>.|4️⃣ ระหว่างลอยตัว<b>อมตะเต็มที่</b> มีในโหมดเดี่ยว/RPG/对战 ส่วนแบทเทิลรอยัล<b>ล้มบอส</b>แล้วได้เลย คูลดาวน์ <b>1.1 วินาที</b>|4️⃣ Suốt lúc bay <b>miễn nhiễm hoàn toàn</b>. Có ở Solo/RPG/Đối kháng; ở BR thì <b>hạ boss</b> là có ngay. Hồi chiêu <b>1,1 giây</b>.|4️⃣ В полёте — <b>полная неуязвимость</b>. Есть в соло/RPG/дуэлях, в королевской битве выдаётся за <b>убийство босса</b>. Перезарядка <b>1,1 с</b>.|4️⃣ In der Luft <b>komplett unverwundbar</b>. In Solo/RPG/Duell verfügbar, in BR gibt es ihn für einen <b>Boss-Kill</b>. Abklingzeit <b>1,1 s</b>.|4️⃣ In aria <b>immune totale</b>. C'è in Solo/RPG/Duello; in BR te lo dà il <b>boss abbattuto</b>. Recupero <b>1,1 s</b>.
+help.ostrich.s5|5️⃣ 吃<b>第二顆紫蛋</b>進化成 <b>⚡風暴鴕鳥</b>：1.62 倍速、跳 <b>3 格</b>、落地 <b>5×5</b>、震波<b>能震碎軟磚</b>（硬牆不破）；<b>滯空中再按一次＝俯衝</b>，範圍再 +1 圈、傷害 ×1.6。吃不同顏色的蛋＝換騎，舊坐騎會爆散一次。|5️⃣ 吃<b>第二颗紫蛋</b>进化成 <b>⚡风暴鸵鸟</b>：1.62 倍速、跳 <b>3 格</b>、落地 <b>5×5</b>、震波<b>能震碎软砖</b>（硬墙不破）；<b>滞空中再按一次＝俯冲</b>，范围再 +1 圈、伤害 ×1.6。吃不同颜色的蛋＝换骑，旧坐骑会爆散一次。|5️⃣ A <b>second purple egg</b> evolves it into the <b>⚡ Storm Ostrich</b>: 1.62× speed, a <b>3-tile</b> leap, a <b>5×5</b> landing and a shock that <b>shatters soft blocks</b> (hard walls hold). <b>Press again mid-air to dive</b> — one more ring of range and 1.6× damage. A differently coloured egg swaps mounts, and the old one bursts.|5️⃣ <b>2 個目の紫の卵</b>で <b>⚡嵐のダチョウ</b>に進化：1.62 倍速、<b>3 マス</b>跳躍、着地 <b>5×5</b>、衝撃波で<b>軟らかい壁を破壊</b>（硬い壁は不可）。<b>空中でもう一度で急降下</b> — 範囲 +1 周、ダメージ 1.6 倍。色違いの卵を食べると乗り換えになり、前の乗り物は破裂します。|5️⃣ <b>두 번째 보라 알</b>로 <b>⚡폭풍 타조</b>로 진화: 1.62배속, <b>3칸</b> 점프, 착지 <b>5×5</b>, 충격파가 <b>약한 벽을 부수고</b>(단단한 벽은 불가). <b>공중에서 한 번 더 = 급강하</b> — 범위 +1바퀴, 피해 1.6배. 다른 색 알을 먹으면 탈것을 교체하고 이전 탈것은 폭발합니다.|5️⃣ ไข่สีม่วง<b>ฟองที่สอง</b>จะวิวัฒน์เป็น <b>⚡นกกระจอกเทศพายุ</b>: เร็ว 1.62 เท่า กระโดด <b>3 ช่อง</b> ลงกระแทก <b>5×5</b> และคลื่น<b>ทุบกำแพงอ่อนได้</b> (กำแพงแข็งไม่แตก) <b>กดอีกครั้งกลางอากาศ＝ดิ่ง</b> เพิ่มรัศมีอีก 1 รอบ ดาเมจ ×1.6 ถ้ากินไข่สีอื่นคือเปลี่ยนพาหนะ ตัวเก่าจะระเบิด|5️⃣ <b>Quả trứng tím thứ hai</b> tiến hoá thành <b>⚡Đà điểu Bão</b>: tốc độ 1,62×, nhảy <b>3 ô</b>, tiếp đất <b>5×5</b> và sóng chấn <b>phá được tường mềm</b> (tường cứng không vỡ). <b>Nhấn lần nữa giữa không trung = bổ nhào</b> — thêm 1 vòng bán kính, sát thương ×1,6. Ăn trứng khác màu là đổi thú, con cũ sẽ nổ.|5️⃣ <b>Второе фиолетовое яйцо</b> превращает его в <b>⚡Штормового страуса</b>: скорость 1,62×, прыжок на <b>3 клетки</b>, посадка <b>5×5</b>, волна <b>ломает мягкие блоки</b> (твёрдые стены — нет). <b>Ещё нажатие в воздухе — пикирование</b>: +1 кольцо радиуса, урон ×1,6. Яйцо другого цвета меняет скакуна, а прежний взрывается.|5️⃣ Ein <b>zweites violettes Ei</b> entwickelt ihn zum <b>⚡Sturm-Strauß</b>: 1,62× Tempo, <b>3 Felder</b> Sprung, <b>5×5</b> Landung und eine Welle, die <b>weiche Blöcke zertrümmert</b> (harte Wände nicht). <b>In der Luft erneut drücken = Sturzflug</b> — ein Ring mehr Reichweite, 1,6× Schaden. Ein andersfarbiges Ei tauscht das Reittier, das alte platzt.|5️⃣ Un <b>secondo uovo viola</b> lo fa evolvere nello <b>⚡Struzzo della Tempesta</b>: velocità 1,62×, salto di <b>3 caselle</b>, atterraggio <b>5×5</b> e onda che <b>frantuma i blocchi teneri</b> (i muri duri no). <b>In aria premi di nuovo = picchiata</b>: un anello in più di raggio, danno ×1,6. Un uovo di colore diverso cambia cavalcatura e la vecchia esplode.
 gift.title|🎁 每日好禮與任務|🎁 每日好礼与任务|🎁 Daily gifts & missions|🎁 デイリー特典とミッション|🎁 일일 선물과 미션|🎁 ของขวัญและภารกิจรายวัน|🎁 Quà và nhiệm vụ hằng ngày|🎁 Награды и задания дня|🎁 Tägliche Gaben & Missionen|🎁 Regali e missioni del giorno
 gift.sub|今天簽到可拿第 {n} 天的獎勵|今天签到可拿第 {n} 天的奖励|Day {n} reward is ready for you|本日は {n} 日目の報酬が受け取れます|오늘 {n}일차 보상을 받을 수 있어요|วันนี้รับรางวัลวันที่ {n} ได้|Hôm nay nhận thưởng ngày {n}|Сегодня доступна награда за день {n}|Die Belohnung für Tag {n} wartet|Il premio del giorno {n} ti aspetta
 gift.subDone|已經連續簽到 {n} 天，明天再來|已经连续签到 {n} 天，明天再来|Day {n} streak — come back tomorrow|{n} 日連続ログイン中 — また明日|{n}일 연속 출석 중 — 내일 또 만나요|ต่อเนื่อง {n} วัน — พรุ่งนี้มาใหม่|Chuỗi {n} ngày — mai ghé lại|Серия {n} дней — заходите завтра|{n} Tage in Folge — bis morgen|{n} giorni di fila — torna domani
@@ -6312,6 +6316,22 @@ const AudioSys = (function () {
       // v4.87：鴕鳥跳躍（起跳的短促氣音 ＋ 落地的低頻悶響）
       case 'hop': tone(420, .10, 'sine', .16, 900); tone(700, .07, 'triangle', .1, 1200, .02); break;
       case 'land': boom(.22, .38); tone(110, .16, 'sawtooth', .18, 60); break;
+      // v4.89：落地重擊 —— 比 land 厚很多（次低頻下潛＋兩層碎土＋高頻撕裂）
+      case 'slam':
+        boom(.40, .72);
+        tone(62, .36, 'sine', .42, 26);
+        tone(148, .14, 'square', .17, 52, .01);
+        boom(.16, .34, .05);
+        tone(1500, .12, 'sawtooth', .07, 260, .01);
+        break;
+      // v4.89：俯衝（先一聲短促下墜，再砸地）
+      case 'dive': tone(680, .18, 'sine', .14, 150); break;
+      // v4.89：升級風暴鴕鳥（電流上衝＋悶雷）
+      case 'storm':
+        tone(280, .14, 'sine', .20, 1500);
+        tone(900, .22, 'triangle', .16, 1900, .07);
+        boom(.32, .40, .16);
+        break;
       case 'nope': tone(180, .10, 'square', .12, 120); break;
       case 'door': tone(520, .12, 'square', .15); tone(660, .12, 'square', .15, null, .1); tone(880, .2, 'square', .16, null, .2); break;
       // 出口開啟（清場）：上行琶音 + 亮片叮咚 + 低頻推力，跟一般過場音明顯不同
@@ -8398,7 +8418,7 @@ function playerSpeed(p) {
   //   同一組數字在小格子裡等於每秒多走 1.5 倍的路。乘上 Game.spdK（格子比例）之後，
   //   「每秒走幾格」跟一般關卡一致，炸彈 2.5 秒的逃命距離也才對得上。
   const base = (146 + p.speedLv * 20) * (p.rpgSpd || 1) * (Game.spdK || 1);   // v4.0：RPG 的速度點數加成
-  const mountK = p.ostrich ? OSTRICH_SPD : 1;                                 // v4.87：鴕鳥 1.45 倍速
+  const mountK = p.storm ? OSTRICH_SPD2 : (p.ostrich ? OSTRICH_SPD : 1);       // v4.87 鴕鳥 1.45 倍速／v4.89 風暴 1.62
   return (p.skull === 'slow' ? base * .45 : base) * mountK;
 }
 // 實際移動速度 = 基礎速度 × 輸送帶加成（順行加快／逆行變慢）
@@ -8409,6 +8429,7 @@ function resetPlayerStats(p) {
   p.kick = p.glove = p.punch = p.remote = p.pierce = p.mine = false;
   p.dino = false; p.redDragon = false; p.fireCd = 0;
   p.ostrich = false; p.air = 0; p.jumpLift = 0;
+  p.storm = false; p.dived = false; p.slamGuard = 0;   // v4.89
   p.carry = null;
 }
 
@@ -9061,6 +9082,21 @@ const OSTRICH_JUMP_CD = 1.1;      // 跳躍冷卻（秒）
 const OSTRICH_JUMP_T = .42;       // 滯空時間（秒）
 const OSTRICH_JUMP_CELLS = 2;     // 往前幾格
 const OSTRICH_LAND_DMG = 2;       // 落地震波傷害
+// v4.89：落地「打了就跑」的保命窗口。v4.88 以前只有滯空免疫，落地瞬間就被旁邊的怪咬掉坐騎
+//   —— 對有血條的 RPG／BOSS 完全划不來（跳過去沒踩死，反而丟了鳥）。現在補兩件事：
+//   ① 落地 0.5 秒「震攝」保護（不進 invuln，避免角色一直閃）；
+//   ② 震波把周圍的怪撞退一格並暈眩 1.15 秒，讓玩家有時間跑開。
+const OSTRICH_SLAM_GUARD = .5;    // 落地後的短暫無敵（秒）
+const OSTRICH_STUN = 1.15;        // 震波造成的暈眩（秒）
+const OSTRICH_BOSS_PCT = .08;     // 對 BOSS 的傷害 = 最大生命的 8%（不暈、不擊退）
+// ----- v4.89：風暴鴕鳥（第二顆紫蛋）-----
+//   速度更快、跳 3 格、落地 5×5、震波能震碎軟磚（硬牆仍然不破）；
+//   滯空中再按一次 = 俯衝，立刻砸地（範圍 7×7、傷害 ×1.6）。
+const OSTRICH_SPD2 = 1.62;
+const OSTRICH_JUMP_CELLS2 = 3;
+const OSTRICH_LAND_R2 = 2;        // 5×5
+const OSTRICH_LAND_DMG2 = 3;
+const OSTRICH_DIVE_MUL = 1.6;
 const EGG_OSTRICH_P = .34;        // 每顆蛋有 34% 是紫蛋（鴕鳥），其餘是恐龍蛋
 //   地圖軟磚不夠（或全被道具／門佔走）才退回舊行為：直接生在空地。
 const EGG_HIDDEN = '__egg';
@@ -9128,6 +9164,7 @@ function eggAt(x, y) {
 function rideDino(p, red) {
   p.dino = true; p.dinoT = 0; p.fireCd = 0;
   p.ostrich = false; p.air = 0; p.jumpLift = 0;        // v4.87：換坐騎時把鴕鳥狀態清乾淨
+  p.storm = false; p.dived = false; p.slamGuard = 0;   // v4.89
   AudioSys.sfx('item');
   if (red) {
     // v1.8：已經騎著小龍再吃到第二顆蛋 → 進化成「紅龍」
@@ -9143,14 +9180,45 @@ function rideDino(p, red) {
   }
 }
 // v4.87：紫蛋 → 鴕鳥神獸（不是恐龍的換色版：速度更快、招式是跳躍而不是吐火）
-function rideOstrich(p) {
-  p.dino = true; p.dinoT = 0; p.fireCd = 0;
-  p.ostrich = true; p.redDragon = false; p.air = 0; p.jumpLift = 0;
-  AudioSys.sfx('item');
-  if (isMyPlayer(p)) toast(t('toast.ostrich'), 2.6, 'g:ostrich');
-  burst(p.x, p.y, '#c9a7f2', 26, 220);
-  burst(p.x, p.y, '#ffe6a6', 10, 150);
-  bubbleSay(p, t('toast.ostrichBanner'), 'kill', Game.T * 1.9);
+// v4.89：騎著鴕鳥再吃一顆紫蛋 → 二段「風暴鴕鳥」（storm = true）
+function rideOstrich(p, storm) {
+  const up = !!(storm && p.ostrich);          // 已經騎著鴕鳥 → 這是「升級」不是「換騎」
+  p.dino = true; p.dinoT = up ? (p.dinoT || 0) : 0; p.fireCd = 0;
+  p.ostrich = true; p.redDragon = false; p.air = 0; p.jumpLift = 0; p.dived = false;
+  p.storm = !!storm;
+  AudioSys.sfx(up ? 'storm' : 'item');
+  if (isMyPlayer(p)) toast(t(up ? 'toast.storm' : 'toast.ostrich'), 2.8, 'g:ostrich');
+  if (up) {
+    burst(p.x, p.y, '#b98bff', 34, 300);
+    burst(p.x, p.y, '#ffd166', 16, 210);
+    Game.shake = Math.min(1, Game.shake + .3);
+    bubbleSay(p, t('toast.stormBanner'), 'kill', Game.T * 1.9);
+  } else {
+    burst(p.x, p.y, '#c9a7f2', 26, 220);
+    burst(p.x, p.y, '#ffe6a6', 10, 150);
+    bubbleSay(p, t('toast.ostrichBanner'), 'kill', Game.T * 1.9);
+  }
+}
+// v4.89：異種蛋「換騎爆散」—— 舊坐騎自爆一次（半徑 1.5 格、傷害 2、不破牆），
+//   補償「吃到不同顏色的蛋 = 被迫換坐騎」這件事，讓它變成一次解圍手段而不是懲罰。
+function swapMountBurst(p) {
+  const T = Game.T;
+  const wasStorm = !!p.storm, wasO = !!p.ostrich;
+  if (isMyPlayer(p)) { AudioSys.sfx('slam'); Game.shake = Math.min(1, Game.shake + .34); }
+  const col = wasStorm ? '#b98bff' : (wasO ? '#c9a7f2' : '#7ee08a');
+  burst(p.x, p.y, col, 30, 260);
+  burst(p.x, p.y, '#ffffff', 12, 180);
+  Game.rings = Game.rings || [];
+  Game.rings.push({ kind: 'ring', x: p.x, y: p.y + T * .28, born: Game.gameT || 0, dur: .44, r: T * 1.6, color: col, thick: .12 });
+  const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
+  (Game.enemies || []).forEach(function (e) {
+    if (!e || e.dead || e.blinkT > 0) return;
+    if (Math.abs(Math.floor(e.x / T) - cx) > 1 || Math.abs(Math.floor(e.y / T) - cy) > 1) return;
+    e.hp = (e.hp || 1) - 2;
+    e.hitT = Math.max(e.hitT || 0, .4);
+    burst(e.x, e.y, '#fff', 8, 160);
+    if (e.hp <= 0) { e.dead = true; Game.players.forEach(function (q) { q.score += 500; }); burst(e.x, e.y, e.color || '#fff', 16, 200); }
+  });
 }
 // 吃到蛋（人類與 AI 共用）：沒坐騎 → 依蛋種上坐騎；已有坐騎 → 升級成紅龍
 function takeEgg(p) {
@@ -9158,15 +9226,23 @@ function takeEgg(p) {
   const eg = eggAt(Math.floor(p.x / T), Math.floor(p.y / T));
   if (!eg) return false;
   Game.eggs.splice(Game.eggs.indexOf(eg), 1);
-  // 已經有坐騎 → 吃什麼蛋都是進化紅龍（紫蛋只是「第一隻」會給你鴕鳥）
-  if (p.dino) rideDino(p, true);
-  else if (eg.kind === 'ostrich') rideOstrich(p);
+  // 已經有坐騎 → 同種蛋升級、異種蛋換騎（舊坐騎爆散一次當補償）
+  //   恐龍蛋 ×2 = 紅龍；紫蛋 ×2 = 風暴鴕鳥；紫蛋→恐龍蛋（或反過來）= 換騎
+  if (p.dino && p.ostrich) {
+    // 已經是風暴鴕鳥 → 再吃紫蛋不會再進化，只補一次小震波（不讓玩家白吃）
+    if (eg.kind === 'ostrich') { if (p.storm) swapMountBurst(p); else rideOstrich(p, true); }
+    else { swapMountBurst(p); rideDino(p, false); }
+  } else if (p.dino) {
+    if (eg.kind === 'ostrich') { swapMountBurst(p); rideOstrich(p, false); }
+    else rideDino(p, true);
+  } else if (eg.kind === 'ostrich') rideOstrich(p, false);
   else rideDino(p, false);
   return true;
 }
 function breakDino(p) {
-  const wasO = !!p.ostrich;
-  p.dino = false; p.redDragon = false; p.ostrich = false; p.air = 0; p.jumpLift = 0; p.fireCd = 0;
+  const wasO = !!p.ostrich, wasS = !!p.storm;
+  p.dino = false; p.redDragon = false; p.ostrich = false; p.storm = false; p.dived = false;
+  p.air = 0; p.jumpLift = 0; p.fireCd = 0;
   //   剛好蓋過吐火冷卻（2 秒）→ 變成「一直有龍就一直打不死」。
   p.invuln = Math.max(p.invuln, .7);
   // v4.78：螢幕震動與音效只給自己 —— 別人的龍被打爆不該搖我的畫面
@@ -9174,7 +9250,7 @@ function breakDino(p) {
     AudioSys.sfx('hurt');
     Game.shake = Math.min(1, Game.shake + .35);
   }
-  burst(p.x, p.y, wasO ? '#c9a7f2' : '#7ee08a', 24, 220);
+  burst(p.x, p.y, wasS ? '#b98bff' : (wasO ? '#c9a7f2' : '#7ee08a'), 24, 220);
   bubbleSay(p, t('toast.dinoGuard'), 'dead', Game.T * 1.9);
 }
 function fireBreath(p) {
@@ -9234,8 +9310,9 @@ function mountJump(p) {
   if (p.air > 0 || (p.fireCd || 0) > 0) return false;
   const T = Game.T;
   const d = DIRS[p.facing] || DIRS.down;
+  const cells = p.storm ? OSTRICH_JUMP_CELLS2 : OSTRICH_JUMP_CELLS;   // v4.89：風暴鴕鳥跳 3 格
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
-  const lx = cx + d.x * OSTRICH_JUMP_CELLS, ly = cy + d.y * OSTRICH_JUMP_CELLS;
+  const lx = cx + d.x * cells, ly = cy + d.y * cells;
   // 落點：地圖內、不是牆、不是炸彈（軟磚也算牆 → 不能落在軟磚上）
   const out = (lx < 0 || ly < 0 || lx >= Game.cols || ly >= Game.rows);
   if (out || cellAt(lx, ly) !== 0 || bombAt(lx, ly)) {
@@ -9248,11 +9325,40 @@ function mountJump(p) {
   p.jumpTo = { x: lx * T + T / 2, y: ly * T + T / 2 };
   p.jumpOver = cellAt(cx + d.x, cy + d.y) !== 0;    // 跨過去的是牆（給特效判斷用）
   p.jumpLift = 0;
+  p.dived = false;                                  // v4.89：新的一次跳躍，俯衝可用
   p.moving = false;
   p.fireCd = OSTRICH_JUMP_CD;
   p.invuln = Math.max(p.invuln || 0, OSTRICH_JUMP_T + .1);
   if (isMyPlayer(p)) { AudioSys.sfx('hop'); try { Gift.add('jump', 1); } catch (e) {} }
-  burst(p.x, p.y + T * .34, '#e6dcff', 10, 130);
+  burst(p.x, p.y + T * .34, p.storm ? '#c9b0ff' : '#e6dcff', 10, 130);
+  return true;
+}
+// v4.89：風暴鴕鳥「俯衝」—— 滯空中再按一次，立刻砸在腳下（不是跳到預定落點）
+//   只在下方的格子站得住時才能用；範圍 +1 圈、傷害 ×1.6。
+function ostrichDive(p) {
+  if (!p || !p.alive || !p.storm || p.air <= 0 || p.dived) return false;
+  const T = Game.T;
+  let cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
+  if (cx < 0 || cy < 0 || cx >= Game.cols || cy >= Game.rows) return false;
+  // 身體正好飛在牆上 → 找一格站得住的相鄰格（優先靠向原本的落點）
+  if (cellAt(cx, cy) !== 0 || bombAt(cx, cy)) {
+    const dx = p.jumpTo ? Math.sign(Math.floor(p.jumpTo.x / T) - cx) : 0;
+    const dy = p.jumpTo ? Math.sign(Math.floor(p.jumpTo.y / T) - cy) : 0;
+    const cand = [[cx + dx, cy + dy], [cx + dx, cy], [cx, cy + dy], [cx, cy + 1], [cx, cy - 1], [cx + 1, cy], [cx - 1, cy]];
+    let ok = false;
+    for (let i = 0; i < cand.length; i++) {
+      const x = cand[i][0], y = cand[i][1];
+      if (x < 0 || y < 0 || x >= Game.cols || y >= Game.rows) continue;
+      if (cellAt(x, y) === 0 && !bombAt(x, y)) { cx = x; cy = y; ok = true; break; }
+    }
+    if (!ok) { if (isMyPlayer(p)) AudioSys.sfx('nope'); return false; }
+  }
+  p.dived = true;
+  p.jumpFrom = { x: p.x, y: p.y };
+  p.jumpTo = { x: cx * T + T / 2, y: cy * T + T / 2 };
+  p.jumpLift = Math.min(p.jumpLift || 0, T * .30);
+  p.air = .001;                                     // 下一個更新週期立刻落地
+  if (isMyPlayer(p)) AudioSys.sfx('dive');
   return true;
 }
 // 滯空插值（每個更新週期跑一次，人類／AI／大逃殺共用）
@@ -9272,30 +9378,111 @@ function jumpTick(p, dt) {
     ostrichLand(p);
   }
 }
-// 落地震波：九宮格內的敵人各吃 OSTRICH_LAND_DMG 點（玩家只打敵人／別隊），牆一律不動
+// 落地震波（v4.89 重做）
+//   範圍：普通 3×3／風暴 5×5／俯衝各 +1 圈
+//   傷害：一般小怪（含 RPG 有血條的雜兵）→ 一擊踩扁；
+//         有血條的大怪 → 35% 最大生命 + 暈眩；真 BOSS → 固定小傷、不暈、不擊退
+//   牆：普通鴕鳥一根都不碰；風暴鴕鳥會震碎軟磚（硬牆仍然不破）
 function ostrichLand(p) {
   const T = Game.T;
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
+  const dive = !!p.dived;
+  const storm = !!p.storm;
+  const R = (storm ? OSTRICH_LAND_R2 : 1) + (dive ? 1 : 0);
+  const dmg = Math.max(1, Math.round((storm ? OSTRICH_LAND_DMG2 : OSTRICH_LAND_DMG) * (dive ? OSTRICH_DIVE_MUL : 1)));
+  const born = Game.gameT || 0;
+
+  // ---- 特效：核心白閃 + 三圈衝擊波 + 塵土 ----
   Game.rings = Game.rings || [];
-  Game.rings.push({ x: p.x, y: p.y + T * .30, born: Game.gameT || 0, dur: .46, r: T * 1.75, color: '#d9c9ff' });
-  if (Game.rings.length > 24) Game.rings.splice(0, Game.rings.length - 24);
+  const near = R;                                  // 給特效用的格數
+  Game.rings.push({ kind: 'core', x: p.x, y: p.y + T * .24, born: born, dur: dive ? .34 : .30,
+                    r: T * (1.15 + near * .55), color: storm ? '#d9c4ff' : '#efe6ff',
+                    bolt: storm ? [.4, 1.5, 2.7, 4.1, 5.3] : null });
+  Game.rings.push({ kind: 'ring', x: p.x, y: p.y + T * .26, born: born, dur: dive ? .62 : .54,
+                    r: T * (1.75 + near * .85), color: storm ? '#ffd166' : '#b98bff', thick: .20 });
+  Game.rings.push({ kind: 'ring', x: p.x, y: p.y + T * .26, born: born + .06, dur: .46,
+                    r: T * (1.30 + near * .70), color: storm ? '#c9a7ff' : '#d9c9ff', thick: .12 });
+  Game.rings.push({ kind: 'ring', x: p.x, y: p.y + T * .26, born: born + .12, dur: .36,
+                    r: T * (1.00 + near * .55), color: '#ffffff', thick: .08, glow: 1 });
+  Game.rings.push({ kind: 'dust', x: p.x, y: p.y + T * .30, born: born, dur: dive ? .72 : .60,
+                    r: T * (1.55 + near * .78), color: storm ? '#cdbff0' : '#d8cbb2' });
+  if (Game.rings.length > 30) Game.rings.splice(0, Game.rings.length - 30);
+
+  p.slamGuard = OSTRICH_SLAM_GUARD;                // 落地後的震攝保護（不進 invuln，不會閃）
+  p.dived = false;
+
   if (isMyPlayer(p)) {
-    AudioSys.sfx('land');
-    Game.shake = Math.min(1, Game.shake + .16);
+    AudioSys.sfx('slam');
+    Game.shake = Math.min(1, Game.shake + (dive ? .55 : .42));
+    Game.flash = Math.max(Game.flash || 0, dive ? .55 : .32);
   }
-  const near = function (ex, ey) { return Math.abs(ex - cx) <= 1 && Math.abs(ey - cy) <= 1; };
+  // 塵土（往外低拋、有重力）＋ 火花
+  const dustCol = storm ? '#c9b6f2' : '#cdbfa4';
+  for (let i = 0; i < (dive ? 26 : 20); i++) {
+    const a = (i / (dive ? 26 : 20)) * 6.283 + Math.random() * .3;
+    const sp = (0.6 + Math.random() * 0.8) * T * 3.2;
+    Game.particles.push({
+      x: p.x + Math.cos(a) * T * .22, y: p.y + T * .3 + Math.sin(a) * T * .10,
+      vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * .5 - 40,
+      t: .42 + Math.random() * .30, color: dustCol, r: 2.4 + Math.random() * 3.2,
+      g: 420, damp: .94
+    });
+  }
+  for (let i = 0; i < (storm ? 16 : 11); i++) {
+    const a = (i / (storm ? 16 : 11)) * 6.283;
+    Game.particles.push({
+      x: p.x, y: p.y + T * .26, vx: Math.cos(a) * T * 6.4, vy: Math.sin(a) * T * 2.6,
+      t: .22 + Math.random() * .14, color: storm ? '#ffe9a8' : '#ffffff', r: 1.6 + Math.random() * 1.8, damp: .90
+    });
+  }
+
+  // ---- 風暴鴕鳥：震碎範圍內的軟磚（硬牆不動）----
+  if (storm) {
+    for (let yy = cy - R; yy <= cy + R; yy++) {
+      for (let xx = cx - R; xx <= cx + R; xx++) {
+        if (xx < 0 || yy < 0 || xx >= Game.cols || yy >= Game.rows) continue;
+        if (Game.grid[yy][xx] === 2) destroySoft(xx, yy);
+      }
+    }
+  }
+
+  // ---- 怪物 ----
+  const inRange = function (ex, ey) { return Math.abs(ex - cx) <= R && Math.abs(ey - cy) <= R; };
   (Game.enemies || []).forEach(function (e) {
-    if (!e || e.dead || e.hitT > 0) return;
-    if (!near(Math.floor(e.x / T), Math.floor(e.y / T))) return;
-    e.hp -= OSTRICH_LAND_DMG;
-    e.hitT = .55;
-    burst(e.x, e.y, '#fff', 12, 200);
+    if (!e || e.dead || e.blinkT > 0) return;
+    const ex = Math.floor(e.x / T), ey = Math.floor(e.y / T);
+    if (!inRange(ex, ey)) return;
+    const big = !!e.boss || !!e.brBoss;                 // 真 BOSS：不吃 % 傷害、不暈不擊退
+    const tank = big || (e.maxHp | 0) > 8;              // 有血條的大怪
+    let deal;
+    if (big) deal = Math.max(dmg, Math.round((e.maxHp || 10) * OSTRICH_BOSS_PCT));
+    else if (tank) deal = Math.max(dmg, Math.ceil((e.maxHp || 10) * .35));
+    else deal = Math.max(dmg, e.hp | 0);                // 雜兵：一擊踩扁
+    e.hp = (e.hp || 1) - deal;
+    burst(e.x, e.y, '#fff', 12, 210);
     if (e.hp <= 0) {
       e.dead = true;
       try { Gift.add('kill', 1); } catch (err) {}
-      burst(e.x, e.y, '#c9a7f2', 34, 280);
+      burst(e.x, e.y, '#c9a7f2', 34, 290);
       Game.players.forEach(function (q) { q.score += 1000; });
+      AudioSys.sfx('punch');
       if (e.brBoss && typeof brBossDown === 'function') brBossDown(e, p);
+      return;
+    }
+    e.hitT = Math.max(e.hitT || 0, .45);
+    if (big) return;
+    // 暈眩 + 擊退一格：讓玩家有時間跑掉（v4.89 平衡重點）
+    e.dizzy = Math.max(e.dizzy || 0, tank ? .7 : OSTRICH_STUN);
+    let sx = Math.sign(ex - cx), sy = Math.sign(ey - cy);
+    if (!sx && !sy) { const d = DIRS[p.facing] || DIRS.down; sx = d.x; sy = d.y; }
+    const tries = [[ex + sx, ey + sy], [ex + sx, ey], [ex, ey + sy]];
+    for (let k = 0; k < tries.length; k++) {
+      const tx = tries[k][0], ty = tries[k][1];
+      if (tx < 0 || ty < 0 || tx >= Game.cols || ty >= Game.rows) continue;
+      if (cellAt(tx, ty) !== 0 || bombAt(tx, ty)) continue;
+      e.x = tx * T + T / 2; e.y = ty * T + T / 2;
+      e.walkT = (e.walkT || 0) + .2;
+      break;
     }
   });
   // 對戰／大逃殺：震波也會打到別的玩家（自己隊友不會）
@@ -9303,7 +9490,7 @@ function ostrichLand(p) {
     (Game.players || []).forEach(function (q) {
       if (q === p || !q.alive) return;
       if (Game.teamsOn >= 2 && q.team >= 0 && q.team === p.team) return;
-      if (!near(Math.floor(q.x / T), Math.floor(q.y / T))) return;
+      if (!inRange(Math.floor(q.x / T), Math.floor(q.y / T))) return;
       killBattlePlayer(q, p);
     });
   }
@@ -10568,6 +10755,7 @@ function buildSoloStageInner(stage, fresh) {
   Game.bombs = []; Game.flames = []; Game.items = []; Game.particles = [];
   Game.bolts = [];                          // v4.36：小怪的元素彈
   Game.pops = []; Game.edgeFx = 0;          // v4.5：換場清掉上次殘留的受傷反饋
+  Game.rings = []; Game.flash = 0;          // v4.89：震波環與落地白閃也不要跨關殘留
   Game.sdIndex = 0; Game.sdList = [];
   hideOverlay();
   buildSdList();
@@ -11708,6 +11896,7 @@ function killPlayer(p, silent, killer) {
   if (Game.rpg) { rpgHurt(p, silent, killer); return; }
   if (!p.alive || p.invuln > 0) return;
   if (p.air > 0) return;                    // v4.87：鴕鳥跳躍中完全免疫
+  if (p.slamGuard > 0) return;              // v4.89：落地震攝保護（跳進去再跳出來不會被咬掉坐騎）
   if (p.dino) { breakDino(p); return; }     // 騎著恐龍 → 恐龍先擋一次
   if (p === Game.players[0]) Game.hurtCount = (Game.hurtCount | 0) + 1;   // v4.87：三星判定（沒被打到才有 3 星）
   if (p.carry) {   // 手上炸彈掉在原地
@@ -12502,6 +12691,7 @@ function updateBattle(dt) {
 function killBattlePlayer(p, killer) {
   if (!p.alive || p.invuln > 0) return;
   if (p.air > 0) return;                    // v4.87：鴕鳥跳躍中完全免疫
+  if (p.slamGuard > 0) return;              // v4.89：落地震攝保護
   if (p.dino) { breakDino(p); return; }     // 騎著恐龍 → 恐龍先擋一次
   if (p === Game.players[0]) Game.hurtCount = (Game.hurtCount | 0) + 1;   // v4.87：三星判定
   // v4.72：大逃殺 3 點血 —— 單人／對戰是「一擊就死」，但 8 人搶一個冠軍時
@@ -13875,7 +14065,12 @@ function controlHuman(p, dt) {
   const T = Game.T;
   tickSkull(p, dt);
   // v4.87：鴕鳥滯空中 —— 位置由 jumpTick 插值，不接受走位／放彈（避免半空中被牆吸住）
-  if (p.air > 0) { p.moving = false; return; }
+  // v4.89：風暴鴕鳥在滯空中「再按一次跳躍鍵」＝ 俯衝（提早砸地，範圍更大、傷害更高）
+  if (p.air > 0) {
+    p.moving = false;
+    if (p.storm && !p.dived && p.scheme.fire && p.scheme.fire()) ostrichDive(p);
+    return;
+  }
   // v1.9：頭暈中 —— 完全停手（不能走、不能放彈），時間到自動恢復
   if (p.dizzy > 0) { p.dizzy -= dt; p.moving = false; return; }
   let dirs = p.scheme.dirs();
@@ -15071,6 +15266,7 @@ function updateWorld(dt) {
   // 無敵時間倒數（出生保護只有 2 秒）＋恐龍吐火冷卻
   Game.players.forEach(function (p) {
     if (p.alive && p.invuln > 0) p.invuln -= dt;
+    if (p.slamGuard > 0) p.slamGuard = Math.max(0, p.slamGuard - dt);   // v4.89 落地震攝
     if (p.gloat > 0) p.gloat -= dt;
     if (p.cry > 0) p.cry = Math.max(0, p.cry - dt);        // v1.7 大哭
     if (p.cheerT > 0) p.cheerT = Math.max(0, p.cheerT - dt); // v1.7 獲勝歡呼
@@ -15141,6 +15337,7 @@ function updateWorld(dt) {
     if (pt.t <= 0) Game.particles.splice(i, 1);
   }
   if (Game.shake > 0) Game.shake = Math.max(0, Game.shake - dt * 2.2);
+  if (Game.flash > 0) Game.flash = Math.max(0, Game.flash - dt * 4.2);   // v4.89 落地白閃
   Game.gameT += dt;
 }
 
@@ -18603,22 +18800,103 @@ function render() {
   ctx.fillStyle = lg;
   ctx.fillRect(0, 0, fw, fh);
   drawAmbient(T, 0);
-  // v4.87：鴕鳥落地震波 —— 往外擴散的雙層橢圓環（貼地，看得出是「震」不是「燒」）
+  // v4.89：鴕鳥落地震波 —— 核心白閃 + 三圈衝擊波 + 塵土 + （風暴）紫電
+  //   全部貼地畫成橢圓（看得出是「震」不是「燒」），kind 決定畫法
   if (Game.rings && Game.rings.length) {
     for (let i = Game.rings.length - 1; i >= 0; i--) {
       const rg = Game.rings[i];
       const age = (Game.gameT || 0) - rg.born;
-      if (age < 0 || age > rg.dur) { Game.rings.splice(i, 1); continue; }
+      // v4.89：born 在未來的「預約環」（分層擴散）要先跳過，不能當成過期砍掉
+      if (age < 0) continue;
+      if (age > rg.dur) { Game.rings.splice(i, 1); continue; }
       const k = age / rg.dur;
       ctx.save();
-      ctx.globalAlpha = (1 - k) * .88;
-      ctx.strokeStyle = rg.color;
-      ctx.lineWidth = Math.max(2, T * .10 * (1 - k * .55));
-      ctx.beginPath(); ctx.ellipse(rg.x, rg.y, Math.max(2, rg.r * k), Math.max(1, rg.r * k * .44), 0, 0, 6.283); ctx.stroke();
-      ctx.globalAlpha = (1 - k) * .42;
-      ctx.beginPath(); ctx.ellipse(rg.x, rg.y, Math.max(2, rg.r * k * .70), Math.max(1, rg.r * k * .30), 0, 0, 6.283); ctx.stroke();
+      if (rg.kind === 'core') {
+        // 撞擊核心：白色徑向光，0.1 秒最亮
+        const pk = k < .34 ? k / .34 : 1;
+        const rr = Math.max(4, rg.r * (.55 + .45 * Math.sqrt(pk)));
+        const gg = ctx.createRadialGradient(rg.x, rg.y, 1, rg.x, rg.y, rr);
+        gg.addColorStop(0, 'rgba(255,255,255,' + (.62 * (1 - k) * (1 - k)).toFixed(3) + ')');
+        gg.addColorStop(.38, 'rgba(255,250,232,' + (.34 * (1 - k) * (1 - k)).toFixed(3) + ')');
+        gg.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = gg;
+        ctx.beginPath(); ctx.ellipse(rg.x, rg.y, rr, rr * .52, 0, 0, 6.283); ctx.fill();
+        // 硬邊白心：前 45% 畫一顆實心橢圓 —— 只有漸層會太柔，看不出「撞到了」
+        if (k < .45) {
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = (1 - k / .45) * .55;
+          ctx.fillStyle = '#fffdf4';
+          ctx.beginPath(); ctx.ellipse(rg.x, rg.y, rr * .34, rr * .18, 0, 0, 6.283); ctx.fill();
+          // 放射線：往外炸的短刺（讓它像「撞擊」而不是「光暈」）
+          ctx.globalAlpha = (1 - k / .45) * .70;
+          ctx.strokeStyle = '#fff6dd';
+          ctx.lineWidth = Math.max(1.2, T * .035);
+          for (let s = 0; s < 8; s++) {
+            const a = s * .785 + .39;
+            ctx.beginPath();
+            ctx.moveTo(rg.x + Math.cos(a) * rr * .34, rg.y + Math.sin(a) * rr * .18);
+            ctx.lineTo(rg.x + Math.cos(a) * rr * 1.02, rg.y + Math.sin(a) * rr * .54);
+            ctx.stroke();
+          }
+        }
+        // 風暴鴕鳥：五道紫色閃電從中心劈出去
+        if (rg.bolt && k < .55) {
+          ctx.globalAlpha = (1 - k / .55) * .95;
+          ctx.strokeStyle = '#e8d6ff';
+          ctx.lineWidth = Math.max(1.5, T * .045 * (1 - k));
+          ctx.shadowColor = '#b98bff'; ctx.shadowBlur = T * .38;
+          for (let b = 0; b < rg.bolt.length; b++) {
+            const a0 = rg.bolt[b];
+            let px = rg.x, py = rg.y, len = rg.r * (.55 + .45 * k);
+            ctx.beginPath(); ctx.moveTo(px, py);
+            for (let s = 1; s <= 4; s++) {
+              const a = a0 + Math.sin(rg.born * 91 + b * 7.3 + s * 2.1) * .30;
+              px += Math.cos(a) * len / 4; py += Math.sin(a) * len / 4 * .52;
+              ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+          }
+          ctx.shadowBlur = 0;
+        }
+      } else if (rg.kind === 'dust') {
+        // 揚塵：整圈往外推的土黃色薄霧
+        const rr = Math.max(4, rg.r * Math.sqrt(k) * 1.05);
+        const gg = ctx.createRadialGradient(rg.x, rg.y, rr * .35, rg.x, rg.y, rr);
+        gg.addColorStop(0, 'rgba(0,0,0,0)');
+        gg.addColorStop(.72, 'rgba(200,186,158,' + (.20 * (1 - k)).toFixed(3) + ')');
+        gg.addColorStop(1, 'rgba(200,186,158,0)');
+        ctx.fillStyle = gg;
+        ctx.beginPath(); ctx.ellipse(rg.x, rg.y, rr, rr * .50, 0, 0, 6.283); ctx.fill();
+      } else {
+        const th = rg.thick == null ? .10 : rg.thick;
+        const rr = rg.r * Math.pow(k, .45);        // 前半段就衝到接近最大 → 才看得見
+        // ① 暗底環：在亮草地／沙地上把衝擊波「框」出來（只加亮會糊在背景裡）
+        ctx.globalAlpha = (1 - k) * .34;
+        ctx.strokeStyle = 'rgba(40,20,70,.9)';
+        ctx.lineWidth = Math.max(2, T * th * 1.85);
+        ctx.beginPath(); ctx.ellipse(rg.x, rg.y, Math.max(2, rr), Math.max(1, rr * .44), 0, 0, 6.283); ctx.stroke();
+        // ② 亮環（只讓白色那圈用加亮 → 有色環才不會被背景洗成白的）
+        if (rg.glow) ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = (1 - k) * .95;
+        ctx.strokeStyle = rg.color;
+        ctx.lineWidth = Math.max(2, T * th * (1 - k * .5));
+        ctx.shadowColor = rg.color; ctx.shadowBlur = T * .18 * (1 - k);
+        ctx.beginPath(); ctx.ellipse(rg.x, rg.y, Math.max(2, rr), Math.max(1, rr * .44), 0, 0, 6.283); ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = (1 - k) * .40;
+        ctx.lineWidth = Math.max(1, T * th * .5 * (1 - k));
+        ctx.beginPath(); ctx.ellipse(rg.x, rg.y, Math.max(2, rr * .72), Math.max(1, rr * .32), 0, 0, 6.283); ctx.stroke();
+      }
       ctx.restore();
     }
+  }
+  // 落地白閃（只在重擊時出現，非常短，避免眼睛不舒服）
+  if (Game.flash > 0) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(.30, Game.flash * .34);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(-T * 2, -T * 2, fw + T * 4, fh + T * 4);
+    ctx.restore();
   }
   // 恐龍蛋：藏在軟磚裡，打出來才看得到；會左右搖晃、蛋緣一直閃亮光
   if (Game.eggs) Game.eggs.forEach(function (eg) {
@@ -21519,9 +21797,76 @@ function drawOstrich(p, T) {
   const bob = p.moving ? Math.abs(Math.sin(walkT * 15)) * T * .022 : Math.sin((p.dinoT || 0) * 2.6) * T * .012;
   const k = clamp(1 - lift / (T * 1.0), 0, 1);
   softShadow(x, y + T * .54, T * .40 * (.55 + .45 * k), T * .12 * (.55 + .45 * k), .30 * (.30 + .70 * k));
-  const drew = drawMountSprite(ctx, 'ostrich', x, footY - bob, DH, side, {
-    walk: walkT * 15, moving: !!p.moving, amp: 1.15, idle: p.dinoT || 0, frame: frame
-  });
+  // v4.89：風暴鴕鳥 —— 紫電光暈＋身上跳動的電弧（不重畫美術，用光效區分二段）
+  if (p.storm) {
+    const pulse = .5 + .5 * Math.sin((p.dinoT || 0) * 7);
+    const ay = footY - bodyH * .42;
+    // ① 腳下的紫電法陣（貼地橢圓，脈動）—— 一眼就看出「這隻不是普通鴕鳥」
+    //    用 translate+scale 把圓形漸層壓成橢圓，四個方向才會一起柔化（直接畫橢圓會有硬邊）
+    ctx.save();
+    ctx.translate(x, y + T * .30);
+    ctx.scale(1, .46);
+    const gr0 = ctx.createRadialGradient(0, 0, T * .05, 0, 0, T * .82);
+    gr0.addColorStop(0, 'rgba(150,100,255,' + (.24 + .10 * pulse).toFixed(3) + ')');
+    gr0.addColorStop(.55, 'rgba(120,80,240,' + (.13 + .06 * pulse).toFixed(3) + ')');
+    gr0.addColorStop(1, 'rgba(120,80,240,0)');
+    ctx.fillStyle = gr0;
+    ctx.beginPath(); ctx.arc(0, 0, T * .82, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = 'rgba(214,190,255,' + (.50 + .35 * pulse).toFixed(3) + ')';
+    ctx.lineWidth = Math.max(1.4, T * .038);
+    ctx.beginPath(); ctx.arc(0, 0, T * (.60 + .04 * pulse), 0, 6.283); ctx.stroke();
+    ctx.restore();
+    // ② 身體外圍的紫色光罩
+    const ar = T * (.72 + .06 * pulse);
+    const gs = ctx.createRadialGradient(x, ay, T * .10, x, ay, ar);
+    gs.addColorStop(0, 'rgba(185,139,255,' + (.34 + .12 * pulse).toFixed(3) + ')');
+    gs.addColorStop(.62, 'rgba(150,110,255,.16)');
+    gs.addColorStop(1, 'rgba(150,110,255,0)');
+    ctx.save();
+    ctx.fillStyle = gs;
+    ctx.beginPath(); ctx.ellipse(x, ay, ar, ar * 1.22, 0, 0, 6.283); ctx.fill();
+    ctx.restore();
+    // ③ 身上跳動的電弧
+    ctx.save();
+    ctx.strokeStyle = 'rgba(240,228,255,.95)';
+    ctx.lineWidth = Math.max(1.6, T * .05);
+    ctx.shadowColor = '#c9a0ff'; ctx.shadowBlur = T * .30;
+    for (let i = 0; i < 3; i++) {
+      const seed = Math.floor((p.dinoT || 0) * 9) * 13 + i * 37;
+      const a0 = (seed % 628) / 100;
+      let qx = x + Math.cos(a0) * T * .22, qy = ay + Math.sin(a0) * T * .22;
+      ctx.beginPath(); ctx.moveTo(qx, qy);
+      for (let s = 1; s <= 3; s++) {
+        qx += Math.cos(a0 + Math.sin(seed + s) * .9) * T * .16;
+        qy += Math.sin(a0 + Math.sin(seed + s) * .9) * T * .16;
+        ctx.lineTo(qx, qy);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  const drew = (function () {
+    // v4.89：風暴鴕鳥先畫一層紫色光暈（用同一個 sprite 的 alpha 當遮罩 → 光會貼著輪廓）
+    if (p.storm) {
+      try {
+        ctx.save();
+        ctx.shadowColor = '#b98bff';
+        ctx.shadowBlur = T * .55;
+        ctx.globalAlpha = .95;
+        drawMountSprite(ctx, 'ostrich', x, footY - bob, DH * 1.06, side, {
+          walk: walkT * 15, moving: !!p.moving, amp: 1.15, idle: p.dinoT || 0, frame: frame
+        });
+        ctx.shadowBlur = T * .28;
+        drawMountSprite(ctx, 'ostrich', x, footY - bob, DH * 1.06, side, {
+          walk: walkT * 15, moving: !!p.moving, amp: 1.15, idle: p.dinoT || 0, frame: frame
+        });
+        ctx.restore();
+      } catch (e) { try { ctx.restore(); } catch (e2) {} }
+    }
+    return drawMountSprite(ctx, 'ostrich', x, footY - bob, DH * (p.storm ? 1.06 : 1), side, {
+      walk: walkT * 15, moving: !!p.moving, amp: 1.15, idle: p.dinoT || 0, frame: frame
+    });
+  })();
   if (!drew) {
     // 圖還沒載入 → 用簡化剪影代替，不會開天窗
     ctx.fillStyle = '#f3e8d2';
@@ -21554,7 +21899,9 @@ function drawOstrich(p, T) {
   }
   if (p.noLabel) return;
   const cd = p.fireCd || 0;
-  const label = cd > 0 ? t('mount.cd', { n: cd.toFixed(1) }) : t('mount.jump');
+  // v4.89：風暴鴕鳥在空中時提示「再按＝俯衝」，其他時候仍是「跳！」
+  const label = cd > 0 ? t('mount.cd', { n: cd.toFixed(1) })
+    : (p.storm && (p.air || 0) > 0 && !p.dived) ? t('mount.dive') : t('mount.jump');
   // v4.88：鴕鳥比龍高（本體 1.86 格），提示牌要抬到頭頂之上，不然會壓在騎手臉上
   const labelY = y - T * 2.08;
   ctx.font = '900 ' + Math.max(9, Math.round(T * .23)) + 'px "Microsoft JhengHei", sans-serif';
@@ -23972,6 +24319,7 @@ const Help = (function () {
     h += '<div class="hd">' + t('help.ostrich.s2') + '</div>';
     h += '<div class="hd">' + t('help.ostrich.s3') + '</div>';
     h += '<div class="hd">' + t('help.ostrich.s4') + '</div>';
+    h += '<div class="hd">' + t('help.ostrich.s5') + '</div>';
     h += '</div></div>';
     return h;
   }
@@ -25135,6 +25483,7 @@ const Net = {
   guestTick: function (dt) {
     Game.gameT = (Game.gameT || 0) + dt;
     if (Game.shake > 0) Game.shake = Math.max(0, Game.shake - dt * 3);
+    if (Game.flash > 0) Game.flash = Math.max(0, Game.flash - dt * 4.2);   // v4.89
     // v4.66：別人的位置用「上一張快照 → 這一張」插值（10Hz 才不會一格一格跳）
     const k = Math.min(1, dt * 12);
     Game.players.forEach(function (p, i) {
@@ -26183,7 +26532,13 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.88', date: '2026-11-05', now: true, items: [
+  { v: '4.89', date: '2026-11-05', now: true, items: [
+    '💥 落地震波<b>重做</b>：白閃核心＋三圈衝擊環＋揚塵＋螢幕震動＋新的重擊音效（低頻下潛＋碎土），落地的力道終於看得出來',
+    '🛡️ <b>平衡修正</b>：以前跳進怪群沒踩死，反而被碰掉坐騎。現在震波<b>一擊踩扁雜兵</b>（含 RPG 有血條的小怪）、大怪吃 35% 生命並被<b>震暈＋擊退</b>，落地還有 0.5 秒震攝保護',
+    '👑 <b>BOSS 例外</b>：只吃固定小傷、<b>不會被震暈也不會被擊退</b>（避免一直跳＝永久暈王）',
+    '⚡ 新二段<b>風暴鴕鳥</b>：第二顆紫蛋進化，1.62 倍速、跳 3 格、落地 5×5、<b>震波能震碎軟磚</b>；滯空中再按一次＝<b>俯衝</b>（範圍再 +1 圈、傷害 ×1.6）',
+    '🥚 蛋的規則統一：<b>同種蛋升級、異種蛋換騎</b>，換騎時舊坐騎會<b>爆散一次</b>（半徑 1.5 格、傷害 2）當補償' ] },
+  { v: '4.88', date: '2026-11-05', now: false, items: [
     '🏃 鴕鳥神獸會<b>跑了</b>：多了兩張跑動圖，移動時<b>翅膀上下拍、兩腳交替</b>（9 張/秒切換），停下來是翅膀張開的站姿，跳起來是雙翼高舉',
     '🎯 三張圖用<b>鞍布格紋當錨點</b>對齊：大小、腳底線完全一致，跑起來不會忽大忽小或上下跳',
     '🧍 騎乘位置修正：原本人會被畫到翅膀上，現在坐在鞍布正中央（鴕鳥比龍高，坐姿也跟著抬高）',
@@ -28348,6 +28703,7 @@ function rpgHurt(p, silent, killer) {
   if (!Game.rpg) return;                             // 只有 RPG 模式走這條路
   if (!p || !p.alive || p.invuln > 0) return;
   if (p.air > 0) return;                             // v4.87：鴕鳥跳躍中完全免疫
+  if (p.slamGuard > 0) return;                       // v4.89：落地震攝保護
   if (p.dino) { breakDino(p); return; }              // 坐騎先擋一次
   if (p === Game.players[0]) Game.hurtCount = (Game.hurtCount | 0) + 1;   // v4.87：三星判定
   let dmg = (killer && killer.type === 'boss') ? 2 : 1;
@@ -28455,6 +28811,7 @@ function buildRpgStage(stage, fresh) {
   Game.bombs = []; Game.flames = []; Game.items = []; Game.particles = [];
   Game.bolts = [];                          // v4.36：小怪的元素彈
   Game.pops = []; Game.edgeFx = 0;          // v4.5：換場清掉上次殘留的受傷反饋
+  Game.rings = []; Game.flash = 0;          // v4.89：震波環與落地白閃也不要跨關殘留
   Game.sdIndex = 0; Game.sdList = [];
   hideOverlay();
   buildSdList();
@@ -30199,7 +30556,11 @@ window.__BH = {
   // v4.87：鴕鳥神獸
   OSTRICH_SPD: OSTRICH_SPD, OSTRICH_JUMP_CD: OSTRICH_JUMP_CD, OSTRICH_JUMP_T: OSTRICH_JUMP_T,
   OSTRICH_JUMP_CELLS: OSTRICH_JUMP_CELLS, OSTRICH_LAND_DMG: OSTRICH_LAND_DMG, EGG_OSTRICH_P: EGG_OSTRICH_P,
+  OSTRICH_SLAM_GUARD: OSTRICH_SLAM_GUARD, OSTRICH_STUN: OSTRICH_STUN, OSTRICH_BOSS_PCT: OSTRICH_BOSS_PCT,
+  OSTRICH_SPD2: OSTRICH_SPD2, OSTRICH_JUMP_CELLS2: OSTRICH_JUMP_CELLS2, OSTRICH_LAND_R2: OSTRICH_LAND_R2,
+  OSTRICH_LAND_DMG2: OSTRICH_LAND_DMG2, OSTRICH_DIVE_MUL: OSTRICH_DIVE_MUL,
   rideOstrich: rideOstrich, mountJump: mountJump, jumpTick: jumpTick, ostrichLand: ostrichLand,
+  ostrichDive: ostrichDive, swapMountBurst: swapMountBurst,
   rollEggKind: rollEggKind, spawnEggs: spawnEggs, takeEgg: takeEgg, breakDino: breakDino, fireBreath: fireBreath,
   playerSpeed: playerSpeed, drawOstrich: drawOstrich, drawClawOn: drawClawOn,
   // v1.3 新增：8 隻動物選角 + 共用角色畫法 + 結束畫面重開
