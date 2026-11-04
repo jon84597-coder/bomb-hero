@@ -8,6 +8,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+// v4.85i：容器啟動時刻 —— /api/health 會回報，用來確認「這次真的換了一個新容器」
+const BOOT_AT = Date.now();
 
 const cloud = require('./cloud').createCloud();
 
@@ -984,7 +986,9 @@ const server = http.createServer(function (req, res) {
       storageError: cs.storageError || '',   // 連不上時的原因（給人看的）
       storageWrites: cs.storageWrites,
       storageFails: cs.storageFails,
-      storageDiag: cs.storageDiag      // v4.85f：遮罩過的 URL/金鑰指紋（不含金鑰本體）
+      storageDiag: cs.storageDiag,     // v4.85f：遮罩過的 URL/金鑰指紋（不含金鑰本體）
+      bootAt: BOOT_AT,                 // v4.85i：這次啟動的時間戳（判斷容器有沒有真的換過）
+      uptimeSec: Math.round((Date.now() - BOOT_AT) / 1000)
     });
   }
 
