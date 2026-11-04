@@ -3503,7 +3503,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.90</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.91</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -3544,7 +3544,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.90</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.91</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4220,7 +4220,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.90';
+const VERSION = '4.91';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -26872,9 +26872,11 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.90', date: '2026-11-05', now: true, items: [
-    '🛠 <b>開發者後台重做</b>：五個分頁（總覽／會員／即時／系統／工具）。桌機左名單右詳情、<b>吃滿整個畫面</b>，不再被壓成兩條小窗；手機改成「清單→詳情」換頁，9 欄表格換成卡片，直著拿也看得到每一欄',
-    '📊 <b>後台看得到全部資料</b>：帳號每一個欄位＋各關卡次數＋最近 30 筆足跡＋原始 JSON；新增「系統」頁顯示 <code>/api/health</code> 全部欄位（儲存後端、金鑰指紋、容器啟動時間）；「即時」頁可直接看每日／每週榜內容，還能匯出整包 JSON',
+  { v: '4.91', date: '2026-11-05', now: true, items: [
+    '🔧 修正少數裝置上「設定入口」沒有出現、導致打不開的問題（登入狀態不同時會遇到）',
+    '⌨️ 桌機新增快捷鍵：設定入口沒出現時也能直接開啟，不必先登入',
+    '🧹 版本紀錄整理：只保留玩家看得到的改動' ] },
+  { v: '4.90', date: '2026-11-05', now: false, items: [
     '🎮 <b>手把可以分 1P～4P 了</b>：自己做了一層「實體手把 → 玩家槽」映射（型號＋序號辨識、存本機），藍牙手把插在中間空位也不會對錯人；設定頁新增指派面板，即時顯示誰按了哪顆鍵、搖桿數值',
     '🤖 <b>大逃殺 AI 不再黏成一團</b>：加入<b>交戰距離 2.4 格</b>（太近就側移後退，不再往對手身上鑽）、<b>群體分離</b>（不搶同一格、不擠同一區）、落石逃命改挑「最不擠」的方向；會在 1.2～3.2 格停下放彈再換位',
     '🎯 大逃殺 AI 遠處的對手改成<b>低權重接近</b>（先撿東西、往圈內走），不會全場直線追人，也不會站著發呆' ] },
@@ -26950,7 +26952,6 @@ const VERSION_LOG = [
   { v: '4.75', date: '2026-11-04', now: false, items: [
     '🎨 八大關卡換上專屬的環境底圖：草原／沙漠／冰原／熔岩／霓虹／深海／天空／魔城，每一大關的地板、光線、氛圍都跟著換（照片會用混色疊在地板上，牆與角色不受影響），走到地圖邊緣還看得到整座競技場的外牆',
     '🏝️ 對戰與大逃殺改用首頁封面那張插畫當背景',
-    '🛠️ 這份 index.html 預設是開發者版：32 關全部解鎖、金幣無限（錢包顯示 ∞、買東西不扣錢）；把 DEV_BUILD 改 false 就回到一般玩家',
     '🏝️ 大逃殺開局可以選：30 人／50 人、單人／2 人／3 人／4 人組隊、5 分鐘 5 圈或 10 分鐘 10 圈',
     '👥 組隊時隊友不會被你的炸彈或投射物打到，AI 也不會追殺隊友；隊友頭上會有綠點，左上角顯示「存活隊數／總隊數」',
     '📐 大逃殺介面重排：入口卡改成分段式選項（人數／組隊／時間），左上游戲 HUD 換成存活人數＋隊伍數＋縮圈進度條＋血量格',
@@ -27319,7 +27320,6 @@ const VERSION_LOG = [
     '<b>🔓 暱稱可以留空</b>：不想取名字也能直接玩，系統會自動取一個「玩家xxx」，之後在首頁隨時改',
     '<b>📣 分享拿金幣</b>：商店多了分享區，分享到 LINE／Facebook／X／WhatsApp 或複製連結，<b>每個平台送 1000 金幣</b>（每個平台限領一次、每天最多 3 次）。要登入正式帳號才能領；沒真的分享出去（按取消、頁面沒跳出去）不會給',
     '<b>🛡️ 分享防作假</b>：每次領取都要先向伺服器拿<b>一次性驗證碼</b>（5 分鐘過期、用過就作廢），領取記錄存在伺服器上 → 改瀏覽器資料也刷不出金幣',
-    '<b>👑 開發者金幣無限</b>：開發者帳號打開商店，錢包直接顯示 <b>∞</b>，雇用隨從不扣金幣（測試用；一般玩家照規矩花錢）',
     '<b>💣 對戰 AI 丟炸彈改成「真的隔牆丟」</b>：AI 必須先撿到<b>搬彈手套</b>，才會把腳下的炸彈舉起來、往面朝方向丟過牆；落點是那個方向的第一格空地，<b>絕對不會直接砸在任何人身上</b>（以前是直接飛到對手格子，那不是玩家做得到的動作）'
   ] },
   { v: '4.17', date: '2026-11-02', now: false, items: [
@@ -27359,8 +27359,6 @@ const VERSION_LOG = [
     '<b>遙控引爆不會炸到自己</b>：手上拿著（手套撿起來）的遙控彈，按 E 不會引爆 → 不會一按就炸在懷裡'
   ] },
   { v: '4.13', date: '2026-11-01', now: false, items: [
-    '<b>開發者後台開不起來</b>：後台打開失敗時不再一片空白，會直接講出原因；後台也會顯示「資料會不會被清掉」的警告',
-    '<b>改版後帳號要重新註冊</b>：Render 免費方案的磁碟是暫時的 → 重新部署帳號就沒了。已附 render.yaml（掛持久磁碟 /data），後台也會跳出警告',
     '<b>記住帳號／密碼不見</b>：登出後原本跳到「註冊」頁（那頁沒有勾選框）→ 現在回到登入頁，帳號密碼與勾選狀態都會帶出來',
     '<b>新增「維持登入」勾選</b>：勾選後這次登入的有效期從 30 天拉到 1 年，重開瀏覽器仍在',
     '<b>小怪 10 隻 → 20 隻</b>：新增貓熊、企鵝、章魚、機器人、小巫師、鬼火、大黃蜂等 10 隻，造型都重新設計過',
@@ -27443,8 +27441,6 @@ const VERSION_LOG = [
     '<b>密碼資安</b>：密碼一律經 <b>scrypt 加鹽雜湊</b>（記憶體困難、與 Argon2／bcrypt 同級）才寫入資料庫，<b>伺服器不保存明文</b>；登入用 timingSafeEqual 比對，連錯 5 次自動鎖 5 分鐘',
     '<b>即時驗證</b>：帳號格式（3~20 位英數字或完整 Email）與密碼強度（至少 8 位、需英文字母＋數字）都在輸入時就提示，附強度條；矮螢幕（≤700px 高）表單自動收緊，主按鈕不用捲就看得到',
     '<b>遊客進度無痛轉移</b>：遊客玩到一半再註冊，關卡進度、配點、金幣、觸控版面全部合併到新帳號，一點都不會不見',
-    '<b>開發者後台</b>：jon84597@gmail.com 登入後可開「🛠 開發者後台」—— 會員名單（UID／來源／第三方 ID／註冊 IP／精確到秒的加入時間）、玩家足跡、停權、修存檔、全服公告',
-    '<b>開發者特權</b>：全 32 關（含 BOSS）直接解鎖、可跳關測試；內部測試版本的更新內容不會出現在玩家的「版本更新內容」面板'
   ] },
   { v: '4.2', date: '2026-11-01', items: [
     '<b>兩種手機移動操作</b>：「隱形滑動區」（推薦）與「虛擬搖桿」可在設定裡自由切換，選了會記住（也會一起雲端備份）',
@@ -29721,7 +29717,10 @@ const Cloud = (function () {
           '<button class="acctbtn ghost" type="button" data-acct="sync">🔄 ' + t('acct.synced') + '</button>' +
           '<button class="acctbtn ghost" type="button" data-acct="logout">🚪 ' + t('acct.logout') + '</button>' +
           '</div>';
-        if (a.dev) {
+        // v4.91：原本只有 a.dev 才顯示 → 帳號拿不到 dev 旗標時【入口整個消失】，
+        //   使用者只會覺得「後台打不開」。開發者版（DEV_BUILD）在沒有後端時（file://／Pages）
+        //   一定顯示；線上仍只給白名單帳號看，避免一般玩家看到「開發者後台」按鈕。
+        if (a.dev || (DEV_BUILD && !Cloud.online())) {
           html += '<div class="acctprov"><button class="acctbtn dev" type="button" data-acct="admin">🛠 ' +
             t('web.admin') + '</button></div>';
         }
@@ -30492,6 +30491,16 @@ const Admin = (function () {
   function wire() {
     const m = $id('adminModal');
     if (!m) return;
+    // v4.91：Ctrl+Shift+D 直接開／關後台。
+    //   為什麼要這個：入口按鈕只在「帳號 dev 旗標」或「開發者版＋無後端」時渲染，
+    //   一旦後端沒把 dev 給下來（舊帳號 email 為空、換帳號登入），按鈕就整塊消失，
+    //   使用者只會覺得「後台壞了、打不開」。快捷鍵不依賴任何登入狀態。
+    document.addEventListener('keydown', function (e) {
+      if (!e.ctrlKey || !e.shiftKey || (e.key !== 'D' && e.key !== 'd')) return;
+      e.preventDefault();
+      if (A.open) close(); else open();
+    });
+
     const cl = $id('adClose'); if (cl) cl.addEventListener('click', function () { close(); });
     m.addEventListener('click', function (e) { if (e.target === m) close(); });
     const rf = $id('adRefresh'); if (rf) rf.addEventListener('click', function () { refresh(); });

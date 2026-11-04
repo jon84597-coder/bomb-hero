@@ -36,7 +36,7 @@ ok(log[1].v !== P.VERSION && !log[1].now, '上一筆 v' + log[1].v + ' 已不是
 ok(log.slice(1).every(function (x) { return !x.now; }), '其餘每一筆舊版本都不是「當前版本」');
 ok(log.filter(function (x) { return x.v === '4.5'; })[0].items.length >= 5, 'v4.5 條列還在');
 ok(log.filter(function (x) { return x.v === '4.4'; })[0].items.length >= 4, 'v4.4 條列還在');
-ok(log.filter(function (x) { return x.v === '4.3'; })[0].items.length >= 5, 'v4.3 條列還在');
+ok(log.filter(function (x) { return x.v === '4.3'; })[0].items.length >= 3, 'v4.3 條列還在（v4.91 起已移除開發者後台相關條目）');
 ok(log.filter(function (x) { return x.v === '4.2'; })[0].items.length >= 5, 'v4.2 條列還在');
 ok(log.filter(function (x) { return x.v === '4.1'; })[0].items.length >= 5, 'v4.1 條列還在');
 ok(log.filter(function (x) { return x.v === '4.0'; })[0].items.length >= 4, 'v4.0 條列還在');

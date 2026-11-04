@@ -32,9 +32,11 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, '版本紀錄最新一筆是 4.5');
   ok(P.VERSION_LOG[1].v !== P.VERSION && !P.VERSION_LOG[1].now, '上一筆 4.4 已不是「當前」');
   const v43 = (P.VERSION_LOG.filter(function (x) { return x.v === '4.3'; })[0] || { items: [] }).items.join('|');
-  ['註冊', '密碼', '開發者', '後台', '公告', '解鎖'].forEach(function (k) {
+  ['註冊', '密碼'].forEach(function (k) {
     ok(v43.indexOf(k) >= 0, 'v4.3 條列提到「' + k + '」');
   });
+  // v4.91：玩家看得到的版本紀錄不再寫「開發者／後台」（原本還洩漏管理員信箱）。
+  ok(v43.indexOf('後台') < 0 && v43.indexOf('開發者') < 0, 'v4.3 條列已不含「後台／開發者」');
 
   console.log('\n=== 1. 密碼雜湊（scrypt 加鹽、單向、不可逆） ===');
   const h1 = await C.hashPassword('abc12345');
