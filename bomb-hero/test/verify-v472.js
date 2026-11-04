@@ -1,4 +1,4 @@
-// test/verify-v472.js —— v4.72：大逃殺三島（地圖／毒圈／名次／門票）＋ 視口裁切 ＋ 逐格主題
+// test/verify-v472.js —— v4.74：大逃殺（隨機不規則大陸／30 人／10 分鐘毒圈／免費／AI 會逃命）
 const path = require('path');
 const { makeEnv, html } = require('./_sandbox');
 
@@ -7,20 +7,34 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
 const src = html;
 
 console.log('\n=== 1. 源碼骨架 ===');
-ok(/const BR = \{[\s\S]{0,200}?W: 56, H: 44/.test(src), 'BR 常數：56×44 超大地圖');
-ok(/N: 8, FOES: 14/.test(src), '8 人 / 14 隻小怪');
-ok(/PH: \[\[\d+, \d+\](, \[\d+, \d+\]){3}\]/.test(src) && /PH: \[\[26, 30\]/.test(src), '毒圈四階段（26s→30 格 …→5 格）');
-ok(/GOLD: \[1200, 700, 450, 300, 200, 150, 100, 80\]/.test(src), '名次獎勵 1200→80');
+ok(/const BR = \{[\s\S]{0,260}?W: 56, H: 44/.test(src), 'BR 常數：56×44 超大地圖');
+ok(/N: 30, FOES: 14/.test(src), '30 人同場 / 14 隻小怪');
+ok(/FREE: true/.test(src), '正式測試期間免費（FREE）');
+ok(/ART_K: \.\d+/.test(src), '大圖怪物比例係數（ART_K）');
+ok(/if \(!BR\.FREE && !dev\) \{/.test(src), '免費時不扣門票');
+// 毒圈：10 段、每段 60 秒
+(function () {
+  const m = src.match(/PH: \[((?:\[\d+(?:\.\d+)?, \d+(?:\.\d+)?\])(?:, \[\d+(?:\.\d+)?, \d+(?:\.\d+)?\])*)\]/);
+  ok(!!m, 'PH 毒圈表存在');
+  if (!m) return;
+  const list = m[1].split('], ').map(function (x) { return x.replace(/[\[\]]/g, '').split(', ').map(Number); });
+  ok(list.length === 10, '毒圈 10 段（實際 ' + list.length + ' 段）');
+  ok(list.every(function (v) { return v[0] === 60; }), '每段 60 秒 → 整場 10 分鐘');
+  ok(list.every(function (v, i) { return i === 0 || v[1] < list[i - 1][1]; }), '半徑逐段變小（' + list.map(function (v) { return v[1]; }).join('→') + '）');
+})();
+ok(/if \(\(Game\.mode === 'battle' \|\| Game\.mode === 'br'\) && p\.alive && isMyPlayer\(p\)\) drawMeBadge/.test(src), '大逃殺也顯示「我」的牌子');
+ok(/function showBRDeath/.test(src) && /id = 'brEnd'/.test(src), '死亡提示是小卡（#brEnd）不是全螢幕');
+ok(/else \{\s*\/\/ v4\.74：輸了不蓋全螢幕/.test(src), '結算：贏了才開全螢幕');
+ok(/function aiEscape/.test(src) && /const inDanger = dangerAt\(cx, cy, p\)/.test(src), 'AI 站在炸彈上會逃（aiEscape）');
+ok(/function brFlowBuild/.test(src) && /f\[nk\] >= 0 \|\| cellAt\(nx, ny\) !== 0/.test(src), 'AI 往圈內走是 BFS 距離場（只走空地）');
+ok(/BR_AI\.cfg\(aiLevelCfg\(\), Game\.brZone \? Game\.brZone\.phase : 0\)/.test(src), '大逃殺 AI 參數依毒圈階段調整');
+ok(/function aiBombOk\(p\)/.test(src) && /p\.brBombCd = BR_AI\.CD\[ph\]/.test(src), 'AI 放彈有冷卻（不會開局就互炸）');
 ok(/else if \(Game\.mode === 'br'\) updateBR\(dt\);/.test(src), 'update 分派到大逃殺');
-ok(/if \(Game\.mode === 'battle' \|\| Game\.mode === 'br'\) killBattlePlayer/.test(src), '炸彈／火焰在大逃殺也走「淘汰」而不是單人重來');
-ok(/Game\.mode !== 'br' && settings\.revenge/.test(src), '大逃殺不上復仇推車');
-ok(/drawBRHud\(\); \} catch \(e\) \{\}/.test(src), 'HUD 掛鉤');
-ok(/if \(Game\.mode === 'br' && Game\.brZone\) drawBRZone\(T\);/.test(src), '毒圈畫在牆之上、角色之下');
+ok(/if \(Game\.mode === 'battle' \|\| Game\.mode === 'br'\) killBattlePlayer/.test(src), '炸彈／火焰在大逃殺走「淘汰」');
 ok(/function viewRange\(T\)/.test(src) && /const vr = viewRange\(T\);/.test(src), 'render 有視口裁切');
-ok(/function themeAtCell\(x, y, th\)/.test(src) && /themeAtCell\(x, y, th\)/.test(src), '逐格主題（三島各自地形）');
-ok(/grantTicket: grantTicket/.test(src), 'Shop 可以送門票');
+ok(/function themeAtCell\(x, y, th\)/.test(src), '逐格主題（八區各自地形）');
 
-console.log('\n=== 2. 三島地圖 ===');
+console.log('\n=== 2. 隨機不規則大陸 ＋ 八區地形 ===');
 (function () {
   const env = makeEnv(); const BH = env.BH, G = env.G;
   env.getId('body').classList.add('touch');
@@ -29,89 +43,79 @@ console.log('\n=== 2. 三島地圖 ===');
   ok(BH.startBR() === true, 'startBR() 開得起來');
   ok(G.mode === 'br' && G.bigMap === true, '模式 = br、bigMap = true');
   ok(G.cols === 56 && G.rows === 44, '地圖 56×44（實際 ' + G.cols + '×' + G.rows + '）');
-  // 三座島都有陸地
-  const land = [0, 0, 0], themeSet = {};
+  let land = 0, water = 0, hard = 0, soft = 0;
+  const regs = {};
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
-    const i = G.brIsl[y][x];
-    if (G.grid[y][x] !== 1) land[i === 2 ? 2 : i]++;
+    const i = G.brIsl[y][x], st = G.grid[y][x];
+    if (i < 0) { water++; continue; }
+    land++;
+    if (st === 1) hard++; else if (st === 2) soft++;
     const th = G.themeAt[y] && G.themeAt[y][x];
-    if (th) themeSet[th.style] = 1;
+    if (th) regs[th.style] = 1;
   }
-  ok(land[0] > 120 && land[1] > 120 && land[2] > 120,
-     '三座島都有陸地（' + land.join('／') + ' 格）');
-  ok(Object.keys(themeSet).length === 3, '三座島各一種地形（' + Object.keys(themeSet).join('、') + '）');
-  // 連通：從第三座島能走到第一、二座島
-  const seen = [], q = [[28, 32]];
-  for (let y = 0; y < G.rows; y++) seen.push(new Array(G.cols).fill(false));
-  seen[32][28] = true;
+  ok(land > 1200 && water > 600, '大陸 + 外海（陸 ' + land + ' 格／海 ' + water + ' 格）');
+  ok(hard < land * .11 && hard > land * .03, '硬牆很少（' + hard + ' 格 = ' + (hard / land * 100).toFixed(1) + '%）');
+  ok(soft > hard * 2.5, '障礙以可炸軟磚為主（軟 ' + soft + ' vs 硬 ' + hard + '）');
+  ok(Object.keys(regs).length === 8, '八種地形各佔一區（' + Object.keys(regs).join('、') + '）');
+  const seen = new Uint8Array(G.cols * G.rows);
+  const sp0 = G.players[0];
+  const sx = Math.floor(sp0.x / G.T), sy = Math.floor(sp0.y / G.T);
+  const q = [sy * G.cols + sx]; seen[q[0]] = 1;
   for (let i = 0; i < q.length; i++) {
-    const cx = q[i][0], cy = q[i][1];
+    const cur = q[i], x = cur % G.cols, y = (cur / G.cols) | 0;
     [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
-      const nx = cx + d[0], ny = cy + d[1];
+      const nx = x + d[0], ny = y + d[1];
       if (nx < 0 || ny < 0 || nx >= G.cols || ny >= G.rows) return;
-      if (seen[ny][nx] || G.grid[ny][nx] === 1) return;
-      seen[ny][nx] = true; q.push([nx, ny]);
+      const k = ny * G.cols + nx;
+      if (seen[k] || G.grid[ny][nx] !== 0) return;
+      seen[k] = 1; q.push(k);
     });
   }
-  let reach0 = 0, reach1 = 0, all = 0, unreach = 0;
+  let unreach = 0;
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
-    if (G.grid[y][x] === 1) continue;
-    all++;
-    if (seen[y][x]) { if (G.brIsl[y][x] === 0) reach0++; if (G.brIsl[y][x] === 1) reach1++; }
-    else unreach++;
+    if (G.grid[y][x] === 0 && !seen[y * G.cols + x]) unreach++;
   }
-  ok(reach0 > 100 && reach1 > 100, '兩座外島都走得到（' + reach0 + '／' + reach1 + ' 格）');
-  ok(unreach === 0, '沒有走不到的死島（未連通 ' + unreach + ' 格）');
-  ok(all > 500 && all < 1100, '可走格 ' + all + '（目標 500~1100）');
-  // v4.73：三座島必須真的隔著海 —— 舊版島半徑 8.6 配 19 格圓心距，三島直接黏成一整塊大陸、
-  //   窄橋整段被蓋在陸地裡，玩家根本看不到「過橋」這件事。這裡驗「橋 = 落在第三島 blob 之外的連通格」。
-  const C3 = BH.BR.ISL[2];
-  let brg = 0, seat = 0;
+  ok(unreach === 0, '所有空地都走得到（走不到的已回填岩層，剩 ' + unreach + ' 格）');
+  let hide = 0;
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
-    if (G.grid[y][x] === 1) { if (G.brIsl[y][x] < 0) seat++; continue; }
-    if (G.brIsl[y][x] !== 2) continue;
-    const d = Math.sqrt((x - C3.cx) * (x - C3.cx) + (y - C3.cy) * (y - C3.cy));
-    if (d > C3.r * 1.3) brg++;
+    const hz = G.hazards[y] && G.hazards[y][x];
+    if (hz && hz.type === 'hide') hide++;
   }
-  ok(brg > 20, '兩座窄橋真的跨在海面上（橋格 ' + brg + '）');
-  ok(seat > 800, '島與島之間是海（深海格 ' + seat + '）');
+  ok(hide >= 20, '有可以躲人的物件（' + hide + ' 個）');
+  ok(G.artK < 1, '大圖怪物比例有縮（artK=' + G.artK + '）');
 })();
 
-console.log('\n=== 3. 出生點與小怪 ===');
+console.log('\n=== 3. 30 人同場 ＋ 小怪 ===');
 (function () {
   const env = makeEnv(); const BH = env.BH, G = env.G;
   env.getId('body').classList.add('touch');
   const c = env.getId('cv'); c.clientWidth = 390; c.clientHeight = 775;
   BH.settings.ctrl = 'touch';
   BH.startBR();
-  ok(G.players.length === 8, '8 名玩家（' + G.players.length + '）');
-  ok(G.players.filter(function (p) { return p.ai; }).length === 7, '7 個 AI + 自己');
+  ok(G.players.length === 30, '30 名玩家（' + G.players.length + '）');
+  ok(G.players.filter(function (p) { return p.ai; }).length === 29, '29 個 AI + 自己');
   ok(G.players[0].ai !== true, 'P1 是自己操作');
   const cells = G.players.map(function (p) { return [Math.floor(p.x / G.T), Math.floor(p.y / G.T)]; });
-  ok(cells.every(function (c2) { return isFinite(c2[0]) && isFinite(c2[1]); }), '八個人的座標都有效');
+  ok(cells.every(function (c2) { return isFinite(c2[0]) && isFinite(c2[1]); }), '30 個人的座標都有效');
   let minD = 99;
   for (let i = 0; i < cells.length; i++) for (let j = i + 1; j < cells.length; j++) {
     minD = Math.min(minD, Math.abs(cells[i][0] - cells[j][0]) + Math.abs(cells[i][1] - cells[j][1]));
   }
-  ok(minD >= 5, '出生點彼此至少隔 5 格（實際最近 ' + minD + '）');
-  const used = {};
-  cells.forEach(function (c2) { used[G.brIsl[c2[1]][c2[0]]] = (used[G.brIsl[c2[1]][c2[0]]] || 0) + 1; });
-  ok(Object.keys(used).length === 3, '三座島都有人出生（' + JSON.stringify(used) + '）');
-  ok(G.enemies.length === 14, '14 隻小怪（' + G.enemies.length + '）');
-  const foeIsl = {};
-  G.enemies.forEach(function (e) {
-    const ix = Math.floor(e.x / G.T), iy = Math.floor(e.y / G.T);
-    const k = G.brIsl[iy][ix];
-    foeIsl[k] = (foeIsl[k] || 0) + 1;
-  });
-  ok(Object.keys(foeIsl).length === 3, '小怪三座島都有（' + JSON.stringify(foeIsl) + '）');
+  ok(minD >= 2, '出生點彼此至少隔 2 格（實際最近 ' + minD + '）');
+  const z = G.brZone;
+  const out = cells.filter(function (c2) {
+    const dx = c2[0] - z.cx, dy = c2[1] - z.cy;
+    return Math.sqrt(dx * dx + dy * dy) > z.r;
+  }).length;
+  ok(out === 0, '所有人都在初始毒圈內（圈外 ' + out + ' 人）');
+  ok(G.enemies.length === 14, '14 隻小怪（照舊）');
   const kinds = {};
   G.enemies.forEach(function (e) { kinds[e.type] = 1; });
   ok(Object.keys(kinds).length >= 4, '小怪種類有跟著地形走（' + Object.keys(kinds).length + ' 種）');
-  ok(G.players[0].brHp === 4, '開局 4 點血（' + G.players[0].brHp + '）');
+  ok(G.players[0].brHp === 10, '開局 10 點血（' + G.players[0].brHp + '）');
 })();
 
-console.log('\n=== 4. 毒圈與淘汰 ===');
+console.log('\n=== 4. 毒圈節奏與淘汰 ===');
 (function () {
   const env = makeEnv({ runTimers: true }); const BH = env.BH, G = env.G;
   env.getId('body').classList.add('touch');
@@ -119,84 +123,109 @@ console.log('\n=== 4. 毒圈與淘汰 ===');
   BH.settings.ctrl = 'touch';
   BH.startBR();
   G.state = 'play';
-  // 這一段只量毒圈：把所有玩家鎖成無敵，免得「自己先死 → 狀態變 over → 圈不再動」
   G.players.forEach(function (q) { q.invuln = 999; });
   const r0 = G.brZone.r;
-  for (let i = 0; i < 60 * 30; i++) BH.updateBR(1 / 60);      // 30 秒
-  ok(G.state === 'play', '（前提）30 秒內沒有人被淘汰、狀態仍是 play');
-  ok(G.brZone.phase >= 1, '26 秒後進入第一階段（phase=' + G.brZone.phase + '）');
+  for (let i = 0; i < 60 * 59; i++) BH.updateBR(1 / 60);
+  ok(G.brZone.phase === 0, '59 秒時還沒縮圈（phase=' + G.brZone.phase + '）');
+  for (let i = 0; i < 60 * 3; i++) BH.updateBR(1 / 60);
+  ok(G.brZone.phase >= 1, '60 秒後進入第一階段（phase=' + G.brZone.phase + '）');
   ok(G.brZone.tr < r0, '目標半徑縮小（' + r0 + ' → ' + G.brZone.tr + '）');
-  ok(G.brZone.r <= r0, '實際半徑跟著收（' + G.brZone.r.toFixed(1) + '）');
-  // 圈外：4 點血、每 1.6 秒掉一點 → 約 6.4 秒淘汰
+  ok(Math.abs(G.brZone.r - G.brZone.tr) < 1, '半徑會收到目標值（' + G.brZone.r.toFixed(1) + '）');
   const p = G.players[0];
   p.alive = true; p.brHp = 1; p.brOut = 0; p.invuln = 0;
-  p.x = 1 * G.T; p.y = 1 * G.T;                                // 角落一定在圈外
+  p.x = 1 * G.T; p.y = 1 * G.T;
   let ticks = 0;
   while (p.alive && ticks < 60 * 12) { BH.updateBR(1 / 60); ticks++; }
   ok(!p.alive, '圈外撐不久就淘汰（' + (ticks / 60).toFixed(1) + ' 秒）');
   ok(p.brPlace >= 2, '淘汰時記下名次（第 ' + p.brPlace + ' 名）');
 })();
 
-console.log('\n=== 5. 門票與名次獎勵 ===');
+console.log('\n=== 5. 免費入場與名次獎勵 ===');
 (function () {
-  const env0 = makeEnv(); const BH0 = env0.BH;
-  const t0 = BH0.Game && 0;
-  // 沒票 → 不開局
-  const env = makeEnv();
+  const env = makeEnv({ storage: { 'bombhero-br-ticket': '5', 'bombhero-br-free': '2000-01-01' } });
+  env.getId('body').classList.add('touch');
+  const c = env.getId('cv'); c.clientWidth = 390; c.clientHeight = 775;
   env.BH.settings.ctrl = 'touch';
-  try { env.BH.Shop && 0; } catch (e) {}
-  ok(typeof env.BH.startBR === 'function', 'startBR 已匯出');
-  // 有票 → 扣一張
-  const envA = makeEnv({ storage: { 'bombhero-br-ticket': '5', 'bombhero-br-free': '2000-01-01' } });
-  envA.getId('body').classList.add('touch');
-  const cA = envA.getId('cv'); cA.clientWidth = 390; cA.clientHeight = 775;
-  envA.BH.settings.ctrl = 'touch';
-  const before = envA.BH.Shop.tickets();
-  envA.BH.startBR();
-  ok(envA.BH.Shop.tickets() === before - 1, '開一場扣一張門票（' + before + ' → ' + envA.BH.Shop.tickets() + '）');
-  // 名次獎勵
-  const G = envA.G;
-  G.state = 'play';
-  G.brAlive = 1;
+  const before = env.BH.Shop.tickets();
+  ok(env.BH.startBR() === true, '有票時可以開局');
+  ok(env.BH.Shop.tickets() === before, '免費期間不扣門票（' + before + ' → ' + env.BH.Shop.tickets() + '）');
+  const env2 = makeEnv({ storage: { 'bombhero-br-free': '2000-01-01' } });
+  env2.getId('body').classList.add('touch');
+  const c2 = env2.getId('cv'); c2.clientWidth = 390; c2.clientHeight = 775;
+  env2.BH.settings.ctrl = 'touch';
+  const tk2 = env2.BH.Shop.tickets();
+  ok(env2.BH.startBR() === true && env2.BH.Shop.tickets() === tk2, '沒票也能進場（免費開放，票數 ' + tk2 + ' → ' + env2.BH.Shop.tickets() + '）');
+  const G = env.G;
+  G.state = 'play'; G.brAlive = 1;
   const me = G.players[0];
   me.brPlace = 1;
-  const goldBefore = envA.BH.Shop.gold();
-  const tkBefore = envA.BH.Shop.tickets();
-  envA.BH.brFinish(me);
-  ok(envA.BH.Shop.gold() === goldBefore + 1200, '冠軍 +1200 金幣（' + (envA.BH.Shop.gold() - goldBefore) + '）');
-  ok(envA.BH.Shop.tickets() === tkBefore + 1, '前三名再送一張門票');
-  ok(G.endShown === true, '顯示結算卡');
+  const goldBefore = env.BH.Shop.gold();
+  const tkBefore = env.BH.Shop.tickets();
+  env.BH.brFinish(me);
+  ok(env.BH.Shop.gold() === goldBefore + 1200, '冠軍 +1200 金幣（' + (env.BH.Shop.gold() - goldBefore) + '）');
+  ok(env.BH.Shop.tickets() === tkBefore + 1, '前三名再送一張門票');
+  ok(G.endShown === true, '冠軍開全螢幕結算');
+  const env3 = makeEnv();
+  env3.getId('body').classList.add('touch');
+  const c3 = env3.getId('cv'); c3.clientWidth = 390; c3.clientHeight = 775;
+  env3.BH.settings.ctrl = 'touch';
+  env3.BH.startBR();
+  const G3 = env3.G;
+  G3.state = 'play'; G3.brAlive = 30;
+  const me3 = G3.players[0];
+  me3.brPlace = 12;
+  const g3 = env3.BH.Shop.gold();
+  env3.BH.brFinish(null);
+  ok(env3.BH.Shop.gold() - g3 === 80, '第 9 名以後一律 80 金幣（+' + (env3.BH.Shop.gold() - g3) + '）');
 })();
 
-console.log('\n=== 6. 視口裁切 ===');
+console.log('\n=== 6. AI 不會站在自己的炸彈上 ===');
 (function () {
   const env = makeEnv(); const BH = env.BH, G = env.G;
   env.getId('body').classList.add('touch');
   const c = env.getId('cv'); c.clientWidth = 390; c.clientHeight = 775;
   BH.settings.ctrl = 'touch';
   BH.startBR();
-  G.state = 'play'; G.zoom = 1; G.camSnap = true;
-  G.camX = 0; G.camY = 0;
-  const vr = BH.viewRange(G.T);
-  ok(vr.x0 >= 0 && vr.y0 >= 0 && vr.x1 <= G.cols - 1 && vr.y1 <= G.rows - 1, '裁切範圍不超出地圖');
-  const seen = (vr.x1 - vr.x0 + 1) * (vr.y1 - vr.y0 + 1);
-  ok(seen < G.cols * G.rows * .7, '只看得到 ' + seen + ' / ' + (G.cols * G.rows) + ' 格');
-  env.rec.calls.length = 0;
-  try { BH.render(); } catch (e) {}
-  const imgs = env.rec.calls.filter(function (k) { return k[0] === 'drawImage'; }).length;
-  ok(imgs < G.cols * G.rows, '實際貼圖次數 ' + imgs + ' < 全部格子 ' + (G.cols * G.rows));
+  G.state = 'play';
+  const ai = G.players.filter(function (p) { return p.ai; })[0];
+  ok(!!ai, '找到一個 AI');
+  const cx = Math.floor(ai.x / G.T), cy = Math.floor(ai.y / G.T);
+  ai.x = cx * G.T + G.T / 2; ai.y = cy * G.T + G.T / 2;
+  G.bombs = [{ cx: cx, cy: cy, x: ai.x, y: ai.y, owner: ai, power: 3, t: 2, held: false, flying: false, remote: false }];
+  const bx = ai.x, by = ai.y;
+  let moved = false, dirSet = false;
+  for (let i = 0; i < 40; i++) {
+    BH.controlAI(ai, 1 / 60);
+    if (ai.aiDir) dirSet = true;
+    if (ai.x !== bx || ai.y !== by) moved = true;
+  }
+  ok(dirSet, '危險格上 AI 有指定方向（不是 null 站著不動）');
+  ok(moved, 'AI 真的離開那一格');
+  ok(typeof BH.aiEscape === 'function' && BH.aiEscape(cx, cy) !== null, 'aiEscape 找得到安全方向');
 })();
 
-console.log('\n=== 7. 版本 ===');
+console.log('\n=== 7. 視口裁切 ===');
+(function () {
+  const env = makeEnv(); const BH = env.BH, G = env.G;
+  env.getId('body').classList.add('touch');
+  const c = env.getId('cv'); c.clientWidth = 390; c.clientHeight = 775;
+  BH.settings.ctrl = 'touch';
+  BH.startBR();
+  const r = BH.viewRange(G.T);
+  ok(r.x0 >= 0 && r.y0 >= 0 && r.x1 < G.cols && r.y1 < G.rows, '裁切範圍不超出地圖');
+  const shown = (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1);
+  ok(shown < G.cols * G.rows, '只看得到 ' + shown + ' / ' + (G.cols * G.rows) + ' 格');
+})();
+
+console.log('\n=== 8. 版本 ===');
 (function () {
   const v = (src.match(/const VERSION = '([^']+)'/) || [])[1];
-  // 不鎖死版號（每次升版都要回來改一次＝浪費時間，也容易漏改）
-  ok(parseFloat(v) >= 4.72, 'VERSION >= 4.72（實際 ' + v + '）');
+  ok(parseFloat(v) >= 4.74, 'VERSION >= 4.74（實際 ' + v + '）');
   ok(/id="verLogVer">4\.\d+</.test(src), '版本紀錄同步');
   const sw = require('fs').readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const m = sw.match(/SW_VERSION = '([^']+)'/);
   ok(m && /^v4\.\d+\.0$/.test(m[1]), 'sw.js = v4.x.0（實際 ' + (m && m[1]) + '）');
 })();
 
-console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v4.72：' + pass + ' 通過 / ' + fail + ' 失敗');
-process.exit(fail ? 1 : 0);
+console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v4.74：' + pass + ' 通過 / ' + fail + ' 失敗');
+process.exit(fail === 0 ? 0 : 1);

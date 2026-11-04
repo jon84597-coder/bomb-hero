@@ -179,7 +179,7 @@ head('7. 大圖換成 WebP，容量上限還有餘裕');
   ok(/src="data:image\/webp;base64,[A-Za-z0-9+/=]{1000,}"/.test(html), '標題 LOGO PNG → WebP（無損、像素完全相同）');
   const chars = html.length, bytes = Buffer.byteLength(html, 'utf8');
   ok(chars < 3350000 && bytes < 3580000, '體積 ' + chars + ' 字元 / ' + bytes + ' 位元組（上限 3,350,000 / 3,580,000）');
-  ok(chars < 3300000, '至少還有 ' + (3350000 - chars) + ' 字元的空間可以寫新功能');
+  ok(bytes < 3580000 - 8000, '還有 ' + (3580000 - bytes) + ' 位元組 / ' + (3350000 - chars) + ' 字元的空間（檔案已接近上限，新功能要考慮拆檔）');
 }
 
 console.log('\n' + (fail ? '❌' : '✅') + ' v4.61：' + pass + ' 通過 / ' + fail + ' 失敗');

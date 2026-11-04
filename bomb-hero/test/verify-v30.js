@@ -59,8 +59,9 @@ ok(P.ME_BADGE_TXT === '我', '徽章文字是「我」');
 ok(/const ME_BADGE_TXT = '我';/.test(html), '原始碼有 ME_BADGE_TXT = 我');
 ok(/function isMyPlayer\(p\)/.test(html), '有 isMyPlayer() 判定誰是「我」');
 ok(/function drawMeBadge\(x, y, R, T\)/.test(html), '有 drawMeBadge() 繪製牌子');
-ok(/if \(Game\.mode === 'battle' && p\.alive && isMyPlayer\(p\)\) drawMeBadge\(/.test(html),
-   'drawPlayer 在「對戰模式 + 存活 + 是我」時才畫牌子');
+// v4.74：大逃殺也顯示同一塊牌子（使用者要求「頭上跟對戰一樣顯示我」）
+ok(/if \(\(Game\.mode === 'battle' \|\| Game\.mode === 'br'\) && p\.alive && isMyPlayer\(p\)\) drawMeBadge\(/.test(html),
+   'drawPlayer 在「對戰／大逃殺 + 存活 + 是我」時才畫牌子');
 
 // --- isMyPlayer 行為 ---
 ok(P.isMyPlayer(null) === false, 'null 不是我');
