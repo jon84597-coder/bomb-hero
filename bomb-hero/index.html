@@ -954,6 +954,43 @@ pointer-events: none; z-index: 6; white-space: nowrap;
 #zoomPill.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 #zoomPill b { font-size: 12.5px; color: #ffe6a6; }
 #zoomPill span.zl { opacity: .7; font-weight: 700; }
+/* ===== v4.86：遊戲中「隨從」面板（HUD 上那顆 🐾 按鈕打開） ===== */
+.chip.petchip { pointer-events: auto; cursor: pointer; border: 1px solid rgba(150,190,255,.30); background: rgba(20,28,46,.72); }
+.chip.petchip:hover { border-color: rgba(255,214,102,.55); }
+.chip.petchip b { color: #ffe6a6; }
+#petBk { position: fixed; inset: 0; z-index: 1490; display: none; background: rgba(6,10,20,.52); }
+#petBk.on { display: block; }
+#petPanel {
+position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.96);
+z-index: 1500; display: none; width: min(360px, calc(100vw - 28px));
+max-height: min(74vh, 560px); overflow: auto; box-sizing: border-box;
+background: linear-gradient(180deg, #24314f, #151e31);
+border: 2px solid rgba(150,190,255,.30); border-radius: 18px;
+box-shadow: 0 24px 64px rgba(0,0,0,.6); padding: 13px 14px 12px;
+color: #e8f0ff; font-size: 13px; transition: opacity .16s ease, transform .18s ease;
+}
+#petPanel.on { display: block; }
+#petPanel .pphd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+#petPanel .pphd b { font-size: 15px; letter-spacing: .02em; }
+#petPanel .ppx { border: 0; background: rgba(255,255,255,.08); color: #cfdcf5; width: 28px; height: 28px;
+border-radius: 9px; font-size: 14px; font-weight: 800; cursor: pointer; }
+#petPanel .ppsub { font-size: 11.5px; line-height: 1.6; color: #9fb0cf; margin: 2px 0 10px; }
+#petPanel .petrow { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 13px;
+background: rgba(255,255,255,.05); border: 1px solid rgba(150,190,255,.14); margin-bottom: 8px; }
+#petPanel .petrow.out { background: rgba(120,200,150,.13); border-color: rgba(140,230,175,.42); }
+#petPanel .petrow .pico { font-size: 21px; width: 26px; text-align: center; flex: 0 0 auto; }
+#petPanel .petrow .pinfo { flex: 1 1 auto; min-width: 0; }
+#petPanel .petrow .pnm { font-size: 13px; font-weight: 800; }
+#petPanel .petrow .pst { font-size: 11px; color: #9fb0cf; margin-top: 2px; }
+#petPanel .petrow .pgo { flex: 0 0 auto; border: 0; cursor: pointer; border-radius: 10px; padding: 7px 12px;
+font-size: 12px; font-weight: 800; min-height: 34px; color: #12203a;
+background: linear-gradient(180deg, #ffe08a, #f2b53c); }
+#petPanel .petrow.out .pgo { background: linear-gradient(180deg, #7fb8f0, #4b86c8); color: #08182c; }
+#petPanel .ppft { display: flex; gap: 8px; margin-top: 4px; }
+#petPanel .ppbtn { flex: 1 1 0; border: 0; cursor: pointer; border-radius: 11px; padding: 10px 8px;
+font-size: 12.5px; font-weight: 800; color: #12203a; background: linear-gradient(180deg, #cfe2ff, #9dbce4); min-height: 40px; }
+#petPanel .ppbtn.ghost { background: rgba(255,255,255,.09); color: #cfdcf5; border: 1px solid rgba(150,190,255,.24); }
+#petPanel .pnone { text-align: center; color: #9fb0cf; font-size: 12px; padding: 16px 6px 18px; line-height: 1.8; }
 .tips { color: #55648a; font-size: 11.5px; text-align: center; margin-top: 10px; line-height: 1.9; }
 /* ===== 手機觸控介面（僅「手機觸控模式」顯示，電腦不顯示） ===== */
 #touchUI {
@@ -1063,6 +1100,11 @@ transform: scale(var(--tscale)); transform-origin: var(--act-origin);
 #touchUI .tact.on { transform: scale(calc(var(--tscale) * .94)); }
 #touchUI .tpause { right: 16px; top: 12px; width: 46px; height: 46px; font-size: 17px; }
 #touchUI .tfs { right: 16px; top: 64px; width: 44px; height: 44px; font-size: 15px; }
+/* v4.86：手機的隨從鈕 —— 接在 ⏸／⛶ 下面，不佔用已經很擠的 HUD 標籤列 */
+#touchUI .tpet { right: 16px; top: 116px; width: 44px; height: 44px; font-size: 19px; display: none; }
+#touchUI .tpet.on { display: flex; }
+/* 手機用浮動鈕，HUD 那顆 🐾 只在電腦顯示（手機 HUD 只准兩排） */
+body.touch .chip.petchip { display: none; }
 /* 遙控引爆（E）／恐龍吐火（F）：小按鈕，排在放彈鍵上方 */
 #touchUI .tdet, #touchUI .tfire {
 width: 62px; height: 62px; opacity: .94;
@@ -3285,7 +3327,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.85</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.86</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -3324,7 +3366,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.85</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.86</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -3732,12 +3774,25 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
           <div class="tbtn tdet hide" data-t="det" title="遙控引爆"><canvas class="ticon" data-icon="remote"></canvas></div>
           <div class="tbtn tfire hide" data-t="fire" title="恐龍吐火"><canvas class="ticon" data-icon="flame"></canvas></div>
           <div class="tbtn tpause" data-t="pause">⏸</div>
+          <div class="tbtn tpet" id="petTouchBtn" title="隨從">🐾</div>
           <div class="tbtn tfs" data-t="full">⛶</div>
         </div>
       </div>
       <div class="side" id="sideR"></div>
     </div>
     <div class="tips" id="gameTips"></div>
+  </div>
+
+  <!-- v4.86：遊戲中隨從面板（HUD 的 🐾 打開，選要叫誰出來／收回） -->
+  <div id="petBk"></div>
+  <div id="petPanel" role="dialog" aria-modal="true">
+    <div class="pphd"><b id="petTitle">隨從</b><button id="petClose" class="ppx" type="button" aria-label="close">✕</button></div>
+    <div class="ppsub" id="petSub"></div>
+    <div id="petList"></div>
+    <div class="ppft">
+      <button id="petAllOut" class="ppbtn" type="button">全部叫出</button>
+      <button id="petAllIn" class="ppbtn ghost" type="button">全部召回</button>
+    </div>
   </div>
 
   <!-- v4.21：離開遊戲（手機／內建瀏覽器關不掉視窗時，留在這張離場卡上，不會變黑畫面） -->
@@ -3968,7 +4023,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.85';
+const VERSION = '4.86';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4374,6 +4429,16 @@ store.btn|商店|🛒 商店|🛒 Store|🛒 ショップ|🛒 상점|🛒 ร�
 menu.store.sub|隨從 5000 金幣|随从 5000 金币|Followers · 5,000 gold|お供 5000ゴールド|동료 5000골드|ลูกสมุน 5,000 เหรียญ|Đồng hành 5.000 vàng|Спутники · 5000 золота|Gefährten · 5.000 Gold|Seguaci · 5.000 oro
 ui.rest|剩餘|剩余|Left|残り|남은|เหลือ|Còn lại|Осталось|Übrig|Restano
 ui.zoom|縮放|缩放|Zoom|ズーム|확대/축소|ซูม|Thu phóng|Масштаб|Zoom|Zoom
+pet.title|隨從|随从|Pets|仲間|동료|เพื่อน|Đồng hành|Питомцы|Begleiter|Compagni
+pet.sub|叫出或收回已雇用的隨從。收回不會受傷，隨時可以再叫。|叫出或收回已雇用的随从。收回不会受伤，随时可以再叫。|Call out or recall a pet you hired. Recalling never hurts them — call them back anytime.|雇った仲間を呼び出す／戻せます。戻しても傷つきません。|고용한 동료를 소환하거나 회수하세요. 회수해도 다치지 않습니다.|เรียกหรือเก็บเพื่อนที่จ้างไว้ เก็บแล้วไม่บาดเจ็บ|Gọi ra hoặc thu hồi thú đồng hành đã thuê. Thu hồi không làm nó bị thương.|Позовите или отзовите наёмного питомца. Отзыв не ранит его.|Begleiter rufen oder zurückholen — Zurückholen verletzt sie nicht.|Richiama o congeda un compagno assunto. Congedarlo non lo ferisce.
+pet.call|叫出|叫出|Call|呼ぶ|소환|เรียก|Gọi ra|Позвать|Rufen|Chiama
+pet.back|收回|收回|Recall|戻す|회수|เก็บคืน|Thu về|Отозвать|Zurück|Richiama
+pet.out|出場中 · HP {hp}|出场中 · HP {hp}|Out · HP {hp}|出撃中 · HP {hp}|출전 중 · HP {hp}|ออกสนาม · HP {hp}|Đang ra · HP {hp}|В бою · HP {hp}|Im Einsatz · HP {hp}|In campo · HP {hp}
+pet.idle|待命中（未出場）|待命中（未出场）|Waiting (not out)|待機中（未出撃）|대기 중（미출전）|รออยู่ (ยังไม่ออก)|Đang chờ (chưa ra)|Ждёт (не в бою)|Bereit (nicht im Einsatz)|In attesa (non in campo)
+pet.down|倒地中，會自己爬起來|倒地中，会自己爬起来|Knocked down — getting up soon|倒れています（すぐ復帰）|쓰러짐 — 곧 일어납니다|ล้มอยู่ เดี๋ยวลุกเอง|Đang gục — lát nữa tự dậy|Сбит — скоро встанет|Liegt am Boden — steht gleich auf|A terra — si rialza
+pet.none|還沒有隨從。到商店的隨從分頁雇用一隻，就能在這裡叫出。|还没有随从。到商店的随从分页雇用一只，就能在这里叫出。|No pets yet — hire one in the shop, then call it out here.|まだ仲間がいません。ショップで雇うと、ここから呼べます。|아직 동료가 없습니다. 상점에서 고용하세요.|ยังไม่มีเพื่อน จ้างที่ร้านค้าก่อน|Chưa có thú đồng hành — thuê ở cửa hàng trước.|Питомцев нет — наймите в магазине.|Noch keine Begleiter — im Shop anheuern.|Nessun compagno — assumine uno nello shop.
+pet.allOut|全部叫出|全部叫出|Call all|全部呼ぶ|전부 소환|เรียกทั้งหมด|Gọi tất cả|Позвать всех|Alle rufen|Chiama tutti
+pet.allIn|全部召回|全部召回|Recall all|全員戻す|전부 회수|เก็บคืนทั้งหมด|Thu hồi tất cả|Отозвать всех|Alle zurück|Richiama tutti
 ui.pub|發布|发布|Publish|公開|게시|เผยแพร่|Đăng|Опубликовать|Senden|Pubblica
 ui.query|查詢|查询|Search|照会|조회|สอบถาม|Tra cứu|Запрос|Abfrage|Cerca
 store.note|隨從 5000 金幣 · 單人／RPG 幫打|随从 5000 金币 · 单人／RPG 帮打|Followers · 5,000 gold · Solo / RPG|お供 5000ゴールド · ソロ／RPG|동료 5000골드 · 싱글／RPG|ลูกสมุน 5,000 เหรียญ · เดี่ยว／RPG|Đồng hành 5.000 vàng · Solo／RPG|Спутники · 5000 золота · Соло／RPG|Gefährten · 5.000 Gold · Solo／RPG|Seguaci · 5.000 oro · Solo／RPG
@@ -14692,6 +14757,9 @@ function renderLbList(force) {
 let hudKey = '';
 let pkKey = '';   // v2.9：右上橫排玩家卡自己的快取 key
 function updateHud() {
+  // v4.86：手機的 🐾 隨從鈕（跟 🔥 吐火鍵一樣，有需要才出現）
+  const petBtn2 = $id('petTouchBtn');
+  if (petBtn2) { try { petBtn2.classList.toggle('on', PetPanel.available()); } catch (e) {} }
   // 只有騎著恐龍才顯示 🔥 吐火鍵（手機）
   const fireBtn = document.querySelector('#touchUI .tfire');
   if (fireBtn) {
@@ -14753,6 +14821,13 @@ function updateHud() {
       '<div class="chip" data-k="bomb"><span class="ic">💣</span><b>' + p.maxBombs + '</b></div>' +
       '<div class="chip" data-k="spd"><span class="ic">🛼</span><b>Lv' + p.speedLv + '</b></div>' +
       '<div class="chip" data-k="gear"><span class="ic">🎒</span>' + gear + '</div>';
+    // v4.86：隨從控制台（單人／RPG 且已雇用隨從時才出現；數字＝目前出場幾隻）
+    try {
+      if (PetPanel.available()) {
+        html += '<button class="chip petchip" id="petBtn" type="button"><span class="ic">🐾</span><b>' +
+          PetPanel.outCount() + '</b></button>';
+      }
+    } catch (e) {}
     html += '<div class="chip big" id="hudTimer"><span class="ic">⏱️</span><b>' + fmtTime(Game.timer) + '</b></div>';
   } else {
     // 對戰：左右側欄玩家卡（SBR 風），頂部只留大計時器
@@ -14777,6 +14852,7 @@ function updateHud() {
     hudKey = key;
     top.innerHTML = html;
     $id('pauseBtn').addEventListener('click', togglePause);
+    $id('petBtn') && $id('petBtn').addEventListener('click', function () { PetPanel.open(); });
     applyHudFx();   // v4.4：HUD 重畫後把還在時效內的高亮補回去
   }
 }
@@ -15093,7 +15169,11 @@ function updateCamera(dt) {
 //   · 只改「畫布怎麼看」→ 玩家／怪物／炸彈的世界座標完全不動，
 //     所以物理、碰撞、鏡頭夾邊都不用改，也不影響連線同步。
 // ====
-const ZOOM_MIN = .42, ZOOM_MAX = 2.10, ZOOM_STEP = .14;   // v4.65：範圍放寬（手機大地圖看得到整張）
+const ZOOM_MIN = .42, ZOOM_MAX = 3.00, ZOOM_STEP = .18;   // v4.86：上限 210% → 300%（手機捏合與滾輪都吃這個）
+// v4.86：手機捏合速度。原本是「手指距離比 = 縮放倍率」1:1 → 要張到 3 倍手指距離才到 300%，
+//   實際手勢張不開，玩家得放開再捏好幾次。改成對比例取 1.75 次方，小幅張手就有明顯變化，
+//   但比例 <1（縮小）同樣被壓縮 → 兩邊手感一致，不會只能放大不能縮小。
+const PINCH_GAIN = 1.75;
 const Zoom = (function () {
   const pts = {};                 // 正在畫面上的手指（pointerId → 座標）
   let pinchD = 0, pinchBase = 1, pinchBad = false;   // pinchBad：這一輪手勢已判定不可信（手指被換掉／版面重排）→ 放手前都不再縮放
@@ -15174,7 +15254,7 @@ const Zoom = (function () {
             //   直接封掉這一輪手勢，兩指都離開後才恢復。
             pinchBad = true; pinchD = d; pinchBase = Game.zoomTarget; return;
           }
-          set(pinchBase * (d / pinchD));
+          set(pinchBase * Math.pow(d / pinchD, PINCH_GAIN));
           if (e.cancelable) e.preventDefault();      // 兩指時才吃掉事件
         }
       }, { passive: false, capture: true });
@@ -25053,7 +25133,12 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.85', date: '2026-11-04', now: true, items: [
+  { v: '4.86', date: '2026-11-04', now: true, items: [
+    '🐾 遊戲中多一顆 🐾 按鈕：打開就是隨從清單，想叫誰出來、想收回誰，都由你決定（只列已經雇用的）',
+    '🔍 畫面放大上限 210% → <b>300%</b>，大地圖看細節、手機想看清楚都更好用',
+    '🤏 手機雙指縮放變快：同樣的手指幅度，縮放變化約 1.75 倍，不用再放開重捏好幾次',
+    '🎛️ 縮放百分比膠囊、滑鼠滾輪、鍵盤 1／2 全部同步吃到新的 300% 上限' ] },
+  { v: '4.85', date: '2026-11-04', now: false, items: [
     '☁️ 雲端存檔搬家了：改存到 Supabase 雲端資料庫，平台休眠、重新部署、換主機都不會再消失',
     '💾 進度全部上雲：關卡、金幣、隨從、票券、教學、每日最佳都跟著帳號走，換手機直接接續',
     '📤 設定頁新增存檔碼：按一下就複製整份進度，換裝置或帳號救不回來時貼上就能還原',
@@ -25997,8 +26082,137 @@ const Shop = (function () {
     }
   })();
 
+/* ============================================================================
+ * v4.86：隨從控制台（遊戲中 HUD 的 🐾 按鈕）
+ *   以前隨從是「商店買了就一直跟著」，玩家沒辦法中途換人。現在改成可以隨時
+ *   叫出／收回任何一隻已雇用的隨從：
+ *     · 叫出 = 用 makePet() 在主角旁邊生一隻，跟正常隨從完全一樣（會尋路、會攻擊）
+ *     · 收回 = 直接從 Game.pets 移除（不是打倒，所以不會有倒地／救援計時）
+ *   狀態存在 Game 上（Game.pets 本身就是真相），不另開一份，避免兩邊不同步。
+ * ========================================================================== */
+const PetPanel = (function () {
+  function owned() {
+    try { return Shop.active() || []; } catch (e) { return []; }
+  }
+  function modeOk() { return Game.mode === 'solo' || Game.mode === 'rpg'; }
+  function pets() {
+    if (!Array.isArray(Game.pets)) Game.pets = [];
+    return Game.pets;
+  }
+  function isOut(kind) {
+    const ps = pets();
+    for (let i = 0; i < ps.length; i++) if (ps[i] && ps[i].kind === kind) return ps[i];
+    return null;
+  }
+  function available() { return modeOk() && owned().length > 0 && Game.state !== 'idle'; }
+
+  function summon(kind) {
+    if (isOut(kind)) return false;
+    // 一定要「已雇用」才生得出來 —— 只檢查 petKind 的話，玩家能憑空叫出沒買的隨從
+    const list = owned();
+    let ch = 0, has = false;
+    for (let i = 0; i < list.length; i++) if (list[i].kind === kind) { ch = list[i].ch; has = true; }
+    if (!has || !petKind(kind)) return false;
+    if (!petHero()) return false;
+    const ps = pets();
+    ps.push(makePet(kind, ch, ps.length));
+    AudioSys.sfx('item');
+    return true;
+  }
+  function recall(kind) {
+    const ps = pets();
+    for (let i = 0; i < ps.length; i++) {
+      if (ps[i] && ps[i].kind === kind) {
+        ps.splice(i, 1);
+        AudioSys.sfx('click');
+        return true;
+      }
+    }
+    return false;
+  }
+  function toggle(kind) { return isOut(kind) ? recall(kind) : summon(kind); }
+  function outCount() { return modeOk() ? pets().length : 0; }
+
+  /* ---------- 面板 ---------- */
+  function rowHtml(o) {
+    const k = petKind(o.kind) || { ico: '🐾', name: o.kind };
+    const out = isOut(o.kind);
+    const st = out
+      ? (out.down ? t('pet.down') : t('pet.out', { hp: Math.max(0, Math.round(out.hp)) + '/' + out.maxHp }))
+      : t('pet.idle');
+    return '<div class="petrow' + (out ? ' out' : '') + '" data-k="' + o.kind + '">' +
+      '<span class="pico">' + k.ico + '</span>' +
+      '<span class="pinfo"><span class="pnm">' + k.name + '</span>' +
+      '<span class="pst">' + st + '</span></span>' +
+      '<button class="pgo" type="button" data-k="' + o.kind + '">' +
+      (out ? t('pet.back') : t('pet.call')) + '</button></div>';
+  }
+  function render() {
+    const box = $id('petList');
+    if (!box) return;
+    const list = owned();
+    box.innerHTML = list.length
+      ? list.map(rowHtml).join('')
+      : '<div class="pnone">' + t('pet.none') + '</div>';
+  }
+  function open() {
+    const p = $id('petPanel'), bk = $id('petBk');
+    if (!p) return;
+    render();
+    const tt = $id('petTitle'), sub = $id('petSub');
+    if (tt) tt.textContent = t('pet.title');
+    if (sub) sub.textContent = t('pet.sub');
+    const a1 = $id('petAllOut'), a2 = $id('petAllIn');
+    if (a1) a1.textContent = t('pet.allOut');
+    if (a2) a2.textContent = t('pet.allIn');
+    p.classList.add('on');
+    if (bk) bk.classList.add('on');
+    AudioSys.sfx('click');
+  }
+  function close() {
+    const p = $id('petPanel'), bk = $id('petBk');
+    if (p) p.classList.remove('on');
+    if (bk) bk.classList.remove('on');
+  }
+  function isOpen() {
+    const p = $id('petPanel');
+    return !!(p && p.classList && p.classList.contains('on'));
+  }
+  function allOut() { owned().forEach(function (o) { summon(o.kind); }); render(); }
+  function allIn() { pets().length = 0; AudioSys.sfx('click'); render(); }
+
+  function wire() {
+    const bk = $id('petBk');   if (bk) bk.addEventListener('click', close);
+    const cl = $id('petClose'); if (cl) cl.addEventListener('click', close);
+    // 手機：⏸／⛶ 下面那顆 🐾（不佔 HUD 的兩排額度）
+    const tp = $id('petTouchBtn');
+    if (tp) tp.addEventListener('click', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (e && e.stopPropagation) e.stopPropagation();
+      if (isOpen()) close(); else open();
+    });
+    const list = $id('petList');
+    if (list) list.addEventListener('click', function (e) {
+      const b = e.target && e.target.closest ? e.target.closest('.pgo') : null;
+      if (!b) return;
+      toggle(b.getAttribute('data-k'));
+      render();
+    });
+    const a1 = $id('petAllOut'), a2 = $id('petAllIn');
+    if (a1) a1.addEventListener('click', allOut);
+    if (a2) a2.addEventListener('click', allIn);
+  }
+  try { wire(); } catch (e) { try { __bootFail('PetPanel.wire', e); } catch (e2) {} }
+
+  return { open: open, close: close, render: render, toggle: toggle,
+    summon: summon, recall: recall, allOut: allOut, allIn: allIn,
+    available: available, isOpen: isOpen, outCount: outCount, owned: owned };
+})();
+window.PetPanel = PetPanel;
+
 // ====
 //   v4.18：分享拿金幣
+
 //   防作假（前端先擋，真正的判定在伺服器）：
 //     ① 一定要「真的分享出去」：優先用系統分享面板 navigator.share
 //        （使用者按取消會拋 AbortError → 不給金幣）
@@ -28838,7 +29052,7 @@ window.__BH = {
   sdDangerAt: sdDangerAt, aiSdFlee: aiSdFlee, addFlame: addFlame,
   AI_SPEED_CAP: AI_SPEED_CAP,
   // v4.17：商店與隨從
-  Shop: Shop, PET_KINDS: PET_KINDS, petKind: petKind, updatePets: updatePets, makePet: makePet, petFollowWork: petFollowWork, spawnPets: spawnPets,
+  Shop: Shop, PET_KINDS: PET_KINDS, petKind: petKind, updatePets: updatePets, makePet: makePet, petFollowWork: petFollowWork, spawnPets: spawnPets, PetPanel: PetPanel,
   // v4.19：2 格仇恨／中高階怪怒氣／BOSS 地盤
   AGGRO_TILES: AGGRO_TILES, BOSS_AGGRO_TILES: BOSS_AGGRO_TILES, aggroTiles: aggroTiles,
   ANGER_WINDUP: ANGER_WINDUP, ANGER_DASH_T: ANGER_DASH_T,

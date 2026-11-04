@@ -21,7 +21,7 @@ function ok(cond, name, extra) {
   ok(vm && parseFloat(vm[1]) >= 4.65, 'VERSION >= 4.65（目前 ' + (vm && vm[1]) + '，不寫死版號）');
   ok(SRC.includes('const gk = hostT > 0 ? Game.T / hostT : 1;'), '快照座標有換算係數 gk');
   ok(SRC.includes('Game.T = clamp(Math.round(tileSize() || hostT), 12, 62);'), '客人的格子大小由自己螢幕決定');
-  ok(/const ZOOM_MIN = \.42, ZOOM_MAX = 2\.10/.test(SRC), '縮放範圍 42%~210%');
+  ok(/const ZOOM_MIN = \.42, ZOOM_MAX = 3\.00/.test(SRC), '縮放範圍 42%~300%（v4.86 上限放寬）');
   ok(SRC.includes('if (p.tx != null) { p.tx *= k; p.ty *= k; }'), '轉向時插值目標一起換算');
 
   const br = await launch({ port: 9481, w: 390, h: 844 });
@@ -127,7 +127,7 @@ function ok(cond, name, extra) {
     return o;
   })()`);
   ok(Math.abs(z[0] - 0.42) < 0.001, '可縮到 42%', z);
-  ok(Math.abs(z[1] - 2.10) < 0.001, '可放到 210%', z);
+  ok(Math.abs(z[1] - 3.00) < 0.001, '可放到 300%', z);
 
   // 截圖
   await pg.eval('__BH.startMapTest(1); 1');
