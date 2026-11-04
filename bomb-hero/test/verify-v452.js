@@ -67,7 +67,8 @@ head('2. 對戰／線上配對標「測試版」');
 ok(/id="btnBattle"[^>]*>對戰模式<span class="betaTag">測試版 Beta<\/span>/.test(html), '對戰鈕標測試版 Beta');
 ok(/id="btnOnline"[^>]*>線上配對<span class="betaTag">測試版 Beta<\/span>/.test(html), '線上配對鈕標測試版 Beta');
 ok(/id="btnRpg"[^>]*>RPG 模式<span class="betaTag">測試版 Beta<\/span>/.test(html), 'RPG 鈕原本就有標');
-eq((html.match(/class="betaTag"/g) || []).length, 4, '總共 4 顆標籤（3 Beta ＋ 大逃殺未開放）');
+eq((html.match(/class="betaTag"/g) || []).length, 3, '總共 3 顆 Beta 標籤（大逃殺改成 HOT 推薦標籤）');
+eq((html.match(/class="hotTag"/g) || []).length, 1, '大逃殺有 1 顆 HOT 標籤');
 
 head('3. 首頁大按鈕：統一外型与四種狀態');
 ['btnLearn', 'btnSolo', 'btnRpg', 'btnBoss', 'btnBR', 'btnStore', 'btnAcctBig', 'btnBattle', 'btnOnline', 'btnHelp', 'btnSettings', 'btnQuit']

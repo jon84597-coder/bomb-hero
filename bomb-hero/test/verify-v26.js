@@ -103,7 +103,7 @@ ok(/const BS = e\.sizeMul \|\| 1;/.test(html) && /const BH = e\.r \* 4\.[0-9] \*
   'drawEnemy 真的用 BS 放大身高（v2.6：再乘上格子縮放 AK）');
 ok(/const sr = e\.boss \? e\.r \* \(e\.sizeMul \|\| 1\) \* tileArtK\(\) : ar;/.test(html),
    'BOSS 的影子也跟著放大（小怪改走 ar：v2.4 放大後的外型半徑）');
-ok(/const bw = Math\.max\(52, Game\.T \* 1\.15\);/.test(html), '血條加寬（配合放大後的體型）');
+ok(/const bw = Math\.max\(52, Game\.T \* \(e\.brBoss \? 1\.55 : 1\.15\)\);/.test(html), '血條加寬（配合放大後的體型；v4.76 亂入 BOSS 再寬一點）');
 // 與玩家對比：BOSS 身高 > 角色身體半徑的兩倍
 const pl = freshSolo(1);
 const pT = G.T;
