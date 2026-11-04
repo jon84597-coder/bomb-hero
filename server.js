@@ -977,7 +977,13 @@ const server = http.createServer(function (req, res) {
       relay: relayRooms.size,
       players: Array.from(rooms.values()).reduce(function (n, r) { return n + r.players.filter(function (p) { return p.connected; }).length; }, 0),
       accounts: cs.accounts,
-      tamper: cs.tamper
+      tamper: cs.tamper,
+      // v4.85：存檔到底存在哪 —— 這三個欄位就是「能不能永存」的答案
+      storage: cs.storage,               // supabase / file / memory
+      storageLoaded: cs.storageLoaded,   // 有沒有真的從雲端讀到資料
+      storageError: cs.storageError || '',   // 連不上時的原因（給人看的）
+      storageWrites: cs.storageWrites,
+      storageFails: cs.storageFails
     });
   }
 
