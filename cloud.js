@@ -651,7 +651,12 @@ function createStore(dir, persist, remote) {
   if (persist) loadLocal();
   let readyP = Promise.resolve(true);
   if (remoteOn) readyP = loadRemote(1);
-  else state.ready = true;
+  else {
+    state.ready = true;
+    // 沒有遠端時「儲存可用」就等於本機檔案可用；
+    // 若這裡留 false，/api/health 會顯示 storageLoaded:false，看起來像壞掉
+    state.loaded = !!persist;
+  }
 
   return {
     db: db, touch: touch, flush: flush, file: file,

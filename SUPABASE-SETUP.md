@@ -92,8 +92,15 @@ Render 後台 → 你的服務 `bomb-hero-game` → **Environment** → **Add En
 { "ok": true, "accounts": 2, "storage": "supabase", "storageLoaded": true, "storageFails": 0 }
 ```
 
-`storage` 是 `supabase` 且 `storageLoaded: true` 就代表接上了。
-若 `storage` 是 `file`，表示環境變數沒生效。
+**只看 `storage` 這個欄位**：
+
+| storage | 意思 |
+|---|---|
+| `supabase` | ✅ 接上了，存檔在雲端資料庫 |
+| `file` | ⚠️ 還在寫本機暫存檔（環境變數沒生效，或還沒重啟） |
+| `memory` | ❌ 連本機檔案都沒開，重啟一定歸零 |
+
+`storageError` 有內容就是連線失敗的原因（金鑰錯、表沒建、網路不通）。
 
 ---
 
