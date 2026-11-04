@@ -15,15 +15,15 @@ const files = fs.readdirSync(dir)
 function parse(out) {
   const lines = out.split('\n');
   let pass = null, fail = null;
-  for (let i = lines.length - 1; i >= 0 && pass === null; i--) {
+  for (let i = lines.length - 1; i >= 0 && pass === null && i >= lines.length - 6; i--) {
     const ln = lines[i];
     let m;
     // 「通過 49 / 49」＝ passed / total
     if ((m = ln.match(/通過\s*(\d+)\s*\/\s*(\d+)/))) { pass = +m[1]; fail = +m[2] - +m[1]; break; }
-    // 「129 項通過、0 項失敗」
-    if ((m = ln.match(/(\d+)\s*(?:項)?\s*通過[^\d]*?(\d+)\s*(?:項)?\s*失敗/))) { pass = +m[1]; fail = +m[2]; break; }
-    // 「97 項通過」
-    if ((m = ln.match(/(\d+)\s*(?:項)?\s*通過/))) { pass = +m[1]; fail = 0; break; }
+    // v4.78：先抓「N 失敗 / M 通過」——舊版只看「M 通過」→ 失敗被吃掉，測試明明紅的也報綠
+    const pf = ln.match(/(\d+)\s*(?:項)?\s*通過/);
+    const ff = ln.match(/(\d+)\s*(?:項)?\s*失敗/);
+    if (pf) { pass = +pf[1]; fail = ff ? +ff[1] : 0; break; }
     // 「通過 97 項」「通過 28」
     if ((m = ln.match(/通過\s*(\d+)\s*(?:項)?/))) { pass = +m[1]; fail = 0; break; }
   }

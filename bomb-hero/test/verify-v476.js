@@ -121,7 +121,7 @@ ok(/matte|mates\.push|mates\[i\]/.test(src) && /q\.alive \? String\(q\.name/.tes
 
 // ---------- 5. 提示只講自己 ----------
 head('5. 提示只回報自己');
-ok(/if \(isMyPlayer\(p\)\) brTip\('💔'/.test(src), '別人扣血不再跳提示（只有自己的）');
+ok(/if \(isMyPlayer\(p\)\) \{[\s\S]{0,200}?brTip\('💔'/.test(src) && !/else banner\('♥/.test(src), '別人扣血不再跳提示（只有自己的）');
 ok(/mate \? '💚' : '☠️'/.test(src), '隊友出局用不同顏色講');
 ok((src.match(/brTip\('💔'/g) || []).length === 1, '「受到傷害」只有一個呼叫點');
 
@@ -129,10 +129,10 @@ ok((src.match(/brTip\('💔'/g) || []).length === 1, '「受到傷害」只有�
 head('6. 首頁：推薦測試遊玩（HOT）');
 ok(/class="mbtn c-br has-beta" id="btnBR"/.test(src), 'btnBR 不再標 locked（未開放）');
 ok(!/未開放<\/span>/.test(src), '畫面上沒有「未開放」標籤');
-ok(/大逃殺<span class="hotTag">HOT<\/span>/.test(src), '按鈕文字：大逃殺＋HOT');
+ok(/t\('br\.btnTop'\) \+ '<span class="hotTag">HOT<\/span><small>'/.test(src), '按鈕文字：大逃殺＋HOT（走字典 br.btnTop）');
 ok(/推薦測試遊玩/.test(src), '副標寫「推薦測試遊玩」');
 ok(/\.hotTag \{/.test(src) && /@keyframes hotPulse/.test(src), 'HOT 標籤有自己的樣式與呼吸光');
-ok(/14 隻小怪＋' \+ BR\.BOSS_N/.test(src), '入口卡寫清楚有亂入 BOSS');
+ok(/t\('br\.foot', \{ b: BR\.BOSS_N \}\)/.test(src), '入口卡寫清楚有亂入 BOSS（br.foot 帶 BOSS_N）');
 
 // ---------- 7. 草原底圖 ----------
 head('7. 草原底圖（調亮＋加飽和）');
@@ -151,9 +151,9 @@ head('7. 草原底圖（調亮＋加飽和）');
 
 // ---------- 8. 版本 ----------
 head('8. 版本');
-ok(P.VERSION === '4.76', 'VERSION = 4.76');
-ok(P.VERSION_LOG[0].v === '4.76', '版本紀錄最上面是 4.76');
-ok(/v4\.76\.0/.test(fs.readFileSync(path.join(__dirname, '../sw.js'), 'utf8')), 'sw.js 升到 v4.76.0');
+ok(/(^|\D)4\.(7[6-9]|[89]\d)(\D|$)/.test(P.VERSION), 'VERSION ≥ 4.76（實際 ' + P.VERSION + '）');
+ok(P.VERSION_LOG[0].v === P.VERSION, '版本紀錄最上面是本版 ' + P.VERSION);
+ok(/SW_VERSION = 'v4\.(7[6-9]|[89]\d)\.\d+'/.test(fs.readFileSync(path.join(__dirname, '../sw.js'), 'utf8')), 'sw.js 版本跟著升');
 
 console.log('\n' + (fail ? '✗ ' + fail + ' 失敗 / ' + pass + ' 通過' : '✅ v4.76：' + pass + ' 通過 / 0 失敗'));
 process.exit(fail ? 1 : 0);

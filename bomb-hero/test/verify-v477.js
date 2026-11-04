@@ -167,15 +167,15 @@ ok(/trBlockInner/.test(src) && /TRBLOCK_CLS/.test(src), '整塊 innerHTML 有翻
 
 // ---------- 6. 版本與容量 ----------
 head('6. 版本與容量');
-ok(P.VERSION === '4.77', 'VERSION = 4.77');
-ok(P.VERSION_LOG[0].v === '4.77', '版本紀錄最上面是 4.77');
+ok(/^4\.(7[7-9]|[89][0-9])$/.test(P.VERSION), 'VERSION 是 4.77 以上（' + P.VERSION + '）');
+ok(P.VERSION_LOG[0].v === P.VERSION, '版本紀錄最上面是本版 ' + P.VERSION);
 ok(P.VERSION_LOG[0].items.filter(function (x) { return /ver\.4\.77\./.test(x.k || ''); }).length >= 0, '版本紀錄條目正常');
-ok(P.VERSION_LOG[1] && P.VERSION_LOG[1].v === '4.76', '第二筆是 4.76');
+ok(P.VERSION_LOG[1] && /^4\./.test(P.VERSION_LOG[1].v), '第二筆是上一版 ' + (P.VERSION_LOG[1] || {}).v);
 ok(P.VERSION_LOG[0].now === true && P.VERSION_LOG[1].now === false, '只有最新版標 now');
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (f) {
   const p2 = path.join(__dirname, f);
   if (!fs.existsSync(p2)) { ok(false, f + ' 不存在'); return; }
-  ok(/v4\.77\.0/.test(fs.readFileSync(p2, 'utf8')), f + ' 升到 v4.77.0');
+  ok(/SW_VERSION = 'v4\.(7[7-9]|[89][0-9])\.\d+'/.test(fs.readFileSync(p2, 'utf8')), f + ' 版本跟著升');
 });
 (function () {
   const chars = src.length, bytes = Buffer.byteLength(src, 'utf8');

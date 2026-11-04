@@ -1,6 +1,9 @@
 // 線上煙霧：開 Pages 站，確認版本 / 10 國語系 / 說明頁 7 分頁 / 大逃殺 50 人 / BOSS 坐騎
+const fs = require('fs');
 const { launch, sleep } = require('./cdp');
 const URL = process.argv[2] || 'https://jon84597-coder.github.io/bomb-hero/';
+// 版號不寫死：以本機 index.html 的 VERSION 為準（部署後線上必須一致）
+const WANT = /const VERSION = '([^']+)'/.exec(fs.readFileSync(require('path').join(__dirname, '../index.html'), 'utf8'))[1];
 let pass = 0, fail = 0;
 const ok = (n, c, e) => { if (c) { pass++; console.log('  ✓ ' + n + (e ? '（' + e + '）' : '')); } else { fail++; console.log('  ✗ ' + n + (e ? '（' + e + '）' : '')); } };
 (async () => {
@@ -11,9 +14,9 @@ const ok = (n, c, e) => { if (c) { pass++; console.log('  ✓ ' + n + (e ? '（'
   await p.goto(URL, 3000);
   for (let i = 0; i < 40; i++) { if (await p.eval('typeof __BH') === 'object') break; await sleep(300); }
   ok('__BH 載入完成', (await p.eval('typeof __BH')) === 'object');
-  ok('版本 4.77', (await p.eval('__BH.VERSION')) === '4.77', await p.eval('__BH.VERSION'));
-  ok('徽章文字同步', (await p.eval("(document.getElementById('verTxt')||{}).textContent")) === '4.77');
-  ok('版本紀錄最上面是 4.77', (await p.eval('__BH.VERSION_LOG[0].v')) === '4.77');
+  ok('版本 ' + WANT, (await p.eval('__BH.VERSION')) === WANT, await p.eval('__BH.VERSION'));
+  ok('徽章文字同步', (await p.eval("(document.getElementById('verTxt')||{}).textContent")) === WANT);
+  ok('版本紀錄最上面是 ' + WANT, (await p.eval('__BH.VERSION_LOG[0].v')) === WANT);
   ok('八大關卡底圖下載得到', await p.eval("(function(){return new Promise(function(r){var im=new Image();im.onload=function(){r(im.naturalWidth>=256)};im.onerror=function(){r(false)};im.src='bg/forest.webp';setTimeout(function(){r(false)},6000);})})()"));
 
   // ---- 10 國語系 ----
