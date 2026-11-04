@@ -8590,7 +8590,7 @@ const Daily = {
 
 /* ---------------- 排行榜（前端） ---------------- */
 const Lb = {
-  TIMEOUT: 9000,
+  TIMEOUT: 10000,         // 第一次連 Render 常卡在 DNS／TLS 握手（實測 7s+），給寬一點，失敗再重試一次
   last: null,             // { day, list, online, at }
   _busy: false,
   /* 後端位址：靜態空間（GitHub Pages／file://）沒有 /api，直接打 Render 那台 */
@@ -8624,7 +8624,10 @@ const Lb = {
     }
     return id;
   },
-  _get(url) {
+  /* 單次請求。第一次連後端常常卡在 DNS／TLS 握手（實測 7 秒以上才通），
+     所以外層 _retry 會再打一次 —— 第二次連線已經暖了，通常 1 秒內回來。
+     POST 重試是安全的：後端同裝置只升級不降級，重送同一個 ms 不會產生重複紀錄。 */
+  _once(url, method, body) {
     return new Promise(function (resolve) {
       let done = false;
       const fin = function (v) { if (!done) { done = true; resolve(v); } };
@@ -8633,25 +8636,22 @@ const Lb = {
         try { if (ctl) ctl.abort(); } catch (e) {}
         fin({ ok: false, err: 'TIMEOUT' });
       }, Lb.TIMEOUT);
-      fetch(url, { method: 'GET', cache: 'no-store', signal: ctl ? ctl.signal : undefined }).then(function (r) {
+      const opt = { method: method, cache: 'no-store' };
+      if (ctl) opt.signal = ctl.signal;
+      if (body) { opt.headers = { 'Content-Type': 'application/json' }; opt.body = JSON.stringify(body); }
+      fetch(url, opt).then(function (r) {
         return r.json().then(function (j) { fin(j || { ok: false }); }, function () { fin({ ok: false, err: 'BAD_JSON' }); });
       }).catch(function () { fin({ ok: false, err: 'NET' }); }).then(function () { clearTimeout(tm); });
     });
   },
-  _post(url, body) {
-    return new Promise(function (resolve) {
-      let done = false;
-      const fin = function (v) { if (!done) { done = true; resolve(v); } };
-      const tm = setTimeout(function () { fin({ ok: false, err: 'TIMEOUT' }); }, Lb.TIMEOUT);
-      fetch(url, {
-        method: 'POST', cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body || {})
-      }).then(function (r) {
-        return r.json().then(function (j) { fin(j || { ok: false }); }, function () { fin({ ok: false, err: 'BAD_JSON' }); });
-      }).catch(function () { fin({ ok: false, err: 'NET' }); }).then(function () { clearTimeout(tm); });
+  _retry(url, method, body) {
+    return Lb._once(url, method, body).then(function (j) {
+      if (j && (j.err === 'TIMEOUT' || j.err === 'NET')) return Lb._once(url, method, body);
+      return j;
     });
   },
+  _get(url) { return Lb._retry(url, 'GET', null); },
+  _post(url, body) { return Lb._retry(url, 'POST', body || {}); },
   top(day) {
     const d = day || dailyDayKey();
     return Lb._get(Lb.origin() + '/api/lb/top?mode=daily&day=' + encodeURIComponent(d) + '&limit=50')
@@ -13904,7 +13904,7 @@ function renderDailyScreen() {
   set('btnLbReload', t('lb.reload'));
   renderLbList();
 }
-function renderLbList() {
+function renderLbList(force) {
   const box = $id('lbList');
   if (!box) return;
   const day = Daily.today();
@@ -13919,11 +13919,14 @@ function renderLbList() {
   else box.innerHTML = '<div class="empty">' + t('lb.loading') + '</div>';
   const hint = $id('lbHint');
   if (hint) hint.textContent = '';
-  const st = Lb.last;
-  if (st && st.day === day) {
+  // force：使用者按了「重新整理」，就算今天已經抓過也要重打（否則永遠看到上次的離線結果）
+  const st = (!force && Lb.last && Lb.last.day === day) ? Lb.last : null;
+  if (st) {
     paint(st.list);
     if (hint) hint.textContent = st.online ? t('lb.online') : t('lb.cached');
   } else {
+    Lb.last = null;
+    if (hint) hint.textContent = t('lb.loading');
     Lb.top(day).then(function (res) {
       if (Screen.current !== 'daily') return;      // 玩家已經離開，不要回頭改畫面
       paint(res.list);
@@ -21433,6 +21436,12 @@ $id('btnLb').addEventListener('click', function () {
   renderDailyScreen();
 });
 $id('btnDailyGo').addEventListener('click', function () { Daily.begin(); });
+// v4.80：重新整理榜單 —— 一定要清掉 Lb.last 才會真的重打（不然同一天只會顯示上次結果）
+$id('btnLbReload').addEventListener('click', function () {
+  AudioSys.ensure(); AudioSys.sfx('click');
+  Lb.last = null;
+  renderLbList(true);
+});
 // v4.8：固定暱稱（首次玩必須先命名，之後都用這個）
   try {
 (function () {

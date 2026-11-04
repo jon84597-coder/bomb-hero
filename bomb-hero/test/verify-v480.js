@@ -130,6 +130,15 @@ ok(P.Lb.deviceId() === dl, '同一台裝置指紋穩定（送榜才不會重複�
 ok(/bombhero-lb-/.test(src) && /bombhero-daily-best/.test(src), '本機快取 key 存在（離線看得到上一次的榜）');
 ok(/MAX_KEEP: 30/.test(src), '本機最佳只留 30 天（不會撐爆 localStorage）');
 
+// v4.80 修正：第一次連 Render 會卡 7 秒以上才通，單次 9 秒逾時會誤判離線
+ok(typeof P.Lb._retry === 'function', 'Lb 有 _retry（失敗會再試一次）');
+ok(/if \(j && \(j\.err === 'TIMEOUT' \|\| j\.err === 'NET'\)\) return Lb\._once\(url, method, body\)/.test(src),
+  '逾時／斷線會自動重試一次');
+ok(/TIMEOUT: 10000/.test(src), '單次逾時放寬到 10 秒');
+ok(/\$id\('btnLbReload'\)\.addEventListener\('click'/.test(src), '「重新整理」按鈕真的有綁 click（v4.80 之前只換文字）');
+ok(/Lb\.last = null;[\s\S]{0,40}renderLbList\(true\)/.test(src), '重新整理會清掉 Lb.last 並強制重抓');
+ok(/function renderLbList\(force\)/.test(src), 'renderLbList 吃 force 參數');
+
 // ---------- 5. 排行榜後端 ----------
 head('5. 排行榜（後端）');
 const cloudSrc = fs.readFileSync(path.join(ROOT, '..', 'cloud.js'), 'utf8');

@@ -139,15 +139,26 @@ function todayKey() {           // 與前端 dailyDayKey() 相同的 UTC+8 換�
   ok('開始按鈕標示 3:00', goTxt.indexOf('3:00') >= 0, goTxt.trim());
   ok('Lb.origin() 指向後端', (await p.eval('__BH.Lb.origin()')) === API.replace('https://', 'https://'), await p.eval('__BH.Lb.origin()'));
 
-  // 榜單是否真的從網路拉回來（畫面只有一筆 TESTER，且沒有「離線」字樣）
+  // 榜單是否真的從網路拉回來（首次連線可能 10~20 秒，等寬一點）
   let lbTxt = '';
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 35; i++) {
     lbTxt = await p.eval("(document.getElementById('lbList').textContent||'')+'|'+(document.getElementById('lbHint').textContent||'')");
     if (lbTxt.indexOf('TESTER') >= 0) break;
-    await sleep(700);
+    await sleep(1000);
   }
   ok('線上榜單抓到 TESTER', lbTxt.indexOf('TESTER') >= 0, lbTxt.replace(/\s+/g, ' ').slice(0, 90));
   ok('榜單沒有「離線」提示', lbTxt.indexOf('離線') < 0, lbTxt.indexOf('離線') >= 0 ? '出現離線字樣' : 'ok');
+
+  // 重新整理按鈕：按了要真的再打一次（曾經只換文字、沒有 click 監聽）
+  const before = await p.eval('__BH.Lb.last && __BH.Lb.last.at');
+  await p.eval("document.getElementById('btnLbReload').click();1");
+  let reloaded = 0;
+  for (let i = 0; i < 25; i++) {
+    reloaded = await p.eval('(__BH.Lb.last && __BH.Lb.last.at) || 0');
+    if (reloaded && reloaded !== before) break;
+    await sleep(800);
+  }
+  ok('重新整理會重新抓榜（last.at 有變）', reloaded && reloaded !== before, String(before) + ' → ' + String(reloaded));
 
   // 每日挑戰真的開得起來、且地圖是決定性的
   const run = await p.eval(`(function(){
@@ -157,7 +168,7 @@ function todayKey() {           // 與前端 dailyDayKey() 相同的 UTC+8 換�
       G.state='play'; G.countdown=0; G.camSnap=true; __BH.updateCamera(1/60); __BH.render();
       return JSON.stringify({ state:G.state, daily:!!G.daily, day:G.daily&&G.daily.day,
         seed:G.daily&&G.daily.seed, timer:Math.round(G.timer), foes:G.enemies.length,
-        door:G.door? (G.door.x+','+G.door.y) : null, sprites:G.sprites.length });
+        door:G.door? (G.door.x+','+G.door.y) : null, items:G.items.length });
     }catch(e){ return 'ERR:'+e.message; }
   })()`);
   let R = {};
@@ -165,13 +176,13 @@ function todayKey() {           // 與前端 dailyDayKey() 相同的 UTC+8 換�
   ok('Daily.begin() 進得去', R.state === 'play', JSON.stringify(R).slice(0, 140));
   ok('Game.daily 帶著今天的日期', R.day === DAY, R.day);
   ok('每日挑戰計時 180 秒', R.timer === 180, String(R.timer));
+  ok('每日挑戰有怪物與道具', R.foes > 0 && R.items > 0, R.foes + ' 隻 / ' + R.items + ' 個道具');
   const fp = await p.eval(`(function(){
     try{
-      var a=__BH.dailySeedOf(__BH.dailyDayKey());
-      __BH.Game.daily=null; __BH.startSolo(__BH.dailyStageOf(a),false);
-      var g1=[__BH.Game.sprites.length, __BH.Game.enemies.length, (__BH.Game.door.x+','+__BH.Game.door.y)].join('|');
-      __BH.Game.daily=null; __BH.startSolo(__BH.dailyStageOf(a),false);
-      var g2=[__BH.Game.sprites.length, __BH.Game.enemies.length, (__BH.Game.door.x+','+__BH.Game.door.y)].join('|');
+      var a=__BH.dailySeedOf(__BH.dailyDayKey()), s=__BH.dailyStageOf(a);
+      function sig(){ return [__BH.Game.items.length, __BH.Game.enemies.length, (__BH.Game.door.x+','+__BH.Game.door.y)].join('|'); }
+      __BH.Game.daily=null; __BH.startSolo(s,false); var g1=sig();
+      __BH.Game.daily=null; __BH.startSolo(s,false); var g2=sig();
       return g1+' :: '+g2;
     }catch(e){ return 'ERR:'+e.message; }
   })()`);
