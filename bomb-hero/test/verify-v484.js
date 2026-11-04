@@ -124,7 +124,7 @@ ok(!/[\u4e00-\u9fff]/.test(sh.split('|')[9]), '德文欄沒有漏中文');
 // ─────────────────────────────────────────────────────────────
 head('⑧ 版本與容量');
 const P = env.BH;
-ok(P.VERSION === '4.84', 'VERSION 就是 4.84（實際 ' + P.VERSION + '）');
+ok(/^4\.(8[4-9]|9\d)$/.test(P.VERSION), 'v4.84 的改動仍在（目前 ' + P.VERSION + '）');
 ok(new RegExp('<span id="verTxt">' + P.VERSION + '</span>').test(src), '#verTxt 跟著 VERSION');
 ok(new RegExp('<span id="verLogVer">' + P.VERSION + '</span>').test(src), '#verLogVer 跟著 VERSION');
 ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 首位＝當前版本且 now:true');

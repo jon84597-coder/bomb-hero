@@ -68,7 +68,7 @@ const chars = src.length, bytes = Buffer.byteLength(src, 'utf8');
 const gz = zlib.gzipSync(Buffer.from(src, 'utf8'), { level: 9 }).length;
 ok(chars < 1600000, '主檔 ' + chars + ' 字元（原本 3,345,500）');
 ok(gz < 900000, 'gzip 後 ' + Math.round(gz / 1024) + ' KB（原本 1.98 MB）');
-ok(chars < 1800000 && bytes < 2000000, '新的容量上限 1,800,000 字元 / 2,000,000 位元組');
+ok(chars < 3900000 && bytes < 4250000, '容量上限 3,900,000 字元 / 4,250,000 位元組（與其他驗證一致）');
 const crlf = (src.match(/\r/g) || []).length;
 ok(crlf === 0, '整檔仍是 LF（\\r = ' + crlf + '）');
 

@@ -3187,6 +3187,13 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
 .lbrow .nm { font-weight: 800; color: #33261a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lbrow .tm { font-weight: 900; color: #b4531a; font-variant-numeric: tabular-nums; }
 .lblist .empty { text-align: center; color: #8a7350; font-size: 13px; padding: 18px 6px; line-height: 1.65; }
+/* v4.85：存檔備份碼輸入框（等寬字、可折行，長字串不會撐破版面） */
+.savecode {
+  width: 100%; min-height: 74px; box-sizing: border-box; margin-top: 7px;
+  resize: vertical; word-break: break-all; overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px; line-height: 1.5;
+}
 @media (max-width: 640px) { .lbrow { font-size: 12.5px; } .dailyrow { font-size: 12.5px; } }
 /* ══════════════════════════════════════════════════════════════════
    v4.84：下滑提示（首頁＋所有選項頁共用一顆）
@@ -3278,7 +3285,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.84</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.85</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -3317,7 +3324,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.84</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.85</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -3597,6 +3604,15 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
       <div class="field"><label>小地圖（雷達）</label>
         <div class="seg" id="segMiniMap"><button data-v="1">開</button><button data-v="0">關</button></div>
         <div class="hint">只在「隨機生成」的大地圖與組隊對戰出現。牆壁留深底、可走的路淡淡發亮；怪物只顯示你周圍 7 格（不是全圖開圖）。關掉可以多留一點畫面給戰場。</div>
+      </div>
+      <div class="field"><label id="saveBakLab">存檔備份</label>
+        <div class="hint" id="saveBakDesc"></div>
+        <div class="keybtns">
+          <button class="minibtn" id="btnSaveExport" type="button">📤 匯出存檔碼</button>
+          <button class="minibtn" id="btnSaveImport" type="button">📥 貼上還原</button>
+        </div>
+        <textarea class="tinput savecode" id="saveCode" rows="3" spellcheck="false" autocomplete="off"></textarea>
+        <div class="hint" id="saveState"></div>
       </div>
       <div class="backrow">
         <button class="ghostbtn" data-back="1">← 回主選單</button>
@@ -3952,7 +3968,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.84';
+const VERSION = '4.85';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4363,6 +4379,17 @@ ui.query|查詢|查询|Search|照会|조회|สอบถาม|Tra cứu|Зап�
 store.note|隨從 5000 金幣 · 單人／RPG 幫打|随从 5000 金币 · 单人／RPG 帮打|Followers · 5,000 gold · Solo / RPG|お供 5000ゴールド · ソロ／RPG|동료 5000골드 · 싱글／RPG|ลูกสมุน 5,000 เหรียญ · เดี่ยว／RPG|Đồng hành 5.000 vàng · Solo／RPG|Спутники · 5000 золота · Соло／RPG|Gefährten · 5.000 Gold · Solo／RPG|Seguaci · 5.000 oro · Solo／RPG
 help.desc|操作、道具、坐騎招式、場景機關、大逃殺、怪物圖鑑一次看懂 —— 點上面的分類切換。|操作、道具、坐骑招式、场景机关、大逃杀、怪物图鉴一次看懂 —— 点上面的分类切换。|Controls, items, mount skills, stage hazards, Battle Royale and the monster guide in one place — switch tabs above.|操作・アイテム・騎乗スキル・ステージの仕掛け・バトロワ・モンスター図鑑をまとめて確認 —— 上のタブで切り替え。|조작, 아이템, 탈것 기술, 스테이지 장치, 배틀로얄, 몬스터 도감을 한 번에 —— 위 탭에서 전환하세요.|การควบคุม ไอเทม ท่าของพาหนะ กลไกในด่าน แบทเทิลรอยัล และคู่มือมอนสเตอร์ ครบในที่เดียว —— สลับแท็บด้านบน|Điều khiển, vật phẩm, chiêu của thú cưỡi, cơ chế màn chơi, sinh tồn và sổ tay quái — xem tất cả ở đây, chuyển tab phía trên.|Управление, предметы, приёмы ездовых, ловушки уровней, королевская битва и бестиарий — всё здесь, переключайте вкладки сверху.|Steuerung, Items, Reittier-Fähigkeiten, Level-Mechaniken, Battle Royale und Monsterlexikon auf einen Blick — oben umschalten.|Comandi, oggetti, mosse delle cavalcature, meccaniche dei livelli, battle royale e bestiario in un colpo d'occhio — cambia scheda qui sopra.
 help.title|📖 遊戲說明|📖 游戏说明|📖 Game Guide|📖 ゲーム説明|📖 게임 설명|📖 คู่มือเกม|📖 Hướng dẫn|📖 Инструкция|📖 Spielanleitung|📖 Guida
+save.bak|存檔備份|存档备份|Save backup|セーブのバックアップ|저장 백업|สำรองเซฟ|Sao lưu bản lưu|Резервная копия|Sicherung|Backup
+save.bakDesc|換手機、清掉瀏覽器資料，或帳號救不回來時，用這串碼把進度搬回來（關卡、金幣、隨從、票券、教學、每日最佳）。|换手机、清掉浏览器数据，或账号救不回来时，用这串码把进度搬回来（关卡、金币、随从、票券、教学、每日最佳）。|Moving to a new phone, clearing browser data, or locked out of your account? Paste this code to bring your progress back: stages, coins, pets, tickets, tutorial and daily best.|機種変更・ブラウザデータの削除・アカウント復旧不能のとき、このコードで進行状況を戻せます（ステージ・コイン・仲間・チケット・チュートリアル・デイリー最佳）。|기기 변경, 브라우저 데이터 삭제, 계정 복구 불가 시 이 코드로 진행 상황을 되살릴 수 있습니다(스테이지·코인·동료·티켓·튜토리얼·일일 최고).|เปลี่ยนมือถือ ล้างข้อมูลเบราว์เซอร์ หรือกู้บัญชีไม่ได้ ใช้รหัสนี้ย้ายความคืบหน้ากลับมา (ด่าน เหรียญ เพื่อนร่วมทีม ตั๋ว บทสอน สถิติรายวัน)|Đổi máy, xóa dữ liệu trình duyệt, hay không vào được tài khoản? Dán mã này để lấy lại tiến độ: màn, xu, thú đồng hành, vé, hướng dẫn, kỷ lục ngày.|Смена телефона, очистка браузера или потеря доступа к аккаунту? Вставьте код, чтобы вернуть прогресс: уровни, монеты, питомцы, билеты, обучение, рекорд дня.|Neues Handy, gelöschte Browserdaten oder kein Zugang zum Konto? Mit diesem Code holst du deinen Fortschritt zurück: Level, Münzen, Begleiter, Tickets, Tutorial, Tagesbestwert.|Cambio telefono, dati del browser cancellati o account irraggiungibile? Incolla questo codice per riavere i progressi: livelli, monete, compagni, biglietti, tutorial, record giornaliero.
+save.export|📤 匯出存檔碼|📤 导出存档码|📤 Export save code|📤 セーブコードを書き出す|📤 저장 코드 내보내기|📤 ส่งออกรหัสเซฟ|📤 Xuất mã lưu|📤 Экспорт кода|📤 Code exportieren|📤 Esporta codice
+save.import|📥 貼上還原|📥 粘贴还原|📥 Restore from code|📥 貼り付けて復元|📥 붙여넣어 복원|📥 วางเพื่อกู้คืน|📥 Dán để khôi phục|📥 Вставить и восстановить|📥 Einfügen und laden|📥 Incolla e ripristina
+save.ph|貼上存檔碼…|粘贴存档码…|Paste your save code…|セーブコードを貼り付け…|저장 코드를 붙여넣으세요…|วางรหัสเซฟ…|Dán mã lưu…|Вставьте код сохранения…|Speichercode einfügen…|Incolla il codice…
+save.copied|存檔碼已複製，找個地方存起來|存档码已复制，找个地方存起来|Code copied — keep it somewhere safe|コードをコピーしました。安全な場所に保管してください|코드를 복사했습니다. 안전한 곳에 보관하세요|คัดลอกรหัสแล้ว เก็บไว้ในที่ปลอดภัย|Đã sao chép mã — hãy cất ở nơi an toàn|Код скопирован — сохраните его|Code kopiert — sicher aufbewahren|Codice copiato — conservalo
+save.copyFail|請長按上方文字全選複製|请长按上方文字全选复制|Long-press the text above to copy it|上の文字を長押しして全選択コピーしてください|위 글자를 길게 눌러 전체 선택 후 복사하세요|กดค้างที่ข้อความด้านบนเพื่อคัดลอก|Nhấn giữ đoạn chữ trên để sao chép|Нажмите и удерживайте текст выше, чтобы скопировать|Text oben lange drücken zum Kopieren|Tieni premuto il testo sopra per copiarlo
+save.noCode|先把存檔碼貼進框裡|先把存档码贴进框里|Paste a save code first|先にセーブコードを貼り付けてください|먼저 저장 코드를 붙여넣으세요|วางรหัสเซฟก่อน|Hãy dán mã lưu trước|Сначала вставьте код|Zuerst den Code einfügen|Prima incolla un codice
+save.bad|這串存檔碼不完整或格式不對|这串存档码不完整或格式不对|That code is incomplete or invalid|コードが不完全か形式が違います|코드가 불완전하거나 형식이 잘못되었습니다|รหัสไม่ครบหรือรูปแบบไม่ถูกต้อง|Mã không đầy đủ hoặc sai định dạng|Код неполный или неверного формата|Code unvollständig oder ungültig|Codice incompleto o non valido
+save.confirm|還原會覆蓋這台裝置目前的進度，確定嗎？|还原会覆盖这台设备目前的进度，确定吗？|Restoring overwrites the progress on this device. Continue?|復元するとこの端末の進行状況が上書きされます。よろしいですか？|복원하면 이 기기의 진행 상황이 덮어쓰여집니다. 계속할까요?|การกู้คืนจะเขียนทับความคืบหน้าในเครื่องนี้ ดำเนินการต่อ?|Khôi phục sẽ ghi đè tiến độ trên máy này. Tiếp tục?|Восстановление перезапишет прогресс на этом устройстве. Продолжить?|Wiederherstellen überschreibt den Fortschritt auf diesem Gerät. Weiter?|Il ripristino sovrascrive i progressi su questo dispositivo. Continuare?
+save.done|已還原|已还原|Restored|復元しました|복원되었습니다|กู้คืนแล้ว|Đã khôi phục|Восстановлено|Wiederhergestellt|Ripristinato
 scrollHint|往下滑，下面還有更多|往下滑，下面还有更多|Scroll down for more|下にスクロールすると続きがあります|아래로 스크롤하면 더 있어요|เลื่อนลงเพื่อดูเพิ่มเติม|Cuộn xuống để xem thêm|Прокрутите вниз — есть ещё|Nach unten scrollen für mehr|Scorri giù per altro
 help.tab.basic|🎮 基本操作|🎮 基本操作|🎮 Basics|🎮 基本操作|🎮 기본 조작|🎮 การควบคุม|🎮 Cơ bản|🎮 Управление|🎮 Steuerung|🎮 Comandi
 help.tab.item|🎁 道具總覽|🎁 道具总览|🎁 Items|🎁 アイテム|🎁 아이템|🎁 ไอเทม|🎁 Vật phẩm|🎁 Предметы|🎁 Items|🎁 Oggetti
@@ -5170,6 +5197,10 @@ ver.4.81.1|🧹 首頁大掃除：14 顆按鈕縮成 6 張玩法卡＋「更多�
 ver.4.81.2|🎯 入口合併：挑戰 BOSS 併進單人闖關、排行榜併進每日挑戰、對戰與線上配對合成「多人對戰」|🎯 入口合并：挑战 BOSS 并入单人闯关、排行榜并入每日挑战、对战与在线配对合成「多人对战」|🎯 Entrances merged: Boss Raid sits inside Solo Quest, the leaderboard inside Daily Challenge, Battle and Online became one Multiplayer entry|🎯 入口を統合：ボス討伐は一人で挑戦へ、ランキングはデイリーチャレンジへ、対戦とオンラインは「マルチ対戦」に|🎯 입구 통합: 보스 토벌은 싱글 모험에, 랭킹은 데일리 챌린지에, 대전과 온라인 매치는 멀티플레이 하나로|🎯 รวมทางเข้า: ล่าบอสอยู่ในโหมดผจญภัยคนเดียว อันดับอยู่ในภารกิจรายวัน ต่อสู้กับออนไลน์รวมเป็น ผู้เล่นหลายคน|🎯 Gộp lối vào: Đánh BOSS trong Chơi đơn, bảng xếp hạng trong Thử thách ngày, Đối chiến và Online gộp thành Nhiều người chơi|🎯 Объединены входы: охота на босса — в одиночной игре, рейтинг — в ежедневном вызове, битва и онлайн — в одном «Мультиплеере»|🎯 Einstiege zusammengelegt: Boss-Raid steckt im Einzelspieler, die Rangliste in der Tagesherausforderung, Kampf und Online wurden zu Mehrspieler|🎯 Ingressi uniti: Assalto al BOSS dentro Giocatore singolo, classifica dentro Sfida giornaliera, Battaglia e Online diventano Multigiocatore
 ver.4.81.3|👤 帳號入口只留右上角那一顆（首頁原本還有一顆重複的）|👤 账号入口只留右上角那颗（首页原本还有一颗重复的）|👤 Only one account entry now — the chip in the top-right corner (the home screen used to have a duplicate)|👤 アカウント入口は右上の1か所だけ（ホームにも重複がありました）|👤 계정 입구는 오른쪽 위 하나만 (홈에 중복 버튼이 있었습니다)|👤 เหลือทางเข้าบัญชีเดียวที่มุมขวาบน (เดิมมีซ้ำบนหน้าหลัก)|👤 Chỉ còn một lối vào tài khoản ở góc phải trên (trước đây có thêm một nút trùng)|👤 Вход в аккаунт теперь один — плашка справа сверху (на главном был дубль)|👤 Nur noch ein Konto-Einstieg oben rechts (auf dem Startbildschirm gab es einen doppelten)|👤 Un solo accesso all'account, in alto a destra (prima ce n'era un doppione nella home)
 ver.4.81.4|📖 首頁導覽重寫：每一步都對得上新位置，講到抽屜裡的按鈕會自動展開|📖 首页导览重写：每一步都对得上新位置，讲到抽屉里的按钮会自动展开|📖 Home tour rewritten: every step matches the new layout, and the drawer opens by itself when needed|📖 ホームのガイドを書き直し：各ステップが新しい配置に対応し、ドロワー内のボタンでは自動で開きます|📖 홈 가이드 다시 작성: 각 단계가 새 배치와 맞고, 서랍 안 버튼을 설명할 때 자동으로 열립니다|📖 เขียนไกด์หน้าหลักใหม่: ทุกขั้นตรงกับตำแหน่งใหม่ และเปิดลิ้นชักอัตโนมัติเมื่อถึงปุ่มข้างใน|📖 Viết lại hướng dẫn trang chủ: mỗi bước khớp vị trí mới, tự mở ngăn khi nói tới nút bên trong|📖 Тур по главному экрану переписан: каждый шаг соответствует новой раскладке, шторка открывается сама|📖 Tour durch den Startbildschirm neu geschrieben: jeder Schritt passt zum neuen Layout, die Schublade öffnet sich automatisch|📖 Tour della home riscritta: ogni passo corrisponde al nuovo layout e il cassetto si apre da solo
+ver.4.85.1|☁️ 雲端存檔搬家了：改存到 Supabase 雲端資料庫，平台休眠、重新部署、換主機都不會再消失|☁️ 云端存档搬家了：改存到 Supabase 云端数据库，平台休眠、重新部署、换主机都不会再消失|☁️ Cloud saves moved to a Supabase database — platform sleep, redeploys and host changes no longer wipe them|☁️ クラウドセーブを Supabase に移行。スリープ・再デプロイ・サーバー変更でも消えません|☁️ 클라우드 저장을 Supabase로 이전했습니다. 절전·재배포·서버 변경에도 사라지지 않습니다|☁️ ย้ายเซฟคลาวด์ไป Supabase แล้ว — สลีป รีดีพลอย หรือเปลี่ยนโฮสต์ก็ไม่หาย|☁️ Đã chuyển lưu trữ đám mây sang Supabase — ngủ đông, triển khai lại hay đổi máy chủ đều không mất|☁️ Облачные сохранения переехали в Supabase — сон, переразвёртывание и смена сервера их не стирают|☁️ Cloud-Speicherstände liegen jetzt in einer Supabase-Datenbank — Standby, Redeploys und Serverwechsel löschen sie nicht mehr|☁️ I salvataggi cloud ora sono su Supabase — sospensione, redeploy e cambio server non li cancellano più
+ver.4.85.2|💾 進度全部上雲：關卡、金幣、隨從、票券、教學、每日最佳都跟著帳號走，換手機直接接續|💾 进度全部上云：关卡、金币、随从、票券、教学、每日最佳都跟着账号走，换手机直接接续|💾 All progress now follows your account — stages, coins, pets, tickets, tutorial and daily best carry over to a new phone|💾 進行状況をすべてクラウドへ。ステージ・コイン・仲間・チケット・チュートリアル・デイリー最佳がアカウントに付いてきます|💾 모든 진행 상황을 클라우드로. 스테이지·코인·동료·티켓·튜토리얼·일일 최고가 계정을 따라갑니다|💾 ความคืบหน้าทั้งหมดผูกกับบัญชีแล้ว — ด่าน เหรียญ เพื่อนร่วมทีม ตั๋ว บทสอน สถิติรายวันตามไปเครื่องใหม่|💾 Toàn bộ tiến độ theo tài khoản: màn, xu, thú đồng hành, vé, hướng dẫn, kỷ lục ngày đều sang máy mới|💾 Весь прогресс привязан к аккаунту: уровни, монеты, питомцы, билеты, обучение, рекорд дня|💾 Der ganze Fortschritt hängt am Konto: Level, Münzen, Begleiter, Tickets, Tutorial, Tagesbestwert|💾 Tutti i progressi seguono l'account: livelli, monete, compagni, biglietti, tutorial, record giornaliero
+ver.4.85.3|📤 設定頁新增存檔碼：按一下就複製整份進度，換裝置或帳號救不回來時貼上就能還原|📤 设置页新增存档码：按一下就复制整份进度，换设备或账号救不回来时贴上就能还原|📤 New save code in Settings — one tap copies your whole progress; paste it to restore on another device or after losing an account|📤 設定にセーブコードを追加。ワンタップで進行状況をコピーし、別端末やアカウント喪失時に貼り付けて復元できます|📤 설정에 저장 코드 추가. 한 번 누르면 진행 상황이 복사되고, 다른 기기나 계정 분실 시 붙여넣어 복원|📤 เพิ่มรหัสเซฟในหน้าตั้งค่า — แตะครั้งเดียวคัดลอกความคืบหน้าทั้งหมด วางเพื่อกู้คืนบนเครื่องอื่น|📤 Thêm mã lưu trong Cài đặt — một chạm sao chép toàn bộ tiến độ, dán để khôi phục trên máy khác|📤 Код сохранения в настройках — одно нажатие копирует весь прогресс, вставьте его для восстановления|📤 Speichercode in den Einstellungen — ein Tippen kopiert den ganzen Fortschritt, Einfügen stellt ihn wieder her|📤 Codice di salvataggio nelle Impostazioni — un tocco copia tutti i progressi, incollalo per ripristinarli
+ver.4.85.4|🛡️ 存檔數值在伺服器端一律檢查：超界自動夾回合法範圍，改前端也刷不出離譜數字|🛡️ 存档数值在服务器端一律检查：超界自动夹回合法范围，改前端也刷不出离谱数字|🛡️ Every save value is clamped server-side — tampering with the client cannot produce absurd numbers|🛡️ セーブ値はサーバー側で必ず検証。範囲外は自動で丸められ、クライアント改変でも異常な値は作れません|🛡️ 저장 값은 서버에서 반드시 검증합니다. 범위를 벗어나면 자동으로 잘리고, 클라이언트를 고쳐도 이상한 수치는 못 만듭니다|🛡️ ค่าเซฟถูกตรวจที่เซิร์ฟเวอร์เสมอ — เกินขอบเขตจะถูกปรับกลับ แก้ฝั่งไคลเอนต์ก็ปั้นเลขเวอร์ไม่ได้|🛡️ Mọi giá trị lưu đều được kiểm ở máy chủ — vượt ngưỡng sẽ bị kẹp lại, sửa client cũng không tạo được số vô lý|🛡️ Все значения сохраняемых данных проверяются на сервере — выход за диапазон обрезается, подделка клиента не даёт абсурдных чисел|🛡️ Alle Speicherwerte werden serverseitig geprüft — Ausreißer werden geklemmt, manipuliertes Frontend erzeugt keine Unsinnszahlen|🛡️ Ogni valore di salvataggio è validato sul server — i fuori scala vengono riportati nei limiti, modificare il client non crea numeri assurdi
 ver.4.84.1|📱 手機橫屏首頁不用再瞎猜：新手教學條和第一列卡片擠進第一屏，一開場就看得到下面還有東西|📱 手机横屏首页不用再瞎猜：新手教学条和第一列卡片挤进第一屏，一开场就看得到下面还有东西|📱 Landscape phones no longer open on a logo-only screen — the tutorial bar and the first row of cards now fit on the first screen|📱 スマホ横画面のホームで迷わなくなりました。チュートリアルバーとカード1列目が最初の画面に収まり、下に続きがあると分かります|📱 가로 모드 홈이 로고만 보이던 문제를 해결했습니다. 튜토리얼 바와 카드 첫 줄이 첫 화면에 들어와 아래에 더 있다는 걸 알 수 있습니다|📱 หน้าหลักแนวนอนไม่เห็นแค่โลโก้แล้ว — แถบสอนเล่นและแถวการ์ดแรกอยู่ในหน้าจอแรก ทำให้รู้ว่าด้านล่างยังมีอีก|📱 Trang chủ ngang không còn chỉ thấy logo — thanh hướng dẫn và hàng thẻ đầu tiên đã nằm trong màn hình đầu, thấy ngay là bên dưới còn nữa|📱 Главный экран в альбомной ориентации больше не показывает только логотип — панель обучения и первый ряд карточек помещаются на первом экране|📱 Der Startbildschirm im Querformat zeigt nicht mehr nur das Logo — Tutorial-Leiste und erste Kartenreihe passen jetzt auf den ersten Bildschirm|📱 La home in orizzontale non mostra più solo il logo — barra tutorial e prima riga di card entrano nella prima schermata
 ver.4.84.2|👇 新增「往下滑，下面還有更多」提示：首頁、設定、說明、單人闖關都通用，滑到底自動消失，看過兩秒就淡掉不擋按鈕|👇 新增「往下滑，下面还有更多」提示：首页、设置、说明、单人闯关都通用，滑到底自动消失，看过两秒就淡掉不挡按钮|👇 New "scroll down for more" hint on every scrollable screen — it fades after two seconds so it never blocks a button, and disappears at the bottom|👇 「下にスクロールすると続きがあります」のヒントを追加。ホーム・設定・説明・ひとりで攻略のすべてで出て、2秒で薄くなり、一番下まで行くと消えます|👇 "아래로 스크롤하면 더 있어요" 안내를 추가했습니다. 홈·설정·설명·1인 모드 모두에 나오고, 2초 뒤 옅어지며, 맨 아래에서 사라집니다|👇 เพิ่มคำใบ้ "เลื่อนลงเพื่อดูเพิ่มเติม" ทุกหน้าที่เลื่อนได้ จางลงหลังสองวินาทีจึงไม่บังปุ่ม และหายไปเมื่อเลื่อนสุด|👇 Thêm gợi ý "cuộn xuống để xem thêm" ở mọi trang cuộn được — mờ đi sau hai giây nên không che nút, và biến mất khi tới cuối|👇 Подсказка «прокрутите вниз» на всех прокручиваемых экранах — через две секунды бледнеет, не закрывая кнопки, и исчезает внизу|👇 Hinweis „nach unten scrollen" auf allen scrollbaren Seiten — wird nach zwei Sekunden blass, verdeckt keine Buttons und verschwindet ganz unten|👇 Nuovo avviso "scorri per altro" su ogni schermata scorrevole — dopo due secondi sbiadisce per non coprire i pulsanti e sparisce in fondo
 ver.4.84.3|🧩 修掉新手教學按鈕在橫屏變成綠色大方塊（舊的 3 欄選單規則把它拉成 251×319），電腦、手機直放、橫放現在都是正常橫條|🧩 修掉新手教学按钮在横屏变成绿色大方块（旧的 3 栏菜单规则把它拉成 251×319），电脑、手机竖放、横放现在都是正常横条|🧩 Fixed the tutorial button turning into a huge green square in landscape (an old 3-column rule stretched it to 251×319) — it is a normal bar on PC, portrait and landscape now|🧩 横画面でチュートリアルボタンが緑の大きな四角になっていた不具合を修正（古い3列ルールが 251×319 に引き伸ばしていました）。PC・縦・横すべて普通の横長バーになります|🧩 가로 모드에서 튜토리얼 버튼이 커다란 초록 사각형이 되던 문제를 고쳤습니다(예전 3열 규칙이 251×319로 늘렸습니다). 이제 PC·세로·가로 모두 일반 막대 모양입니다|🧩 แก้ปุ่มสอนเล่นที่กลายเป็นสี่เหลี่ยมเขียวใหญ่ในโหมดแนวนอน (กฎ 3 คอลัมน์เก่าดึงเป็น 251×319) ตอนนี้เป็นแถบปกติทั้งคอมพิวเตอร์ ตั้ง และนอน|🧩 Sửa nút hướng dẫn bị phóng thành ô vuông xanh khổng lồ ở chế độ ngang (quy tắc 3 cột cũ kéo thành 251×319) — giờ là thanh ngang bình thường trên PC, dọc và ngang|🧩 Исправлена кнопка обучения, превращавшаяся в альбомной ориентации в огромный зелёный квадрат (старое правило трёх колонок растягивало её до 251×319) — теперь это обычная полоса на ПК и в обеих ориентациях|🧩 Der Tutorial-Button wurde im Querformat zum großen grünen Quadrat (eine alte Drei-Spalten-Regel zog ihn auf 251×319) — jetzt ist er überall eine normale Leiste|🧩 Corretto il pulsante tutorial che in orizzontale diventava un enorme quadrato verde (una vecchia regola a 3 colonne lo allungava a 251×319) — ora è una barra normale su PC, verticale e orizzontale
@@ -24897,6 +24928,12 @@ const Tut = (function () {
         const h0 = $id('lpH0'); if (h0) h0.textContent = t('learn.homeTab');
         const p0 = $id('lpP0'); if (p0) p0.textContent = t('learn.playTab');
         const lead = $id('tutLead'); if (lead) lead.textContent = t('learn.title');
+        // v4.85：設定頁的存檔備份區（短標籤翻不到，一定要在這裡注入）
+        const sbk = $id('saveBakLab'); if (sbk) sbk.textContent = t('save.bak');
+        const sbd = $id('saveBakDesc'); if (sbd) sbd.textContent = t('save.bakDesc');
+        const sbe = $id('btnSaveExport'); if (sbe) sbe.textContent = t('save.export');
+        const sbi = $id('btnSaveImport'); if (sbi) sbi.textContent = t('save.import');
+        const sbc = $id('saveCode'); if (sbc) sbc.setAttribute('placeholder', t('save.ph'));
         try { homeFill(); } catch (e) {}
       }
 
@@ -24944,6 +24981,14 @@ const Tut = (function () {
       return {
         startHome: startHome, startPlay: startPlay, tick: tick, drawWorld: drawWorld,
         hit: hit, guard: guard, onDoor: onDoor, syncTag: syncTag, glow: glow, fillUI: fillUI,
+        /* v4.85：教學進度要跟著帳號走（換裝置不用重看一次） */
+        state: function () { return { home: !!doneP.home, play: !!doneP.play }; },
+        setState: function (st) {
+          if (!st || typeof st !== 'object') return;
+          doneP.home = !!st.home;
+          doneP.play = !!st.play;
+          saveDone();
+        },
         get on() { return on; }, get part() { return part; }, get step() { return i; },
         PLAY: PLAY, HOME: HOME, CH: CH, _next: next, _prev: prev, _close: closeAll
       };
@@ -25008,7 +25053,12 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.84', date: '2026-11-04', now: true, items: [
+  { v: '4.85', date: '2026-11-04', now: true, items: [
+    '☁️ 雲端存檔搬家了：改存到 Supabase 雲端資料庫，平台休眠、重新部署、換主機都不會再消失',
+    '💾 進度全部上雲：關卡、金幣、隨從、票券、教學、每日最佳都跟著帳號走，換手機直接接續',
+    '📤 設定頁新增存檔碼：按一下就複製整份進度，換裝置或帳號救不回來時貼上就能還原',
+    '🛡️ 存檔數值在伺服器端一律檢查：超界自動夾回合法範圍，改前端也刷不出離譜數字' ] },
+  { v: '4.84', date: '2026-11-04', now: false, items: [
     '📱 手機橫屏首頁不用再瞎猜：新手教學條和第一列卡片擠進第一屏，一開場就看得到下面還有東西',
     '👇 新增「往下滑，下面還有更多」提示：首頁、設定、說明、單人闖關都通用，滑到底自動消失，看過兩秒就淡掉不擋按鈕',
     '🧩 修掉新手教學按鈕在橫屏變成綠色大方塊（舊的 3 欄選單規則把它拉成 251×319），電腦、手機直放、橫放現在都是正常橫條',
@@ -25914,6 +25964,29 @@ const Shop = (function () {
     claimDaily: claimDaily, todayKey: todayKey, grantTicket: grantTicket,
     ticketPrice: function () { return TICKET_PRICE; },
     gold: function () { return gold; },
+    /* v4.85：整包存檔要能一次拿走／寫回商店的三樣東西（金幣、票券、隨從） */
+    state: function () {
+      return {
+        gold: gold, tickets: tickets,
+        pets: owned.map(function (o) { return { kind: o.kind, ch: o.ch }; })
+      };
+    },
+    setState: function (st) {
+      if (!st || typeof st !== 'object') return;
+      if (st.gold != null) gold = Math.max(0, Math.min(100000000, Math.round(Number(st.gold)) || 0));
+      if (st.tickets != null) tickets = Math.max(0, Math.min(9999, Math.round(Number(st.tickets)) || 0));
+      if (Array.isArray(st.pets)) {
+        const seen = {};
+        owned = st.pets.filter(function (o) { return o && petKind(o.kind); }).map(function (o) {
+          return { kind: o.kind, ch: Math.abs((o.ch | 0)) % CHARACTERS.length };
+        }).filter(function (o) {
+          if (seen[o.kind]) return false;
+          seen[o.kind] = 1; return true;
+        });
+      }
+      save();
+      try { render(); } catch (e) {}
+    },
     dev: dev,
     reset: function () { owned = []; gold = 0; save(); render(); }   // 測試用
   };
@@ -27488,6 +27561,8 @@ const Cloud = (function () {
     // v4.3：開發者 → 闖關模式也全關卡解鎖 + 版本紀錄面板重畫（豁免內部版本）
     try { if (typeof Solo !== 'undefined' && Solo && Solo.applyDev) Solo.applyDev(DEV_BUILD || !!a.dev); } catch (e) {}
     try { if (typeof VersionLog !== 'undefined') VersionLog.refresh(); } catch (e) {}
+    // v4.85：帳號確認後 → 把雲端那份整包存檔拉下來合併（單機進度／金幣／隨從／票券／教學）
+    try { if (window.Save && window.Save.onCloud) window.Save.onCloud(); } catch (e) {}
   }
 
   /* v4.2：伺服器回的觸控版面 → 本機設定（拖曳位置／模式／大小） */
@@ -28036,6 +28111,13 @@ const Cloud = (function () {
     init: init, wireUi: wireUi, paint: paint, open: open, close: close,
     online: online, guest: isGuest, acc: acc, unlocked: unlocked, isDev: isDev,
     spend: spend, setAlloc: setAlloc, clearStage: clearStage, sync: sync,
+    /* v4.85：整包存檔（單機進度／金幣／隨從／票券）—— 成功回 {ok,rev,ts} */
+    saveGet: function () {
+      return req('/api/save/get', {}).then(function (r) { return r || { ok: false }; }, function () { return { ok: false }; });
+    },
+    savePut: function (save) {
+      return req('/api/save/put', { save: save }).then(function (r) { return r || { ok: false }; }, function () { return { ok: false }; });
+    },
     setLayout: pushLayout, applyRemoteLayout: applyRemoteLayout,
     register: register, login: login, changePw: changePw, track: track,
     setAnnounce: setAnnounce, renderAnnounce: renderAnnounce,
@@ -28391,12 +28473,267 @@ function rpgAdjust(k, d) {
     } catch (e) {}
   }
 
+  /* ==========================================================================
+   * v4.85：統一存檔層（Save）
+   * --------------------------------------------------------------------------
+   * 以前進度散在 8 個 localStorage 鍵裡（關卡、金幣、隨從、票券、教學、每日最佳…），
+   * 各自讀寫、各自有格式 → 換裝置或清快取就歸零，也沒辦法整包上雲。
+   *
+   * 這裡把它們收成一份 snapshot：
+   *   snapshot()  收集（優先讀模組記憶體，模組掛掉才退回 localStorage）
+   *   merge()     跟雲端合併 —— 本地非空就以本地為準（避免剛打完的進度被舊雲端蓋掉）；
+   *               本地是空的（新裝置）才整套採用雲端
+   *   apply()     寫回各模組並刷新畫面
+   *   push()      1.5 秒 debounce + 15 秒巡檢 + 頁面隱藏時補推
+   * ======================================================================== */
+  const Save = (function () {
+    const K_DAILY = 'bombhero-daily-best', K_STAGE = 'bombhero-stage';
+    const TICK = 15000;
+    let timer = 0, tickTimer = 0, lastSent = '', pushing = false, lastErr = '', armed = false;
+
+    function num(v, def, lo, hi) {
+      const n = Math.round(Number(v));
+      if (!isFinite(n)) return def;
+      return n < lo ? lo : (n > hi ? hi : n);
+    }
+
+    function snapshot() {
+      const st = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {} };
+      try { st.stage = num(Solo.unlocked, 1, 1, SOLO_STAGES); } catch (e) {}
+      try {
+        const s = Shop.state ? Shop.state() : null;
+        if (s) {
+          st.gold = num(s.gold, 0, 0, 100000000);
+          st.tickets = num(s.tickets, 0, 0, 9999);
+          st.pets = Array.isArray(s.pets) ? s.pets : [];
+        }
+      } catch (e) {}
+      try { st.tut = (Tut.state ? Tut.state() : null) || {}; } catch (e) {}
+      try { st.daily = Daily.all() || {}; } catch (e) {}
+      return st;
+    }
+
+    function isEmpty(s) {
+      if (!s) return true;
+      const gold = num(s.gold, 0, 0, 1e9), tk = num(s.tickets, 0, 0, 1e9);
+      const pets = Array.isArray(s.pets) ? s.pets.length : 0;
+      return num(s.stage, 1, 1, SOLO_STAGES) <= 1 && gold <= 0 && tk <= 0 && pets === 0;
+    }
+
+    function merge(remote, local) {
+      if (!remote) return local;
+      if (!local) return remote;
+      const out = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {} };
+      // 進度只前進不後退
+      out.stage = Math.max(num(remote.stage, 1, 1, SOLO_STAGES), num(local.stage, 1, 1, SOLO_STAGES));
+      // 金幣／票券會花掉，不能取大 → 以「本地非空就用本地」為準（本地才是玩家眼前看到的）
+      const src = isEmpty(local) ? remote : local;
+      out.gold = num(src.gold, 0, 0, 100000000);
+      out.tickets = num(src.tickets, 0, 0, 9999);
+      // 隨從買了就永久 → 取聯集
+      const seen = {};
+      [].concat(remote.pets || [], local.pets || []).forEach(function (p) {
+        if (!p || !p.kind || seen[p.kind]) return;
+        seen[p.kind] = 1;
+        out.pets.push({ kind: String(p.kind), ch: num(p.ch, 0, 0, 99) });
+      });
+      // 教學：任一邊看過就算看過
+      out.tut = {
+        home: !!(remote.tut && remote.tut.home) || !!(local.tut && local.tut.home),
+        play: !!(remote.tut && remote.tut.play) || !!(local.tut && local.tut.play)
+      };
+      // 每日最佳：秒數越少越好
+      [remote.daily || {}, local.daily || {}].forEach(function (d) {
+        for (const k in d) {
+          const ms = num(d[k], 0, 0, 3600000);
+          if (ms <= 0) continue;
+          if (!out.daily[k] || ms < out.daily[k]) out.daily[k] = ms;
+        }
+      });
+      return out;
+    }
+
+    function apply(st) {
+      if (!st) return false;
+      const stage = num(st.stage, 1, 1, SOLO_STAGES);
+      try {
+        Solo.unlocked = stage;
+        Solo.sel = Math.min(SOLO_STAGES, Math.max(1, stage));
+        if (Solo.renderGrid) Solo.renderGrid();
+        if (Solo.renderGo) Solo.renderGo();
+      } catch (e) {}
+      try { localStorage.setItem(K_STAGE, String(stage)); } catch (e) {}
+      try { if (Shop.setState) Shop.setState({ gold: st.gold, tickets: st.tickets, pets: st.pets }); } catch (e) {}
+      try { if (Tut.setState) Tut.setState(st.tut || {}); } catch (e) {}
+      try { localStorage.setItem(K_DAILY, JSON.stringify(st.daily || {})); } catch (e) {}
+      return true;
+    }
+
+    function doPush() {
+      if (!armed || pushing) return;
+      const st = snapshot();
+      const sig = JSON.stringify(st);
+      if (sig === lastSent) return;
+      pushing = true;
+      const wire = Object.assign({}, st, { seen: Date.now() });
+      Cloud.savePut(wire).then(function (r) {
+        pushing = false;
+        if (r && r.ok) { lastSent = sig; lastErr = ''; }
+        else lastErr = (r && r.err) || 'NET';
+      }, function (e) {
+        pushing = false;
+        lastErr = String((e && e.message) || e);
+      });
+    }
+
+    function push(now) {
+      if (!armed) return;
+      clearTimeout(timer);
+      if (now === true) { doPush(); return; }
+      timer = setTimeout(doPush, 1500);
+    }
+
+    function pull() {
+      if (!armed) return Promise.resolve(null);
+      return Cloud.saveGet().then(function (r) {
+        if (!r || !r.ok) return null;
+        const local = snapshot();
+        const merged = merge(r.save, local);
+        apply(merged);
+        const sig = JSON.stringify(merged);
+        if (!r.save || JSON.stringify(r.save) !== sig) { lastSent = ''; doPush(); }
+        else lastSent = sig;
+        return merged;
+      }, function () { return null; });
+    }
+
+    function watch() {
+      if (!armed) return;
+      const st = snapshot();
+      if (JSON.stringify(st) !== lastSent) push(true);
+    }
+
+    function onCloud() {
+      if (armed) { pull(); return; }
+      armed = true;
+      pull();
+      if (!tickTimer) tickTimer = setInterval(watch, TICK);
+      try {
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'hidden') push(true);
+        });
+        window.addEventListener('pagehide', function () { push(true); });
+      } catch (e) {}
+    }
+
+    function onBoot() {
+      try { if (Cloud.online && Cloud.online()) onCloud(); } catch (e) {}
+    }
+
+    /* ---------- v4.85：存檔碼（複製貼上就能搬進度，最後一道保險） ---------- */
+    function sum36(s) {
+      let h = 5381;
+      for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+      return h.toString(36);
+    }
+    /* base64url：比 encodeURIComponent 短一半、也不會出現一堆 %，貼到聊天軟體不易斷行 */
+    function b64e(s) {
+      const bytes = new TextEncoder().encode(s);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+    function b64d(s) {
+      const b = String(s).replace(/-/g, '+').replace(/_/g, '/');
+      const pad = b.length % 4 ? '===='.slice(0, 4 - (b.length % 4)) : '';
+      const bin = atob(b + pad);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    }
+    function encodeDoc(obj) {
+      const j = JSON.stringify(obj || {});
+      return 'BH1.' + sum36(j) + '.' + b64e(j);
+    }
+    function decodeDoc(code) {
+      const s = String(code || '').replace(/\s+/g, '');
+      const m = /^BH1\.([0-9a-z]{1,8})\.([A-Za-z0-9_-]{8,4096})$/.exec(s);
+      if (!m) return null;
+      let j;
+      try { j = b64d(m[2]); } catch (e) { return null; }
+      if (sum36(j) !== m[1]) return null;      // 貼到一半被截斷 → 直接拒絕，不要半套還原
+      let o;
+      try { o = JSON.parse(j); } catch (e) { return null; }
+      if (!o || typeof o !== 'object') return null;
+      return {
+        v: 1,
+        stage: num(o.stage, 1, 1, SOLO_STAGES),
+        gold: num(o.gold, 0, 0, 100000000),
+        tickets: num(o.tickets, 0, 0, 9999),
+        pets: Array.isArray(o.pets) ? o.pets.slice(0, 8) : [],
+        tut: (o.tut && typeof o.tut === 'object') ? o.tut : {},
+        daily: (o.daily && typeof o.daily === 'object') ? o.daily : {},
+        stars: (o.stars && typeof o.stars === 'object') ? o.stars : {}
+      };
+    }
+
+    function wireBackup() {
+      const btnE = $id('btnSaveExport'), btnI = $id('btnSaveImport');
+      const box = $id('saveCode'), st = $id('saveState');
+      if (!btnE || !btnI || !box) return;
+      btnE.addEventListener('click', function () {
+        const code = encodeDoc(snapshot());
+        box.value = code;
+        try { box.focus(); box.select(); } catch (e) {}
+        const done = function (okCopy) {
+          if (st) st.textContent = t(okCopy ? 'save.copied' : 'save.copyFail');
+          if (okCopy) toast(t('save.copied'), 3);
+        };
+        let copied = false;
+        try { copied = document.execCommand('copy'); } catch (e) {}
+        if (copied) { done(true); return; }
+        // execCommand 在部分瀏覽器（尤其非 HTTPS／舊 WebView）會被擋 → 改用 Clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(function () { done(true); }, function () { done(false); });
+          return;
+        }
+        done(false);
+      });
+      btnI.addEventListener('click', function () {
+        const raw = String(box.value || '').trim();
+        if (!raw) { if (st) st.textContent = t('save.noCode'); return; }
+        const obj = decodeDoc(raw);
+        if (!obj) { if (st) st.textContent = t('save.bad'); try { AudioSys.sfx('click'); } catch (e) {} return; }
+        let ok = true;
+        try { ok = confirm(t('save.confirm')); } catch (e) { ok = true; }
+        if (!ok) return;
+        apply(obj);
+        lastSent = '';
+        if (armed) doPush();
+        if (st) st.textContent = t('save.done');
+        toast(t('save.done'), 3);
+      });
+    }
+
+    return {
+      snapshot: snapshot, merge: merge, apply: apply,
+      push: push, pull: pull, onCloud: onCloud, onBoot: onBoot,
+      encodeDoc: encodeDoc, decodeDoc: decodeDoc, wireBackup: wireBackup,
+      state: function () { return { armed: armed, lastErr: lastErr, lastSent: lastSent }; },
+      _reset: function () { lastSent = ''; }
+    };
+  })();
+  window.Save = Save;
+
   function boot() {
     try { setupWebViewGuard(); } catch (e) {}
     try { Cloud.wireUi(); } catch (e) {}
     try { PadEdit.wire(); } catch (e) {}       // v4.2：#padEdit 的 HTML 也在 script 之後
     try { Admin.wire(); } catch (e) {}         // v4.3：#adminModal 的 HTML 也在 script 之後
     try { Cloud.init(); } catch (e) {}
+    // v4.85：已經有 session（例如自動登入）就直接開同步；沒有的話等 adopt() 再觸發
+    try { Save.onBoot(); } catch (e) {}
+    try { Save.wireBackup(); } catch (e) {}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

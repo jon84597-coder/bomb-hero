@@ -987,6 +987,7 @@ const server = http.createServer(function (req, res) {
       url.pathname.indexOf('/api/rpg/') === 0 ||
       url.pathname.indexOf('/api/admin/') === 0 ||
       url.pathname.indexOf('/api/lb/') === 0 ||        // v4.80：每日挑戰排行榜
+      url.pathname.indexOf('/api/save/') === 0 ||      // v4.85：整包存檔（跨裝置同步）
       url.pathname.indexOf('/api/share/') === 0) {
     cloud.handle(req, res, url).then(function (done) {
       if (!done) sendJSON(res, 404, { ok: false, err: 'no such api' });
@@ -1040,11 +1041,21 @@ setInterval(function () {
   });
 }, TICK_MS);
 
-server.listen(PORT, '0.0.0.0', function () {
+/* v4.85：先等雲端存檔載入完再開始收請求
+ *   —— 不然冷啟動的第一個請求會讀到空資料庫（帳號「不存在」→ 玩家被登出／進度看起來消失）
+ */
+const booted = cloud && cloud.ready ? cloud.ready : Promise.resolve();
+booted.then(function () { server.listen(PORT, '0.0.0.0', function () {
   console.log('炸彈超人 Online 啟動：http://0.0.0.0:' + PORT);
   const cs = cloud.stats();
-  if (!cs.persisted) console.log('[cloud] 目前為記憶體模式（重啟後帳號會消失）');
-  else console.log('[cloud] 帳號資料存放於 ' + cs.dir + '（建議掛載持久磁碟）');
-});
+  if (cs.storage === 'supabase') {
+    if (cs.storageLoaded) console.log('[cloud] 存檔：Supabase（雲端資料庫）✔ 已載入，寫入 ' + cs.storageWrites + ' 次');
+    else console.log('[cloud] ⚠ Supabase 連線失敗：' + cs.storageError + ' → 目前不會寫回雲端，請檢查環境變數');
+  } else if (cs.persisted) {
+    console.log('[cloud] 存檔：本機檔案 ' + cs.dir + '（暫時磁碟，休眠／重新部署會消失）');
+  } else {
+    console.log('[cloud] 存檔：記憶體模式（重啟後帳號會消失）');
+  }
+}); }, function () { server.listen(PORT, '0.0.0.0', function () { console.log('炸彈超人 Online 啟動（存檔載入失敗，仍提供服務）'); }); });
 
 module.exports = { server: server, cloud: cloud };

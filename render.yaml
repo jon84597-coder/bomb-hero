@@ -26,7 +26,14 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "18"
-      # ↓↓↓ 持久磁碟：帳號與雲端進度放這裡，改版重新部署不會不見
+      # ↓↓↓ v4.85：真正的持久化在 Supabase（免費方案不支援持久磁碟）
+      #     填了這兩個，存檔就住在雲端資料庫，休眠／重新部署／換主機都不會消失。
+      #     沒填 → 只能寫本機暫存檔，平台一清空容器就沒了（啟動日誌會警告）。
+      - key: BH_SUPABASE_URL
+        sync: false
+      - key: BH_SUPABASE_KEY
+        sync: false
+      # 本機快取目錄（加速啟動用；不是權威來源，清掉也沒關係）
       - key: BH_DATA_DIR
         value: /data
       # ↓↓↓ session 簽章密鑰：重新部署後仍然有效（不會被強制登出）
@@ -45,7 +52,11 @@ services:
         sync: false
       - key: LINE_CHANNEL_SECRET
         sync: false
-    disk:
-      name: bomb-hero-data
-      mountPath: /data
-      sizeGB: 1
+    # 注意（v4.85）：這裡刻意「不」宣告 disk。
+    #   Render 的 free 實例不支援持久磁碟，舊版藍圖寫了 disk + plan: free 是無效組合，
+    #   但程式看到 BH_DATA_DIR=/data 就以為已經持久化 → 資料無聲消失。
+    #   現在權威來源是 Supabase；若日後升級付費方案要掛盤，再取消下面註解。
+    # disk:
+    #   name: bomb-hero-data
+    #   mountPath: /data
+    #   sizeGB: 1

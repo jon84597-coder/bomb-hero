@@ -283,6 +283,62 @@ function applyClear(rpg, stage, meta, opts) {
   };
 }
 
+/* v4.85：整包存檔（單機進度／金幣／隨從／票券／教學進度／每日最佳）的伺服器端清洗
+ *   伺服器仍然是權威：前端送來的每個數字都要過 clampInt，超界一律夾回合法範圍，
+ *   陣列長度、日期格式、寵物種類也一併限縮。
+ *   這裡刻意不做「只能變大」的比較 —— 金幣會花掉、票券會用掉，
+ *   合併策略放在前端（先 get → merge → put）。
+ */
+const SAVE_MAX_GOLD = 100000000;
+const SAVE_MAX_TICKET = 9999;
+
+function sanitizeSave(obj) {
+  const o = (obj && typeof obj === 'object') ? obj : {};
+  const out = { v: 1, ts: Date.now() };
+  out.stage = clampInt(o.stage, 1, MAX_STAGE, 1);
+  out.gold = clampInt(o.gold, 0, SAVE_MAX_GOLD, 0);
+  out.tickets = clampInt(o.tickets, 0, SAVE_MAX_TICKET, 0);
+
+  const pets = [];
+  const PET_KINDS = { blade: 1, bomber: 1, guard: 1 };   // 只認商店真的有的三種
+  if (Array.isArray(o.pets)) {
+    const seen = {};
+    for (let i = 0; i < o.pets.length && pets.length < 8; i++) {
+      const p = o.pets[i];
+      if (!p || typeof p.kind !== 'string') continue;
+      const kind = p.kind.slice(0, 12).replace(/[^a-z]/g, '');
+      if (!kind || !PET_KINDS[kind] || seen[kind]) continue;
+      seen[kind] = 1;
+      pets.push({ kind: kind, ch: clampInt(p.ch, 0, 99, 0) });
+    }
+  }
+  out.pets = pets;
+
+  const tut = (o.tut && typeof o.tut === 'object') ? o.tut : {};
+  out.tut = { home: !!tut.home, play: !!tut.play };
+
+  out.daily = {};
+  if (o.daily && typeof o.daily === 'object') {
+    Object.keys(o.daily).filter(function (k) { return /^\d{4}-\d{2}-\d{2}$/.test(k); })
+      .sort().slice(-60).forEach(function (k) {
+        const ms = clampInt(o.daily[k], 0, 3600000, 0);
+        if (ms > 0) out.daily[k] = ms;
+      });
+  }
+
+  out.stars = {};
+  if (o.stars && typeof o.stars === 'object') {
+    Object.keys(o.stars).slice(0, MAX_STAGE + 1).forEach(function (k) {
+      const s = clampInt(k, 0, MAX_STAGE, 0);
+      if (s >= 1) out.stars[String(s)] = clampInt(o.stars[k], 0, 3, 0);
+    });
+  }
+
+  const seen = clampInt(o.seen, 0, 4102444800000, 0);
+  if (seen > 0) out.seen = seen;
+  return out;
+}
+
 /* 把「比較強」的那一組配點留下來；超過可用點數時從點最多的往下修 */
 function fitAlloc(alloc, cap) {
   const out = {};
@@ -392,54 +448,215 @@ function makeLimiter() {
 
 /* ---------------------------------------------------------------- 檔案儲存 */
 
-function createStore(dir, persist) {
+/* v4.85：儲存層大改 —— 遠端資料庫（Supabase REST）為權威來源，本機檔案只當快取
+ *   為什麼非改不可：Render 免費實例的檔案系統是暫時的，**15 分鐘沒流量就休眠清空**，
+ *   持久磁碟只有付費方案能掛。舊版又用「有沒有設 BH_DATA_DIR」來判斷是否持久化，
+ *   於是設了 /data 卻沒真的掛盤時，連警告都不會印 → 帳號與進度無聲消失。
+ *   現在的分工：
+ *     ① Supabase（Postgres）＝真正永存，換主機、重新部署、休眠都不受影響
+ *     ② ./data/accounts.json ＝ 本機快取（加速啟動；遠端掛掉時至少還有當次資料）
+ *     ③ 遠端載入失敗時**不允許寫回遠端**（state.loaded=false），避免用空資料蓋掉雲端
+ */
+function createStore(dir, persist, remote) {
   const file = path.join(dir, 'accounts.json');
   // v4.80：lb = 每日挑戰排行榜（跟帳號同一份檔案，一起 flush）
-  const db = { v: 1, accounts: {}, devices: {}, tamper: 0, created: Date.now(), lb: { v: 1, days: {} } };
+  const db = { v: 1, accounts: {}, devices: {}, tamper: 0, created: Date.now(), lb: { v: 1, days: {} }, announce: null };
   let timer = null;
   let dirty = false;
+  let retry = 0;
+  let retryTimer = null;
 
-  if (persist) {
+  // v4.85：遠端設定（Supabase → Render 環境變數）
+  const R = remote || {};
+  const remoteOn = !!(R.url && R.key);
+  const table = R.table || 'bh_kv';
+  const state = {
+    mode: remoteOn ? 'supabase' : (persist ? 'file' : 'memory'),
+    ready: false,      // 初始化流程跑完了
+    loaded: false,     // 真的從遠端讀到資料（false 時禁止寫回遠端）
+    lastError: '', lastOk: 0, writes: 0, fails: 0, skipped: 0, parts: []
+  };
+  const lastSent = {};
+
+  function rsUrl(q) { return String(R.url).replace(/\/+$/, '') + '/rest/v1/' + table + (q || ''); }
+  function rsHeaders(extra) {
+    return Object.assign({
+      apikey: R.key,
+      Authorization: 'Bearer ' + R.key,
+      'Content-Type': 'application/json'
+    }, extra || {});
+  }
+
+  /* 把 db 切成三個分片：accounts（含裝置）／lb（排行榜）／meta（公告、竄改計數） */
+  function parts() {
+    return {
+      meta: { v: db.v, tamper: db.tamper, created: db.created, announce: db.announce },
+      accounts: { accounts: db.accounts, devices: db.devices },
+      lb: db.lb
+    };
+  }
+  function applyPart(key, val) {
+    if (!val || typeof val !== 'object') return false;
+    if (key === 'accounts') {
+      db.accounts = (val.accounts && typeof val.accounts === 'object') ? val.accounts : {};
+      db.devices = (val.devices && typeof val.devices === 'object') ? val.devices : {};
+      return true;
+    }
+    if (key === 'lb') { db.lb = val.days ? val : { v: 1, days: {} }; return true; }
+    if (key === 'meta') {
+      db.v = val.v || 1;
+      db.tamper = val.tamper || 0;
+      db.created = val.created || db.created;
+      db.announce = val.announce || null;
+      return true;
+    }
+    return false;
+  }
+
+  function loadLocal() {
     try {
       fs.mkdirSync(dir, { recursive: true });
-      if (fs.existsSync(file)) {
-        const raw = fs.readFileSync(file, 'utf8');
-        const obj = JSON.parse(raw);
-        if (obj && obj.accounts) {
-          db.accounts = obj.accounts;
-          db.devices = obj.devices || {};
-          db.tamper = obj.tamper || 0;
-          db.created = obj.created || db.created;
-          db.announce = obj.announce || null;      // v4.3：全服公告
-          db.lb = obj.lb && obj.lb.days ? obj.lb : { v: 1, days: {} };   // v4.80：排行榜
-        }
-      }
+      if (!fs.existsSync(file)) return;
+      const obj = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (!obj || !obj.accounts) return;
+      db.accounts = obj.accounts;
+      db.devices = obj.devices || {};
+      db.tamper = obj.tamper || 0;
+      db.created = obj.created || db.created;
+      db.announce = obj.announce || null;      // v4.3：全服公告
+      db.lb = obj.lb && obj.lb.days ? obj.lb : { v: 1, days: {} };   // v4.80：排行榜
     } catch (e) {
       // 壞檔 → 備份起來再看，不要讓伺服器起不來
       try { fs.renameSync(file, file + '.bad-' + Date.now()); } catch (e2) {}
-      console.error('[cloud] 存檔讀取失敗，改用空資料庫：', e.message);
+      console.error('[cloud] 本機存檔讀取失敗（改用遠端／空資料庫）：', e.message);
     }
   }
 
-  function flush() {
-    if (!persist || !dirty) return;
-    dirty = false;
+  function writeLocal() {
+    if (!persist) return;
     try {
       const tmp = file + '.tmp';
       fs.writeFileSync(tmp, JSON.stringify(db));
       fs.renameSync(tmp, file);
     } catch (e) {
-      console.error('[cloud] 寫入失敗：', e.message);
+      // 這裡失敗不致命：遠端才是權威，本機只是快取
     }
+  }
+
+  function sendPart(key, val) {
+    return fetchImpl(rsUrl(''), {
+      method: 'POST',
+      headers: rsHeaders({ Prefer: 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify([{ key: key, val: val, updated: new Date().toISOString() }])
+    }).then(function (r) {
+      if (!r.ok) {
+        return r.text().then(function (t) {
+          throw new Error('supabase ' + r.status + ' ' + String(t).replace(/\s+/g, ' ').slice(0, 140));
+        });
+      }
+      return true;
+    });
+  }
+
+  function scheduleRetry() {
+    if (retryTimer) return;
+    const waits = [2000, 5000, 15000, 60000];
+    const wait = waits[Math.min(retry, waits.length - 1)];
+    retry++;
+    retryTimer = setTimeout(function () {
+      retryTimer = null;
+      pushRemote();
+    }, wait);
+    if (retryTimer.unref) retryTimer.unref();
+  }
+
+  /* 只送「內容有變」的分片；失敗就清掉 lastSent，下次重送 */
+  function pushRemote() {
+    if (!remoteOn) return;
+    if (!state.loaded) { state.skipped++; return; }
+    const snap = parts();
+    const jobs = [];
+    Object.keys(snap).forEach(function (k) {
+      const s = JSON.stringify(snap[k]);
+      if (s === lastSent[k]) return;
+      jobs.push({ k: k, s: s, v: snap[k] });
+    });
+    if (!jobs.length) return;
+    jobs.forEach(function (j) { lastSent[j.k] = j.s; });
+    Promise.all(jobs.map(function (j) { return sendPart(j.k, j.v); })).then(function () {
+      retry = 0;
+      state.writes += jobs.length;
+      state.lastOk = Date.now();
+      state.lastError = '';
+    }, function (e) {
+      state.fails++;
+      state.lastError = String((e && e.message) || e);
+      jobs.forEach(function (j) { delete lastSent[j.k]; });
+      console.error('[cloud] 遠端寫入失敗：', state.lastError);
+      scheduleRetry();
+    });
+  }
+
+  function loadRemote(attempt) {
+    const n = attempt || 1;
+    return fetchImpl(rsUrl('?select=key,val'), { headers: rsHeaders() }).then(function (r) {
+      if (!r.ok) {
+        return r.text().then(function (t) {
+          throw new Error('supabase ' + r.status + ' ' + String(t).replace(/\s+/g, ' ').slice(0, 140));
+        });
+      }
+      return r.json();
+    }).then(function (rows) {
+      if (!Array.isArray(rows)) throw new Error('回傳格式不是陣列');
+      let hit = 0;
+      const seen = [];
+      rows.forEach(function (row) {
+        if (row && applyPart(row.key, row.val)) { hit++; seen.push(row.key); }
+      });
+      state.loaded = true;
+      state.ready = true;
+      state.lastOk = Date.now();
+      state.lastError = '';
+      state.parts = seen;
+      // 遠端是空的（第一次啟用）→ 把本機快取推上去，完成一次性搬遷
+      if (hit === 0) { dirty = true; flush(); }
+      else console.log('[cloud] 已從 Supabase 載入：' + seen.join(', '));
+      return true;
+    }).catch(function (e) {
+      state.lastError = String((e && e.message) || e);
+      if (n < 3) {
+        return new Promise(function (res) { setTimeout(res, n * 1200); }).then(function () { return loadRemote(n + 1); });
+      }
+      state.ready = true;   // loaded 仍為 false → 不會覆蓋雲端
+      console.error('[cloud] Supabase 載入失敗（3 次）：' + state.lastError);
+      console.error('[cloud] → 進入記憶體模式，**不會寫回雲端**；請檢查 BH_SUPABASE_URL / BH_SUPABASE_KEY / 資料表');
+      return false;
+    });
+  }
+
+  function flush() {
+    if (!dirty) return;
+    dirty = false;
+    writeLocal();
+    if (remoteOn) pushRemote();
   }
   function touch() {
     dirty = true;
-    if (!persist) return;
     if (timer) return;
     timer = setTimeout(function () { timer = null; flush(); }, 400);
     if (timer.unref) timer.unref();
   }
-  return { db: db, touch: touch, flush: flush, file: file };
+
+  // 先讀本機快取（讓服務就算遠端慢也能起），再由遠端覆蓋
+  if (persist) loadLocal();
+  let readyP = Promise.resolve(true);
+  if (remoteOn) readyP = loadRemote(1);
+  else state.ready = true;
+
+  return {
+    db: db, touch: touch, flush: flush, file: file,
+    ready: readyP, state: state, remoteOn: remoteOn, pushNow: pushRemote
+  };
 }
 
 /* ---------------------------------------------------------------- 第三方登入 */
@@ -524,7 +741,13 @@ function createCloud(options) {
   const env = opt.env || process.env;
   const persist = opt.persist !== false;
   const dir = opt.dir || env.BH_DATA_DIR || path.join(__dirname, 'data');
-  const store = createStore(dir, persist);
+  // v4.85：遠端資料庫（Supabase）優先；沒設就退回本機檔案（會警告）
+  const remote = {
+    url: String(env.BH_SUPABASE_URL || '').trim(),
+    key: String(env.BH_SUPABASE_KEY || '').trim(),
+    table: String(env.BH_SUPABASE_TABLE || 'bh_kv').trim()
+  };
+  const store = createStore(dir, persist, remote);
   const db = store.db;
   // v4.13：偵測「這個資料夾會不會在重新部署後被清空」
   //   Render 免費方案的磁碟是暫時的 → 每次改版重新部署，帳號就歸零（要重新註冊）。
@@ -535,9 +758,12 @@ function createCloud(options) {
     /srv[\\/]app/i.test(dir);
   // v4.13：沒設 BH_DATA_DIR → 用預設的 ./data → 雲端平台的暫時磁碟 → 重新部署帳號會消失
   const ephemeral = !dataDirEnv && (onCloud || /[\\/]data$/.test(dir) || dir === "data");
-  const persistWarning = ephemeral
-    ? 'BH_DATA_DIR 未設定且資料夾位於 Render 暫時磁碟 → 重新部署後帳號會全部消失（請掛載持久磁碟並設 BH_DATA_DIR=/data）'
-    : '';
+  // v4.85：有 Supabase 就不算「暫時」——雲端那份才是權威，本機只是快取
+  const persistWarning = store.remoteOn
+    ? ''
+    : (ephemeral
+      ? '沒有設定 BH_SUPABASE_URL／BH_SUPABASE_KEY，且資料夾位於暫時磁碟 → 休眠或重新部署後帳號會全部消失'
+      : '沒有設定 BH_SUPABASE_URL／BH_SUPABASE_KEY → 只存在本機檔案，平台一旦清空容器就沒了');
 
   let secret = opt.secret || env.BH_AUTH_SECRET || '';
   if (!secret) {
@@ -981,7 +1207,8 @@ function createCloud(options) {
     const p = url.pathname;
     if (p.indexOf('/api/') !== 0) return false;
     const isAuth = p.indexOf('/api/auth/') === 0;
-    const isRpg = p.indexOf('/api/rpg/') === 0;
+    // v4.85：/api/save/* 併進同一條「需要登入」的分支（同樣靠 session 認人）
+    const isRpg = p.indexOf('/api/rpg/') === 0 || p.indexOf('/api/save/') === 0;
     const isAdmin = p.indexOf('/api/admin/') === 0;
     const isShare = p.indexOf('/api/share/') === 0;
     const isLb = p.indexOf('/api/lb/') === 0;              // v4.80：每日挑戰排行榜
@@ -1494,6 +1721,30 @@ function createCloud(options) {
         const acc = session(req);
         if (!acc) return fail(res, 401, 'NO_SESSION'), true;
 
+        /* v4.85：整包存檔 —— 讓「單機進度／金幣／隨從／票券／教學／每日最佳」
+           跟著帳號走，不再只鎖在這台裝置的瀏覽器裡 */
+        if (p === '/api/save/get' && req.method === 'POST') {
+          if (!gate(req, res, 'saveget', 30, 6)) return true;
+          return send(res, 200, {
+            ok: true,
+            save: acc.save || null,
+            rev: acc.saveRev || 0,
+            ts: acc.saveTs || 0
+          }), true;
+        }
+
+        if (p === '/api/save/put' && req.method === 'POST') {
+          if (!gate(req, res, 'saveput', 20, 4)) return true;
+          const body = await readJson(req, 65536);
+          if (!body || !body.save || typeof body.save !== 'object') return fail(res, 400, 'BAD_BODY'), true;
+          acc.save = sanitizeSave(body.save);
+          acc.saveRev = (acc.saveRev || 0) + 1;
+          acc.saveTs = Date.now();
+          logEvent(acc, 'save', {});
+          store.touch();
+          return send(res, 200, { ok: true, rev: acc.saveRev, ts: acc.saveTs }), true;
+        }
+
         if (p === '/api/rpg/state' && req.method === 'GET') {
           return send(res, 200, { ok: true, account: publicAccount(acc) }), true;
         }
@@ -1689,7 +1940,13 @@ function createCloud(options) {
       webLogins: stats.webLogins,
       bindings: stats.bindings,
       syncs: stats.syncs,
-      persisted: !!persist,
+      persisted: store.remoteOn ? store.state.loaded : !!persist,
+      storage: store.state.mode,
+      storageLoaded: store.state.loaded,
+      storageError: store.state.lastError,
+      storageWrites: store.state.writes,
+      storageFails: store.state.fails,
+      storageSkipped: store.state.skipped,
       dir: dir
     };
   }
@@ -1698,6 +1955,8 @@ function createCloud(options) {
     handle: handle,
     stats: statsOut,
     flush: store.flush,
+    ready: store.ready,
+    storage: store.state,
     secret: secret,
     db: db,
     _internals: {
