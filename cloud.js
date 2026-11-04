@@ -764,6 +764,17 @@ function createCloud(options) {
     key: cleanEnvKey(env.BH_SUPABASE_KEY),
     table: String(env.BH_SUPABASE_TABLE || 'bh_kv').trim()
   };
+  /* v4.85h：實測踩到 —— 在 Render 後台貼值時，把 `sb_secret_` 那段一起黏進了「變數名稱」欄，
+   *   結果變數叫 `BH_SUPABASE_KEYsb_secret_`，程式找不到 BH_SUPABASE_KEY → 靜默退回本機檔案模式
+   *   （表面正常、其實休眠就丟資料）。這裡做一次容錯：找不到正名時，接受任何以
+   *   `BH_SUPABASE_KEY` 開頭的多餘變數，並記下來讓 /api/health 提醒使用者去改名。 */
+  let keyNameWarn = '';
+  if (!remote.key) {
+    const alt = Object.keys(env).filter(function (n) {
+      return /^BH_SUPABASE_KEY./i.test(n) && String(env[n] == null ? '' : env[n]).trim();
+    })[0];
+    if (alt) { remote.key = cleanEnvKey(env[alt]); keyNameWarn = alt; }
+  }
   const store = createStore(dir, persist, remote);
   const db = store.db;
   // v4.13：偵測「這個資料夾會不會在重新部署後被清空」
@@ -2000,6 +2011,7 @@ function createCloud(options) {
           keyPfx: pfx,
           keyHash: h,
           keySet: !!k,
+          keyNameWarn: keyNameWarn || '',
           // 只看「名稱含 SUPABASE 的環境變數」叫什麼、值有多長（不露值本體）：
           //   常見症狀是變數名打錯（多一個空白、少一個 E）或存檔時只存了一個。
           envNames: Object.keys(env)
