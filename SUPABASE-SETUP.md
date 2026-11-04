@@ -53,17 +53,53 @@ curl https://bomb-hero-game.onrender.com/api/health
 看到這兩行就是接上了：
 
 ```json
-{ "storage": "supabase", "storageLoaded": true, "storageAccounts": 0, "storageError": null }
+{ "storage": "supabase", "storageLoaded": true, "storageError": "" }
 ```
 
-- `storage: "file"` → 環境變數還沒生效（多半是存檔後沒重新部署，或 Key 打錯）
-- `storageLoaded: false` → 遠端連不上（URL／Key 有誤），此時**不會**寫回雲端，不會蓋掉資料
+- `storage: "file"` → 環境變數沒生效（沒重新部署、變數名打錯、或值空白）
+- `storageLoaded: false` + `storageError` 有 401 → Key 字串不對（Supabase 直接拒絕）
+- `storageDiag` 是給人核對用的遮罩指紋，不會外洩金鑰：
+
+```json
+"storageDiag": {
+  "urlHost": "sgchdgcrrpfeliapllny.supabase.co",
+  "table": "bh_kv",
+  "keyLen": 41,
+  "keyPfx": "sb_secret_",
+  "keyHash": "6ecbf320",
+  "keySet": true,
+  "keyNameWarn": "",
+  "envNames": ["BH_SUPABASE_KEY:41", "BH_SUPABASE_URL:40"]
+}
+```
+
+- `keyLen` 應為 **41**（`sb_secret_` 10 + 31）；`keyPfx` 是 `sb_secret_` 才算後端金鑰
+- `keyHash` 是 key 的 sha256 前 8 碼 —— 用來確認「Render 上那把」跟手上那把是不是同一把
+- **`keyNameWarn` 有值** → 變數名被貼歪了（例如 `BH_SUPABASE_KEYsb_secret_`），程式仍然運作，但請去 Render 改名
+- `envNames` 列出名稱含 `SUPABASE` 的變數及其值長度（不露值），專門抓「名打錯／只存了一個」
+- `bootAt` / `uptimeSec` 是這次容器啟動的時間，用來確認「真的換過一個新容器」
+
+> 實測踩過的坑：在 Render 後台貼值時，若把 `sb_secret_` 前半段黏進 **Key（名稱）** 欄，變數會變成
+> `BH_SUPABASE_KEYsb_secret_`，程式找不到正名就**靜默退回本機檔案模式** —— 表面一切正常，直到休眠才發現資料沒了。
+> v4.85h 起會容錯接手並用 `keyNameWarn` 提醒。
 
 ### 換一組新金鑰（建議，因為舊的貼在聊天裡了）
 
 1. Supabase → **API Keys** → **New secret key** → 建一把新的
 2. 複製新的 `sb_secret_...`，到 Render 把 `BH_SUPABASE_KEY` 換掉 → Save
-3. 等部署完成、`/api/health` 顯示 `storageLoaded: true` 後，回 Supabase 把舊金鑰 **Revoke**
+3. 等部署完成、`/api/health` 顯示 `storageLoaded: true`（且 `keyHash` 變了、`keySet: true`）後，
+   回 Supabase 把舊金鑰 **Revoke**
+
+### 已完成的端到端驗證（2026-11-04）
+
+| 步驟 | 結果 |
+|---|---|
+| 建遊客 `g_04dbaeeb39b25e31` | ✅ |
+| `/api/save/put`（stage 17 / gold 4321 / tickets 9） | ✅ rev 1 |
+| 直接在 Supabase 讀 `accounts` 分片 | ✅ 兩個值都在 |
+| 推新 commit 觸發**真正換容器** | ✅ `uptimeSec` 歸零、`storageWrites` 歸零 |
+| 用**重啟前**的 cookie 打 `/api/save/get` | ✅ 同一組 cookie 仍認得，回傳 stage 17 / gold 4321 / 同一個 ts、rev 1 |
+
 
 ---
 
