@@ -1,24 +1,76 @@
-# 雲端存檔設定（Supabase）— 5 分鐘
+# 雲端存檔設定（Supabase）
 
 > 為什麼要換：Render 的**免費**實例檔案系統是暫時的。只要 15 分鐘沒有流量就會自動休眠，
 > 休眠時寫在磁碟上的東西**全部清空**；而持久磁碟只有付費方案才能掛。
-> 所以「帳號存在伺服器的 data/accounts.json」其實隨時會消失。
+> 所以「帳號存在伺服器的 `data/accounts.json`」其實隨時會消失。
 > 現在改成存到 Supabase（Postgres），Render 重啟幾次都不受影響。
 
 ---
 
-## 步驟 1：開一個 Supabase 專案（免費）
+## 目前進度
 
-1. 到 https://supabase.com 註冊（GitHub 帳號可直接登入）
-2. **New project**
-   - Name：`bomb-hero`
-   - Database Password：隨便設一組（**這個不是等等要用的 key，記下來就好**）
-   - Region：選 **Southeast Asia (Singapore)**，離台灣最近
-3. 等 1~2 分鐘建置完成
+| 步驟 | 狀態 |
+|---|---|
+| 1. 建 Supabase 專案 | ✅ 完成（ref `sgchdgcrrpfeliapllny`） |
+| 2. 建 `bh_kv` 表 | ✅ 完成（`Success. No rows returned`） |
+| 3. 本機實測讀寫 | ✅ 通過（寫入 → 讀回 → 清除，見 `tools/check-supabase.js`） |
+| 4. 把兩個值填進 Render | ⬜ **剩下這一步** |
 
-## 步驟 2：建一張表
+**你的兩個值：**
 
-左側 **SQL Editor** → **New query** → 貼上 → **Run**：
+```
+BH_SUPABASE_URL = https://sgchdgcrrpfeliapllny.supabase.co
+BH_SUPABASE_KEY = sb_secret_…（完整值在對話裡；或到 Supabase → API Keys 複製）
+```
+
+（金鑰在 Supabase → Project Settings → **API Keys** → 下方 **Secret keys**。
+新版是 `sb_secret_` 開頭；舊版的 `eyJ...` service_role JWT 也還能用。
+⚠ 這個 repo 是公開的，**金鑰不要寫進任何會被 commit 的檔案**。）
+
+---
+
+## 步驟 4：填進 Render（最後一步）
+
+1. 打開 https://dashboard.render.com/
+2. 點服務 **bomb-hero-game**
+3. 左側 **Environment**
+4. 右側 **Add Environment Variable**，填第一組
+   - Key：`BH_SUPABASE_URL`
+   - Value：`https://sgchdgcrrpfeliapllny.supabase.co`
+5. 再點一次 **Add Environment Variable**，填第二組
+   - Key：`BH_SUPABASE_KEY`
+   - Value：`sb_secret_` 開頭那一整串（從 Supabase → API Keys → Secret keys 複製）
+6. 點 **Save Changes** → Render 會自動重新部署（約 1~2 分鐘）
+
+> 若已經存在同名變數，直接改成上面的值再存即可。
+
+### 驗證
+
+```bash
+curl https://bomb-hero-game.onrender.com/api/health
+```
+
+看到這兩行就是接上了：
+
+```json
+{ "storage": "supabase", "storageLoaded": true, "storageAccounts": 0, "storageError": null }
+```
+
+- `storage: "file"` → 環境變數還沒生效（多半是存檔後沒重新部署，或 Key 打錯）
+- `storageLoaded: false` → 遠端連不上（URL／Key 有誤），此時**不會**寫回雲端，不會蓋掉資料
+
+### 換一組新金鑰（建議，因為舊的貼在聊天裡了）
+
+1. Supabase → **API Keys** → **New secret key** → 建一把新的
+2. 複製新的 `sb_secret_...`，到 Render 把 `BH_SUPABASE_KEY` 換掉 → Save
+3. 等部署完成、`/api/health` 顯示 `storageLoaded: true` 後，回 Supabase 把舊金鑰 **Revoke**
+
+---
+
+## 附錄：從零重建時要做的事
+
+<details>
+<summary>建表 SQL（已經跑過，重灌環境時用）</summary>
 
 ```sql
 create table if not exists bh_kv (
@@ -28,89 +80,42 @@ create table if not exists bh_kv (
 );
 
 -- 打開 RLS 但「不建任何 policy」：
--- service_role 會繞過 RLS 正常讀寫，anon（公開金鑰）則完全碰不到，
+-- secret key 會繞過 RLS 正常讀寫，publishable／anon 則完全碰不到，
 -- 所以這張表不會被路過的人用公開金鑰讀走。
 alter table bh_kv enable row level security;
 ```
 
-看到 `Success. No rows returned` 就對了。
+</details>
 
-## 步驟 3：拿兩組值
-
-左側 **Project Settings**（齒輪）→ **API**：
-
-| 要複製的 | 在哪 | 長相 |
-|---|---|---|
-| **Project URL** | Project URL 那一行 | `https://abcdefgh.supabase.co` |
-| **service_role key** | Project API keys → `service_role` `secret` | 很長一串（`eyJ...`）|
-
-⚠️ **一定是 service_role，不是 anon。** anon 金鑰沒有寫入權限，填錯會一直 401。
-⚠️ service_role 等於資料庫管理員密碼，**只能放在伺服器環境變數**，不要貼進前端或 commit。
-
-## 步驟 4：本機先驗證一次
-
-在專案根目錄執行（把兩組值換成你的）：
+<details>
+<summary>本機驗證指令</summary>
 
 ```bash
-BH_SUPABASE_URL="https://abcdefgh.supabase.co" \
-BH_SUPABASE_KEY="eyJhbGciOi..." \
-node tools/check-supabase.js
+node tools/check-supabase.js \
+  --url "https://sgchdgcrrpfeliapllny.supabase.co" \
+  --key "sb_secret_..."
 ```
 
-看到 `✅ 全部通過` 才往下走。若出現「資料表不存在」，回到步驟 2 再跑一次 SQL。
-
-## 步驟 5：填進 Render
-
-Render 後台 → 你的服務 `bomb-hero-game` → **Environment** → **Add Environment Variable**：
-
-| Key | Value |
-|---|---|
-| `BH_SUPABASE_URL` | `https://abcdefgh.supabase.co` |
-| `BH_SUPABASE_KEY` | service_role key |
-
-存檔後按 **Manual Deploy → Deploy latest commit**（或直接推一個 commit）。
-
-部署完打開日誌，應該看到：
+通過的輸出會長這樣：
 
 ```
-[cloud] 存檔：Supabase（雲端資料庫）✔ 已載入，寫入 0 次
+金鑰型別：Secret key（sb_secret_…）✓
+1) 檢查資料表…   ✓ 資料表存在
+2) 測試寫入…     ✓ 寫入成功
+3) 讀回確認…     ✓ 讀回一致
+4) 清除測試資料… ✓ 已清除
 ```
 
-如果是 `⚠ Supabase 連線失敗`，把訊息貼給我，通常是 key 貼錯或表沒建。
+若貼成 `sb_publishable_` 開頭，腳本會直接告訴你「這是公開金鑰，寫不進去」。
 
----
+</details>
 
-## 怎麼確認「真的永存」
+<details>
+<summary>免費額度會不會不夠</summary>
 
-1. 線上註冊一個帳號、玩到第 2 關
-2. Render 後台 **Manual Deploy → Restart service**（模擬休眠／重新部署）
-3. 重新整理頁面 → 應該還是第 2 關
+- Supabase Free：**500 MB 資料庫**（不是 1 GB；1 GB 是檔案儲存，存圖片用的）
+- 一份玩家存檔約 300~600 bytes，含帳號索引 → 500 MB 大約能存 **數十萬名玩家**
+- 免費專案「7 天完全沒有 API 請求」才會被暫停；伺服器本身就連著它，正常有玩家就不會閒置
+- 真的要保險：Render 升 Starter（$7/月）就不會休眠，Supabase 免費層搭配伺服器連線即可
 
-或直接看 `https://bomb-hero-game.onrender.com/api/health`：
-
-```json
-{ "ok": true, "accounts": 2, "storage": "supabase", "storageLoaded": true, "storageFails": 0 }
-```
-
-**只看 `storage` 這個欄位**：
-
-| storage | 意思 |
-|---|---|
-| `supabase` | ✅ 接上了，存檔在雲端資料庫 |
-| `file` | ⚠️ 還在寫本機暫存檔（環境變數沒生效，或還沒重啟） |
-| `memory` | ❌ 連本機檔案都沒開，重啟一定歸零 |
-
-`storageError` 有內容就是連線失敗的原因（金鑰錯、表沒建、網路不通）。
-
----
-
-## 費用與限制
-
-- **免費**：500 MB 資料庫、每月 5 GB 流量。你的存檔一筆約 2 KB，10 萬個帳號也才 200 MB。
-- Supabase 免費專案**閒置 7 天會暫停**（資料不會消失）。下次有請求會自動喚醒，喚醒約 10 秒 —— 對存檔 API 來說就是偶爾一次慢幾秒。
-- 如果真的遇到暫停又不想等，升級 Supabase Pro（$25/月）或改回 Render 付費磁碟（$7/月）。
-
-## 備份（可選，但建議）
-
-Supabase 後台 → **Database** → **Backups**，免費方案有每日備份。
-另外玩家自己在「設定 → 存檔備份」可以匯出一串存檔碼，那是他們自己的保險。
+</details>

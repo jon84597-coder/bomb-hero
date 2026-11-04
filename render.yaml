@@ -1,19 +1,18 @@
-# Render Blueprint —— 讓帳號／雲端進度在「重新部署（改版）」後不會消失
+# Render Blueprint —— 帳號／雲端進度要放在哪裡
 #
-# 問題（v4.13 修）：Render 免費方案的檔案系統是「暫時的」，
-#   每次推送新版本重新部署 → data/ 會被清空 → 已註冊的帳號全部消失、必須重新註冊。
+# v4.13 的做法（已廢棄）：掛一顆 1GB 持久磁碟到 /data。
+#   ✗ Render 免費實例「不支援持久磁碟」，plan: free + disk 是無效組合；
+#   ✗ 但程式看到 BH_DATA_DIR=/data 就以為已經持久化 → 不印警告 → 資料無聲消失。
+#   ✗ 而且免費實例 15 分鐘沒流量就休眠，休眠時容器檔案系統會被清空。
 #
-# 修法：這個 blueprint 會
-#   1. 建立一顆 1GB 的持久磁碟，掛載到 /data
-#   2. 設定 BH_DATA_DIR=/data → 伺服器把帳號存到磁碟上而不是暫時磁碟
-#   3. 設定 BH_AUTH_SECRET → session 簽章密鑰在重新部署後仍然有效（不會被登出）
+# v4.85 起的做法：權威來源 = Supabase（Postgres），本機 /data 只當快取。
+#   要生效必須在 Render 後台填兩個環境變數：
+#     BH_SUPABASE_URL = https://<project-ref>.supabase.co
+#     BH_SUPABASE_KEY = sb_secret_…（Secret key，不是 publishable）
+#   ⚠ 金鑰不要寫進這個檔案 —— repo 是公開的，會被掃描。
 #
-# 套用方式：Render 後台 → 你的服務 → Blueprint → 點「Apply」→ 勾選「Update Existing Resources」
-#
-# 若不想用 Blueprint，也可以手動做：
-#   Render 後台 → Disks → 建立磁碟（掛載到 /data）
-#   Render 後台 → Environment → 加 BH_DATA_DIR=/data
-#   （BH_AUTH_SECRET 若已設定就會保留；若沒有，伺服器會自動寫一份到 /data/secret.key）
+# 驗證方式：curl https://bomb-hero-game.onrender.com/api/health
+#   "storage": "supabase" 且 "storageLoaded": true 才算接上。
 
 services:
   - type: web

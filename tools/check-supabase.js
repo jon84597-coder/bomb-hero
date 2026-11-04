@@ -15,9 +15,14 @@
  *   4. 清掉那筆測試資料
  */
 
-const url = String(process.env.BH_SUPABASE_URL || '').trim().replace(/\/+$/, '');
-const key = String(process.env.BH_SUPABASE_KEY || '').trim();
-const table = String(process.env.BH_SUPABASE_TABLE || 'bh_kv').trim();
+const argv = process.argv.slice(2);
+const argOf = function (name) {
+  const i = argv.indexOf('--' + name);
+  return i >= 0 && argv[i + 1] ? argv[i + 1] : '';
+};
+const url = String(argOf('url') || process.env.BH_SUPABASE_URL || '').trim().replace(/\/+$/, '');
+const key = String(argOf('key') || process.env.BH_SUPABASE_KEY || '').trim();
+const table = String(argOf('table') || process.env.BH_SUPABASE_TABLE || 'bh_kv').trim();
 
 const SQL = `
 create table if not exists ${table} (
@@ -42,8 +47,27 @@ if (!url || !key) {
 if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)) {
   console.error('⚠ URL 看起來不像 Supabase 專案網址：' + url + '（仍會嘗試連線）');
 }
-if (key.length < 40) {
-  console.error('⚠ KEY 長度只有 ' + key.length + '，service_role key 通常超過 100 字元');
+/* v4.85d：Supabase 2025 起改用新版 API key（sb_publishable_ / sb_secret_），
+   舊的 eyJ... JWT 仍然可用。這裡先判斷型別，貼錯金鑰要當場講清楚，
+   不要等 PostgREST 回一個看不懂的 401。 */
+if (/^sb_publishable_/.test(key)) {
+  fail('貼成了 publishable key（瀏覽器端用的公開金鑰）',
+    '這個金鑰受 RLS 限制，寫不進 bh_kv。請改貼同頁下方 Secret keys 那一組（sb_secret_ 開頭）。');
+}
+if (/^sb_secret_/.test(key)) {
+  console.log('金鑰型別：Secret key（sb_secret_…）✓\n');
+} else if (/^eyJ/.test(key)) {
+  let role = '';
+  try {
+    role = JSON.parse(Buffer.from(key.split('.')[1], 'base64').toString('utf8')).role || '';
+  } catch (e) {}
+  if (role && role !== 'service_role') {
+    fail('這把 JWT 的 role 是 "' + role + '"，不是 service_role',
+      '請到 Project Settings → API 複製 service_role 那一把（不是 anon）。');
+  }
+  console.log('金鑰型別：Legacy JWT（role=' + (role || '未知') + '）\n');
+} else {
+  console.error('⚠ 認不出金鑰格式（開頭應為 sb_secret_ 或 eyJ），仍會嘗試連線\n');
 }
 
 const headers = {
