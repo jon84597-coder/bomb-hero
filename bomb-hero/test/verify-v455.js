@@ -204,10 +204,10 @@ head('7. 首頁大逃殺（未開放）');
 {
   ok(/id="btnBR"[^>]*data-ico="🏝️"/.test(src), '首頁有 btnBR 按鈕');
   ok(/class="mbtn c-br has-beta" id="btnBR"/.test(src), 'v4.76：按鈕不再標 locked（大逃殺已開放）');
-  ok(/\.hotTag \{/.test(src) && /大逃殺<span class="hotTag">HOT/.test(src), '改標 HOT（推薦測試遊玩）');
-  ok(/br\.innerHTML = '大逃殺/.test(src), '文案由 JS 注入（靜態 HTML 只留空殼，i18n 覆蓋率才不會掉）');
+  ok(/\.hotTag \{/.test(src) && /<span class="hotTag">HOT<\/span>/.test(src), '改標 HOT（推薦測試遊玩）');
+  ok(/br\.innerHTML = t\('br\.btnTop'\)/.test(src), '文案由 JS 注入（靜態 HTML 只留空殼，i18n 覆蓋率才不會掉）');
   ok(/\$id\('btnBR'\)\.addEventListener/.test(src), '點下去有事件');
-  ok(/大逃殺<span class="hotTag">HOT/.test(src) && /推薦測試遊玩/.test(src), 'v4.76：改成「推薦測試遊玩」＋HOT');
+  ok(P.t('br.btnTop') === '大逃殺' && P.t('br.btnTopSub').indexOf('推薦測試遊玩') >= 0, 'v4.76：改成「推薦測試遊玩」＋HOT');
   ok(P.VERSION_LOG.some(function (e) { return e.items.join(' ').indexOf('大逃殺') >= 0; }), '版本紀錄有提到大逃殺');
 }
 

@@ -114,8 +114,9 @@ head('4. 暱稱可以留空');
   ok(S.playerName === S.playerName.trim(), '名字沒有前後空白');
   S.playerName = saved;
   // 十語言都有自動取名的提示
-  ok((css.match(/'nick\.auto'/g) || []).length >= 10, 'nick.auto 十語言都補了（' +
-    (css.match(/'nick\.auto'/g) || []).length + ' 處）');
+  // v4.77：字典改成壓縮表 → 改驗執行期
+  const nn = P.LANGS.filter(function (L) { return P.I18N[L.id] && P.I18N[L.id]['nick.auto']; }).length;
+  ok(nn >= 10, 'nick.auto 十語言都補了（' + nn + ' 處）');
 }
 
 // ================================================================

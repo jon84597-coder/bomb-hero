@@ -1,0 +1,99 @@
+{
+  "_note": "v4.77 說明頁：大逃殺分頁 8 條 ＋ 更新副標（10 欄）",
+  "help.desc": [
+    "操作、道具、坐騎招式、場景機關、大逃殺、怪物圖鑑一次看懂 —— 點上面的分類切換。",
+    "操作、道具、坐骑招式、场景机关、大逃杀、怪物图鉴一次看懂 —— 点上面的分类切换。",
+    "Controls, items, mount skills, stage hazards, Battle Royale and the monster guide in one place — switch tabs above.",
+    "操作・アイテム・騎乗スキル・ステージの仕掛け・バトロワ・モンスター図鑑をまとめて確認 —— 上のタブで切り替え。",
+    "조작, 아이템, 탈것 기술, 스테이지 장치, 배틀로얄, 몬스터 도감을 한 번에 —— 위 탭에서 전환하세요.",
+    "การควบคุม ไอเทม ท่าของพาหนะ กลไกในด่าน แบทเทิลรอยัล และคู่มือมอนสเตอร์ ครบในที่เดียว —— สลับแท็บด้านบน",
+    "Điều khiển, vật phẩm, chiêu của thú cưỡi, cơ chế màn chơi, sinh tồn và sổ tay quái — xem tất cả ở đây, chuyển tab phía trên.",
+    "Управление, предметы, приёмы ездовых, ловушки уровней, королевская битва и бестиарий — всё здесь, переключайте вкладки сверху.",
+    "Steuerung, Items, Reittier-Fähigkeiten, Level-Mechaniken, Battle Royale und Monsterlexikon auf einen Blick — oben umschalten.",
+    "Comandi, oggetti, mosse delle cavalcature, meccaniche dei livelli, battle royale e bestiario in un colpo d'occhio — cambia scheda qui sopra."
+  ],
+  "help.br.lead": [
+    "🏝️ 大逃殺：最多 50 人的亂鬥，活到最後一個就贏。可以單打，也可以組隊。下面幾點先記住，就不會一開場就出局。",
+    "🏝️ 大逃杀：最多 50 人的乱斗，活到最后一个就赢。可以单打，也可以组队。下面几点先记住，就不会一开场就出局。",
+    "🏝️ Battle Royale: up to 50 players brawl it out — last one standing wins. Play solo or in teams. Remember the points below and you won't be out in the first seconds.",
+    "🏝️ バトロワ：最大50人の乱戦、最後まで生き残れば勝ち。ソロでもチームでもOK。下のポイントを押さえれば開幕即脱落は防げます。",
+    "🏝️ 배틀로얄: 최대 50인 난전, 마지막까지 살아남으면 승리. 솔로도 팀도 가능합니다. 아래 요점만 기억하면 시작하자마자 탈락하지 않습니다.",
+    "🏝️ แบทเทิลรอยัล: ต่อสู้สูงสุด 50 คน อยู่ถึงคนสุดท้ายเป็นผู้ชนะ เล่นเดี่ยวหรือเป็นทีมก็ได้ จำข้อด้านล่างไว้จะไม่ตกรอบตั้งแต่เปิดเกม",
+    "🏝️ Sinh tồn: hỗn chiến tối đa 50 người, sống cuối cùng là thắng. Chơi solo hoặc theo đội. Nhớ mấy điểm dưới đây là không bị loại ngay từ đầu.",
+    "🏝️ Королевская битва: до 50 игроков, побеждает последний выживший. Можно в одиночку или в команде. Запомните пункты ниже — и не вылетите в первые секунды.",
+    "🏝️ Battle Royale: bis zu 50 Spieler, wer überlebt gewinnt. Solo oder im Team. Merk dir die Punkte unten, dann bist du nicht sofort raus.",
+    "🏝️ Battle Royale: fino a 50 giocatori, vince l'ultimo rimasto. In solitaria o a squadre. Ricorda i punti qui sotto e non uscirai subito."
+  ],
+  "help.br.goal": [
+    "🎯 <b>目標</b>：開場有 10 點血，被炸到一次扣 1～2 點；血量歸零就出局。<b>最後活著的人（或隊伍）獲勝</b>，名次越前面獎勵越好。",
+    "🎯 <b>目标</b>：开场有 10 点血，被炸到一次扣 1～2 点；血量归零就出局。<b>最后活着的人（或队伍）获胜</b>，名次越前面奖励越好。",
+    "🎯 <b>Goal</b>: you start with 10 HP and lose 1–2 per hit; at zero you're out. <b>The last player (or team) standing wins</b> — the higher your place, the bigger the reward.",
+    "🎯 <b>目標</b>：開始時10ポイント、被弾ごとに1～2減り、0で脱落。<b>最後に生き残った人（チーム）の勝ち</b>。順位が上ほど報酬が良い。",
+    "🎯 <b>목표</b>: 시작 시 10 HP, 피격당 1~2 감소, 0이면 탈락. <b>마지막까지 살아남은 사람(팀)이 승리</b>하며 순위가 높을수록 보상이 좋습니다.",
+    "🎯 <b>เป้าหมาย</b>: เริ่มด้วย 10 แต้ม โดนระเบิดครั้งละ 1–2 แต้ม หมดแล้วตกรอบ <b>คน(หรือทีม)สุดท้ายที่รอดชนะ</b> อันดับยิ่งสูงรางวัลยิ่งดี",
+    "🎯 <b>Mục tiêu</b>: khởi đầu 10 máu, trúng đòn mất 1–2; hết máu là bị loại. <b>Người (hoặc đội) sống cuối cùng thắng</b>, thứ hạng càng cao thưởng càng lớn.",
+    "🎯 <b>Цель</b>: на старте 10 HP, попадание снимает 1–2; ноль — вылет. <b>Побеждает последний выживший (или команда)</b>; чем выше место, тем больше награда.",
+    "🎯 <b>Ziel</b>: Start mit 10 HP, 1–2 pro Treffer, bei null bist du raus. <b>Wer (oder welches Team) übrig bleibt, gewinnt</b> — je besser der Platz, desto größer die Belohnung.",
+    "🎯 <b>Obiettivo</b>: parti con 10 HP, perdi 1–2 a colpo, a zero sei fuori. <b>Vince l'ultimo (o l'ultima squadra) rimasto</b>: più alto il piazzamento, miglior premio."
+  ],
+  "help.br.team": [
+    "👥 <b>人數與組隊</b>：可選 30 人或 50 人；組隊可開 2／3／4 隊 —— <b>同隊的炸彈與火焰不會傷到自己人</b>，但毒圈和小怪照樣會咬人。",
+    "👥 <b>人数与组队</b>：可选 30 人或 50 人；组队可开 2／3／4 队 —— <b>同队的炸弹与火焰不会伤到自己人</b>，但毒圈和小怪照样会咬人。",
+    "👥 <b>Players & teams</b>: pick 30 or 50 players; teams can be 2/3/4 — <b>your team's bombs and flames never hurt teammates</b>, but the zone and monsters still do.",
+    "👥 <b>人数とチーム</b>：30人か50人。チームは2／3／4から選択 —— <b>同じチームの爆弾と炎では味方を傷つけません</b>。ただし毒エリアと雑魚は容赦なし。",
+    "👥 <b>인원과 팀</b>: 30명 또는 50명, 팀은 2／3／4 —— <b>같은 팀의 폭탄과 불꽃은 아군을 해치지 않습니다</b>. 다만 자기장과 몬스터는 예외.",
+    "👥 <b>จำนวนคนและทีม</b>: เลือก 30 หรือ 50 คน ทีม 2／3／4 ได้ —— <b>ระเบิดและเปลวไฟของทีมเดียวกันไม่ทำร้ายเพื่อนร่วมทีม</b> แต่โซนพิษและมอนยังกัดได้",
+    "👥 <b>Số người và đội</b>: chọn 30 hoặc 50 người; đội 2／3／4 — <b>bom và lửa của đồng đội không làm hại nhau</b>, nhưng vùng độc và quái thì vẫn cắn.",
+    "👥 <b>Игроки и команды</b>: 30 или 50 человек, команды 2／3／4 — <b>бомбы и огонь своей команды не вредят союзникам</b>, а вот зона и монстры вредят.",
+    "👥 <b>Spieler & Teams</b>: 30 oder 50 Spieler, Teams 2／3／4 — <b>Bomben und Flammen des eigenen Teams verletzen keine Verbündeten</b>, Zone und Monster aber schon.",
+    "👥 <b>Giocatori e squadre</b>: 30 o 50 giocatori, squadre 2／3／4 — <b>bombe e fiamme della tua squadra non feriscono i compagni</b>, ma zona e mostri sì."
+  ],
+  "help.br.zone": [
+    "☠️ <b>毒圈</b>：一場 5 分鐘（5 圈）或 10 分鐘（10 圈）。時間到毒圈就往內縮，<b>站在圈外每 1.6 秒掉 1 點血</b> —— 看到圈靠過來就快往中間移動。",
+    "☠️ <b>毒圈</b>：一场 5 分钟（5 圈）或 10 分钟（10 圈）。时间到毒圈就往内缩，<b>站在圈外每 1.6 秒掉 1 点血</b> —— 看到圈靠过来就快往中间移动。",
+    "☠️ <b>The zone</b>: a match lasts 5 min (5 rings) or 10 min (10 rings). Each phase the ring closes in and <b>outside it you lose 1 HP every 1.6s</b> — when the ring moves, head for the middle.",
+    "☠️ <b>毒エリア</b>：1試合5分（5周）or 10分（10周）。時間ごとに円が縮み、<b>外にいると1.6秒ごとに1ポイント減</b> —— 円が来たら中央へ。",
+    "☠️ <b>자기장</b>: 한 판 5분(5회) 또는 10분(10회). 시간마다 원이 줄어들고 <b>바깥에 있으면 1.6초마다 1 HP 감소</b> — 원이 다가오면 중앙으로.",
+    "☠️ <b>โซนพิษ</b>: ตาหนึ่ง 5 นาที (5 รอบ) หรือ 10 นาที (10 รอบ) วงจะหดเข้ามาเรื่อย ๆ <b>อยู่นอกวงเสีย 1 แต้มทุก 1.6 วินาที</b> — เห็นวงเข้ามารีบวิ่งไปกลาง",
+    "☠️ <b>Vùng độc</b>: một trận 5 phút (5 vòng) hoặc 10 phút (10 vòng). Mỗi mốc vòng thu nhỏ lại, <b>đứng ngoài mất 1 máu mỗi 1,6 giây</b> — thấy vòng tới thì chạy vào giữa.",
+    "☠️ <b>Зона</b>: матч 5 мин (5 колец) или 10 мин (10 колец). Кольцо сжимается, <b>снаружи теряете 1 HP каждые 1,6 с</b> — кольцо пошло, бегите в центр.",
+    "☠️ <b>Die Zone</b>: eine Runde dauert 5 Min (5 Ringe) oder 10 Min (10 Ringe). Der Ring zieht sich zusammen, <b>außerhalb verlierst du alle 1,6 s 1 HP</b> — Ring kommt? Ab zur Mitte.",
+    "☠️ <b>La zona</b>: una partita dura 5 min (5 anelli) o 10 min (10 anelli). L'anello si stringe, <b>fuori perdi 1 HP ogni 1,6 s</b> — quando arriva, corri al centro."
+  ],
+  "help.br.boss": [
+    "🦖 <b>亂入 BOSS（v4.77 新）</b>：場上會有 2 隻從 32 關隨機抽來的 BOSS 到處亂走。<b>打死牠最後一下的人直接騎上恐龍</b>（不用撿蛋）—— 多一層護盾，還能吐火，火力立刻翻一倍。",
+    "🦖 <b>乱入 BOSS（v4.77 新）</b>：场上会有 2 只从 32 关随机抽来的 BOSS 到处乱走。<b>打死它最后一下的人直接骑上恐龙</b>（不用捡蛋）—— 多一层护盾，还能吐火，火力立刻翻一倍。",
+    "🦖 <b>Roaming boss (new in v4.77)</b>: 2 bosses picked at random from the 32 stages wander the map. <b>Whoever lands the last hit mounts the dino right away</b> (no egg needed) — a free shield plus flame breath, so your firepower doubles instantly.",
+    "🦖 <b>乱入ボス（v4.77 新）</b>：32面からランダムに選ばれたボスが2体うろつきます。<b>最後の一撃を入れた人がそのまま恐竜に騎乗</b>（卵不要）—— シールド1枚＋火吹きで火力が倍に。",
+    "🦖 <b>난입 BOSS (v4.77 신규)</b>: 32개 스테이지에서 무작위로 뽑힌 BOSS 2마리가 돌아다닙니다. <b>마지막 일격을 넣은 사람이 바로 공룡에 탑승</b>(알 필요 없음) — 보호막 하나에 불뿜기까지, 화력이 두 배.",
+    "🦖 <b>บอสสุ่ม (ใหม่ v4.77)</b>: มีบอส 2 ตัวสุ่มจาก 32 ด่านเดินไปทั่วแผนที่ <b>คนที่โจมตีปิดบอสจะได้ขี่ไดโนทันที</b> (ไม่ต้องเก็บไข่) — ได้โล่เพิ่มหนึ่งชั้นและพ่นไฟได้ พลังโจมตีเพิ่มเป็นสองเท่า",
+    "🦖 <b>Boss lang thang (mới v4.77)</b>: 2 boss lấy ngẫu nhiên từ 32 ải đi lang thang khắp bản đồ. <b>Ai tung đòn cuối sẽ cưỡi khủng long ngay</b> (không cần trứng) — thêm một lớp khiên và phun lửa, hỏa lực tăng gấp đôi.",
+    "🦖 <b>Блуждающий босс (ново в v4.77)</b>: по карте ходят 2 босса, случайно выбранных из 32 уровней. <b>Кто нанёс последний удар — сразу садится на динозавра</b> (яйцо не нужно): лишний щит и дыхание огнём, урон удваивается.",
+    "🦖 <b>Wanderboss (neu in v4.77)</b>: 2 zufällig aus den 32 Leveln gewählte Bosse ziehen über die Karte. <b>Wer den letzten Treffer landet, sitzt sofort auf dem Dino</b> (kein Ei nötig) — ein Schutzschild plus Feueratem, doppelte Feuerkraft.",
+    "🦖 <b>Boss vagante (novità v4.77)</b>: 2 boss scelti a caso tra i 32 livelli girano per la mappa. <b>Chi dà il colpo finale sale subito sul dino</b> (niente uovo): uno scudo in più e il soffio di fuoco, potenza raddoppiata."
+  ],
+  "help.br.reward": [
+    "🏆 <b>獎勵</b>：依最後名次發金幣（冠軍最多），前三名再加送票券；現在還在免費測試，入場不扣票。",
+    "🏆 <b>奖励</b>：依最后名次发金币（冠军最多），前三名再加送票券；现在还在免费测试，入场不扣票。",
+    "🏆 <b>Rewards</b>: coins by final placement (champion gets the most), and the top three also earn tickets. It's still a free test — entering costs no ticket.",
+    "🏆 <b>報酬</b>：最終順位に応じてコイン（優勝が最高）、上位3位にはチケットも進呈。現在は無料テスト中で入場にチケットは不要。",
+    "🏆 <b>보상</b>: 최종 순위에 따라 코인(우승이 최대), 3위까지는 티켓도 지급. 지금은 무료 테스트라 입장에 티켓이 들지 않습니다.",
+    "🏆 <b>รางวัล</b>: ได้เหรียญตามอันดับสุดท้าย (ที่หนึ่งได้มากสุด) สามอันดับแรกได้ตั๋วเพิ่ม ตอนนี้ทดสอบฟรี เข้าเล่นไม่เสียตั๋ว",
+    "🏆 <b>Phần thưởng</b>: xu theo thứ hạng chung cuộc (vô địch nhiều nhất), top 3 còn được thêm vé. Hiện đang thử nghiệm miễn phí, vào không tốn vé.",
+    "🏆 <b>Награда</b>: монеты по итоговому месту (больше всех чемпиону), топ-3 ещё и билеты. Сейчас бесплатный тест — вход без билета.",
+    "🏆 <b>Belohnung</b>: Münzen nach Endplatz (am meisten für Platz 1), die Top 3 bekommen zusätzlich Tickets. Noch Testphase — Eintritt ohne Ticket.",
+    "🏆 <b>Ricompense</b>: monete in base al piazzamento (il massimo al primo), i primi tre anche biglietti. È ancora un test gratuito: entrare non costa biglietti."
+  ],
+  "help.br.ctrl": [
+    "🎮 <b>操作</b>：跟一般模式一樣 —— 放彈、吐火、引爆都在右下角，手機用左下搖桿移動；草叢、破屋可以躲人。",
+    "🎮 <b>操作</b>：跟一般模式一样 —— 放弹、吐火、引爆都在右下角，手机用左下摇杆移动；草丛、破屋可以躲人。",
+    "🎮 <b>Controls</b>: same as always — bomb, flame and detonate sit at the bottom-right, the joystick at the bottom-left on mobile. Bushes and broken huts hide you.",
+    "🎮 <b>操作</b>：通常モードと同じ —— 爆弾・火吹き・起爆は右下、スマホの移動は左下スティック。草むらや廃屋に隠れられます。",
+    "🎮 <b>조작</b>: 일반 모드와 같습니다 — 폭탄, 불뿜기, 폭파는 오른쪽 아래, 모바일 이동은 왼쪽 아래 조이스틱. 풀숲과 폐가는 숨을 수 있습니다.",
+    "🎮 <b>การควบคุม</b>: เหมือนโหมดปกติ — วางระเบิด พ่นไฟ ระเบิด อยู่มุมขวาล่าง มือถือใช้จอยซ้ายล่างในการเคลื่อนที่ พุ่มไม้และกระท่อมใช้ซ่อนตัวได้",
+    "🎮 <b>Điều khiển</b>: như chế độ thường — đặt bom, phun lửa, kích nổ ở góc dưới phải; trên điện thoại di chuyển bằng cần trái. Bụi cây và nhà đổ che được.",
+    "🎮 <b>Управление</b>: как обычно — бомба, огонь и взрыв справа внизу, на телефоне движение левым джойстиком. Кусты и разрушенные дома скрывают вас.",
+    "🎮 <b>Steuerung</b>: wie immer — Bombe, Feuer und Zünden unten rechts, am Handy bewegst du dich mit dem linken Stick. Büsche und Hütten verstecken dich.",
+    "🎮 <b>Comandi</b>: come sempre — bomba, fuoco e detona in basso a destra, su mobile ti muovi con la levetta sinistra. Cespugli e capanne ti nascondono."
+  ]
+}

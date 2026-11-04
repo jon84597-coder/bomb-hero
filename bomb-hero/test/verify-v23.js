@@ -235,9 +235,9 @@ function hsl(h) {
 }
 ok(typeof BH.drawStone === 'function', '有獨立的 drawStone（石頭專屬畫法）');
 // v4.54：硬牆分「外牆（沙色粗磚 drawOuterWall）／硬牆島（drawStone）」，軟磚仍是 drawCrate
-ok(/if \(v === 1\)[\s\S]{0,260}?drawOuterWall\(/.test(html) && /drawStone\(px, py, T, thc?\.hard/.test(html),
+ok(/if \(v === 1\)[\s\S]{0,300}?drawOuterWall\(/.test(html) && /drawStone\(cxp, cyp, T, thc\.hard/.test(html),
   'render()：外牆 → drawOuterWall、硬牆島 → drawStone（兩套不同畫法）');
-ok(/else \{[\s\S]{0,120}?drawCrate\(/.test(html), 'render()：軟磚仍走 drawCrate');
+ok(/else if \(v === 2\)[\s\S]{0,80}?drawCrate\(/.test(html), 'render()：軟磚仍走 drawCrate');
 // v4.26：軟牆有些主題改用「剪影」（陶罐／雲朵／珊瑚）辨識，色相不一定差很多
 //   → 色相／飽和／明度任一項拉得開就算分得出來
 const distinct = BH.THEMES.filter(t => {

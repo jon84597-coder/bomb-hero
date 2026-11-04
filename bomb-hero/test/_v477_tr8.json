@@ -1,0 +1,8 @@
+{
+  "_note": "怪物圖鑑速度形容詞 5 條（10 欄：tw,cn,en,ja,ko,th,vi,ru,de,it）",
+  "spd.veryFast": ["極快", "极快", "extremely fast", "極めて速い", "매우 빠름", "เร็วมาก", "cực nhanh", "очень быстрый", "sehr schnell", "velocissimo"],
+  "spd.fast": ["快", "快", "fast", "速い", "빠름", "เร็ว", "nhanh", "быстрый", "schnell", "veloce"],
+  "spd.mid": ["中", "中", "medium", "ふつう", "보통", "ปานกลาง", "trung bình", "средний", "mittel", "medio"],
+  "spd.slow": ["慢", "慢", "slow", "遅い", "느림", "ช้า", "chậm", "медленный", "langsam", "lento"],
+  "spd.verySlow": ["很慢", "很慢", "very slow", "とても遅い", "매우 느림", "ช้ามาก", "rất chậm", "очень медленный", "sehr langsam", "molto lento"]
+}

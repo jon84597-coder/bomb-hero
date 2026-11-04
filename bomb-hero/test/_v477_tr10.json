@@ -1,0 +1,66 @@
+{
+  "_note": "版本紀錄面板：最新版 4.77 的 5 條 ＋ 標籤文字（10 欄）",
+  "verLog.now": ["當前版本", "当前版本", "Current", "現在のバージョン", "현재 버전", "เวอร์ชันปัจจุบัน", "Bản hiện tại", "Текущая версия", "Aktuelle Version", "Versione attuale"],
+  "verLog.dev": ["內部", "内部", "Internal", "内部", "내부", "ภายใน", "Nội bộ", "Внутренняя", "Intern", "Interna"],
+  "verLog.zhOnly": ["此版本的更新說明以繁體中文撰寫。", "此版本的更新说明以繁体中文撰写。", "Release notes for this version are in Traditional Chinese only.", "このバージョンの更新内容は繁体字中国語のみです。", "이 버전의 업데이트 설명은 번체 중국어로만 제공됩니다.", "บันทึกการอัปเดตเวอร์ชันนี้มีเฉพาะภาษาจีนตัวเต็ม", "Ghi chú cập nhật của phiên bản này chỉ có tiếng Trung phồn thể.", "Описание этого обновления только на традиционном китайском.", "Die Änderungen dieser Version gibt es nur auf Traditionell-Chinesisch.", "Le note di questa versione sono solo in cinese tradizionale."],
+  "ver.4.77.1": [
+    "🦖 大逃殺打倒亂入 BOSS 立刻上坐騎：最後一擊的人<b>直接騎上恐龍</b>（不用等蛋、不用撿蛋），並附 1.2 秒無敵；騎小龍再吃一隻會進化成紅龍",
+    "🦖 大逃杀打倒乱入 BOSS 立刻上坐骑：最后一击的人<b>直接骑上恐龙</b>（不用等蛋、不用捡蛋），并附 1.2 秒无敌；骑小龙再吃一只会进化成红龙",
+    "🦖 Beat a roaming boss in Battle Royale and mount instantly: <b>whoever lands the last hit rides the dino right away</b> (no egg to wait for or pick up) with 1.2s of invincibility; if you're already on a small dino, downing another boss evolves it into the red dragon",
+    "🦖 バトロワで乱入ボスを倒すと即騎乗：<b>最後の一撃を入れた人がそのまま恐竜に乗る</b>（卵を待つ・拾う必要なし）＋1.2秒無敵。小竜に乗ったままもう1体倒すと赤竜に進化",
+    "🦖 배틀로얄에서 난입 BOSS를 잡으면 즉시 탑승: <b>마지막 일격을 넣은 사람이 바로 공룡에 탑승</b>(알을 기다리거나 줍지 않아도 됨) + 1.2초 무적. 작은 공룡 탑승 중 하나 더 잡으면 붉은 용으로 진화",
+    "🦖 ล้มบอสสุ่มในแบทเทิลรอยัลแล้วขี่ได้ทันที: <b>คนที่โจมตีปิดบอสจะขี่ไดโนทันที</b> (ไม่ต้องรอไข่ ไม่ต้องเก็บไข่) พร้อมอมตะ 1.2 วินาที ถ้าขี่ไดโนเล็กอยู่แล้วปิดบอสอีกตัวจะกลายเป็นมังกรแดง",
+    "🦖 Hạ boss lang thang trong Sinh tồn là cưỡi ngay: <b>ai tung đòn cuối sẽ cưỡi khủng long ngay</b> (không cần chờ hay nhặt trứng) kèm 1,2 giây bất tử; đang cưỡi rồng nhỏ mà hạ thêm một con sẽ tiến hoá thành rồng đỏ",
+    "🦖 Победили блуждающего босса в королевской битве — сразу верхом: <b>кто нанёс последний удар, тот сразу садится на динозавра</b> (яйцо ждать и подбирать не нужно) плюс 1,2 с неуязвимости; на малом дино + ещё один босс = красный дракон",
+    "🦖 Wanderboss im Battle Royale besiegt? Sofort aufsitzen: <b>wer den letzten Treffer landet, reitet direkt den Dino</b> (kein Ei nötig) plus 1,2 s Unverwundbarkeit; auf dem kleinen Dino noch einen Boss = roter Drache",
+    "🦖 Abbatti un boss vagante nel Battle Royale e sali subito: <b>chi dà il colpo finale cavalca il dino all'istante</b> (niente uovo da aspettare o raccogliere) con 1,2 s di invincibilità; sul dino piccolo, un altro boss = drago rosso"
+  ],
+  "ver.4.77.2": [
+    "🌏 全遊戲文字 10 國語系：介面、HUD、提示、怪物習性、道具、坐騎、關卡名、說明頁、教學全部跟著語言切換（含 canvas 上畫的字與即時跳出的提示），切語言不用重開",
+    "🌏 全游戏文字 10 国语言：界面、HUD、提示、怪物习性、道具、坐骑、关卡名、说明页、教学全部跟着语言切换（含 canvas 上画的字与即时跳出的提示），切语言不用重开",
+    "🌏 Every piece of text in 10 languages: UI, HUD, pop-ups, monster behaviour notes, items, mounts, stage names, the guide and the tutorial all follow the chosen language (including text drawn on the canvas and live toasts) — no reload needed",
+    "🌏 ゲーム内の文字を10言語対応：UI・HUD・通知・敵の性質・アイテム・騎乗・ステージ名・説明ページ・チュートリアルまですべて言語に追従（canvas に描く文字や即時ポップも含む）。言語切替に再読み込みは不要",
+    "🌏 게임 내 모든 문구 10개 언어 지원: UI, HUD, 알림, 몬스터 특성, 아이템, 탈것, 스테이지 이름, 설명 페이지, 튜토리얼까지 언어를 따라갑니다(canvas에 그리는 글자와 즉시 뜨는 알림 포함). 언어를 바꿔도 새로고침 필요 없음",
+    "🌏 ข้อความทั้งเกมรองรับ 10 ภาษา: UI, HUD, ข้อความแจ้ง, นิสัยมอนสเตอร์, ไอเทม, พาหนะ, ชื่อด่าน, หน้าคู่มือ และสอนเล่น เปลี่ยนตามภาษาที่เลือก (รวมข้อความที่วาดบน canvas และป๊อปอัป) ไม่ต้องโหลดใหม่",
+    "🌏 Toàn bộ chữ trong game đủ 10 ngôn ngữ: giao diện, HUD, thông báo, tập tính quái, vật phẩm, thú cưỡi, tên ải, trang hướng dẫn và tutorial đều theo ngôn ngữ (kể cả chữ vẽ trên canvas và thông báo nổi) — đổi ngôn ngữ không cần tải lại",
+    "🌏 Весь текст игры на 10 языках: интерфейс, HUD, подсказки, повадки монстров, предметы, скакуны, названия уровней, руководство и обучение следуют выбранному языку (включая текст на canvas и всплывающие сообщения) — перезагрузка не нужна",
+    "🌏 Jeder Text im Spiel in 10 Sprachen: UI, HUD, Hinweise, Monsterverhalten, Items, Reittiere, Levelnamen, Anleitung und Tutorial folgen der Sprache (auch Text auf dem Canvas und Einblendungen) — kein Neuladen nötig",
+    "🌏 Tutti i testi del gioco in 10 lingue: interfaccia, HUD, avvisi, comportamento dei mostri, oggetti, cavalcature, nomi dei livelli, guida e tutorial seguono la lingua scelta (anche il testo disegnato sul canvas e i messaggi) — nessun ricaricamento"
+  ],
+  "ver.4.77.3": [
+    "📖 說明頁新增大逃殺分頁：人數／組隊、毒圈節奏、亂入 BOSS 與獎勵一次看懂；操作與坐騎段落也一併更新",
+    "📖 说明页新增大逃杀分页：人数／组队、毒圈节奏、乱入 BOSS 与奖励一次看懂；操作与坐骑段落也一并更新",
+    "📖 New Battle Royale tab in the guide: players/teams, zone timing, roaming bosses and rewards at a glance — plus refreshed controls and mount sections",
+    "📖 説明ページにバトロワのタブを追加：人数／チーム・毒エリアの進行・乱入ボス・報酬が一目で分かります。操作と騎乗の項目も更新",
+    "📖 설명 페이지에 배틀로얄 탭 추가: 인원／팀, 자기장 진행, 난입 BOSS, 보상을 한눈에. 조작과 탈것 항목도 함께 갱신",
+    "📖 หน้าคู่มือมีแท็บแบทเทิลรอยัลเพิ่ม: จำนวนคน／ทีม จังหวะโซนพิษ บอสสุ่ม และรางวัล ดูได้ในที่เดียว พร้อมอัปเดตหัวข้อการควบคุมและพาหนะ",
+    "📖 Trang hướng dẫn có thêm tab Sinh tồn: số người／đội, nhịp vùng độc, boss lang thang và phần thưởng trong một chỗ; mục điều khiển và thú cưỡi cũng được cập nhật",
+    "📖 В руководстве новая вкладка «Королевская битва»: игроки/команды, тайминг зоны, блуждающие боссы и награды — плюс обновлены разделы управления и скакунов",
+    "📖 Neue Battle-Royale-Seite in der Anleitung: Spieler/Teams, Zonen-Timing, Wanderbosse und Belohnungen auf einen Blick — Steuerung und Reittiere ebenfalls aktualisiert",
+    "📖 Nuova scheda Battle Royale nella guida: giocatori/squadre, tempi della zona, boss vaganti e ricompense a colpo d'occhio — aggiornati anche comandi e cavalcature"
+  ],
+  "ver.4.77.4": [
+    "⚡ 效能整理：地板改成「同色相鄰格合併成一次填色」、外牆與裝飾只畫看得到的格，大逃殺 50 人時每幀畫布指令少一半以上",
+    "⚡ 效能整理：地板改成「同色相邻格合并成一次填色」、外墙与装饰只画看得到的格，大逃杀 50 人时每帧画布指令少一半以上",
+    "⚡ Performance pass: floors now batch same-colour neighbours into a single fill, outer walls and decor only draw on visible tiles — canvas calls per frame in a 50-player match dropped by more than half",
+    "⚡ 性能整理：床を「同色の隣接マスをまとめて1回で塗る」方式に変更、外壁と装飾は見えるマスだけ描画。バトロワ50人でも1フレームの描画命令が半分以下に",
+    "⚡ 성능 정리: 바닥을 «같은 색 인접 칸을 묶어 한 번에 채우기»로 바꾸고, 외벽과 장식은 보이는 칸만 그립니다. 배틀로얄 50인에서 프레임당 캔버스 명령이 절반 이하로 감소",
+    "⚡ ปรับประสิทธิภาพ: พื้นเปลี่ยนเป็น «รวมช่องสีเดียวกันที่ติดกันให้เติมครั้งเดียว» กำแพงนอกและของตกแต่งวาดเฉพาะช่องที่มองเห็น ในโหมด 50 คนคำสั่งแคนวาสต่อเฟรมลดลงกว่าครึ่ง",
+    "⚡ Tối ưu hiệu năng: sàn gộp các ô cùng màu liền nhau thành một lần tô, tường ngoài và trang trí chỉ vẽ ô nhìn thấy — số lệnh canvas mỗi khung hình ở trận 50 người giảm hơn một nửa",
+    "⚡ Оптимизация: пол теперь объединяет соседние клетки одного цвета в одну заливку, внешние стены и декор рисуются только в видимых клетках — команд canvas на кадр в матче на 50 человек стало вдвое меньше",
+    "⚡ Performance: Böden fassen gleichfarbige Nachbarfelder zu einer Füllung zusammen, Außenwände und Deko nur auf sichtbaren Feldern — mehr als halb so viele Canvas-Aufrufe pro Frame bei 50 Spielern",
+    "⚡ Ottimizzazione: i pavimenti uniscono le caselle adiacenti dello stesso colore in un'unica campitura, muri esterni e decori solo sulle caselle visibili — comandi canvas per frame più che dimezzati in una partita da 50"
+  ],
+  "ver.4.77.5": [
+    "🧹 翻譯字典改壓縮格式（同樣的 10 國文字省下 82KB），順手把重複的舊字串清掉",
+    "🧹 翻译字典改压缩格式（同样的 10 国文字省下 82KB），顺手把重复的旧字串清掉",
+    "🧹 The translation table now uses a compact format (same 10 languages, 82KB smaller) and duplicate legacy strings were cleaned up",
+    "🧹 翻訳辞書を圧縮形式に変更（同じ10言語で82KB削減）。重複していた古い文字列も整理",
+    "🧹 번역 사전을 압축 형식으로 변경(같은 10개 언어로 82KB 절약). 중복된 옛 문자열도 정리",
+    "🧹 พจนานุกรมคำแปลเปลี่ยนเป็นรูปแบบบีบอัด (10 ภาษาเดิมแต่ประหยัด 82KB) และเคลียร์สตริงเก่าที่ซ้ำกัน",
+    "🧹 Bảng dịch chuyển sang định dạng nén (vẫn đủ 10 ngôn ngữ, tiết kiệm 82KB) và dọn các chuỗi cũ trùng lặp",
+    "🧹 Таблица переводов в компактном формате (те же 10 языков, экономия 82 КБ), дублирующиеся старые строки убраны",
+    "🧹 Übersetzungstabelle im Kompaktformat (gleiche 10 Sprachen, 82 KB gespart), doppelte alte Strings entfernt",
+    "🧹 Tabella delle traduzioni in formato compatto (stesse 10 lingue, 82 KB risparmiati) e stringhe vecchie duplicate rimosse"
+  ]
+}

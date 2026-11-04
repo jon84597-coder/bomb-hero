@@ -127,7 +127,7 @@ head('4. 選角卡片：觸控目標變大、AI 鍵有狀態');
   ok(/\.aibtn\.on\{/.test(css), 'AI 開啟時有高亮樣式');
   ok(/'<button data-ai="' \+ i \+ '" class="aibtn' \+ \(ai \? ' on' : ''\)/.test(html), 'AI 鍵會依狀態加 class');
   ok(/\(ai \? '🤖' : '👤'\)/.test(html), 'AI 鍵顯示 🤖／👤');
-  ok(/'bt\.charge': '[^']*輕點＝第 1 格/.test(html), '集氣提示改成階梯式說明');
+  ok(/輕點＝第 1 格/.test((P.I18N['zh-TW'] || {})['bt.charge'] || ''), '集氣提示改成階梯式說明');
 }
 
 console.log('\n通過 ' + pass + ' / ' + (pass + fail) + '　失敗 ' + fail);

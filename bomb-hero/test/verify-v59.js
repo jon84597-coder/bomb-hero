@@ -187,7 +187,7 @@ ok(/buildOrganicMap\(cols, rows, theme, info, rngFrom\(seed\)/.test(html),
 // ================================================================
 head('6. 選關畫面');
 ok(/MAP32\.forEach\(function \(m, i\) \{/.test(html), '選關格由 MAP32 產生（32 格）');
-ok(/\(boss \? '👑' : ''\) \+ m\.n/.test(html), '魔王關標 👑');
+ok(/\(boss \? '👑' : ''\) \+ mapName\(m\)/.test(html), '魔王關標 👑（v4.77 名稱改走 mapName）');
 ok(/body\.touch #scr-solo \.stagegrid \{[^}]*repeat\(8, (?:minmax\(0, )?1fr\)/.test(html.replace(/\r/g, '')),
   '手機：32 格排成 8 欄');
 // v4.14b：地圖名 nowrap 的 min-content 會把 8 欄撐爆（實測手機橫向溢出 257px）

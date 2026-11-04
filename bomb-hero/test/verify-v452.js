@@ -56,7 +56,7 @@ ok(P.PET_KINDS.every(function (k) { return k.price === 5000; }), '每一隻都�
 ok(html.indexOf('price: 1000') < 0, '沒有殘留 1000 的售價');
 ok(html.indexOf('<small>隨從 5000 金幣</small>') > 0, '首頁商店鈕副標寫 5000');
 ok(html.indexOf('隨從三種各 <b>5000</b> 金幣') > 0, '說明頁也寫 5000');
-const notes = html.match(/'store\.note': '[^']*'/g) || [];
+const notes = P.LANGS.map(function (L) { return (P.I18N[L.id] || {})['store.note'] || ''; }).filter(Boolean);
 eq(notes.length, 10, '10 國語系的商店副標');
 ok(notes.every(function (z) { return z.indexOf('5000') >= 0 || z.indexOf('5,000') >= 0 || z.indexOf('5.000') >= 0; }),
   '十國語系全部改成 5000');
@@ -90,7 +90,7 @@ ok(css.indexOf('--g1: rgba(120,230,170,.6)') > 0 && css.indexOf('--c1: #ffa161')
 ['c-learn', 'c-solo', 'c-rpg', 'c-boss', 'c-battle', 'c-online', 'c-store', 'c-acct', 'c-help', 'c-set', 'c-quit']
   .forEach(function (c) { ok(css.indexOf('#scr-title .menu .' + c) > 0, '配色 ' + c + ' 已定義'); });
 ok(html.indexOf('>單人闖關<small>') > 0 && html.indexOf('>挑戰 BOSS<small>') > 0, '標題不再夾行內 emoji');
-ok(html.indexOf('新手教學<span id="learnTag">') > 0, '新手教學標題由 JS 注入（不含 emoji）');
+ok(html.indexOf('<span id="learnTag">') > 0 && P.t('learn.tag') === '新手教學', '新手教學標題由 JS 注入（不含 emoji）');
 
 head('4. 首頁移除「操作提示」白框');
 const titleBlock = html.slice(html.indexOf('id="scr-title"'), html.indexOf('id="scr-shop"'));

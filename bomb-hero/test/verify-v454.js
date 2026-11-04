@@ -93,8 +93,8 @@ head('3. 外牆顏色：每個大關自己一組（th.out），八關都不一�
 // ================================================================
 head('4. 渲染：太遠的實心格連地板都不畫');
 {
-  ok(/Game\.wallKind\[y\]\[x\] === 0 && Game\.grid\[y\]\[x\] === 1\) continue;/.test(html), '地板迴圈會跳過「太遠」的實心格');
-  ok(/wk === 0\) continue;/.test(html) && /wk === 1\) drawOuterWall/.test(html), '牆迴圈：0 不畫、1 畫外牆、其餘畫硬牆');
+  ok(/Game\.wallKind\[g[xy]\]\[g[xy]\] === 0 && Game\.grid\[g[xy]\]\[g[xy]\] === 1/.test(html), '地板迴圈會跳過「太遠」的實心格');
+  ok(/wk === 1\) drawOuterWall/.test(html) && /wk !== 0\) drawStone/.test(html), '牆迴圈：0 不畫、1 畫外牆、其餘畫硬牆');
 }
 
 // ================================================================

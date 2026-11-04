@@ -21,7 +21,7 @@ function makeEnv(opts) {
 
   // calls = 方法呼叫；sets = 屬性指派（fillStyle / strokeStyle …）
   // sets 設上限，避免長時間 render 把記憶體吃光（測試要自己 rec.sets.length = 0 清空）
-  const rec = { calls: [], sets: [], SETS_CAP: 60000 };
+  const rec = { calls: [], sets: [], texts: [], SETS_CAP: 60000 };
   function mkCtx2D() {
     const grad = { addColorStop() {} };
     return new Proxy({}, {
@@ -77,12 +77,19 @@ function makeEnv(opts) {
       getAttribute(n) { return n in el.attrs ? el.attrs[n] : null; },
       setPointerCapture() {}, releasePointerCapture() {},
       focus() {}, click() {},
-      width: 720, height: 540, textContent: '', value: ''
+      width: 720, height: 540, value: ''
     };
-    let _inner = '';
+    // v4.77：記錄所有寫進 DOM 的文字（i18n 掃描用）
+    let _inner = '', _txt = '';
+    if (rec.texts) {
+      Object.defineProperty(el, 'textContent', {
+        get() { return _txt; },
+        set(v) { _txt = String(v); if (_txt) rec.texts.push(_txt); }
+      });
+    } else el.textContent = '';
     Object.defineProperty(el, 'innerHTML', {
       get() { return _inner; },
-      set(v) { _inner = v; el.children = []; }
+      set(v) { _inner = String(v); el.children = []; if (rec.texts && _inner) rec.texts.push(_inner); }
     });
     els[id] = el;
     return el;

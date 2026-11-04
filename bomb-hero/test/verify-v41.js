@@ -25,7 +25,7 @@ console.log('\n=== 2. 頁面骨架 ===');
 ok(/<div class="screen" id="scr-help">/.test(html), '有 #scr-help 畫面');
 ok(/id="helpTabs"/.test(html) && /id="helpBody"/.test(html), '有分頁列與內容區');
 ok(/<button class="mbtn [a-z-]+" id="btnHelp" data-ico="📖">/.test(html), '首頁有「📖 遊戲說明」按鈕（v4.52 icon 走 data-ico）');
-ok(cnt(html, /data-ht="/g) === 6, '6 個分頁按鈕（basic/item/ride/stage/foe/tip）');
+ok(cnt(html, /data-ht="/g) === 7, '7 個分頁按鈕（basic/item/ride/stage/br/foe/tip）');
 ok(/id="scr-help"[\s\S]{0,900}data-back="1"/.test(html), '說明頁有「← 回主選單」');
 
 console.log('\n=== 3. 樣式 ===');
@@ -36,12 +36,12 @@ ok(/@media \(max-width: 560px\)[\s\S]{0,400}\.hgrid, \.hride \{ grid-template-co
 
 console.log('\n=== 4. 多語選單文案 ===');
 const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'];
-ok(LANGS.every(function (l) { return html.indexOf("I18N['" + l + "'] = {") > 0; }), '10 種語言區塊都在');
+// v4.77：字典改成壓縮表（key|tw|cn|en|…），改從執行期的 I18N 驗證
+ok(LANGS.every(function (l) { return P.I18N[l] && Object.keys(P.I18N[l]).length > 300; }), '10 種語言區塊都在');
 let allHelp = true;
 LANGS.forEach(function (l) {
-  const i = html.indexOf("I18N['" + l + "'] = {");
-  const seg = html.slice(i, i + 40000);
-  if (seg.indexOf("'menu.help':") < 0 || seg.indexOf("'menu.help.sub':") < 0) allHelp = false;
+  const d = P.I18N[l] || {};
+  if (!d['menu.help'] || !d['menu.help.sub']) allHelp = false;
 });
 ok(allHelp, '每種語言都有 menu.help / menu.help.sub');
 

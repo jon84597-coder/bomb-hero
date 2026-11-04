@@ -105,7 +105,7 @@ head('5. 牆頂冠部：只畫在「上面不是外牆」的那一排');
 head('6. 兩套材質沒有互相污染');
 {
   ok(/wk === 1\) drawOuterWall/.test(src), '外牆格 → drawOuterWall');
-  ok(/else drawStone\(px, py, T, thc?\.hard/.test(src), '硬牆島 → drawStone（吃 th.hard／thc.hard，沒被換掉）');
+  ok(/\) drawStone\(cxp, cyp, T, thc\.hard/.test(src), '硬牆島 → drawStone（吃 th.hard／thc.hard，沒被換掉）');
   ok(/paintHardTile\(g, st, ART_RES, seed, vi\)/.test(src), '硬牆貼圖照舊用 paintHardTile');
   // 執行時：每個大關都真的有外牆格，而且硬牆分類還在
   let bad = [];
