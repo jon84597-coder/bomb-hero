@@ -92,7 +92,8 @@ function todayKey() {           // 與前端 dailyDayKey() 相同的 UTC+8 換�
   ok('submit 的 OPTIONS 預檢放行', pre.status === 200 || pre.status === 204, String(pre.status));
 
   // 送一筆「最慢」的測試成績：一定排在榜尾，不會干擾真實玩家
-  const devId = 'bh-livetest-' + Date.now();
+  // deviceId 固定 → 重複跑只會走「只升級不降級」那條，不會每天多一筆垃圾紀錄
+  const devId = 'bh-livetest-fixed-device';
   const sub = await req(API + '/api/lb/submit', {
     body: { mode: 'daily', day: DAY, name: 'TESTER', ms: 3599000, deviceId: devId }
   });
@@ -168,19 +169,24 @@ function todayKey() {           // 與前端 dailyDayKey() 相同的 UTC+8 換�
       G.state='play'; G.countdown=0; G.camSnap=true; __BH.updateCamera(1/60); __BH.render();
       return JSON.stringify({ state:G.state, daily:!!G.daily, day:G.daily&&G.daily.day,
         seed:G.daily&&G.daily.seed, timer:Math.round(G.timer), foes:G.enemies.length,
-        door:G.door? (G.door.x+','+G.door.y) : null, items:G.items.length });
+        door:G.door? (G.door.x+','+G.door.y) : null,
+        hidden:G.hidden? Object.keys(G.hidden).length : 0, gems:G.gems? G.gems.length : 0 });
     }catch(e){ return 'ERR:'+e.message; }
   })()`);
   let R = {};
   try { R = JSON.parse(run); } catch (e) { R = { err: run }; }
-  ok('Daily.begin() 進得去', R.state === 'play', JSON.stringify(R).slice(0, 140));
+  ok('Daily.begin() 進得去', R.state === 'play', JSON.stringify(R).slice(0, 150));
   ok('Game.daily 帶著今天的日期', R.day === DAY, R.day);
   ok('每日挑戰計時 180 秒', R.timer === 180, String(R.timer));
-  ok('每日挑戰有怪物與道具', R.foes > 0 && R.items > 0, R.foes + ' 隻 / ' + R.items + ' 個道具');
+  // 道具是藏在軟磚裡、開局一定是 0，所以驗「藏寶」而不是 Game.items
+  ok('每日挑戰有小怪與藏寶', R.foes > 0 && R.hidden > 0, R.foes + ' 隻 / 藏寶 ' + R.hidden + ' 處');
   const fp = await p.eval(`(function(){
     try{
       var a=__BH.dailySeedOf(__BH.dailyDayKey()), s=__BH.dailyStageOf(a);
-      function sig(){ return [__BH.Game.items.length, __BH.Game.enemies.length, (__BH.Game.door.x+','+__BH.Game.door.y)].join('|'); }
+      function sig(){
+        var G=__BH.Game, h=G.hidden? Object.keys(G.hidden).sort().join(',') : '';
+        return [G.enemies.length, (G.door.x+','+G.door.y), h.length, h.slice(0,1)].join('|');
+      }
       __BH.Game.daily=null; __BH.startSolo(s,false); var g1=sig();
       __BH.Game.daily=null; __BH.startSolo(s,false); var g2=sig();
       return g1+' :: '+g2;
