@@ -17,11 +17,12 @@ console.log('=== ① 後台入口 ===');
 ok(/if \(a\.dev \|\| \(DEV_BUILD && !Cloud\.online\(\)\)\)/.test(SRC),
   '入口按鈕：dev 帳號 或「開發者版＋無後端」都顯示（原本只有 a.dev）');
 ok(!/^\s*if \(a\.dev\) \{$/m.test(SRC), '舊的「只有 a.dev 才顯示」已移除');
-ok(/Ctrl\+Shift\+D/.test(SRC) || /ctrlKey && !?e\.shiftKey/.test(SRC) || /e\.ctrlKey && e\.shiftKey/.test(SRC),
-  '有 Ctrl+Shift+D 快捷鍵（不依賴登入狀態）');
-ok(/if \(A\.open\) close\(\); else open\(\);/.test(SRC), '快捷鍵是開／關切換');
-ok(/function open\(\) \{[\s\S]{0,120}if \(!Cloud\.isDev\(\)\)/.test(SRC),
-  'open() 仍保留 isDev() 檢查（不會被繞過）');
+ok(/const toggle = function \(\) \{ if \(A\.open\) close\(\); else open\(\); \}/.test(SRC),
+  '有開／關切換的 toggle（v4.92 起三種入口共用）');
+ok(/const combo = \(e\.altKey && \(e\.ctrlKey \|\| e\.shiftKey\)\) \|\| \(e\.ctrlKey && e\.shiftKey\)/.test(SRC),
+  '鍵盤入口接受 Ctrl+Alt+D 與 Ctrl+Shift+D');
+ok(/let devOk = DEV_BUILD;/.test(SRC),
+  'open() 以 DEV_BUILD 放行（v4.92：不再因為 Cloud stub 而永遠擋掉）');
 
 // 模擬判斷式真值表（照抄實際條件，驗證邏輯而不是驗證字串）
 function show(dev, devBuild, online) { return !!(dev || (devBuild && !online)); }

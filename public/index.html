@@ -2480,6 +2480,14 @@ color: #d8e2f5; box-shadow: 0 20px 60px rgba(0,0,0,.65); overflow: hidden;
 .adpane.on { display: flex; flex-direction: column; gap: 7px; overflow: auto; }
 .adwarn { flex: 0 0 auto; background: rgba(120,70,20,.22); border: 1.5px solid #a8763a; color: #ffd9a8; border-radius: 10px; padding: 7px 10px; margin-bottom: 8px; font-size: 11.5px; font-weight: 700; line-height: 1.5; }
 .adwarn.hide { display: none; }
+/* v4.92：後台讀不到資料時，直接告訴使用者「要登入哪一種帳號」，不要只閃一句 toast */
+.adlogin { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+  background: rgba(90,60,20,.28); border: 1.5px solid #b98a4a; border-radius: 12px; padding: 12px 14px; }
+.adlogin b { font-size: 13px; font-weight: 900; color: #ffe0b0; }
+.adlogin span { font-size: 11.5px; line-height: 1.65; color: #e8d6bb; }
+.adlogin button { font-family: inherit; font-size: 12.5px; font-weight: 900; cursor: pointer;
+  background: linear-gradient(#5fd08a, #2f9c5c); color: #06210f; border: 0; border-radius: 10px; padding: 8px 16px; }
+.adlogin button:active { transform: translateY(1px); }
 .adstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 6px; flex: 0 0 auto; }
 .adstat { background: #161e2b; border: 1.5px solid #253045; border-radius: 10px; padding: 6px 8px; text-align: center; }
 .adstat b { display: block; font-size: 17px; color: #7ee0a5; font-variant-numeric: tabular-nums; }
@@ -3503,7 +3511,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.91</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.92</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -3544,7 +3552,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.91</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.92</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4220,7 +4228,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.91';
+const VERSION = '4.92';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -26872,7 +26880,11 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.91', date: '2026-11-05', now: true, items: [
+  { v: '4.92', date: '2026-11-05', now: true, items: [
+    '🧭 主畫面版本號可以連點 3 下，回報問題時直接開啟診斷面板（手機也支援）',
+    '⌨️ 桌機診斷快捷鍵改為 Ctrl+Alt+D：原本那組會被瀏覽器本身攔截，按了沒反應',
+    '🧹 程式碼整理與穩定性修正，不影響遊戲內容' ] },
+  { v: '4.91', date: '2026-11-05', now: false, items: [
     '🔧 修正少數裝置上「設定入口」沒有出現、導致打不開的問題（登入狀態不同時會遇到）',
     '⌨️ 桌機新增快捷鍵：設定入口沒出現時也能直接開啟，不必先登入',
     '🧹 版本紀錄整理：只保留玩家看得到的改動' ] },
@@ -30408,10 +30420,27 @@ const Admin = (function () {
       A.health = res[1] || null;
       A.dump = (res[2] && res[2].ok) ? res[2] : null;
       if (!r || !r.ok) {
-        if (r && r.err === 'NOT_DEV') { toast('沒有權限（只有開發者帳號可以看後台）', 3); close(); }
-        else if (r && r.err === 'NOT_FOUND') {
+        // v4.92：登入狀態的問題不再只閃一句 toast（使用者根本看不懂 NO_SESSION），
+        //   直接在總覽頁畫一塊說明＋登入按鈕，後台不會變成一片空白。
+        const code = (r && r.err) || 'NET';
+        const needLogin = code === 'NO_SESSION' || code === 'NOT_DEV';
+        if (needLogin) {
+          const box = $id('adStats');
+          if (box) box.innerHTML =
+            '<div class="adlogin">' +
+            '<b>' + (code === 'NOT_DEV' ? '這個帳號沒有後台權限' : '還沒登入，所以讀不到資料') + '</b>' +
+            '<span>' + (code === 'NOT_DEV'
+              ? '後台只開放給白名單裡的開發者帳號。請換成開發者帳號登入，或請管理員把這個 Email 加進白名單。'
+              : '後台資料需要登入才能讀取。請先用開發者帳號登入，登入後按右上角 🔄 重新整理即可。') + '</span>' +
+            '<button type="button" data-adm="login">' + (code === 'NOT_DEV' ? '切換帳號' : '前往登入') + '</button>' +
+            '</div>';
+          const w = $id('adWarn');
+          if (w) { w.textContent = '⚠️ ' + (code === 'NOT_DEV' ? '目前帳號不是開發者' : '尚未登入'); w.classList.remove('hide'); }
+        } else if (code === 'NOT_FOUND') {
           toast('後端還是舊版：/api/admin/dump 不存在，重啟後就有了', 3.4);
-        } else toast('後台讀取失敗：' + ((r && r.err) || 'NET'), 3);
+        } else {
+          toast('後台讀取失敗：' + code, 3);
+        }
         renderHealth();
         return null;
       }
@@ -30459,7 +30488,12 @@ const Admin = (function () {
   }
 
   function open() {
-    if (!Cloud.isDev()) { toast('只有開發者帳號可以開啟後台', 2.6); return false; }
+    // v4.92：這裡原本是 `if (!Cloud.isDev())`。問題是 Cloud 若初始化失敗會退回
+    //   __stubModule（isDev 永遠回 false），後台就變成「按了完全沒反應」而且沒有任何線索。
+    //   DEV_BUILD 是編譯期常數，永遠可信 → 開發者版直接放行。
+    let devOk = DEV_BUILD;
+    if (!devOk) { try { devOk = !!(Cloud && Cloud.isDev && Cloud.isDev()); } catch (e) { devOk = false; } }
+    if (!devOk) { toast('只有開發者帳號可以開啟後台', 2.6); return false; }
     const m = $id('adminModal');
     if (!m) { toast(t('acct.adminFail'), 3.2); return false; }
     m.classList.add('on');
@@ -30491,18 +30525,68 @@ const Admin = (function () {
   function wire() {
     const m = $id('adminModal');
     if (!m) return;
-    // v4.91：Ctrl+Shift+D 直接開／關後台。
-    //   為什麼要這個：入口按鈕只在「帳號 dev 旗標」或「開發者版＋無後端」時渲染，
-    //   一旦後端沒把 dev 給下來（舊帳號 email 為空、換帳號登入），按鈕就整塊消失，
-    //   使用者只會覺得「後台壞了、打不開」。快捷鍵不依賴任何登入狀態。
+    // v4.92：後台入口「三保險」——任何一條通就能開，不再押在單一快捷鍵上。
+    //   為什麼要改：v4.91 只用 Ctrl+Shift+D，但那是 **Chrome 內建的「書籤全部開啟」**，
+    //   瀏覽器層級的快速鍵不會傳給網頁 → 按了百分之百沒反應（不是程式沒寫對）。
+    //   ① 版本號連點 3 下      → 滑鼠與觸控都能用，**手機後台靠這條**
+    //   ② Ctrl+Alt+D / Ctrl+Shift+D → 前者 Chrome 沒佔用
+    //   ③ 網址加 #admin 或 ?admin=1 → 可存成書籤，冷啟動也能直接進
+    const toggle = function () { if (A.open) close(); else open(); };
+
     document.addEventListener('keydown', function (e) {
-      if (!e.ctrlKey || !e.shiftKey || (e.key !== 'D' && e.key !== 'd')) return;
-      e.preventDefault();
-      if (A.open) close(); else open();
-    });
+      const isD = (e.code === 'KeyD') || e.key === 'd' || e.key === 'D';
+      if (!isD) return;
+      // Ctrl+Alt+D（Chrome／Edge／Firefox 都沒佔用）或 Ctrl+Shift+D（部分瀏覽器可用）
+      const combo = (e.altKey && (e.ctrlKey || e.shiftKey)) || (e.ctrlKey && e.shiftKey);
+      if (!combo) return;
+      if (e.preventDefault) e.preventDefault();
+      if (e.stopPropagation) e.stopPropagation();
+      toggle();
+    }, true);
+
+    // ① 版本號連點 3 下（1.2 秒內算一組）
+    (function () {
+      const vt = $id('verTxt');
+      const v = vt && vt.parentNode ? vt.parentNode : null;
+      if (!v) return;
+      let n = 0, t0 = 0;
+      v.style.cursor = 'pointer';
+      v.title = 'v' + (typeof VERSION !== 'undefined' ? VERSION : '');
+      v.addEventListener('click', function (e) {
+        const now = Date.now();
+        if (now - t0 > 1200) n = 0;
+        t0 = now; n++;
+        if (n >= 3) {
+          n = 0;
+          if (e && e.preventDefault) e.preventDefault();
+          toggle();
+        }
+      });
+    })();
+
+    // ③ 網址參數：#admin 或 ?admin=1
+    (function () {
+      const want = function () {
+        try {
+          const h = String(location.hash || '').toLowerCase();
+          const q = String(location.search || '').toLowerCase();
+          return h.indexOf('admin') >= 0 || q.indexOf('admin=1') >= 0;
+        } catch (e) { return false; }
+      };
+      if (want()) setTimeout(function () { try { if (!A.open) open(); } catch (e) {} }, 800);
+      window.addEventListener('hashchange', function () { try { if (want()) toggle(); } catch (e) {} });
+    })();
 
     const cl = $id('adClose'); if (cl) cl.addEventListener('click', function () { close(); });
     m.addEventListener('click', function (e) { if (e.target === m) close(); });
+    // v4.92：總覽頁的「前往登入／切換帳號」→ 關掉後台、直接打開帳號視窗
+    m.addEventListener('click', function (e) {
+      const b = e.target && e.target.closest ? e.target.closest('[data-adm="login"]') : null;
+      if (!b) return;
+      e.stopPropagation();
+      close();
+      try { if (Cloud && Cloud.open) Cloud.open(); } catch (err) {}
+    });
     const rf = $id('adRefresh'); if (rf) rf.addEventListener('click', function () { refresh(); });
 
     const tabs = $id('adTabs');

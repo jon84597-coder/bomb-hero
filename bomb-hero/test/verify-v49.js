@@ -138,7 +138,11 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   ok(src(/'\/api\/admin\/overview'/), '後台會打 /api/admin/overview');
   ok(src(/'\/api\/admin\/ban'/) && src(/'\/api\/admin\/grant'/) && src(/'\/api\/admin\/reset-alloc'/) &&
     src(/'\/api\/admin\/announce'/), '停權／修存檔／重置配點／公告 API 都在');
-  ok(src(/if \(!Cloud\.isDev\(\)\) \{ toast\('只有開發者帳號可以開啟後台'/), '前端先擋一次（非開發者開不了）');
+  // v4.92：守門條件改成「DEV_BUILD 或 Cloud.isDev()」，且用 try/catch 包住 ——
+  //   原本直接寫 if (!Cloud.isDev())，Cloud 模組初始化失敗（退回 stub）時會永遠回 false，
+  //   後台就變成按了完全沒反應。這裡驗的是「仍然會擋非開發者」，不是驗某一行字串。
+  ok(src(/if \(!devOk\) \{ toast\('只有開發者帳號可以開啟後台'/) && src(/let devOk = DEV_BUILD;/),
+    '前端先擋一次（非開發者開不了）');
   ok(src(/Admin: Admin,/) && typeof P.Admin === 'object', '__BH 有匯出 Admin（測試與除錯用）');
   ok(src(/id="adminModal"/) && src(/id="adList"/) && src(/id="adDetail"/), '後台版面（名單／詳情）存在');
   ok(src(/加入時間/) && src(/註冊 IP/) && src(/第三方平台 ID/), '詳情欄位：加入時間／註冊 IP／第三方平台 ID');
