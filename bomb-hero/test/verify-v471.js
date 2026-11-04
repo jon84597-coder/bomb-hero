@@ -124,7 +124,7 @@ console.log('\n=== 8. 版本 ===');
   ok(/\{ v: '4\.71', date: '[^']+', now: false/.test(src), 'VERSION_LOG 收了 4.71（後續版本已接手 now:true）');
   const sw = require('fs').readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const m = sw.match(/SW_VERSION = '([^']+)'/);
-  ok(m && /^v4\.\d+\.0$/.test(m[1]), 'sw.js 版本格式正確且已升版（實際 ' + (m && m[1]) + '）');
+  ok(m && /^v\d+\.\d+\.\d+$/.test(m[1]), 'sw.js 版本格式正確且已升版（實際 ' + (m && m[1]) + '）');
 })();
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v4.71：' + pass + ' 通過 / ' + fail + ' 失敗');

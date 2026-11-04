@@ -211,9 +211,9 @@ async function apiTest() {
   }
 }
 
-// ---------- 6. 10 國語系 ----------
-head('6. 10 國語系');
-const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'];
+// ---------- 6. 5 國語系（v5.0 砍掉 th/vi/ru/de/it，只留繁中／簡中／英／日／韓） ----------
+head('6. 5 國語系');
+const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko'];
 const KEYS = ['menu.daily', 'menu.daily.sub', 'menu.lb', 'menu.lb.sub',
   'daily.title', 'daily.desc', 'daily.labDay', 'daily.labSeed', 'daily.labStage', 'daily.labBest',
   'daily.stageVal', 'daily.noBest', 'daily.go', 'daily.ovTitle', 'daily.ovSub', 'daily.ovRule',
@@ -228,11 +228,11 @@ LANGS.forEach(function (L) {
   const dict = P.I18N[L] || {};
   KEYS.forEach(function (k) { if (!dict[k]) { missing++; console.log('    缺 ' + L + ' / ' + k); } });
 });
-ok(missing === 0, '新增的 ' + KEYS.length + ' 條文案 × 10 語言，0 缺（缺 ' + missing + '）');
+ok(missing === 0, '新增的 ' + KEYS.length + ' 條文案 × 5 語言，0 缺（缺 ' + missing + '）');
 
 // 非中文語系不可以留中文（專有名詞如「關」允許出現在 number+關 的格式，這裡只看整句）
 let cnLeft = [];
-['en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'].forEach(function (L) {
+['en', 'ja', 'ko'].forEach(function (L) {
   P.setLang(L);
   KEYS.forEach(function (k) {
     const v = P.t(k);
@@ -259,7 +259,7 @@ ok(/daily: \{ tw: '📅 每日挑戰'/.test(src), '分頁標題走 HELP_TAB_TXT�
 // ---------- 8. 版本與容量 ----------
 head('8. 版本與容量');
 // 版號不寫死：這一支講的是「每日挑戰/排行榜」這件事，後面版本不該讓它紅
-ok(/^4\.(80|8\d|9\d)$/.test(P.VERSION), 'VERSION = ' + P.VERSION);
+ok(parseFloat(P.VERSION) >= 4.80, 'VERSION = ' + P.VERSION);
 ok(P.VERSION_LOG.filter(function (x) { return x.now; }).length === 1, '版本紀錄只有一筆 now（現在版本）');
 ok(P.VERSION_LOG[0].now === true && parseFloat(P.VERSION_LOG[0].v) >= 4.80, '最上面那筆 = 現在版本（' + P.VERSION_LOG[0].v + '）');
 // 版號寫法 4.9 → 4.10 不是數值序，日期也有幾筆歷史筆誤 → 只驗「筆數夠多、格式對」
@@ -269,7 +269,7 @@ ok(P.VERSION_LOG.every(function (x) { return /^\d+\.\d+$/.test(x.v) && /^\d{4}-\
 ok(P.VERSION_LOG.some(function (x) { return x.v === '4.80' && x.now === false; }), '4.80 已改成 now:false');
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (p2) {
   const t2 = fs.readFileSync(path.join(__dirname, p2), 'utf8');
-  ok(/SW_VERSION = 'v4\.(80|8\d|9\d)\.\d+'/.test(t2), p2 + ' 版本有跟上（' + (/SW_VERSION = '([^']+)'/.exec(t2) || [])[1] + '）');
+  ok(/SW_VERSION = 'v\d+\.\d+\.\d+'/.test(t2), p2 + ' 版本有跟上（' + (/SW_VERSION = '([^']+)'/.exec(t2) || [])[1] + '）');
 });
 ok(src.length < 3900000, '字元數 ' + src.length.toLocaleString() + ' < 3.9M');
 ok(Buffer.byteLength(src, 'utf8') < 4250000, '位元組 ' + Buffer.byteLength(src, 'utf8').toLocaleString() + ' < 4.25M');

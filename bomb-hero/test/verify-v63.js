@@ -26,9 +26,9 @@ head('1. 開發者金幣無限');
   CloudRef.isDev = function () { return false; };
   ok(P.Shop.dev() === false, '一般玩家 dev() = false');
   P.Shop.reset();
-  P.Shop.addGold(5000);
+  P.Shop.addGold(8000);
   const r0 = P.Shop.buy('blade');
-  ok(r0.ok === true && P.Shop.gold() === 0, '一般玩家照規矩扣錢（5000 − 5000 = 0）');
+  ok(r0.ok === true && P.Shop.gold() === 0, '一般玩家照規矩扣錢（8000 − 8000 = 0）');
   P.Shop.reset();
 
   CloudRef.isDev = function () { return true; };
@@ -113,10 +113,10 @@ head('4. 暱稱可以留空');
   ok(P.ensureNickname() === true, '已經有名字時照樣回 true');
   ok(S.playerName === S.playerName.trim(), '名字沒有前後空白');
   S.playerName = saved;
-  // 十語言都有自動取名的提示
+  // 每個語言都有自動取名的提示
   // v4.77：字典改成壓縮表 → 改驗執行期
   const nn = P.LANGS.filter(function (L) { return P.I18N[L.id] && P.I18N[L.id]['nick.auto']; }).length;
-  ok(nn >= 10, 'nick.auto 十語言都補了（' + nn + ' 處）');
+  ok(nn >= P.LANGS.length, 'nick.auto 每個語言都補了（' + nn + ' 處）');
 }
 
 // ================================================================

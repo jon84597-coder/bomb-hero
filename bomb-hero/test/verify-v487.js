@@ -167,7 +167,7 @@ console.log('=== ⑧ 十語系 ===');
   .forEach(function (k) {
     const line = (SRC.match(new RegExp('^' + k.replace('.', '\\.') + '\\|.*$', 'm')) || [''])[0];
     const cols = line.split('|').length;
-    ok(cols === 11, k + ' 有 10 種語言（實際 ' + cols + ' 欄）');
+    ok(cols === 6, k + ' 有 5 種語言（實際 ' + cols + ' 欄）');
   });
 
 console.log('\n========================================');

@@ -1,5 +1,5 @@
-// 無頭測試 v33：v2.7 多語言（10 語）
-//   1. 工具列有語言切換圖示（在音樂開關旁邊）＋ 10 種語言選單
+// 無頭測試 v33：v2.7 多語言（5 語）
+//   1. 工具列有語言切換圖示（在音樂開關旁邊）＋ 5 種語言選單
 //   2. 所有語言都有完整字典（缺字比例 0）
 //   3. 靜態介面會被翻譯、動態介面（JS 產生）也跟著翻
 //   4. 遊戲內對話框台詞（死亡／擊殺）跟著語言變
@@ -19,10 +19,10 @@ console.log('\n=== 0. 版本 ===');
 ok(/^\d+\.\d+$/.test(P.VERSION), 'VERSION 格式正確（' + P.VERSION + '）');
 ok(html.indexOf('id="verTxt">' + P.VERSION) > 0, '徽章版本號同步 ' + P.VERSION);
 
-console.log('\n=== 1. 語言列表（10 種） ===');
+console.log('\n=== 1. 語言列表（5 種） ===');
 const ids = P.LANGS.map(function (l) { return l.id; });
-ok(P.LANGS.length === 10, '一共 10 種語言（實測 ' + P.LANGS.length + '）');
-['zh-TW', 'zh-CN', 'en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'].forEach(function (id) {
+ok(P.LANGS.length === 5, '一共 5 種語言（實測 ' + P.LANGS.length + '）');
+['zh-TW', 'zh-CN', 'en', 'ja', 'ko'].forEach(function (id) {
   ok(ids.indexOf(id) >= 0, '有 ' + id);
 });
 ok(P.LANGS[0].id === 'zh-TW', '預設語言是繁體中文');
@@ -135,42 +135,42 @@ if (ch0) {
 }
 P.setLang('ko', true);
 ok(P.themeName(7) === '암흑 마왕성', '韓文關卡 8 → ' + P.themeName(7));
-P.setLang('th', true);
-ok(P.itemName('bomb') === 'ระเบิด', '泰文道具 bomb → ' + P.itemName('bomb'));
+P.setLang('ja', true);
+ok(P.itemName('bomb') === '爆弾', '日文道具 bomb → ' + P.itemName('bomb'));
 P.setLang('zh-TW', true);
 ok(P.themeName(0) === '綠野草原', '切回繁中關卡 1 → ' + P.themeName(0));
 
 console.log('\n=== 8. 提示／浮層也翻譯（banner / toast / overlay） ===');
-P.setLang('vi', true);
+P.setLang('ko', true);
 (function () {
   P.startSolo ? P.startSolo(1, false) : null;
   G.state = 'play';
   const box = doc.getElementById('ovBox');
   P.showOverlay({ title: '單人闖關', sub: '設定', btn: '繼續' });
   const h3 = box.querySelector ? box.querySelector('h3') : null;
-  ok(h3 && h3.textContent === 'Chơi đơn', '浮層標題翻成越文：' + (h3 && h3.textContent));
+  ok(h3 && h3.textContent === '싱글 모험', '浮層標題翻成韓文：' + (h3 && h3.textContent));
 })();
 (function () {
   P.toast('單人闖關');
   const el = doc.getElementById('toast');
-  ok(el && el.textContent === 'Chơi đơn', 'toast 自動翻譯：' + (el && el.textContent));
+  ok(el && el.textContent === '싱글 모험', 'toast 自動翻譯：' + (el && el.textContent));
   P.banner('設定');
   const bn = doc.getElementById('bannerTxt');
-  ok(bn && bn.textContent === 'Cài đặt', 'banner 自動翻譯：' + (bn && bn.textContent));
+  ok(bn && bn.textContent === '설정', 'banner 自動翻譯：' + (bn && bn.textContent));
 })();
 P.setLang('zh-TW', true);
 
 console.log('\n=== 9. 語言會被記住（localStorage） ===');
-P.setLang('de', true);
+P.setLang('ko', true);
 let saved = null;
 try { saved = sbx.localStorage.getItem('bombhero-lang'); } catch (e) {}
-ok(saved === 'de', '切到德文後存進 localStorage：' + saved);
-ok(P.langLabel('de').indexOf('Deutsch') >= 0, 'langLabel(de) = ' + P.langLabel('de'));
+ok(saved === 'ko', '切到韓文後存進 localStorage：' + saved);
+ok(P.langLabel('ko').indexOf('한국어') >= 0, 'langLabel(ko) = ' + P.langLabel('ko'));
 P.setLang('zh-TW', true);
 ok(P.t('nav.music') === '音樂', '還原成繁中');
 
 console.log('\n=== 10. 沒翻到的字串要安全退回繁中（不噴錯） ===');
-P.setLang('it', true);
+P.setLang('ja', true);
 ok(P.t('this.key.does.not.exist') === 'this.key.does.not.exist', '未知 key 回傳 key 本身（不 undefined）');
 ok(typeof P.t('menu.solo') === 'string' && P.t('menu.solo').length > 0, '已知 key 有值');
 P.setLang('zh-TW', true);

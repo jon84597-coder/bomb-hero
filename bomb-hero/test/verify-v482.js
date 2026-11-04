@@ -130,7 +130,7 @@ for (let n = 1; n <= 4; n++) {
   const line = src.split('\n').find(function (x) { return x.indexOf(key + '|') === 0; });
   if (!line) { ok(false, key + ' 字典列存在'); continue; }
   const cols = line.split('|');
-  ok(cols.length === 11, key + ' 剛好 11 欄（實際 ' + cols.length + '）');
+  ok(cols.length === 6, key + ' 剛好 6 欄（實際 ' + cols.length + '）');
   const empties = cols.slice(2).filter(function (c) { return !c.trim(); });
   ok(empties.length === 0, key + ' 9 種語言都填了');
   /* 日文（第 5 欄）本來就用漢字，不能當「漏中文」判 —— 只檢查 en/ko/th/vi/ru/de/it */
@@ -140,7 +140,7 @@ for (let n = 1; n <= 4; n++) {
 ok(itemCount >= 3, '4.82 至少 3 條更新項目（' + itemCount + ' 條）');
 
 head('⑧ 版本與容量');
-ok(/^4\.(8[2-9]|9\d)$/.test(env.BH.VERSION), 'VERSION 至少 4.82（實際 ' + env.BH.VERSION + '）');
+ok((parseFloat(env.BH.VERSION) >= 4.82), 'VERSION 至少 4.82（實際 ' + env.BH.VERSION + '）');
 ok(new RegExp('id="verTxt">' + env.BH.VERSION.replace(/\./g, '\\.') + '<').test(src), 'verTxt 跟著 VERSION 走');
 ok(env.BH.VERSION_LOG[0].v === env.BH.VERSION && env.BH.VERSION_LOG[0].now === true, 'VERSION_LOG 首位是當前版號且 now:true');
 ok(env.BH.VERSION_LOG[1].now === false, '上一版（' + env.BH.VERSION_LOG[1].v + '）已改 now:false');
@@ -151,7 +151,7 @@ for (const f of ['sw.js', '../public/sw.js', '../bomberman-online/public/sw.js']
   const p = path.join(ROOT, f);
   if (!fs.existsSync(p)) { ok(false, f + ' 不存在'); continue; }
   const sv = (fs.readFileSync(p, 'utf8').match(/SW_VERSION = '(v[\d.]+)'/) || [])[1] || '';
-  ok(/^v4\.(8[2-9]|9\d)\.\d+$/.test(sv), f + ' 版本跟得上主檔（' + sv + '）');
+  ok(/^v\d+\.\d+\.\d+$/.test(sv), f + ' 版本跟得上主檔（' + sv + '）');
 }
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' ' + pass + ' 通過 / ' + fail + ' 失敗');

@@ -104,7 +104,7 @@ keys.forEach(function (k) {
   const re = new RegExp('^' + k.replace(/\./g, '\\.') + '\\|', 'm');
   const line = (src.match(new RegExp('^' + k.replace(/\./g, '\\.') + '\\|.*$', 'm')) || [''])[0];
   const cols = line ? line.split('|').length : 0;
-  ok(re.test(src) && cols === 11, k + ' 有 10 種語言（實際 ' + cols + ' 欄）');
+  ok(re.test(src) && cols === 6, k + ' 有 5 種語言（實際 ' + cols + ' 欄）');
 });
 
 console.log('\n========================================');

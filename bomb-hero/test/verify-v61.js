@@ -182,7 +182,7 @@ ok(/const HIDE_THEME_POOL = \[/.test(css) && /function hidePool\(\)/.test(css),
     '躲進去會跳一句提示（hide.in）');
   ['hide.in'].forEach(function (k) {   // v4.77：改驗執行期字典
     const n = P.LANGS.filter(function (L) { return P.I18N[L.id] && P.I18N[L.id][k]; }).length;
-    ok(n === 10, k + ' 有 10 種語言（' + n + '）');
+    ok(n === P.LANGS.length, k + ' 有 ' + P.LANGS.length + ' 種語言（' + n + '）');
   });
 
   // 火焰會把躲點燒掉

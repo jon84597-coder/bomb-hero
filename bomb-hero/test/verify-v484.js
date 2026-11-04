@@ -105,18 +105,16 @@ function row(key) {
 }
 function cols(line) { return line ? line.split('|').length : 0; }
 const sh = row('scrollHint');
-ok(cols(sh) === 11, 'scrollHint 剛好 11 欄（實際 ' + cols(sh) + '）');
+ok(cols(sh) === 6, 'scrollHint 剛好 6 欄（實際 ' + cols(sh) + '）');
 ok(/往下滑/.test(sh.split('|')[1]) && /往下滑/.test(sh.split('|')[2]), '中文兩欄都有「往下滑」');
-[3, 4, 5, 6, 7, 8, 9, 10].forEach(function (i) {
+[3, 4, 5].forEach(function (i) {
   const v = (sh.split('|')[i] || '').trim();
   ok(v.length > 5, 'scrollHint 第 ' + i + ' 欄有內容（' + v.slice(0, 18) + '）');
 });
 ok(!/[\u4e00-\u9fff]/.test(sh.split('|')[3]), '英文欄沒有漏中文');
-ok(!/[\u4e00-\u9fff]/.test(sh.split('|')[8]), '俄文欄沒有漏中文');
-ok(!/[\u4e00-\u9fff]/.test(sh.split('|')[9]), '德文欄沒有漏中文');
 [1, 2, 3, 4].forEach(function (n) {
   const r = row('ver.4.84.' + n);
-  ok(cols(r) === 11, 'ver.4.84.' + n + ' 剛好 11 欄（實際 ' + cols(r) + '）');
+  ok(cols(r) === 6, 'ver.4.84.' + n + ' 剛好 6 欄（實際 ' + cols(r) + '）');
   const parts = r.split('|');
   ok(parts.slice(3).every(function (x) { return x.trim().length > 8; }), 'ver.4.84.' + n + ' 9 種語言都填了');
 });
@@ -124,7 +122,7 @@ ok(!/[\u4e00-\u9fff]/.test(sh.split('|')[9]), '德文欄沒有漏中文');
 // ─────────────────────────────────────────────────────────────
 head('⑧ 版本與容量');
 const P = env.BH;
-ok(/^4\.(8[4-9]|9\d)$/.test(P.VERSION), 'v4.84 的改動仍在（目前 ' + P.VERSION + '）');
+ok((parseFloat(P.VERSION) >= 4.84), 'v4.84 的改動仍在（目前 ' + P.VERSION + '）');
 ok(new RegExp('<span id="verTxt">' + P.VERSION + '</span>').test(src), '#verTxt 跟著 VERSION');
 ok(new RegExp('<span id="verLogVer">' + P.VERSION + '</span>').test(src), '#verLogVer 跟著 VERSION');
 ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 首位＝當前版本且 now:true');

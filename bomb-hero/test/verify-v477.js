@@ -62,7 +62,7 @@ ok(/e\.lastHitBy\s*=/.test(src), '命中時會記 lastHitBy');
 
 // ---------- 2. 10 國語系字典完整 ----------
 head('2. 全遊戲文字 10 國語系');
-const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'];
+const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko'];
 const base = Object.keys(P.I18N['zh-TW'] || {});
 ok(base.length > 700, '字典共 ' + base.length + ' 條');
 LANGS.forEach(function (L) {
@@ -81,11 +81,11 @@ ok(P.LANG === 'zh-TW' || !!P.I18N[P.LANG], '目前語言有字典');
   const k = kr[0];
   const zh = P.I18N['zh-TW'][k];
   // 只要求「非中文語系」不能等於中文原文（zh-CN 短詞與 zh-TW 相同是正常的）
-  const bad = ['en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'].filter(function (L) { return !P.I18N[L] || !P.I18N[L][k] || P.I18N[L][k] === zh; });
+  const bad = ['en', 'ja', 'ko'].filter(function (L) { return !P.I18N[L] || !P.I18N[L][k] || P.I18N[L][k] === zh; });
   ok(!!zh && bad.length === 0, k + ' 10 國都有（' + (P.I18N.en[k] || '') + '）');
 });
 // 最新版版本紀錄有 10 國翻譯、舊版只給中文
-ok(/ver\.4\.77\.1/.test(src) && P.I18N.en['ver.4.77.1'] && P.I18N.de['ver.4.77.1'], '4.77 的 5 條更新 10 國都有翻');
+ok(/ver\.4\.77\.1/.test(src) && P.I18N.en['ver.4.77.1'] && P.I18N.ja['ver.4.77.1'], '4.77 的 5 條更新每個語系都有翻');
 ok(P.I18N.en['verLog.zhOnly'] && P.I18N.ja['verLog.zhOnly'], '舊版更新在非中文語系顯示「原文繁中」提示');
 // 速度形容詞不再寫死中文
 ok(!/function foeSpeedWord\([\s\S]{0,300}?'很慢'/.test(src), 'foeSpeedWord 不再回傳中文');
@@ -94,7 +94,7 @@ ok(/if \(v >= 62\) return t\('spd\.veryFast'\)/.test(src), '速度形容詞走�
 // 怪物圖鑑：舊 20 隻的開頭句改放字典 fd.<id>；新 28 隻的名字走「繁中名 → key」反查
 const FD_IDS = ['slime', 'mush', 'beetle', 'crab', 'eye', 'penguin', 'bat', 'panda', 'bee', 'bomber',
   'lizard', 'wisp', 'scavenger', 'robot', 'ghost', 'hornet', 'sapper', 'skull', 'wizard'];
-const FD_L = ['en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'];
+const FD_L = ['en', 'ja', 'ko'];
 const fdMiss = [];
 FD_IDS.forEach(function (id) {
   FD_L.forEach(function (L) { if (!P.I18N[L] || !P.I18N[L]['fd.' + id]) fdMiss.push(L + '.' + id); });
@@ -102,12 +102,12 @@ FD_IDS.forEach(function (id) {
 ok(fdMiss.length === 0, '19 隻舊怪的圖鑑開頭句 9 國都有（' + (fdMiss.length ? '缺 ' + fdMiss.slice(0, 4).join('、') : 'fd.* 共 ' + FD_IDS.length + ' 條') + '）');
 ok(/function foeDesc\(id\)[\s\S]{0,220}?t\('fd\.' \+ id\)/.test(src), 'foeDesc() 先查字典再退回 HELP_FOES');
 ok(/function foeName\(id\)[\s\S]{0,400}?trLive\(sp\.name\)/.test(src), 'foeName() 沒有 sp.* key 時走即時字典反查');
-ok(!!P.I18N.de['help.tab.br'] && !!P.I18N.ru['help.tab.br'], '說明頁「大逃殺」分頁標題有 10 國翻譯');
+ok(!!P.I18N.ja['help.tab.br'] && !!P.I18N.ko['help.tab.br'], '說明頁「大逃殺」分頁標題每個語系都有翻譯');
 
 // 實際渲染：非中文語系不該再吐出中文（日文漢字不算）
 const CJK = /[\u4e00-\u9fff]/;
 const FOE_IDS = Array.from(new Set(P.STAGE_ROSTER.reduce(function (a, l) { return a.concat(l); }, [])));
-['en', 'de', 'ru', 'th', 'vi', 'it', 'ko'].forEach(function (L) {
+['en', 'ko'].forEach(function (L) {
   P.setLang(L);
   const badN = [], badD = [];
   FOE_IDS.forEach(function (id) {
@@ -167,7 +167,7 @@ ok(/trBlockInner/.test(src) && /TRBLOCK_CLS/.test(src), '整塊 innerHTML 有翻
 
 // ---------- 6. 版本與容量 ----------
 head('6. 版本與容量');
-ok(/^4\.(7[7-9]|[89][0-9])$/.test(P.VERSION), 'VERSION 是 4.77 以上（' + P.VERSION + '）');
+ok(parseFloat(P.VERSION) >= 4.77, 'VERSION 是 4.77 以上（' + P.VERSION + '）');
 ok(P.VERSION_LOG[0].v === P.VERSION, '版本紀錄最上面是本版 ' + P.VERSION);
 ok(P.VERSION_LOG[0].items.filter(function (x) { return /ver\.4\.77\./.test(x.k || ''); }).length >= 0, '版本紀錄條目正常');
 ok(P.VERSION_LOG[1] && /^4\./.test(P.VERSION_LOG[1].v), '第二筆是上一版 ' + (P.VERSION_LOG[1] || {}).v);
@@ -175,7 +175,7 @@ ok(P.VERSION_LOG[0].now === true && P.VERSION_LOG[1].now === false, '只有最�
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (f) {
   const p2 = path.join(__dirname, f);
   if (!fs.existsSync(p2)) { ok(false, f + ' 不存在'); return; }
-  ok(/SW_VERSION = 'v4\.(7[7-9]|[89][0-9])\.\d+'/.test(fs.readFileSync(p2, 'utf8')), f + ' 版本跟著升');
+  ok(/SW_VERSION = 'v\d+\.\d+\.\d+'/.test(fs.readFileSync(p2, 'utf8')), f + ' 版本跟著升');
 });
 (function () {
   const chars = src.length, bytes = Buffer.byteLength(src, 'utf8');

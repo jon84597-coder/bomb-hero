@@ -129,8 +129,8 @@ ok(/function drawMeBadge/.test(html), 'drawMeBadge 存在');
 const codeNoLog = html.slice(0, html.indexOf('const VERSION_LOG = ['));
 ok(codeNoLog.indexOf('⭐我') < 0, '程式碼裡沒有「⭐我」文字（只剩版本紀錄敘述）');ok(/const label = \(small \? '' : pname\(p\) \+ '🛒'\) \+ \(p\.ai && !small \? '🤖' : ''\) \|\| '🛒';/.test(html),
   '推車名牌只有名字＋🛒＋🤖（小螢幕省略文字），沒有「⭐我」文字');
-ok(/if \(Game\.mode === 'battle' && p\.alive && isMyPlayer\(p\)\) drawMeBadge/.test(html),
-  '場內活著時頭上畫「我」徽章');
+ok(/if \(\(Game\.mode === 'battle' \|\| Game\.mode === 'br'\) && p\.alive && isMyPlayer\(p\)\) drawMeBadge/.test(html),
+  '場內活著時頭上畫「我」徽章（v4.5x 起大逃殺也共用）');
 ok(/if \(Game\.mode === 'battle' && isMyPlayer\(p\)\) drawMeBadge\(x, y - T \* \.30/.test(html),
   '推車上的「我」也畫頭上徽章（不要求 alive，推車上 alive=false）');
 // 實測：推車上會畫出徽章
@@ -244,7 +244,7 @@ ok(/if \(stopAtFoe !== false && enemyAtCell\(nx, ny\)\)/.test(html),
   'findLanding：前方有敵人 → 停在敵人前一格（v4.13 仍保留此規則）');
 ok(/enemyAtCell\(ncx \+ m\.dx, ncy \+ m\.dy\)/.test(html),
   '被踢飛的炸彈：前方有敵人 → 停下');
-ok(/const land = findLanding\(bx, by, d\.x, d\.y, false, true\);/.test(html),
+ok(/function punchLanding\(bx, by, dx, dy\)[\s\S]{0,700}?if \(enemyAtCell\(nx, ny\)\) break;/.test(html),
   '被打飛的炸彈：沿著路徑逐格跳 → 前方有敵人會停在敵人前一格（v4.13）');
 // 實測踢彈
 {

@@ -106,7 +106,7 @@ head('5. 新增的大逃殺提示 10 國都有');
 const C = /[\u4e00-\u9fff]/;
 ['br.hurt', 'br.out', 'br.outMate', 'br.zone'].forEach(function (k) {
   const zh = P.I18N['zh-TW'][k];
-  const bad = ['en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'].filter(function (L) { return !P.I18N[L] || !P.I18N[L][k]; });
+  const bad = ['en', 'ja', 'ko'].filter(function (L) { return !P.I18N[L] || !P.I18N[L][k]; });
   ok(!!zh && bad.length === 0, k + ' 9 國都有' + (bad.length ? '（缺 ' + bad.join('/') + '）' : ''));
 });
 P.setLang('en');
@@ -121,14 +121,14 @@ P.setLang('zh-TW');
 
 // ---------- 6. 版本與容量 ----------
 head('6. 版本與容量');
-ok(/^4\.(7[8-9]|[89]\d)$/.test(P.VERSION), 'VERSION ≥ 4.78（實際 ' + P.VERSION + '）');
+ok(parseFloat(P.VERSION) >= 4.78, 'VERSION ≥ 4.78（實際 ' + P.VERSION + '）');
 ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, '版本紀錄最上面是本版 ' + P.VERSION + '（now）');
 ok(P.VERSION_LOG[1].now === false, '上一版 ' + P.VERSION_LOG[1].v + ' 已改成 now:false');
-ok(!!P.I18N.en['ver.4.78.1'] && !!P.I18N.de['ver.4.78.2'], '4.78 的 2 條更新有 10 國翻譯');
+ok(!!P.I18N.en['ver.4.78.1'] && !!P.I18N.ja['ver.4.78.2'], '4.78 的 2 條更新每個語系都有翻譯');
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (f) {
   const p2 = path.join(__dirname, f);
   if (!fs.existsSync(p2)) { ok(false, f + ' 不存在'); return; }
-  ok(/SW_VERSION = 'v4\.\d+\.\d+'/.test(fs.readFileSync(p2, 'utf8')), f + ' 版本跟著升');
+  ok(/SW_VERSION = 'v\d+\.\d+\.\d+'/.test(fs.readFileSync(p2, 'utf8')), f + ' 版本跟著升');
 });
 (function () {
   const chars = src.length, bytes = Buffer.byteLength(src, 'utf8');

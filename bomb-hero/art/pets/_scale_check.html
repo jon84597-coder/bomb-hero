@@ -1,0 +1,54 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  body { margin:0; background:#7fd08a; font:12px/1.4 sans-serif; color:#123; }
+  canvas { display:block; }
+</style></head>
+<body>
+<canvas id="cv" width="1100" height="420"></canvas>
+<script>
+// 比例檢查頁：把 12 張隨從幀圖按「遊戲內算式」畫出來，旁邊放一個 T 方塊當尺
+const T = 80;
+const ART = {
+  blade:  { asp: 1.0094, bodyRatio: 0.8785 },
+  bomber: { asp: 0.8688, bodyRatio: 0.8859 },
+  guard:  { asp: 0.9750, bodyRatio: 0.8992 }
+};
+const FR = ['idle', 'run1', 'run2', 'atk'];
+const cv = document.getElementById('cv'), g = cv.getContext('2d');
+const imgs = {};
+let left = 12;
+for (const k of Object.keys(ART)) for (const f of FR) {
+  const im = new Image();
+  im.onload = () => { if (--left <= 0) draw(); };
+  im.onerror = () => { if (--left <= 0) draw(); };
+  im.src = 'spr/pet-' + k + '-' + f + '.webp';
+  imgs[k + '-' + f] = im;
+}
+function draw() {
+  g.clearRect(0, 0, cv.width, cv.height);
+  // 參考尺：1 格 = T px
+  g.fillStyle = 'rgba(0,0,0,.10)';
+  g.fillRect(20, 320, T, T);
+  g.fillStyle = '#123';
+  g.fillText('1 tile', 26, 316);
+  let x = 140;
+  for (const k of Object.keys(ART)) {
+    const sp = ART[k];
+    FR.forEach((f, i) => {
+      const bodyH = T * .60;
+      const H = bodyH / sp.bodyRatio, W = H * sp.asp;
+      const footY = 320 + T;             // 腳底線
+      const im = imgs[k + '-' + f];
+      if (im && im.naturalWidth) {
+        g.drawImage(im, x - W / 2, footY - H, W, H);
+        g.strokeStyle = 'rgba(255,255,255,.5)';
+        g.strokeRect(x - W / 2, footY - H, W, H);
+      }
+      g.fillStyle = '#123';
+      g.fillText(k + '/' + f, x - 26, footY + 16);
+      x += 78;
+    });
+  }
+}
+</script>
+</body></html>

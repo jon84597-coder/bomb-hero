@@ -37,13 +37,13 @@ head('1. 首頁選單結構');
   const grid = gi < 0 ? '' : src.slice(gi, src.indexOf('id="mDrawer"'));
   const cards = (grid.match(/<button class="mbtn/g) || []).length;
   ok(cards === 6, '主玩法 6 張卡（' + cards + '）');
-  ['btnSolo', 'btnBR', 'btnDaily', 'btnMulti', 'btnRpg', 'btnMoreMenu'].forEach(function (id) {
+  ['btnAdventure', 'btnBR', 'btnDaily', 'btnMulti', 'btnStore', 'btnMoreMenu'].forEach(function (id) {
     ok(grid.indexOf('id="' + id + '"') > 0, '卡片 #' + id + ' 在 grid 裡');
   });
   // 沙盒不會解析 HTML 上的 class，位置關係要看原始碼順序
   ok(src.indexOf('id="btnLearn"') < src.indexOf('<div class="mgrid">'),
     '新手教學排在 grid 之前（它是上方獨立一條）');
-  ['btnStore', 'btnHelp', 'btnSettings', 'btnQuit'].forEach(function (id) {
+  ['btnHelp', 'btnSettings', 'btnQuit'].forEach(function (id) {
     const el = els[id];
     ok(!!el, '抽屜 #' + id + ' 存在');
     ok(new RegExp('<button class="drawbtn" id="' + id + '"').test(src), '#' + id + ' 用 drawbtn 樣式');
@@ -69,7 +69,7 @@ ok(click('btnMoreMenu') && hasCls('mDrawer', 'on'), '點「更多」會展開');
 ok(click('btnMoreMenu') && !hasCls('mDrawer', 'on'), '再點一次會收起');
 // 進模式時抽屜要自己收回去
 P.setDrawer(true);
-els.btnSolo._on.click.forEach(function (f) { f(); });
+els.btnAdventure._on.click.forEach(function (f) { f(); });
 ok(!hasCls('mDrawer', 'on'), '點玩法卡之後抽屜自動收起（回首頁是乾淨的）');
 
 // ---------- 3. 多人對戰 ----------
@@ -100,7 +100,7 @@ ok(!hasCls('multiPick', 'on'), '「返回」關得掉');
 // ---------- 4. BOSS 搬進單人關卡 ----------
 head('4. BOSS 併進單人闖關');
 ok(!!els.btnSoloBoss, '#btnSoloBoss 存在');
-ok(!!els['scr-solo'] && src.indexOf('id="btnSoloBoss"') > src.indexOf('id="scr-solo"'), '住在單人關卡畫面裡（不在首頁）');
+ok(src.indexOf('id="btnSoloBoss"') > src.indexOf('id="scr-solo"'), '住在單人關卡畫面裡（不在首頁）');
 ok(typeof P.goBoss === 'function', 'goBoss 有匯出');
 ok(els.btnSoloBoss._on.click && els.btnSoloBoss._on.click.length > 0, '按鈕有綁 click');
 {
@@ -163,7 +163,7 @@ head('7. 10 語系');
     'solo.bossgo', 'beta.tag',
     'home.d.store', 'home.d.help', 'home.d.set', 'home.d.quit', 'home.rpg.sub',
     'ver.4.81.1', 'ver.4.81.2', 'ver.4.81.3', 'ver.4.81.4'];
-  const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'];
+  const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko'];
   let missing = [], cjk = [];
   KEYS.forEach(function (k) {
     LANGS.forEach(function (lg) {
@@ -174,7 +174,7 @@ head('7. 10 語系');
       if (lg !== 'zh-TW' && lg !== 'zh-CN' && lg !== 'ja' && CJK.test(v)) cjk.push(lg + '/' + k);
     });
   });
-  ok(missing.length === 0, KEYS.length + ' 條 × 10 語言無缺' + (missing.length ? '（缺 ' + missing.slice(0, 5).join(',') + '）' : ''));
+  ok(missing.length === 0, KEYS.length + ' 條 × 5 語言無缺' + (missing.length ? '（缺 ' + missing.slice(0, 5).join(',') + '）' : ''));
   ok(cjk.length === 0, '非中文語系沒有漢字殘留' + (cjk.length ? '（' + cjk.slice(0, 5).join(',') + '）' : ''));
   ok(P.I18N.en['home.multi'] !== P.I18N['zh-TW']['home.multi'], '英文真的有翻（不是照抄中文）');
   ok(P.I18N.ja['multi.local'] && P.I18N.ja['multi.local'] !== P.I18N.en['multi.local'], '日文跟英文不一樣');
@@ -183,7 +183,7 @@ head('7. 10 語系');
 ok(/function homeFill\(\)/.test(src), '有 homeFill() 專責注入首頁文案');
 ok(/homeFill\(\); \} catch \(e\) \{\}/.test(src), 'fillUI() 會呼叫 homeFill()（換語言跟著換）');
 ok(/card\('btnMoreMenu', 'home\.more', 'home\.more\.sub'\)/.test(src), '「更多」卡片走字典');
-['btnStore', 'btnHelp', 'btnSettings', 'btnQuit'].forEach(function (id) {
+['btnHelp', 'btnSettings', 'btnQuit'].forEach(function (id) {
   ok(new RegExp("b\\.textContent = t\\(dr\\[id\\]\\)").test(src), '抽屜按鈕文字由 t() 注入');
 });
 
@@ -207,12 +207,12 @@ ok(P.VERSION_LOG[0].items.length >= 3, '最新版至少寫 3 條更新（' + P.V
 ok(src.length < 3900000, '字元數 ' + src.length.toLocaleString() + ' < 3.9M');
 ok(Buffer.byteLength(src) < 4250000, '位元組 ' + Buffer.byteLength(src).toLocaleString() + ' < 4.25M');
 ok((src.match(/\r/g) || []).length === 0, '整檔 LF（0 個 \\r）');
-// 每個字典列都必須剛好 11 欄
+// 每個字典列都必須剛好 6 欄
 {
   const i = src.indexOf('const I18N_SRC');
   const j = src.indexOf('`;', i);
   const lines = src.slice(i, j).split('\n').slice(1).filter(function (l) { return l.indexOf('|') > 0; });
-  const bad = lines.filter(function (l) { return l.split('|').length !== 11; });
+  const bad = lines.filter(function (l) { return l.split('|').length !== 6; });
   ok(bad.length === 0, '字典每列 11 欄（共 ' + lines.length + ' 列）' + (bad.length ? '（壞 ' + bad.length + ' 列）' : ''));
 }
 

@@ -5,7 +5,7 @@
 //   ④ 首頁「離開遊戲」：按鈕 + 離場卡
 //   ⑤ 關卡金幣 → 過關（或陣亡）時進商店錢包
 //   ⑥ 找傳送門提示改用 doorHintCard（不再用中央巨型 banner）
-//   ⑦ i18n：10 語言都有提示卡文字
+//   ⑦ i18n：5 語言都有提示卡文字
 //   ⑧ 版本與 SW 快取
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
@@ -26,7 +26,7 @@ head('1. 作者公告不再蓋住選單（這是「按鈕點不到」的元凶�
   // 先把 CSS 註解拿掉，否則「舊版是 position:fixed」這種說明文字會被誤判
   const cssNoCmt = css.replace(/\/\*[\s\S]*?\*\//g, '');
   // 只取獨立的 `.annbox {` 規則（v4.23 起還有 `.toprow .annbox {`，別抓錯）
-  const m = cssNoCmt.match(/\n\s{2}\.annbox \{([\s\S]*?)\}/);
+  const m = cssNoCmt.match(/\n\s*\.annbox \{([\s\S]*?)\}/);
   const block = m ? m[1] : '';
   ok(!!m, '找得到 .annbox 樣式');
   ok(!/position:\s*fixed/.test(block), '.annbox 不再是 position:fixed（以前浮在左上角蓋住按鈕）');
@@ -43,7 +43,7 @@ head('1. 作者公告不再蓋住選單（這是「按鈕點不到」的元凶�
 
 head('2. 內容比視窗高時，頂端不會被切掉');
 {
-  ok(!/body \{[\s\S]{0,200}?align-items:\s*center/.test(css), 'body 不再用 align-items:center（會把頂端推到畫面外）');
+  ok(!/body \{[\s\S]{0,200}?align-items:\s*center/.test(css.replace(/\/\*[\s\S]*?\*\//g, '')), 'body 不再用 align-items:center（會把頂端推到畫面外）');
   ok(/align-items:\s*flex-start/.test(css), 'body 改成靠上對齊');
   ok(/\.wrap \{[^}]*margin-block:\s*auto/.test(css), '.wrap 用 auto margin 置中（空間不夠時自動靠上）');
 }
@@ -164,10 +164,10 @@ head('7. 找傳送門的提示：漂亮的提示卡，2.6 秒後淡出');
   ok(box.classList.contains('hide'), 'hideDoorHint() 會收掉提示卡');
 }
 
-head('8. i18n：10 種語言都有提示卡文字');
+head('8. i18n：5 種語言都有提示卡文字');
 {
-  const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'];
-  ok(LANGS.length === 10, '語言清單 10 種');
+  const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko'];
+  ok(LANGS.length === 5, '語言清單 5 種');
   LANGS.forEach(l => {
     const has = (k) => (P.I18N && P.I18N[l] && P.I18N[l][k]) ? true : false;
     const t1 = has('solo.doorTip.t'), t2 = has('solo.doorTip.s'), t3 = has('solo.doorTip.go');

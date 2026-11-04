@@ -172,9 +172,9 @@ head('7. 草原底圖（調亮＋加飽和）');
 
 // ---------- 8. 版本 ----------
 head('8. 版本');
-ok(/(^|\D)4\.(7[6-9]|[89]\d)(\D|$)/.test(P.VERSION), 'VERSION ≥ 4.76（實際 ' + P.VERSION + '）');
+ok(parseFloat(P.VERSION) >= 4.76, 'VERSION ≥ 4.76（實際 ' + P.VERSION + '）');
 ok(P.VERSION_LOG[0].v === P.VERSION, '版本紀錄最上面是本版 ' + P.VERSION);
-ok(/SW_VERSION = 'v4\.(7[6-9]|[89]\d)\.\d+'/.test(fs.readFileSync(path.join(__dirname, '../sw.js'), 'utf8')), 'sw.js 版本跟著升');
+ok(/SW_VERSION = 'v\d+\.\d+\.\d+'/.test(fs.readFileSync(path.join(__dirname, '../sw.js'), 'utf8')), 'sw.js 版本跟著升');
 
 console.log('\n' + (fail ? '✗ ' + fail + ' 失敗 / ' + pass + ' 通過' : '✅ v4.76：' + pass + ' 通過 / 0 失敗'));
 process.exit(fail ? 1 : 0);

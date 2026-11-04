@@ -88,7 +88,7 @@ head('⑧ 文案（10 語言）');
  'save.copied', 'save.copyFail', 'save.noCode', 'save.bad', 'save.confirm', 'save.done'].forEach(function (k) {
   const re = new RegExp('^' + k.replace('.', '\\.') + '\\|', 'm');
   const line = (src.match(new RegExp('^' + k.replace('.', '\\.') + '\\|.*$', 'm')) || [''])[0];
-  ok(re.test(src) && line.split('|').length === 11, k + ' 有 11 欄（key + 10 語言）');
+  ok(re.test(src) && line.split('|').length === 6, k + ' 有 6 欄（key＋5 語言）');
 });
 ok(/const sbk = \$id\('saveBakLab'\); if \(sbk\) sbk\.textContent = t\('save\.bak'\)/.test(src),
   'fillUI() 注入標題（短標籤即時翻譯層翻不到）');

@@ -29,9 +29,9 @@ ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, '版本紀
 console.log('\n=== 1. 暫停選單：回關卡清單 ===');
 ok(src(/id="pmStages"/), '暫停選單有 pmStages 按鈕');
 ok(!!(P.I18N['zh-TW'] && P.I18N['zh-TW']['pause.stages']), '有 pause.stages 文案');
-// 10 個語系都翻到
+// 每個語系都翻到
 const nStages = P.LANGS.filter(function (L) { return P.I18N[L.id] && P.I18N[L.id]['pause.stages']; }).length;
-ok(nStages === 10, '10 個語系都有 pause.stages', nStages);
+ok(nStages === P.LANGS.length, P.LANGS.length + ' 個語系都有 pause.stages', nStages);
 ok(!/"pause\.stages"/.test(html), '沒有殘留未翻譯的 key');
 // 只有單人／RPG 才顯示，而且會跳回對應清單
 ok(src(/Game\.mode !== 'solo' && Game\.mode !== 'rpg'[\s\S]{0,140}pmSt\.style\.display = 'none'/), '對戰／線上模式把按鈕藏起來');

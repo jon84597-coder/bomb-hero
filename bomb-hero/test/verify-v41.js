@@ -36,7 +36,7 @@ ok(/max-height: min\(60vh, 540px\)/.test(html), '內容區可上下捲（不會�
 ok(/@media \(max-width: 560px\)[\s\S]{0,400}\.hgrid, \.hride \{ grid-template-columns: 1fr; \}/.test(html), '窄螢幕改單欄');
 
 console.log('\n=== 4. 多語選單文案 ===');
-const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'];
+const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko'];
 // v4.77：字典改成壓縮表（key|tw|cn|en|…），改從執行期的 I18N 驗證
 ok(LANGS.every(function (l) { return P.I18N[l] && Object.keys(P.I18N[l]).length > 300; }), '10 種語言區塊都在');
 let allHelp = true;

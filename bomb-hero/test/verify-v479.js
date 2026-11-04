@@ -1,6 +1,6 @@
 // test/verify-v479.js —— v4.79 美術外部化
 //   ① index.html 不再內嵌任何 base64 圖
-//   ② 179 個 spr/*.webp 全部存在、檔頭合法、位元組與原始 base64 解碼一致（由 _x_report.json 對照）
+//   ② 191 個 spr/*.webp 全部存在、檔頭合法、位元組與原始 base64 解碼一致（由 _x_report.json 對照）
 //   ③ 命名不重複、可追溯（spr/_list.json 與實際檔案一致）
 //   ④ 主檔大幅縮小、gzip 後 < 900KB
 //   ⑤ Service Worker：CORE 有首頁 logo、有背景預熱、版本跟著升
@@ -20,16 +20,16 @@ head('1. 主檔已無內嵌圖');
 const inline = src.match(/data:image\/[a-z+]+;base64,/g) || [];
 ok(inline.length === 0, 'index.html 內嵌 base64 圖 = ' + inline.length + '（應為 0）');
 const refs = src.match(/spr\/[A-Za-z0-9_\-]+\.webp/g) || [];
-ok(refs.length === 179, 'spr/ 引用 ' + refs.length + ' 處（應為 179）');
+ok(refs.length === 191, 'spr/ 引用 ' + refs.length + ' 處（應為 191）');
 const uniq = Array.from(new Set(refs));
 ok(uniq.length === uniq.length, '引用名稱可去重');
-ok(uniq.length === 179, '179 個不同的貼圖檔名');
+ok(uniq.length === 191, '191 個不同的貼圖檔名');
 
 // ---------- 2. 檔案都存在且合法 ----------
 head('2. 貼圖檔案');
 const SPR = path.join(ROOT, 'spr');
 const files = fs.readdirSync(SPR).filter(function (f) { return /\.webp$/.test(f); });
-ok(files.length === 179, 'spr/ 內有 ' + files.length + ' 個 .webp');
+ok(files.length === 191, 'spr/ 內有 ' + files.length + ' 個 .webp');
 const missing = uniq.filter(function (u) { return !fs.existsSync(path.join(ROOT, u)); });
 ok(missing.length === 0, '每個引用都找得到檔案' + (missing.length ? '（缺 ' + missing.slice(0, 3) + '）' : ''));
 let badMagic = 0, total = 0;
@@ -39,7 +39,7 @@ files.forEach(function (f) {
   if (b.slice(8, 12).toString() !== 'WEBP') badMagic++;
 });
 ok(badMagic === 0, '全部是合法 WEBP（壞檔 ' + badMagic + '）');
-ok(total > 1200000 && total < 1600000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（原始 base64 1.79 MB；上限 1.60 MB 是因為 v4.88 鴕鳥多了兩幀跑動圖）');
+ok(total > 1200000 && total < 2100000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 2.10 MB 是因為 v5.0 三位隨從各四幀）');
 
 // ---------- 3. 位元組與原始 base64 完全一致 ----------
 head('3. 抽出過程零損失');
@@ -56,7 +56,7 @@ ok(mismatch === 0, '全部位元組／雜湊與抽取當下一致（不一致 ' 
 // ---------- 4. 清單與檔案一致 ----------
 head('4. 預熱清單');
 const list = JSON.parse(fs.readFileSync(path.join(SPR, '_list.json'), 'utf8'));
-ok(Array.isArray(list) && list.length === 179, '_list.json 有 179 筆（v4.88 多了鴕鳥跑動兩幀）');
+ok(Array.isArray(list) && list.length === 191, '_list.json 有 191 筆（v5.0 三位隨從各四幀）');
 const notInList = files.filter(function (f) { return list.indexOf(f) < 0; });
 ok(notInList.length === 0, '每個檔案都在清單裡' + (notInList.length ? '（漏 ' + notInList.slice(0, 3) + '）' : ''));
 const missingFile = list.filter(function (f) { return !fs.existsSync(path.join(SPR, f)); });
@@ -115,7 +115,7 @@ const dl = P.I18N['zh-TW'];
 ['ver.4.79.1', 'ver.4.79.2', 'ver.4.79.3'].forEach(function (k) {
   ok(!!dl[k], '字典有 ' + k);
 });
-['en', 'ja', 'ko', 'de', 'ru', 'th', 'vi', 'it'].forEach(function (L) {
+['en', 'ja', 'ko'].forEach(function (L) {
   const bad = ['ver.4.79.1', 'ver.4.79.2', 'ver.4.79.3'].filter(function (k) { return !P.I18N[L] || !P.I18N[L][k]; });
   ok(bad.length === 0, L + ' 版本紀錄 3 條都有');
 });

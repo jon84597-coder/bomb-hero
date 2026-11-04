@@ -187,8 +187,8 @@ const raw = (SRC.match(/const I18N_SRC = `([\s\S]*?)`;/) || [])[1] || '';
 const rows = raw.split('\n').filter(Boolean);
 const gRows = rows.filter(r => r.indexOf('gift.') === 0);
 ok(gRows.length >= 30, 'gift.* 字典條目 ' + gRows.length + ' 條');
-const badCols = gRows.filter(r => r.split('|').length !== 11).map(r => r.split('|')[0]);
-ok(badCols.length === 0, '每條都是 11 欄（key＋10 語系）', badCols);
+const badCols = gRows.filter(r => r.split('|').length !== 6).map(r => r.split('|')[0]);
+ok(badCols.length === 0, '每條都是 6 欄（key＋5 語系）', badCols);
 // 前端用到的每個 key 都要真的存在
 const used = new Set();
 (SRC.match(/t\('(gift\.[A-Za-z]+)'/g) || []).forEach(m => used.add(m.replace(/t\('/, '').replace(/'$/, '')));

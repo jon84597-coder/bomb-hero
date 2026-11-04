@@ -191,7 +191,7 @@ function cols(key) {
   return m ? m[1].split('|').length + 1 : 0;
 }
 ['toast.storm', 'toast.stormBanner', 'mount.dive'].forEach(function (k) {
-  ok(cols(k) === 11, k + ' 有 10 種語言（實際 ' + cols(k) + ' 欄）');
+  ok(cols(k) === 6, k + ' 有 5 種語言（實際 ' + cols(k) + ' 欄）');
 });
 
 console.log('\n========================================');

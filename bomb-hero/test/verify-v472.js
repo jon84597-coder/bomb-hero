@@ -224,10 +224,10 @@ console.log('\n=== 8. 版本 ===');
 (function () {
   const v = (src.match(/const VERSION = '([^']+)'/) || [])[1];
   ok(parseFloat(v) >= 4.74, 'VERSION >= 4.74（實際 ' + v + '）');
-  ok(/id="verLogVer">4\.\d+</.test(src), '版本紀錄同步');
+  ok(/id="verLogVer">\d+\.\d+</.test(src), '版本紀錄同步');
   const sw = require('fs').readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const m = sw.match(/SW_VERSION = '([^']+)'/);
-  ok(m && /^v4\.\d+\.0$/.test(m[1]), 'sw.js = v4.x.0（實際 ' + (m && m[1]) + '）');
+  ok(m && /^v\d+\.\d+\.\d+$/.test(m[1]), 'sw.js = v4.x.0（實際 ' + (m && m[1]) + '）');
 })();
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v4.74：' + pass + ' 通過 / ' + fail + ' 失敗');

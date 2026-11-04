@@ -66,7 +66,7 @@ for (let n = 1; n <= 3; n++) {
   const line = src.split('\n').find(function (x) { return x.indexOf(key + '|') === 0; });
   if (!line) { ok(false, key + ' 字典列存在'); continue; }
   const cols = line.split('|');
-  ok(cols.length === 11, key + ' 剛好 11 欄（實際 ' + cols.length + '）');
+  ok(cols.length === 6, key + ' 剛好 6 欄（實際 ' + cols.length + '）');
   ok(cols.slice(2).every(function (c) { return c.trim(); }), key + ' 9 種語言都填了');
   /* 日文（第 5 欄）本來就用漢字，不能當「漏中文」判 */
   const leak = cols.filter(function (c, i) { return i >= 3 && i !== 4 && CJK.test(c); });
@@ -75,7 +75,7 @@ for (let n = 1; n <= 3; n++) {
 
 head('⑦ 版本與容量');
 const P = env.BH || {};
-ok(/^4\.(8[3-9]|9\d)$/.test(P.VERSION), 'VERSION 至少 4.83（實際 ' + P.VERSION + '）');
+ok((parseFloat(P.VERSION) >= 4.83), 'VERSION 至少 4.83（實際 ' + P.VERSION + '）');
 ok(new RegExp('id="verTxt">' + P.VERSION.replace(/\./g, '\\.') + '<').test(src), '首頁版本標籤跟著 VERSION 走');
 ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, '版本紀錄首位就是目前版號且 now:true');
 ok(P.VERSION_LOG[1].now === false, '上一版（' + P.VERSION_LOG[1].v + '）已改 now:false');
@@ -86,7 +86,7 @@ for (const f of ['sw.js', '../public/sw.js', '../bomberman-online/public/sw.js']
   const p = path.join(ROOT, f);
   if (!fs.existsSync(p)) { ok(false, f + ' 不存在'); continue; }
   const v = (fs.readFileSync(p, 'utf8').match(/SW_VERSION = '(v[\d.]+)'/) || [])[1] || '';
-  ok(new RegExp('^v4\\.(8[3-9]|9\\d)\\.\\d+$').test(v), f + ' 版本跟得上主檔（' + v + '）');
+  ok(new RegExp('^v\\d+\\.\\d+\\.\\d+$').test(v), f + ' 版本跟得上主檔（' + v + '）');
 }
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' ' + pass + ' 通過 / ' + fail + ' 失敗');

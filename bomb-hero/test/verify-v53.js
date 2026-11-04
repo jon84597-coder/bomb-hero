@@ -120,7 +120,7 @@ ok(/偶爾/.test(html), '新文案改成「偶爾才會朝你飄過來」');
 
 // ==================================================================
 console.log('\n=== 6. 密碼眼睛：10 語齊備 ===');
-const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'];
+const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko'];
 LANGS.forEach(function (lg) {
   const d = P.I18N[lg];
   ok(!!(d && d['web.pwShow'] && d['web.pwHide']), lg + ' 有顯示／隱藏文案',

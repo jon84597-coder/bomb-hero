@@ -50,35 +50,36 @@ eq(typeof P.beltGrab, 'function', 'beltGrab 已匯出');
 eq(typeof P.updatePets, 'function', 'updatePets 已匯出');
 eq(typeof P.makePet, 'function', 'makePet 已匯出');
 
-head('1. 隨從 5000 金幣');
+head('1. 隨從 8000 金幣');
 eq(P.PET_KINDS.length, 3, '三種隨從');
-ok(P.PET_KINDS.every(function (k) { return k.price === 5000; }), '每一隻都是 5000 金幣');
+ok(P.PET_KINDS.every(function (k) { return k.price === 8000; }), '每一隻都是 8000 金幣');
 ok(html.indexOf('price: 1000') < 0, '沒有殘留 1000 的售價');
-// v4.81：商店收進抽屜，副標不再寫價格（價格在商店頁才顯示）
-ok(html.indexOf('id="btnStore"') > 0 && html.indexOf('隨從 5000 金幣') > 0, '商店入口還在（價格在商店頁說明）');
-ok(html.indexOf('隨從三種各 <b>5000</b> 金幣') > 0, '說明頁也寫 5000');
+// v5.0：商店搬回首頁大按鈕，副標改成「隨從 · 外觀」（價格在商店頁才顯示）
+ok(html.indexOf('id="btnStore"') > 0 && html.indexOf('隨從 8000 金幣') > 0, '商店入口還在（價格在商店頁說明）');
+ok(html.indexOf('隨從三種各 <b>8000</b> 金幣') > 0, '說明頁也寫 8000');
 const notes = P.LANGS.map(function (L) { return (P.I18N[L.id] || {})['store.note'] || ''; }).filter(Boolean);
-eq(notes.length, 10, '10 國語系的商店副標');
-ok(notes.every(function (z) { return z.indexOf('5000') >= 0 || z.indexOf('5,000') >= 0 || z.indexOf('5.000') >= 0; }),
-  '十國語系全部改成 5000');
-ok(notes.every(function (z) { return z.indexOf('1000') < 0 && z.indexOf('1,000') < 0 && z.indexOf('1.000') < 0; }),
-  '十國語系沒有殘留 1000');
+eq(notes.length, P.LANGS.length, P.LANGS.length + ' 國語系的商店副標');
+ok(notes.every(function (z) { return z.indexOf('8000') >= 0 || z.indexOf('8,000') >= 0 || z.indexOf('8.000') >= 0; }),
+  '每個語系全部改成 8000');
+ok(notes.every(function (z) { return z.indexOf('5000') < 0 && z.indexOf('5,000') < 0 && z.indexOf('5.000') < 0; }),
+  '每個語系沒有殘留 5000');
 
 head('2. 對戰／線上配對標「測試版」');
 ok(html.indexOf('id="btnMulti"') > 0 && html.indexOf('class="mbtn c-multi has-beta"') > 0, '多人對戰鈕標測試版');
 ok(html.indexOf('id="mpOnline"') > 0, '線上房號入口在多人選擇器裡');
-ok(/id="btnRpg"[^>]*>RPG 模式<span class="betaTag">/.test(html), 'RPG 鈕原本就有標');
-eq((html.match(/class="betaTag"/g) || []).length, 2, '2 顆 Beta 標籤（大逃殺改成 HOT、多人/ RPG 各一）');
+// v5.0：RPG 收進「冒險模式」選擇器，不再自帶標籤
+ok(/<button class="qbtn" id="btnRpg"/.test(html), 'RPG 鈕移到冒險選擇器裡');
+eq((html.match(/class="betaTag"/g) || []).length, 1, '1 顆 Beta 標籤（只剩多人對戰）');
 eq((html.match(/class="hotTag"/g) || []).length, 1, '大逃殺有 1 顆 HOT 標籤');
 
 head('3. 首頁大按鈕：統一外型与四種狀態');
-// v4.81：首頁只留 6 張玩法卡，工具收進「更多」抽屜
-['btnLearn', 'btnSolo', 'btnRpg', 'btnBR', 'btnDaily', 'btnMulti', 'btnMoreMenu']
+// v5.0：首頁 6 張玩法卡（冒險／大逃殺／每日／多人／商店／更多），工具收進「更多」抽屜
+['btnAdventure', 'btnBR', 'btnDaily', 'btnMulti', 'btnStore', 'btnMoreMenu']
   .forEach(function (id) {
-    const re = new RegExp('<button class="mbtn (c-[a-z]+)[^"]*" id="' + id + '" data-ico="[^"]+"');
+    const re = new RegExp('<button class="mbtn (c-[a-z]+)[^"]*" id="' + id + '"[^>]*data-ico="[^"]+"');
     ok(re.test(html), id + ' 有統一 class ＋ data-ico');
   });
-['btnStore', 'btnHelp', 'btnSettings', 'btnQuit'].forEach(function (id) {
+['btnHelp', 'btnSettings', 'btnQuit'].forEach(function (id) {
   const re = new RegExp('<button class="drawbtn" id="' + id + '"[^>]*data-ico="[^"]+"');
   ok(re.test(html), id + ' 抽屜按鈕也有 data-ico');
 });
@@ -89,7 +90,7 @@ head('3. 首頁大按鈕：統一外型与四種狀態');
   const icos = (seg.match(/data-ico="/g) || []).length;
   ok(btns === 6 && btns === icos, '主玩法每顆卡片都有 icon（' + icos + '/' + btns + '）');
 }
-eq((html.match(/class="mbtn[^"]*has-beta/g) || []).length, 3, '3 顆帶測試版標籤的卡片都預留空間');
+eq((html.match(/class="mbtn[^"]*has-beta/g) || []).length, 2, '2 顆帶測試版標籤的卡片都預留空間');
 ok(css.indexOf('content: attr(data-ico)') > 0, 'icon 由 ::before 統一產生');
 ok(css.indexOf('#scr-title .menu .mbtn:hover {') > 0, '有滑過狀態');
 ok(css.indexOf('#scr-title .menu .mbtn:active {') > 0, '有按下狀態');
@@ -101,7 +102,7 @@ ok(/body\.touch #scr-title \.menu \.mbtn \{ padding: 11px 10px 11px 40px/.test(c
 ok(css.indexOf('--g1: rgba(120,230,170,.6)') > 0 && css.indexOf('--c1: #ffa161') > 0, '顏色用 CSS 變數分層');
 ['c-learn', 'c-solo', 'c-rpg', 'c-boss', 'c-battle', 'c-online', 'c-store', 'c-acct', 'c-help', 'c-set', 'c-quit']
   .forEach(function (c) { ok(css.indexOf('#scr-title .menu .' + c) > 0, '配色 ' + c + ' 已定義'); });
-ok(html.indexOf('>單人闖關<small>') > 0 && html.indexOf('跳過關卡，直接單挑最終魔王') > 0, '標題不再夾行內 emoji（BOSS 移到單人畫面）');
+ok(html.indexOf('>冒險模式<small>') > 0 && html.indexOf('>商店<small>') > 0, '卡片標題由 data-ico 給圖示，行內不再夾 emoji');
 ok(html.indexOf('<span id="learnTag">') > 0 && P.t('learn.tag') === '新手教學', '新手教學標題由 JS 注入（不含 emoji）');
 
 head('4. 首頁移除「操作提示」白框');
