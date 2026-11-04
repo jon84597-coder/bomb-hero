@@ -2958,6 +2958,59 @@ body.touch #scr-title .menu .mgrid .mbtn .betaTag { right: 6px; top: 5px; font-s
     0 2px 0 rgba(0,0,0,.10);
 }
 
+/* 大逃殺設定面板（#brOv 暗底）：選項鈕同樣是果凍，只是換成深色版 */
+.brseg b {
+  background:
+    radial-gradient(ellipse 96% 54% at 50% -4%, rgba(255,255,255,.20) 0%, rgba(255,255,255,.08) 94%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 52%, rgba(0,0,0,.22) 100%),
+    linear-gradient(180deg, #2c3d61 0%, #1b2740 100%);
+  border: 1px solid rgba(140,180,240,.22);
+  box-shadow:
+    0 2px 0 rgba(0,0,0,.42),
+    inset 0 0 0 1px rgba(255,255,255,.07),
+    inset 0 2px 0 rgba(255,255,255,.14);
+}
+.brseg b.on {
+  color: #3a1a00;
+  border-color: #ffd08a;
+  background:
+    radial-gradient(ellipse 96% 50% at 50% -2%, rgba(255,255,255,.62) 0%, rgba(255,255,255,.34) 94%, rgba(255,255,255,.10) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.26) 86%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 48%, rgba(0,0,0,.10) 74%, rgba(0,0,0,.20) 100%),
+    linear-gradient(180deg, #ffd07a 0%, #f7a13a 46%, #e07a12 100%);
+  box-shadow:
+    0 3px 0 #a85a08,
+    0 10px 18px -12px rgba(240,128,30,.85),
+    inset 0 0 0 2px rgba(255,255,255,.24),
+    inset 0 2px 0 rgba(255,255,255,.80),
+    inset 0 -2px 0 rgba(255,255,255,.30);
+}
+.brc-x {
+  background:
+    radial-gradient(ellipse 100% 56% at 50% -6%, rgba(255,255,255,.24) 0%, rgba(255,255,255,.08) 94%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 52%, rgba(0,0,0,.24) 100%),
+    linear-gradient(180deg, #2c3d61 0%, #1b2740 100%);
+  box-shadow:
+    0 2px 0 rgba(0,0,0,.42),
+    inset 0 0 0 1px rgba(255,255,255,.08),
+    inset 0 2px 0 rgba(255,255,255,.16);
+}
+/* 出發鈕：面板裡用的是 .mbtn.warm，而水晶 .mbtn 只掛在首頁選單底下，這裡要另外給 */
+#brOv #brGo {
+  background:
+    radial-gradient(ellipse 92% 46% at 50% -2%, rgba(255,255,255,.62) 0%, rgba(255,255,255,.36) 94%, rgba(255,255,255,.10) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.28) 86%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 46%, rgba(0,0,0,.10) 74%, rgba(0,0,0,.22) 100%),
+    linear-gradient(180deg, #ffc98c 0%, #f4703c 46%, #d24a19 100%);
+  border-color: #ffd0a6;
+  box-shadow:
+    0 4px 0 #b33c12,
+    0 12px 22px -14px rgba(200,70,30,.85),
+    inset 0 0 0 2px rgba(255,255,255,.22),
+    inset 0 3px 0 rgba(255,255,255,.82),
+    inset 0 -2px 0 rgba(255,255,255,.30);
+}
+
 /* v4.53：選角卡片放大 —— 原本 ◀▶🤖 只有 20x17px，手機根本點不到，8 格擠成一團也不好看 */
 #scr-battle #pSlots{grid-template-columns:repeat(auto-fit,minmax(164px,1fr));gap:10px;justify-content:stretch}
 #scr-battle #pSlots .pbox{padding:10px 10px 9px;border-width:2px;border-radius:14px;

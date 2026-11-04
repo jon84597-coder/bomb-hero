@@ -113,6 +113,10 @@ ok(/radial-gradient/.test(big) && /inset 0 3px 0/.test(big), '開始遊戲大按
 const dark = rule('#scr-battle #pSlots .crow button {');
 ok(/radial-gradient/.test(dark) && /#1d2842/.test(dark), '對戰選角的暗底小鈕用深色果凍');
 ok(/\.crow button\.aibtn/.test(V42), 'AI 開關鈕有獨立配色（不會被深色果凍蓋掉）');
+const brs = rule('.brseg b {');
+ok(/radial-gradient/.test(brs) && /#1b2740/.test(brs), '大逃殺面板的選項鈕有深色果凍（這一組當初漏掉過）');
+ok(/\.brseg b\.on \{[\s\S]{0,600}?radial-gradient/.test(V42), '大逃殺已選項是橘色果凍');
+ok(/#brOv #brGo \{[\s\S]{0,600}?radial-gradient/.test(V42), '出發鈕也吃到果凍（它用的是 .mbtn.warm，不在首頁選單底下）');
 
 head('⑦ 版本更新日誌的 10 國譯文');
 /* 只有「最新一版」的條目會走字典（ver.<v>.<n>）。漏一列，非中文語系就會整段
