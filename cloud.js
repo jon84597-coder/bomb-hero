@@ -1999,7 +1999,13 @@ function createCloud(options) {
           keyLen: k.length,
           keyPfx: pfx,
           keyHash: h,
-          keySet: !!k
+          keySet: !!k,
+          // 只看「名稱含 SUPABASE 的環境變數」叫什麼、值有多長（不露值本體）：
+          //   常見症狀是變數名打錯（多一個空白、少一個 E）或存檔時只存了一個。
+          envNames: Object.keys(env)
+            .filter(function (n) { return /SUPABASE/i.test(n); })
+            .sort()
+            .map(function (n) { return n + ':' + String(env[n] == null ? '' : env[n]).length; })
         };
       })(),
       dir: dir
