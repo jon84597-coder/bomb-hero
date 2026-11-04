@@ -15,3 +15,6 @@ bomberman-online/public/sw.js text eol=lf
 
 # v4.79：貼圖一律當二進位處理，避免 git 做任何換行轉換
 *.webp binary
+
+# 測試用的 HTML 原型也鎖 LF（避免工作檔 CRLF 讓字串比對出錯）
+*.html text eol=lf
