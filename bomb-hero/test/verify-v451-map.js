@@ -201,7 +201,7 @@ ok(G.spawnCell && G.spawnCell.x === 1 && G.spawnCell.y === 1, '正常關卡出�
 console.log('\n=== 7. 設定頁與入口 ===');
 ok(!/id="segSize2"/.test(html), '設定頁已移除「地圖尺寸（全域）」');
 ok(!/segWire\('segSize2'/.test(html), 'segSize2 的綁定也一起拿掉');
-ok(/id="mapTestRow"/.test(html), '說明頁有測試關入口容器');
+ok(!/id="mapTestRow"/.test(html), 'v4.84 起說明頁不再有測試關入口（T1~T5 已移除）');
 ok(/q\.get\('maptest'\)/.test(html), '支援 ?maptest=N 直開');
 
 console.log('\n=== 8. 版本 ===');

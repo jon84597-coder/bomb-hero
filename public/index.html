@@ -1302,17 +1302,38 @@ body.touch #scr-title .title-card {
 padding: 2px 8px 4px; min-height: 0; flex: 0 0 auto;
 display: flex; flex-direction: column; justify-content: center;
 }
-body.touch #scr-title .title-card .title-logo { width: clamp(160px, min(86vw, 108vh), 480px); }  
+/* v4.84：橫屏高度只剩 390~430px，LOGO 原本吃掉 340px，卡片完全被推到第二屏。
+   縮到 72vh 上限 340 —— 讓第一屏至少露出「新手教學條 ＋ 第一列卡片」的開頭，
+   玩家看得到下面有東西，才願意滑。 */
+body.touch #scr-title .title-card .title-logo { width: clamp(150px, min(58vw, 72vh), 340px); }
 body.touch .title-card .sub { display: none; }
 body.touch #scr-title .ver.beta { font-size: 9px; margin-top: 2px; }
 body.touch #scr-title .gap24 { height: 4px !important; }
 body.touch #scr-title .hint { display: none; }
+/* v4.84：v4.81 把選單改成「新手教學條 ＋ .mgrid 卡片」兩層，但這裡的舊規則還是
+   把 .menu 當成「3 欄 grid 裝 11 顆按鈕」→ #btnLearn 只分到 1 欄、又被 stretch
+   拉到跟右邊 3 列卡片一樣高，就變成那顆 251×319 的綠色大方塊。
+   改成 flex 直排：教學條吃整列的高度由內容決定，卡片區自己排 3 欄。 */
 body.touch #scr-title .menu {
-display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px 9px;
+display: flex; flex-direction: column; align-items: stretch; gap: 7px;
 max-width: none; width: 100%; margin: 5px 0 0;
 }
+body.touch #scr-title .menu > .mbtn#btnLearn { padding: 8px 12px 8px 46px; font-size: 15px; min-height: 0; }
+body.touch #scr-title .menu .mgrid { margin-top: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px 9px; }
 body.touch #scr-title .menu .mbtn { font-size: 14.5px; padding: 9px 8px; border-radius: 12px; }
 body.touch #scr-title .menu .mbtn small { font-size: 10px; margin-top: 1px; }
+/* 橫屏：暱稱標籤與輸入框並排，省下約 26px 的直向空間 */
+body.touch #scr-title .nickwrap { flex-direction: row; justify-content: center; gap: 8px; margin: 3px 0 2px; flex-wrap: nowrap; }
+body.touch #scr-title .nickwrap .nklabel { font-size: 11.5px; white-space: nowrap; }
+body.touch #scr-title .nickwrap .tinput { width: 190px; max-width: 190px; }
+/* v4.84：頂部「版本更新／作者公告」在橫屏原本吃掉 59px（整列 + 下緣 10px），
+   把它們改成浮在右上角（LOGO 右側本來就是空的），省下的一整列剛好讓
+   「新手教學條 ＋ 第一列卡片」擠進第一屏。 */
+body.touch #scr-title { position: relative; }
+body.touch #scr-title .toprow {
+position: absolute; top: 0; right: 4px; width: auto; max-width: min(46vw, 320px);
+margin: 0; gap: 5px; flex-wrap: nowrap; justify-content: flex-end; z-index: 4;
+}
 /* 其他選單頁：卡片改兩欄（同 PC 寬版排版），緊湊但不擠 */
 body.touch #scr-solo .card, body.touch #scr-battle .card,
 body.touch #scr-settings .card, body.touch #scr-online .card {
@@ -2711,6 +2732,14 @@ body.touch #scr-title .menu .mgrid .mbtn small { display: -webkit-box; font-size
 #scr-title .menu .c-multi { --c1: #ef6a8a; --c2: #b12c50; --c3: #74203a; --g1: rgba(255,170,200,.55); --g0: rgba(255,170,200,0); }
 #scr-title .menu .c-more  { --c1: #93a2b8; --c2: #56657c; --c3: #38434f; --g1: rgba(175,195,220,.45); --g0: rgba(175,195,220,0); }
 body.touch #scr-title .menu .mgrid .mbtn .betaTag { right: 6px; top: 5px; font-size: 8px; padding: 1px 4px; }
+/* v4.84：首頁暱稱列原本寫在行內 style，橫屏要改成「標籤＋輸入框」並排 → 抽成 class 才蓋得動 */
+#scr-title .nickwrap { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 8px 0 4px; }
+#scr-title .nickwrap .nklabel { font-size: 13px; font-weight: 600; color: #7a5a2e; text-shadow: 0 1px 0 rgba(255,255,255,.65); }
+#scr-title .nickwrap .tinput { width: 100%; max-width: 320px; }
+/* 桌機 820px 容器裡，新手教學條如果吃滿就是一條超長綠棒 → 置中限寬，當成單獨的主 CTA */
+@media (min-width: 900px) {
+  #scr-title .menu > .mbtn#btnLearn { max-width: 420px; margin-left: auto; margin-right: auto; }
+}
 
 /* ══════════════════════════════════════════════════════════════════
    v4.82：水晶高光按鈕（果凍質感 gel gloss ＋ 邊緣反光）
@@ -3159,10 +3188,56 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
 .lbrow .tm { font-weight: 900; color: #b4531a; font-variant-numeric: tabular-nums; }
 .lblist .empty { text-align: center; color: #8a7350; font-size: 13px; padding: 18px 6px; line-height: 1.65; }
 @media (max-width: 640px) { .lbrow { font-size: 12.5px; } .dailyrow { font-size: 12.5px; } }
+/* ══════════════════════════════════════════════════════════════════
+   v4.84：下滑提示（首頁＋所有選項頁共用一顆）
+   手機橫屏高度只有 390~430px，首頁／設定／說明常常還有一整排藏在下面，
+   頁面卻沒有任何暗示 → 新手以為「就只有這些」。
+   這顆膠囊只在「這一頁真的還能往下捲」時出現，捲到底自動淡出，點一下翻一屏。
+   z-index 58：在導覽列（60 以下）之上、教學遮罩／彈窗（60+）之下。
+   ══════════════════════════════════════════════════════════════════ */
+#scrollHint {
+  position: fixed; left: 50%; bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  z-index: 58; display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px 6px 11px; border-radius: 999px;
+  background: rgba(26,20,12,.80); border: 1px solid rgba(255,214,140,.42);
+  box-shadow: 0 8px 22px -10px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.16);
+  color: #ffe9c4; font-size: 11.5px; font-weight: 800; letter-spacing: .02em; line-height: 1;
+  white-space: nowrap;
+  opacity: 0; transform: translate(-50%, 14px); pointer-events: none;
+  transition: opacity .26s ease, transform .26s cubic-bezier(.2,.9,.25,1);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+#scrollHint.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; cursor: pointer; }
+/* 看過 2.2 秒就收成底部中央的小圓箭頭 —— 提示一次就夠，之後不該再擋住底下的按鈕與文字；
+   收起來後連點擊都不攔（pointer-events:none），玩家直接點得到下面的卡片。 */
+#scrollHint.on.dim {
+  opacity: .82; padding: 0; width: 30px; height: 30px; gap: 0; border-radius: 50%;
+  justify-content: center; transform: translate(-50%, 0); pointer-events: none;
+}
+#scrollHint.on.dim .sh-t { display: none; }
+#scrollHint.on.dim .sh-a { margin-top: -2px; }
+#scrollHint:active { transform: translate(-50%, 2px); }
+#scrollHint .sh-a {
+  width: 7px; height: 7px; flex: 0 0 auto; margin-top: -3px;
+  border-right: 2.5px solid #ffd166; border-bottom: 2.5px solid #ffd166;
+  transform: rotate(45deg); animation: shBob 1.15s ease-in-out infinite;
+}
+@keyframes shBob {
+  0%, 100% { transform: rotate(45deg) translate(0, -2px); opacity: .6; }
+  50% { transform: rotate(45deg) translate(0, 3px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { #scrollHint .sh-a { animation: none; } }
+/* 桌機用滾輪很直覺，而且版面本來就一屏放得下 → 不顯示 */
+@media (hover: hover) and (pointer: fine) { body:not(.touch) #scrollHint { display: none; } }
 </style>
 </head>
 <body>
 <div id="titleBg" aria-hidden="true"></div>
+<!-- v4.84：下滑提示（JS 依「這一頁是否還能往下捲」自動開關） -->
+<div id="scrollHint" role="status" aria-live="polite">
+  <span class="sh-t" id="scrollHintTxt">往下滑，下面還有更多</span>
+  <i class="sh-a" aria-hidden="true"></i>
+</div>
 
 <!-- 全域工具列：明顯的「上一頁」＋ 音樂／音效開關（固定在畫面角落，不隨遊戲畫面旋轉） -->
 <div id="navBar">
@@ -3203,7 +3278,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.83</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.84</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -3242,11 +3317,11 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.83</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.84</span></div>
       <div class="gap24" style="height:24px"></div>
-      <div class="nickwrap" style="margin:8px 0 4px;display:flex;flex-direction:column;gap:4px;align-items:center">
-        <label for="playerName" style="font-size:13px;font-weight:600;color:#7a5a2e;text-shadow:0 1px 0 rgba(255,255,255,.65)">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
-        <input class="tinput" id="playerName" maxlength="8" placeholder="可留空，系統自動取名字" style="width:100%;max-width:320px">
+      <div class="nickwrap">
+        <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
+        <input class="tinput" id="playerName" maxlength="8" placeholder="可留空，系統自動取名字">
       </div>
       <div class="menu" id="homeMenu">
         <button class="mbtn c-learn" id="btnLearn" data-ico="🎓"></button>
@@ -3373,7 +3448,6 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         <button type="button" data-ht="tip">💡 實戰訣竅</button>
       </div>
       <div class="helpbody" id="helpBody"></div>
-      <div class="mtrow" id="mapTestRow"></div>
       <div class="backrow">
         <button class="ghostbtn" data-back="1">← 回主選單</button>
       </div>
@@ -3878,7 +3952,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.83';
+const VERSION = '4.84';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4289,8 +4363,7 @@ ui.query|查詢|查询|Search|照会|조회|สอบถาม|Tra cứu|Зап�
 store.note|隨從 5000 金幣 · 單人／RPG 幫打|随从 5000 金币 · 单人／RPG 帮打|Followers · 5,000 gold · Solo / RPG|お供 5000ゴールド · ソロ／RPG|동료 5000골드 · 싱글／RPG|ลูกสมุน 5,000 เหรียญ · เดี่ยว／RPG|Đồng hành 5.000 vàng · Solo／RPG|Спутники · 5000 золота · Соло／RPG|Gefährten · 5.000 Gold · Solo／RPG|Seguaci · 5.000 oro · Solo／RPG
 help.desc|操作、道具、坐騎招式、場景機關、大逃殺、怪物圖鑑一次看懂 —— 點上面的分類切換。|操作、道具、坐骑招式、场景机关、大逃杀、怪物图鉴一次看懂 —— 点上面的分类切换。|Controls, items, mount skills, stage hazards, Battle Royale and the monster guide in one place — switch tabs above.|操作・アイテム・騎乗スキル・ステージの仕掛け・バトロワ・モンスター図鑑をまとめて確認 —— 上のタブで切り替え。|조작, 아이템, 탈것 기술, 스테이지 장치, 배틀로얄, 몬스터 도감을 한 번에 —— 위 탭에서 전환하세요.|การควบคุม ไอเทม ท่าของพาหนะ กลไกในด่าน แบทเทิลรอยัล และคู่มือมอนสเตอร์ ครบในที่เดียว —— สลับแท็บด้านบน|Điều khiển, vật phẩm, chiêu của thú cưỡi, cơ chế màn chơi, sinh tồn và sổ tay quái — xem tất cả ở đây, chuyển tab phía trên.|Управление, предметы, приёмы ездовых, ловушки уровней, королевская битва и бестиарий — всё здесь, переключайте вкладки сверху.|Steuerung, Items, Reittier-Fähigkeiten, Level-Mechaniken, Battle Royale und Monsterlexikon auf einen Blick — oben umschalten.|Comandi, oggetti, mosse delle cavalcature, meccaniche dei livelli, battle royale e bestiario in un colpo d'occhio — cambia scheda qui sopra.
 help.title|📖 遊戲說明|📖 游戏说明|📖 Game Guide|📖 ゲーム説明|📖 게임 설명|📖 คู่มือเกม|📖 Hướng dẫn|📖 Инструкция|📖 Spielanleitung|📖 Guida
-help.maptest|地圖生成測試（開發用 · 不公開）|地图生成测试（开发用 · 不公开）|Map-generation test (dev only · not public)|マップ生成テスト（開発用・非公開）|맵 생성 테스트 (개발용 · 비공개)|ทดสอบการสร้างแผนที่ (สำหรับผู้พัฒนา · ไม่เปิดเผย)|Kiểm thử tạo bản đồ (chỉ dev · không công khai)|Тест генерации карт (только для разработки · не для публики)|Kartengenerierungstest (nur Entwickler · nicht öffentlich)|Test di generazione mappa (solo sviluppo · non pubblico)
-help.maptestBtn|T{n}　{floor}格／{foes}怪|T{n}　{floor}格／{foes}怪|T{n} · {floor} tiles / {foes} foes|T{n}　{floor}マス／{foes}体|T{n} · {floor}칸 / {foes}마리|T{n} · {floor} ช่อง / {foes} ตัว|T{n} · {floor} ô / {foes} quái|T{n} · {floor} клеток / {foes} врагов|T{n} · {floor} Felder / {foes} Gegner|T{n} · {floor} caselle / {foes} mostri
+scrollHint|往下滑，下面還有更多|往下滑，下面还有更多|Scroll down for more|下にスクロールすると続きがあります|아래로 스크롤하면 더 있어요|เลื่อนลงเพื่อดูเพิ่มเติม|Cuộn xuống để xem thêm|Прокрутите вниз — есть ещё|Nach unten scrollen für mehr|Scorri giù per altro
 help.tab.basic|🎮 基本操作|🎮 基本操作|🎮 Basics|🎮 基本操作|🎮 기본 조작|🎮 การควบคุม|🎮 Cơ bản|🎮 Управление|🎮 Steuerung|🎮 Comandi
 help.tab.item|🎁 道具總覽|🎁 道具总览|🎁 Items|🎁 アイテム|🎁 아이템|🎁 ไอเทม|🎁 Vật phẩm|🎁 Предметы|🎁 Items|🎁 Oggetti
 help.tab.ride|🦖 坐騎招式|🦖 坐骑招式|🦖 Mount Skills|🦖 騎乗スキル|🦖 탈것 기술|🦖 ท่าพาหนะ|🦖 Chiêu thú cưỡi|🦖 Приёмы ездовых|🦖 Reittier-Fähigkeiten|🦖 Mosse cavalcatura
@@ -5097,6 +5170,10 @@ ver.4.81.1|🧹 首頁大掃除：14 顆按鈕縮成 6 張玩法卡＋「更多�
 ver.4.81.2|🎯 入口合併：挑戰 BOSS 併進單人闖關、排行榜併進每日挑戰、對戰與線上配對合成「多人對戰」|🎯 入口合并：挑战 BOSS 并入单人闯关、排行榜并入每日挑战、对战与在线配对合成「多人对战」|🎯 Entrances merged: Boss Raid sits inside Solo Quest, the leaderboard inside Daily Challenge, Battle and Online became one Multiplayer entry|🎯 入口を統合：ボス討伐は一人で挑戦へ、ランキングはデイリーチャレンジへ、対戦とオンラインは「マルチ対戦」に|🎯 입구 통합: 보스 토벌은 싱글 모험에, 랭킹은 데일리 챌린지에, 대전과 온라인 매치는 멀티플레이 하나로|🎯 รวมทางเข้า: ล่าบอสอยู่ในโหมดผจญภัยคนเดียว อันดับอยู่ในภารกิจรายวัน ต่อสู้กับออนไลน์รวมเป็น ผู้เล่นหลายคน|🎯 Gộp lối vào: Đánh BOSS trong Chơi đơn, bảng xếp hạng trong Thử thách ngày, Đối chiến và Online gộp thành Nhiều người chơi|🎯 Объединены входы: охота на босса — в одиночной игре, рейтинг — в ежедневном вызове, битва и онлайн — в одном «Мультиплеере»|🎯 Einstiege zusammengelegt: Boss-Raid steckt im Einzelspieler, die Rangliste in der Tagesherausforderung, Kampf und Online wurden zu Mehrspieler|🎯 Ingressi uniti: Assalto al BOSS dentro Giocatore singolo, classifica dentro Sfida giornaliera, Battaglia e Online diventano Multigiocatore
 ver.4.81.3|👤 帳號入口只留右上角那一顆（首頁原本還有一顆重複的）|👤 账号入口只留右上角那颗（首页原本还有一颗重复的）|👤 Only one account entry now — the chip in the top-right corner (the home screen used to have a duplicate)|👤 アカウント入口は右上の1か所だけ（ホームにも重複がありました）|👤 계정 입구는 오른쪽 위 하나만 (홈에 중복 버튼이 있었습니다)|👤 เหลือทางเข้าบัญชีเดียวที่มุมขวาบน (เดิมมีซ้ำบนหน้าหลัก)|👤 Chỉ còn một lối vào tài khoản ở góc phải trên (trước đây có thêm một nút trùng)|👤 Вход в аккаунт теперь один — плашка справа сверху (на главном был дубль)|👤 Nur noch ein Konto-Einstieg oben rechts (auf dem Startbildschirm gab es einen doppelten)|👤 Un solo accesso all'account, in alto a destra (prima ce n'era un doppione nella home)
 ver.4.81.4|📖 首頁導覽重寫：每一步都對得上新位置，講到抽屜裡的按鈕會自動展開|📖 首页导览重写：每一步都对得上新位置，讲到抽屉里的按钮会自动展开|📖 Home tour rewritten: every step matches the new layout, and the drawer opens by itself when needed|📖 ホームのガイドを書き直し：各ステップが新しい配置に対応し、ドロワー内のボタンでは自動で開きます|📖 홈 가이드 다시 작성: 각 단계가 새 배치와 맞고, 서랍 안 버튼을 설명할 때 자동으로 열립니다|📖 เขียนไกด์หน้าหลักใหม่: ทุกขั้นตรงกับตำแหน่งใหม่ และเปิดลิ้นชักอัตโนมัติเมื่อถึงปุ่มข้างใน|📖 Viết lại hướng dẫn trang chủ: mỗi bước khớp vị trí mới, tự mở ngăn khi nói tới nút bên trong|📖 Тур по главному экрану переписан: каждый шаг соответствует новой раскладке, шторка открывается сама|📖 Tour durch den Startbildschirm neu geschrieben: jeder Schritt passt zum neuen Layout, die Schublade öffnet sich automatisch|📖 Tour della home riscritta: ogni passo corrisponde al nuovo layout e il cassetto si apre da solo
+ver.4.84.1|📱 手機橫屏首頁不用再瞎猜：新手教學條和第一列卡片擠進第一屏，一開場就看得到下面還有東西|📱 手机横屏首页不用再瞎猜：新手教学条和第一列卡片挤进第一屏，一开场就看得到下面还有东西|📱 Landscape phones no longer open on a logo-only screen — the tutorial bar and the first row of cards now fit on the first screen|📱 スマホ横画面のホームで迷わなくなりました。チュートリアルバーとカード1列目が最初の画面に収まり、下に続きがあると分かります|📱 가로 모드 홈이 로고만 보이던 문제를 해결했습니다. 튜토리얼 바와 카드 첫 줄이 첫 화면에 들어와 아래에 더 있다는 걸 알 수 있습니다|📱 หน้าหลักแนวนอนไม่เห็นแค่โลโก้แล้ว — แถบสอนเล่นและแถวการ์ดแรกอยู่ในหน้าจอแรก ทำให้รู้ว่าด้านล่างยังมีอีก|📱 Trang chủ ngang không còn chỉ thấy logo — thanh hướng dẫn và hàng thẻ đầu tiên đã nằm trong màn hình đầu, thấy ngay là bên dưới còn nữa|📱 Главный экран в альбомной ориентации больше не показывает только логотип — панель обучения и первый ряд карточек помещаются на первом экране|📱 Der Startbildschirm im Querformat zeigt nicht mehr nur das Logo — Tutorial-Leiste und erste Kartenreihe passen jetzt auf den ersten Bildschirm|📱 La home in orizzontale non mostra più solo il logo — barra tutorial e prima riga di card entrano nella prima schermata
+ver.4.84.2|👇 新增「往下滑，下面還有更多」提示：首頁、設定、說明、單人闖關都通用，滑到底自動消失，看過兩秒就淡掉不擋按鈕|👇 新增「往下滑，下面还有更多」提示：首页、设置、说明、单人闯关都通用，滑到底自动消失，看过两秒就淡掉不挡按钮|👇 New "scroll down for more" hint on every scrollable screen — it fades after two seconds so it never blocks a button, and disappears at the bottom|👇 「下にスクロールすると続きがあります」のヒントを追加。ホーム・設定・説明・ひとりで攻略のすべてで出て、2秒で薄くなり、一番下まで行くと消えます|👇 "아래로 스크롤하면 더 있어요" 안내를 추가했습니다. 홈·설정·설명·1인 모드 모두에 나오고, 2초 뒤 옅어지며, 맨 아래에서 사라집니다|👇 เพิ่มคำใบ้ "เลื่อนลงเพื่อดูเพิ่มเติม" ทุกหน้าที่เลื่อนได้ จางลงหลังสองวินาทีจึงไม่บังปุ่ม และหายไปเมื่อเลื่อนสุด|👇 Thêm gợi ý "cuộn xuống để xem thêm" ở mọi trang cuộn được — mờ đi sau hai giây nên không che nút, và biến mất khi tới cuối|👇 Подсказка «прокрутите вниз» на всех прокручиваемых экранах — через две секунды бледнеет, не закрывая кнопки, и исчезает внизу|👇 Hinweis „nach unten scrollen" auf allen scrollbaren Seiten — wird nach zwei Sekunden blass, verdeckt keine Buttons und verschwindet ganz unten|👇 Nuovo avviso "scorri per altro" su ogni schermata scorrevole — dopo due secondi sbiadisce per non coprire i pulsanti e sparisce in fondo
+ver.4.84.3|🧩 修掉新手教學按鈕在橫屏變成綠色大方塊（舊的 3 欄選單規則把它拉成 251×319），電腦、手機直放、橫放現在都是正常橫條|🧩 修掉新手教学按钮在横屏变成绿色大方块（旧的 3 栏菜单规则把它拉成 251×319），电脑、手机竖放、横放现在都是正常横条|🧩 Fixed the tutorial button turning into a huge green square in landscape (an old 3-column rule stretched it to 251×319) — it is a normal bar on PC, portrait and landscape now|🧩 横画面でチュートリアルボタンが緑の大きな四角になっていた不具合を修正（古い3列ルールが 251×319 に引き伸ばしていました）。PC・縦・横すべて普通の横長バーになります|🧩 가로 모드에서 튜토리얼 버튼이 커다란 초록 사각형이 되던 문제를 고쳤습니다(예전 3열 규칙이 251×319로 늘렸습니다). 이제 PC·세로·가로 모두 일반 막대 모양입니다|🧩 แก้ปุ่มสอนเล่นที่กลายเป็นสี่เหลี่ยมเขียวใหญ่ในโหมดแนวนอน (กฎ 3 คอลัมน์เก่าดึงเป็น 251×319) ตอนนี้เป็นแถบปกติทั้งคอมพิวเตอร์ ตั้ง และนอน|🧩 Sửa nút hướng dẫn bị phóng thành ô vuông xanh khổng lồ ở chế độ ngang (quy tắc 3 cột cũ kéo thành 251×319) — giờ là thanh ngang bình thường trên PC, dọc và ngang|🧩 Исправлена кнопка обучения, превращавшаяся в альбомной ориентации в огромный зелёный квадрат (старое правило трёх колонок растягивало её до 251×319) — теперь это обычная полоса на ПК и в обеих ориентациях|🧩 Der Tutorial-Button wurde im Querformat zum großen grünen Quadrat (eine alte Drei-Spalten-Regel zog ihn auf 251×319) — jetzt ist er überall eine normale Leiste|🧩 Corretto il pulsante tutorial che in orizzontale diventava un enorme quadrato verde (una vecchia regola a 3 colonne lo allungava a 251×319) — ora è una barra normale su PC, verticale e orizzontale
+ver.4.84.4|🗑️ 說明頁最下面那排開發用的 T1～T5 測試地圖入口拿掉了，一般玩家不會再誤入|🗑️ 说明页最下面那排开发用的 T1～T5 测试地图入口拿掉了，普通玩家不会再误入|🗑️ Removed the developer-only T1–T5 test-map row at the bottom of the help page, so normal players cannot wander into it|🗑️ 説明ページ下部の開発用 T1～T5 テストマップ入口を削除しました。一般プレイヤーが誤って入ることはありません|🗑️ 설명 페이지 맨 아래의 개발용 T1~T5 테스트 맵 입구를 제거했습니다. 일반 플레이어가 실수로 들어갈 일이 없습니다|🗑️ เอาแถวทางเข้าด่านทดสอบ T1–T5 สำหรับนักพัฒนาออกจากล่างหน้าคำอธิบายแล้ว ผู้เล่นทั่วไปจะไม่หลงเข้าไป|🗑️ Đã bỏ hàng lối vào bản đồ thử T1–T5 (chỉ dành cho dev) ở cuối trang hướng dẫn, người chơi thường không vào nhầm nữa|🗑️ Убрал строку разработческих тестовых карт T1–T5 внизу страницы справки — обычный игрок туда больше не попадёт|🗑️ Die Entwickler-Testkarten T1–T5 unten auf der Hilfeseite wurden entfernt — normale Spieler landen dort nicht mehr|🗑️ Rimossa la riga delle mappe di test T1–T5 (solo per sviluppatori) in fondo alla pagina di aiuto: i giocatori normali non ci finiscono più
 ver.4.83.1|🖼️ 標題 LOGO 抓不到時自動換成文字標題 —— 單獨打開 index.html（旁邊沒有 spr/）也不會再露出破圖和一片 alt 文字|🖼️ 标题 LOGO 抓不到时自动换成文字标题 —— 单独打开 index.html（旁边没有 spr/）也不会再露出破图和一片 alt 文字|🖼️ If the title logo cannot load, a text logo takes its place — opening index.html on its own (no spr/ folder) no longer shows a broken image and raw alt text|🖼️ タイトル LOGO が読み込めないときは文字ロゴに自動で切り替わります — index.html を単体で開いても（spr/ フォルダがなくても）壊れた画像や alt テキストが出なくなりました|🖼️ 타이틀 로고를 불러오지 못하면 글자 로고로 자동 전환됩니다 — index.html만 단독으로 열어도(spr/ 폴더 없이도) 깨진 이미지와 alt 텍스트가 더 이상 보이지 않습니다|🖼️ ถ้าโหลดโลโก้หัวเรื่องไม่ได้ จะสลับเป็นโลโก้ตัวอักษรให้อัตโนมัติ — เปิด index.html เดี่ยว ๆ (ไม่มีโฟลเดอร์ spr/) ก็ไม่เห็นรูปแตกและข้อความ alt แล้ว|🖼️ Nếu không tải được logo tiêu đề, logo chữ sẽ tự thay thế — mở riêng index.html (không có thư mục spr/) không còn thấy ảnh hỏng và chữ alt nữa|🖼️ Если логотип не загрузился, вместо него автоматически появляется текстовый — при открытии одного index.html (без папки spr/) больше не видно битой картинки и текста alt|🖼️ Lädt das Titel-Logo nicht, erscheint automatisch ein Text-Logo — eine einzeln geöffnete index.html (ohne spr/-Ordner) zeigt kein kaputtes Bild und keinen alt-Text mehr|🖼️ Se il logo del titolo non si carica, subentra automaticamente un logo testuale — aprendo index.html da solo (senza cartella spr/) non si vedono più immagine rotta e testo alt
 ver.4.83.2|🧭 載入失敗的提示講清楚了：只缺美術圖會直接說「旁邊要有 spr/ 資料夾」或「跑本機伺服器」，不再叫人亂按「強制更新」|🧭 加载失败的提示讲清楚了：只缺美术图会直接说「旁边要有 spr/ 文件夹」或「跑本地服务器」，不再叫人乱按「强制更新」|🧭 The load-failure notice is specific now: if only artwork is missing it tells you to keep the spr/ folder next to the file or run a local server, instead of telling you to force-refresh|🧭 読み込み失敗の案内を具体的にしました。画像だけ足りない場合は「spr/ フォルダを一緒に置く」「ローカルサーバーで開く」と案内し、むやみに「強制更新」を押させる案内はやめました|🧭 로딩 실패 안내가 구체적이 되었습니다. 그림만 없으면 spr/ 폴더를 함께 두거나 로컬 서버로 열라고 알려 주고, 무작정 강제 새로고침을 누르라고 하지 않습니다|🧭 ข้อความแจ้งโหลดไม่สำเร็จชัดเจนขึ้น: ถ้าขาดแค่รูปภาพ จะบอกให้วางโฟลเดอร์ spr/ ไว้ข้างไฟล์ หรือรันเซิร์ฟเวอร์ในเครื่อง ไม่ใช่บอกให้กดบังคับอัปเดตมั่ว ๆ|🧭 Thông báo lỗi tải rõ ràng hơn: nếu chỉ thiếu hình, sẽ bảo bạn để thư mục spr/ cạnh tệp hoặc chạy máy chủ cục bộ, thay vì bảo bấm cập nhật cưỡng bức|🧭 Сообщение об ошибке загрузки стало конкретным: если не хватает только картинок, оно подскажет положить папку spr/ рядом с файлом или запустить локальный сервер, а не жать принудительное обновление|🧭 Der Ladefehler-Hinweis ist jetzt konkret: Fehlen nur Bilder, sagt er, den spr/-Ordner daneben zu legen oder einen lokalen Server zu starten — statt hart neu zu laden|🧭 L'avviso di caricamento fallito è più preciso: se mancano solo le immagini dice di tenere la cartella spr/ accanto al file o di avviare un server locale, invece di premere aggiorna forzatamente
 ver.4.83.3|📦 只多一個小函式和兩段 CSS，沒有新增任何檔案或網路請求 —— 主檔仍然是一個 HTML 加 spr/ 美術|📦 只多一个小函数和两段 CSS，没有新增任何文件或网络请求 —— 主档仍然是一个 HTML 加 spr/ 美术|📦 Just one small function and two CSS blocks — no new files, no new network requests; the game is still one HTML file plus the spr/ artwork|📦 小さな関数ひとつと CSS ふたつだけ。新しいファイルも通信も増えていません — 本体は今まで通り HTML 1 枚と spr/ の画像だけです|📦 작은 함수 하나와 CSS 두 블록만 추가했습니다. 새 파일도 네트워크 요청도 없습니다 — 본체는 여전히 HTML 하나와 spr/ 이미지입니다|📦 เพิ่มแค่ฟังก์ชันเล็ก ๆ หนึ่งอันกับ CSS สองบล็อก ไม่มีไฟล์ใหม่ ไม่มีคำขอใหม่ — ตัวเกมยังเป็น HTML ไฟล์เดียวกับภาพใน spr/|📦 Chỉ thêm một hàm nhỏ và hai khối CSS, không có tệp mới, không có yêu cầu mạng mới — game vẫn là một tệp HTML và thư mục ảnh spr/|📦 Добавлены лишь одна небольшая функция и два блока CSS — ни новых файлов, ни новых запросов; игра по-прежнему один HTML плюс папка spr/|📦 Nur eine kleine Funktion und zwei CSS-Blöcke — keine neuen Dateien, keine neuen Requests; das Spiel bleibt eine HTML-Datei plus spr/-Grafiken|📦 Solo una piccola funzione e due blocchi CSS — nessun nuovo file, nessuna nuova richiesta; il gioco resta un HTML più la cartella spr/
@@ -6616,6 +6693,8 @@ const Screen = (function () {
     try { if (typeof hideDoorHint === 'function') hideDoorHint(); } catch (e) {}
     try { updateNavUI(); } catch (e) {}
     try { window.scrollTo(0, 0); } catch (e) {}
+    // v4.84：換頁後版面高度會變 → 重新判斷這一頁要不要顯示下滑提示
+    try { if (window.ScrollHint) setTimeout(function () { window.ScrollHint.sync(); }, 60); } catch (e) {}
     try { if (typeof refreshers !== 'undefined') refreshers.forEach(function (f) { try { f(); } catch (e) {} }); } catch (e) {}
   }
   function show(name) {
@@ -6657,6 +6736,128 @@ const Screen = (function () {
     }
   })();
 window.addEventListener('popstate', function () { Screen.onPop(); });
+
+/* ══════════════════════════════════════════════════════════════════
+   v4.84：下滑提示
+   手機橫屏高度只有 390~430px，首頁／設定／說明／商店常常還有一整排在下面，
+   但畫面沒有任何暗示 → 新手以為「就只有這些」，根本不知道要滑。
+   這支負責：找出「這一頁現在真正在滾的那個容器」，還有剩餘可滾距離就顯示膠囊。
+   找法依序是 ① 整頁（document）② 頁面內 overflow:auto/scroll 又確實溢出的大容器。
+   只在換頁／縮放／點擊後重算，捲動時只做加減法，不會每幀掃 DOM。
+   ══════════════════════════════════════════════════════════════════ */
+var ScrollHint = (function () {
+  // 只挑「有可能當滾動容器」的幾個，不對 .screen * 做全掃（上千個元素會卡）
+  var CAND = '.wrap,.card,.qcard,.helpbody,.lblist,.shopcard,#brOv,#ovBox,.stagegrid,.lobby';
+  var MIN_GAP = 16;          // 少於這個像素就不算「還有東西」（避免亞像素誤判）
+  var el = null, target = null, isDoc = false, on = false, timer = 0, inited = false, dimT = 0;
+
+  function hide() {
+    on = false;
+    clearTimeout(dimT); dimT = 0;
+    if (el) { el.classList.remove('on'); el.classList.remove('dim'); }
+  }
+  function raise() {
+    if (!el) return;
+    el.classList.remove('dim');
+    clearTimeout(dimT);
+    dimT = setTimeout(function () { if (on && el) el.classList.add('dim'); }, 2200);
+  }
+  function show() {
+    if (on) return;
+    on = true;
+    if (el) el.classList.add('on');
+    raise();
+  }
+  // 遊戲中不提示（場上有自己的 UI，膠囊會擋住操作）
+  function blocked() {
+    try { if (Screen.current === 'game') return true; } catch (e) {}
+    return false;
+  }
+  function findTarget() {
+    if (blocked()) return null;
+    var de = document.documentElement;
+    var docGap = de.scrollHeight - (window.innerHeight || de.clientHeight);
+    var bodyOverflow = '';
+    try { bodyOverflow = getComputedStyle(document.body).overflowY; } catch (e) {}
+    // 整頁可滾（首頁橫屏就是這種）——但 body 鎖住捲動時不算
+    if (docGap > MIN_GAP && bodyOverflow !== 'hidden') return { doc: true };
+    var best = null, bestGap = MIN_GAP;
+    var list = document.querySelectorAll(CAND);
+    for (var j = 0; j < list.length; j++) {
+      var e = list[j];
+      var gap = e.scrollHeight - e.clientHeight;
+      if (gap <= bestGap) continue;
+      var st = null;
+      try { st = getComputedStyle(e); } catch (err) { continue; }
+      if (st.overflowY !== 'auto' && st.overflowY !== 'scroll') continue;
+      if (e.clientHeight < 80) continue;      // 藏在 display:none 的頁面 clientHeight 是 0
+      best = e; bestGap = gap;
+    }
+    return best ? { el: best } : null;
+  }
+  function refresh() {
+    if (!inited) return;
+    var t = findTarget();
+    isDoc = !!(t && t.doc);
+    target = (t && t.el) ? t.el : null;
+    if (!t) { hide(); return; }
+    check();
+  }
+  function check() {
+    if (!inited) return;
+    var top, gap;
+    if (isDoc) {
+      top = window.pageYOffset || document.documentElement.scrollTop || 0;
+      gap = document.documentElement.scrollHeight - (window.innerHeight || document.documentElement.clientHeight);
+    } else if (target) {
+      top = target.scrollTop || 0;
+      gap = target.scrollHeight - target.clientHeight;
+    } else { hide(); return; }
+    if (gap - top > MIN_GAP) {
+      if (!on) show();
+      else if (top < 8 && el && el.classList.contains('dim')) raise();   // 滑回頂端再看一次
+    } else hide();
+  }
+  function later(ms) {
+    clearTimeout(timer);
+    timer = setTimeout(refresh, ms);
+  }
+  function init() {
+    if (inited) return;
+    el = $id('scrollHint');
+    if (!el) return;
+    inited = true;
+    // 點一下往下翻 3/4 屏（比一屏少一點，保留上下文，玩家看得出滑動了）
+    el.addEventListener('click', function () {
+      var step = Math.round((isDoc ? window.innerHeight : (target ? target.clientHeight : 300)) * 0.75);
+      try { AudioSys.ensure(); AudioSys.sfx('click'); } catch (e) {}
+      try {
+        if (isDoc) window.scrollBy({ top: step, behavior: 'smooth' });
+        else if (target) target.scrollBy({ top: step, behavior: 'smooth' });
+      } catch (e) {
+        if (isDoc) window.scrollTo(0, (window.pageYOffset || 0) + step);
+        else if (target) target.scrollTop += step;
+      }
+      later(320);
+    });
+    // scroll 不冒泡，用捕獲階段一次接住所有容器（含 document）
+    document.addEventListener('scroll', check, true);
+    window.addEventListener('resize', function () { later(120); });
+    window.addEventListener('orientationchange', function () { later(260); });
+    // 點任何按鈕（展開「更多」、切分頁、開面板）→ 版面高度會變，稍後重算
+    document.addEventListener('click', function () { later(240); }, true);
+    refresh();
+    later(360);        // 字型／圖片載入完高度會再變一次
+    // LOGO 這種大圖在行動網路常常 360ms 還沒到 → 整頁載入完成後補算一次
+    if (document.readyState === 'complete') later(60);
+    else window.addEventListener('load', function () { later(60); });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else { setTimeout(init, 0); }
+  return { sync: refresh, check: check, _find: findTarget, get active() { return on; } };
+})();
+try { window.ScrollHint = ScrollHint; } catch (e) {}
 
 // ---------- 全域工具列：上一頁 ＋ 音樂／音效開關 ----------
 function updateNavUI() {
@@ -22690,31 +22891,6 @@ const Help = (function () {
     return h;
   }
 
-/* v4.51：說明頁最下方的地圖測試關入口（不公開）——
-   v4.77：改成可重繪的函式，換語言時標題與 T1~T5 才會跟著換 */
-function buildMapTestRow() {
-  const row = $id('mapTestRow');
-  if (!row) return;
-  const mk = function (txt) {
-    return '<span style="display:inline-block;padding:5px 9px;border-radius:8px;font-size:12px;' +
-      'background:#9fd3ff;color:#0b1220;font-weight:700;cursor:pointer;margin:3px 4px 0 0">' + txt + '</span>';
-  };
-  let h = '<div style="margin:14px 0 2px;font-size:11.5px;color:#7f8ca3;letter-spacing:.4px">' +
-    t('help.maptest') + '</div>';
-  MAPTEST.forEach(function (m) {
-    h += mk(t('help.maptestBtn', { n: m.n, floor: m.floor, foes: m.foes }));
-  });
-  row.innerHTML = h;
-  row.onclick = function (e) {
-    const t2 = e.target;
-    if (!t2 || t2.tagName !== 'SPAN') return;   // 標題是 div，不在 span 名單裡
-    const idx = Array.prototype.indexOf.call(row.querySelectorAll('span'), t2);
-    if (idx < 0) return;
-    AudioSys.ensure(); AudioSys.sfx('click');
-    startMapTest(idx + 1);                      // span[0] = T1
-  };
-}
-try { buildMapTestRow(); } catch (__e) { __bootFail('mapTestRow', __e); }
 
   function render() {
     const box = $id('helpBody');
@@ -22722,7 +22898,6 @@ try { buildMapTestRow(); } catch (__e) { __bootFail('mapTestRow', __e); }
     // v4.77：標題與副標原本是靜態中文靠即時翻譯層，切語言時若畫面藏著就不會被翻到 → 這裡直接注入
     const h2t = $id('helpTitle'); if (h2t) h2t.textContent = t('help.title');
     const hdt = $id('helpDesc'); if (hdt) hdt.textContent = t('help.desc');
-    try { if (typeof buildMapTestRow === 'function') buildMapTestRow(); } catch (e) {}
     const tb = $id('helpTabs');
     if (tb) {
       Array.prototype.forEach.call(tb.querySelectorAll('button'), function (b) {
@@ -24713,6 +24888,7 @@ const Tut = (function () {
         if (br) br.innerHTML = t('br.btnTop') + '<span class="hotTag">HOT</span><small>' + t('br.btnTopSub') + '</small>';
         const b = $id('btnLearn');
         if (b) b.innerHTML = t('learn.tag') + '<span id="learnTag">' + t('learn.badge') + '</span><small>' + t('learn.btnSub') + '</small>';
+        const sh = $id('scrollHintTxt'); if (sh) sh.textContent = t('scrollHint');
         const tl = $id('learnTitle'); if (tl) tl.textContent = t('learn.title');
         const d = $id('learnDesc'); if (d) d.textContent = t('learn.desc');
         const g = $id('btnTourAll'); if (g) g.textContent = t('learn.start');
@@ -24832,7 +25008,12 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.83', date: '2026-11-04', now: true, items: [
+  { v: '4.84', date: '2026-11-04', now: true, items: [
+    '📱 手機橫屏首頁不用再瞎猜：新手教學條和第一列卡片擠進第一屏，一開場就看得到下面還有東西',
+    '👇 新增「往下滑，下面還有更多」提示：首頁、設定、說明、單人闖關都通用，滑到底自動消失，看過兩秒就淡掉不擋按鈕',
+    '🧩 修掉新手教學按鈕在橫屏變成綠色大方塊（舊的 3 欄選單規則把它拉成 251×319），電腦、手機直放、橫放現在都是正常橫條',
+    '🗑️ 說明頁最下面那排開發用的 T1～T5 測試地圖入口拿掉' ] },
+  { v: '4.83', date: '2026-11-04', now: false, items: [
     '🖼️ 標題 LOGO 抓不到時自動換成文字標題 —— 單獨打開 index.html（旁邊沒有 spr/）也不會再露出破圖和一片 alt 文字',
     '🧭 載入失敗的提示講清楚了：只缺美術圖會直接說「旁邊要有 spr/ 資料夾」或「跑本機伺服器」，不再叫人亂按「強制更新」',
     '📦 只多一個小函式和兩段 CSS，沒有新增任何檔案或網路請求 —— 主檔仍然是一個 HTML 加 spr/ 美術' ] },
