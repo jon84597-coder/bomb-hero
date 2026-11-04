@@ -506,3 +506,68 @@ deep violet shell with faint indigo marbling and a soft inner glow`），其餘�
 
 **新增任何 spr/ 檔都要同步 `spr/_list.json`**（離線預熱清單），
 `test/verify-v479.js` 會數檔案數量，忘了加就會紅。
+
+## E. 跑動循環（v4.88 實際做法，之後的新坐騎照抄）
+
+使用者對「只有一張圖 + 上下抖」的評語是「像滑行」。要做到**翅膀拍動、兩腳交替**，
+需要多張圖輪播，而且**三張必須共用同一塊畫布**，否則播放時會忽大忽小、腳底上下跳。
+
+### 生圖：只改相位，不要重畫角色
+
+對同一張已經定稿的坐騎圖做 image-to-image（`input_fidelity: high`），
+prompt 開頭先把「不准變的東西」全部列死：
+
+```
+Same EXACT <animal> character as the reference image — identical body feathers,
+identical wing feathers, identical saddle blanket with straps and buckle,
+identical head, identical camera angle, identical painterly PBR rendering,
+identical warm key light from upper-left with cool rim light.
+
+Change ONLY the running phase. This is frame N of a run cycle: <翅膀相位>，<哪隻腳著地>，<另一隻腳怎麼擺>。
+
+Keep the exact same scale, same foot contact height, same silhouette width as the reference.
+Full body head to toe, three-quarter view facing <方向>.
+
+NEGATIVE: different character, different colors, different saddle, text, logo,
+watermark, frame, ground shadow, ground plane, watercolor, ink outline,
+flat vector icon, sticker, emoji, chibi logo mascot, plastic toy, low-poly,
+extra limbs, deformed anatomy, motion blur.
+```
+
+**兩幀要挑「左右腳互補」的組合**（A 幀左腳著地／右腳前抬，B 幀反過來），
+這樣 1↔2 交替就是完整循環；站立幀（翅膀張開、最好看的那張）只在靜止時用。
+本次三幀的分配：`0 = 站立`、`1 = 翅下壓＋左腳著地`、`2 = 翅高舉＋右腳著地`。
+
+### 去背：白底比黑底難
+
+黑底泛洪（`cut_black`）可以照用；**白底不行** —— 生圖的白底帶 210~250 的漸層與暗角，
+固定門檻的泛洪從邊界根本進不去（會留下 45% 的假前景）。改用：
+
+1. `L >= 238` → 背景；`L >= 150 且彩度 <= 14` → 落地灰影（一起當背景）
+2. 取**最大連通塊**（丟浮水印、暗角碎塊）
+3. **不要填洞**：眼睛高光那種小洞交給 `MaxFilter(3)` 補；翅膀與脖子之間的大空隙
+   要留透明（填了會變成一塊白斑，v4.88 實測踩過）
+
+### 對齊：用「鞍布」當錨點，不要用 bbox
+
+每張圖的 bbox 差異很大（翅膀舉高那張會高出 30%），按 bbox 縮放會讓身體忽大忽小。
+正確做法（`art/mounts/make_ostrich_frames.py`）：
+
+| 軸 | 錨點 | 原因 |
+|---|---|---|
+| 縮放 | 鞍布的藍綠格紋 **bbox 高度**（三幀統一成同一個像素值） | 鞍布貼在身體上，比輪廓穩；翅膀張開不影響 |
+| x | 鞍布中心 | 翅膀左右張開時身體不會左右漂 |
+| y | **圖片底邊**（落地那隻腳） | 三幀踩同一條地面線，跑起來不上下跳 |
+
+鞍布偵測（HSV 太慢，直接 RGB 判斷即可）：
+`g > 105 && b > 95 && (g-r) > 35 && (b-r) > 18 && abs(g-b) < 55` → 再取最大連通塊。
+找不到就 `SystemExit`，不要靜默用 bbox 頂替。
+
+### 引擎端
+
+- `MOUNT_ART[key]` 加 `frames: [null, "nav1.webp", "nav2.webp"]`（`null` = 就是 `u`，
+  **不要重複寫同一個路徑字面**，`verify-v479` 會多計）＋ `run: [1, 2]` ＋ `bodyRatio`
+- `bodyRatio = 角色本體高 / 畫布高`，`DH = T*1.86 / bodyRatio`，
+  這樣「畫布變高（留舉翅空間）」不會讓角色在遊戲裡變大
+- 播放節奏 `Math.floor(walkT * 9) % run.length`（9 張/秒）；離地用最後一幀
+- 騎手位置要跟著改：`rideX / rideY` 用實機截圖目測校（鴕鳥鞍布在身體中央、比龍高很多）

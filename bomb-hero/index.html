@@ -3435,7 +3435,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.87</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.88</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -3476,7 +3476,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.87</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.88</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4145,7 +4145,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.87';
+const VERSION = '4.88';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -5981,8 +5981,15 @@ const FOE_ART = {
 const MOUNT_ART = {
   green: { dir: +1, asp: 1.1686, u: "spr/mount-art-green.webp" },
   red: { dir: +1, asp: 1.1732, u: "spr/mount-art-red.webp" },
-  // v4.87：鴕鳥神獸（紫蛋孵出來的坐騎）—— 高瘦、長腿，asp 比龍小很多
-  ostrich: { dir: +1, asp: 0.7812, u: "spr/mount-art-ostrich.webp" }
+  // v4.88：鴕鳥神獸（紫蛋孵出來的坐騎）—— 高瘦長腿，三張圖。
+  // frames 三張共用同一塊畫布（鞍布大小、腳底線都對齊過），bodyRatio = 角色本體高 / 畫布高。
+  // run = 移動時交替的兩幀（左腿／右腿剛好互補），0 是站立姿勢（翅膀張開最好看）。
+  ostrich: {
+    dir: +1, asp: 0.7438, bodyRatio: 0.93,
+    u: "spr/mount-art-ostrich.webp",
+    frames: [null, "spr/mount-art-ostrich-run1.webp", "spr/mount-art-ostrich-run2.webp"],
+    run: [1, 2]
+  }
 };
 
 const IMG_PARTS = {
@@ -21360,18 +21367,29 @@ const MountArt = (function () {
   try {
     return (function () {
       const imgs = {}, ready = {};
+      // v4.88：一個 key 可以有多張 frames（鴕鳥跑動三幀）；第 0 幀用原 key，其餘存成 "key#1"、"key#2"
+      function slot(k, i) { return i ? k + '#' + i : k; }
       function load() {
         if (typeof Image === 'undefined' || typeof MOUNT_ART === 'undefined') return;
         Object.keys(MOUNT_ART).forEach(function (k) {
-          const im = new Image();
-          im.onload = function () { ready[k] = true; };
-          im.onerror = function () { ready[k] = false; };
-          try { im.src = MOUNT_ART[k].u; } catch (e) {}
-          imgs[k] = im;
+          const sp = MOUNT_ART[k] || {};
+          // frames[0] 可以留 null 表示「就是 u」，避免同一個路徑字面寫兩次
+          const urls = sp.frames && sp.frames.length ? sp.frames.map(function (u) { return u || sp.u; }) : [sp.u];
+          urls.forEach(function (u, i) {
+            const key = slot(k, i);
+            const im = new Image();
+            im.onload = function () { ready[key] = true; };
+            im.onerror = function () { ready[key] = false; };
+            try { im.src = u; } catch (e) {}
+            imgs[key] = im;
+          });
         });
       }
-      function has(k) { return !!(MOUNT_ART && MOUNT_ART[k] && ready[k] && imgs[k] && imgs[k].naturalWidth); }
-      function get(k) { return has(k) ? imgs[k] : null; }
+      function has(k, i) {
+        const key = slot(k, i || 0);
+        return !!(MOUNT_ART && MOUNT_ART[k] && ready[key] && imgs[key] && imgs[key].naturalWidth);
+      }
+      function get(k, i) { return has(k, i || 0) ? imgs[slot(k, i || 0)] : null; }
       function readyCount() { return Object.keys(ready).filter(function (k) { return ready[k]; }).length; }
       return { load: load, has: has, get: get, readyCount: readyCount, imgs: imgs };
     })();
@@ -21396,9 +21414,12 @@ function softShadow(x, y, rx, ry, alpha) {
 function drawMountSprite(g, key, x, footY, H, side, a) {
   const sp = (typeof MOUNT_ART !== 'undefined') ? MOUNT_ART[key] : null;
   if (!sp) return false;
-  const im = (typeof MountArt !== 'undefined') ? MountArt.get(key) : null;
-  if (!im) return false;
   a = a || {};
+  // v4.88：多幀坐騎（鴕鳥跑動三幀）。指定幀沒載到就退回第 0 幀，不會開天窗。
+  const fi = Math.max(0, a.frame | 0);
+  let im = (typeof MountArt !== 'undefined') ? MountArt.get(key, fi) : null;
+  if (!im && fi) im = (typeof MountArt !== 'undefined') ? MountArt.get(key, 0) : null;
+  if (!im) return false;
   const W = H * sp.asp;
   const w = a.walk || 0;
   const moving = !!a.moving;
@@ -21480,32 +21501,40 @@ function drawDino(p, T) {
 }
 
 // v4.87：鴕鳥神獸。高瘦長腿、跳躍時整隻離地，影子跟著縮小變淡。
+// v4.88：跑動改成三幀貼圖輪播（翅膀拍動＋兩腳交替），靜止與跳躍各有專屬幀。
 function drawOstrich(p, T) {
   const x = p.x, y = p.y;
   const fx = DIRS[p.facing];
   const side = fx.x !== 0 ? fx.x : 1;
   const lift = p.jumpLift || 0;
-  const DH = T * 1.86;                       // 鴕鳥比龍高一大截（長脖子）
+  const bodyH = T * 1.86;                    // 角色本體高（不含舉翅多出來的畫布空間）
+  const sp = (typeof MOUNT_ART !== 'undefined' && MOUNT_ART.ostrich) ? MOUNT_ART.ostrich : null;
+  const DH = bodyH / ((sp && sp.bodyRatio) || .93);
   const footY = y + T * .52 - lift;
-  const bob = p.moving ? Math.abs(Math.sin(p.walkT * 15)) * .6 : Math.sin((p.dinoT || 0) * 2.6) * .5;
+  const walkT = p.walkT || 0;
+  // 幀選擇：離地 → 翅膀高舉那幀；移動 → run 兩幀交替（9 次/秒）；靜止 → 站立幀
+  let frame = 0;
+  if (lift > T * .16) frame = 2;
+  else if (p.moving && sp && sp.run) frame = sp.run[Math.floor(walkT * 9) % sp.run.length];
+  const bob = p.moving ? Math.abs(Math.sin(walkT * 15)) * T * .022 : Math.sin((p.dinoT || 0) * 2.6) * T * .012;
   const k = clamp(1 - lift / (T * 1.0), 0, 1);
   softShadow(x, y + T * .54, T * .40 * (.55 + .45 * k), T * .12 * (.55 + .45 * k), .30 * (.30 + .70 * k));
   const drew = drawMountSprite(ctx, 'ostrich', x, footY - bob, DH, side, {
-    walk: (p.walkT || 0) * 15, moving: !!p.moving, amp: 1.3, idle: p.dinoT || 0
+    walk: walkT * 15, moving: !!p.moving, amp: 1.15, idle: p.dinoT || 0, frame: frame
   });
   if (!drew) {
     // 圖還沒載入 → 用簡化剪影代替，不會開天窗
     ctx.fillStyle = '#f3e8d2';
-    ctx.beginPath(); ctx.ellipse(x, footY - DH * .40, T * .34, T * .26, 0, 0, 6.283); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x, footY - bodyH * .40, T * .34, T * .26, 0, 0, 6.283); ctx.fill();
     ctx.strokeStyle = '#e8a15c'; ctx.lineWidth = T * .07; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(x + side * T * .16, footY - DH * .40);
-    ctx.quadraticCurveTo(x + side * T * .26, footY - DH * .62, x + side * T * .20, footY - DH * .74);
+    ctx.beginPath(); ctx.moveTo(x + side * T * .16, footY - bodyH * .40);
+    ctx.quadraticCurveTo(x + side * T * .26, footY - bodyH * .62, x + side * T * .20, footY - bodyH * .74);
     ctx.stroke();
     ctx.fillStyle = '#c9a7f2';
-    ctx.beginPath(); ctx.arc(x + side * T * .20, footY - DH * .76, T * .12, 0, 6.283); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + side * T * .20, footY - bodyH * .76, T * .12, 0, 6.283); ctx.fill();
     ctx.strokeStyle = '#e8a15c'; ctx.lineWidth = T * .055;
     [-.10, .10].forEach(function (o) {
-      ctx.beginPath(); ctx.moveTo(x + o * T, footY - DH * .18); ctx.lineTo(x + o * T, footY - T * .04); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + o * T, footY - bodyH * .18); ctx.lineTo(x + o * T, footY - T * .04); ctx.stroke();
     });
   }
   // 跳躍氣流：起跳／落地的白色弧線（只在離地時出現）
@@ -21526,14 +21555,16 @@ function drawOstrich(p, T) {
   if (p.noLabel) return;
   const cd = p.fireCd || 0;
   const label = cd > 0 ? t('mount.cd', { n: cd.toFixed(1) }) : t('mount.jump');
+  // v4.88：鴕鳥比龍高（本體 1.86 格），提示牌要抬到頭頂之上，不然會壓在騎手臉上
+  const labelY = y - T * 2.08;
   ctx.font = '900 ' + Math.max(9, Math.round(T * .23)) + 'px "Microsoft JhengHei", sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const tw = ctx.measureText(label).width;
   ctx.fillStyle = cd > 0 ? 'rgba(28,20,44,.76)' : 'rgba(78,44,120,.84)';
-  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - tw / 2 - 6, y - T * 1.82, tw + 12, T * .36, T * .13); ctx.fill(); }
-  else ctx.fillRect(x - tw / 2 - 6, y - T * 1.82, tw + 12, T * .36);
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - tw / 2 - 6, labelY, tw + 12, T * .36, T * .13); ctx.fill(); }
+  else ctx.fillRect(x - tw / 2 - 6, labelY, tw + 12, T * .36);
   ctx.fillStyle = cd > 0 ? '#d9c9ff' : '#f0e6ff';
-  ctx.fillText(label, x, y - T * 1.64);
+  ctx.fillText(label, x, labelY + T * .18);
   ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
 }
 
@@ -22350,11 +22381,14 @@ function bombUnderFoot(p) {
 }
 function drawPlayer(p, T) {
   if (p.dino) drawDino(p, T);
-  // 騎乘時坐到小龍背上的鞍座（往頭的反方向偏一點，兩邊都看得到）
+  // 騎乘時坐到坐騎背上的鞍座
+  // 恐龍的鞍座在「頭的反方向」；鴕鳥的鞍布在身體中央偏頭那一側（頭在右前），而且高得多，
+  // 所以往反方向偏一點點、坐得更高（v4.88 依三幀對齊後的鞍布位置實測而來）
   const rideSide = (DIRS[p.facing] && DIRS[p.facing].x) || 1;
-  const rideX = (p.ostrich ? .16 : .22);
+  const rideX = (p.ostrich ? .10 : .22);
+  const rideY = (p.ostrich ? .74 : .50);
   const x = p.x - (p.dino ? rideSide * T * rideX : 0);
-  const y = p.y - (p.carry ? T * .2 : 0) - (p.dino ? T * .50 : 0) - (p.jumpLift || 0);
+  const y = p.y - (p.carry ? T * .2 : 0) - (p.dino ? T * rideY : 0) - (p.jumpLift || 0);
   // v1.7：獲勝（或歡呼中）會開心地一直跳
   const jumpY = p.cheerT > 0 ? Math.abs(Math.sin(Game.gameT * 9)) * T * .30 : 0;
   const blink = p.invuln > 0 && Math.floor(Game.gameT * 10) % 2 === 0;
@@ -26149,7 +26183,12 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.87', date: '2026-11-04', now: true, items: [
+  { v: '4.88', date: '2026-11-05', now: true, items: [
+    '🏃 鴕鳥神獸會<b>跑了</b>：多了兩張跑動圖，移動時<b>翅膀上下拍、兩腳交替</b>（9 張/秒切換），停下來是翅膀張開的站姿，跳起來是雙翼高舉',
+    '🎯 三張圖用<b>鞍布格紋當錨點</b>對齊：大小、腳底線完全一致，跑起來不會忽大忽小或上下跳',
+    '🧍 騎乘位置修正：原本人會被畫到翅膀上，現在坐在鞍布正中央（鴕鳥比龍高，坐姿也跟著抬高）',
+    '🪧 坐騎提示牌（跳／冷卻）抬到頭頂之上，不再壓在騎手臉上' ] },
+  { v: '4.87', date: '2026-11-04', now: false, items: [
     '🪶 新坐騎<b>鴕鳥神獸</b>：紫色蛋跟恐龍蛋一起隨機掉，跑速 1.45 倍；原本的 🔥 鍵變成<b>爪子鍵</b>，按下去往前跳 2 格（中間一格是牆也跳得過去，兩層牆就不行）',
     '💥 跳躍中<b>完全免疫</b>，落地<b>半徑 1 格震波</b>打怪 —— 但<b>不會破壞任何一堵牆</b>；單人、RPG、對戰都有，大逃殺打倒 BOSS 直接送你一隻',
     '🎁 首頁左下角新增 <b>🎁 每日好禮</b>：7 天簽到（第 3／5 天送票券、第 7 天雙票券＋大金幣）＋<b>每天 3 個任務</b>，任務用日期抽籤，全球同一天同一組',
