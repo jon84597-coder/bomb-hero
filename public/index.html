@@ -2665,6 +2665,299 @@ body.touch #scr-title .menu .mgrid .mbtn small { display: -webkit-box; font-size
 #scr-title .menu .c-multi { --c1: #ef6a8a; --c2: #b12c50; --c3: #74203a; --g1: rgba(255,170,200,.55); --g0: rgba(255,170,200,0); }
 #scr-title .menu .c-more  { --c1: #93a2b8; --c2: #56657c; --c3: #38434f; --g1: rgba(175,195,220,.45); --g0: rgba(175,195,220,0); }
 body.touch #scr-title .menu .mgrid .mbtn .betaTag { right: 6px; top: 5px; font-size: 8px; padding: 1px 4px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   v4.82：水晶高光按鈕（果凍質感 gel gloss ＋ 邊緣反光）
+   重點是「鏡面要有邊界、邊緣要有光」，不是霧霧的一片漸層。五層光學：
+     ① 左上橢圓聚光點（硬邊）—— 光源打在球面上的小亮斑
+     ② 果凍鏡面：42% 處直接硬切，做出清楚的上下分界線
+        白色 alpha 只給到 .42 —— 再高顏色就被洗成粉彩，會失去主題色
+     ③ 底部反光帶：下緣反光，但**壓到 86% 以下**，避開副標題文字
+     ④ 下半段壓暗，撐出厚度
+     ⑤ 本體色階
+   邊緣反光靠三層 inset：整圈 2px 內亮邊（斜角）＋ 上緣 3px 銳光 ＋ 下緣 3px 反光。
+   全部寫在元素自己的 background／box-shadow，不新增偽元素 —— ::before 已被
+   data-ico 圖示佔用，而絕對定位的 ::after 繪製層級高於行內文字，標題會整片變灰。
+   圖層順序＝由上往下，第一層最上面。
+   ══════════════════════════════════════════════════════════════════ */
+#scr-title .menu .mbtn {
+  border: 2px solid rgba(0,0,0,.26);
+  background:
+    radial-gradient(ellipse 18% 10% at 24% 11%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.40) 56%, rgba(255,255,255,0) 58%),
+    radial-gradient(ellipse 88% 44% at 50% -2%, rgba(255,255,255,.40) 0%, rgba(255,255,255,.26) 94%, rgba(255,255,255,.08) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 86%, rgba(255,255,255,.34) 88%, rgba(255,255,255,.04) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 43%, rgba(255,255,255,.16) 45%, rgba(255,255,255,.05) 54%, rgba(255,255,255,0) 62%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 46%, rgba(0,0,0,.06) 60%, rgba(0,0,0,.20) 82%, rgba(0,0,0,.32) 100%),
+    linear-gradient(180deg, var(--c1) 0%, var(--c2) 42%, var(--c3) 100%);
+  box-shadow:
+    0 5px 0 var(--c3),
+    0 14px 22px -14px rgba(40,24,10,.70),
+    inset 0 0 0 2px rgba(255,255,255,.22),
+    inset 0 3px 0 rgba(255,255,255,.85),
+    inset 0 -3px 0 rgba(255,255,255,.36);
+}
+#scr-title .menu .mbtn:hover {
+  transform: translateY(-2px) scale(1.010);
+  filter: brightness(1.07) saturate(1.05);
+  box-shadow:
+    0 7px 0 var(--c3),
+    0 20px 28px -14px rgba(40,24,10,.60),
+    0 0 0 3px rgba(255,255,255,.55), 0 0 18px 2px var(--g1),
+    inset 0 0 0 2px rgba(255,255,255,.30),
+    inset 0 3px 0 rgba(255,255,255,.95),
+    inset 0 -3px 0 rgba(255,255,255,.42);
+}
+#scr-title .menu .mbtn:active {
+  transform: translateY(3px);
+  filter: brightness(.94) saturate(1.02);
+  box-shadow:
+    0 1px 0 var(--c3),
+    0 4px 10px -6px rgba(0,0,0,.50),
+    inset 0 3px 9px rgba(0,0,0,.30);
+}
+/* newbie 呼吸光環：動畫優先序高於一般宣告，keyframes 不改就會把邊緣反光整個吃掉 */
+@keyframes mbtnGlow {
+  0%, 100% { box-shadow: 0 5px 0 var(--c3), 0 0 0 0 var(--g1),
+    inset 0 0 0 2px rgba(255,255,255,.22),
+    inset 0 3px 0 rgba(255,255,255,.85), inset 0 -3px 0 rgba(255,255,255,.36); }
+  55% { box-shadow: 0 5px 0 var(--c3), 0 0 0 9px var(--g0),
+    inset 0 0 0 2px rgba(255,255,255,.22),
+    inset 0 3px 0 rgba(255,255,255,.85), inset 0 -3px 0 rgba(255,255,255,.36); }
+}
+/* 抽屜：奶油色果凍。底色本來就淺，鏡面白要更收斂，不然整塊糊掉 */
+#scr-title .drawbtn {
+  border: 2px solid rgba(160,120,70,.42);
+  background:
+    radial-gradient(ellipse 18% 12% at 24% 12%, rgba(255,255,255,1) 0%, rgba(255,255,255,.45) 54%, rgba(255,255,255,0) 56%),
+    radial-gradient(ellipse 94% 46% at 50% -2%, rgba(255,255,255,.62) 0%, rgba(255,255,255,.40) 94%, rgba(255,255,255,.12) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.42) 86%, rgba(255,255,255,.04) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 43%, rgba(255,255,255,.20) 45%, rgba(255,255,255,.06) 56%, rgba(255,255,255,0) 66%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 47%, rgba(0,0,0,.03) 62%, rgba(0,0,0,.08) 82%, rgba(0,0,0,.14) 100%),
+    linear-gradient(180deg, #fffefb 0%, #fff6e6 46%, #ffe9c4 78%, #ffdca6 100%);
+  box-shadow:
+    0 3px 0 #d8b285,
+    0 9px 16px -10px rgba(120,80,40,.60),
+    inset 0 0 0 2px rgba(255,255,255,.55),
+    inset 0 2px 0 #fff,
+    inset 0 -2px 0 rgba(255,255,255,.75);
+}
+#scr-title .drawbtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  border-color: rgba(240,112,60,.75);
+  box-shadow:
+    0 4px 0 #d8b285,
+    0 12px 20px -10px rgba(120,80,40,.60),
+    inset 0 0 0 2px rgba(255,255,255,.65),
+    inset 0 2px 0 #fff,
+    inset 0 -2px 0 rgba(255,255,255,.85);
+}
+#scr-title .drawbtn:active {
+  transform: translateY(2px);
+  filter: brightness(.97);
+  box-shadow: 0 1px 0 #d8b285, 0 3px 8px -6px rgba(120,80,40,.6), inset 0 3px 7px rgba(150,110,60,.24);
+}
+/* 彈窗：暗底上的果凍，白要更收斂，不然會變塑膠 */
+.qbtn {
+  border: 2px solid rgba(120,40,10,.45);
+  background:
+    radial-gradient(ellipse 20% 12% at 24% 12%, rgba(255,255,255,.90) 0%, rgba(255,255,255,.32) 54%, rgba(255,255,255,0) 56%),
+    radial-gradient(ellipse 94% 46% at 50% -2%, rgba(255,255,255,.38) 0%, rgba(255,255,255,.22) 94%, rgba(255,255,255,.06) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.26) 86%, rgba(255,255,255,0) 96%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 43%, rgba(255,255,255,.14) 45%, rgba(255,255,255,.04) 56%, rgba(255,255,255,0) 66%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 46%, rgba(0,0,0,.07) 62%, rgba(0,0,0,.16) 82%, rgba(0,0,0,.28) 100%),
+    linear-gradient(180deg, #ffa961 0%, #f0703a 54%, #c44f22 100%);
+  box-shadow:
+    0 4px 0 #9d3c16,
+    0 14px 22px -14px rgba(240,120,50,.90),
+    inset 0 0 0 2px rgba(255,255,255,.18),
+    inset 0 3px 0 rgba(255,255,255,.70),
+    inset 0 -2px 0 rgba(255,255,255,.30);
+}
+.qbtn.ghost {
+  border-color: rgba(160,195,250,.34);
+  color: #d8e2f6;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,.10) 41%, rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,.02) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.16),
+    inset 0 2px 0 rgba(255,255,255,.24),
+    0 4px 12px -8px rgba(0,0,0,.8);
+}
+/* 次要鈕（← 回主選單）：同一套果凍，鏡面更薄，不跟主按鈕搶視線 */
+.ghostbtn {
+  border: 2px solid #dcbb95; color: #8a5f35;
+  background:
+    radial-gradient(ellipse 18% 11% at 24% 12%, rgba(255,255,255,1) 0%, rgba(255,255,255,.42) 54%, rgba(255,255,255,0) 56%),
+    radial-gradient(ellipse 94% 46% at 50% -2%, rgba(255,255,255,.60) 0%, rgba(255,255,255,.38) 94%, rgba(255,255,255,.10) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.40) 86%, rgba(255,255,255,.04) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 43%, rgba(255,255,255,.18) 45%, rgba(255,255,255,.05) 56%, rgba(255,255,255,0) 66%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 47%, rgba(0,0,0,.03) 62%, rgba(0,0,0,.08) 82%, rgba(0,0,0,.14) 100%),
+    linear-gradient(180deg, #fffefb 0%, #fff6e6 46%, #ffebca 78%, #ffddaa 100%);
+  box-shadow:
+    0 3px 0 #dcc0a0,
+    0 9px 16px -10px rgba(120,80,40,.50),
+    inset 0 0 0 2px rgba(255,255,255,.50),
+    inset 0 2px 0 #fff,
+    inset 0 -2px 0 rgba(255,255,255,.70);
+}
+.ghostbtn:hover {
+  border-color: #f09060; color: #c9502a;
+  filter: brightness(1.03);
+  box-shadow:
+    0 4px 0 #dcc0a0,
+    0 12px 20px -10px rgba(120,80,40,.55),
+    inset 0 0 0 2px rgba(255,255,255,.62),
+    inset 0 2px 0 #fff,
+    inset 0 -2px 0 rgba(255,255,255,.82);
+}
+.ghostbtn:active {
+  transform: translateY(2px);
+  filter: brightness(.97);
+  box-shadow: 0 1px 0 #dcc0a0, inset 0 3px 7px rgba(170,130,80,.24);
+}
+/* 首頁頂端兩顆膠囊：很薄，鏡面只留上半，但分界線和邊緣一樣要清楚 */
+.verlogbtn {
+  border: 2px solid #e8c9a0;
+  background:
+    radial-gradient(ellipse 110% 52% at 50% -4%, rgba(255,255,255,.72) 0%, rgba(255,255,255,.48) 92%, rgba(255,255,255,.14) 95%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 82%, rgba(255,255,255,.40) 84%, rgba(255,255,255,0) 96%),
+    linear-gradient(180deg, #fffdf6 0%, #fff1d8 46%, #ffe6b8 100%);
+  box-shadow:
+    0 2px 0 #e0bd93,
+    0 8px 18px -12px rgba(120,80,40,.75),
+    inset 0 0 0 2px rgba(255,255,255,.55),
+    inset 0 2px 0 #fff,
+    inset 0 -2px 0 rgba(255,255,255,.70);
+}
+.verlogbtn:hover {
+  border-color: #f4703c;
+  box-shadow:
+    0 2px 0 #e0bd93,
+    0 10px 20px -12px rgba(200,90,40,.70),
+    inset 0 0 0 2px rgba(255,255,255,.70),
+    inset 0 2px 0 #fff,
+    inset 0 -2px 0 rgba(255,255,255,.85);
+}
+.annbox .annhead {
+  border-bottom: 1px solid var(--woodline, #ecd0ab);
+  background:
+    radial-gradient(ellipse 120% 56% at 50% -6%, rgba(255,255,255,.70) 0%, rgba(255,255,255,.44) 92%, rgba(255,255,255,.10) 95%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, #fffdf8 0%, #ffefd4 52%, #ffe2b9 100%);
+  box-shadow: inset 0 2px 0 #fff, inset 0 -1px 0 rgba(255,255,255,.60);
+}
+
+/* ── 其餘畫面的「選擇鈕」也套同一套果凍 ─────────────────────────────
+   依字色分三組：奶油（未選）／奶油偏暖＋橘框（已選但字是深色）／橘底（字是白色）。
+   只換背景與陰影，圓角、尺寸、內距一律不動 —— 那些是各畫面自己調好的比例。 */
+.seg button, .stg, .chcard, .minibtn, .keybtn {
+  background:
+    radial-gradient(ellipse 90% 46% at 50% -2%, rgba(255,255,255,.88) 0%, rgba(255,255,255,.58) 94%, rgba(255,255,255,.18) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.40) 86%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 48%, rgba(0,0,0,.03) 66%, rgba(0,0,0,.09) 100%),
+    linear-gradient(180deg, #fffefb 0%, #fff7e9 46%, #ffedcf 78%, #ffe0b4 100%);
+  box-shadow:
+    0 2px 0 #e0c4a0,
+    0 7px 12px -8px rgba(120,80,40,.55),
+    inset 0 0 0 1px rgba(255,255,255,.55),
+    inset 0 2px 0 #fff,
+    inset 0 -2px 0 rgba(255,255,255,.72);
+}
+.seg button:hover:not(.sel):not(:disabled),
+.stg:hover:not(.sel):not(:disabled),
+.chcard:hover:not(.sel),
+.minibtn:hover, .keybtn:hover {
+  box-shadow:
+    0 3px 0 #e0c4a0,
+    0 10px 16px -8px rgba(120,80,40,.55),
+    inset 0 0 0 1px rgba(255,255,255,.70),
+    inset 0 2px 0 #fff,
+    inset 0 -2px 0 rgba(255,255,255,.85);
+}
+.seg button:disabled, .stg:disabled { box-shadow: inset 0 2px 0 #fff; }
+/* 已選、但字仍是深色（關卡數字／角色卡）→ 暖奶油 + 橘框 + 外圈光暈 */
+.stg.sel, .chcard.sel {
+  background:
+    radial-gradient(ellipse 90% 46% at 50% -2%, rgba(255,255,255,.85) 0%, rgba(255,255,255,.50) 94%, rgba(255,255,255,.15) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.45) 86%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 48%, rgba(0,0,0,.03) 70%, rgba(0,0,0,.10) 100%),
+    linear-gradient(180deg, #fffaea 0%, #fff0d2 44%, #ffe1b2 100%);
+  border-color: #f4703c;
+  box-shadow:
+    0 0 0 3px rgba(244,112,60,.22),
+    0 8px 18px -10px rgba(200,110,40,.55),
+    inset 0 0 0 1px rgba(255,255,255,.75),
+    inset 0 2px 0 #fff,
+    inset 0 -2px 0 rgba(255,255,255,.85);
+}
+/* 已選、字是白色（分段鈕）→ 橘色果凍 */
+.seg button.sel {
+  background:
+    radial-gradient(ellipse 92% 46% at 50% -2%, rgba(255,255,255,.62) 0%, rgba(255,255,255,.38) 94%, rgba(255,255,255,.12) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.30) 86%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 46%, rgba(0,0,0,.10) 72%, rgba(0,0,0,.22) 100%),
+    linear-gradient(180deg, #ffc98c 0%, #f4703c 46%, #d24a19 100%);
+  border-color: #ffd0a6;
+  box-shadow:
+    0 3px 0 #b33c12,
+    0 10px 18px -12px rgba(200,70,30,.85),
+    inset 0 0 0 2px rgba(255,255,255,.22),
+    inset 0 2px 0 rgba(255,255,255,.80),
+    inset 0 -2px 0 rgba(255,255,255,.32);
+}
+/* 主要動作大按鈕（開始遊戲） */
+.biggo {
+  background:
+    radial-gradient(ellipse 92% 44% at 50% -2%, rgba(255,255,255,.60) 0%, rgba(255,255,255,.36) 94%, rgba(255,255,255,.10) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.30) 86%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 46%, rgba(0,0,0,.10) 74%, rgba(0,0,0,.24) 100%),
+    linear-gradient(180deg, #ffd88f 0%, #f4703c 48%, #d94f22 100%);
+  box-shadow:
+    0 4px 0 #b84518,
+    0 12px 22px -14px rgba(200,70,30,.80),
+    inset 0 0 0 2px rgba(255,255,255,.22),
+    inset 0 3px 0 rgba(255,255,255,.85),
+    inset 0 -3px 0 rgba(255,255,255,.30);
+}
+/* 對戰選角：暗底的圓形小鈕（◀ ▶ 🤖），用「深色果凍」才跟奶油卡分得開 */
+#scr-battle #pSlots .crow button {
+  background:
+    radial-gradient(ellipse 92% 50% at 50% -4%, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 94%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 52%, rgba(0,0,0,.24) 100%),
+    linear-gradient(180deg, #2b3c62 0%, #1d2842 100%);
+  box-shadow:
+    0 2px 0 rgba(0,0,0,.42),
+    0 6px 12px -8px rgba(0,0,0,.70),
+    inset 0 0 0 1px rgba(255,255,255,.12),
+    inset 0 2px 0 rgba(255,255,255,.18);
+}
+#scr-battle #pSlots .crow button.aibtn {
+  background:
+    radial-gradient(ellipse 92% 50% at 50% -4%, rgba(220,190,255,.30) 0%, rgba(255,255,255,.08) 94%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 52%, rgba(0,0,0,.26) 100%),
+    linear-gradient(180deg, #3a2d63 0%, #251c40 100%);
+}
+#scr-battle #pSlots .crow button.aibtn.on {
+  border-color: #a077f5;
+  box-shadow:
+    0 0 0 2px rgba(138,92,240,.35),
+    0 2px 0 rgba(0,0,0,.42),
+    inset 0 0 0 1px rgba(255,255,255,.22),
+    inset 0 2px 0 rgba(255,255,255,.26);
+}
+/* 對戰暱稱輸入／隊伍鈕也給一層薄玻璃，不然只有它們是平的 */
+#scr-battle #pSlots .pbox .pname,
+#scr-battle #pSlots .pbox .ptm {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.30) 48%, rgba(255,255,255,0) 50%),
+    linear-gradient(180deg, #fffefb 0%, #fff6e6 52%, #ffeccf 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.70),
+    inset 0 2px 0 #fff,
+    0 2px 0 rgba(0,0,0,.10);
+}
+
 /* v4.53：選角卡片放大 —— 原本 ◀▶🤖 只有 20x17px，手機根本點不到，8 格擠成一團也不好看 */
 #scr-battle #pSlots{grid-template-columns:repeat(auto-fit,minmax(164px,1fr));gap:10px;justify-content:stretch}
 #scr-battle #pSlots .pbox{padding:10px 10px 9px;border-width:2px;border-radius:14px;
@@ -2811,7 +3104,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.81</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.82</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -2844,7 +3137,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         <img class="title-logo" id="titleLogo" alt="BOMB HERO 爆爆英雄" draggable="false" src="spr/title-logo.webp">
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.81</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.82</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" style="margin:8px 0 4px;display:flex;flex-direction:column;gap:4px;align-items:center">
         <label for="playerName" style="font-size:13px;font-weight:600;color:#7a5a2e;text-shadow:0 1px 0 rgba(255,255,255,.65)">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -3471,7 +3764,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.81';
+const VERSION = '4.82';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4690,6 +4983,10 @@ ver.4.81.1|🧹 首頁大掃除：14 顆按鈕縮成 6 張玩法卡＋「更多�
 ver.4.81.2|🎯 入口合併：挑戰 BOSS 併進單人闖關、排行榜併進每日挑戰、對戰與線上配對合成「多人對戰」|🎯 入口合并：挑战 BOSS 并入单人闯关、排行榜并入每日挑战、对战与在线配对合成「多人对战」|🎯 Entrances merged: Boss Raid sits inside Solo Quest, the leaderboard inside Daily Challenge, Battle and Online became one Multiplayer entry|🎯 入口を統合：ボス討伐は一人で挑戦へ、ランキングはデイリーチャレンジへ、対戦とオンラインは「マルチ対戦」に|🎯 입구 통합: 보스 토벌은 싱글 모험에, 랭킹은 데일리 챌린지에, 대전과 온라인 매치는 멀티플레이 하나로|🎯 รวมทางเข้า: ล่าบอสอยู่ในโหมดผจญภัยคนเดียว อันดับอยู่ในภารกิจรายวัน ต่อสู้กับออนไลน์รวมเป็น ผู้เล่นหลายคน|🎯 Gộp lối vào: Đánh BOSS trong Chơi đơn, bảng xếp hạng trong Thử thách ngày, Đối chiến và Online gộp thành Nhiều người chơi|🎯 Объединены входы: охота на босса — в одиночной игре, рейтинг — в ежедневном вызове, битва и онлайн — в одном «Мультиплеере»|🎯 Einstiege zusammengelegt: Boss-Raid steckt im Einzelspieler, die Rangliste in der Tagesherausforderung, Kampf und Online wurden zu Mehrspieler|🎯 Ingressi uniti: Assalto al BOSS dentro Giocatore singolo, classifica dentro Sfida giornaliera, Battaglia e Online diventano Multigiocatore
 ver.4.81.3|👤 帳號入口只留右上角那一顆（首頁原本還有一顆重複的）|👤 账号入口只留右上角那颗（首页原本还有一颗重复的）|👤 Only one account entry now — the chip in the top-right corner (the home screen used to have a duplicate)|👤 アカウント入口は右上の1か所だけ（ホームにも重複がありました）|👤 계정 입구는 오른쪽 위 하나만 (홈에 중복 버튼이 있었습니다)|👤 เหลือทางเข้าบัญชีเดียวที่มุมขวาบน (เดิมมีซ้ำบนหน้าหลัก)|👤 Chỉ còn một lối vào tài khoản ở góc phải trên (trước đây có thêm một nút trùng)|👤 Вход в аккаунт теперь один — плашка справа сверху (на главном был дубль)|👤 Nur noch ein Konto-Einstieg oben rechts (auf dem Startbildschirm gab es einen doppelten)|👤 Un solo accesso all'account, in alto a destra (prima ce n'era un doppione nella home)
 ver.4.81.4|📖 首頁導覽重寫：每一步都對得上新位置，講到抽屜裡的按鈕會自動展開|📖 首页导览重写：每一步都对得上新位置，讲到抽屉里的按钮会自动展开|📖 Home tour rewritten: every step matches the new layout, and the drawer opens by itself when needed|📖 ホームのガイドを書き直し：各ステップが新しい配置に対応し、ドロワー内のボタンでは自動で開きます|📖 홈 가이드 다시 작성: 각 단계가 새 배치와 맞고, 서랍 안 버튼을 설명할 때 자동으로 열립니다|📖 เขียนไกด์หน้าหลักใหม่: ทุกขั้นตรงกับตำแหน่งใหม่ และเปิดลิ้นชักอัตโนมัติเมื่อถึงปุ่มข้างใน|📖 Viết lại hướng dẫn trang chủ: mỗi bước khớp vị trí mới, tự mở ngăn khi nói tới nút bên trong|📖 Тур по главному экрану переписан: каждый шаг соответствует новой раскладке, шторка открывается сама|📖 Tour durch den Startbildschirm neu geschrieben: jeder Schritt passt zum neuen Layout, die Schublade öffnet sich automatisch|📖 Tour della home riscritta: ogni passo corrisponde al nuovo layout e il cassetto si apre da solo
+ver.4.82.1|💎 全站按鈕換成<b>水晶高光</b>：弧形鏡面、上緣銳光、底部厚度，看起來像一塊打磨過的玻璃而不是平面色塊|💎 全站按钮换成<b>水晶高光</b>：弧形镜面、上缘锐光、底部厚度，看起来像一块打磨过的玻璃而不是平面色块|💎 <b>Crystal gloss</b> on every button: curved specular arc, sharp top rim, solid bottom edge — polished glass instead of flat colour blocks|💎 全サイトのボタンを<b>クリスタル光沢</b>に：曲面の鏡面ハイライト・上端のシャープな反射・底の厚みで、平面の色ではなく磨かれたガラスに見えます|💎 모든 버튼을 <b>크리스탈 광택</b>으로: 곡면 반사 하이라이트, 날카로운 상단 윤곽, 두꺼운 하단 — 평면 색이 아니라 갈아낸 유리처럼 보입니다|💎 เปลี่ยนทุกปุ่มเป็น<b>คริสตัลเงา</b>: ไฮไลต์โค้งบนผิว ขอบบนคม และความหนาด้านล่าง — ดูเหมือนกระจกขัด ไม่ใช่บล็อกสีแบน|💎 Đổi toàn bộ nút sang <b>thuỷ tinh bóng</b>: vệt sáng cong trên mặt, viền trên sắc, đáy dày — trông như kính đánh bóng chứ không phải mảng màu phẳng|💎 Все кнопки теперь <b>глянцевые, как хрусталь</b>: дуговой блик, резкая верхняя кромка, толстое днище — полированное стекло, а не плоское цветное пятно|💎 Alle Buttons mit <b>Kristallglanz</b>: gewölbter Lichtbogen, scharfe Oberkante, solide Unterkante — geschliffenes Glas statt flacher Farbflächen|💎 Tutti i pulsanti in <b>stile cristallo</b>: arco di luce curvo, bordo superiore netto, fondo solido — vetro levigato invece di blocchi di colore piatti
+ver.4.82.2|🎨 高光用多層漸層疊在按鈕自己的背景上（不是貼圖、不是偽元素）—— 文字永遠清楚、可翻譯、放大不糊|🎨 高光用多层渐变叠在按钮自己的背景上（不是贴图、不是伪元素）—— 文字永远清楚、可翻译、放大不糊|🎨 The gloss is stacked gradients on each button's own background — no images, no pseudo-elements, so text stays crisp, translatable and sharp at any size|🎨 ハイライトはボタン自身の背景に重ねた多層グラデーション（画像でも疑似要素でもありません）—— 文字は常にくっきり、翻訳可能、拡大してもボケません|🎨 하이라이트는 버튼 자체 배경에 겹친 다층 그라데이션입니다(이미지도, 의사 요소도 아님) — 글자는 항상 선명하고 번역되며 확대해도 흐려지지 않습니다|🎨 ไฮไลต์คือไล่ระดับหลายชั้นบนพื้นหลังของปุ่มเอง — ไม่ใช่รูปภาพ ไม่ใช่ pseudo-element ข้อความจึงคมชัด แปลได้ และขยายแล้วไม่แตก|🎨 Hiệu ứng bóng là các lớp gradient chồng trên nền của chính nút — không phải ảnh, không phải pseudo-element, nên chữ luôn rõ, dịch được và phóng to không nhoè|🎨 Блик — это слои градиентов на фоне самой кнопки, без картинок и псевдоэлементов: текст остаётся чётким, переводимым и не мылится при увеличении|🎨 Der Glanz sind gestapelte Verläufe auf dem Hintergrund des Buttons selbst — keine Bilder, keine Pseudo-Elemente. Text bleibt scharf, übersetzbar und sauber in jeder Größe|🎨 La lucentezza è fatta di gradienti sovrapposti sullo sfondo del pulsante — niente immagini, niente pseudo-elementi: il testo resta nitido, traducibile e pulito a ogni dimensione
+ver.4.82.3|🪟 首頁卡片、抽屜、彈窗、開始遊戲、關卡數字、角色卡、分段鈕、對戰小鈕全部同一套光學，不再有平掉的按鈕|🪟 首页卡片、抽屉、弹窗、开始游戏、关卡数字、角色卡、分段钮、对战小钮全部同一套光学，不再有平掉的按钮|🪟 Home cards, drawer, dialogs, Start Game, stage numbers, character cards, segmented controls and lobby buttons all share the same optics — nothing is flat any more|🪟 ホームのカード、ドロワー、ダイアログ、ゲーム開始、ステージ番号、キャラカード、セグメントボタン、対戦の小ボタンまで全部同じ光沢に — 平らなボタンはもうありません|🪟 홈 카드, 서랍, 대화상자, 게임 시작, 스테이지 번호, 캐릭터 카드, 구간 버튼, 대전 소형 버튼까지 모두 같은 광학 — 이제 평평한 버튼은 없습니다|🪟 การ์ดหน้าหลัก ลิ้นชัก หน้าต่างโต้ตอบ ปุ่มเริ่มเกม เลขด่าน การ์ดตัวละคร ปุ่มแบ่งช่วง และปุ่มเล็กในห้องเล่น ใช้ผิวแสงชุดเดียวกันหมด — ไม่มีปุ่มแบนเหลือแล้ว|🪟 Thẻ trang chủ, ngăn kéo, hộp thoại, nút Bắt đầu, số màn, thẻ nhân vật, nút phân đoạn và nút nhỏ trong phòng đều cùng một hệ quang học — không còn nút phẳng nữa|🪟 Карточки главного экрана, шторка, диалоги, «Начать игру», номера уровней, карточки героев, сегментные и мелкие кнопки лобби — всё с одним бликом, плоских кнопок больше нет|🪟 Startkarten, Schublade, Dialoge, Spiel starten, Levelnummern, Heldenkarten, Segment- und Lobby-Knöpfe teilen dieselbe Optik — nichts ist mehr flach|🪟 Card della home, cassetto, finestre, Avvia partita, numeri dei livelli, card dei personaggi, pulsanti a segmenti e pulsanti piccoli della lobby usano la stessa ottica — niente più pulsanti piatti
+ver.4.82.4|⚡ 只多幾層 CSS 漸層，沒有圖片、沒有 backdrop-filter，手機不會掉幀|⚡ 只多几层 CSS 渐变，没有图片、没有 backdrop-filter，手机不会掉帧|⚡ Only a few extra CSS gradients — no images, no backdrop-filter, so phones keep their frame rate|⚡ 増えたのは CSS グラデーション数層だけ。画像も backdrop-filter も使わないので、スマホでもフレームレートが落ちません|⚡ CSS 그라데이션 몇 겹만 추가했습니다. 이미지도 backdrop-filter도 없어 휴대폰 프레임이 떨어지지 않습니다|⚡ เพิ่มแค่ไล่ระดับ CSS อีกไม่กี่ชั้น ไม่มีรูปภาพ ไม่มี backdrop-filter เฟรมเรตบนมือถือจึงไม่ตก|⚡ Chỉ thêm vài lớp gradient CSS, không ảnh, không backdrop-filter, nên điện thoại không tụt khung hình|⚡ Добавлено лишь несколько слоёв CSS-градиентов — без картинок и backdrop-filter, частота кадров на телефоне не падает|⚡ Nur ein paar zusätzliche CSS-Verläufe — keine Bilder, kein backdrop-filter, die Bildrate auf dem Handy bleibt stabil|⚡ Solo qualche gradiente CSS in più — niente immagini, niente backdrop-filter, il frame rate sul telefono non cala
 home.daily|每日挑戰|每日挑战|Daily Challenge|デイリーチャレンジ|데일리 챌린지|ภารกิจรายวัน|Thử thách ngày|Ежедневный вызов|Tages-Challenge|Sfida giornaliera
 home.solo.sub|32 關 · 難度自選|32 关 · 难度可选|32 levels · any difficulty|全32面 · 難易度自由|32개 · 난이도 자유|32 ด่าน · เลือกความยาก|32 màn · chọn độ khó|32 уровня · любая сложность|32 Level · freie Wahl|32 livelli · difficoltà libera
 home.namePh|可留空，系統自動取名字|可留空，系统自动取名字|Optional — we will name you|空でもOK・自動で名前をつけます|비워도 됨 · 자동으로 이름 지어줌|เว้นว่างได้ ระบบตั้งชื่อให้|Có thể để trống, hệ thống tự đặt tên|Можно оставить пустым — имя дадим сами|Leer lassen — wir vergeben einen Namen|Puoi lasciare vuoto — il nome lo scegliamo noi`;
@@ -24418,7 +24715,12 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.81', date: '2026-11-04', now: true, items: [
+  { v: '4.82', date: '2026-11-04', now: true, items: [
+    '💎 全站按鈕換成<b>水晶高光</b>：弧形鏡面、上緣銳光、底部厚度，看起來像一塊打磨過的玻璃而不是平面色塊',
+    '🎨 高光用多層漸層疊在按鈕自己的背景上（不是貼圖、不是偽元素）—— 文字永遠清楚、可翻譯、放大不糊',
+    '🪟 首頁卡片、抽屜、彈窗、開始遊戲、關卡數字、角色卡、分段鈕、對戰小鈕全部同一套光學，不再有平掉的按鈕',
+    '⚡ 只多幾層 CSS 漸層，沒有圖片、沒有 backdrop-filter，手機不會掉幀' ] },
+  { v: '4.81', date: '2026-11-04', now: false, items: [
     '🧹 首頁大掃除：14 顆一樣大的按鈕縮成 <b>6 張玩法卡</b>＋「更多」抽屜。手機本來要滑 1.4 屏才看得到全部，現在一屏看完',
     '🎯 入口合併（功能一個都沒少）：挑戰 BOSS 併進單人闖關、排行榜併進每日挑戰、對戰與線上配對合成「多人對戰」',
     '👤 帳號入口只留右上角那一顆 —— 首頁原本還有一顆重複的，兩個門通同一個房間',

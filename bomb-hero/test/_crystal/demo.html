@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<title>水晶高光按鈕 — 三種質感對照</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  background:
+    radial-gradient(circle at 18% 8%, #ffe9c2 0%, rgba(255,233,194,0) 55%),
+    radial-gradient(circle at 84% 92%, #ffd9d0 0%, rgba(255,217,208,0) 52%),
+    linear-gradient(180deg,#fff8ea,#ffeccd 62%,#ffe0bd);
+  color:#4a3520;
+  padding:26px 18px 40px;
+}
+h1{font-size:20px;font-weight:900;letter-spacing:.02em}
+h1 span{font-size:12px;font-weight:700;color:#a8825a;letter-spacing:.06em;margin-left:8px}
+.note{font-size:11.5px;color:#9c7b56;font-weight:600;margin-top:6px;line-height:1.7;max-width:1180px}
+.row{display:flex;gap:22px;margin-top:22px;align-items:flex-start;flex-wrap:wrap}
+.col{width:390px;flex:0 0 auto}
+.vh{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+.vh b{font-size:15px;font-weight:900;color:#5a3d1e}
+.vh i{font-style:normal;font-size:11px;font-weight:700;color:#a8825a;letter-spacing:.04em}
+.vh em{display:block;font-style:normal;font-size:11px;color:#a8825a;font-weight:600;margin-top:3px;line-height:1.5}
+
+/* ── 共用的卡片骨架（照抄遊戲 .mbtn 的尺寸與留白） ───────────────── */
+.card{
+  --c1:#ffa161; --c2:#e8622b; --c3:#a8411a;
+  position:relative; display:flex; flex-direction:column; justify-content:center;
+  align-items:center; text-align:center; overflow:hidden;
+  width:100%; min-height:98px; padding:11px 9px 10px; border-radius:15px;
+  font:900 17px/1.2 inherit; letter-spacing:0; color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.34);
+  border:1px solid rgba(255,255,255,.42);
+  background:linear-gradient(180deg,var(--c1) 0%,var(--c2) 62%,var(--c3) 100%);
+  cursor:pointer; isolation:isolate;
+}
+.card small{display:block;font-size:10.5px;font-weight:700;margin-top:2px;
+  color:rgba(255,255,255,.9);text-shadow:0 1px 2px rgba(0,0,0,.28);letter-spacing:.01em}
+.card .ico{position:relative;z-index:2;width:30px;height:30px;line-height:30px;text-align:center;
+  font-size:17px;border-radius:9px;margin-bottom:4px;
+  background:rgba(255,255,255,.24);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+.card .txt{position:relative;z-index:2}
+
+.c-solo {--c1:#ffa161;--c2:#e8622b;--c3:#a8411a}
+.c-br   {--c1:#4fc3b8;--c2:#1b7c75;--c3:#0d4d48}
+.c-daily{--c1:#6fd3f5;--c2:#2a7fd4;--c3:#17457e}
+.c-multi{--c1:#ef6a8a;--c2:#b12c50;--c3:#74203a}
+.c-rpg  {--c1:#f0b13c;--c2:#c47a10;--c3:#8a5306}
+.c-more {--c1:#93a2b8;--c2:#56657c;--c3:#38434f}
+.c-learn{--c1:#48c08a;--c2:#1e7a52;--c3:#125038}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+
+/* ── V1 玻璃弧光：弧形鏡面 + 頂部銳邊 + 底部厚度 ─────────────────── */
+.v1 .card{
+  box-shadow:
+    0 6px 0 var(--c3),
+    0 16px 26px -14px rgba(40,24,10,.72),
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 0 -9px 16px -8px rgba(0,0,0,.30);
+}
+.v1 .card::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;
+  background:
+    radial-gradient(122% 60% at 50% -20%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.38) 44%, rgba(255,255,255,0) 73%),
+    radial-gradient(26% 30% at 15% 9%, #fff 0%, rgba(255,255,255,0) 72%),
+    linear-gradient(180deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,0) 46%, rgba(255,255,255,.12) 100%);
+}
+
+/* ── V2 果凍水晶：厚玻璃、內發光、底部焦散光斑 ───────────────────── */
+.v2 .card{
+  border-color:rgba(255,255,255,.55);
+  box-shadow:
+    0 7px 0 var(--c3),
+    0 18px 30px -14px rgba(40,24,10,.75),
+    0 0 0 1px rgba(255,255,255,.5),
+    inset 0 2px 1px rgba(255,255,255,1),
+    inset 0 10px 18px -10px rgba(255,255,255,.9),
+    inset 0 -14px 20px -10px rgba(0,0,0,.32);
+}
+.v2 .card::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;
+  background:
+    radial-gradient(130% 64% at 50% -22%, #fff 0%, rgba(255,255,255,.5) 38%, rgba(255,255,255,0) 70%),
+    radial-gradient(24% 26% at 12% 8%, #fff 0%, rgba(255,255,255,0) 70%),
+    radial-gradient(70% 34% at 50% 112%, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 72%),
+    radial-gradient(28% 16% at 80% 97%, rgba(255,255,255,.42) 0%, rgba(255,255,255,0) 70%),
+    linear-gradient(180deg, rgba(255,255,255,.24) 0%, rgba(255,255,255,.04) 38%, rgba(255,255,255,0) 55%, rgba(255,255,255,.18) 100%);
+}
+.v2 .card .ico{background:rgba(255,255,255,.32);box-shadow:inset 0 1px 0 rgba(255,255,255,.85),
+  inset 0 -3px 6px -3px rgba(0,0,0,.2)}
+
+/* ── V3 冷凝水晶：半透明毛玻璃，只留亮邊與一道斜射光 ─────────────── */
+.v3 .card{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.08) 34%, rgba(0,0,0,.06) 100%),
+    linear-gradient(180deg,var(--c1) 0%,var(--c2) 100%);
+  border-color:rgba(255,255,255,.62);
+  box-shadow:
+    0 5px 0 var(--c3),
+    0 16px 26px -16px rgba(40,24,10,.6),
+    inset 0 1px 0 rgba(255,255,255,.98),
+    inset 0 0 0 1px rgba(255,255,255,.22),
+    inset 0 -10px 18px -12px rgba(0,0,0,.35);
+}
+.v3 .card::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;
+  background:
+    linear-gradient(115deg,
+      rgba(255,255,255,0) 22%,
+      rgba(255,255,255,.55) 33%,
+      rgba(255,255,255,.10) 41%,
+      rgba(255,255,255,0) 52%),
+    radial-gradient(100% 46% at 50% -6%, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 78%);
+}
+.v3 .card .ico{background:rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+
+/* ── 小按鈕：抽屜／modal 也一起換（=.drawbtn / .qbtn） ────────────── */
+.smallrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.sbtn{
+  position:relative;overflow:hidden;display:flex;align-items:center;gap:7px;
+  padding:10px 11px;border-radius:13px;border:1px solid rgba(255,255,255,.5);
+  font:800 13px/1.2 inherit;color:#6b4222;
+  background:linear-gradient(180deg, rgba(255,255,255,.92) 0%, #fff5e2 46%, #ffe6c2 100%);
+  cursor:pointer;
+  box-shadow:0 3px 0 #dcb98c, 0 8px 14px -10px rgba(120,80,40,.6),
+    inset 0 1px 0 #fff, inset 0 -6px 10px -6px rgba(160,120,70,.35);
+}
+.sbtn::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:
+    radial-gradient(120% 56% at 50% -18%, rgba(255,255,255,.98) 0%, rgba(255,255,255,.4) 46%, rgba(255,255,255,0) 74%),
+    radial-gradient(22% 34% at 14% 12%, #fff 0%, rgba(255,255,255,0) 70%);
+}
+.sbtn .si{position:relative;z-index:2;width:22px;height:22px;line-height:22px;text-align:center;
+  font-size:13px;border-radius:6px;background:rgba(255,255,255,.85);
+  box-shadow:inset 0 1px 0 #fff, 0 1px 2px rgba(0,0,0,.08)}
+.sbtn .st{position:relative;z-index:2}
+.sbtn.ghost{color:#8a6a4a;background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,246,232,.6))}
+
+/* 主要動作鈕（warm） */
+.warm{
+  position:relative;overflow:hidden;width:100%;margin-top:10px;
+  padding:13px 16px;border-radius:15px;border:1px solid rgba(255,255,255,.55);
+  font:900 16px/1.2 inherit;color:#fff;text-shadow:0 2px 3px rgba(120,40,10,.5);
+  background:linear-gradient(180deg,#ffb072 0%,#f4703c 58%,#d24d1e 100%);
+  cursor:pointer;
+  box-shadow:0 6px 0 #a83c16, 0 16px 26px -14px rgba(200,70,30,.75),
+    inset 0 2px 1px rgba(255,255,255,.95), inset 0 10px 18px -10px rgba(255,255,255,.85),
+    inset 0 -14px 20px -10px rgba(90,20,0,.4);
+}
+.warm::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:
+    radial-gradient(130% 64% at 50% -22%, #fff 0%, rgba(255,255,255,.5) 38%, rgba(255,255,255,0) 70%),
+    radial-gradient(70% 34% at 50% 112%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 72%);
+}
+
+.legend{margin-top:26px;font-size:11.5px;color:#8a6a4a;font-weight:600;line-height:1.9;max-width:1180px}
+.legend b{color:#5a3d1e}
+</style>
+</head>
+<body>
+
+<h1>水晶高光按鈕<span>CRYSTAL GLOSS · 3 VARIANTS</span></h1>
+<p class="note">
+  三種都在同一組品牌色上實作，尺寸、留白、字級完全照遊戲現況（卡片 min-height 98px、手機 2 欄）。
+  差別只在「光學層」— 高光落點、內折射強度、玻璃厚度。文字是 DOM，可翻譯、可縮放、可測試。
+</p>
+
+<div class="row">
+
+  <!-- ══════════ V1 ══════════ -->
+  <div class="col v1">
+    <div class="vh"><b>V1</b><i>玻璃弧光</i><em>弧形鏡面 + 頂部 1px 銳邊 + 底部厚度。最接近現有外型，只是多了玻璃感。</em></div>
+    <div class="card c-learn"><span class="ico">🎓</span><span class="txt">新手教學</span></div>
+    <div class="grid">
+      <div class="card c-solo"><span class="ico">🎯</span><span class="txt">單人闖關<small>32 關 · 難度自選</small></span></div>
+      <div class="card c-br"><span class="ico">🏝️</span><span class="txt">大逃殺<small>56×44 · 毒圈</small></span></div>
+      <div class="card c-daily"><span class="ico">📅</span><span class="txt">每日挑戰<small>全球同一張圖</small></span></div>
+      <div class="card c-multi"><span class="ico">⚔️</span><span class="txt">多人對戰<small>本機 · 房號</small></span></div>
+      <div class="card c-rpg"><span class="ico">🎲</span><span class="txt">RPG 模式<small>配點養成</small></span></div>
+      <div class="card c-more"><span class="ico">⋯</span><span class="txt">更多<small>商店 · 說明</small></span></div>
+    </div>
+    <div class="smallrow">
+      <div class="sbtn"><span class="si">🛒</span><span class="st">商店</span></div>
+      <div class="sbtn"><span class="si">📖</span><span class="st">遊戲說明</span></div>
+      <div class="sbtn"><span class="si">⚙️</span><span class="st">設定</span></div>
+      <div class="sbtn"><span class="si">🚪</span><span class="st">離開遊戲</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════ V2 ══════════ -->
+  <div class="col v2">
+    <div class="vh"><b>V2</b><i>果凍水晶</i><em>厚玻璃 + 內發光 + 底部焦散光斑。最「水晶」，也最搶眼、最耗效能的陰影層數最多。</em></div>
+    <div class="card c-learn"><span class="ico">🎓</span><span class="txt">新手教學</span></div>
+    <div class="grid">
+      <div class="card c-solo"><span class="ico">🎯</span><span class="txt">單人闖關<small>32 關 · 難度自選</small></span></div>
+      <div class="card c-br"><span class="ico">🏝️</span><span class="txt">大逃殺<small>56×44 · 毒圈</small></span></div>
+      <div class="card c-daily"><span class="ico">📅</span><span class="txt">每日挑戰<small>全球同一張圖</small></span></div>
+      <div class="card c-multi"><span class="ico">⚔️</span><span class="txt">多人對戰<small>本機 · 房號</small></span></div>
+      <div class="card c-rpg"><span class="ico">🎲</span><span class="txt">RPG 模式<small>配點養成</small></span></div>
+      <div class="card c-more"><span class="ico">⋯</span><span class="txt">更多<small>商店 · 說明</small></span></div>
+    </div>
+    <div class="smallrow">
+      <div class="sbtn"><span class="si">🛒</span><span class="st">商店</span></div>
+      <div class="sbtn"><span class="si">📖</span><span class="st">遊戲說明</span></div>
+      <div class="sbtn"><span class="si">⚙️</span><span class="st">設定</span></div>
+      <div class="sbtn"><span class="si">🚪</span><span class="st">離開遊戲</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════ V3 ══════════ -->
+  <div class="col v3">
+    <div class="vh"><b>V3</b><i>冷凝水晶</i><em>表面半透明，只留亮邊 + 一道斜射光。最精緻冷冽，但小字對比會下降。</em></div>
+    <div class="card c-learn"><span class="ico">🎓</span><span class="txt">新手教學</span></div>
+    <div class="grid">
+      <div class="card c-solo"><span class="ico">🎯</span><span class="txt">單人闖關<small>32 關 · 難度自選</small></span></div>
+      <div class="card c-br"><span class="ico">🏝️</span><span class="txt">大逃殺<small>56×44 · 毒圈</small></span></div>
+      <div class="card c-daily"><span class="ico">📅</span><span class="txt">每日挑戰<small>全球同一張圖</small></span></div>
+      <div class="card c-multi"><span class="ico">⚔️</span><span class="txt">多人對戰<small>本機 · 房號</small></span></div>
+      <div class="card c-rpg"><span class="ico">🎲</span><span class="txt">RPG 模式<small>配點養成</small></span></div>
+      <div class="card c-more"><span class="ico">⋯</span><span class="txt">更多<small>商店 · 說明</small></span></div>
+    </div>
+    <div class="smallrow">
+      <div class="sbtn"><span class="si">🛒</span><span class="st">商店</span></div>
+      <div class="sbtn"><span class="si">📖</span><span class="st">遊戲說明</span></div>
+      <div class="sbtn"><span class="si">⚙️</span><span class="st">設定</span></div>
+      <div class="sbtn"><span class="si">🚪</span><span class="st">離開遊戲</span></div>
+    </div>
+  </div>
+
+</div>
+
+<p class="legend">
+  <b>怎麼看：</b>把眼睛放遠一點、只看整體。V1 的光停在「上緣」像一塊打磨過的玻璃；
+  V2 的光會「從裡面透出來」，底部有焦散，摸起來像厚果凍；V3 的光是斜著掃過去的，像結霜的窗。
+  <br><b>實作成本：</b>三者都只用到 `radial-gradient` + `inset box-shadow`，沒有圖片、沒有 SVG、沒有 `backdrop-filter`，所以 Android WebView 也吃得下。
+</p>
+
+</body>
+</html>

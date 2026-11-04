@@ -189,15 +189,15 @@ ok(/card\('btnMoreMenu', 'home\.more', 'home\.more\.sub'\)/.test(src), '「更�
 
 // ---------- 8. 版本與容量 ----------
 head('8. 版本與容量');
-ok(P.VERSION === '4.81', 'VERSION = 4.81');
-ok(src.indexOf('<span id="verTxt">4.81</span>') > 0, '首頁版本標籤 4.81');
-ok(P.VERSION_LOG[0].v === '4.81' && P.VERSION_LOG[0].now === true, '版本紀錄最上面是 4.81');
-ok(P.VERSION_LOG[1].v === '4.80' && P.VERSION_LOG[1].now === false, '4.80 已改成 now:false');
-ok(P.VERSION_LOG[0].items.length >= 3, '4.81 至少寫 3 條更新');
+ok(/^4\.8[1-9]$/.test(P.VERSION), 'VERSION 至少 4.81（實際 ' + P.VERSION + '）');
+ok(new RegExp('id="verTxt">4\\.8[1-9]<').test(src), '首頁版本標籤跟著 VERSION 走');
+ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, '版本紀錄最上面就是目前版號且 now:true');
+ok(P.VERSION_LOG[1].now === false, '上一版（' + P.VERSION_LOG[1].v + '）已改成 now:false');
+ok(P.VERSION_LOG[0].items.length >= 3, '最新版至少寫 3 條更新（' + P.VERSION_LOG[0].items.length + ' 條）');
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (rel) {
   const f = path.join(__dirname, rel);
   const v = (/SW_VERSION = '([^']+)'/.exec(fs.readFileSync(f, 'utf8')) || [])[1];
-  ok(v === 'v4.81.0', rel + ' = v4.81.0（' + v + '）');
+  ok(/^v4\.8[1-9]\.\d+$/.test(v), rel + ' 版本跟得上主檔（' + v + '）');
 });
 ok(src.length < 3900000, '字元數 ' + src.length.toLocaleString() + ' < 3.9M');
 ok(Buffer.byteLength(src) < 4250000, '位元組 ' + Buffer.byteLength(src).toLocaleString() + ' < 4.25M');
