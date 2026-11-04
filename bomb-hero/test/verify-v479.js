@@ -81,10 +81,17 @@ ok(/\.\/spr\/title-logo\.webp/.test(swSrc), 'CORE 預載首頁 logo');
 ok(/function warmSprites\(/.test(swSrc), '有背景預熱函式 warmSprites');
 ok(/warmSprites\(\)/.test(swSrc.replace(/function warmSprites\(\)/, '')), 'install 會呼叫 warmSprites');
 ok(/spr\/_list\.json/.test(swSrc), '預熱讀 _list.json');
-ok(/SW_VERSION = 'v4\.(79|8\d)\.\d+'/.test(swSrc), 'sw.js 版本 ≥ 4.79（實際 ' + (/SW_VERSION = '(v[^']+)'/.exec(swSrc) || [])[1] + '）');
+// v4.90：版本比較改成「數字比大小」—— 4.90 用 float 解析會變成 4.9 < 4.79 的假失敗
+const vnum = function (s) {
+  const m = String(s || '').replace(/^v/, '').split('.');
+  return (+m[0] || 0) * 10000 + (+m[1] || 0) * 100 + (+m[2] || 0);
+};
+const swV = (/SW_VERSION = '(v[^']+)'/.exec(swSrc) || [])[1] || '';
+ok(vnum(swV) >= vnum('4.79'), 'sw.js 版本 ≥ 4.79（實際 ' + swV + '）');
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (p) {
   const t = fs.readFileSync(path.join(__dirname, p), 'utf8');
-  ok(/SW_VERSION = 'v4\.(79|8\d)\.\d+'/.test(t), p + ' 同步');
+  const v = (/SW_VERSION = '(v[^']+)'/.exec(t) || [])[1] || '';
+  ok(vnum(v) >= vnum('4.79'), p + ' 同步（' + v + '）');
 });
 
 // ---------- 7. 載入守衛（沒載完不會破圖） ----------
@@ -99,7 +106,7 @@ ok(/spr\/title-logo\.webp/.test(src), 'HTML 的 logo 直接指向 spr/');
 // ---------- 8. 版本 ----------
 head('8. 版本');
 const V = /const VERSION = '([^']+)'/.exec(src)[1];
-ok(/^4\.(79|8\d)$/.test(V), 'VERSION ≥ 4.79（實際 ' + V + '）');
+ok(vnum(V) >= vnum('4.79'), 'VERSION ≥ 4.79（實際 ' + V + '）');
 ok(new RegExp('id="verTxt">' + V.replace(/\./g, '\\.')).test(src), '徽章文字同步 ' + V);
 ok(P.VERSION_LOG[0].v === V, '版本紀錄最上面是本版 ' + V);
 ok(P.VERSION_LOG[0].items.length >= 3, '本版至少 3 條紀錄（' + P.VERSION_LOG[0].items.length + '）');

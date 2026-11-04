@@ -2459,59 +2459,109 @@ flex: 0 0 auto; border: 0; background: transparent; color: #b07a30; font-size: 1
 cursor: pointer; padding: 2px 4px; line-height: 1;
 }
 
-#adminModal { position: fixed; inset: 0; z-index: 1250; display: none; align-items: center; justify-content: center; padding: 12px; background: rgba(8,10,20,.72); }
+/* ===== v4.90：開發者後台（桌機雙欄／手機分頁）===== */
+#adminModal { position: fixed; inset: 0; z-index: 1250; display: none; align-items: center; justify-content: center; padding: 12px; background: rgba(6,8,16,.80); }
 #adminModal.on { display: flex; }
 .adcard {
-width: 100%; max-width: 1080px; max-height: calc(100vh - 24px); display: flex; flex-direction: column;
-background: #10151f; border: 2px solid #2a3348; border-radius: 16px; padding: 12px 14px; color: #d8e2f5;
-box-shadow: 0 20px 60px rgba(0,0,0,.6);
+width: 100%; max-width: 1220px; height: min(94vh, 1020px); display: flex; flex-direction: column;
+background: #0e131c; border: 2px solid #2a3348; border-radius: 16px; padding: 10px 12px 12px;
+color: #d8e2f5; box-shadow: 0 20px 60px rgba(0,0,0,.65); overflow: hidden;
 }
-.adhead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.adhead h3 { font-size: 16px; font-weight: 900; margin: 0; color: #ffd9b0; }
-.adsub { font-size: 10.5px; color: #7b8aa8; font-weight: 700; }
+.adhead { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex: 0 0 auto; flex-wrap: wrap; }
+.adhead h3 { font-size: 15px; font-weight: 900; margin: 0; color: #ffd9b0; white-space: nowrap; }
+.adsub { font-size: 10px; color: #7b8aa8; font-weight: 700; }
 .adheadr { margin-left: auto; display: flex; gap: 6px; }
-.adheadr button { width: 32px; height: 32px; border-radius: 9px; border: 1.5px solid #2f3b52; background: #18202e; color: #9db0d0; font-size: 14px; cursor: pointer; }
-.adstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 6px; margin-bottom: 8px; }
-.adwarn { background: rgba(120,70,20,.22); border: 1.5px solid #a8763a; color: #ffd9a8;
-border-radius: 10px; padding: 7px 10px; margin-bottom: 8px; font-size: 11.5px; font-weight: 700; line-height: 1.5; }
+.adheadr button { width: 30px; height: 30px; border-radius: 9px; border: 1.5px solid #2f3b52; background: #18202e; color: #9db0d0; font-size: 13px; cursor: pointer; }
+.adheadr button:hover { background: #1f2a3d; }
+.adtabs { display: flex; gap: 3px; background: #141b27; border: 1px solid #202a3b; border-radius: 11px; padding: 3px; }
+.adtabs button { border: 0; background: transparent; color: #8ea3c6; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.adtabs button.on { background: #2b3a55; color: #eaf2ff; box-shadow: inset 0 0 0 1px #3d5273; }
+.adpane { display: none; flex: 1 1 auto; min-height: 0; }
+.adpane.on { display: flex; flex-direction: column; gap: 7px; overflow: auto; }
+.adwarn { flex: 0 0 auto; background: rgba(120,70,20,.22); border: 1.5px solid #a8763a; color: #ffd9a8; border-radius: 10px; padding: 7px 10px; margin-bottom: 8px; font-size: 11.5px; font-weight: 700; line-height: 1.5; }
 .adwarn.hide { display: none; }
+.adstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 6px; flex: 0 0 auto; }
 .adstat { background: #161e2b; border: 1.5px solid #253045; border-radius: 10px; padding: 6px 8px; text-align: center; }
 .adstat b { display: block; font-size: 17px; color: #7ee0a5; font-variant-numeric: tabular-nums; }
 .adstat span { font-size: 10px; color: #7b8aa8; }
-.adann, .adsearch { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; font-size: 11.5px; color: #9db0d0; }
-.adann input[type=text], .adsearch input { flex: 1 1 auto; min-width: 0; background: #0c1017; border: 1.5px solid #2a3348; border-radius: 9px; color: #d8e2f5; font-family: inherit; font-size: 12.5px; padding: 7px 9px; outline: none; }
-.adann input[type=number] { width: 62px; background: #0c1017; border: 1.5px solid #2a3348; border-radius: 9px; color: #d8e2f5; font-family: inherit; font-size: 12.5px; padding: 7px 6px; }
-.adann button, .adsearch button { background: #2b3a55; border: 1.5px solid #3d5273; color: #cfe0ff; border-radius: 9px; padding: 7px 12px; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
-.adlist { flex: 1 1 auto; min-height: 90px; max-height: 34vh; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; }
-.adtab { width: 100%; border-collapse: collapse; font-size: 11px; }
-.adtab th { position: sticky; top: 0; background: #1a2233; color: #8ea3c6; font-weight: 800; text-align: left; padding: 6px 7px; white-space: nowrap; z-index: 1; }
-.adtab td { padding: 5px 7px; border-top: 1px solid #1d2637; color: #c3d0e6; white-space: nowrap; }
-.adtab tr { cursor: pointer; }
-.adtab tr:hover td { background: #17202e; }
-.adtab tr.on td { background: #1d2a3d; }
-.adtab .mono { font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; color: #9db0d0; }
-.adtab .num { text-align: right; font-variant-numeric: tabular-nums; }
-.adpill { font-size: 9.5px; font-weight: 900; border-radius: 999px; padding: 1px 6px; }
+.adsec2 { flex: 0 0 auto; font-size: 11px; font-weight: 900; color: #8ea3c6; letter-spacing: .04em; margin-top: 2px; }
+.adsec2::before { content: ''; display: inline-block; width: 3px; height: 11px; background: #3d5273; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.adann, .adsearch, .adbtnrow, .adrow2 { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #9db0d0; flex: 0 0 auto; flex-wrap: wrap; }
+.adann input[type=text], .adann input[type=number], .adsearch input, .adrow2 select {
+background: #0c1017; border: 1.5px solid #2a3348; border-radius: 9px; color: #d8e2f5;
+font-family: inherit; font-size: 12.5px; padding: 7px 9px; outline: none;
+}
+.adann input[type=text], .adsearch input { flex: 1 1 160px; min-width: 0; }
+.adann input[type=number] { width: 64px; }
+.adann button, .adsearch button, .adbtnrow button, .adrow2 button {
+background: #2b3a55; border: 1.5px solid #3d5273; color: #cfe0ff; border-radius: 9px;
+padding: 7px 12px; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
+}
+.adann button:active, .adsearch button:active, .adbtnrow button:active { transform: translateY(1px); }
+.adsplit { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(290px, .92fr) minmax(360px, 1.4fr); gap: 8px; }
+.adlist { min-height: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; }
+.addetail { min-height: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; padding: 9px 11px; }
+.adrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; padding: 7px 9px; border-bottom: 1px solid #1a2331; cursor: pointer; }
+.adrow:hover { background: #141d29; }
+.adrow.on { background: #1b2637; box-shadow: inset 3px 0 0 #5b8def; }
+.adrow .adnm { font-size: 12.5px; font-weight: 800; color: #e6eeff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adrow .aduid { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #6f7f9c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adrow .admt { grid-column: 1 / 2; font-size: 10.5px; color: #8ea3c6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adrow .adst { grid-column: 2 / 3; grid-row: 1 / 3; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.adpill { font-size: 9.5px; font-weight: 900; border-radius: 999px; padding: 1px 6px; white-space: nowrap; }
 .adpill.g { background: #2a3448; color: #9db0d0; }
 .adpill.p { background: #1e3a2c; color: #7ee0a5; }
 .adpill.d { background: #3a2a5c; color: #d9cdff; }
 .adpill.b { background: #4a1f24; color: #ff9a9a; }
 .adpill.ok { background: #1e3a2c; color: #7ee0a5; }
-.adempty { padding: 14px; text-align: center; color: #6f7f9c; font-size: 12px; }
-.addetail { flex: 0 0 auto; max-height: 32vh; overflow: auto; margin-top: 8px; }
-.adwho { font-size: 13px; margin-bottom: 6px; }
-.adgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 4px 10px; }
-.adgrid > div { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; border-bottom: 1px dashed #1f2a3c; padding: 3px 0; }
-.adgrid span { color: #7b8aa8; }
-.adgrid b { color: #d8e2f5; font-weight: 800; }
-.adsec { margin-top: 7px; font-size: 11px; color: #8ea3c6; }
+.adempty { padding: 16px; text-align: center; color: #6f7f9c; font-size: 12px; }
+.adback { display: none; }
+.adwho { font-size: 13px; margin-bottom: 7px; line-height: 1.6; }
+.adkv { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 3px 12px; }
+.adkv > div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11px; border-bottom: 1px dashed #1f2a3c; padding: 3px 0; min-width: 0; }
+.adkv span { color: #7b8aa8; flex: 0 0 auto; }
+.adkv b { color: #d8e2f5; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adkv b.mono { font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; color: #a9bcd8; }
+.adsec { margin-top: 8px; font-size: 11px; color: #8ea3c6; }
 .adsec > span { display: block; font-weight: 800; color: #7b8aa8; margin-bottom: 3px; }
-.adactions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.adactions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 9px; }
 .adactions button { background: #2b3a55; border: 1.5px solid #3d5273; color: #cfe0ff; border-radius: 9px; padding: 6px 10px; font-family: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; }
+.adactions button[data-adm=ban] { background: #4a1f24; border-color: #7a3038; color: #ffb3b3; }
 .adgrant { font-size: 11px; color: #8ea3c6; display: flex; align-items: center; gap: 5px; }
-.adgrant input { width: 74px; background: #0c1017; border: 1.5px solid #2a3348; border-radius: 8px; color: #d8e2f5; font-family: inherit; font-size: 11.5px; padding: 5px 7px; }
-.adev { display: flex; gap: 8px; align-items: center; font-size: 11px; padding: 2px 0; border-bottom: 1px dashed #1f2a3c; color: #c3d0e6; }
+.adgrant input { width: 76px; background: #0c1017; border: 1.5px solid #2a3348; border-radius: 8px; color: #d8e2f5; font-family: inherit; font-size: 11.5px; padding: 5px 7px; }
+.adev { display: flex; gap: 8px; align-items: center; font-size: 11px; padding: 3px 0; border-bottom: 1px dashed #1f2a3c; color: #c3d0e6; }
+.adev .mono { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #6f7f9c; flex: 0 0 auto; }
 .adev b { color: #7ee0a5; font-weight: 800; }
+.adpre { flex: 1 1 auto; min-height: 120px; margin: 0; padding: 9px 10px; background: #080c12; border: 1.5px solid #1f2a3c; border-radius: 10px; color: #9fd4b4; font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; line-height: 1.5; overflow: auto; white-space: pre; }
+.adtag { display: inline-block; font-size: 9.5px; font-weight: 900; padding: 1px 6px; border-radius: 999px; background: #1e3a2c; color: #7ee0a5; margin-left: 4px; }
+.adtag.w { background: #4a3a1a; color: #ffd9a8; }
+@media (max-width: 880px) {
+#adminModal { padding: 0; background: #0e131c; }
+.adcard { height: 100%; max-width: none; border: 0; border-radius: 0; padding: calc(6px + env(safe-area-inset-top)) 9px calc(8px + env(safe-area-inset-bottom)); }
+.adhead { gap: 6px; }
+.adhead h3 { font-size: 13.5px; }
+.adsub { display: none; }
+.adtabs { order: 4; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.adtabs::-webkit-scrollbar { display: none; }
+.adtabs button { flex: 1 0 auto; padding: 7px 10px; font-size: 11.5px; }
+.adsplit { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+.addetail { display: none; }
+.adsplit.show-detail .adlist { display: none; }
+.adsplit.show-detail .addetail { display: block; }
+.adpane.detail-on .adsearch { display: none; }
+.adback { display: block; width: 100%; margin-bottom: 8px; background: #1b2637; border: 1.5px solid #2f3b52; color: #cfe0ff; border-radius: 9px; padding: 8px; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.adstats { grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); }
+.adstat b { font-size: 15px; }
+.adactions button { flex: 1 1 auto; padding: 9px 10px; }
+.adkv { grid-template-columns: 1fr; }
+.adann input[type=text] { flex: 1 1 100%; }
+.adsearch input { flex: 1 1 auto; min-width: 0; }
+.adann button { flex: 1 1 auto; padding: 9px 10px; }
+.adsearch button { flex: 0 0 auto; padding: 9px 12px; }
+}
+@media (max-width: 400px) {
+.adstat span { font-size: 9px; }
+}
 .vlog-item.devitem { border-left: 3px solid #6b5aa8; }
 .tagdev { font-size: 9px; font-weight: 900; background: #4a3a6b; color: #d9cdff; border-radius: 999px; padding: 1px 6px; margin-right: 5px; }
 @media (max-width: 520px) {
@@ -3386,6 +3436,24 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
 @media (prefers-reduced-motion: reduce) { #scrollHint .sh-a { animation: none; } }
 /* 桌機用滾輪很直覺，而且版面本來就一屏放得下 → 不顯示 */
 @media (hover: hover) and (pointer: fine) { body:not(.touch) #scrollHint { display: none; } }
+/* ===== v4.90：手把指派面板（設定頁是淺色底，這裡跟著用淺色） ===== */
+.padlist { display: flex; flex-direction: column; gap: 6px; margin-bottom: 7px; }
+.padnone { font-size: 11.5px; color: #6f5a38; background: rgba(255,252,244,.72); border: 1.5px dashed #c3a678;
+  border-radius: 10px; padding: 9px 11px; line-height: 1.6; }
+.padrow { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.72); border: 1.5px solid rgba(160,124,72,.34); border-radius: 11px; padding: 7px 9px; }
+.padrow .padnm { min-width: 0; }
+.padrow .padnm b { display: block; font-size: 12.5px; font-weight: 800; color: #4a3a22;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.padrow .padnm span { font-size: 10px; color: #8a7452; }
+.padsel { background: #fffdf8; color: #4a3a22; border: 1.5px solid #c9ae86; border-radius: 9px;
+  font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 8px; cursor: pointer; }
+.padslot { font-size: 10px; font-weight: 900; background: #2f6b4a; color: #eafff2; border-radius: 999px; padding: 2px 7px; }
+.padlive { font-size: 11px; color: #5a4630; background: rgba(120,96,60,.10); border-radius: 9px;
+  padding: 6px 9px; margin-bottom: 6px; min-height: 26px; line-height: 1.7; font-variant-numeric: tabular-nums; }
+.padlive:empty { display: none; }
+.padlive b { color: #2f6b4a; margin-right: 3px; }
+.padlive span { color: #8a7452; font-size: 10px; }
 </style>
 </head>
 <body>
@@ -3435,7 +3503,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.89</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.90</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -3476,7 +3544,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.89</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.90</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -3716,6 +3784,13 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
           <button data-v="pad">手把</button><button data-v="touch">手機觸控</button>
         </div>
         <div class="hint" id="ctrlHint"></div>
+      </div>
+      <div class="field" id="padField"><label>手把指派（1P～4P）</label>
+        <div class="padlist" id="padList"></div>
+        <div class="padlive" id="padLive"></div>
+        <div class="hint">接上手把後<b>按一下任意鍵</b>，瀏覽器才會回報。同一支手把只能佔一個位置；
+          兩支同款也分得開（用「型號＋序號」認）。藍牙延遲高時把距離拉近或改用有線。</div>
+        <div class="keybtns"><button class="minibtn" id="btnPadReset2">清除全部指派</button></div>
       </div>
       <div class="field"><label>鍵盤按鍵（點按鈕 → 再按你要的鍵）</label>
         <div class="seg" id="segKeyP" style="margin-bottom:9px">
@@ -4145,7 +4220,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.89';
+const VERSION = '4.90';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6068,10 +6143,14 @@ const Pad = (function () {
     const l = list();
     if (!l.length) { if (active) setActive(false); return false; }
     let touched = false;
-    for (let b = 0; b < 16; b++) if (Input.padEdge(0, b)) { touched = true; break; }
-    if (!touched) {
-      const a = Input.padAxis(0);
-      if (Math.abs(a.x) > .55 || Math.abs(a.y) > .55) touched = true;
+    for (let s = 0; s < 4 && !touched; s++) {
+      const pi = Input.padPhys ? Input.padPhys(s) : (s === 0 ? 0 : -1);
+      if (pi < 0) continue;
+      for (let b = 0; b < 16; b++) if (Input.padEdge(pi, b)) { touched = true; break; }
+      if (!touched) {
+        const a = Input.padAxis(pi);
+        if (Math.abs(a.x) > .55 || Math.abs(a.y) > .55) touched = true;
+      }
     }
     if (touched && !active) setActive(true);
     if (touched) { try { InputSense.seen('pad'); } catch (e) {} }
@@ -6833,13 +6912,15 @@ const Input = (function () {
     };
   }
   // 手把控制方案（可建立多支）
-  function padScheme(pi) {
+  //   v4.90：參數是「玩家槽」0~3（1P~4P），不是瀏覽器原始索引 —— 內部再查 padPhys()
+  function padScheme(slot) {
     return {
       dirs: function () {
-        const gp = navigator.getGamepads && navigator.getGamepads()[pi];
+        const pi = padPhys(slot);
         const d = [];
-        if (!gp) return d;
-        const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
+        if (pi < 0) return d;
+        const a = padAxis(pi);
+        const ax = a.x, ay = a.y;
         if (padDown(pi, 12)) d.push('up');
         if (padDown(pi, 13)) d.push('down');
         if (padDown(pi, 14)) d.push('left');
@@ -6848,10 +6929,10 @@ const Input = (function () {
         if (ax < -.5) d.push('left'); if (ax > .5) d.push('right');
         return d;
       },
-      action: function () { return padEdge(pi, 0); },
-      actionHeld: function () { return padDown(pi, 0); },
-      detonate: function () { return padEdge(pi, 2); },     // X／□
-      fire: function () { return padEdge(pi, 3); }          // Y／△
+      action: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, 0); },
+      actionHeld: function () { const pi = padPhys(slot); return pi >= 0 && padDown(pi, 0); },
+      detonate: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, 2); },   // X／□
+      fire: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, 3); }        // Y／△
     };
   }
   const PAD0 = padScheme(0);
@@ -6922,9 +7003,94 @@ const Input = (function () {
   }
   // ---- 手把：整幀快照 + 邊緣偵測（選單導航與遊戲共用） ----
   const gNow = [[], [], [], []], gPrev = [[], [], [], []];
+  /* v4.90：手把 → 玩家槽（1P~4P）
+     navigator.getGamepads() 的索引是瀏覽器「連線時配發的固定格」，中間拔掉一支就留洞：
+     只剩索引 3 有手把時，1P（讀槽 0）完全沒反應，玩家會以為手把壞了。
+     所以自己做一層映射：
+       · 每支手把用「id ＋ 同型號序號」當 token（兩支同款也分得出來）
+       · token → 槽 0~3（＝1P~4P），存 localStorage，換頁／重新連線都還在
+       · 已經在手邊但沒配過的 → 自動補到最左邊的空槽 */
+  const PAD_SLOT_KEY = 'bombhero-pads-v1';
+  const padSlotIdx = [-1, -1, -1, -1];     // 槽 → 瀏覽器原始索引
+  let padWant = ['', '', '', ''];          // 槽 → token
+  try {
+    const saved = JSON.parse(localStorage.getItem(PAD_SLOT_KEY) || '[]');
+    if (Array.isArray(saved)) for (let i = 0; i < 4; i++) padWant[i] = String(saved[i] || '');
+  } catch (e) {}
+  function padSave() {
+    try { localStorage.setItem(PAD_SLOT_KEY, JSON.stringify(padWant)); } catch (e) {}
+  }
+  function padCleanId(id) {
+    return String(id || '手把').replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim() || '手把';
+  }
+  function padScan() {
+    const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+    const out = [], seen = {};
+    for (let i = 0; i < (gps ? gps.length : 0); i++) {
+      const gp = gps[i];
+      if (!gp || gp.connected === false) continue;
+      const id = String(gp.id || 'pad');
+      const n = seen[id] || 0; seen[id] = n + 1;
+      out.push({ idx: i, gp: gp, id: id, token: id + '#' + n });
+    }
+    return out;
+  }
+  function padResolve() {
+    const pads = padScan(), byTok = {}, used = {};
+    pads.forEach(function (p) { byTok[p.token] = p; });
+    const res = [-1, -1, -1, -1];
+    let changed = false;
+    for (let s = 0; s < 4; s++) {
+      const tk = padWant[s];
+      if (!tk) continue;
+      if (byTok[tk] && !used[tk]) { res[s] = byTok[tk].idx; used[tk] = 1; }
+      else if (!byTok[tk]) { padWant[s] = ''; changed = true; }     // 這支已經不在了
+    }
+    for (let i = 0; i < pads.length; i++) {
+      const p = pads[i];
+      if (used[p.token]) continue;
+      let slot = -1;
+      for (let s = 0; s < 4; s++) if (res[s] === -1) { slot = s; break; }
+      if (slot < 0) break;                                          // 已經 4 支
+      res[slot] = p.idx; padWant[slot] = p.token; used[p.token] = 1; changed = true;
+    }
+    if (changed) padSave();
+    for (let s = 0; s < 4; s++) padSlotIdx[s] = res[s];
+    return res;
+  }
+  function padPhys(slot) { return (slot >= 0 && slot < 4) ? padSlotIdx[slot] : -1; }
+  function padInfo() {
+    const pads = padScan();
+    return {
+      pads: pads.map(function (p) {
+        let slot = -1;
+        for (let s = 0; s < 4; s++) if (padSlotIdx[s] === p.idx) slot = s;
+        return {
+          idx: p.idx, id: p.id, token: p.token, name: padCleanId(p.id), slot: slot,
+          buttons: (p.gp.buttons || []).length, axes: (p.gp.axes || []).length,
+          mapping: p.gp.mapping || '—'
+        };
+      }),
+      slots: padSlotIdx.slice(),
+      want: padWant.slice()
+    };
+  }
+  function padAssign(token, slot) {
+    for (let s = 0; s < 4; s++) if (padWant[s] === token && s !== slot) padWant[s] = '';
+    if (slot >= 0 && slot < 4) padWant[slot] = token;
+    padSave(); padResolve();
+    return padInfo();
+  }
+  function padReset() {
+    padWant = ['', '', '', ''];
+    padSave(); padResolve();
+    return padInfo();
+  }
   function framePads() {
+    padResolve();                                   // v4.90：每幀重算「槽 → 索引」（拔插後立刻修正）
     const gps = (navigator.getGamepads ? navigator.getGamepads() : []) || [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < gps.length; i++) {
+      if (!gNow[i]) { gNow[i] = []; gPrev[i] = []; }
       const gp = gps[i], n = gNow[i], pv = gPrev[i];
       for (let b = 0; b < 16; b++) {
         pv[b] = n[b] === undefined ? false : n[b];
@@ -6939,24 +7105,27 @@ const Input = (function () {
       pv.ay = gp ? (pv.ay || 0) : 0;
     }
   }
-  function padDown(pi, b) { return !!(gNow[pi] && gNow[pi][b]); }
-  function padEdge(pi, b) { return !!(gNow[pi] && gNow[pi][b]) && !(gPrev[pi] && gPrev[pi][b]); }
+  function padDown(pi, b) { return !!(pi >= 0 && gNow[pi] && gNow[pi][b]); }
+  function padEdge(pi, b) { return !!(pi >= 0 && gNow[pi] && gNow[pi][b]) && !(gPrev[pi] && gPrev[pi][b]); }
   function padAxis(pi) { return { x: (gNow[pi] && gNow[pi].ax) || 0, y: (gNow[pi] && gNow[pi].ay) || 0, rx: (gNow[pi] && gNow[pi].rx) || 0, ry: (gNow[pi] && gNow[pi].ry) || 0 }; }
   let padPrev = [false, false, false, false];
   function pollPads() {
+    // v4.90：回傳「玩家槽」順序（0=1P…3=4P），不是瀏覽器原始索引
     const gps = navigator.getGamepads ? navigator.getGamepads() : [];
     const res = [];
-    for (let i = 0; i < 4; i++) {
-      const gp = gps[i];
+    for (let s = 0; s < 4; s++) {
+      const pi = padSlotIdx[s];
+      const gp = pi >= 0 ? gps[pi] : null;
       const pressed = !!(gp && gp.buttons[0] && gp.buttons[0].pressed);
-      res.push(pressed && !padPrev[i]);
-      padPrev[i] = pressed;
+      res.push(pressed && !padPrev[s]);
+      padPrev[s] = pressed;
     }
     return res;
   }
   function flush() { for (const k in edges) edges[k] = false; }
   return { keys: keys, edges: edges, schemes: schemes, pollPads: pollPads, flush: flush, setTouch: setTouch, setTouchAxis: setTouchAxis, touchState: touchState,
-    framePads: framePads, padEdge: padEdge, padDown: padDown, padAxis: padAxis };
+    framePads: framePads, padEdge: padEdge, padDown: padDown, padAxis: padAxis,
+    padInfo: padInfo, padAssign: padAssign, padReset: padReset, padPhys: padPhys };
       })();
     } catch (__e) {
       __bootFail('Input', __e);
@@ -14883,6 +15052,73 @@ function aiPlaceBomb(p) {
 function sameTeam(a, b) {
   return !!((Game.brTeam | 0) >= 2 && a && b && a.team >= 0 && a.team === b.team);
 }
+
+/* v4.90：大逃殺 AI 的「社交距離 ＋ 群體分離」
+   ------------------------------------------------------------------
+   舊版：直接朝最近的對手走 → 全場 AI 黏成一團、身體互相穿過、偶爾才放一顆，
+         看起來完全沒有邏輯（使用者回報「一群 AI 靠在一起走來走去」）。
+   新版三個原則：
+     ① 交戰距離 BR_STANDOFF：比這更近就不再往前，改成側移／後退，不會貼在別人身上
+     ② 分離：目的地已經有別人 → 大扣分；目的地鄰格擠了兩個人以上 → 再扣
+     ③ 太遠的對手（> BR_ENGAGE 格）不主動追，交給巡邏（撿道具、往圈內走）
+   另外走到 1.2~3.2 格、彈藥與冷卻都允許時，停下來放一顆再換位。 */
+const BR_STANDOFF = 2.4;     // 格：想貼到比這更近就會被扣分
+const BR_ENGAGE = 8;         // 格：超過這個距離就不主動追
+function aiBrCrowd(p, x, y) {
+  const T = Game.T;
+  let n = 0;
+  for (let i = 0; i < Game.players.length; i++) {
+    const q = Game.players[i];
+    if (!q || q === p || !q.alive) continue;
+    const qx = Math.floor(q.x / T), qy = Math.floor(q.y / T);
+    const ad = Math.abs(qx - x) + Math.abs(qy - y);
+    if (ad === 0) n += 3;          // 同一格：非常擠
+    else if (ad === 1) n += 1;
+  }
+  return n;
+}
+/* 只挑「最不擠」的方向（落石／逃命時用：大家才不會全往同一格擠） */
+function aiBrLeastCrowded(p, opts, cx, cy) {
+  if (!opts || !opts.length) return null;
+  let best = null, bestV = 1e9;
+  for (let i = 0; i < opts.length; i++) {
+    const d = DIRS[opts[i]];
+    const v = aiBrCrowd(p, cx + d.x, cy + d.y) + Math.random() * .4;
+    if (v < bestV) { bestV = v; best = opts[i]; }
+  }
+  return best;
+}
+function aiBrChoose(p, opts, cx, cy, tgt, tgtD2) {
+  if (!opts || !opts.length) return null;
+  const T = Game.T;
+  const isFoe = !!(tgt && tgt.foe);
+  const foeD = isFoe ? Math.sqrt(tgtD2) / T : 99;
+  let best = null, bestV = -1e9;
+  for (let i = 0; i < opts.length; i++) {
+    const dn = opts[i], d = DIRS[dn];
+    const nx = cx + d.x, ny = cy + d.y;
+    let v = Math.random() * .5 - .25;
+    v -= aiBrCrowd(p, nx, ny) * 1.5;
+    if (isFoe) {
+      const nd = Math.sqrt(dist2(tgt.x, tgt.y, (nx + .5) * T, (ny + .5) * T)) / T;
+      if (foeD < BR_STANDOFF) {
+        v += (nd - foeD) * 2.4;                    // 太近 → 往後／側移
+      } else {
+        // 還遠 → 靠到交戰距離；超過交戰半徑權重降低（先撿東西、往圈內走，不要全場追人）
+        v += Math.max(0, foeD - nd) * (foeD > BR_ENGAGE ? .35 : .8);
+        if (nd < BR_STANDOFF) v -= 1.8;
+      }
+    }
+    if (v > bestV) { bestV = v; best = dn; }
+  }
+  if (!best) return null;
+  let bomb = false;
+  if (isFoe && foeD >= 1.2 && foeD <= 3.2 && !p.carry && !bombAt(cx, cy) && Math.random() < .6) {
+    const mine = Game.bombs.filter(function (b) { return b.owner === p && !b.held; }).length;
+    if (mine < p.maxBombs && aiBombOk(p)) bomb = true;
+  }
+  return { dir: best, bomb: bomb };
+}
 function controlAI(p, dt) {
   const T = Game.T;
   const lv = BR_AI.on ? BR_AI.cfg(aiLevelCfg(), Game.brZone ? Game.brZone.phase : 0) : aiLevelCfg();
@@ -14955,7 +15191,8 @@ function controlAI(p, dt) {
         p.aiDir = esc.length ? pick(esc)
           : (flee || (safeOpts.length ? pick(safeOpts) : (opts.length ? pick(opts) : null)));
       } else {
-        p.aiDir = flee || (safeOpts.length ? safeOpts[0] : (opts.length ? pick(opts) : null));
+        // v4.90：以前固定挑 safeOpts[0] → 附近所有 AI 全往同一格擠，改成挑最不擠的
+        p.aiDir = flee || (safeOpts.length ? (BR_AI.on ? aiBrLeastCrowded(p, safeOpts, cx, cy) : safeOpts[0]) : (opts.length ? pick(opts) : null));
       }
       // 進攻：自己不在火線上、而且確認有逃命路線（flee 有值＝BFS 找得到往內圈的路）才放彈，
       //   不然會自己把退路封死。實測「站在安全區也主動開炸」會讓 AI 在落石中忙著放彈、
@@ -15022,13 +15259,23 @@ function controlAI(p, dt) {
         }
         choice = pref.filter(function (dn) { return safeOpts.indexOf(dn) >= 0; })[0];
       }
-      p.aiDir = choice || pick(safeOpts);
+      // v4.90：大逃殺走「社交距離」決策（不再直接朝對手身上擠）
+      let brBomb = false;
+      if (BR_AI.on) {
+        const ch = aiBrChoose(p, safeOpts, cx, cy, tgt, bestScore);
+        p.aiDir = ch ? ch.dir : (choice || pick(safeOpts));
+        brBomb = !!(ch && ch.bomb);
+      } else {
+        p.aiDir = choice || pick(safeOpts);
+      }
       // 放炸彈判斷：靠近對手或旁邊有軟磚，且留有逃生路
       const mineCount = Game.bombs.filter(function (b) { return b.owner === p && !b.held; }).length;
-      if (mineCount < p.maxBombs && !p.carry) {
+      if (!BR_AI.on && mineCount < p.maxBombs && !p.carry) {
         const nearFoe = tgt && tgt.foe && bestD < (T * lv.foeR) * (T * lv.foeR);
         const nearSoft = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (v) { return cellAt(cx + v[0], cy + v[1]) === 2; });
         if ((nearFoe || (nearSoft && Math.random() < lv.soft)) && Math.random() < lv.bomb && aiBombOk(p)) aiPlaceBomb(p);
+      } else if (BR_AI.on && brBomb) {
+        aiPlaceBomb(p);
       }
       // v4.18：對戰 AI 隔牆丟炸彈 —— 走「玩家那條路」：
       //   先撿到搬彈手套（p.glove）→ 把腳下的炸彈舉起來 → 往面朝方向丟出去（越牆）
@@ -23498,6 +23745,99 @@ function applyCtrl() {
   applyTouchLayout();
   updateTips();
 }
+
+/* ---------- v4.90：手把指派面板（1P～4P） ---------- */
+(function () {
+  const LBL = ['1P', '2P', '3P', '4P'];
+  const BTN = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', '選單', 'Start', 'L3', 'R3',
+    '↑', '↓', '←', '→'];
+  let lastSig = '', liveTimer = 0, wired = false;
+
+  function esc2(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function visible() {
+    const el = $id('padField');
+    if (!el || typeof el.offsetParent === 'undefined') return false;
+    if (!el.offsetParent) return false;
+    const sc = el.closest ? el.closest('.screen') : null;
+    return !sc || sc.classList.contains('on');
+  }
+  function render(force) {
+    const box = $id('padList');
+    if (!box || !Input.padInfo) return;
+    const info = Input.padInfo();
+    const sig = JSON.stringify(info.pads.map(function (p) { return [p.token, p.slot]; }));
+    if (!force && sig === lastSig) return;
+    lastSig = sig;
+    if (!info.pads.length) {
+      box.innerHTML = '<div class="padnone">還沒偵測到手把 —— 藍牙配對完<b>按一下手把上的鍵</b>，' +
+        'Chrome／Edge 才會把它交給網頁（iOS Safari 不支援手把 API）。</div>';
+      return;
+    }
+    box.innerHTML = info.pads.map(function (p) {
+      const opts = ['<option value="-1">未指派</option>'];
+      for (let s = 0; s < 4; s++) {
+        opts.push('<option value="' + s + '"' + (p.slot === s ? ' selected' : '') + '>' + LBL[s] + '</option>');
+      }
+      return '<div class="padrow">' +
+        '<div class="padnm"><b>' + esc2(p.name) + '</b>' +
+        '<span>索引 ' + p.idx + '　按鍵 ' + p.buttons + '　軸 ' + p.axes + '</span></div>' +
+        '<select class="padsel" data-token="' + esc2(p.token) + '">' + opts.join('') + '</select>' +
+        (p.slot >= 0 ? '<span class="padslot">' + LBL[p.slot] + '</span>' : '<span></span>') +
+        '</div>';
+    }).join('');
+  }
+  function live() {
+    if (!visible()) return;
+    render(false);
+    const box = $id('padLive');
+    if (!box || !Input.padInfo) return;
+    const info = Input.padInfo();
+    if (!info.pads.length) { box.innerHTML = ''; return; }
+    const parts = [];
+    for (let s = 0; s < 4; s++) {
+      const pi = info.slots[s];
+      if (pi < 0) continue;
+      const on = [];
+      for (let b = 0; b < 16; b++) if (Input.padDown(pi, b)) on.push(BTN[b] || ('#' + b));
+      const a = Input.padAxis(pi);
+      parts.push('<b>' + LBL[s] + '</b>' + (on.length ? on.join('+') : '待機') +
+        ' <span>搖桿 ' + (a.x || 0).toFixed(1) + ',' + (a.y || 0).toFixed(1) + '</span>');
+    }
+    box.innerHTML = parts.join('　·　');
+  }
+  function wirePad() {
+    if (wired) return;
+    wired = true;
+    const box = $id('padList');
+    if (box) box.addEventListener('change', function (e) {
+      const sel = e.target && e.target.classList && e.target.classList.contains('padsel') ? e.target : null;
+      if (!sel) return;
+      Input.padAssign(sel.getAttribute('data-token'), Number(sel.value));
+      applyCtrl();
+      render(true);
+      AudioSys.sfx('click');
+    });
+    const rs = $id('btnPadReset2');
+    if (rs) rs.addEventListener('click', function () {
+      Input.padReset(); applyCtrl(); render(true); AudioSys.sfx('click');
+      toast('手把指派已清除，接上的會自動排 1P → 4P', 2.4);
+    });
+    window.addEventListener('gamepadconnected', function (e) {
+      render(true);
+      const nm = String((e.gamepad && e.gamepad.id) || '').replace(/\(.*?\)/g, '').trim() || '手把';
+      toast('🎮 已接上：' + nm, 2.6);
+    });
+    window.addEventListener('gamepaddisconnected', function () { render(true); });
+    if (!liveTimer) liveTimer = setInterval(live, 130);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wirePad);
+  else wirePad();
+  window.__padRender = function () { render(true); };
+})();
 refreshers.push(segWire('segCtrl', function () { return settings.ctrl; }, function (v) { settings.ctrl = v; applyCtrl(); }));
 refreshers.push(segWire('segTmode', function () { return padMode(); }, function (v) {
   settings.tpad.mode = (v === 'stick') ? 'stick' : 'slide';
@@ -26532,7 +26872,13 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.89', date: '2026-11-05', now: true, items: [
+  { v: '4.90', date: '2026-11-05', now: true, items: [
+    '🛠 <b>開發者後台重做</b>：五個分頁（總覽／會員／即時／系統／工具）。桌機左名單右詳情、<b>吃滿整個畫面</b>，不再被壓成兩條小窗；手機改成「清單→詳情」換頁，9 欄表格換成卡片，直著拿也看得到每一欄',
+    '📊 <b>後台看得到全部資料</b>：帳號每一個欄位＋各關卡次數＋最近 30 筆足跡＋原始 JSON；新增「系統」頁顯示 <code>/api/health</code> 全部欄位（儲存後端、金鑰指紋、容器啟動時間）；「即時」頁可直接看每日／每週榜內容，還能匯出整包 JSON',
+    '🎮 <b>手把可以分 1P～4P 了</b>：自己做了一層「實體手把 → 玩家槽」映射（型號＋序號辨識、存本機），藍牙手把插在中間空位也不會對錯人；設定頁新增指派面板，即時顯示誰按了哪顆鍵、搖桿數值',
+    '🤖 <b>大逃殺 AI 不再黏成一團</b>：加入<b>交戰距離 2.4 格</b>（太近就側移後退，不再往對手身上鑽）、<b>群體分離</b>（不搶同一格、不擠同一區）、落石逃命改挑「最不擠」的方向；會在 1.2～3.2 格停下放彈再換位',
+    '🎯 大逃殺 AI 遠處的對手改成<b>低權重接近</b>（先撿東西、往圈內走），不會全場直線追人，也不會站著發呆' ] },
+  { v: '4.89', date: '2026-11-05', now: false, items: [
     '💥 落地震波<b>重做</b>：白閃核心＋三圈衝擊環＋揚塵＋螢幕震動＋新的重擊音效（低頻下潛＋碎土），落地的力道終於看得出來',
     '🛡️ <b>平衡修正</b>：以前跳進怪群沒踩死，反而被碰掉坐騎。現在震波<b>一擊踩扁雜兵</b>（含 RPG 有血條的小怪）、大怪吃 35% 生命並被<b>震暈＋擊退</b>，落地還有 0.5 秒震攝保護',
     '👑 <b>BOSS 例外</b>：只吃固定小傷、<b>不會被震暈也不會被擊退</b>（避免一直跳＝永久暈王）',
@@ -29775,7 +30121,11 @@ const Cloud = (function () {
 const Admin = (function () {
     try {
       return (function () {
-  const A = { open: false, data: null, q: '', sel: null, busy: false };
+  /* v4.90：後台改成「分頁 ＋ 雙欄」，桌機不用捲、手機不用左右拉。
+     五個頁籤：總覽（統計＋伺服器狀態）／會員（名單＋詳情）／
+     即時（排行榜）／系統（dump 摘要＋原始 JSON）／工具（公告、匯出）。 */
+  const A = { open: false, data: null, dump: null, health: null, q: '', sel: null,
+    tab: 'home', lb: null, lbMode: 'daily', busy: false, err: '' };
 
   function e2(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -29795,6 +30145,14 @@ const Admin = (function () {
     const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
     return h + 'h' + (m < 10 ? '0' : '') + m + 'm';
   }
+  function dt(ms) {
+    if (!ms) return '—';
+    try {
+      const d = new Date(ms), p = function (n) { return n < 10 ? '0' + n : '' + n; };
+      return (d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' +
+        p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()));
+    } catch (e) { return '—'; }
+  }
   function srcLabel(a) {
     if (a.kind === 'guest') return '<span class="adpill g">遊客</span>';
     const p = a.provider || 'web';
@@ -29802,134 +30160,312 @@ const Admin = (function () {
       : p === 'line' ? 'LINE' : '帳密';
     return '<span class="adpill p">' + e2(name) + '</span>';
   }
-
-  /* ---------- 畫面 ---------- */
-  function renderStats(st) {
-    const box = $id('adStats');
-    if (!box) return;
-    const cells = [
-      ['總帳號', st.accounts], ['正式會員', st.members], ['遊客', st.guests],
-      ['今日註冊', st.newToday], ['24h 上線', st.online24h], ['停權中', st.banned],
-      ['註冊總數', st.registers], ['帳密登入', st.webLogins],
-      ['竄改攔阻', st.tamper], ['限流攔阻', st.rateLimited]
-    ];
-    box.innerHTML = cells.map(function (c) {
-      return '<div class="adstat"><b>' + c[1] + '</b><span>' + c[0] + '</span></div>';
+  function kv(rows) {
+    return rows.map(function (r) {
+      if (!r) return '';
+      const cls = r[2] === 'mono' ? ' class="mono"' : '';
+      return '<div><span>' + e2(r[0]) + '</span><b' + cls + '>' + r[1] + '</b></div>';
     }).join('');
   }
 
+  /* ---------- 頁籤 ---------- */
+  function setTab(name) {
+    A.tab = name;
+    const bar = $id('adTabs');
+    if (bar) {
+      const bs = bar.querySelectorAll('button[data-tab]');
+      for (let i = 0; i < bs.length; i++) {
+        bs[i].classList.toggle('on', bs[i].getAttribute('data-tab') === name);
+      }
+    }
+    const panes = document.querySelectorAll('#adminModal .adpane');
+    for (let i = 0; i < panes.length; i++) {
+      panes[i].classList.toggle('on', panes[i].getAttribute('data-pane') === name);
+    }
+    if (name === 'live' && !A.lb) loadLb();
+    if (name === 'system' && !A.dump) refresh();
+    AudioSys.sfx('click');
+  }
+
+  /* ---------- 總覽 ---------- */
+  function renderStats(st) {
+    const box = $id('adStats');
+    if (!box || !st) return;
+    const cells = [
+      ['總帳號', st.accounts], ['正式會員', st.members], ['遊客', st.guests],
+      ['開發者', st.devs], ['今日註冊', st.newToday], ['24h 上線', st.online24h],
+      ['停權中', st.banned], ['註冊次數', st.registers], ['登入次數', st.logins],
+      ['綁定', st.bindings], ['竄改攔阻', st.tamper], ['限流攔阻', st.rateLimited]
+    ];
+    box.innerHTML = cells.map(function (c) {
+      return '<div class="adstat"><b>' + (c[1] == null ? 0 : c[1]) + '</b><span>' + c[0] + '</span></div>';
+    }).join('');
+  }
+
+  function renderHealth() {
+    const box = $id('adHealth'), tag = $id('adHealthTag');
+    if (!box) return;
+    const h = A.health;
+    if (!h) {
+      box.innerHTML = '<div><span>狀態</span><b>讀不到 /api/health</b></div>';
+      if (tag) { tag.textContent = '離線'; tag.className = 'adtag w'; }
+      return;
+    }
+    if (tag) { tag.textContent = h.ok ? '正常' : '異常'; tag.className = 'adtag' + (h.ok ? '' : ' w'); }
+    const d = h.storageDiag || {};
+    const rows = [
+      ['房間 / 中繼', (h.rooms | 0) + ' / ' + (h.relay | 0)],
+      ['線上交換中玩家', h.players | 0],
+      ['本機帳號快取', h.accounts | 0],
+      ['儲存後端', (h.storage || '?') + (h.storageLoaded ? '（已載入）' : '（未載入！）')],
+      ['遠端寫入 / 失敗', (h.storageWrites | 0) + ' / ' + (h.storageFails | 0)],
+      ['儲存錯誤', h.storageError || '無'],
+      ['Supabase 主機', d.urlHost || '—'],
+      ['資料表', d.table || '—'],
+      ['金鑰長度 / 前綴', (d.keyLen == null ? '—' : d.keyLen) + ' / ' + (d.keyPfx || '—')],
+      ['金鑰指紋', d.keyHash || '—'],
+      ['金鑰變數名警告', d.keyNameWarn || '無'],
+      ['環境變數', (d.envNames || []).join('、') || '—'],
+      ['容器啟動', dt(h.bootAt)],
+      ['已運行', fmtDur(h.uptimeSec || 0)],
+      ['竄改 / 限流', (h.tamper | 0) + ' / 0']
+    ];
+    box.innerHTML = kv(rows.map(function (r) { return [r[0], e2(r[1]), 'mono']; }));
+  }
+
+  function renderRecent() {
+    const box = $id('adRecent');
+    if (!box || !A.data) return;
+    const rows = (A.data.accounts || []).slice().sort(function (x, y) {
+      return (y.lastSeen || 0) - (x.lastSeen || 0);
+    }).slice(0, 40);
+    if (!rows.length) { box.innerHTML = '<div class="adempty">還沒有任何帳號</div>'; return; }
+    box.innerHTML = rows.map(function (a) {
+      return '<div class="adrow" data-id="' + e2(a.id) + '">' +
+        '<div class="adnm">' + e2(a.name) + (a.dev ? ' <span class="adpill d">DEV</span>' : '') + '</div>' +
+        '<div class="adst">' + srcLabel(a) +
+        (a.banned ? '<span class="adpill b">停權</span>' : '') + '</div>' +
+        '<div class="admt">最後上線 ' + e2(a.lastSeenStr || dt(a.lastSeen)) +
+        '　關卡 ' + (a.cleared | 0) + '/32　💰' + (a.gold | 0) + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  /* ---------- 會員名單 ---------- */
+  function rowsFiltered() {
+    if (!A.data) return [];
+    const q = A.q.trim().toLowerCase();
+    if (!q) return A.data.accounts || [];
+    return (A.data.accounts || []).filter(function (a) {
+      return (a.id + ' ' + a.name + ' ' + a.email + ' ' + a.username + ' ' + a.ip + ' ' + (a.sub || ''))
+        .toLowerCase().indexOf(q) >= 0;
+    });
+  }
   function renderList() {
     const box = $id('adList');
-    if (!box || !A.data) return;
-    const q = A.q.trim().toLowerCase();
-    let rows = A.data.accounts;
-    if (q) {
-      rows = rows.filter(function (a) {
-        return (a.id + ' ' + a.name + ' ' + a.email + ' ' + a.username + ' ' + a.ip).toLowerCase().indexOf(q) >= 0;
-      });
-    }
+    if (!box) return;
+    if (!A.data) { box.innerHTML = '<div class="adempty">載入中…</div>'; return; }
+    const rows = rowsFiltered();
     if (!rows.length) { box.innerHTML = '<div class="adempty">沒有符合的帳號</div>'; return; }
-    let html = '<table class="adtab"><thead><tr>' +
-      '<th>UID</th><th>名稱</th><th>來源</th><th>IP</th><th>加入時間</th>' +
-      '<th>最後上線</th><th>登入</th><th>關卡</th><th>狀態</th></tr></thead><tbody>';
-    rows.forEach(function (a) {
-      html += '<tr data-id="' + e2(a.id) + '"' + (A.sel === a.id ? ' class="on"' : '') + '>' +
-        '<td class="mono">' + e2(a.id) + '</td>' +
-        '<td>' + e2(a.name) + (a.dev ? ' <span class="adpill d">DEV</span>' : '') + '</td>' +
-        '<td>' + srcLabel(a) + '</td>' +
-        '<td class="mono">' + e2(a.ip || '-') + '</td>' +
-        '<td class="mono">' + e2(a.createdStr) + '</td>' +
-        '<td class="mono">' + e2(a.lastSeenStr) + '</td>' +
-        '<td class="num">' + a.logins + '</td>' +
-        '<td class="num">' + a.cleared + '/32</td>' +
-        '<td>' + (a.banned ? '<span class="adpill b">停權</span>' : '<span class="adpill ok">正常</span>') + '</td>' +
-        '</tr>';
-    });
-    box.innerHTML = html + '</tbody></table>';
+    box.innerHTML = rows.map(function (a) {
+      return '<div class="adrow' + (A.sel === a.id ? ' on' : '') + '" data-id="' + e2(a.id) + '">' +
+        '<div class="adnm">' + e2(a.name) + (a.dev ? ' <span class="adpill d">DEV</span>' : '') + '</div>' +
+        '<div class="adst">' + srcLabel(a) +
+        (a.banned ? '<span class="adpill b">停權</span>' : '') + '</div>' +
+        '<div class="aduid">' + e2(a.id) + '</div>' +
+        '<div class="admt">關卡 ' + (a.cleared | 0) + '/32　💰' + (a.gold | 0) +
+        '　登入 ' + (a.logins | 0) + '　' + e2(a.createdStr || dt(a.created)) + '</div>' +
+        '</div>';
+    }).join('');
   }
 
   function renderDetail(a) {
     const box = $id('adDetail');
     if (!box) return;
-    if (!a) { box.innerHTML = ''; return; }
+    if (!a) {
+      box.innerHTML = '<div class="adempty">← 從左邊選一個帳號看完整資料</div>';
+      return;
+    }
     const al = a.alloc || {};
     const stg = a.stages || {};
     const stgTxt = Object.keys(stg).sort(function (x, y) { return x - y; })
       .map(function (k) { return k + '×' + stg[k]; }).join('、') || '（無）';
     const evs = (a.events || []).map(function (e) {
-      return '<div class="adev"><span class="mono">' + e2(e.str) + '</span>' +
+      return '<div class="adev"><span class="mono">' + e2(e.str || dt(e.t)) + '</span>' +
         '<b>' + e2(e.type) + '</b>' +
         (e.stage ? ' <span class="adpill g">關 ' + e.stage + '</span>' : '') +
         (e.cleared != null ? ' <span class="adpill g">cleared=' + e.cleared + '</span>' : '') +
         '</div>';
     }).join('') || '<div class="adempty">（沒有足跡）</div>';
+
+    const ips = (a.ips || []).join('、') || a.ip || '—';
     box.innerHTML =
-      '<div class="adwho"><b>' + e2(a.name) + '</b> <span class="mono">' + e2(a.id) + '</span>' +
+      '<button class="adback" type="button" data-adm="back">← 返回名單</button>' +
+      '<div class="adwho"><b>' + e2(a.name) + '</b> <span class="mono" style="font-size:10.5px;color:#6f7f9c">' +
+      e2(a.id) + '</span>' +
       (a.dev ? ' <span class="adpill d">DEVELOPER</span>' : '') +
-      (a.banned ? ' <span class="adpill b">已停權</span>' : '') + '</div>' +
-      '<div class="adgrid">' +
-      '<div><span>Email / 帳號</span><b>' + e2(a.email || a.username || '—') + '</b></div>' +
-      '<div><span>登入來源</span><b>' + e2(a.provider || 'guest') + '</b></div>' +
-      '<div><span>第三方平台 ID</span><b class="mono">' + e2(a.sub || '—') + '</b></div>' +
-      '<div><span>註冊 IP</span><b class="mono">' + e2(a.firstIp || a.ip || '—') + '</b></div>' +
-      '<div><span>最近 IP</span><b class="mono">' + e2(a.ip || '—') + '</b></div>' +
-      '<div><span>加入時間</span><b class="mono">' + e2(a.createdStr) + '</b></div>' +
-      '<div><span>最後上線</span><b class="mono">' + e2(a.lastSeenStr) + '</b></div>' +
-      '<div><span>登入次數</span><b>' + a.logins + '</b></div>' +
-      '<div><span>RPG 進度</span><b>' + a.cleared + ' / 32（解鎖到 ' + Math.min(32, a.cleared + 1) + '）</b></div>' +
-      '<div><span>金幣</span><b>💰 ' + (a.gold | 0) + '</b></div>' +
-      '<div><span>配點</span><b>❤️' + (al.hp | 0) + ' 🛡️' + (al.def | 0) + ' 👟' + (al.spd | 0) + ' 💥' + (al.atk | 0) + '</b></div>' +
-      '<div><span>累計遊玩</span><b>' + fmtDur(a.playSec) + '</b></div>' +
-      '</div>' +
+      (a.banned ? ' <span class="adpill b">已停權</span>' : '') +
+      (a.hasPass ? ' <span class="adpill g">有密碼</span>' : '') + '</div>' +
+      '<div class="adkv">' + kv([
+        ['Email / 帳號', e2(a.email || a.username || '—')],
+        ['登入來源', e2(a.provider || 'guest')],
+        ['帳號種類', e2(a.kind || '—')],
+        ['第三方平台 ID', e2(a.sub || '—'), 'mono'],
+        ['註冊 IP', e2(a.firstIp || a.ip || '—'), 'mono'],
+        ['最近 IP', e2(a.ip || '—'), 'mono'],
+        ['IP 歷史', e2(ips), 'mono'],
+        ['加入時間', e2(a.createdStr || dt(a.created)), 'mono'],
+        ['最後上線', e2(a.lastSeenStr || dt(a.lastSeen)), 'mono'],
+        ['登入次數', (a.logins | 0)],
+        ['RPG 進度', (a.cleared | 0) + ' / 32'],
+        ['金幣', '💰 ' + (a.gold | 0)],
+        ['配點', '❤️' + (al.hp | 0) + ' 🛡️' + (al.def | 0) + ' 👟' + (al.spd | 0) + ' 💥' + (al.atk | 0)],
+        ['可用 / 已用點數', (a.points == null ? '—' : a.points) + ' / ' + (a.spent == null ? '—' : a.spent)],
+        ['累計遊玩', fmtDur(a.playSec || 0)],
+        ['停權資訊', a.banned ? (e2(a.banned.reason || '未填') + '　' + dt(a.banned.at)) : '正常']
+      ]) + '</div>' +
       '<div class="adsec"><span>各關卡遊玩次數</span><div>' + e2(stgTxt) + '</div></div>' +
       '<div class="adactions">' +
       '<button data-adm="ban" data-id="' + e2(a.id) + '" data-on="' + (a.banned ? '0' : '1') + '">' +
       (a.banned ? '♻️ 解除停權' : '🚫 停權') + '</button>' +
-      '<button data-adm="grant" data-id="' + e2(a.id) + '">💾 套用下方的進度／金幣</button>' +
+      '<button data-adm="grant" data-id="' + e2(a.id) + '">💾 套用下方進度／金幣</button>' +
       '<button data-adm="reset" data-id="' + e2(a.id) + '">🧹 配點歸零</button>' +
-      '<span class="adgrant">關卡 <input id="adCleared" type="number" min="0" max="32" value="' + a.cleared + '">' +
+      '<span class="adgrant">關卡 <input id="adCleared" type="number" min="0" max="32" value="' + (a.cleared | 0) + '">' +
       '金幣 <input id="adGold" type="number" min="0" value="' + (a.gold | 0) + '"></span>' +
       '</div>' +
-      '<div class="adsec"><span>最近操作足跡（最多 30 筆）</span>' + evs + '</div>';
+      '<div class="adsec"><span>最近操作足跡（最多 30 筆）</span>' + evs + '</div>' +
+      '<div class="adsec"><span>這個帳號的原始 JSON</span></div>' +
+      '<pre class="adpre" style="min-height:90px">' + e2(JSON.stringify(a, null, 2)) + '</pre>';
+    const split = $id('adSplit');
+    const pane = document.querySelector('.adpane[data-pane=members]');
+    if (split && window.matchMedia && window.matchMedia('(max-width: 880px)').matches) {
+      split.classList.add('show-detail');
+      if (pane) pane.classList.add('detail-on');   // 手機看詳情時把搜尋列收起來（省空間）
+    }
   }
 
-  /* ---------- 行為 ---------- */
+  /* ---------- 系統 ---------- */
+  function renderSys() {
+    const box = $id('adSys'), raw = $id('adRaw');
+    const d = A.dump;
+    if (!d) {
+      if (box) box.innerHTML = '<div><span>資料</span><b>尚未載入（按 🔄）</b></div>';
+      return;
+    }
+    if (box) {
+      box.innerHTML = kv([
+        ['產生時間', dt(d.at), 'mono'],
+        ['帳號總數', (d.accounts || []).length],
+        ['裝置綁定數', d.devices == null ? '—' : (typeof d.devices === 'number' ? d.devices : Object.keys(d.devices).length)],
+        ['排行榜天數', d.lb && d.lb.days ? Object.keys(d.lb.days).length : '—'],
+        ['公告', (d.announce && d.announce.text) ? e2(d.announce.text) : '無'],
+        ['資料是否永存', d.flags && d.flags.ephemeral ? '否（重新部署會清空）' : '是'],
+        ['後端版本', (d.flags && d.flags.version) || '—', 'mono'],
+        ['開發者帳號', (d.flags && d.flags.devEmails || []).join('、') || '—']
+      ]);
+    }
+    if (raw) raw.textContent = JSON.stringify(d, null, 2);
+  }
+
+  /* ---------- 排行榜 ---------- */
+  function loadLb() {
+    const box = $id('adLbList'), meta = $id('adLbMeta');
+    const mode = A.lbMode || 'daily';
+    if (box) box.innerHTML = '<div class="adempty">讀取中…</div>';
+    return api('/api/lb/top?mode=' + encodeURIComponent(mode) + '&limit=100').then(function (r) {
+      if (!r || !r.ok) {
+        if (box) box.innerHTML = '<div class="adempty">讀不到排行榜：' + e2((r && r.err) || 'NET') + '</div>';
+        return;
+      }
+      A.lb = r;
+      if (meta) {
+        meta.textContent = (mode === 'weekly' ? '本週 ' : '當日 ') + (r.day || '') +
+          '　共 ' + (r.count || 0) + ' 筆';
+      }
+      const list = r.list || [];
+      if (box) {
+        box.innerHTML = list.length ? list.map(function (it, i) {
+          return '<div class="adrow" style="cursor:default">' +
+            '<div class="adnm">#' + (i + 1) + '　' + e2(it.name || it.id || '匿名') + '</div>' +
+            '<div class="adst"><span class="adpill p">' + (it.score == null ? '—' : it.score) + '</span></div>' +
+            '<div class="admt">' + e2(it.at ? dt(it.at) : '') +
+            (it.mode ? '　' + e2(it.mode) : '') + '</div></div>';
+        }).join('') : '<div class="adempty">這一天還沒有人上榜</div>';
+      }
+    });
+  }
+
+  /* ---------- 載入 ---------- */
   function refresh() {
-    return api('/api/admin/overview').then(function (r) {
+    if (A.busy) return Promise.resolve(null);
+    A.busy = true;
+    return Promise.all([
+      api('/api/admin/overview'),
+      fetch('/api/health', { credentials: 'omit' }).then(function (r) { return r.json(); }, function () { return null; }),
+      api('/api/admin/dump')
+    ]).then(function (res) {
+      A.busy = false;
+      const r = res[0];
+      A.health = res[1] || null;
+      A.dump = (res[2] && res[2].ok) ? res[2] : null;
       if (!r || !r.ok) {
         if (r && r.err === 'NOT_DEV') { toast('沒有權限（只有開發者帳號可以看後台）', 3); close(); }
-        else toast('後台讀取失敗：' + ((r && r.err) || 'NET'), 3);
+        else if (r && r.err === 'NOT_FOUND') {
+          toast('後端還是舊版：/api/admin/dump 不存在，重啟後就有了', 3.4);
+        } else toast('後台讀取失敗：' + ((r && r.err) || 'NET'), 3);
+        renderHealth();
         return null;
       }
       A.data = r;
       renderStats(r.stats);
+      renderHealth();
+      renderRecent();
       renderList();
-      const t = $id('adAnnText');
-      if (t) t.value = (r.announce && r.announce.text) || '';
-      // v4.13：後台把「資料會不會被清掉」的警告顯示出來（避免改版後帳號消失而不知情）
+      renderSys();
+      const mail = $id('adDevMail');
+      if (mail) mail.textContent = (r.devEmails || []).join(' / ');
+      const annText = $id('adAnnText');
+      if (annText) annText.value = (r.announce && r.announce.text) || '';
       const w = $id('adWarn');
       if (w) {
         if (r.persistWarning) { w.textContent = '⚠️ ' + r.persistWarning; w.classList.remove('hide'); }
         else w.classList.add('hide');
       }
+      const help = $id('adHelp');
+      if (help) {
+        help.innerHTML =
+          '<div>· <b>總覽</b>：帳號統計 ＋ <code>/api/health</code> 全部欄位（儲存後端、金鑰指紋、容器啟動時間、運行秒數）。</div>' +
+          '<div>· <b>會員</b>：搜尋 UID／Email／名稱／IP；點一列看完整欄位、各關卡次數、最近 30 筆足跡，最下方有該帳號的原始 JSON。</div>' +
+          '<div>· <b>即時</b>：每日／每週排行榜的實際內容（前 100 名），用來確認分數有沒有正常寫入。</div>' +
+          '<div>· <b>系統</b>：<code>/api/admin/dump</code> 的摘要與整包原始 JSON，可複製或匯出。</div>' +
+          '<div>· 手機：清單與詳情是「換頁」不是左右擠，點列進來、按「← 返回名單」回去。</div>';
+      }
+      if (r.announce) { try { if (Cloud.setAnnounce) Cloud.setAnnounce(r.announce); } catch (e) {} }
       return r;
+    }, function () {
+      A.busy = false;
+      renderHealth();
+      return null;
     });
   }
+
   function pick(id) {
     A.sel = id;
     renderList();
+    AudioSys.sfx('click');
     return api('/api/admin/player?id=' + encodeURIComponent(id)).then(function (r) {
       if (r && r.ok) renderDetail(r.account);
       else toast('查不到這個玩家', 2.4);
     });
   }
+
   function open() {
     if (!Cloud.isDev()) { toast('只有開發者帳號可以開啟後台', 2.6); return false; }
     const m = $id('adminModal');
-    // v4.13：找不到後台元素時要說清楚（原本靜默 return false → 使用者只看到空白）
     if (!m) { toast(t('acct.adminFail'), 3.2); return false; }
     m.classList.add('on');
     A.open = true;
+    setTab(A.tab || 'home');
     renderList();
     refresh();
     AudioSys.sfx('click');
@@ -29941,28 +30477,45 @@ const Admin = (function () {
     A.open = false;
   }
 
+  function download(name, text) {
+    try {
+      const blob = new Blob([text], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { try { URL.revokeObjectURL(url); a.remove(); } catch (e) {} }, 400);
+      toast('已匯出 ' + name, 2.2);
+    } catch (e) { toast('匯出失敗', 2.2); }
+  }
+
   function wire() {
     const m = $id('adminModal');
     if (!m) return;
     const cl = $id('adClose'); if (cl) cl.addEventListener('click', function () { close(); });
     m.addEventListener('click', function (e) { if (e.target === m) close(); });
     const rf = $id('adRefresh'); if (rf) rf.addEventListener('click', function () { refresh(); });
+
+    const tabs = $id('adTabs');
+    if (tabs) tabs.addEventListener('click', function (e) {
+      const b = e.target && e.target.closest ? e.target.closest('button[data-tab]') : null;
+      if (b) setTab(b.getAttribute('data-tab'));
+    });
+
     const qg = $id('adQGo');
     const doQ = function () {
       const q = $id('adQ');
       A.q = q ? q.value : '';
       renderList();
       if (A.q && A.data) {
-        const hit = A.data.accounts.filter(function (a) {
-          return (a.id + ' ' + a.name + ' ' + a.email + ' ' + a.username).toLowerCase()
-            .indexOf(A.q.trim().toLowerCase()) >= 0;
-        })[0];
+        const hit = rowsFiltered()[0];
         if (hit) pick(hit.id);
       }
     };
     if (qg) qg.addEventListener('click', doQ);
     const qi = $id('adQ');
     if (qi) qi.addEventListener('keydown', function (e) { if (e.key === 'Enter') doQ(); });
+
     const ag = $id('adAnnGo');
     if (ag) ag.addEventListener('click', function () {
       const t1 = $id('adAnnText'), h1 = $id('adAnnHours');
@@ -29977,16 +30530,66 @@ const Admin = (function () {
         } else toast('發布失敗：' + ((r && r.err) || 'NET'), 2.6);
       });
     });
+
+    const lg = $id('adLbGo');
+    if (lg) lg.addEventListener('click', function () {
+      const sel = $id('adLbMode');
+      A.lbMode = sel ? sel.value : 'daily';
+      loadLb();
+    });
+    const lm = $id('adLbMode');
+    if (lm) lm.addEventListener('change', function () {
+      A.lbMode = lm.value; A.lb = null; loadLb();
+    });
+
+    const ex1 = $id('adExportAcc');
+    if (ex1) ex1.addEventListener('click', function () {
+      if (!A.data) return toast('還沒載入', 2);
+      download('bombhero-accounts-' + Date.now() + '.json', JSON.stringify(A.data.accounts, null, 2));
+    });
+    const ex2 = $id('adExportRaw');
+    if (ex2) ex2.addEventListener('click', function () {
+      if (!A.dump) return toast('還沒載入', 2);
+      download('bombhero-dump-' + Date.now() + '.json', JSON.stringify(A.dump, null, 2));
+    });
+    const cp = $id('adCopyRaw');
+    if (cp) cp.addEventListener('click', function () {
+      if (!A.dump) return toast('還沒載入', 2);
+      const txt = JSON.stringify(A.dump, null, 2);
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt);
+        else { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+        toast('已複製', 2);
+      } catch (e) { toast('複製失敗', 2); }
+    });
+
     const list = $id('adList');
     if (list) list.addEventListener('click', function (e) {
-      const tr = e.target && e.target.closest ? e.target.closest('tr[data-id]') : null;
-      if (tr) pick(tr.getAttribute('data-id'));
+      const row = e.target && e.target.closest ? e.target.closest('.adrow[data-id]') : null;
+      if (row) pick(row.getAttribute('data-id'));
     });
+    const recent = $id('adRecent');
+    if (recent) recent.addEventListener('click', function (e) {
+      const row = e.target && e.target.closest ? e.target.closest('.adrow[data-id]') : null;
+      if (!row) return;
+      const id = row.getAttribute('data-id');
+      setTab('members');
+      pick(id);
+    });
+
     const det = $id('adDetail');
     if (det) det.addEventListener('click', function (e) {
       const b = e.target && e.target.closest ? e.target.closest('[data-adm]') : null;
       if (!b) return;
       const act = b.getAttribute('data-adm'), id = b.getAttribute('data-id');
+      if (act === 'back') {
+        const sp = $id('adSplit');
+        if (sp) sp.classList.remove('show-detail');
+        const pn = document.querySelector('.adpane[data-pane=members]');
+        if (pn) pn.classList.remove('detail-on');
+        AudioSys.sfx('click');
+        return;
+      }
       if (act === 'ban') {
         api('/api/admin/ban', { id: id, on: b.getAttribute('data-on') === '1', reason: '後台操作' })
           .then(function (r) { toast(r && r.ok ? '已更新' : '操作失敗', 2); refresh(); pick(id); });
@@ -30004,7 +30607,7 @@ const Admin = (function () {
     });
   }
 
-  return { open: open, close: close, wire: wire, refresh: refresh, state: A };
+  return { open: open, close: close, wire: wire, refresh: refresh, state: A, setTab: setTab };
       })();
     } catch (__e) {
       __bootFail('Admin', __e);
@@ -30463,6 +31066,9 @@ window.__BH = {
   updateEnemy: updateEnemy, updateBoss: updateBoss, buildSdList: buildSdList,
   updateFlyer: updateFlyer, aiLevelCfg: aiLevelCfg, AI_LEVELS: AI_LEVELS,
   controlAI: controlAI, aiLobBomb: aiLobBomb, aiThrowLanding: aiThrowLanding,
+  // v4.90：大逃殺 AI 的社交距離／分離（測試用）
+  aiBrChoose: aiBrChoose, aiBrCrowd: aiBrCrowd, aiBrLeastCrowded: aiBrLeastCrowded,
+  BR_STANDOFF: BR_STANDOFF, BR_ENGAGE: BR_ENGAGE,
   aiGrabOwnBomb: aiGrabOwnBomb, aiDropCarry: aiDropCarry, dangerAt: dangerAt, findLanding: findLanding, playerAtCell: playerAtCell, playerAhead: playerAhead,
   enemySkillTick: enemySkillTick, ENEMY_SPECIES: ENEMY_SPECIES,
   STAGE_ROSTER: STAGE_ROSTER, blockOf: blockOf, stageRoster: stageRoster, stageTypes: stageTypes,
@@ -30650,27 +31256,75 @@ document.addEventListener('pointerdown', function once() {
 <div id="adminModal" role="dialog" aria-modal="true" aria-label="開發者後台">
   <div class="adcard">
     <div class="adhead">
-      <h3>🛠 開發者後台 <span class="adsub">jon84597@gmail.com</span></h3>
+      <h3>🛠 開發者後台 <span class="adsub" id="adDevMail"></span></h3>
+      <div class="adtabs" id="adTabs">
+        <button type="button" data-tab="home" class="on">總覽</button>
+        <button type="button" data-tab="members">會員</button>
+        <button type="button" data-tab="live">即時</button>
+        <button type="button" data-tab="system">系統</button>
+        <button type="button" data-tab="tools">工具</button>
+      </div>
       <div class="adheadr">
         <button id="adRefresh" type="button" title="重新整理">🔄</button>
         <button id="adClose" type="button" aria-label="關閉">✕</button>
       </div>
     </div>
-    <div class="adstats" id="adStats"></div>
-    <!-- v4.13：資料夾不是持久化時的警告（重新部署會讓帳號消失） -->
     <div class="adwarn hide" id="adWarn"></div>
-    <div class="adann">
-      <span>📢 全服公告</span>
-      <input id="adAnnText" type="text" maxlength="300" placeholder="留空＝清除公告">
-      <input id="adAnnHours" type="number" min="0" max="720" value="24" title="顯示時數（0＝永久）">
-      <button id="adAnnGo" type="button">發布</button>
+
+    <div class="adpane on" data-pane="home">
+      <div class="adstats" id="adStats"></div>
+      <div class="adsec2">伺服器即時狀態<span class="adtag" id="adHealthTag">讀取中</span></div>
+      <div class="adkv" id="adHealth"></div>
+      <div class="adsec2">最近活動的帳號</div>
+      <div class="adlist" id="adRecent"></div>
     </div>
-    <div class="adsearch">
-      <input id="adQ" type="text" placeholder="搜尋 UID / Email / 名稱（Enter 直接查）">
-      <button id="adQGo" type="button">查詢</button>
+
+    <div class="adpane" data-pane="members">
+      <div class="adsearch">
+        <input id="adQ" type="text" placeholder="搜尋 UID / Email / 名稱 / IP（Enter 直接查）">
+        <button id="adQGo" type="button">查詢</button>
+      </div>
+      <div class="adsplit" id="adSplit">
+        <div class="adlist" id="adList"></div>
+        <div class="addetail" id="adDetail"></div>
+      </div>
     </div>
-    <div class="adlist" id="adList"></div>
-    <div class="addetail" id="adDetail"></div>
+
+    <div class="adpane" data-pane="live">
+      <div class="adrow2">
+        <span>排行榜</span>
+        <select id="adLbMode">
+          <option value="daily">每日挑戰</option>
+          <option value="weekly">每週榜</option>
+        </select>
+        <button id="adLbGo" type="button">讀取</button>
+        <span class="adsub" id="adLbMeta"></span>
+      </div>
+      <div class="adlist" id="adLbList"></div>
+    </div>
+
+    <div class="adpane" data-pane="system">
+      <div class="adsec2">後端資料摘要</div>
+      <div class="adkv" id="adSys"></div>
+      <div class="adsec2">原始 JSON（全部資料，可複製／匯出）</div>
+      <pre class="adpre" id="adRaw">按右上角 🔄 載入</pre>
+    </div>
+
+    <div class="adpane" data-pane="tools">
+      <div class="adann">
+        <span>📢 全服公告</span>
+        <input id="adAnnText" type="text" maxlength="300" placeholder="留空＝清除公告">
+        <input id="adAnnHours" type="number" min="0" max="720" value="24" title="顯示時數（0＝永久）">
+        <button id="adAnnGo" type="button">發布</button>
+      </div>
+      <div class="adbtnrow">
+        <button id="adExportAcc" type="button">⬇ 匯出帳號 JSON</button>
+        <button id="adExportRaw" type="button">⬇ 匯出完整 dump</button>
+        <button id="adCopyRaw" type="button">📋 複製原始資料</button>
+      </div>
+      <div class="adsec2">這個後台看得到什麼</div>
+      <div class="adsec" id="adHelp"></div>
+    </div>
   </div>
 </div>
 

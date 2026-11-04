@@ -19,6 +19,9 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+// v4.90：後台要顯示「後端版本」——直接讀 package.json，避免又多一處要手動同步
+let PKG = null;
+try { PKG = require('./package.json'); } catch (e) { PKG = null; }
 
 const ATTRS = ['hp', 'def', 'spd', 'atk'];
 const BASE_POINTS = 9;          // 創角配點
@@ -1726,6 +1729,49 @@ function createCloud(options) {
 
         if (p === '/api/admin/overview' && req.method === 'GET') {
           return send(res, 200, adminOverview()), true;
+        }
+
+        /* v4.90：整包資料（後台「系統 → 原始 JSON」頁用）
+           —— 後台看得到的每個欄位都在這裡，前端可直接複製／匯出。
+           不含密碼雜湊（adminRow 只給 hasPass 布林），避免整包外流就能離線爆破。 */
+        if (p === '/api/admin/dump' && req.method === 'GET') {
+          const all = [];
+          let members = 0, guests = 0, devs = 0, banned = 0, today = 0, online = 0;
+          const now = Date.now(), day0 = new Date(); day0.setHours(0, 0, 0, 0);
+          const d0 = day0.getTime(), h24 = now - 86400000;
+          for (const id in db.accounts) {
+            const a = db.accounts[id];
+            if (a.mergedInto) continue;
+            if (a.kind === 'member') members++; else guests++;
+            if (isDev(a)) devs++;
+            if (a.banned) banned++;
+            if ((a.created || 0) >= d0) today++;
+            if ((a.lastSeen || 0) >= h24) online++;
+            all.push(adminRow(a));
+          }
+          all.sort(function (x, y) { return (y.created || 0) - (x.created || 0); });
+          return send(res, 200, {
+            ok: true,
+            at: now,
+            stats: {
+              accounts: members + guests, members: members, guests: guests, devs: devs,
+              banned: banned, newToday: today, online24h: online,
+              tamper: stats.tamper, rateLimited: stats.rateLimited,
+              registers: stats.registers, webLogins: stats.webLogins,
+              logins: stats.logins, bindings: stats.bindings
+            },
+            accounts: all,
+            devices: db.devices,
+            lb: db.lb,
+            announce: announceOut(),
+            flags: {
+              version: PKG ? PKG.version : '',
+              ephemeral: ephemeral,
+              persistWarning: persistWarning,
+              devEmails: DEV_EMAILS,
+              accountLimit: 300
+            }
+          }), true;
         }
 
         /* 客服查詢：UID / Email / 使用者名稱都可以 */

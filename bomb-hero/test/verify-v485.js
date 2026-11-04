@@ -95,10 +95,15 @@ ok(/const sbk = \$id\('saveBakLab'\); if \(sbk\) sbk\.textContent = t\('save\.ba
 
 head('⑨ 版本與體積');
 const V = (env.BH && env.BH.VERSION) || '';
-ok(/^4\.8[5-9]$/.test(V) || /^4\.9/.test(V), 'VERSION = ' + V);
-ok(/SW_VERSION = 'v4\.8[5-9]\.0'/.test(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8')), 'sw.js 跟著升版');
-ok(/SW_VERSION = 'v4\.8[5-9]\.0'/.test(fs.readFileSync(path.join(ROOT, '..', 'public', 'sw.js'), 'utf8')), 'public/sw.js 跟著升版');
-ok(/SW_VERSION = 'v4\.8[5-9]\.0'/.test(fs.readFileSync(path.join(ROOT, '..', 'bomberman-online', 'public', 'sw.js'), 'utf8')), 'bomberman-online/public/sw.js 跟著升版');
+const vnum = function (s) {
+  const m = String(s || '').replace(/^v/, '').split('.');
+  return (+m[0] || 0) * 10000 + (+m[1] || 0) * 100 + (+m[2] || 0);
+};
+ok(vnum(V) >= vnum('4.85'), 'VERSION = ' + V);
+['sw.js', '../public/sw.js', '../bomberman-online/public/sw.js'].forEach(function (rel) {
+  const sv = (/SW_VERSION = '(v[^']+)'/.exec(fs.readFileSync(path.join(ROOT, rel), 'utf8')) || [])[1] || '';
+  ok(vnum(sv) >= vnum(V), rel + ' 跟著升版（' + sv + '）');
+});
 const first = (src.match(/const VERSION_LOG = \[\s*\{ v: '([0-9.]+)'/) || [])[1];
 ok(first === V, 'VERSION_LOG 首位＝當前版本');
 const block = (src.match(/const VERSION_LOG = \[\s*\{[\s\S]*?\n  \{ v: '4\.84'/) || [''])[0];
