@@ -142,7 +142,8 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   ok(src(/加入時間/) && src(/註冊 IP/) && src(/第三方平台 ID/), '詳情欄位：加入時間／註冊 IP／第三方平台 ID');
 
   console.log('\n=== 10. 開發者全關卡解鎖 ===');
-  ok(src(/maxUnlocked\(\) \{ return Solo\.dev \? SOLO_STAGES : Solo\.unlocked; \}/),
+  P.setDevBuild(false);   // v4.75：這份 index.html 預設是開發者版，這段要模擬一般玩家
+  ok(src(/maxUnlocked\(\) \{ return \(Solo\.dev \|\| DEV_BUILD\) \? SOLO_STAGES : Solo\.unlocked; \}/),
     '單人闖關：開發者 → 全 32 關（v4.14 起 8 大關 × 4 張地圖）');
   P.Solo.dev = false;
   P.Solo.unlocked = 2;
@@ -171,6 +172,7 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   P.Cloud.state.acc = null;
   ok(P.VersionLog.list().length === before, '切回一般身分 → 內部版本又消失');
   P.VERSION_LOG.shift();
+  P.setDevBuild(true);
 
   console.log('\n=== 12. 全服公告 ===');
   ok(src(/function renderAnnounce\(\)/) && src(/const ANN_KEY = 'bombhero-ann-seen'/),

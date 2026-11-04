@@ -138,7 +138,7 @@ ok(Object.keys(chars).every(function (k) { return chars[k].indexOf('data:image/w
   '角色圖都是 webp data URL（透明背景）');
 ok(Object.keys(chars).every(function (k) { return chars[k].length > 4000; }),
   '每張圖都有實際內容（> 4KB base64）');
-ok(/^data:image\/webp;base64,/.test(BH.IMG_TITLEBG), '首頁底圖（使用者插畫）已內嵌（v4.61：JPEG → WebP，省 58%）');
+ok(/^bg\/title\.webp$/.test(BH.IMG_TITLEBG), '首頁底圖（使用者插畫）走獨立檔 bg/title.webp（v4.75：移出主檔）');
 ok(html.indexOf('id="titleBg"') > 0, '首頁有底圖容器 #titleBg');
 ok(html.indexOf("tb.style.backgroundImage") > 0, '啟動時把插畫設成首頁背景');
 

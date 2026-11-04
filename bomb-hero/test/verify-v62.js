@@ -8,6 +8,7 @@
 //   ⑦ 推車：手上拿著一模一樣的炸彈＋超明顯集氣條與落點
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
+try { env.BH.setDevBuild(false); } catch (e) {}   // v4.75：主檔預設開發者，這裡要模擬一般玩家
 const P = env.BH, G = P.Game, S = P.settings, html = env.html, els = env.els;
 const fs = require('fs');
 

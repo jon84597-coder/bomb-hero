@@ -14,8 +14,9 @@ ok(/ART_K: \.\d+/.test(src), '大圖怪物比例係數（ART_K）');
 ok(/if \(!BR\.FREE && !dev\) \{/.test(src), '免費時不扣門票');
 // 毒圈：10 段、每段 60 秒
 (function () {
-  const m = src.match(/PH: \[((?:\[\d+(?:\.\d+)?, \d+(?:\.\d+)?\])(?:, \[\d+(?:\.\d+)?, \d+(?:\.\d+)?\])*)\]/);
-  ok(!!m, 'PH 毒圈表存在');
+  const m = src.match(/PH10: \[((?:\[\d+(?:\.\d+)?, \d+(?:\.\d+)?\])(?:, \[\d+(?:\.\d+)?, \d+(?:\.\d+)?\])*)\]/);
+  ok(!!m, 'PH10 毒圈表存在');
+  ok(/PH5: \[\[/.test(src), '有 5 分鐘版毒圈表（PH5）');
   if (!m) return;
   const list = m[1].split('], ').map(function (x) { return x.replace(/[\[\]]/g, '').split(', ').map(Number); });
   ok(list.length === 10, '毒圈 10 段（實際 ' + list.length + ' 段）');

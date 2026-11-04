@@ -12,6 +12,7 @@ const path = require('path');
 const src = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 const srv = fs.readFileSync(path.join(__dirname, '../../server.js'), 'utf8');
 const env = makeEnv();
+try { env.BH.setDevBuild(false); } catch (e) {}   // v4.75：主檔預設開發者，這裡要模擬一般玩家
 const P = env.BH, G = P.Game;
 const S = [], F = [];
 function ok(cond, msg, extra) {

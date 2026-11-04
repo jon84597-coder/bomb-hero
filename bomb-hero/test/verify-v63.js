@@ -5,6 +5,7 @@
 //   ④ 對戰 AI 隔牆丟炸彈走玩家流程（需手套、不砸人）
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
+try { env.BH.setDevBuild(false); } catch (e) {}   // v4.75：主檔預設開發者，這裡要模擬一般玩家
 const P = env.BH, G = P.Game, S = P.settings, html = env.html, els = env.els;
 const fs = require('fs');
 
