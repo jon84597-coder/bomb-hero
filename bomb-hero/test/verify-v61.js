@@ -108,13 +108,14 @@ ok(/function hideOverlay\(\) \{ Game\.ovInfo = null; stopWinJump\(\); ovHide\(\)
 // ================================================================
 head('3. 首頁收起「組隊 對戰」');
 ok(css.indexOf('id="btnTeam"') < 0, '首頁 HTML 沒有 btnTeam 按鈕');
-ok(css.indexOf('id="btnBattle"') > 0 && /對戰（含 AI）/.test(css), '「對戰（含 AI）」按鈕還在');
+// v4.81：首頁改成「多人對戰」一顆，進去再選本機／線上
+ok(css.indexOf('id="btnMulti"') > 0 && css.indexOf('id="mpLocal"') > 0, '「多人對戰」入口（本機混戰）還在');
 ok(css.indexOf("if ($id('btnTeam'))") > 0, '舊監聽器有存在判斷（不會因為按鈕不見而爆）');
 ok(/id="segTeams"/.test(css) && /組隊對戰（隊數 2～4，同隊不會互炸）/.test(css), '對戰頁仍可選隊數（組隊入口只剩這裡）');
 {
   let threw = null;
-  try { click('btnBattle'); } catch (e) { threw = e; }
-  ok(threw === null, '點「對戰」不會報錯' + (threw ? '：' + threw.message : ''));
+  try { P.showMultiPick(true); click('mpLocal'); } catch (e) { threw = e; }
+  ok(threw === null, '點「本機混戰」不會報錯' + (threw ? '：' + threw.message : ''));
   ok(els.scrBattle ? els.scrBattle._cls.has('on') || true : true, '有進到對戰設定（不會卡住）');
 }
 

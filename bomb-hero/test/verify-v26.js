@@ -164,7 +164,8 @@ ok(/<div class="titlewrap">\s*<img class="title-logo"/.test(html), '順序：LOG
 // ================================================================
 console.log('\n=== 5. 首頁收起了「組隊 對戰」（v4.16：改在對戰頁選隊數） ===');
 ok(html.indexOf('id="btnTeam"') < 0, '首頁沒有「組隊 對戰」按鈕（只留「對戰」一個入口）');
-ok(html.indexOf('id="btnBattle"') > 0, '「對戰（含 AI）」按鈕還在');
+// v4.81：對戰＋線上配對合成首頁的「多人對戰」，本機入口改成選擇器裡的 mpLocal
+ok(html.indexOf('id="btnMulti"') > 0 && html.indexOf('id="mpLocal"') > 0, '「多人對戰」入口（本機混戰）還在');
 ok(/id="segTeams"/.test(html) && /data-v="4">4<\/button>/.test(html), '對戰頁仍然可以選隊數（關閉／2／3／4）');
 ok(html.indexOf("if ($id('btnTeam'))") > 0, '舊的監聽器有存在判斷（找不到按鈕也不會爆）');
 ok(/\.mbtn\.soon \{[\s\S]{0,120}?border: 1px dashed/.test(html), '樣式仍在（給未來未開放的按鈕用）');

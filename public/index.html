@@ -846,13 +846,13 @@ transform-origin: left center; background: linear-gradient(90deg, #ffc46b, #ff8a
 
 #btnQuit { border-color: rgba(150,170,200,.30); opacity: .92; }
 #btnQuit:hover { opacity: 1; }
-#quitModal {
+#quitModal, #multiPick {
 position: fixed; inset: 0; z-index: 2600; display: none;
 align-items: center; justify-content: center; padding: 18px;
 background: radial-gradient(120% 100% at 50% 0%, rgba(20,28,48,.86), rgba(6,9,16,.95));
 -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
-#quitModal.on { display: flex; }
+#quitModal.on, #multiPick.on { display: flex; }
 .qcard {
 width: min(92vw, 380px); padding: 24px 20px 18px; border-radius: 20px; text-align: center;
 background: linear-gradient(170deg, #1d2946, #131b2d);
@@ -2600,6 +2600,71 @@ body.touch #scr-title .menu .mbtn.has-beta { padding-right: 10px; }
 body.touch #scr-title .menu .mbtn::before { left: 9px; margin-top: -12px; width: 24px; height: 24px; line-height: 24px; font-size: 14px; border-radius: 7px; }
 body.touch #scr-title .menu .mbtn small { font-size: 10.5px; margin-top: 2px; }
 body.touch #scr-title .menu .mbtn .betaTag { right: 7px; top: 6px; font-size: 8px; padding: 1px 5px; }
+/* ===== v4.81：首頁分層 —— 首頁只放玩法，工具收進「更多」抽屜 =====
+   原本 14 顆等高按鈕（手機 1203px，要滑 1.4 屏，而且看不出哪個是主玩法）。
+   現在主玩法排成 2 欄卡片、其餘收抽屜。 */
+#scr-title .menu { display: block; max-width: 720px; }
+#scr-title .menu > .mbtn#btnLearn {
+  display: block; text-align: left; white-space: nowrap;
+  padding: 10px 14px 10px 52px; font-size: 16px; min-height: 0;
+}
+#scr-title .menu .mgrid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px;
+}
+/* 卡片版型：圖示在上、標題居中、副標在下（原本是「左圖示＋左對齊」的橫條） */
+#scr-title .menu .mgrid .mbtn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px; text-align: center; white-space: normal;
+  overflow-wrap: anywhere; word-break: break-word;   /* 德文那種長單字不能撐破卡片 */
+  min-height: 98px; padding: 11px 9px 10px; border-radius: 15px;
+  font-size: 17px; line-height: 1.2; letter-spacing: 0;
+}
+#scr-title .menu .mgrid .mbtn::before {
+  position: static; left: auto; top: auto; margin: 0 0 4px;
+  width: 30px; height: 30px; line-height: 30px; font-size: 17px; border-radius: 9px;
+}
+#scr-title .menu .mgrid .mbtn small {
+  margin-top: 2px; font-size: 10.5px; font-weight: 700; line-height: 1.32; white-space: normal;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+#scr-title .menu .mgrid .mbtn.has-beta { padding-right: 9px; }
+#scr-title .menu .mgrid .mbtn:last-child { grid-column: auto; justify-self: stretch; width: auto; }
+body.touch #scr-title .menu .mgrid .mbtn {
+  padding: 10px 8px 9px; font-size: 16px; min-height: 92px; border-radius: 14px;
+}
+body.touch #scr-title .menu .mgrid .mbtn::before { left: auto; margin: 0 0 4px; width: 28px; height: 28px; line-height: 28px; font-size: 16px; }
+body.touch #scr-title .menu .mgrid .mbtn small { display: -webkit-box; font-size: 10px; }
+@media (min-width: 900px) {
+  #scr-title .menu { max-width: 820px; }
+  #scr-title .menu .mgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  #scr-title .menu .mgrid .mbtn { min-height: 128px; font-size: 20px; padding: 16px 12px 14px; }
+  #scr-title .menu .mgrid .mbtn::before { width: 36px; height: 36px; line-height: 36px; font-size: 20px; }
+  #scr-title .menu .mgrid .mbtn small { font-size: 12px; }
+  #scr-title .menu .mgrid .mbtn:last-child { grid-column: auto; }
+}
+/* 「更多」抽屜：預設收起，點一下展開 */
+#scr-title .menu .mdrawer { display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+#scr-title .menu .mdrawer.on { display: grid; }
+@media (min-width: 900px) { #scr-title .menu .mdrawer { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; } }
+#scr-title .drawbtn {
+  position: relative; cursor: pointer; text-align: left; font-family: inherit;
+  padding: 11px 12px 11px 42px; border-radius: 12px;
+  background: rgba(255,255,255,.74); border: 1px solid rgba(150,120,80,.28);
+  color: #5b4527; font-size: 14px; font-weight: 800; letter-spacing: .02em;
+  transition: background .12s, border-color .12s, transform .12s;
+}
+#scr-title .drawbtn::before {
+  content: attr(data-ico); position: absolute; left: 9px; top: 50%; margin-top: -11px;
+  width: 24px; height: 24px; line-height: 24px; text-align: center; font-size: 14px; border-radius: 7px;
+  background: rgba(255,255,255,.72);
+}
+#scr-title .drawbtn:hover { background: #fff; border-color: #d09a4e; transform: translateY(-1px); }
+#scr-title .drawbtn:active { transform: translateY(1px); }
+#scr-title .drawbtn:focus-visible { outline: 3px solid #e8622b; outline-offset: 2px; }
+/* 多人／更多 的配色 */
+#scr-title .menu .c-multi { --c1: #ef6a8a; --c2: #b12c50; --c3: #74203a; --g1: rgba(255,170,200,.55); --g0: rgba(255,170,200,0); }
+#scr-title .menu .c-more  { --c1: #93a2b8; --c2: #56657c; --c3: #38434f; --g1: rgba(175,195,220,.45); --g0: rgba(175,195,220,0); }
+body.touch #scr-title .menu .mgrid .mbtn .betaTag { right: 6px; top: 5px; font-size: 8px; padding: 1px 4px; }
 /* v4.53：選角卡片放大 —— 原本 ◀▶🤖 只有 20x17px，手機根本點不到，8 格擠成一團也不好看 */
 #scr-battle #pSlots{grid-template-columns:repeat(auto-fit,minmax(164px,1fr));gap:10px;justify-content:stretch}
 #scr-battle #pSlots .pbox{padding:10px 10px 9px;border-width:2px;border-radius:14px;
@@ -2746,7 +2811,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.80</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">4.81</span></span>
     </button>
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
@@ -2779,29 +2844,45 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         <img class="title-logo" id="titleLogo" alt="BOMB HERO 爆爆英雄" draggable="false" src="spr/title-logo.webp">
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">4.80</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">4.81</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" style="margin:8px 0 4px;display:flex;flex-direction:column;gap:4px;align-items:center">
         <label for="playerName" style="font-size:13px;font-weight:600;color:#7a5a2e;text-shadow:0 1px 0 rgba(255,255,255,.65)">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
         <input class="tinput" id="playerName" maxlength="8" placeholder="可留空，系統自動取名字" style="width:100%;max-width:320px">
       </div>
-      <div class="menu">
+      <div class="menu" id="homeMenu">
         <button class="mbtn c-learn" id="btnLearn" data-ico="🎓"></button>
-        <button class="mbtn c-solo" id="btnSolo" data-ico="🎯">單人闖關<small>32 關 · 可調難度</small></button>
-        <button class="mbtn c-daily" id="btnDaily" data-ico="📅">每日挑戰<small>全世界同一張圖 · 比快</small></button>
-        <button class="mbtn c-rpg has-beta" id="btnRpg" data-ico="🎲">RPG 模式<span class="betaTag">測試版 Beta</span><small>配點養成 · 血量防禦</small></button>
-        <button class="mbtn c-boss" id="btnBoss" data-ico="👹">挑戰 BOSS<small>單挑暗黑魔王</small></button>
-        <button class="mbtn c-lb" id="btnLb" data-ico="🏆">排行榜<small>今日最快 · 全球連線</small></button>
-        <button class="mbtn c-br has-beta" id="btnBR" data-ico="🏝️"></button>
-        <!-- v4.23：商店／帳號往上挪到 BOSS 後面（原本要滑到第四屏才看得到，很多人根本沒發現） -->
-        <button class="mbtn c-store" id="btnStore" data-ico="🛒">商店<small>隨從 5000 金幣</small></button>
-        <button class="mbtn c-acct" id="btnAcctBig" data-ico="👤">帳號登入<small>雲端存檔 · 分享金幣</small></button>
-        <button class="mbtn c-battle has-beta" id="btnBattle" data-ico="⚔️">對戰模式<span class="betaTag">測試版 Beta</span><small>2～8 人混戰</small></button>
-        <button class="mbtn c-online has-beta" id="btnOnline" data-ico="🌐">線上配對<span class="betaTag">測試版 Beta</span><small>房號連線 · 朋友同樂</small></button>
-        <button class="mbtn c-help" id="btnHelp" data-ico="📖">遊戲說明<small>操作 · 道具 · 怪物</small></button>
-        <button class="mbtn c-set" id="btnSettings" data-ico="⚙️">設定<small>控制 · 音量 · 語言</small></button>
-        <button class="mbtn c-quit" id="btnQuit" data-ico="🚪">離開遊戲<small>存好進度再關</small></button>
+        <div class="mgrid">
+          <button class="mbtn c-solo" id="btnSolo" data-ico="🎯">單人闖關<small>32 關 · 難度自選</small></button>
+          <button class="mbtn c-br has-beta" id="btnBR" data-ico="🏝️"></button>
+          <button class="mbtn c-daily" id="btnDaily" data-ico="📅">每日挑戰<small>全球同一張圖</small></button>
+          <button class="mbtn c-multi has-beta" id="btnMulti" data-ico="⚔️">多人對戰<small>本機混戰 · 房號連線</small></button>
+          <button class="mbtn c-rpg has-beta" id="btnRpg" data-ico="🎲">RPG 模式<span class="betaTag">測試版</span><small>配點養成 · 血量防禦</small></button>
+          <button class="mbtn c-more" id="btnMoreMenu" data-ico="⋯">更多<small>商店 · 說明 · 設定</small></button>
+        </div>
+        <!-- v4.81：低頻功能收進抽屜，首頁只留玩法（原本 14 顆一樣大的按鈕，手機要滑 1.4 屏） -->
+        <div class="mdrawer" id="mDrawer">
+          <button class="drawbtn" id="btnStore" type="button" data-ico="🛒">商店</button>
+          <button class="drawbtn" id="btnHelp" type="button" data-ico="📖">遊戲說明</button>
+          <button class="drawbtn" id="btnSettings" type="button" data-ico="⚙️">設定</button>
+          <button class="drawbtn" id="btnQuit" type="button" data-ico="🚪">離開遊戲</button>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- v4.81：多人對戰入口（本機混戰／線上房號） -->
+  <div id="multiPick" role="dialog" aria-modal="true" aria-label="多人對戰">
+    <div class="qcard">
+      <div class="qico">⚔️</div>
+      <h3 id="mpTitle">多人對戰</h3>
+      <p id="mpDesc">想跟誰玩？</p>
+      <div class="qrows" style="flex-direction:column;gap:8px">
+        <button class="qbtn" id="mpLocal" type="button">🖥️ 本機混戰（2～8 人）</button>
+        <button class="qbtn" id="mpOnline" type="button">🌐 線上房號（跟朋友連線）</button>
+      </div>
+      <div class="qtip" id="mpTip">沒人加入時 AI 會自動補位，一個人也能玩。</div>
+      <button class="qbtn ghost" id="mpBack" type="button" style="margin-top:10px">← 返回</button>
     </div>
   </div>
 
@@ -2936,6 +3017,8 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
           <small class="gsub" id="soloGoSub">第 1 關 · 綠野草原</small>
         </button>
         <div class="hint gobote" id="soloGoHint">👆 先點上面選關卡，再按這顆大按鈕出發（同一顆按鈕再點一次也會直接出發）</div>
+        <!-- v4.81：BOSS 挑戰從首頁搬到這裡（跳過所有關卡，直接打最終魔王） -->
+        <button class="ghostbtn bossgo" id="btnSoloBoss" type="button">👹 跳過關卡，直接單挑最終魔王</button>
       </div>
       <div class="backrow">
         <button class="ghostbtn" data-back="1">← 回主選單</button>
@@ -3388,7 +3471,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '4.80';
+const VERSION = '4.81';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4585,7 +4668,31 @@ help.daily.tip|💡 訣竅｜先炸出一條直線衝到門口。每日挑戰比
 ver.4.80.1|📅 每日挑戰：每天用「日期」算出一張地圖，全世界當天玩到<b>完全相同</b>的圖；規則固定（普通難度、3 分鐘、3 條命），比誰先走到出口|📅 每日挑战：每天用「日期」算出一张地图，全世界当天玩到<b>完全相同</b>的图；规则固定（普通难度、3 分钟、3 条命），比谁先走到出口|📅 Daily Challenge: the map is derived from the date, so everyone plays the <b>exact same</b> map that day. Rules are fixed (normal, 3 minutes, 3 lives) — it is a race to the exit|📅 デイリーチャレンジ：日付からマップを作るので、その日は世界中が<b>まったく同じ</b>マップで遊べます。ルール固定（ふつう・3分・残機3）で出口までの速さ勝負|📅 데일리 챌린지: 날짜로 맵을 만들어 그날 전 세계가 <b>완전히 같은</b> 맵을 플레이합니다. 규칙 고정(보통·3분·목숨 3)으로 출구까지 속도 대결|📅 ภารกิจรายวัน: สร้างแผนที่จากวันที่ ทุกคนจึงได้แผนที่<b>เดียวกันเป๊ะ</b>ในวันนั้น กติกาคงที่ (ปกติ 3 นาที 3 ชีวิต) แข่งกันว่าใครถึงประตูก่อน|📅 Thử thách ngày: bản đồ sinh từ ngày, nên hôm đó ai cũng chơi <b>đúng cùng một</b> bản đồ. Luật cố định (thường, 3 phút, 3 mạng) — đua tới cửa|📅 Ежедневный вызов: карта строится из даты, поэтому в этот день у всех <b>одна и та же</b> карта. Правила фиксированы (обычная, 3 минуты, 3 жизни) — гонка до выхода|📅 Tagesherausforderung: Die Karte entsteht aus dem Datum, alle spielen an dem Tag <b>exakt dieselbe</b> Karte. Feste Regeln (normal, 3 Minuten, 3 Leben) — ein Rennen zum Ausgang|📅 Sfida giornaliera: la mappa deriva dalla data, quindi quel giorno tutti giocano la <b>stessa identica</b> mappa. Regole fisse (normale, 3 minuti, 3 vite) — corsa all'uscita
 ver.4.80.2|🏆 排行榜：主選單新增入口，看今天最快的 50 個人。成績存在伺服器，換手機也看得到；連不到時退回本機快取，至少看得到自己|🏆 排行榜：主菜单新增入口，看今天最快的 50 个人。成绩存在伺服器，换手机也看得到；连不到时退回本机缓存，至少看得到自己|🏆 Leaderboard: a new main-menu entry shows today's 50 fastest. Scores live on the server, so another phone sees them too; when offline it falls back to a local cache|🏆 ランキング：メインメニューから今日の最速50人を確認。記録はサーバー保存なので別の端末でも見られます。繋がらない時は端末のキャッシュを表示|🏆 리더보드: 메인 메뉴에서 오늘 가장 빠른 50명을 확인. 기록은 서버에 저장되어 다른 기기에서도 보입니다. 연결이 안 되면 기기 캐시를 표시|🏆 อันดับ: เมนูหลักมีทางเข้าใหม่ ดู 50 คนเร็วสุดของวันนี้ สถิติเก็บบนเซิร์ฟเวอร์จึงดูจากเครื่องอื่นได้ ถ้าต่อไม่ได้จะใช้แคชในเครื่อง|🏆 Bảng xếp hạng: mục mới ở menu chính, xem 50 người nhanh nhất hôm nay. Điểm lưu trên máy chủ nên đổi máy vẫn thấy; mất mạng thì dùng bộ nhớ tạm|🏆 Таблица лидеров: новый пункт меню — 50 самых быстрых за сегодня. Результаты хранятся на сервере, их видно и с другого телефона; без сети показывается локальный кэш|🏆 Rangliste: neuer Eintrag im Hauptmenü mit den 50 Schnellsten von heute. Ergebnisse liegen auf dem Server, also auch auf einem anderen Handy sichtbar; offline greift ein lokaler Cache|🏆 Classifica: nuova voce nel menu principale con i 50 più veloci di oggi. I risultati stanno sul server, quindi si vedono anche da un altro telefono; offline usa la cache locale
 ver.4.80.3|⏱️ 每日挑戰結算：過關直接顯示秒數、名次與今日前 5 名。同一天想重打幾次都可以，只取你最快的一次|⏱️ 每日挑战结算：过关直接显示秒数、名次与今日前 5 名。同一天想重打几次都可以，只取你最快的一次|⏱️ Daily results: clearing the map shows your time, rank and today's top 5 right away. Retry as often as you like — only your fastest run counts|⏱️ デイリー結果：クリアすると秒数・順位・今日のトップ5をすぐ表示。同じ日に何度でも再挑戦でき、最速の1回だけが記録されます|⏱️ 데일리 결산: 클리어하면 초·순위·오늘의 톱5를 바로 표시. 같은 날 몇 번이든 다시 도전할 수 있고 가장 빠른 기록만 남습니다|⏱️ สรุปผลรายวัน: ผ่านด่านแล้วเห็นเวลา อันดับ และ 5 อันดับแรกของวันทันที เล่นซ้ำได้ไม่จำกัด เอาเฉพาะครั้งที่เร็วที่สุด|⏱️ Kết quả ngày: qua màn là thấy ngay thời gian, thứ hạng và top 5 hôm nay. Chơi lại bao nhiêu lần cũng được, chỉ tính lần nhanh nhất|⏱️ Итоги дня: после прохождения сразу видно время, место и топ-5 за сегодня. Переигрывать можно сколько угодно — считается лучший забег|⏱️ Tagesergebnis: nach dem Ausgang sofort Zeit, Platz und die Top 5 von heute. Beliebig oft wiederholen — nur der schnellste Lauf zählt|⏱️ Risultato giornaliero: superata la mappa vedi subito tempo, posizione e i primi 5 di oggi. Riprova quanto vuoi: conta il giro più veloce
-ver.4.80.4|📖 說明頁新增每日挑戰分頁：種子怎麼來、規則為什麼固定、排行榜怎麼算，一次看懂（10 國語系）|📖 说明页新增每日挑战分页：种子怎么来、规则为什么固定、排行榜怎么算，一次看懂（10 国语系）|📖 New help tab for the daily challenge: where the seed comes from, why the rules are fixed and how the board is ranked (10 languages)|📖 説明ページにデイリーチャレンジのタブを追加：シードの作り方、ルールを固定する理由、ランキングの仕組みをまとめて解説（10言語）|📖 설명 페이지에 데일리 챌린지 탭 추가: 시드가 어떻게 만들어지는지, 규칙이 고정된 이유, 순위 계산법을 한 번에 (10개 언어)|📖 หน้าช่วยเหลือมีแท็บภารกิจรายวันแล้ว: ซีดมาจากไหน ทำไมกติกาถึงคงที่ และอันดับคิดอย่างไร (10 ภาษา)|📖 Trang hướng dẫn có thêm tab Thử thách ngày: hạt giống từ đâu, vì sao luật cố định và bảng xếp hạng tính thế nào (10 ngôn ngữ)|📖 В справке появилась вкладка ежедневного вызова: откуда берётся сид, почему правила фиксированы и как считается рейтинг (10 языков)|📖 Neue Hilfe-Registerkarte für die Tagesherausforderung: Woher der Seed kommt, warum die Regeln fest sind und wie die Rangliste zählt (10 Sprachen)|📖 Nuova scheda nella guida per la sfida giornaliera: da dove viene il seed, perché le regole sono fisse e come funziona la classifica (10 lingue)`;
+ver.4.80.4|📖 說明頁新增每日挑戰分頁：種子怎麼來、規則為什麼固定、排行榜怎麼算，一次看懂（10 國語系）|📖 说明页新增每日挑战分页：种子怎么来、规则为什么固定、排行榜怎么算，一次看懂（10 国语系）|📖 New help tab for the daily challenge: where the seed comes from, why the rules are fixed and how the board is ranked (10 languages)|📖 説明ページにデイリーチャレンジのタブを追加：シードの作り方、ルールを固定する理由、ランキングの仕組みをまとめて解説（10言語）|📖 설명 페이지에 데일리 챌린지 탭 추가: 시드가 어떻게 만들어지는지, 규칙이 고정된 이유, 순위 계산법을 한 번에 (10개 언어)|📖 หน้าช่วยเหลือมีแท็บภารกิจรายวันแล้ว: ซีดมาจากไหน ทำไมกติกาถึงคงที่ และอันดับคิดอย่างไร (10 ภาษา)|📖 Trang hướng dẫn có thêm tab Thử thách ngày: hạt giống từ đâu, vì sao luật cố định và bảng xếp hạng tính thế nào (10 ngôn ngữ)|📖 В справке появилась вкладка ежедневного вызова: откуда берётся сид, почему правила фиксированы и как считается рейтинг (10 языков)|📖 Neue Hilfe-Registerkarte für die Tagesherausforderung: Woher der Seed kommt, warum die Regeln fest sind und wie die Rangliste zählt (10 Sprachen)|📖 Nuova scheda nella guida per la sfida giornaliera: da dove viene il seed, perché le regole sono fisse e come funziona la classifica (10 lingue)
+home.multi|多人對戰|多人对战|Multiplayer|マルチ対戦|멀티플레이|ผู้เล่นหลายคน|Nhiều người chơi|Мультиплеер|Mehrspieler|Multigiocatore
+home.multi.sub|本機混戰 · 房號連線|本机混战 · 房号连线|Local melee · Room code|ローカル対戦 · ルーム番号|로컬 난투 · 방 번호|บวกกันในเครื่อง · รหัสห้อง|Hỗn chiến tại máy · Mã phòng|Локальная битва · Код комнаты|Lokal · Raumcode|Mischia locale · Codice stanza
+home.more|更多|更多|More|その他|더 보기|เพิ่มเติม|Thêm|Ещё|Mehr|Altro
+home.more.sub|商店 · 說明 · 設定|商店 · 说明 · 设置|Store · Help · Settings|ショップ · 遊び方 · 設定|상점 · 설명 · 설정|ร้านค้า · วิธีเล่น · ตั้งค่า|Cửa hàng · Hướng dẫn · Cài đặt|Магазин · Справка · Настройки|Shop · Anleitung · Einstellungen|Negozio · Guida · Impostazioni
+multi.title|多人對戰|多人对战|Multiplayer|マルチ対戦|멀티플레이|ผู้เล่นหลายคน|Chơi nhiều người|Мультиплеер|Mehrspieler|Multigiocatore
+multi.desc|想跟誰玩？|想和谁玩？|Who do you want to play with?|誰と遊びますか？|누구와 플레이할까요?|อยากเล่นกับใคร?|Muốn chơi với ai?|С кем играем?|Mit wem spielen?|Con chi vuoi giocare?
+multi.tip|沒人加入時 AI 會自動補位，一個人也能玩。|没人加入时 AI 会自动补位，一个人也能玩。|AI fills empty slots, so you can play alone.|空き枠は AI が埋めるので、一人でも遊べます。|빈자리는 AI가 채우므로 혼자서도 할 수 있습니다.|ถ้าไม่มีคน AI จะลงแทน เล่นคนเดียวก็ได้|Thiếu người thì AI vào thế, chơi một mình vẫn được.|Пустые слоты займёт ИИ — можно играть одному.|Freie Plätze füllt die KI — auch allein spielbar.|L'IA riempie i posti vuoti: puoi giocare anche da solo.
+multi.local|本機混戰（2～8 人）|本机混战（2～8 人）|Local melee (2–8)|ローカル対戦（2～8人）|로컬 난투 (2~8인)|บวกกันในเครื่อง (2–8 คน)|Hỗn chiến tại máy (2–8 người)|Локальная битва (2–8)|Lokal (2–8 Spieler)|Mischia locale (2–8)
+multi.online|線上房號（跟朋友連線）|在线房号（和朋友连线）|Online room (play with friends)|ルーム番号（友達と対戦）|온라인 방 번호 (친구와)|รหัสห้องออนไลน์ (เล่นกับเพื่อน)|Mã phòng online (chơi cùng bạn)|Онлайн-комната (с друзьями)|Online-Raum (mit Freunden)|Stanza online (con amici)
+multi.back|返回|返回|Back|戻る|뒤로|กลับ|Quay lại|Назад|Zurück|Indietro
+solo.bossgo|跳過關卡，直接單挑最終魔王|跳过关卡，直接单挑最终魔王|Skip stages — face the final boss|ステージを飛ばしてラスボスと一対一|스테이지 건너뛰고 최종 보스와 1:1|ข้ามด่าน ไปสู้บอสใหญ่เลย|Bỏ qua màn, đấu trùm cuối luôn|Пропустить уровни — сразу к финальному боссу|Level überspringen — direkt zum Endboss|Salta i livelli — subito al boss finale
+beta.tag|測試版|测试版|Beta|ベータ|베타|เบต้า|Beta|Бета|Beta|Beta
+home.d.store|商店|商店|Store|ショップ|상점|ร้านค้า|Cửa hàng|Магазин|Shop|Negozio
+home.d.help|遊戲說明|游戏说明|How to play|遊び方|게임 설명|วิธีเล่น|Hướng dẫn|Как играть|Anleitung|Guida
+home.d.set|設定|设置|Settings|設定|설정|ตั้งค่า|Cài đặt|Настройки|Einstellungen|Impostazioni
+home.d.quit|離開遊戲|离开游戏|Quit game|ゲームを終了|게임 종료|ออกจากเกม|Thoát game|Выйти из игры|Spiel beenden|Esci dal gioco
+home.rpg.sub|配點養成 · 血量防禦|加点养成 · 血量防御|Stat growth · HP & armor|ステ振り · HPと防御|스탯 육성 · HP·방어|ปั๊มสเตตัส · HP และเกราะ|Tăng điểm · Máu & giáp|Прокачка · Здоровье и броня|Werte · HP und Rüstung|Statistiche · HP e armatura
+ver.4.81.1|🧹 首頁大掃除：14 顆按鈕縮成 6 張玩法卡＋「更多」抽屜，手機一屏就看完|🧹 首页大扫除：14 颗按钮缩成 6 张玩法卡＋「更多」抽屉，手机一屏就看完|🧹 Home clean-up: 14 buttons down to 6 mode cards plus a More drawer — fits one phone screen|🧹 ホーム画面を整理：14 個のボタンを 6 枚のカード＋「その他」ドロワーに。スマホ1画面に収まります|🧹 홈 화면 정리: 버튼 14개를 모드 카드 6장 + '더 보기' 서랍으로, 휴대폰 한 화면에|🧹 จัดหน้าหลักใหม่: 14 ปุ่ม เหลือ 6 การ์ดโหมด + ลิ้นชัก เพิ่มเติม เห็นครบในหน้าจอเดียว|🧹 Dọn lại trang chủ: 14 nút rút còn 6 thẻ chế độ + ngăn Thêm, vừa một màn hình|🧹 Уборка главного экрана: 14 кнопок → 6 карточек режимов и шторка «Ещё», всё влезает на один экран|🧹 Aufgeräumter Startbildschirm: 14 Buttons → 6 Modus-Karten plus Mehr-Schublade, passt auf einen Handy-Schirm|🧹 Home riordinata: da 14 pulsanti a 6 card più un cassetto Altro, tutto in una schermata
+ver.4.81.2|🎯 入口合併：挑戰 BOSS 併進單人闖關、排行榜併進每日挑戰、對戰與線上配對合成「多人對戰」|🎯 入口合并：挑战 BOSS 并入单人闯关、排行榜并入每日挑战、对战与在线配对合成「多人对战」|🎯 Entrances merged: Boss Raid sits inside Solo Quest, the leaderboard inside Daily Challenge, Battle and Online became one Multiplayer entry|🎯 入口を統合：ボス討伐は一人で挑戦へ、ランキングはデイリーチャレンジへ、対戦とオンラインは「マルチ対戦」に|🎯 입구 통합: 보스 토벌은 싱글 모험에, 랭킹은 데일리 챌린지에, 대전과 온라인 매치는 멀티플레이 하나로|🎯 รวมทางเข้า: ล่าบอสอยู่ในโหมดผจญภัยคนเดียว อันดับอยู่ในภารกิจรายวัน ต่อสู้กับออนไลน์รวมเป็น ผู้เล่นหลายคน|🎯 Gộp lối vào: Đánh BOSS trong Chơi đơn, bảng xếp hạng trong Thử thách ngày, Đối chiến và Online gộp thành Nhiều người chơi|🎯 Объединены входы: охота на босса — в одиночной игре, рейтинг — в ежедневном вызове, битва и онлайн — в одном «Мультиплеере»|🎯 Einstiege zusammengelegt: Boss-Raid steckt im Einzelspieler, die Rangliste in der Tagesherausforderung, Kampf und Online wurden zu Mehrspieler|🎯 Ingressi uniti: Assalto al BOSS dentro Giocatore singolo, classifica dentro Sfida giornaliera, Battaglia e Online diventano Multigiocatore
+ver.4.81.3|👤 帳號入口只留右上角那一顆（首頁原本還有一顆重複的）|👤 账号入口只留右上角那颗（首页原本还有一颗重复的）|👤 Only one account entry now — the chip in the top-right corner (the home screen used to have a duplicate)|👤 アカウント入口は右上の1か所だけ（ホームにも重複がありました）|👤 계정 입구는 오른쪽 위 하나만 (홈에 중복 버튼이 있었습니다)|👤 เหลือทางเข้าบัญชีเดียวที่มุมขวาบน (เดิมมีซ้ำบนหน้าหลัก)|👤 Chỉ còn một lối vào tài khoản ở góc phải trên (trước đây có thêm một nút trùng)|👤 Вход в аккаунт теперь один — плашка справа сверху (на главном был дубль)|👤 Nur noch ein Konto-Einstieg oben rechts (auf dem Startbildschirm gab es einen doppelten)|👤 Un solo accesso all'account, in alto a destra (prima ce n'era un doppione nella home)
+ver.4.81.4|📖 首頁導覽重寫：每一步都對得上新位置，講到抽屜裡的按鈕會自動展開|📖 首页导览重写：每一步都对得上新位置，讲到抽屉里的按钮会自动展开|📖 Home tour rewritten: every step matches the new layout, and the drawer opens by itself when needed|📖 ホームのガイドを書き直し：各ステップが新しい配置に対応し、ドロワー内のボタンでは自動で開きます|📖 홈 가이드 다시 작성: 각 단계가 새 배치와 맞고, 서랍 안 버튼을 설명할 때 자동으로 열립니다|📖 เขียนไกด์หน้าหลักใหม่: ทุกขั้นตรงกับตำแหน่งใหม่ และเปิดลิ้นชักอัตโนมัติเมื่อถึงปุ่มข้างใน|📖 Viết lại hướng dẫn trang chủ: mỗi bước khớp vị trí mới, tự mở ngăn khi nói tới nút bên trong|📖 Тур по главному экрану переписан: каждый шаг соответствует новой раскладке, шторка открывается сама|📖 Tour durch den Startbildschirm neu geschrieben: jeder Schritt passt zum neuen Layout, die Schublade öffnet sich automatisch|📖 Tour della home riscritta: ogni passo corrisponde al nuovo layout e il cassetto si apre da solo
+home.daily|每日挑戰|每日挑战|Daily Challenge|デイリーチャレンジ|데일리 챌린지|ภารกิจรายวัน|Thử thách ngày|Ежедневный вызов|Tages-Challenge|Sfida giornaliera
+home.solo.sub|32 關 · 難度自選|32 关 · 难度可选|32 levels · any difficulty|全32面 · 難易度自由|32개 · 난이도 자유|32 ด่าน · เลือกความยาก|32 màn · chọn độ khó|32 уровня · любая сложность|32 Level · freie Wahl|32 livelli · difficoltà libera
+home.namePh|可留空，系統自動取名字|可留空，系统自动取名字|Optional — we will name you|空でもOK・自動で名前をつけます|비워도 됨 · 자동으로 이름 지어줌|เว้นว่างได้ ระบบตั้งชื่อให้|Có thể để trống, hệ thống tự đặt tên|Можно оставить пустым — имя дадим сами|Leer lassen — wir vergeben einen Namen|Puoi lasciare vuoto — il nome lo scegliamo noi`;
 (function () {
   const L = ["zh-TW","zh-CN","en","ja","ko","th","vi","ru","de","it"];
   for (let i = 0; i < L.length; i++) I18N[L[i]] = {};
@@ -21430,17 +21537,88 @@ $id('btnDaily').addEventListener('click', function () {
   Screen.show('daily');
   renderDailyScreen();
 });
-$id('btnLb').addEventListener('click', function () {
-  AudioSys.ensure(); AudioSys.sfx('click');
-  Screen.show('daily');
-  renderDailyScreen();
-});
 $id('btnDailyGo').addEventListener('click', function () { Daily.begin(); });
 // v4.80：重新整理榜單 —— 一定要清掉 Lb.last 才會真的重打（不然同一天只會顯示上次結果）
 $id('btnLbReload').addEventListener('click', function () {
   AudioSys.ensure(); AudioSys.sfx('click');
   Lb.last = null;
   renderLbList(true);
+});
+
+/* ===== v4.81：首頁「更多」抽屜 + 多人對戰入口 ===== */
+/* 短標籤（商店／設定／更多…）走 t() 直接注入：即時翻譯層只收 6 字以上的原文，
+   兩三個字的標籤不會被 trPairs 收進去，靠它翻會永遠停在中文。 */
+function homeFill() {
+  const card = function (id, key, sub, beta) {
+    const b = $id(id);
+    if (!b) return;
+    b.innerHTML = t(key) +
+      (beta ? '<span class="betaTag">' + t('beta.tag') + '</span>' : '') +
+      (sub ? '<small>' + t(sub) + '</small>' : '');
+  };
+  card('btnSolo', 'menu.solo', 'home.solo.sub');
+  card('btnDaily', 'home.daily', 'menu.daily.sub');
+  card('btnMulti', 'home.multi', 'home.multi.sub', true);
+  card('btnRpg', 'rpg.mode', 'home.rpg.sub', true);
+  card('btnMoreMenu', 'home.more', 'home.more.sub');
+  const dr = { btnStore: 'home.d.store', btnHelp: 'home.d.help', btnSettings: 'home.d.set', btnQuit: 'home.d.quit' };
+  Object.keys(dr).forEach(function (id) {
+    const b = $id(id);
+    if (b) b.textContent = t(dr[id]);
+  });
+  const sb = $id('btnSoloBoss');
+  if (sb) sb.textContent = '👹 ' + t('solo.bossgo');
+  const mp = $id('mpTitle');
+  if (mp) mp.textContent = t('multi.title');
+  const pn = $id('playerName');
+  if (pn) pn.setAttribute('placeholder', t('home.namePh'));
+}
+function setDrawer(open) {
+  const d = $id('mDrawer'), b = $id('btnMoreMenu');
+  if (!d || !b) return;
+  d.classList.toggle('on', !!open);
+  b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  b.classList.toggle('drawon', !!open);
+}
+$id('btnMoreMenu').addEventListener('click', function () {
+  AudioSys.ensure(); AudioSys.sfx('click');
+  const d = $id('mDrawer');
+  setDrawer(!(d && d.classList.contains('on')));
+});
+// 進了任何模式就把抽屜收回去，下次回首頁是乾淨的
+['btnSolo', 'btnBR', 'btnDaily', 'btnRpg', 'btnStore', 'btnHelp', 'btnSettings', 'btnQuit'].forEach(function (k) {
+  const b = $id(k);
+  if (b) b.addEventListener('click', function () { setDrawer(false); }, true);
+});
+function showMultiPick(on) {
+  const m = $id('multiPick');
+  if (!m) return;
+  m.classList.toggle('on', !!on);
+  if (on) {
+    const t1 = $id('mpTitle'), d1 = $id('mpDesc'), p1 = $id('mpTip');
+    if (t1) t1.textContent = t('multi.title');
+    if (d1) d1.textContent = t('multi.desc');
+    if (p1) p1.textContent = t('multi.tip');
+    const a = $id('mpLocal'), b = $id('mpOnline'), c = $id('mpBack');
+    if (a) a.textContent = t('multi.local');
+    if (b) b.textContent = t('multi.online');
+    if (c) c.textContent = t('multi.back');
+  }
+}
+$id('btnMulti').addEventListener('click', function () {
+  AudioSys.ensure(); AudioSys.sfx('click');
+  if (!ensureNickname()) return;
+  showMultiPick(true);
+});
+$id('mpBack').addEventListener('click', function () { AudioSys.sfx('click'); showMultiPick(false); });
+$id('multiPick').addEventListener('click', function (e) { if (e.target === this) showMultiPick(false); });
+$id('mpLocal').addEventListener('click', function () {
+  AudioSys.sfx('click'); showMultiPick(false);
+  openBattle();
+});
+$id('mpOnline').addEventListener('click', function () {
+  AudioSys.sfx('click'); showMultiPick(false);
+  openOnline();
 });
 // v4.8：固定暱稱（首次玩必須先命名，之後都用這個）
   try {
@@ -21476,7 +21654,8 @@ function ensureNickname() {
 }
 // v1.9：明顯的「開始遊戲」大按鈕
 $id('btnSoloGo').addEventListener('click', function () { AudioSys.ensure(); AudioSys.sfx('click'); Solo.go(); });
-$id('btnBoss').addEventListener('click', function () {
+// v4.81：BOSS 挑戰併進「單人闖關」（本質就是 startSolo 的 bossRush 模式），首頁不再單獨一顆
+function goBoss() {
   AudioSys.ensure(); AudioSys.sfx('click');
   if (!ensureNickname()) return;
   // v4.21：BOSS 挑戰任何環節出錯都要講出來，不要靜靜地什麼都沒發生
@@ -21486,7 +21665,9 @@ $id('btnBoss').addEventListener('click', function () {
     console.error('[boss]', e);
     try { toast('⚠️ BOSS 挑戰開不起來：' + ((e && e.message) || e), 3.6); } catch (e2) {}
   }
-});
+}
+const _soloBossBtn = $id('btnSoloBoss');
+if (_soloBossBtn) _soloBossBtn.addEventListener('click', goBoss);
 // 單人難易度 / 關卡時間
 function updateSoloHints() {
   const dh = $id('soloDiffHint'), th = $id('soloTimeHint');
@@ -22183,13 +22364,14 @@ try { buildMapTestRow(); } catch (__e) { __bootFail('mapTestRow', __e); }
 /* 語言切換時重畫（文字跟著換） */
 refreshers.push(function () { if (Screen.current === 'help') Help.render(); });
 
-$id('btnBattle').addEventListener('click', function () {
+// v4.81：對戰／線上配對合成「多人對戰」，由首頁的 #btnMulti 選擇器呼叫
+function openBattle() {
   AudioSys.ensure(); AudioSys.sfx('click');
   if (!ensureNickname()) return;
   Screen.show('battle');
   Battle.resetSlots();
   updateCountHint();
-});
+}
 $id('btnHelp').addEventListener('click', function () {
   AudioSys.ensure(); AudioSys.sfx('click');
   Help.show();
@@ -22324,7 +22506,7 @@ if ($id('btnTeam')) $id('btnTeam').addEventListener('click', function () {
   updateCountHint();
   toast('👥 組隊對戰：' + Battle.teamSummary() + '（點隊徽可換隊）', 2.8);
 });
-$id('btnOnline').addEventListener('click', function () {
+function openOnline() {
   AudioSys.ensure(); AudioSys.sfx('click');
   if (!ensureNickname()) return;
   const nm = $id('netName');
@@ -22332,7 +22514,7 @@ $id('btnOnline').addEventListener('click', function () {
   Net.msg('');
   Screen.show('online');
   Net.lobbyStart();
-});
+}
 $id('btnNetCreate').addEventListener('click', function () { AudioSys.ensure(); AudioSys.sfx('click'); Net.create(); });
 $id('btnNetQuick').addEventListener('click', function () { AudioSys.ensure(); AudioSys.sfx('click'); Net.quick(); });
 $id('btnNetJoin').addEventListener('click', function () { AudioSys.ensure(); AudioSys.sfx('click'); Net.join(); });
@@ -23701,18 +23883,21 @@ const Tut = (function () {
       })();
 
       /* ---------- 首頁導覽步驟 ---------- */
+      /* v4.81：首頁從 14 顆按鈕改成「5 張玩法卡 + 更多抽屜」，導覽跟著重寫。
+         drawer:true 的步驟會先把抽屜打開，否則高亮框會指向看不見的元素。 */
       const HOME = [
         { sel: '#playerName', t: '先取個名字', b: '這是你的<b>暱稱</b>，會用在對戰與排行。留空也可以，系統會自動取一個，之後在首頁都改得到。' },
-        { sel: '#btnSolo', t: '① 單人闖關（主要玩法）', b: '32 張地圖、8 大關。進去先<b>選角色</b>→ 選難度與時間 → 出發。炸光小怪、炸開軟磚找到<b>出口門</b>就過關。' },
-        { sel: '#btnRpg', t: '② RPG 模式', b: '多了<b>血量、護甲、四維屬性</b>，被打不會一下就死，適合喜歡慢慢養成的人。' },
-        { sel: '#btnBoss', t: '③ 挑戰 BOSS', b: '跳過前面所有關卡，直接單挑<b>最終魔王</b>，沒有小怪干擾，練手感最快。' },
-        { sel: '#btnStore', t: '④ 商店', b: '過關賺的<b>金幣</b>在這裡花：買隨從幫你打、看分享送金幣。' },
-        { sel: '#btnAcctBig', t: '⑤ 帳號登入', b: '綁定後<b>雲端存檔</b>，換手機進度還在；分享金幣也需要正式帳號。' },
-        { sel: '#btnBattle', t: '⑥ 對戰（含 AI）', b: '2～8 人混戰，可以改名、組隊；沒人加入時 <b>AI 自動補位</b>，一個人也能玩。' },
-        { sel: '#btnOnline', t: '⑦ 線上配對', b: '用 <b>4 位數房號</b>跟朋友連線，等待室到齊就開打；沒滿的位子由 AI 補。' },
-        { sel: '#btnHelp', t: '⑧ 遊戲說明', b: '道具、坐騎、場景、怪物圖鑑都在這裡，隨時可以回來查。' },
-        { sel: '#btnSettings', t: '⑨ 設定', b: '地圖尺寸、鍵盤按鍵、手機搖桿位置與大小、音樂音效音量，全部在這裡調。' },
-        { sel: '#btnQuit', t: '⑩ 離開遊戲', b: '會先幫你<b>存好進度</b>再關頁面，下次回來從原本的地方繼續。' },
+        { sel: '#btnSolo', t: '① 單人闖關（主要玩法）', b: '32 張地圖、8 大關。進去先<b>選角色</b>→ 選難度與時間 → 出發。炸光小怪、炸開軟磚找到<b>出口門</b>就過關。畫面下方還有「直接單挑最終魔王」。' },
+        { sel: '#btnBR', t: '② 大逃殺', b: '島上 <b>50 人混戰</b>，毒圈一路縮小。可以單人，也可以 2～4 人組隊，最後存活的隊伍奪冠。' },
+        { sel: '#btnDaily', t: '③ 每日挑戰', b: '用<b>日期算出種子</b>，全世界當天玩到一模一樣的地圖，比誰最快過關。規則固定、下方就有<b>今日排行榜</b>。' },
+        { sel: '#btnMulti', t: '④ 多人對戰', b: '點下去可以選<b>本機混戰</b>（2～8 人，AI 會補位）或<b>線上房號</b>（用 4 位數房號跟朋友連線）。' },
+        { sel: '#btnRpg', t: '⑤ RPG 模式', b: '多了<b>血量、護甲、四維屬性</b>，被打不會一下就死，適合喜歡慢慢養成的人。' },
+        { sel: '#btnMoreMenu', t: '⑥ 更多', b: '商店、遊戲說明、設定、離開遊戲都收在這裡，<b>點一下展開</b>。首頁只放玩法，才不會整頁都是按鈕。' },
+        { sel: '#btnStore', drawer: true, t: '⑦ 商店', b: '過關賺的<b>金幣</b>在這裡花：買隨從幫你打、看分享送金幣。' },
+        { sel: '#btnHelp', drawer: true, t: '⑧ 遊戲說明', b: '道具、坐騎、場景、怪物圖鑑都在這裡，隨時可以回來查。' },
+        { sel: '#btnSettings', drawer: true, t: '⑨ 設定', b: '地圖尺寸、鍵盤按鍵、手機搖桿位置與大小、音樂音效音量，全部在這裡調。' },
+        { sel: '#btnQuit', drawer: true, t: '⑩ 離開遊戲', b: '會先幫你<b>存好進度</b>再關頁面，下次回來從原本的地方繼續。' },
+        { sel: '#acctChip', pad: 3, t: '右上角：帳號', b: '點 <b>👤 綁定帳號</b>開綁定視窗：綁好之後<b>雲端存檔</b>，換手機進度還在。遊客也能直接玩。' },
         { sel: '#navBar', pad: 3, t: '右上角工具列', b: '🎵 音樂、🔊 音效、🌐 語言、⛶ 全視窗、📥 下載 App 都在右上。<b>手機</b>點 <b>⋮</b> 展開，遊戲中也可以隨時按。' },
         { sel: '#verLogBtn', t: '📜 版本更新內容', b: '每次改版都記在這裡，想知道新增什麼就點開看。' },
         { next: 'play', t: '導覽完成！', b: '介面都認識了。接下來進<b>實戰演練</b>：用一張練習地圖，帶你把移動、放炸彈、炸磚、撿道具、踢彈、遙控、打怪、找出口全部做一次。' }
@@ -23834,6 +24019,8 @@ const Tut = (function () {
       function showHome(n) {
         part = 'home'; i = n;
         const st = HOME[n];
+        // v4.81：抽屜裡的按鈕要先展開，不然高亮框會指向一個 display:none 的元素
+        try { if (typeof setDrawer === 'function') setDrawer(!!st.drawer); } catch (e) {}
         if (st.sel) spot(st.sel, st.pad); else { const m = $id('tutMask'); if (m) m.classList.remove('on'); }
         paintCard(st, n);
       }
@@ -24120,6 +24307,7 @@ const Tut = (function () {
         const h0 = $id('lpH0'); if (h0) h0.textContent = t('learn.homeTab');
         const p0 = $id('lpP0'); if (p0) p0.textContent = t('learn.playTab');
         const lead = $id('tutLead'); if (lead) lead.textContent = t('learn.title');
+        try { homeFill(); } catch (e) {}
       }
 
       /* ---------- 接線 ---------- */
@@ -24230,7 +24418,12 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '4.80', date: '2026-11-04', now: true, items: [
+  { v: '4.81', date: '2026-11-04', now: true, items: [
+    '🧹 首頁大掃除：14 顆一樣大的按鈕縮成 <b>6 張玩法卡</b>＋「更多」抽屜。手機本來要滑 1.4 屏才看得到全部，現在一屏看完',
+    '🎯 入口合併（功能一個都沒少）：挑戰 BOSS 併進單人闖關、排行榜併進每日挑戰、對戰與線上配對合成「多人對戰」',
+    '👤 帳號入口只留右上角那一顆 —— 首頁原本還有一顆重複的，兩個門通同一個房間',
+    '📖 首頁導覽跟著重寫：每一步都對得上新位置，講到抽屜裡的按鈕會自動展開' ] },
+  { v: '4.80', date: '2026-11-04', now: false, items: [
     '📅 每日挑戰：每天用「日期」算出一張地圖，全世界當天玩到<b>完全相同</b>的圖；規則固定（普通難度、3 分鐘、3 條命），比誰先走到出口',
     '🏆 排行榜：主選單新增入口，看今天最快的 50 個人。成績存在伺服器，換手機也看得到；連不到時退回本機快取，至少看得到自己',
     '⏱️ 每日挑戰結算：過關直接顯示秒數、名次與今日前 5 名。同一天想重打幾次都可以，只取你最快的一次',
@@ -27610,6 +27803,9 @@ window.__BH = {
   Game: Game, Solo: Solo, Battle: Battle, Screen: Screen, settings: settings, SIZES: SIZES, Input: Input, IS_TOUCH: IS_TOUCH,
   // v4.80：每日挑戰 / 排行榜
   Daily: Daily, Lb: Lb, dailyDayKey: dailyDayKey, dailySeedOf: dailySeedOf, dailyStageOf: dailyStageOf,
+  // v4.81：首頁分層
+  homeFill: homeFill, setDrawer: setDrawer, showMultiPick: showMultiPick,
+  goBoss: goBoss, openBattle: openBattle, openOnline: openOnline,
   fmtMs: fmtMs, seedCodeOf: seedCodeOf, DAILY_TIME: DAILY_TIME, DAILY_DIFF: DAILY_DIFF,
   buildSoloStageInner: buildSoloStageInner, dailyClear: dailyClear, dailyTimeUp: dailyTimeUp,
   showDailyResult: showDailyResult, renderDailyScreen: renderDailyScreen, renderLbList: renderLbList,

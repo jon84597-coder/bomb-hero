@@ -77,20 +77,14 @@ head('2. 手機工具列重排（帳號變大＋⋮ 更多）');
 }
 
 /* ------------------------------------------------------------------ 3 */
-head('3. 主選單「帳號登入」大按鈕');
+head('3. 首頁不再重複一顆「帳號登入」大按鈕');
 {
-  const el = env.getId('btnAcctBig');
-  ok(!!el, '#btnAcctBig 存在');
-  const i = src.indexOf('id="btnAcctBig"');
-  ok(i > 0 && src.slice(i, i + 260).indexOf('帳號登入') > 0, '按鈕文字是「帳號登入」');
-  ok(i > src.indexOf('id="btnStore"') && i < src.indexOf('id="btnSettings"'),
-    '排在「商店」和「設定」之間（首頁一眼看得到）');
-  const handlers = (el._on && el._on.click) || [];
-  ok(handlers.length > 0, '有綁 click 事件');
-  const code = handlers.length ? handlers[0].toString() : '';
-  ok(code.indexOf('Cloud') >= 0 && code.indexOf('open') >= 0, '點下去會開帳號視窗（Cloud.open）');
-  ok(code.indexOf('try') >= 0, '有 try/catch 保護（打不開會跳訊息，不會靜默）');
-  ok(/\.mbtn\.acctbigbtn\s*\{/.test(noCmt), '有大按鈕的樣式（看得出來跟其他選項一樣大）');
+  // v4.81：右上角 acctChip 一直是常駐入口，首頁那顆等於第二個門，已移除
+  ok(src.indexOf('id="btnAcctBig"') < 0, '首頁的大顆「帳號登入」已移除（不會有兩個入口）');
+  ok(src.indexOf('id="acctChip"') > 0, '右上角帳號膠囊仍在（唯一入口）');
+  ok(src.indexOf("$id('acctChip').addEventListener('click'") > 0, '膠囊有綁 click');
+  const seg = src.slice(src.indexOf('id="homeMenu"'), src.indexOf('id="btnStore"'));
+  ok(seg.indexOf('帳號') < 0, '首頁選單區塊裡沒有帳號字樣');
 }
 
 /* ------------------------------------------------------------------ 4 */

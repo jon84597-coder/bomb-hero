@@ -152,7 +152,8 @@ function fakePad(pressed) {
 // ================================================================
 console.log('=== 1. 版本號 & 首頁 BOSS 項目 ===');
 ok(parseFloat(P.VERSION) >= 1.2, '版本已推進（目前 v' + P.VERSION + '，每次改版 +0.1）');
-ok(/id="btnBoss"/.test(html), '首頁有「挑戰 BOSS」按鈕');
+// v4.81：BOSS 從首頁搬進單人關卡畫面（本質是 startSolo 的 bossRush 模式）
+ok(/id="btnSoloBoss"/.test(html), '單人關卡畫面有「直接單挑最終魔王」入口');
 ok(html.indexOf('startBossRush()') >= 0, 'BOSS 按鈕接到 startBossRush()');
 P.settings.ctrl = 'kb';
 P.settings.soloDiff = 'normal';

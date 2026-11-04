@@ -98,20 +98,31 @@ head('4. 帳號／商店按鈕看得清楚');
   ok(!!s2 && /#fff8e2/.test(s2[1]) && /#6a4512/.test(s2[1]), '商店鈕改成金色卡片＋深褐字');
 }
 
-head('5. 手機選單兩欄');
+head('5. 首頁選單分層（v4.81：6 張玩法卡 + 更多抽屜）');
 {
-  ok(/body\.touch \.menu \{\s*\n\s*display: grid; grid-template-columns: 1fr 1fr;/.test(noCmt),
-    '手機 .menu 是兩欄 grid');
-  ['warm', 'rpgbtn', 'bossbtn', 'quitbtn'].forEach(function (c) {
-    ok(new RegExp('body\\.touch \\.menu \\.mbtn\\.' + c + '[^{]*\\{[^}]*grid-column: 1 / -1').test(noCmt) ||
-       new RegExp('body\\.touch \\.menu \\.mbtn\\.' + c + ',?\\s*\\n?[^{]*\\{[^}]*grid-column: 1 / -1').test(noCmt),
-      '.' + c + ' 跨滿整列');
+  // 舊版 14 顆等高按鈕在手機佔 1203px（要滑 1.4 屏），改成 2 欄卡片 + 抽屜
+  ok(/\.mgrid \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/.test(noCmt), '主玩法 2 欄 grid');
+  ok(/@media \(min-width: 900px\)[\s\S]{0,240}?\.mgrid \{[^}]*repeat\(3/.test(noCmt), '桌機 3 欄');
+  ok(/\.mdrawer \{ display: none;/.test(noCmt), '「更多」抽屜預設收起');
+  ok(/\.mdrawer\.on \{ display: grid;/.test(noCmt), '抽屜展開才有 grid');
+
+  const grid = src.slice(src.indexOf('<div class="mgrid">'), src.indexOf('id="mDrawer"'));
+  const cards = (grid.match(/class="mbtn/g) || []).length;
+  ok(cards === 6, '首頁主玩法剛好 6 張卡（' + cards + '）');
+  ['btnSolo', 'btnBR', 'btnDaily', 'btnMulti', 'btnRpg', 'btnMoreMenu'].forEach(function (id) {
+    ok(grid.indexOf('id="' + id + '"') > 0, '卡片 #' + id + ' 在 grid 裡');
   });
-  const iBoss = src.indexOf('id="btnBoss"');
-  const iStore = src.indexOf('id="btnStore"');
-  const iAcct = src.indexOf('id="btnAcctBig"');
-  const iBattle = src.indexOf('id="btnBattle"');
-  ok(iStore > iBoss && iAcct > iStore && iBattle > iAcct, '商店／帳號登入已提到 BOSS 後面（不用滑四屏）');
+  const drawer = src.slice(src.indexOf('id="mDrawer"'), src.indexOf('id="mDrawer"') + 900);
+  ['btnStore', 'btnHelp', 'btnSettings', 'btnQuit'].forEach(function (id) {
+    ok(drawer.indexOf('id="' + id + '"') > 0, '抽屜 #' + id + ' 收在裡面');
+  });
+  // 併掉的入口不能再出現在首頁
+  const menuSeg = src.slice(src.indexOf('id="homeMenu"'), src.indexOf('id="multiPick"'));
+  ['btnBoss', 'btnLb"', 'btnBattle', 'btnOnline', 'btnAcctBig'].forEach(function (id) {
+    ok(menuSeg.indexOf(id) < 0, '首頁已移除 #' + id);
+  });
+  ok(menuSeg.indexOf('btnSoloBoss') < 0 && src.indexOf('id="btnSoloBoss"') > 0,
+    'BOSS 入口搬到單人關卡畫面（不在首頁）');
 }
 
 head('6. 寒冰地圖：四種元件分得出來');

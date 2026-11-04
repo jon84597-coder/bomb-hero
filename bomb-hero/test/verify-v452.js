@@ -54,7 +54,8 @@ head('1. 隨從 5000 金幣');
 eq(P.PET_KINDS.length, 3, '三種隨從');
 ok(P.PET_KINDS.every(function (k) { return k.price === 5000; }), '每一隻都是 5000 金幣');
 ok(html.indexOf('price: 1000') < 0, '沒有殘留 1000 的售價');
-ok(html.indexOf('<small>隨從 5000 金幣</small>') > 0, '首頁商店鈕副標寫 5000');
+// v4.81：商店收進抽屜，副標不再寫價格（價格在商店頁才顯示）
+ok(html.indexOf('id="btnStore"') > 0 && html.indexOf('隨從 5000 金幣') > 0, '商店入口還在（價格在商店頁說明）');
 ok(html.indexOf('隨從三種各 <b>5000</b> 金幣') > 0, '說明頁也寫 5000');
 const notes = P.LANGS.map(function (L) { return (P.I18N[L.id] || {})['store.note'] || ''; }).filter(Boolean);
 eq(notes.length, 10, '10 國語系的商店副標');
@@ -64,26 +65,31 @@ ok(notes.every(function (z) { return z.indexOf('1000') < 0 && z.indexOf('1,000')
   '十國語系沒有殘留 1000');
 
 head('2. 對戰／線上配對標「測試版」');
-ok(/id="btnBattle"[^>]*>對戰模式<span class="betaTag">測試版 Beta<\/span>/.test(html), '對戰鈕標測試版 Beta');
-ok(/id="btnOnline"[^>]*>線上配對<span class="betaTag">測試版 Beta<\/span>/.test(html), '線上配對鈕標測試版 Beta');
-ok(/id="btnRpg"[^>]*>RPG 模式<span class="betaTag">測試版 Beta<\/span>/.test(html), 'RPG 鈕原本就有標');
-eq((html.match(/class="betaTag"/g) || []).length, 3, '總共 3 顆 Beta 標籤（大逃殺改成 HOT 推薦標籤）');
+ok(html.indexOf('id="btnMulti"') > 0 && html.indexOf('class="mbtn c-multi has-beta"') > 0, '多人對戰鈕標測試版');
+ok(html.indexOf('id="mpOnline"') > 0, '線上房號入口在多人選擇器裡');
+ok(/id="btnRpg"[^>]*>RPG 模式<span class="betaTag">/.test(html), 'RPG 鈕原本就有標');
+eq((html.match(/class="betaTag"/g) || []).length, 2, '2 顆 Beta 標籤（大逃殺改成 HOT、多人/ RPG 各一）');
 eq((html.match(/class="hotTag"/g) || []).length, 1, '大逃殺有 1 顆 HOT 標籤');
 
 head('3. 首頁大按鈕：統一外型与四種狀態');
-['btnLearn', 'btnSolo', 'btnRpg', 'btnBoss', 'btnBR', 'btnStore', 'btnAcctBig', 'btnBattle', 'btnOnline', 'btnHelp', 'btnSettings', 'btnQuit']
+// v4.81：首頁只留 6 張玩法卡，工具收進「更多」抽屜
+['btnLearn', 'btnSolo', 'btnRpg', 'btnBR', 'btnDaily', 'btnMulti', 'btnMoreMenu']
   .forEach(function (id) {
     const re = new RegExp('<button class="mbtn (c-[a-z]+)[^"]*" id="' + id + '" data-ico="[^"]+"');
     ok(re.test(html), id + ' 有統一 class ＋ data-ico');
   });
+['btnStore', 'btnHelp', 'btnSettings', 'btnQuit'].forEach(function (id) {
+  const re = new RegExp('<button class="drawbtn" id="' + id + '"[^>]*data-ico="[^"]+"');
+  ok(re.test(html), id + ' 抽屜按鈕也有 data-ico');
+});
 {
-  const menuHtml = (/<div class="menu">([\s\S]*?)<\/div>/).exec(html);
-  const seg = menuHtml ? menuHtml[1] : '';
+  const gi = html.indexOf('<div class="mgrid">');
+  const seg = gi < 0 ? '' : html.slice(gi, html.indexOf('id="mDrawer"'));
   const btns = (seg.match(/<button\b/g) || []).length;
   const icos = (seg.match(/data-ico="/g) || []).length;
-  ok(btns >= 12 && btns === icos, '主選單每顆按鈕都有 icon（' + icos + '/' + btns + '）');
+  ok(btns === 6 && btns === icos, '主玩法每顆卡片都有 icon（' + icos + '/' + btns + '）');
 }
-eq((html.match(/class="mbtn[^"]*has-beta/g) || []).length, 4, '4 顆帶標籤的按鈕都預留空間');
+eq((html.match(/class="mbtn[^"]*has-beta/g) || []).length, 3, '3 顆帶測試版標籤的卡片都預留空間');
 ok(css.indexOf('content: attr(data-ico)') > 0, 'icon 由 ::before 統一產生');
 ok(css.indexOf('#scr-title .menu .mbtn:hover {') > 0, '有滑過狀態');
 ok(css.indexOf('#scr-title .menu .mbtn:active {') > 0, '有按下狀態');
@@ -95,7 +101,7 @@ ok(/body\.touch #scr-title \.menu \.mbtn \{ padding: 11px 10px 11px 40px/.test(c
 ok(css.indexOf('--g1: rgba(120,230,170,.6)') > 0 && css.indexOf('--c1: #ffa161') > 0, '顏色用 CSS 變數分層');
 ['c-learn', 'c-solo', 'c-rpg', 'c-boss', 'c-battle', 'c-online', 'c-store', 'c-acct', 'c-help', 'c-set', 'c-quit']
   .forEach(function (c) { ok(css.indexOf('#scr-title .menu .' + c) > 0, '配色 ' + c + ' 已定義'); });
-ok(html.indexOf('>單人闖關<small>') > 0 && html.indexOf('>挑戰 BOSS<small>') > 0, '標題不再夾行內 emoji');
+ok(html.indexOf('>單人闖關<small>') > 0 && html.indexOf('跳過關卡，直接單挑最終魔王') > 0, '標題不再夾行內 emoji（BOSS 移到單人畫面）');
 ok(html.indexOf('<span id="learnTag">') > 0 && P.t('learn.tag') === '新手教學', '新手教學標題由 JS 注入（不含 emoji）');
 
 head('4. 首頁移除「操作提示」白框');
