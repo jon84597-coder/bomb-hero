@@ -8007,6 +8007,16 @@ const PadUI = (function () {
       try { el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
     }
   }
+  // v5.10：這個元素現在「真的看得到」嗎（用來挑預設焦點，避免光環落在畫面外）
+  function inView(el) {
+    try {
+      const q = el.getBoundingClientRect();
+      if (!q || q.width < 1 || q.height < 1) return false;
+      const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+      const vw = window.innerWidth || document.documentElement.clientWidth || 0;
+      return q.bottom > 4 && q.top < vh - 4 && q.right > 4 && q.left < vw - 4;
+    } catch (e) { return true; }
+  }
   function ensureFocus() {
     const list = items();
     if (!list.length) { if (focusEl) { clearPaint(); focusEl = null; } return null; }
@@ -8021,17 +8031,34 @@ const PadUI = (function () {
     if (!pick) {
       // 預設不要落在輸入框（A 會直接叫出鍵盤）→ 先找第一個「按鈕類」；
       // 再優先挑主要動作（大按鈕／選單卡），而不是角落的版本鈕、公告這種小東西
+      // v5.10：還要求「現在真的看得到」——RPG／設定這種長頁面，主要動作（出發）在最下面，
+      //   挑它會讓光環落在畫面外（玩家以為手把又壞了），而換頁就硬捲到底又很跳。
+      //   所以在「畫面內」的項目裡挑，一個都看不到才退回整份清單。
+      const visible = list.filter(inView);
+      // 再跳過「邊角元件」：帳號小膠囊、工具列按鈕、版本鈕、公告…
+      //   這些一定看得到，但它們不是這一頁的主要動作，落在上面玩家會不知道從哪開始。
+      const CHROME = /(^|\s)(acctmini|navbtn|icobtn|verLogBtn|annHead|pwaBtn|scrollhint)(\s|$)/;
+      let pool = visible;
+      if (pool.length) {
+        const core = pool.filter(function (e) {
+          const c = (typeof e.className === 'string') ? e.className : '';
+          return !CHROME.test(c);
+        });
+        if (core.length) pool = core;
+      }
+      const cands = pool.length ? pool : list;
       const PRIMARY = 'biggo, bigbtn, qbtn, mbtn';
-      for (let i = 0; i < list.length; i++) {
-        const c = typeof list[i].className === 'string' ? list[i].className : '';
-        if (c && PRIMARY.split(', ').some(function (k) { return c.indexOf(k) >= 0; })) { pick = list[i]; break; }
+      for (let i = 0; i < cands.length; i++) {
+        const c = typeof cands[i].className === 'string' ? cands[i].className : '';
+        if (c && PRIMARY.split(', ').some(function (k) { return c.indexOf(k) >= 0; })) { pick = cands[i]; break; }
       }
-    }
-    if (!pick) {
-      for (let i = 0; i < list.length; i++) {
-        const tg = (list[i].tagName || '').toUpperCase();
-        if (tg !== 'INPUT' && tg !== 'TEXTAREA' && tg !== 'SELECT') { pick = list[i]; break; }
+      if (!pick) {
+        for (let i = 0; i < cands.length; i++) {
+          const tg = (cands[i].tagName || '').toUpperCase();
+          if (tg !== 'INPUT' && tg !== 'TEXTAREA' && tg !== 'SELECT') { pick = cands[i]; break; }
+        }
       }
+      if (!pick) pick = cands[0];
     }
     if (!pick) pick = list[0];
     setFocus(pick, false);

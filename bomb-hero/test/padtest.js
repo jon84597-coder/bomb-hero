@@ -60,7 +60,18 @@ const SETUP = `(function(){
   const ax = (i, v, ms) => page.eval(`window.__ax(${i}, ${v}, ${ms || 160})`);
   const show = n => page.eval(`window.__BH.Screen.show('${n}')`);
   const itemCount = () => page.eval(`window.__BH.PadUI.items().length`);
-  async function goScreen(n) { await show(n); await sleep(260); await page.eval('window.__BH.PadUI.refocus()'); await sleep(220); }
+  async function goScreen(n) {
+    if (n === 'rpg') {
+      // v5.10：RPG 頁的內容是「真的點進去」才長出來的，直接 Screen.show('rpg') 只有 6 項外殼
+      //   （角色卡、能力加減、關卡按鈕全都還沒建）→ 用真實路徑才量得到全部 30 項。
+      await show('title'); await sleep(220);
+      await page.eval(`document.getElementById('btnAdventure').click()`); await sleep(320);
+      await page.eval(`document.getElementById('btnRpg').click()`); await sleep(850);
+    } else {
+      await show(n);
+    }
+    await sleep(260); await page.eval('window.__BH.PadUI.refocus()'); await sleep(220);
+  }
 
   // ---------------------------------------------------------------
   head('① 首頁：預設焦點要落在主要按鈕');
