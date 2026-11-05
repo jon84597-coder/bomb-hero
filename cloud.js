@@ -177,7 +177,13 @@ const PLAY_EVENTS = { solo: 1, boss: 1, rpg: 1, clear: 1, play: 1, battle: 1, br
 /* 給後台顯示用的中文模式名（前端也會自己翻譯，這裡是後端備援） */
 const EVENT_LABEL = {
   solo: '單人闖關', boss: 'BOSS 連戰', rpg: 'RPG 模式', clear: '過關',
-  play: '開始遊玩', battle: '本機對戰', br: '大逃殺', online: '線上配對', act: '操作'
+  play: '開始遊玩', battle: '本機對戰', br: '大逃殺', online: '線上配對', act: '操作',
+  /* v5.14：以前這幾種只會印原始英文 type（save／bind／login／grant…），
+     後台一看全是英文，客服根本不知道玩家當下做了什麼 */
+  save: '雲端存檔', bind: '帳號綁定', register: '註冊帳號', login: '登入',
+  'login-fail': '登入失敗', lock: '密碼錯誤鎖定', passwd: '修改密碼',
+  share: '分享獎勵', ban: '被停權', unban: '解除停權', grant: '管理員調整進度',
+  'reset-alloc': '管理員歸零配點'
 };
 
 function sumAlloc(a) {
@@ -417,6 +423,7 @@ function sanitizeSave(obj) {
       }
     });
     if (/^\d{4}-\d{2}-\d{2}$/.test(String(ac.lastDay || ''))) out.ach.lastDay = String(ac.lastDay);
+    out.ach.devT = (ac.devT === 0) ? 0 : 1;      // v5.14：開發者稱號要不要戴
   }
   out.rank = { v: 1, week: '', base: {}, claimed: '' };
   const rk = (o.rank && typeof o.rank === 'object') ? o.rank : null;
@@ -1624,11 +1631,12 @@ function createCloud(options) {
     let me = S.players[pid];
     if (!me) {
       me = S.players[pid] = { n: '無名玩家', ch: 0, g: '', r: '', b: '', k: 'guest', join: Date.now(),
-        seen: 0, sec: 0, pts: 0, wins: 0, mode: '大廳', friends: [], reqs: [], blocks: [] };
+        seen: 0, sec: 0, pts: 0, wins: 0, mode: '大廳', friends: [], reqs: [], blocks: [], read: {} };
     }
     if (!me.friends) me.friends = [];
     if (!me.reqs) me.reqs = [];
     if (!me.blocks) me.blocks = [];
+    if (!me.read || typeof me.read !== 'object') me.read = {};   // v5.14：每個人最後讀到哪
     return me;
   }
   function socApply(me, body) {
@@ -1696,11 +1704,57 @@ function createCloud(options) {
       return { id: m.id, from: m.from, t: m.t, m: m.m };
     });
   }
+  /* v5.14：未讀私訊（給首頁的驚嘆號通知用）
+     read[對方pid] = 我最後一次打開那個對話的時間點 */
+  function socUnread(pid) {
+    const S = socDb();
+    const me = S.players[pid];
+    if (!me) return { n: 0, by: {} };
+    const read = me.read || {};
+    const by = {};
+    let n = 0;
+    for (const k in S.dm) {
+      const i = k.indexOf('|');
+      const a = k.slice(0, i), b = k.slice(i + 1);
+      if (a !== pid && b !== pid) continue;
+      const other = (a === pid) ? b : a;
+      const arr = S.dm[k];
+      if (!arr || !arr.length) continue;
+      const since = read[other] || 0;
+      for (let j = arr.length - 1; j >= 0; j--) {
+        const m = arr[j];
+        if ((m.t || 0) <= since) break;
+        if (m.from === pid) continue;
+        by[other] = (by[other] || 0) + 1;
+        n++;
+      }
+    }
+    return { n: n, by: by };
+  }
+  /* 把某個對話標成已讀（讀到最後一則的時間，不用「現在」→ 不會吃掉同時進來的訊息） */
+  function socRead(pid, withPid) {
+    const S = socDb();
+    const me = S.players[pid];
+    if (!me || !withPid) return;
+    const arr = S.dm[dmKey(pid, withPid)] || [];
+    const last = arr.length ? (arr[arr.length - 1].t || Date.now()) : Date.now();
+    if (!me.read) me.read = {};
+    if (last > (me.read[withPid] || 0)) me.read[withPid] = last;
+    // read 表不要無限長大
+    const ks = Object.keys(me.read);
+    if (ks.length > 200) {
+      ks.sort(function (x, y) { return (me.read[x] || 0) - (me.read[y] || 0); });
+      for (let i = 0; i < ks.length - 200; i++) delete me.read[ks[i]];
+    }
+  }
+
   function socOut(pid) {
     const S = socDb();
     const me = socGet(pid);
+    const un = socUnread(pid);
     return { me: socPublic(pid, me), friends: me.friends.slice(0, 200), blocks: me.blocks.slice(0, 200),
-      reqs: me.reqs.slice(0, 100), list: socOnline(pid, 80), total: socCount() };
+      reqs: me.reqs.slice(0, 100), list: socOnline(pid, 80), total: socCount(),
+      unread: un.n, unreadBy: un.by };
   }
 
   async function handle(req, res, url) {
@@ -1826,7 +1880,8 @@ function createCloud(options) {
           const o = socOut(pid);
           return send(res, 200, {
             ok: true, me: o.me, total: o.total, list: o.list,
-            friends: o.friends, blocks: o.blocks, reqs: o.reqs
+            friends: o.friends, blocks: o.blocks, reqs: o.reqs,
+            unread: o.unread, unreadBy: o.unreadBy
           }, CORS_X), true;
         }
 
@@ -1841,7 +1896,8 @@ function createCloud(options) {
           const o = socOut(pid);
           return send(res, 200, {
             ok: true, me: o.me, total: o.total, list: o.list,
-            friends: o.friends, blocks: o.blocks, reqs: o.reqs
+            friends: o.friends, blocks: o.blocks, reqs: o.reqs,
+            unread: o.unread, unreadBy: o.unreadBy
           }, CORS_X), true;
         }
 
@@ -1885,6 +1941,10 @@ function createCloud(options) {
               rm(me.reqs, target); rm(him.reqs, pid);
               note = '已成為好友 🤝';
             }
+          } else if (action === 'ignore') {
+            // v5.14：忽略好友邀請（只刪邀請，不會像 unfriend 一樣把既有好友也拆掉）
+            rm(me.reqs, target); rm(him.reqs, pid);
+            note = '已忽略邀請';
           } else if (action === 'unfriend') {
             rm(me.friends, target); rm(him.friends, pid);
             rm(me.reqs, target); rm(him.reqs, pid);
@@ -1903,6 +1963,8 @@ function createCloud(options) {
           const limit = Math.max(1, Math.min(200, parseInt(url.searchParams.get('limit'), 10) || 60));
           const me = socGet(pid);
           me.seen = Date.now();
+          socRead(pid, withPid);                       // v5.14：打開對話就標已讀
+          store.touch();
           return send(res, 200, { ok: true, list: dmList(pid, withPid, limit) }, CORS_X), true;
         }
 
@@ -2167,7 +2229,7 @@ function createCloud(options) {
         acc.loginCount = 1;
         acc.dev = (acc.email && DEV_EMAILS.indexOf(String(acc.email).toLowerCase()) >= 0) || false;
         noteIp(acc, ip(req));
-        logEvent(acc, 'register', { ip: ip(req) });
+        logEvent(acc, 'register', { ip: ip(req), via: '帳號密碼', name: acc.name });
         // 遊客進度完整轉移：關卡、配點、金幣、觸控版面一起帶過來
         if (cur && cur.kind === 'guest' && cur.id !== acc.id && !cur.mergedInto) {
           bindGuest(acc, cur);
@@ -2209,8 +2271,8 @@ function createCloud(options) {
         if (!acc || !acc.pass || !okPw) {
           if (acc) {
             acc.fails = (acc.fails | 0) + 1;
-            if (acc.fails >= 5) { acc.lockUntil = now + 300000; acc.fails = 0; logEvent(acc, 'lock', { ip: ip(req) }); }
-            logEvent(acc, 'login-fail', { ip: ip(req) });
+            if (acc.fails >= 5) { acc.lockUntil = now + 300000; acc.fails = 0; logEvent(acc, 'lock', { ip: ip(req), via: '帳號密碼' }); }
+            logEvent(acc, 'login-fail', { ip: ip(req), via: '帳號密碼', fails: acc.fails | 0 });
             store.touch();
           }
           return send(res, 401, { ok: false, err: 'BAD_LOGIN' }), true;
@@ -2220,7 +2282,7 @@ function createCloud(options) {
         acc.loginCount = (acc.loginCount | 0) + 1;
         acc.lastSeen = now;
         noteIp(acc, ip(req));
-        logEvent(acc, 'login', { ip: ip(req) });
+        logEvent(acc, 'login', { ip: ip(req), via: '帳號密碼' });
         const cur = session(req);
         if (cur && cur.kind === 'guest' && cur.id !== acc.id && !cur.mergedInto) {
           bindGuest(acc, cur);
@@ -2320,8 +2382,14 @@ function createCloud(options) {
           if (gust && !gust.mergedInto && gust.id !== acc.id) {
             bindGuest(acc, gust);
             stats.bindings++;
+            logEvent(acc, 'bind', { from: gust.id, via: prov });
           }
         }
+        /* v5.14：第三方登入以前完全沒有足跡 —— 後台只看得到帳密登入，會誤判「這人沒在玩」 */
+        logEvent(acc, 'login', {
+          ip: ip(req),
+          via: prov === 'google' ? 'Google' : prov === 'facebook' ? 'Facebook' : 'LINE'
+        });
         cookieSet(res, req, makeToken(secret, acc.id));
         store.touch();
         return redirectBack(res, back, 'ok'), true;
@@ -2452,7 +2520,7 @@ function createCloud(options) {
               by: me.id
             };
             stats.bans++;
-            logEvent(target, 'ban', { by: me.id });
+            logEvent(target, 'ban', { by: me.id, reason: target.banned.reason || '' });
           }
           store.touch();
           return send(res, 200, { ok: true, account: adminRow(target) }), true;
@@ -2537,7 +2605,16 @@ function createCloud(options) {
           acc.save = sanitizeSave(body.save);
           acc.saveRev = (acc.saveRev || 0) + 1;
           acc.saveTs = Date.now();
-          logEvent(acc, 'save', {});
+          /* v5.14：存檔只記時間對客服沒有用。記下「第幾次、多大、目前進度多少」，
+             玩家回報「我金幣不見了」時，後台可以直接對照存檔前後的數字。 */
+          logEvent(acc, 'save', {
+            rev: acc.saveRev,
+            kb: Math.round(JSON.stringify(acc.save).length / 102.4) / 10,
+            lvl: acc.save.stage | 0,
+            gold: acc.save.gold | 0,
+            achN: Object.keys(acc.save.ach ? (acc.save.ach.u || {}) : {}).length,
+            sec: acc.playSec | 0
+          });
           store.touch();
           return send(res, 200, { ok: true, rev: acc.saveRev, ts: acc.saveTs }), true;
         }

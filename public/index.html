@@ -3972,7 +3972,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 }
 
 /* 首頁三顆社群入口（成就／排名／線上玩家） */
-.quickrow { display: flex; gap: 7px; margin: 9px 0 4px; }
+.quickrow { display: flex; gap: 7px; margin: 5px 0 2px; }
 .qchip { flex: 1 1 0; position: relative; display: flex; align-items: center; justify-content: center; gap: 6px;
   padding: 9px 6px; border-radius: 13px; border: 2px solid #e6c8a0; background: #fffaf0; color: #8a5b2c;
   font-family: inherit; font-size: 12.5px; font-weight: 900; cursor: pointer;
@@ -3987,6 +3987,50 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 @media (max-width: 520px) {
   .quickrow { padding-left: 58px; }
 }
+
+/* ===================================================================
+ * v5.14：好友邀請／私訊通知（首頁）
+ * ---------------------------------------------------------------
+ * 使用者要的是「不影響遊戲畫面的位置」→ 這條通知只活在首頁選單裡
+ * （.screen 沒開就整個 display:none），遊戲中完全不會出現。
+ * ================================================================ */
+.socnotice { position: relative; display: flex; align-items: center; gap: 7px;
+  margin: -3px 0 -3px; padding: 5px 6px 5px 10px; border-radius: 12px; cursor: pointer;
+  border: 2px solid #ff9d8a; background: linear-gradient(180deg, #fff3ef, #ffe1d8);
+  color: #7d2718; font-family: inherit; font-size: 12.5px; font-weight: 900; text-align: left;
+  box-shadow: 0 3px 0 rgba(200, 80, 60, .16); animation: snPulse 2.1s ease-in-out infinite; }
+.socnotice.hide { display: none; }
+.socnotice:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(200, 80, 60, .16); }
+.socnotice .snico { flex: 0 0 auto; font-size: 15px; line-height: 1; }
+/* 一行、不換行：長暱稱就省略，高度永遠固定（不會把下面的三顆入口推出手機畫面） */
+.socnotice .sntxt { flex: 1 1 auto; min-width: 0; font-size: 12px; line-height: 1.35;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.socnotice .snact { flex: 0 0 auto; font-size: 11.5px; font-weight: 900; color: #e04a2d; }
+.socnotice .snx { flex: 0 0 auto; width: 24px; height: 24px; line-height: 24px; text-align: center;
+  border-radius: 50%; color: #b56a5c; font-style: normal; font-size: 12px; font-weight: 900; }
+.socnotice .snx:active { background: rgba(255, 120, 90, .2); }
+@keyframes snPulse {
+  0%, 100% { box-shadow: 0 3px 0 rgba(200, 80, 60, .16); }
+  50% { box-shadow: 0 3px 0 rgba(200, 80, 60, .16), 0 0 0 4px rgba(255, 106, 77, .16); }
+}
+/* 線上玩家 chip 上的數字（有未讀就變成紅底數字，比原本的小綠點明顯） */
+.qdot-num { width: auto; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+  top: -5px; right: -4px; background: #f2433a; color: #fff; font-style: normal;
+  font-size: 9.5px; font-weight: 900; line-height: 16px; text-align: center;
+  box-shadow: 0 0 0 2px #fff6e0, 0 1px 3px rgba(0, 0, 0, .28); }
+.qchip.has-nt { border-color: #ff9d8a; background: #fff1ec; color: #b5341f; }
+/* 開發者稱號：黑紫 */
+.ttrow.dev { background: linear-gradient(90deg, #191026, #241539 60%, #1a1028);
+  border: 1px solid #4b2f7d; border-radius: 12px; padding: 6px 8px; }
+.ttrow.dev .ttneed { color: #9b86c4; }
+.ttrow.dev.on { border-color: #7a4cc9; box-shadow: 0 0 0 2px rgba(140, 90, 240, .18); }
+.tttagdev { display: inline-block; margin-left: 4px; padding: 1px 5px; border-radius: 6px;
+  background: #3a2263; color: #cbb2ff; font-size: 9.5px; font-weight: 800; letter-spacing: .3px; }
+/* 後台足跡的補充說明（v5.14） */
+.bhev .bhevdet { color: #8ea6c4; font-size: 10.5px; }
+.bhev.req { border-bottom: 0; }
+.onreq { display: flex; gap: 5px; flex: 0 0 auto; }
+.onreq button { padding: 4px 9px; font-size: 11px; border-radius: 8px; }
 
 </style>
 </head>
@@ -4037,7 +4081,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.13</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.14</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4079,13 +4123,20 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.13</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.14</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
         <input class="tinput" id="playerName" maxlength="8" placeholder="可留空，系統自動取名字">
       </div>
       <div class="menu" id="homeMenu">
+        <!-- v5.14：好友邀請／私訊通知。有未讀才出現（.hide），不佔遊戲畫面 -->
+        <div class="socnotice hide" id="socNotice" role="button" tabindex="0" aria-label="訊息通知">
+          <span class="snico">🔔</span>
+          <span class="sntxt" id="socNoticeTxt">有新訊息</span>
+          <span class="snact">查看 ›</span>
+          <i class="snx" id="socNoticeX" title="先收起">✕</i>
+        </div>
         <button class="mbtn c-learn" id="btnLearn" data-ico="🎓"></button>
         <div class="mgrid">
           <button class="mbtn c-solo" id="btnAdventure" data-ico="🗺️">冒險模式<small>單人 32 關 · RPG 養成</small></button>
@@ -4106,7 +4157,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
   <div class="quickrow" id="quickRow">
     <button class="qchip" id="btnAch" type="button" title="成就與稱號"><span class="qico2">🏆</span><b>成就</b><i class="qdot hide" id="achDot"></i></button>
     <button class="qchip" id="btnRank" type="button" title="各項排行榜"><span class="qico2">📊</span><b>排名</b></button>
-    <button class="qchip" id="btnPlayers" type="button" title="線上玩家名單"><span class="qico2">👥</span><b>線上玩家</b><i class="qdot qdot-g hide" id="onDot"></i></button>
+    <button class="qchip" id="btnPlayers" type="button" title="線上玩家名單"><span class="qico2">👥</span><b>線上玩家</b><i class="qdot qdot-num hide" id="onDot">0</i></button>
   </div>
 
       </div>
@@ -4868,7 +4919,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.13';
+const VERSION = '5.14';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -11495,6 +11546,16 @@ const Ach = (function () {
         { need: 750, name: '紫電傳說', ico: '🌟', color: '#6a3aa0', bg: '#f2e9ff', frame: 'linear-gradient(180deg,#d3b6ff,#9a63e0)' },
         { need: 1000, name: '不朽神話', ico: '🏆', color: '#b3242f', bg: '#ffe8e9', frame: 'linear-gradient(180deg,#ffb2ba,#d63c4a)' }
       ];
+      /* v5.14：使用者要求「多一個遊戲開發者的頭銜稱號，黑紫色的設計」。
+         刻意不放進 TITLES：TITLES 是「成就分到了就自動升」的階梯，
+         開發者稱號不是分數換來的（後台帳號才有），混進去會讓階梯邏輯壞掉。
+         canvasFill／canvasEdge／canvasText 是畫在頭上的顏色（Canvas 吃不了 CSS 漸層）。 */
+      const DEV_TITLE = {
+        need: -1, dev: true, name: '遊戲開發者', ico: '🛠️',
+        color: '#c9a4ff', bg: '#150b26',
+        frame: 'linear-gradient(160deg,#2b1650,#7b4bd4 48%,#0d0718)',
+        canvasFill: ['#2a1550', '#0e0718'], canvasEdge: '#a273ff', canvasText: '#efe4ff'
+      };
 
       /* 每個系列 = 一個計數器 + 一串門檻。
          need / names 一一對應；gold 是「係數」，實際金幣 = round(gold × (階級+1)² × 12)。 */
@@ -11610,7 +11671,8 @@ const Ach = (function () {
         return t.getUTCFullYear() + '-' + p(t.getUTCMonth() + 1) + '-' + p(t.getUTCDate());
       }
 
-      const S = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {} };
+      /* devT：開發者稱號要不要戴（1 = 戴、0 = 收起；帳號不是開發者時一律不戴） */
+      const S = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, devT: 1 };
       let ready = false, dirty = false, timeAcc = 0;
       const listeners = [];
 
@@ -11638,6 +11700,7 @@ const Ach = (function () {
             S.g = (o.g && typeof o.g === 'object') ? o.g : {};
             S.lastDay = String(o.lastDay || '');
             S.star3 = (o.star3 && typeof o.star3 === 'object') ? o.star3 : {};
+            S.devT = (o.devT === 0) ? 0 : 1;
           }
         } catch (e) {}
         ready = true;
@@ -11685,7 +11748,29 @@ const Ach = (function () {
         for (let i = 0; i < LIST.length; i++) if (S.u[LIST[i].id]) n += LIST[i].pts;
         return n;
       }
+      /* 這個帳號有沒有資格戴「遊戲開發者」：
+         · 已登入 → 只看伺服器給的 dev 旗標（DEV_EMAILS 白名單）
+         · 沒登入（file:// 或離線開發）→ 退回開發版旗標
+         刻意不看 DEV_BUILD 本身，否則正式版（DEV_BUILD=true）每個玩家頭上都掛開發者。 */
+      function canDev() {
+        try {
+          const a = (typeof Cloud !== 'undefined' && Cloud && Cloud.acc) ? Cloud.acc() : null;
+          return !!(a && a.dev === true);
+        } catch (e) { return false; }
+      }
+      /* 只有測試／離線除錯會呼叫：強制當成開發者（正式流程請讓伺服器給 dev 旗標） */
+      let devForced = false;
+      function forceDev(on) { devForced = !!on; return devForced; }
+      function devAllowed() { return devForced || canDev(); }
+      function devOn() { return devAllowed() && S.devT !== 0; }
+      function setDev(on) {
+        S.devT = on ? 1 : 0;
+        save();
+        return S.devT;
+      }
+
       function titleOf(pts) {
+        if (devOn()) return DEV_TITLE;                 // 開發者稱號優先於所有成就稱號
         const p = (pts == null) ? points() : pts;
         let cur = null;
         for (let i = 0; i < TITLES.length; i++) if (p >= TITLES[i].need) cur = TITLES[i];
@@ -11778,7 +11863,7 @@ const Ach = (function () {
       }
 
       function state() {
-        return { v: 1, c: S.c, u: S.u, g: S.g, lastDay: S.lastDay, star3: S.star3 };
+        return { v: 1, c: S.c, u: S.u, g: S.g, lastDay: S.lastDay, star3: S.star3, devT: S.devT | 0 };
       }
       function setState(o) {
         if (!o || typeof o !== 'object') return false;
@@ -11792,13 +11877,14 @@ const Ach = (function () {
         if (o.g && typeof o.g === 'object') for (const k in o.g) if (BY_ID[k]) S.g[k] = 1;
         if (o.star3 && typeof o.star3 === 'object') for (const k in o.star3) S.star3[k] = 1;
         if (o.lastDay && String(o.lastDay) > S.lastDay) S.lastDay = String(o.lastDay);
+        if (o.devT === 0 || o.devT === 1) S.devT = o.devT;
         check();
         store();
         return true;
       }
       /* 合併（雲端 vs 本地）：計數取大、解鎖取聯集、已領取取聯集 */
       function merge(a, b) {
-        const out = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {} };
+        const out = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, devT: 1 };
         [a, b].forEach(function (o) {
           if (!o || typeof o !== 'object') return;
           if (o.c) for (const k in o.c) out.c[k] = Math.max(out.c[k] | 0, Math.min(1e12, Number(o.c[k]) || 0));
@@ -11806,6 +11892,7 @@ const Ach = (function () {
           if (o.g) for (const k in o.g) if (BY_ID[k]) out.g[k] = 1;
           if (o.star3) for (const k in o.star3) out.star3[k] = 1;
           if (o.lastDay && String(o.lastDay) > out.lastDay) out.lastDay = String(o.lastDay);
+          if (o.devT === 0) out.devT = 0;        // 任何一台收起來就收起來
         });
         return out;
       }
@@ -11814,6 +11901,7 @@ const Ach = (function () {
         KEY: KEY, TITLES: TITLES, SERIES: SERIES, CATS: CATS, LIST: LIST,
         stat: stat, count: count, setMax: setMax, check: check,
         points: points, titleOf: titleOf, nextTitle: nextTitle,
+        DEV_TITLE: DEV_TITLE, canDev: canDev, devAllowed: devAllowed, devOn: devOn, setDev: setDev, forceDev: forceDev,
         unclaimed: unclaimed, claim: claim, claimAll: claimAll, star3: star3, addTime: addTime,
         state: state, setState: setState, merge: merge, save: save,
         isUnlocked: function (id) { return !!S.u[id]; },
@@ -12114,7 +12202,9 @@ const Social = (function () {
         on: false, list: [], total: 0, at: 0, err: '',
         me: null, friends: [], blocks: [], reqs: [],
         tab: 'online', view: 'list', sel: null,
-        chatWith: '', msgs: [], chatAt: 0, chatErr: '', sending: false
+        chatWith: '', msgs: [], chatAt: 0, chatErr: '', sending: false,
+        /* v5.14：通知狀態（req = 好友邀請數、dm = 未讀私訊數、by = 誰傳的） */
+        nt: { n: 0, req: 0, dm: 0, by: {} }, dismiss: false
       };
       let hbT = 0, listT = 0, dmT = 0, opened = false;
 
@@ -12182,6 +12272,7 @@ const Social = (function () {
             if (Array.isArray(j.blocks)) S.blocks = j.blocks;
             if (Array.isArray(j.reqs)) S.reqs = j.reqs;
             if (Array.isArray(j.list)) { S.list = j.list; S.at = Date.now(); }
+            setNt(j);
             paintSoon();
           } else if (j) {
             S.on = false;
@@ -12208,6 +12299,7 @@ const Social = (function () {
             if (Array.isArray(j.blocks)) S.blocks = j.blocks;
             if (Array.isArray(j.reqs)) S.reqs = j.reqs;
             S.at = Date.now();
+            setNt(j);
           } else if (j) {
             S.err = j.err || 'ERR'; S.on = false;
           }
@@ -12259,6 +12351,12 @@ const Social = (function () {
             S.msgs = Array.isArray(j.list) ? j.list : [];
             S.chatErr = '';
             S.chatAt = Date.now();
+            if (S.nt.by && S.nt.by[S.chatWith]) {       // v5.14：打開對話就算已讀
+              S.nt.dm = Math.max(0, (S.nt.dm | 0) - (S.nt.by[S.chatWith] | 0));
+              S.nt.by[S.chatWith] = 0;
+              S.nt.n = (S.nt.req | 0) + (S.nt.dm | 0);
+              syncNotice();
+            }
             paint();
           } else if (j) {
             S.chatErr = errText(j.err);
@@ -12283,6 +12381,77 @@ const Social = (function () {
             }
             return j;
           }, function () { S.sending = false; try { toast('網路不穩，訊息沒有送出', 2.4); } catch (e) {} return null; });
+      }
+
+      /* ---------------- v5.14：通知（驚嘆號） ---------------- */
+      /* 為什麼不只畫一個小紅點：使用者要「一看就知道有事」。
+         所以三個地方一起亮：①線上玩家 chip 上的數字 ②首頁那條通知 ③剛好收到時跳一則 toast。 */
+      function setNt(j) {
+        if (!j) return;
+        const req = Array.isArray(j.reqs) ? j.reqs.length : (S.reqs.length | 0);
+        const dm = (j.unread | 0);
+        const by = (j.unreadBy && typeof j.unreadBy === 'object') ? j.unreadBy : {};
+        const grew = (dm > (S.nt.dm | 0)) || (req > (S.nt.req | 0));
+        S.nt = { n: (req | 0) + (dm | 0), req: req | 0, dm: dm | 0, by: by };
+        if (grew) {
+          S.dismiss = false;
+          // 有新的未讀才跳提示（正在跟同一個人聊天時不用吵）
+          if (dm > 0 && !(opened && S.view === 'chat')) {
+            try { toast('🔔 ' + (firstWho() || '有人傳訊息給你'), 3); } catch (e) {}
+          }
+        }
+        syncNotice();
+      }
+      function firstPid() {
+        const by = S.nt.by || {};
+        let best = '', bv = 0;
+        for (const k in by) if ((by[k] | 0) > bv) { bv = by[k] | 0; best = k; }
+        return best;
+      }
+      function firstName() {
+        const pid = firstPid();
+        if (!pid) return '';
+        const p = findPid(pid);
+        return p && p.name ? p.name : '玩家 ' + pcode(pid);
+      }
+      function firstWho() {
+        const pid = firstPid();
+        if (!pid) return '';
+        return firstName() + ' 傳了 ' + ((S.nt.by || {})[pid] | 0) + ' 則訊息';
+      }
+      function syncNotice() {
+        const N = S.nt.n | 0;
+        const dot = $id('onDot');
+        if (dot) {
+          dot.textContent = N > 9 ? '9+' : (N > 0 ? String(N) : '');
+          dot.classList.toggle('hide', N <= 0);
+        }
+        const chip = $id('btnPlayers');
+        if (chip) chip.classList.toggle('has-nt', N > 0);
+        const bar = $id('socNotice');
+        if (!bar) return;
+        const show = N > 0 && !S.dismiss;
+        bar.classList.toggle('hide', !show);
+        if (!show) return;
+        const t2 = $id('socNoticeTxt');
+        if (t2) {
+          const parts = [];
+          if (S.nt.req) parts.push(S.nt.req + ' 個好友邀請');
+          if (S.nt.dm) {
+            const who = firstName();
+            parts.push(who ? who + ' 傳了 ' + S.nt.dm + ' 則訊息' : S.nt.dm + ' 則未讀訊息');
+          }
+          t2.textContent = parts.join(' · ') || '有新通知';
+        }
+      }
+      function openNotice() {
+        const by = S.nt.by || {};
+        let best = '', bv = 0;
+        for (const k in by) if ((by[k] | 0) > bv) { bv = by[k] | 0; best = k; }
+        S.dismiss = false;
+        open();
+        if (best) { openChat(best); return; }
+        if (S.nt.req) { S.tab = 'friend'; S.view = 'list'; paint(); }
       }
 
       /* ---------------- 畫面 ---------------- */
@@ -12339,12 +12508,27 @@ const Social = (function () {
                 '<div class="onsub">編號 ' + pcode(p.pid) + '</div></div><div class="onmode">已封鎖</div></div>';
             }).join('') + '</div>';
         }
+        /* v5.14：好友邀請列（以前只寫「點名字加為好友」，名字根本不能點） */
+        let reqHTML = '';
+        if (S.tab === 'friend' && S.reqs.length) {
+          reqHTML = '<div class="bhnote">🤝 好友邀請（' + S.reqs.length + '）</div><div class="onlist">' +
+            S.reqs.map(function (id) {
+              const p = findPid(id);
+              return '<div class="onrow req"><div class="onav">🤝</div>' +
+                '<div class="onmeta"><div class="onname">' + esc(p ? p.name : '玩家 ' + pcode(id)) + '</div>' +
+                '<div class="onsub">想加你為好友' + (p ? ' · 玩 ' + fmtDur(p.sec) : '') + '</div></div>' +
+                '<div class="onreq"><button class="bhbtn warm" type="button" data-socact="accept" data-pid="' +
+                esc(id) + '">接受</button><button class="bhbtn" type="button" data-socact="ignore" data-pid="' +
+                esc(id) + '">忽略</button></div></div>';
+            }).join('') + '</div>';
+        }
         if (!arr.length) {
-          return '<div class="rkempty">' + (S.tab === 'friend'
-            ? '還沒有好友。<br>在「線上」點一位玩家，再按「➕ 加好友」。'
+          return reqHTML + '<div class="rkempty">' + (S.tab === 'friend'
+            ? (S.reqs.length ? '還沒有已接受的好友（上面有 ' + S.reqs.length + ' 個邀請等你處理）。'
+                              : '還沒有好友。<br>在「線上」點一位玩家，再按「➕ 加好友」。')
             : '目前沒有人在線上。<br>（名單只顯示 150 秒內有動靜的玩家）') + '</div>';
         }
-        return '<div class="onbar"><span class="ondot"></span>線上 ' + S.total +
+        return reqHTML + '<div class="onbar"><span class="ondot"></span>線上 ' + S.total +
           ' 人 · 更新於 ' + ago(S.at) + '</div><div class="onlist">' + arr.map(rowHTML).join('') + '</div>';
       }
 
@@ -12434,10 +12618,8 @@ const Social = (function () {
         if (S.tab === 'me') { box.innerHTML = renderMe(); return; }
         if (S.view === 'detail') { box.innerHTML = renderDetail(); return; }
         if (S.view === 'chat') { box.innerHTML = renderChat(); const lg = $id('onChatLog'); if (lg) lg.scrollTop = lg.scrollHeight; return; }
-        box.innerHTML = (S.reqs.length && S.tab === 'friend'
-          ? '<div class="bhnote">🤝 有 ' + S.reqs.length + ' 個好友邀請：' + S.reqs.map(function (id) {
-              const p = findPid(id); return esc(p ? p.name : pcode(id));
-            }).join('、') + '（點名字加為好友）</div>' : '') + renderList();
+        box.innerHTML = renderList();
+        syncNotice();
       }
 
       function paint() { try { render(); } catch (e) { console.warn('[Social] 畫面更新失敗', e); } }
@@ -12477,6 +12659,13 @@ const Social = (function () {
           return;
         }
         if (t.closest('#socHb')) { hb().then(fetchList); return; }
+        const sa = t.closest('[data-socact]');           // v5.14：好友邀請的接受／忽略
+        if (sa) {
+          const pid = sa.getAttribute('data-pid');
+          const what = sa.getAttribute('data-socact');
+          act(what === 'ignore' ? 'ignore' : 'accept', pid);
+          return;
+        }
         const fr = t.closest('#onFriend');
         if (fr && S.sel) { act(S.friends.indexOf(S.sel.pid) >= 0 ? 'unfriend' : 'friend', S.sel.pid); return; }
         const dm = t.closest('#onDm');
@@ -12510,6 +12699,18 @@ const Social = (function () {
         if (tabsEl) tabsEl.addEventListener('click', onTabClick);
         const ob = $id('btnPlayers');
         if (ob) ob.addEventListener('click', open);
+        const nb = $id('socNotice');
+        if (nb) nb.addEventListener('click', function (e) {
+          if (e.target && e.target.closest && e.target.closest('#socNoticeX')) return;
+          openNotice();
+        });
+        const nx = $id('socNoticeX');
+        if (nx) nx.addEventListener('click', function (e) {
+          if (e.stopPropagation) e.stopPropagation();
+          S.dismiss = true;
+          syncNotice();
+        });
+        syncNotice();
         const mb = $id('onModal');
         if (mb) mb.addEventListener('click', function (e) { if (e.target === mb) close(); });
         const x = $id('onX');
@@ -12524,6 +12725,7 @@ const Social = (function () {
       }
 
       window.Social = { open: open, close: close, hb: hb, list: fetchList, render: paint, init: init,
+        notice: syncNotice, openNotice: openNotice,
         state: function () { return { gender: P.gender, region: P.region, bio: P.bio }; },
         setState: function (o) {
           if (!o) return;
@@ -12617,6 +12819,25 @@ const AchUI = (function () {
             '<div class="ttneed">需要 ' + t.need + ' 成就分' + (got ? ' · 已達成' : ' · 還差 ' + (t.need - pts)) + '</div></div>' +
             '<div class="achgold">' + (got ? '✅' : '🔒') + '</div></div>';
         });
+        /* v5.14：開發者稱號固定排在最後（不參與成就分階梯） */
+        const D = Ach.DEV_TITLE;
+        if (Ach.devAllowed()) {
+          const on = Ach.devOn();
+          h += '<div class="ttrow dev' + (on ? ' on' : '') + '">' +
+            '<div class="ttframe" style="background:' + D.frame + ';border-color:#6b4bb0">' + D.ico + '</div>' +
+            '<div class="ttmeta"><div class="ttname" style="color:' + D.color + '">' + D.name +
+            '<span class="tttagdev">開發者專屬</span></div>' +
+            '<div class="ttneed">不用成就分 · ' + (on ? '目前戴在頭上' : '已收起') + '</div></div>' +
+            '<button class="bhbtn' + (on ? '' : ' warm') + '" type="button" data-achdev="' + (on ? '0' : '1') + '">' +
+            (on ? '卸下' : '配戴') + '</button></div>';
+        } else {
+          h += '<div class="ttrow dev" style="opacity:.55">' +
+            '<div class="ttframe" style="background:' + D.frame + ';border-color:#4b2f7d">' + D.ico + '</div>' +
+            '<div class="ttmeta"><div class="ttname" style="color:' + D.color + '">' + D.name +
+            '<span class="tttagdev">開發者專屬</span></div>' +
+            '<div class="ttneed">這套遊戲的開發者帳號才會拿到</div></div>' +
+            '<div class="achgold">🔒</div></div>';
+        }
         return h + '</div>';
       }
 
@@ -12680,7 +12901,15 @@ const AchUI = (function () {
         });
         const body = $id('achBody');
         if (body) body.addEventListener('click', function (e) {
-          const b = e.target && e.target.closest ? e.target.closest('[data-claim]') : null;
+          if (!e.target || !e.target.closest) return;
+          const dv = e.target.closest('[data-achdev]');       // v5.14：開發者稱號開關
+          if (dv) {
+            Ach.setDev(dv.getAttribute('data-achdev') === '1');
+            try { toast(Ach.devOn() ? '🛠️ 已戴上「遊戲開發者」' : '已收起開發者稱號', 2); } catch (err) {}
+            render();
+            return;
+          }
+          const b = e.target.closest('[data-claim]');
           if (!b) return;
           const id = b.getAttribute('data-claim');
           const g = Ach.claim(id);
@@ -27454,10 +27683,17 @@ function drawMeBadge(x, y, R, T, headTop, mode) {
       ctx.lineTo(lx, ly + rr2);
       ctx.quadraticCurveTo(lx, ly, lx + rr2, ly);
       ctx.closePath();
-      ctx.fillStyle = 'rgba(32,16,0,.66)'; ctx.fill();
-      ctx.lineWidth = Math.max(1.2, T * .034); ctx.strokeStyle = tt.color; ctx.stroke();
+      if (tt.canvasFill) {                     // v5.14：開發者稱號（黑紫漸層 + 紫光邊）
+        const g2 = ctx.createLinearGradient(lx, ly, lx, ly + fh);
+        g2.addColorStop(0, tt.canvasFill[0]); g2.addColorStop(1, tt.canvasFill[1]);
+        ctx.fillStyle = g2;
+      } else {
+        ctx.fillStyle = 'rgba(32,16,0,.66)';
+      }
+      ctx.fill();
+      ctx.lineWidth = Math.max(1.2, T * .034); ctx.strokeStyle = tt.canvasEdge || tt.color; ctx.stroke();
       ctx.lineWidth = 1;
-      ctx.fillStyle = '#fff8e6';
+      ctx.fillStyle = tt.canvasText || '#fff8e6';
       ctx.fillText(label, x, ty + .5);
     }
   } catch (e) {}
@@ -31861,7 +32097,15 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.13', date: '2026-11-05', now: true, items: [
+  { v: '5.14', date: '2026-11-05', now: true, items: [
+    '🛠️ <b>黑底紫光的專屬名號</b>：隱藏稱號，<b>不用成就分</b> —— 只有遊戲作者本人的帳號會出現（成就 → 稱號頁可以自由戴上／卸下），遊戲中一樣畫在頭上',
+    '🔔 <b>有人加你好友或傳訊息，首頁會亮驚嘆號</b>：選單上方出現一條「🔔 2 個好友邀請 · 1 則未讀訊息」，點一下直接跳到那個對話；入口按鈕上也會顯示未讀數字。通知只出現在首頁，<b>不會蓋到遊戲畫面</b>',
+    '🤝 <b>好友邀請可以真的按了</b>：好友頁最上面列出「誰想加你」，直接<b>接受／忽略</b>（以前只寫「點名字加為好友」，名字其實不能點）',
+    '🧾 <b>出問題時對得上時間點了</b>：系統紀錄以前有幾筆是英文（save／bind／login），現在全部中文，而且會寫清楚「第幾次存檔、存檔多大、當下第幾關、金幣多少、成就幾個」',
+    '🔎 順手補齊：<b>Google／Facebook／LINE 登入以前完全沒有紀錄</b>，現在也會寫下「用哪個平台登入＋IP」；被停權時也會記下原因',
+    '🧪 新增 <b>verify-v514</b>（86 項）：稱號的顯示條件與開關、未讀計算與已讀、好友邀請的接受／忽略、紀錄中文化都跑過一遍'
+  ] },
+  { v: '5.13', date: '2026-11-05', now: false, items: [
     '🏆 <b>成就系統上線</b>：八個分類、<b>192 個成就</b>（大逃殺擊殺／前十／前三／冠軍、對戰擊殺與冠軍、線上配對、單人殺怪與討伐 BOSS、RPG、坐騎、累積時數與登入天數…），<b>每個成就都有自己的名字</b>，達成就能領金幣（越難領越多）',
     '📛 <b>頭上有名號了</b>：成就分累積到 <b>10／50／75／100／250／500／750／1000</b> 會依序換稱號 —— 見習英雄 → 流浪傭兵 → 荒野守衛 → 烈焰戰士 → 深藍精英 → 黃金英雄 → 紫電傳說 → 不朽神話，<b>名字、顏色、外框都不一樣</b>，遊戲中與大逃殺都看得到',
     '📊 <b>十項排名</b>：單人殺怪／單人 BOSS／RPG 殺怪／RPG BOSS／大逃殺擊殺／大逃殺冠軍／對戰擊殺／對戰冠軍／線上配對擊殺／線上配對冠軍，<b>歷史總榜</b>＋<b>本週活動榜</b>（週一 08:00 重置，前 10 名有金幣，最高 1000）',
@@ -35301,10 +35545,52 @@ const Admin = (function () {
   }
   /* 事件模式的中文名（後端也會給，這裡當備援／翻譯） */
   const EV_NAME = {
-    solo: '單人闖關', boss: 'BOSS 連戰', rpg: 'RPG', clear: '過關',
-    play: '開始遊玩', battle: '本機對戰', br: '大逃殺', online: '線上配對', act: '操作'
+    solo: '單人闖關', boss: 'BOSS 連戰', rpg: 'RPG', clear: '通關',
+    play: '開始遊玩', battle: '本機對戰', br: '大逃殺', online: '線上配對', act: '操作',
+    /* v5.14：以前這幾種只印原始英文（save／bind／login…），後台全是英文，
+       玩家回報「我剛剛存檔之後金幣不見了」時，客服根本對不上時間軸 */
+    save: '雲端存檔', bind: '帳號綁定', register: '註冊帳號', login: '登入',
+    'login-fail': '登入失敗', lock: '密碼錯誤鎖定', passwd: '修改密碼',
+    share: '分享獎勵', ban: '被停權', unban: '解除停權', grant: '管理員調整進度',
+    'reset-alloc': '管理員歸零配點'
   };
-  function evName(e) { return (e && (EV_NAME[e.type] || e.mode)) || (e && e.type) || '遊玩'; }
+  function evName(e) {
+    if (!e) return '遊玩';
+    const n = EV_NAME[e.type] || e.mode;
+    if (n) return n;
+    // 不認得的 type 也不要丟英文給客服看
+    return /^[a-z][a-z-]*$/.test(String(e.type || '')) ? '其他操作' : String(e.type || '遊玩');
+  }
+  /* v5.14：把事件帶的欄位翻成一句人話（玩家回報時，客服要能一眼看出「當下在做什麼」） */
+  function evDetail(e) {
+    if (!e) return '';
+    const d = [];
+    if (e.type === 'save') {
+      if (e.rev) d.push('第 ' + e.rev + ' 次存檔');
+      if (e.kb) d.push(e.kb + ' KB');
+      if (e.lvl != null) d.push('RPG 第 ' + (e.lvl | 0) + ' 關');
+      if (e.gold != null) d.push('金幣 ' + (e.gold | 0));
+      if (e.achN != null) d.push('成就 ' + (e.achN | 0) + ' 個');
+      if (e.sec) d.push('累計玩了 ' + fmtDur(e.sec));
+    } else if (e.type === 'login' || e.type === 'login-fail' || e.type === 'lock' || e.type === 'register') {
+      if (e.via) d.push(e.via);
+      if (e.ip) d.push('IP ' + e.ip);
+      if (e.fails) d.push('連續錯 ' + (e.fails | 0) + ' 次');
+      if (e.name) d.push('暱稱 ' + e.name);
+    } else if (e.type === 'bind') {
+      if (e.from) d.push('把 ' + e.from + ' 的進度併進來');
+      if (e.via) d.push(e.via);
+    } else if (e.type === 'share') {
+      if (e.platform) d.push(String(e.platform));
+      if (e.gold != null) d.push('+金幣 ' + (e.gold | 0));
+    } else if (e.type === 'ban' || e.type === 'unban' || e.type === 'grant' || e.type === 'reset-alloc') {
+      if (e.cleared != null) d.push('關卡 ' + (e.cleared | 0) + '/32');
+      if (e.gold != null) d.push('金幣 ' + (e.gold | 0));
+      if (e.reason) d.push('原因：' + e.reason);
+      if (e.by) d.push('操作者 ' + e.by);
+    }
+    return d.join(' · ');
+  }
   /* v5.7：名單那一行「最近玩了什麼」。
      大逃殺的 label 本身就長成「大逃殺 30 人・單人・第 3 名」，
      前面再加一次模式名就變「大逃殺・大逃殺 …」→ 重複。已經以模式名開頭就直接用 label。 */
@@ -35538,8 +35824,10 @@ const Admin = (function () {
        現在：台灣時間 → 模式名 → 事件附帶的 label（「第 3-2 關・綠野草原」）。 */
     const evs = (a.events || []).map(function (e) {
       const lab = e.label ? '　<span class="bhevlab">' + e2(e.label) + '</span>' : '';
+      const det = evDetail(e);
       return '<div class="bhev"><span class="mono">' + e2(e.t ? dt(e.t) : (e.str || '—')) + '</span>' +
         '<b>' + e2(evName(e)) + '</b>' + lab +
+        (det ? '　<span class="bhevdet">' + e2(det) + '</span>' : '') +
         (!e.label && e.stage ? ' <span class="bhpill g">關 ' + e.stage + '</span>' : '') +
         (e.cleared != null ? ' <span class="bhpill g">進度 ' + e.cleared + '</span>' : '') +
         '</div>';

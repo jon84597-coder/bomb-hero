@@ -71,7 +71,9 @@ const chars = src.length, bytes = Buffer.byteLength(src, 'utf8');
 const gz = zlib.gzipSync(Buffer.from(src, 'utf8'), { level: 9 }).length;
 // v4.86：這條是「別讓主檔無聲膨脹」的預算線，不是平台的硬上限（硬上限見下一條 3.9M/4.25M）。
 //   隨從控制台＋多語系＋版本紀錄讓主檔從 1.59M 長到 1.60M，預算線由 1.60M 調到 1.75M。
-ok(chars < 1750000, '主檔 ' + chars + ' 字元（原本 3,345,500）');
+// v5.14：成就面板／排名／線上名單／通知／後台足跡說明讓主檔多了約 15K，預算線由 1.75M 調到 1.80M。
+//   這條是「別讓主檔無聲膨脹」的提醒，不是平台上限（真正的上限是下面那條 3.9M/4.25M）。
+ok(chars < 1800000, '主檔 ' + chars + ' 字元（原本 3,345,500）');
 ok(gz < 900000, 'gzip 後 ' + Math.round(gz / 1024) + ' KB（原本 1.98 MB）');
 ok(chars < 3900000 && bytes < 4250000, '容量上限 3,900,000 字元 / 4,250,000 位元組（與其他驗證一致）');
 const crlf = (src.match(/\r/g) || []).length;

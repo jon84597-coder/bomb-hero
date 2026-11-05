@@ -94,7 +94,10 @@ head('2. 仇恨 4 格、看到人就追');
     const dd = Math.hypot(b.x - me.x, b.y - me.y);
     if (dd < minD) minD = dd;
   }
-  ok(minD < d0 - G.T * .5, '發火後會往人靠（' + Math.round(d0) + ' → 最近 ' + Math.round(minD) + ' px）');
+  // 2026-11 修：地圖是隨機生成的，有時「3 格外的空地」其實只離王 18 px（不到一格），
+  //   原本的『縮短半格』門檻（18-16=2）根本不可能達成 → 隨機紅燈。
+  //   改成『至少縮短 40% 距離』，對正常的 54 px 來說仍然是 54→32 以內（實際都收在 0~9 px）。
+  ok(minD < Math.min(d0 * .6, d0 - 1), '發火後會往人靠（' + Math.round(d0) + ' → 最近 ' + Math.round(minD) + ' px）');
   G.players.forEach(function (q, i) { q.alive = back[i]; });
 })();
 
