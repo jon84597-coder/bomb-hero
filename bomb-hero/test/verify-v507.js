@@ -207,8 +207,11 @@ const w = dim[0], h = dim[1];
 ok(w === 900 && Math.abs(h - 507) <= 2, '尺寸 900×' + h, dim);
 ok(Math.abs(w / h - 1672 / 941) < .02, '長寬比與原圖一致（不會被拉扁）');
 ok(buf.length > 60000 && buf.length < 400000, '檔案大小合理（' + buf.length + ' bytes）');
-ok(/src="spr\/title-logo\.webp\?v=57"/.test(SRC), '#titleLogo 帶快取參數（換圖一定換到）');
-ok(/\.\/spr\/title-logo\.webp\?v=57/.test(SW), 'service worker 預熱清單用同一個網址');
+// v5.9：快取參數會跟著版號換（v5.7 用 57、v5.9 用 59），所以改成「兩邊同一個數字」而不是寫死
+const lgV = (SRC.match(/src="spr\/title-logo\.webp\?v=(\d+)"/) || [])[1];
+ok(!!lgV, '#titleLogo 帶快取參數（v=' + lgV + '）');
+ok(!!lgV && new RegExp('\\./spr/title-logo\\.webp\\?v=' + lgV).test(SW),
+  'service worker 預熱清單用同一個網址');
 const rep = JSON.parse(fs.readFileSync(path.join(__dirname, '_x_report.json'), 'utf8'));
 const row = rep.filter(function (r) { return r.name === 'title-logo'; })[0];
 ok(!!row && row.bytes === buf.length, '_x_report.json 的 bytes 與實際檔案一致');

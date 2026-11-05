@@ -24,16 +24,26 @@ const env = makeEnv();
 const B = env.BH, G = env.G, rec = env.rec;
 
 // ---------------------------------------------------------------
-head('① 版號 5.8');
+head('① 版號 ≥ 5.8（本版功能留下的，不寫死版號）');
 
-ok(B.VERSION === '5.8', 'VERSION = 5.8');
-ok(/<span id="verTxt">5\.8<\/span>/.test(SRC), '首頁版號同步');
-ok(/<span id="verLogVer">5\.8<\/span>/.test(SRC), '版本日誌標題同步');
-ok(/var SW_VERSION = 'v5\.8\.0';/.test(SW1), 'bomb-hero/sw.js = v5.8.0');
-ok(/var SW_VERSION = 'v5\.8\.0';/.test(SW2), 'public/sw.js = v5.8.0');
-ok(B.VERSION_LOG[0].v === '5.8' && B.VERSION_LOG[0].now === true, '日誌最新一筆是 5.8 且標 now');
-ok(B.VERSION_LOG[1].v === '5.7' && B.VERSION_LOG[1].now === false, '5.7 的 now 已取消');
-ok(B.VERSION_LOG[0].items.length >= 2, '5.8 有寫更新內容');
+// v5.9 教訓：這幾條原本寫死 '5.8'／'v5.8.0'，一升版就整支紅。
+//   改成「不低於 5.8」的元組比較，且與 VERSION 自我一致。
+const VT = function (s) { return String(s || '').replace(/^v/, '').split('.').map(function (n) { return parseInt(n, 10) || 0; }); };
+const VGE = function (a, b) {
+  const x = VT(a), y = VT(b);
+  for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); }
+  return true;
+};
+const VSTR = String(B.VERSION || '').replace(/\./g, '\\.');
+
+ok(/^\d+\.\d+$/.test(B.VERSION) && VGE(B.VERSION, '5.8'), 'VERSION 是 x.y 且不低於 5.8（' + B.VERSION + '）');
+ok(new RegExp('<span id="verTxt">' + VSTR + '<\\/span>').test(SRC), '首頁版號同步（' + B.VERSION + '）');
+ok(new RegExp('<span id="verLogVer">' + VSTR + '<\\/span>').test(SRC), '版本日誌標題同步');
+ok(new RegExp("var SW_VERSION = 'v" + VSTR + "\\.0';").test(SW1), 'bomb-hero/sw.js = v' + B.VERSION + '.0');
+ok(new RegExp("var SW_VERSION = 'v" + VSTR + "\\.0';").test(SW2), 'public/sw.js = v' + B.VERSION + '.0');
+ok(B.VERSION_LOG[0].v === B.VERSION && B.VERSION_LOG[0].now === true, '日誌最新一筆 = 當前版本且標 now');
+ok(B.VERSION_LOG[1].v === '5.8' && B.VERSION_LOG[1].now === false, '5.8 的 now 已取消');
+ok(B.VERSION_LOG.length >= 2 && B.VERSION_LOG[0].items.length >= 2, '本版有寫更新內容');
 
 // ---------------------------------------------------------------
 head('② meBadgeMode()：前 5 秒閃，五秒後只有大逃殺留著');
