@@ -3599,7 +3599,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.2</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.3</span></span>
     </button>
     <!-- v4.93：開發者後台入口（DEV_BUILD 或白名單帳號才顯示） -->
     <button class="verlogbtn devbtn" id="devBtn" type="button" title="開發者後台">🛠</button>
@@ -3642,7 +3642,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">正式版 v<span id="verTxt">5.2</span></div>
+      <div class="ver beta">正式版 v<span id="verTxt">5.3</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4333,7 +4333,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.2';
+const VERSION = '5.3';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -8517,6 +8517,27 @@ function beltMulFor(p, mx, my) {
   return BELT_CROSS;             // 橫向穿越／離開：甩出去（快），不要卡在帶子上
 }
 
+// v5.3：換地圖時「逐格狀態」的統一清理窗口。
+//   為什麼要有這支：大逃殺會把 themeAt（每格地形）、brIsl、artK 寫進 Game，
+//   但只有 buildMap 記得清、buildOrganicMap（單人／RPG／隨機圖）完全沒清 ——
+//   玩完大逃殺再進單人，56×44 的 themeAt 原封不動留著，前 15×13 格就被套上
+//   大逃殺八塊大陸的地形（草地／沙地／冰原／熔岩…）→ 看起來像「混到別張關卡的素材」。
+//   所有地圖產生器一律先呼叫這支，就不會再有第二個地方漏清。
+function resetMapCellState() {
+  Game.themeAt = null;         // 逐格主題（只有大逃殺三島會設）
+  Game.brIsl = null;           // 大逃殺島嶼編號
+  Game.wallKind = null;        // 牆分類（尺寸／內容都跟地圖綁定）
+  Game.wallSize = null;
+  Game.sdRock = null;          // 縮圈落石
+  Game.sdActive = false;       //   旗標留著會讓外圍岩層整片畫成外牆素材
+  Game.sdList = [];
+  Game.artK = 1;               // 大逃殺（T≈30 大圖）會縮怪物比例，別帶到別的模式
+  BR_AI.on = false;            // 大逃殺 AI 的節奏（交戰距離／放彈頻率）也不要帶進單人／RPG
+  Game.mapSeq = (Game.mapSeq | 0) + 1;   // 地板烘焙快取／小地圖底圖一起換
+  //   牆與落石都烘在地板分塊裡 → 分類一變，快取一定要丟（否則剛落的石頭不會畫出來）
+  if (typeof floorChunkDirty === 'function') floorChunkDirty(null);
+}
+
 function buildMap(cols, rows, theme, opts) {
   opts = opts || {};
   Game.cols = cols; Game.rows = rows;
@@ -8534,12 +8555,8 @@ function buildMap(cols, rows, theme, opts) {
   Game.grid = [];
   // v4.64：換地圖一定要清牆分類。對戰模式每回合都重建同尺寸的地圖，舊的 wallKind 會原封不動
   //   套到新地圖上 → 大量格子被誤判成「牆的內層，不畫」→ 地板與牆一起消失，看起來就是掉圖。
-  Game.wallKind = null;
-  Game.wallSize = null;
-  Game.mapSeq = (Game.mapSeq | 0) + 1;   // v4.72：換地圖 → 小地圖底圖快取一起換
-  Game.themeAt = null;         // v4.72：換地圖清掉逐格主題（大逃殺三島才會設）
-  Game.sdRock = null;          // v4.64：新地圖沒有縮圈落石
-  Game.sdActive = false;       //   也不要留著上一局的縮圈旗標（留著會讓外圍岩層整片畫出來）
+  // v5.3：連逐格主題／縮圈落石／artK／烘焙快取一起走同一支清理函式。
+  resetMapCellState();
   Game.hazards = [];
   Game.warps = [];
   Game.bubbles = [];
@@ -13465,7 +13482,9 @@ function updateBattle(dt) {
           Game.grid[c[1]][c[0]] = 1;
           if (!Game.sdRock) Game.sdRock = {};
           Game.sdRock[c[1] * Game.cols + c[0]] = 1;   // v4.64：記下來，這格要整片畫
-          Game.wallKind = null;                   // v4.54：落石也會改牆，重算分類
+          // v4.54：落石也會改牆，重算分類。v5.3：當場算完 —— 只有「真的變了」的分塊會被重烘，
+          //   不要再等到下一次 render 才重算（中間那一格會先畫成舊地板）。
+          markWallKinds();
           AudioSys.sfx('sd');
           burst(c[0] * Game.T + Game.T / 2, c[1] * Game.T + Game.T / 2, '#8899bb', 12, 160);
           // 壓死與壓毀
@@ -19106,8 +19125,23 @@ function markWallKinds() {
     if (!near && conn[y][x] && !mass) continue;
     wk[y][x] = (isOut[y][x] || mass) ? 1 : 2;      // 落石用外牆（石頭）素材
   }
+  const prev = Game.wallKind;
   Game.wallKind = wk;
   Game.wallSize = cols + 'x' + rows;      // v4.64：記下這份分類是給多大的圖算的
+  // v5.3：牆與落石是「烘」進地板分塊裡的，分類一變就一定要把快取丟掉重烘。
+  //   以前只有 wallKind = null、沒人清 _flrMap → 對戰模式時間到開始落石時，
+  //   grid 已經是石頭、牆也重算了，畫面上卻還是舊地板 → 落石整片看不見。
+  //   只丟「真的變了」的格子所屬分塊：大逃殺 56×44 每落一顆石頭就整張重烘會卡幀。
+  if (typeof floorChunkDirty === 'function') {
+    if (!prev || prev.length !== rows) floorChunkDirty(null);
+    else {
+      for (let y = 0; y < rows; y++) {
+        const a = prev[y], b = wk[y];
+        if (!a) { floorChunkDirty(null); break; }
+        for (let x = 0; x < cols; x++) if (a[x] !== b[x]) floorChunkDirty(x, y);
+      }
+    }
+  }
 }
 //   兩層牆貼在一起只是白白吃掉場地空間，還會讓輪廓看起來像一坨疙瘩。
 //   只拆「小島」（<= 24 格），大塊岩層不動，免得把關卡的隔間拆光。
@@ -28433,7 +28467,12 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.2', date: '2026-11-05', now: true, items: [
+  { v: '5.3', date: '2026-11-05', now: true, items: [
+    '🔧 <b>修掉「玩完大逃殺再進單人，地板與牆混到別張關卡」</b>：換模式時上一張圖的逐格地形（大逃殺八塊大陸）、牆分類、縮圈落石、怪物比例全部沒被清掉 → 單人／RPG／隨機圖／對戰都會吃到殘留。現在所有地圖產生器走同一個清理入口，不用重開遊戲也正常',
+    '🪨 <b>修掉「對戰時間到開始落石，落石卻看不到」</b>：牆與落石是烘在地板分塊裡的，以前只重算牆、沒丟掉烘好的圖 → 石頭準時壓下來但畫面還是舊地板。現在牆一變就重烘，落石會準時出現',
+    '🧠 <b>大逃殺的 AI 節奏不會再帶進別的模式</b>：交戰距離、放彈頻率、群體分離都只在大逃殺生效，單人與 RPG 的怪物行為回到原本設定'
+  ] },
+  { v: '5.2', date: '2026-11-05', now: false, items: [
     '🐛 <b>教學「撿道具」回到原本的位置</b>：炸開那塊木箱，火力道具就掉在腳邊。上一版把它搬去地圖另一頭，結果炸完那一格什麼都沒有',
     '🔥 <b>每隻王身上都有自己地區的元素特效</b>：草原飄葉、沙漠飛沙、冰雪雪花、熔岩火星、霓虹電弧、深海氣泡、天空氣流、魔界紫焰 —— 外圈光暈＋兩道光環＋三顆會繞著身體轉的元素光珠，遠遠就看得出這隻王帶什麼屬性',
     '👹 <b>大逃殺的亂入 BOSS 換成八隻新王</b>：每場開局重新洗牌，<b>同一場不會撞兩隻一樣的</b>，每場遇到的組合都不同；血條上方直接寫王的名字與屬性色',
@@ -30224,6 +30263,9 @@ function buildOrganicMap(cols, rows, theme, info, rnd, opts) {
   Game.bigMap = !!opts.targetFloor;
   let sp = { x: 1, y: 1 };
   Game.cols = cols; Game.rows = rows;
+  // v5.3：單人／RPG／隨機地圖以前沒清逐格狀態 → 玩完大逃殺再進單人，
+  //   56×44 的 themeAt 會被當成這張圖的地形，地板與牆就混到別張關卡的素材。
+  resetMapCellState();
   Game.T = tileSize();
   recalcSpdK();                   // v4.67：速度跟著格子比例縮（隨機大圖不再變快）
   Game.ox = Math.floor((VIEW_W - Game.T * cols) / 2);

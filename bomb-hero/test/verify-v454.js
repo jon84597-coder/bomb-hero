@@ -105,7 +105,7 @@ head('5. 分類失效：換地圖 / 縮圈落石');
   P.startSolo(3, false);
   ok(G.wallKind === null || G.wallKind, '再換一關也不會殘留舊表');
   ok(/Game\.grid = g;\n[\s\S]{0,120}?Game\.wallKind = null;/.test(html), 'buildOrganicMap 建完圖會清掉分類');
-  ok(/Game\.wallKind = null;                   \/\/ v4\.54：落石也會改牆/.test(html), '縮圈落石改格子也會清掉分類');
+  ok(/Game\.grid\[c\[1\]\]\[c\[0\]\] = 1;[\s\S]{0,420}?markWallKinds\(\);/.test(html), '縮圈落石改格子會當場重算牆分類（v5.3：順便清掉對應的地板分塊）');
 }
 
 // ================================================================
