@@ -186,7 +186,8 @@ ok(/Game\.doorHinted = false;/.test(html), '每張新地圖會重置提示旗標
 // ================================================================
 console.log('\n=== 4. 標題：拿掉大光暈，改成字型外凸的紅底形狀 ===');
 
-ok(!/repeating-conic-gradient/.test(html), '一整圈的放射狀光芒已完全移除');
+/* v5.11：同上 —— 只檢查 title 自己的規則，不去管奪冠標題（.champ .ray）的裝飾。 */
+ok(!/\.title-logo[^{]*\{[^}]*conic-gradient/.test(html) && !/\.titlewrap[^{]*\{[^}]*conic-gradient/.test(html), '一整圈的放射狀光芒已完全移除');
 ok(!/@keyframes bh-rays/.test(html), '旋轉光芒的動畫也移除');
 ok(!/content: attr\(data-t\)/.test(html) && !/paint-order: stroke fill/.test(html), 'v2.1：紅底外凸層（data-t 複本）已整個移除');
 ok(/<img class="title-logo" id="titleLogo"[^>]*src="spr\/title-logo\.webp(\?[^"]*)?"/.test(html), 'v2.1：標題換成美術 LOGO 圖（spr/title-logo.webp）');

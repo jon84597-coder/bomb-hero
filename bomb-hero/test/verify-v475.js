@@ -36,7 +36,9 @@ BGS.forEach(function (st) {
   if (String(b.slice(0, 4)) !== 'RIFF' || String(b.slice(8, 12)) !== 'WEBP') allOk = false;
 });
 ok(allOk, '8 張 bg/*.webp 都在、檔頭是 WebP（合計 ' + Math.round(tot / 1024) + 'KB）');
-ok(/im\.src = 'bg\/' \+ st \+ '\.webp'/.test(src), '底圖依主題 style 取名（bg/<style>.webp）');
+// v5.11：底圖改成「會重試」的 bgTryLoad／bgSrcOf，網址仍必須是 bg/<style>.webp
+ok(/function bgSrcOf\(key\)[\s\S]{0,120}'bg\/' \+ key \+ '\.webp'/.test(src), '底圖網址由 bgSrcOf 產生（bg/<style>.webp）');
+ok(/function bgTryLoad\(key\)[\s\S]{0,400}im\.src = bgSrcOf\(key\)/.test(src), '載入失敗會重試（bgTryLoad → bgSrcOf）');
 ok(/Game\.mode === 'battle' \|\| Game\.mode === 'br'/.test(src) && /IMG_TITLEBG/.test(src),
   '對戰／大逃殺改用首頁封面底圖');
 ok(/globalCompositeOperation = 'overlay'/.test(src), '氛圍照片會用 overlay 混到地板上');

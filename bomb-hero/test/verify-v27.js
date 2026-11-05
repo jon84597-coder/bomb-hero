@@ -165,7 +165,9 @@ ok(/<div class="titlewrap">\s*<img class="title-logo"/.test(html), 'v2.1：.titl
 ok(/src="spr\/title-logo\.webp(\?[^"]*)?"/.test(html), 'v2.1：LOGO 指向 spr/title-logo.webp（v4.79 外部化）');
 ok(!/data-t="BOMB HERO"/.test(html) && !/data-t="爆爆英雄"/.test(html), 'v2.1：舊的 data-t 文字複本已移除');
 ok(!/\.title-en::before/.test(html) && !/\.title-zh::before/.test(html), 'v2.1：紅底外凸層 CSS 已移除');
-ok(!/repeating-conic-gradient/.test(html), '一整圈放射狀大光暈維持拿掉');
+/* v5.11：奪冠大標題（.champ .ray）也是一圈旋轉光芒，但那跟首頁 LOGO 無關。
+   這條守的其實是「LOGO 不要那一圈光暈」→ 改成只看 title 相關的規則區塊。 */
+ok(!/\.title-logo[^{]*\{[^}]*conic-gradient/.test(html) && !/\.titlewrap[^{]*\{[^}]*conic-gradient/.test(html), '一整圈放射狀大光暈維持拿掉');
 ok(!/@keyframes bh-rays/.test(html), '不再有旋轉的光芒動畫');
 ok(!/-webkit-text-stroke: clamp\(8px, 1\.9vw, 17px\)/.test(html), 'v2.1：深紅外凸描邊已移除');
 ok(/\.title-logo \{[\s\S]{0,80}display: block; margin: 0 auto/.test(html), 'LOGO 置中顯示');

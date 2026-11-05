@@ -16,7 +16,8 @@ const CLOUD = fs.readFileSync(path.join(__dirname, '..', '..', 'cloud.js'), 'utf
 console.log('=== ① 開發者後台：分頁 ＋ 雙欄 ＋ 全部看得到 ===');
 const tabCount = (SRC.match(/<button type="button" data-tab="/g) || []).length;
 ok(tabCount === 5, '五個分頁（總覽／會員／即時／系統／工具）', tabCount);
-const paneCount = (SRC.match(/data-pane="/g) || []).length;
+// v5.11：設定頁也用 data-pane（.setpane）→ 後台只算 .bhpane，免得把設定的兩頁算進來
+const paneCount = (SRC.match(/class="bhpane[^"]*"[^>]*data-pane="|data-pane="[^"]*"[^>]*class="bhpane/g) || []).length;
 ok(paneCount === 5, '五個頁面容器', paneCount);
 ok(/id="bhStats"/.test(SRC), '總覽統計容器存在');
 ok(/id="bhHealth"/.test(SRC), '伺服器即時狀態容器存在（/api/health 全部欄位）');

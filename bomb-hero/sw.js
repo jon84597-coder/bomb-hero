@@ -12,7 +12,7 @@
      · /api/ 一律不攔（帳號、雲端存檔、線上配對都必須即時）
    ================================================================ */
 
-var SW_VERSION = 'v5.10.0';
+var SW_VERSION = 'v5.11.0';
 var CORE_CACHE = 'bh-core-' + SW_VERSION;   // 遊戲本體（離線也要開得起來）
 var ASSET_CACHE = 'bh-asset-' + SW_VERSION; // 圖示等靜態資源
 var NAV_TIMEOUT = 2200;   // v4.22：Render 冷啟動一定超過，早點回快取讓畫面先出來
@@ -63,6 +63,29 @@ function warmSprites() {
   }).catch(function () {});
 }
 
+/* v5.11：八張關卡底圖一定要進快取。
+   以前只有 './bg/title.webp' 在 CORE 裡，其餘 8 張靠「用的時候才抓」——
+   離線、或飯店／捷運那種斷斷續續的網路，assetFetch 回 504 就整批載不到，
+   玩家看到的就是「每個關卡的底圖都不見了」（其他美術都在，因為 spr/ 有預熱）。
+   這裡照 warmSprites 的做法：不阻塞安裝，一張一張慢慢補進 ASSET_CACHE。 */
+var BG_LIST = ['forest', 'sand', 'ice', 'lava', 'neon', 'sea', 'sky', 'dark'];
+
+function warmBg() {
+  caches.open(ASSET_CACHE).then(function (cache) {
+    var i = 0;
+    function next() {
+      if (i >= BG_LIST.length) return;
+      var url = './bg/' + BG_LIST[i] + '.webp';
+      i++;
+      cache.match(url).then(function (hit) {
+        if (hit) return null;
+        return fetch(url).then(function (r) { if (r && r.ok) return cache.put(url, r); return null; }).catch(function () { return null; });
+      }).then(next, next);
+    }
+    next();
+  }).catch(function () {});
+}
+
 /* ---------- 安裝：先把本體抓下來（單一檔案失敗不影響其他） ---------- */
 self.addEventListener('install', function (e) {
   e.waitUntil(
@@ -73,6 +96,7 @@ self.addEventListener('install', function (e) {
     }).then(function () {
       self.skipWaiting();   // 新版立刻接手，不用關掉所有分頁
       warmSprites();        // v4.79：背景預熱 spr/*.webp（不阻塞）
+      warmBg();             // v5.11：背景預熱 bg/*.webp（八張關卡底圖）
     })
   );
 });

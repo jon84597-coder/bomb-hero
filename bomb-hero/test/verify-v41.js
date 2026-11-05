@@ -69,7 +69,7 @@ ok(/id === 'boss'[\s\S]{0,400}makeBoss\(0, 0, 5\)/.test(html), 'BOSS 圖用遊�
 
 console.log('\n=== 7. 各分頁內容 ===');
 const hBasic = tabHtml('basic');
-ok(/移動/.test(hBasic) && /放彈／動作/.test(hBasic), '基本操作：移動／放彈');
+ok(/移動/.test(hBasic) && /(放炸彈|放彈)/.test(hBasic), '基本操作：移動／放炸彈（v5.11 起滑鼠左鍵）');
 ok(/遙控引爆/.test(hBasic) && /恐龍吐火/.test(hBasic), '基本操作：遙控引爆／恐龍吐火');
 ok(/搖桿/.test(hBasic), '基本操作：手機搖桿');
 ok(/軟磚/.test(hBasic) && /硬牆/.test(hBasic) && /過關傳送門/.test(hBasic), '基本操作：地圖元素說明');

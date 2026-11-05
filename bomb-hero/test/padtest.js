@@ -81,13 +81,22 @@ const SETUP = `(function(){
   ok(first && first.w > 0 && first.h > 0, '焦點元素有實際尺寸');
 
   head('② 首頁：方向鍵走完左欄並繞回（不會卡死）');
-  let seq = [];
-  for (let i = 0; i < 8; i++) { await tap(13); const f = await foc(); seq.push(f && f.key); }
-  ok(seq.indexOf('btnLearn') >= 1 || (first && first.key === 'btnLearn'), '走得到「新手教學」');
+  // v5.11 教訓：不要寫死「按 8 次就繞回」——首頁多一顆 FB 連結，欄長就變了。
+  //   改成「一直往下，直到回到起點」，並記錄走過的路徑（人看得懂、程式也不會因版面變動而紅）。
+  const startK = (first && first.key) || '';
+  const seq = [];
+  let backAt = -1;
+  for (let i = 0; i < 16; i++) {
+    await tap(13);
+    const f = await foc();
+    seq.push(f && f.key);
+    if (f && f.key === startK) { backAt = i + 1; break; }
+  }
+  ok(seq.indexOf('btnLearn') >= 0 || startK === 'btnLearn', '走得到「新手教學」');
   ok(seq.indexOf('btnAdventure') >= 0, '走得到「冒險模式」');
   ok(seq.indexOf('btnDaily') >= 0, '走得到「每日挑戰」');
   ok(seq.indexOf('btnStore') >= 0, '走得到「商店」');
-  ok(seq.length === 8 && !!seq[7] && seq[7] === seq[0], '第 8 次會繞回起點（不會停在最後一項）', seq.join(' → '));
+  ok(backAt > 0, '一直往下會繞回起點（不會停在最後一項）', seq.join(' → '));
 
   head('③ 首頁：右方向鍵可以進右欄（大逃殺／多人／更多）');
   await goScreen('title');

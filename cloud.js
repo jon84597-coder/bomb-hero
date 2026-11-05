@@ -566,6 +566,7 @@ function createStore(dir, persist, remote) {
     if (key === 'accounts') {
       db.accounts = (val.accounts && typeof val.accounts === 'object') ? val.accounts : {};
       db.devices = (val.devices && typeof val.devices === 'object') ? val.devices : {};
+      fixAccountIds();   // v5.11：補回缺漏的 id（後台點人靠它）
       return true;
     }
     if (key === 'lb') { db.lb = val.days ? val : { v: 1, days: {} }; return true; }
@@ -592,6 +593,7 @@ function createStore(dir, persist, remote) {
       if (!obj || !obj.accounts) return;
       db.accounts = obj.accounts;
       db.devices = obj.devices || {};
+      fixAccountIds();   // v5.11：本機快取也補 id（見 fixAccountIds 的說明）
       db.tamper = obj.tamper || 0;
       db.created = obj.created || db.created;
       db.announce = obj.announce || null;      // v4.3：全服公告
@@ -909,6 +911,23 @@ function createCloud(options) {
 
   /* ---------- 帳號 ---------- */
   function findById(id) { return db.accounts[id] || null; }
+
+  /* v5.11：舊資料修補 —— 早期版本的帳號物件「只用物件鍵當索引」，沒有把 id 寫進欄位。
+     後台名單直接用 a.id 產生 data-id，於是：
+       名單的 UID 欄是空的 → data-id="" → 點人送出 /api/admin/player?id=undefined
+       → findById 找不到 → 404 → 前端只閃一句 toast，右邊詳情永遠是空白提示。
+     這裡在每次載入／套用遠端分片時補回 id（物件鍵才是權威），之後名單與查詢都拿得到。
+     同時修正 key 與 id 不一致的狀況（合併帳號搬移過資料的情形）。 */
+  function fixAccountIds() {
+    let n = 0;
+    for (const key in db.accounts) {
+      const a = db.accounts[key];
+      if (!a || typeof a !== 'object') continue;
+      if (!a.id) { a.id = key; n++; }
+      else if (String(a.id) !== key && !findById(a.id)) { a.id = key; n++; }
+    }
+    return n;
+  }
 
   /* 用識別鍵找帳號（web:xxx / google:sub …），已合併的舊帳號不算 */
   function findByKey(key) {
@@ -1949,7 +1968,16 @@ function createCloud(options) {
             if (idc.ok) acc = findByKey(idc.key);
             if (!acc) acc = findByEmail(q);
           }
-          if (!acc) return fail(res, 404, 'NOT_FOUND'), true;
+          /* v5.11：上面三步都找不到時，再掃一遍 a.id。
+             舊資料可能「物件鍵 ≠ a.id」（帳號合併搬移過），後台名單是拿 a.id 當 data-id，
+             只查物件鍵就會 404 —— 這正是「後台點人沒顯示資訊」的來源。 */
+          if (!acc && q && q !== 'undefined' && q !== 'null') {
+            for (const k in db.accounts) {
+              const a = db.accounts[k];
+              if (a && !a.mergedInto && String(a.id || '') === q) { acc = a; break; }
+            }
+          }
+          if (!acc) return fail(res, 404, 'NOT_FOUND', { q: q, total: Object.keys(db.accounts).length }), true;
           const row = adminRow(acc);
           row.alloc = acc.rpg ? Object.assign({}, acc.rpg.alloc) : null;
           row.cleared = acc.rpg ? (acc.rpg.cleared | 0) : 0;

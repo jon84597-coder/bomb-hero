@@ -281,6 +281,40 @@ body.touch .ver { margin-top: 3px; font-size: 9.5px; padding: 1px 8px; }
 .title-card .hint { color: #55648a; font-size: 12px; margin-top: 26px; line-height: 1.9; }
 
 .menu { display: flex; flex-direction: column; gap: 11px; max-width: 420px; margin: 0 auto; }
+/* v5.11：首頁支援平台列 —— 六個小圖示（純顯示，不可點）＋ 作者 FB。
+   放在 2×3 選單下面那條空隙，不佔選單格；手機橫屏（高度很緊）只留圖示。 */
+.platrow {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 5px; max-width: 460px; margin: 9px auto 0;
+}
+.platrow .pchip, .platrow .pfb {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 24px; padding: 0 8px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .02em; line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.platrow .pchip {
+  color: #8a5525; background: rgba(255,255,255,.70);
+  border: 1px solid rgba(224,176,131,.62);
+  cursor: default;
+}
+.platrow .pi {
+  width: 12px; height: 12px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.platrow .pfb {
+  color: #fff; background: #1877f2; border: 1px solid #0f5fc4;
+  text-decoration: none; box-shadow: 0 2px 0 rgba(15,95,196,.35);
+  cursor: pointer; transition: transform .12s, box-shadow .12s;
+}
+.platrow .pfb .pi { fill: #fff; stroke: none; width: 12px; height: 12px; }
+.platrow .pfb:hover { transform: translateY(-1px); box-shadow: 0 3px 0 rgba(15,95,196,.35); }
+.platrow .pfb:active { transform: translateY(1px); box-shadow: none; }
+body.touch .platrow { margin-top: 6px; gap: 4px; }
+body.touch .platrow .pchip, body.touch .platrow .pfb { height: 22px; padding: 0 7px; font-size: 10px; }
+body.touch .platrow .pchip b { display: none; }        /* 手機只留圖示，省高度 */
+body.touch .platrow .pchip { padding: 0 6px; }
 .mbtn {
 display: block; width: 100%; text-align: center; cursor: pointer;
 background: linear-gradient(180deg, #1b2540, #151d33);
@@ -824,6 +858,68 @@ max-height: calc(100% - 12px); overflow-y: auto; overflow-x: hidden;
 width: auto; height: auto;
 max-width: min(38vw, 190px); max-height: 30vh;
 border-radius: 0; background: transparent;
+}
+/* v5.11：奪冠大標題重新設計 ------------------------------------------------
+   舊版只是把 h3 放大（34px 白色 + 陰影）→ 看起來像「遊戲結束」的公告，
+   完全沒有「我贏了」的情緒。現在是一整組頒獎視覺：
+     · 背後一圈會旋轉的金色放射光芒（repeating-conic-gradient + 遮罩）
+     · 上面一顆會上下浮動的皇冠
+     · 標題用金色漸層熔進字裡（background-clip:text），外圈金色光暈
+     · 進場 0.6 秒彈跳放大 + 七顆閃光依序亮起
+   純 CSS，沒有新圖檔（不影響載入與上限）。 */
+.champ { position: relative; display: inline-block; padding: 4px 6px 2px; margin: 0 auto 6px; isolation: isolate; }
+.champ .ray {
+  position: absolute; left: 50%; top: 46%; width: 460px; height: 460px; margin: -230px 0 0 -230px;
+  z-index: -1; border-radius: 50%; pointer-events: none; opacity: .5;
+  background: repeating-conic-gradient(from 0deg,
+    rgba(255,214,120,.55) 0deg 5deg, rgba(255,214,120,0) 5deg 17deg);
+  -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,.95) 0%, rgba(0,0,0,.5) 40%, rgba(0,0,0,0) 68%);
+  mask-image: radial-gradient(circle, rgba(0,0,0,.95) 0%, rgba(0,0,0,.5) 40%, rgba(0,0,0,0) 68%);
+  animation: champSpin 14s linear infinite;
+}
+.champ .crown { display: block; font-size: 34px; line-height: 1; font-style: normal;
+  filter: drop-shadow(0 5px 12px rgba(255,180,60,.8)); animation: crownBob 2.4s ease-in-out infinite; }
+.champ .kick { display: block; font-size: 10.5px; font-weight: 900; letter-spacing: .42em;
+  color: rgba(255,224,150,.9); text-indent: .42em; margin: 3px 0 1px;
+  text-shadow: 0 1px 6px rgba(180,90,10,.8); }
+.champ h3 {
+  margin: 0; font-size: clamp(27px, 6.6vw, 46px); font-weight: 900; letter-spacing: .04em;
+  background: linear-gradient(180deg, #fffbe6 0%, #ffe98f 30%, #ffc32a 58%, #ff8f12 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 3px 0 rgba(140,64,8,.45)) drop-shadow(0 9px 20px rgba(255,150,40,.55));
+  animation: champPop .62s cubic-bezier(.18,1.55,.42,1) both;
+}
+.champ .sparks { position: absolute; left: 50%; top: 44%; width: 0; height: 0; z-index: -1; }
+.champ .sparks i {
+  position: absolute; width: 7px; height: 7px; border-radius: 50%;
+  background: #fff6c8; box-shadow: 0 0 12px 3px rgba(255,206,96,.9);
+  opacity: 0; transform: rotate(calc(var(--i) * 51deg)) translateY(-96px);
+  animation: sparkTwinkle 2.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * .19s);
+}
+.champ p { margin: 6px 0 12px; }
+.champ.soft .ray { opacity: .26; }
+.champ.soft .crown { font-size: 27px; animation-duration: 3.2s; }
+.champ.lose .ray, .champ.lose .sparks { display: none; }
+.champ.lose .crown { animation: none; filter: grayscale(.5) drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
+.champ.lose h3 {
+  background: none; -webkit-text-fill-color: #cfd8ea; color: #cfd8ea;
+  filter: drop-shadow(0 3px 0 rgba(0,0,0,.45)); animation-duration: .34s;
+}
+@keyframes champSpin { to { transform: rotate(360deg); } }
+@keyframes crownBob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+@keyframes champPop {
+  0% { transform: scale(.62); opacity: 0; }
+  62% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes sparkTwinkle {
+  0%, 70%, 100% { opacity: 0; transform: rotate(calc(var(--i) * 51deg)) translateY(-84px) scale(.5); }
+  18%, 42% { opacity: .95; transform: rotate(calc(var(--i) * 51deg)) translateY(-104px) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .champ .ray, .champ .crown, .champ h3, .champ .sparks i { animation: none !important; }
 }
 /* v3.1：右上角「下一步」快捷鈕 —— 設定頁把主按鈕複製一份釘在右上，文字與主按鈕永遠同步（含語言切換） */
 #ctaBar { position: fixed; z-index: 950; right: 10px; top: calc(54px + env(safe-area-inset-top, 0px)); }
@@ -1562,14 +1658,90 @@ padding-left: 5px; padding-right: 154px; margin-bottom: 2px;
 }
 body.touch.in-game #gameTop { justify-content: flex-start; }
 }
+/* ===== v5.11：設定頁分頁（操作設定／一般設定）＋ 音量滑桿 ===== */
+.settabs { display: flex; gap: 8px; margin: 10px 0 4px; }
+.settabs .settab {
+  flex: 1 1 0; min-height: 40px; padding: 8px 10px; border-radius: 12px; cursor: pointer;
+  font-size: 13.5px; font-weight: 900; letter-spacing: .02em;
+  color: #6b4a86; background: rgba(255,255,255,.62);
+  border: 1px solid rgba(151,116,190,.42); transition: all .14s;
+}
+.settabs .settab.on {
+  color: #fff; background: linear-gradient(180deg,#a77bd8,#7c4fb0);
+  border-color: #6b3f9c; box-shadow: 0 3px 0 rgba(92,48,140,.42);
+}
+.settabs .settab:active { transform: translateY(1px); }
+.setpane { display: none; }
+.setpane.on { display: block; }
+.setcmdhint {
+  margin: 4px 0 2px; padding: 9px 11px; border-radius: 11px;
+  font-size: 12px; line-height: 1.75; color: #5b4a70;
+  background: rgba(255,255,255,.56); border: 1px dashed rgba(151,116,190,.45);
+}
+.volnum {
+  display: inline-block; min-width: 44px; margin-left: 6px; padding: 0 7px;
+  border-radius: 999px; font-size: 11.5px; font-weight: 900;
+  color: #6b4a86; background: rgba(167,123,216,.16);
+}
+.volrange {
+  -webkit-appearance: none; appearance: none;
+  display: block; width: 100%; height: 34px; margin: 2px 0 0; background: transparent;
+  cursor: pointer; touch-action: pan-y;
+}
+.volrange::-webkit-slider-runnable-track {
+  height: 8px; border-radius: 999px;
+  background: linear-gradient(90deg,#a77bd8,#ffd166); border: 1px solid rgba(120,86,160,.35);
+}
+.volrange::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 24px; height: 24px; margin-top: -9px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%,#fff,#f4e6ff 55%,#c9a5ea);
+  border: 2px solid #7c4fb0; box-shadow: 0 2px 6px rgba(60,30,90,.35);
+}
+.volrange::-moz-range-track {
+  height: 8px; border-radius: 999px;
+  background: linear-gradient(90deg,#a77bd8,#ffd166); border: 1px solid rgba(120,86,160,.35);
+}
+.volrange::-moz-range-thumb {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%,#fff,#f4e6ff 55%,#c9a5ea);
+  border: 2px solid #7c4fb0;
+}
+.volticks { display: flex; justify-content: space-between; font-size: 10.5px; color: #8a7aa0; margin-top: -2px; }
+
+/* ===== v5.11：操作教學圖（鍵盤＋滑鼠／手把／手機），用 SVG 畫才能跟著版面縮放 ===== */
+.cdet {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 2px 0 10px; padding: 8px 12px; border-radius: 12px;
+  font-size: 12.5px; color: #4c3d63; background: rgba(255,209,102,.18);
+  border: 1px solid rgba(224,160,60,.42);
+}
+.cdet b { color: #8a4e12; }
+.cdet .ico { font-size: 15px; }
+.cartwrap { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 2px 2px; }
+.cart { width: 100%; max-width: 420px; height: auto; display: block; }
+.cartlegend { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: center; margin-top: 6px; }
+.cartlegend span { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: #5d4a76; }
+.cartlegend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+.hmore { margin: 10px 0 2px; }
+.hmore > summary {
+  cursor: pointer; padding: 9px 12px; border-radius: 11px; font-size: 12.5px; font-weight: 800;
+  color: #6b4a86; background: rgba(255,255,255,.62); border: 1px dashed rgba(151,116,190,.45);
+  list-style: none;
+}
+.hmore > summary::-webkit-details-marker { display: none; }
+.hmore > summary::before { content: '▸ '; }
+.hmore[open] > summary::before { content: '▾ '; }
+
 /* ===== 寬螢幕：選單／設定改橫向多欄，充分利用橫向空間 ===== */
 @media (min-width: 900px) {
 .wrap { max-width: min(1180px, 94vw); }
 .menu { max-width: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-#scr-settings .card, #scr-battle .card, #scr-solo .card {
+#scr-settings .setpane.on, #scr-battle .card, #scr-solo .card {
 display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; align-items: start;
 }
-#scr-settings .card > h2, #scr-settings .card > .desc, #scr-settings .card > .backrow,
+/* v5.11：設定頁改成「分頁 + 自己的 2 欄」，.card 不再是 grid（不然分頁會被拆成兩格） */
+#scr-settings .setcmdhint { grid-column: 1 / -1; }
 #scr-battle .card > h2, #scr-battle .card > .desc, #scr-battle .card > .backrow,
 #scr-solo .card > h2, #scr-solo .card > .desc,
 #scr-solo .card > .stagegrid, #scr-solo .card > .gowrap, #scr-solo .card > .backrow { grid-column: 1 / -1; }
@@ -2542,6 +2714,11 @@ background: #2b3a55; border: 1.5px solid #3d5273; color: #cfe0ff; border-radius:
 padding: 7px 12px; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
 }
 .bhann button:active, .bhsearch button:active, .bhbtnrow button:active { transform: translateY(1px); }
+/* v5.11：後台詳情欄的狀態條（讀取中／失敗原因）。
+   以前失敗只閃 toast，欄位裡什麼都沒有 → 使用者判定「點人沒反應」。 */
+.bhnote { margin: 0 0 8px; padding: 7px 9px; border-radius: 8px; font-size: 11.5px; line-height: 1.55;
+  background: #16202c; border-left: 3px solid #5b8def; color: #cfe0ff; }
+.bhnote.w { background: #2a1e14; border-left-color: #f0a33c; color: #ffd9a8; }
 .bhsplit { flex: 1 1 auto; min-height: 0; min-width: 0; display: grid; grid-template-columns: minmax(290px, .92fr) minmax(360px, 1.4fr); gap: 8px; }
 .bhlist { min-height: 0; min-width: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; }
 .bhdetail { min-height: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; padding: 9px 11px; }
@@ -3438,6 +3615,23 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .brsum { margin: 13px 14px 0; padding: 9px 11px; border-radius: 11px; font-size: 11.5px; line-height: 1.55;
   color: #b8cbe4; background: rgba(90,150,220,.10); border: 1px solid rgba(120,190,255,.20); }
 .brsum b { color: #ffe0a0; }
+/* v5.11：大逃殺入口的「我的角色」—— 比照對戰的選角（頭像左右切換）＋ 可以命名 */
+.brrow.brwho { align-items: flex-start; }
+.brchar { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
+  padding: 4px 6px 4px 4px; border-radius: 12px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); }
+.brchar .brchpv { width: 54px; height: 50px; flex: none; border-radius: 9px;
+  background: radial-gradient(circle at 50% 78%, rgba(120,190,255,.20), rgba(0,0,0,0) 70%); }
+.brarr { width: 24px; height: 30px; flex: none; border-radius: 8px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.07);
+  color: #d7e6fa; font-size: 11px; font-weight: 900; line-height: 1; }
+.brarr:active { transform: translateY(1px); }
+.brname { flex: 1 1 40px; min-width: 0; padding: 7px 8px; border-radius: 9px;
+  border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.28); color: #eaf4ff;
+  font-family: inherit; font-size: 12px; font-weight: 700; text-align: center; }
+.brname::placeholder { color: #7f94b0; font-weight: 600; }
+.brchlab { flex: none; max-width: 62px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 10.5px; font-weight: 800; color: #b9d3ef; }
 .brgo-box { padding: 12px 14px 14px; }
 .brgo-box .mbtn { width: 100%; }
 .brfoot { margin-top: 8px; font-size: 10.5px; line-height: 1.5; color: #8ea6c4; text-align: center; }
@@ -3479,6 +3673,16 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .dailyrow .dlab { color: #8a6a3e; font-weight: 700; }
 .dailyrow b { color: #3b2b16; font-weight: 900; font-variant-numeric: tabular-nums; }
 .dailyrow b.ok { color: #1f8a5a; }
+/* v5.11：每日挑戰結算的獎金卡（金色，跟一般名次資訊區隔） */
+.dprize { margin: 9px 0 2px; display: flex; align-items: center; gap: 8px; justify-content: center;
+  padding: 9px 14px; border-radius: 12px; background: linear-gradient(#fff8e6, #ffe2a8);
+  border: 1.5px solid #e0ac4e; color: #6a4a14; font-weight: 700; font-size: 12.5px;
+  box-shadow: 0 2px 0 rgba(160,110,20,.18); }
+.dprize .ico { font-size: 17px; line-height: 1; }
+.dprize b { font-size: 19px; color: #c9861a; font-variant-numeric: tabular-nums; }
+.dprize .tx { line-height: 1.45; }
+.dprize.got { animation: dprizePop .42s cubic-bezier(.2,1.5,.4,1); }
+@keyframes dprizePop { from { transform: scale(.9); opacity: .35; } to { transform: scale(1); opacity: 1; } }
 .lbhead { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 8px; }
 .lbhead b { font-size: 15px; color: #4a3a1e; }
 .lblist { display: grid; gap: 5px; min-height: 60px; max-width: 620px; width: 100%; margin: 0 auto; }
@@ -3672,7 +3876,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.10</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.11</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -3714,7 +3918,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
       </div>
 
-      <div class="ver beta">正式版 v<span id="verTxt">5.10</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.11</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -3736,6 +3940,30 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
           <button class="drawbtn" id="btnSettings" type="button" data-ico="⚙️">設定</button>
           <button class="drawbtn" id="btnQuit" type="button" data-ico="🚪">離開遊戲</button>
         </div>
+      </div>
+      <!-- v5.11：支援平台（純顯示，不可點）＋ 作者 FB（網址取自作者公告的 ANN_URL） -->
+      <div class="platrow" id="platRow">
+        <span class="pchip" title="電腦：Windows / macOS 的瀏覽器">
+          <svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path d="M9 20h6M12 16.5V20"/></svg><b>電腦</b>
+        </span>
+        <span class="pchip" title="手機：iOS / Android 瀏覽器">
+          <svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg><b>手機</b>
+        </span>
+        <span class="pchip" title="平板：iPad / Android 平板">
+          <svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M10.5 18.5h3"/></svg><b>平板</b>
+        </span>
+        <span class="pchip" title="手把：接上就自動偵測，不用設定">
+          <svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8.5h10a4 4 0 0 1 4 4v1.6a3 3 0 0 1-5.2 2l-1.4-1.6h-4.8l-1.4 1.6a3 3 0 0 1-5.2-2V12.5a4 4 0 0 1 4-4z"/><path d="M6.6 11.4v2M5.6 12.4h2M16 11.6h.01M18 13h.01"/></svg><b>手把</b>
+        </span>
+        <span class="pchip" title="iPhone / iPad（Safari）">
+          <svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 12.5c0-1.9 1.5-2.8 1.6-2.9-.9-1.3-2.3-1.5-2.8-1.5-1.2-.1-2.3.7-2.9.7-.6 0-1.5-.7-2.5-.7-1.3 0-2.5.8-3.2 2-1.4 2.4-.4 6 1 8 .7 1 1.4 2 2.5 2 1 0 1.3-.6 2.5-.6 1.2 0 1.5.6 2.5.6 1 0 1.7-1 2.4-1.9.7-1 1-2 1-2.1-.1 0-2-.7-2-3.1z"/><path d="M13.4 6.4c.6-.7 1-1.6.9-2.6-.9.1-1.8.6-2.4 1.3-.5.6-1 1.6-.8 2.5 1 .1 1.9-.5 2.3-1.2z"/></svg><b>iOS</b>
+        </span>
+        <span class="pchip" title="Android 手機／平板">
+          <svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 11h11v5.5a3 3 0 0 1-3 3h-5a3 3 0 0 1-3-3V11z"/><path d="M6.5 11a5.5 5.5 0 0 1 11 0"/><path d="M8.6 5.9 7.4 4.4M15.4 5.9l1.2-1.5M9.7 8.4h.01M14.3 8.4h.01"/></svg><b>Android</b>
+        </span>
+        <a class="pfb" id="btnFB" href="https://www.facebook.com/jon84597" target="_blank" rel="noopener noreferrer" title="作者的 FB 頁面">
+          <svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.6 21v-7.4h2.5l.4-2.9h-2.9V9c0-.8.2-1.4 1.4-1.4h1.6V5c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9v2.3H9v2.9h2.5V21h3.1z"/></svg><b>FB</b>
+        </a>
       </div>
     </div>
   </div>
@@ -3801,6 +4029,8 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         <div class="dailyrow"><span class="dlab" id="dailySeedLab">地圖種子</span><b id="dailySeed">—</b></div>
         <div class="dailyrow"><span class="dlab" id="dailyStageLab">今天的關卡</span><b id="dailyStage">—</b></div>
         <div class="dailyrow"><span class="dlab" id="dailyBestLab">我的最佳</span><b id="dailyBest">—</b></div>
+        <!-- v5.11：每日挑戰獎金（過關就發，越快越多） -->
+        <div class="dailyrow"><span class="dlab" id="dailyPrizeLab">今日獎金</span><b id="dailyPrizeNow">—</b></div>
       </div>
       <div class="rowbtns">
         <button class="biggo" id="btnDailyGo" type="button">開始挑戰 →</button>
@@ -3963,6 +4193,12 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="card">
       <h2>設定</h2>
       <div class="desc">單人闖關與 RPG 的地圖由系統自動生成，大小隨關卡成長，不需要設定。</div>
+      <!-- v5.11：設定分成「操作設定／一般設定」兩頁 —— 按鍵、手把、觸控歸一頁，音量與存檔歸另一頁 -->
+      <div class="settabs" id="setTabs" role="tablist">
+        <button class="settab on" type="button" data-tab="ctrl" role="tab" aria-selected="true">🕹️ 操作設定</button>
+        <button class="settab" type="button" data-tab="gen" role="tab" aria-selected="false">🎚️ 一般設定</button>
+      </div>
+      <div class="setpane on" data-pane="ctrl" id="paneCtrl">
       <div class="field"><label>控制模式</label>
         <div class="seg" id="segCtrl">
           <button data-v="auto">自動</button><button data-v="kb">鍵盤</button>
@@ -4007,11 +4243,19 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
         <div class="hint" id="tpadHint"></div>
       </div>
-      <div class="field"><label>音樂音量</label>
-        <div class="seg" id="segBgm"><button data-v="0">關</button><button data-v="0.5">小</button><button data-v="1">大</button></div>
+      <div class="setcmdhint" id="setCmdHint"></div>
+      </div><!-- /操作設定 -->
+      <div class="setpane" data-pane="gen" id="paneGen">
+      <div class="field"><label>音樂音量 <b class="volnum" id="bgmVal">100%</b></label>
+        <input class="volrange" id="rngBgm" type="range" min="0" max="100" step="5" value="100"
+               aria-label="音樂音量" autocomplete="off">
+        <div class="volticks"><span>關</span><span>小</span><span>大</span></div>
       </div>
-      <div class="field"><label>音效音量</label>
-        <div class="seg" id="segSfx"><button data-v="0">關</button><button data-v="0.5">小</button><button data-v="1">大</button></div>
+      <div class="field"><label>音效音量 <b class="volnum" id="sfxVal">100%</b></label>
+        <input class="volrange" id="rngSfx" type="range" min="0" max="100" step="5" value="100"
+               aria-label="音效音量" autocomplete="off">
+        <div class="volticks"><span>關</span><span>小</span><span>大</span></div>
+        <div class="hint">播音樂／音效時直接拖，馬上聽得到差別。右上角 🎵／🔊 是快速開關。</div>
       </div>
       <div class="field"><label>小地圖（雷達）</label>
         <div class="seg" id="segMiniMap"><button data-v="1">開</button><button data-v="0">關</button></div>
@@ -4026,6 +4270,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         <textarea class="tinput savecode" id="saveCode" rows="3" spellcheck="false" autocomplete="off"></textarea>
         <div class="hint" id="saveState"></div>
       </div>
+      </div><!-- /一般設定 -->
       <div class="backrow">
         <button class="ghostbtn" data-back="1">← 回主選單</button>
       </div>
@@ -4405,7 +4650,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.10';
+const VERSION = '5.11';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4925,9 +5170,9 @@ key.up|上|上|Up|上|위
 key.down|下|下|Down|下|아래
 key.left|左|左|Left|左|왼쪽
 key.right|右|右|Right|右|오른쪽
-key.act|動作／放彈|动作／放弹|Action / Bomb|アクション／爆弾|액션／폭탄
-key.det|遙控引爆|遥控引爆|Remote detonate|リモート起爆|원격 폭파
-key.fire|恐龍吐火|恐龙吐火|Dino Flame|恐竜の炎|공룡 화염
+key.act|放炸彈／動作|放炸弹／动作|Bomb / Action|爆弾／アクション|폭탄／액션
+key.det|引爆|引爆|Detonate|起爆|폭파
+key.fire|坐騎招式|坐骑招式|Mount skill|乗り物スキル|탈것 기술
 key.press|按下鍵…|按下键…|Press a key…|キーを押して…|키를 누르세요…
 time.1|1 分|1 分|1 min|1 分|1분
 time.2|2 分|2 分|2 min|2 分|2분
@@ -4969,6 +5214,10 @@ br.final|終局|终局|Final zone|最終局面|종국
 br.hudZone|縮圈 {n}s|缩圈 {n}s|Zone {n}s|縮小 {n}s|축소 {n}s
 br.bossStage|👑 第 {n} 關|👑 第 {n} 关|👑 Stage {n}|👑 ステージ {n}|👑 {n}스테이지
 br.title|大逃殺|大逃杀|Battle Royale|バトロワ|배틀로얄
+br.myChar|角色|角色|Fighter|キャラ|캐릭터
+br.namePh|你的名字|你的名字|Your name|名前|이름
+br.chPrev|上一個角色|上一个角色|Previous fighter|前のキャラ|이전 캐릭터
+br.chNext|下一個角色|下一个角色|Next fighter|次のキャラ|다음 캐릭터
 br.sub|{w}×{h} 隨機大陸|{w}×{h} 随机大陆|{w}×{h} random continent|{w}×{h} ランダム大陸|{w}×{h} 랜덤 대륙
 br.people|人數|人数|Players|人数|인원
 br.team|組隊|组队|Teams|チーム|팀
@@ -4991,7 +5240,7 @@ rpg.ovSub|❤️ 生命 {hp}　🛡️ 護甲 {ar}　👟 速度 {sp}%　💥 �
 rpg.go|出發！|出发！|Go!|出発！|출발!
 tips.touch|手機觸控：左下圓形搖桿推方向（可 45° 斜走）· 💥 放彈／撿彈／投擲／排線 · 🧨 遙控引爆 · 🔥 恐龍吐火 · <b>🤏 雙指縮放</b> · ⏸ 暫停|手机触控：左下圆形摇杆推方向（可 45° 斜走）· 💥 放弹／捡弹／投掷／排线 · 🧨 遥控引爆 · 🔥 恐龙吐火 · <b>🤏 双指缩放</b> · ⏸ 暂停|Touch: left stick to move (diagonals work) · 💥 bomb / pick up / throw / line · 🧨 remote · 🔥 dino flame · <b>🤏 pinch to zoom</b> · ⏸ pause|タッチ：左下スティックで移動（斜めも可）· 💥 設置／拾う／投げる／連鎖 · 🧨 リモコン · 🔥 恐竜の炎 · <b>🤏 ピンチで拡大縮小</b> · ⏸ 一時停止|터치: 왼쪽 스틱으로 이동(대각선 가능) · 💥 설치/줍기/던지기 · 🧨 원격 · 🔥 공룡 화염 · <b>🤏 두 손가락 확대</b> · ⏸ 일시정지
 tips.pad|手把：十字鍵／左蘑菇頭移動 · A 放彈 · X 遙控引爆 · Y 恐龍吐火 · <b>右搖桿上下／LT·RT 縮放</b> · <kbd>ESC</kbd>／Start 暫停|手柄：十字键／左摇杆移动 · A 放弹 · X 遥控引爆 · Y 恐龙吐火 · <b>右摇杆上下／LT·RT 缩放</b> · <kbd>ESC</kbd>／Start 暂停|Pad: D-pad / left stick to move · A bomb · X remote · Y dino flame · <b>right stick up-down / LT·RT zoom</b> · <kbd>ESC</kbd> / Start pause|パッド：十字キー／左スティックで移動 · A 設置 · X リモコン · Y 恐竜の炎 · <b>右スティック上下／LT·RT で拡大縮小</b> · <kbd>ESC</kbd>／Start 一時停止|패드: 십자키/왼쪽 스틱 이동 · A 설치 · X 원격 · Y 공룡 화염 · <b>오른쪽 스틱 상하/LT·RT 확대</b> · <kbd>ESC</kbd>/Start 일시정지
-tips.kb|{dirs} 移動 · {act} 放彈 · {det} 遙控引爆 · {fire} 恐龍吐火 · <kbd>1</kbd>／<kbd>2</kbd> 縮放（<kbd>0</kbd> 復原）· 滾輪縮放 · <kbd>ESC</kbd> 暫停（按鍵可在設定自訂）|{dirs} 移动 · {act} 放弹 · {det} 遥控引爆 · {fire} 恐龙吐火 · <kbd>1</kbd>／<kbd>2</kbd> 缩放（<kbd>0</kbd> 复原）· 滚轮缩放 · <kbd>ESC</kbd> 暂停（按键可在设定自订）|{dirs} move · {act} bomb · {det} remote · {fire} dino flame · <kbd>1</kbd>/<kbd>2</kbd> zoom (<kbd>0</kbd> reset) · wheel zooms · <kbd>ESC</kbd> pause (rebind in Settings)|{dirs} 移動 · {act} 設置 · {det} リモコン · {fire} 恐竜の炎 · <kbd>1</kbd>／<kbd>2</kbd> 拡大縮小（<kbd>0</kbd> リセット）· ホイールでも可 · <kbd>ESC</kbd> 一時停止（設定で変更可）|{dirs} 이동 · {act} 설치 · {det} 원격 · {fire} 공룡 화염 · <kbd>1</kbd>/<kbd>2</kbd> 확대(<kbd>0</kbd> 초기화) · 휠 확대 · <kbd>ESC</kbd> 일시정지 (설정에서 변경)
+tips.kb|{dirs} 移動 · {act} 放炸彈 · {det} 引爆 · 中鍵／<kbd>Shift</kbd> 衝刺 · {fire} 坐騎招式 · <kbd>1</kbd>／<kbd>2</kbd> 縮放（<kbd>0</kbd> 復原）· 滾輪縮放 · <kbd>ESC</kbd> 暫停（按鍵可在設定自訂）|{dirs} 移动 · {act} 放炸弹 · {det} 引爆 · 中键／<kbd>Shift</kbd> 冲刺 · {fire} 坐骑招式 · <kbd>1</kbd>／<kbd>2</kbd> 缩放（<kbd>0</kbd> 复原）· 滚轮缩放 · <kbd>ESC</kbd> 暂停（按键可在设定自订）|{dirs} move · {act} bomb · {det} detonate · MMB/<kbd>Shift</kbd> dash · {fire} mount skill · <kbd>1</kbd>/<kbd>2</kbd> zoom (<kbd>0</kbd> reset) · wheel zooms · <kbd>ESC</kbd> pause (rebind in Settings)|{dirs} 移動 · {act} 爆弾 · {det} 起爆 · 中ボタン／<kbd>Shift</kbd> ダッシュ · {fire} 乗り物スキル · <kbd>1</kbd>／<kbd>2</kbd> 拡大縮小（<kbd>0</kbd> リセット）· ホイールでも可 · <kbd>ESC</kbd> 一時停止（設定で変更可）|{dirs} 이동 · {act} 폭탄 · {det} 폭파 · 휠클릭／<kbd>Shift</kbd> 대시 · {fire} 탈것 기술 · <kbd>1</kbd>/<kbd>2</kbd> 확대(<kbd>0</kbd> 초기화) · 휠 확대 · <kbd>ESC</kbd> 일시정지 (설정에서 변경)
 tips.bombs|走向炸彈：有🥾就踢出去 · 有🥊就打飛 · 有🧤可撿起投擲（越牆飛行，飛出邊界從對側繞回）· 💀骷髏會詛咒你|走向炸弹：有🥾就踢出去 · 有🥊就打飞 · 有🧤可捡起投掷（越墙飞行，飞出边界从对侧绕回）· 💀骷髅会诅咒你|Bump a bomb: 🥾 kicks it · 🥊 punches it · 🧤 picks it up and throws it over walls (wraps at the edge) · 💀 skulls curse you|爆弾に体当たり：🥾 なら蹴る · 🥊 なら打ち飛ばす · 🧤 なら持ち上げて投げる（壁を越え、端は反対側へ）· 💀 ドクロは呪う|폭탄에 부딪히면: 🥾 차기 · 🥊 날리기 · 🧤 들고 던지기(벽을 넘고 끝은 반대편) · 💀 해골은 저주
 tips.cart|🛒 復仇推車：被淘汰後坐推車沿場外移動（可回頭，但倒著推很慢），動作鍵把炸彈拋進場內干擾（超級模式炸死人可立刻復活；突死開始時撤離）|🛒 复仇推车：被淘汰后坐推车沿场外移动（可回头，但倒着推很慢），动作键把炸弹抛进场内干扰（超级模式炸死人可立刻复活；突死开始时撤离）|🛒 Revenge cart: after you're out you ride the rails (you can turn back, but pushing in reverse is slow). Action tosses bombs into the arena. Super mode: a kill revives you instantly; the cart leaves when Sudden Death starts.|🛒 復讐カート：脱落後はコース外を移動（逆走は遅い）。アクションで爆弾を場内へ投げ込む（スーパー時は 1 キルで復活、サドンデス開始で退場）|🛒 복수 카트: 탈락 후 외곽을 이동(역주행은 느림). 액션으로 폭탄 투척 (슈퍼 모드에선 1킬 시 부활, 서든데스 시작 시 퇴장)
 mn.1|微風草原|微风草原|Breezy Plains|そよ風の草原|산들바람 초원
@@ -5624,6 +5873,12 @@ z481|突死縮圈|突死缩圈|Sudden Death|サドンデス縮小|서든데스 �
 z482|，外圈開始落石 → 快往中間跑；淘汰後還能坐|，外圈开始落石 → 快往中间跑；淘汰后还能坐|; rocks fall on the outer ring → run for the middle. Even knocked out you can ride the|。外周に落石 → 中央へ急げ。脱落後も| 바깥 고리가 낙석 → 가운데로 뛰어라. 탈락해도
 z483|復仇推車|复仇推车|Revenge Cart|復讐カート|복수 카트
 z484|繼續丟彈。|继续丢弹。|and keep throwing bombs.|に乗って爆弾を投げ続けられる。|. 복수 카트를 타고 계속 폭탄을 던질 수 있다.
+z485|電腦|电脑|PC|PC|PC
+z486|手機|手机|Phone|スマホ|휴대폰
+z487|平板|平板|Tablet|タブレット|태블릿
+z488|🕹️ 操作設定|🕹️ 操作设定|🕹️ Controls|🕹️ 操作設定|🕹️ 조작 설정
+z489|🎚️ 一般設定|🎚️ 一般设定|🎚️ General|🎚️ 一般設定|🎚️ 일반 설정
+z490|播音樂／音效時直接拖，馬上聽得到差別。右上角 🎵／🔊 是快速開關。|播音乐／音效时直接拖，马上听得到差别。右上角 🎵／🔊 是快速开关。|Drag while music/SFX is playing to hear the change. The 🎵／🔊 buttons up top are quick on/off.|音楽／効果音を再生しながらドラッグすると違いが分かります。右上の 🎵／🔊 はすばやいオン／オフ。|음악／효과음을 재생한 채로 드래그하면 차이를 바로 알 수 있습니다. 오른쪽 위 🎵／🔊 는 빠른 켜기／끄기.
 
 menu.daily|每日挑戰|每日挑战|Daily Challenge|デイリーチャレンジ|데일리 챌린지
 menu.daily.sub|全世界同一張圖 · 比快|全世界同一张图 · 比快|Same map worldwide · beat the clock|世界中が同じマップ · タイム勝負|전 세계가 같은 맵 · 속도 대결
@@ -5646,6 +5901,12 @@ daily.winTitle|🎉 過關！|🎉 过关！|🎉 Cleared!|🎉 クリア！|�
 daily.loseTitle|💀 挑戰失敗|💀 挑战失败|💀 Run failed|💀 チャレンジ失敗|💀 도전 실패
 daily.winSub|你的時間 {t} · 本機最佳 {b}|你的时间 {t} · 本机最佳 {b}|Your time {t} · local best {b}|タイム {t} · 自己ベスト {b}|기록 {t} · 내 최고 {b}
 daily.loseSub|第 {n} 關失敗 · 存活 {t}|第 {n} 关失败 · 存活 {t}|Failed on stage {n} · survived {t}|第 {n} 面で失敗 · 生存 {t}|{n} 스테이지 실패 · 버틴 시간 {t}
+daily.labPrize|今日獎金|今日奖金|Today's prize|今日の賞金|오늘의 상금
+daily.prizeHave|已領 {n} 金幣|已领 {n} 金币|{n} coins claimed|{n} コイン獲得済み|{n} 코인 획득
+daily.prizeNone|最高 {n} 金幣 · 過關就發|最高 {n} 金币 · 过关就发|Up to {n} coins · paid on clear|最大 {n} コイン · クリアで獲得|최대 {n} 코인 · 클리어 시 지급
+daily.prizeGot|今日獎金 +{n}，累計 {total} 金幣|今日奖金 +{n}，累计 {total} 金币|Prize +{n} coins — {total} today|賞金 +{n} コイン（本日 {total}）|상금 +{n} 코인 (오늘 {total})
+daily.prizeFull|今日獎金已滿 {total} 金幣（破紀錄才會再加）|今日奖金已满 {total} 金币（破纪录才会再加）|Today's prize is maxed at {total} coins — beat your record to earn more|本日の賞金は {total} コインで上限（記録更新で追加）|오늘 상금은 {total} 코인으로 최대 (기록 갱신 시 추가)
+daily.prizeToast|每日挑戰獎金 +{n} 金幣|每日挑战奖金 +{n} 金币|Daily prize +{n} coins|デイリー賞金 +{n} コイン|데일리 상금 +{n} 코인
 daily.rankLine|你的時間 {t} · 今日第 {r} 名（共 {n} 人）|你的时间 {t} · 今日第 {r} 名（共 {n} 人）|Time {t} · rank #{r} of {n} today|タイム {t} · 今日 {r} 位（{n} 人中）|기록 {t} · 오늘 {r}위 (총 {n}명)
 daily.again|🔄 再挑戰一次|🔄 再挑战一次|🔄 Try again|🔄 もう一度|🔄 다시 도전
 lb.titleToday|🏆 今日排行榜|🏆 今日排行榜|🏆 Today's leaderboard|🏆 今日のランキング|🏆 오늘의 리더보드
@@ -6429,7 +6690,10 @@ const Pad = (function () {
 const SIZES = { S: [13, 11], M: [15, 13], L: [17, 15], XL: [21, 15] };
 const SET_KEY = 'bombhero-settings-v1';
 // 預設按鍵（可自訂，存檔後沿用）
-const DEF_KEYS1 = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', act: 'Space', det: 'KeyE', fire: 'KeyF' };
+// v5.11：電腦操作改成「鍵盤＋滑鼠」。
+//   移動 WASD 照舊；放炸彈＝滑鼠左鍵、引爆＝滑鼠右鍵、衝刺＝中鍵或 Shift、坐騎招式＝空白鍵。
+//   滑鼠鍵用 'Mouse0'／'Mouse1'／'Mouse2' 這種代號存，跟鍵盤鍵一樣可以自訂、一樣會被 keyName() 翻譯。
+const DEF_KEYS1 = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', act: 'Mouse0', det: 'Mouse2', fire: 'Space' };
 const DEF_KEYS2 = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', act: 'Enter', det: 'Numpad0', fire: 'Numpad1' };
 // v4.2：手機移動操作雙軌 —— mode:'slide' 隱形滑動區（預設）／'stick' 實體虛擬搖桿
 //   pad：自訂搖桿中心點（0~1 的比例，null = 用預設角落）
@@ -6442,6 +6706,7 @@ const CTRL_MODES = ['auto', 'kb', 'pad', 'touch'];
 let settings = {
   size: 'M', wins: 2, time: 120, hazards: 'on', sd: 'on', revenge: 'on',
   bgm: 1, sfx: 1, soloChar: 0,
+  brChar: 0, brName: '',                             // v5.11：大逃殺自己的選角與暱稱
   soloDiff: 'normal',                              // 單人難易度：easy / normal / hard
   soloTime: 300,                                  // 單人關卡時間（0 = 無限）
   mapMode: 'classic',                             // v4.69：地圖模式 classic = 原本 32 張 / random = 隨機生成
@@ -6455,6 +6720,7 @@ let settings = {
   ctrl: 'auto',                                   // auto / kb / pad / touch
   keys1: Object.assign({}, DEF_KEYS1),            // 玩家 1 鍵盤
   keys2: Object.assign({}, DEF_KEYS2),            // 玩家 2 鍵盤
+  keysVer: 2,                                     // v5.11：電腦操作配置版本（2＝滑鼠左右鍵放彈／引爆）
   tpad: Object.assign({}, DEF_TPAD)               // 手機觸控版面
 };
 // v4.15：對戰人數 2～8（原本只有 4／8 兩種）
@@ -6483,6 +6749,13 @@ try {
   if (CTRL_MODES.indexOf(settings.ctrl) < 0) settings.ctrl = 'auto';
   settings.keys1 = Object.assign({}, DEF_KEYS1, settings.keys1 || {});
   settings.keys2 = Object.assign({}, DEF_KEYS2, settings.keys2 || {});
+  // v5.11：電腦操作改版（空白鍵→坐騎招式、放彈/引爆改滑鼠左右鍵）。
+  //   舊存檔裡還是 Space/E/F，這裡一次性換成新預設，不然老玩家永遠停在舊配置。
+  //   只有「從沒動過鍵盤設定」的人才會被換掉（keysVer 不存在＝v5.10 以前的存檔）。
+  if ((settings.keysVer | 0) < 2) {
+    settings.keys1 = Object.assign({}, DEF_KEYS1);
+    settings.keysVer = 2;
+  }
   settings.tpad = Object.assign({}, DEF_TPAD, settings.tpad || {});
   // v4.2：老玩家（本來就有觸控設定、但沒有 mode 欄位）維持原本的實體搖桿；
   //       全新玩家則直接給「隱形滑動區」（推薦模式）。
@@ -6514,6 +6787,12 @@ try {
   const nm = [];
   for (let i = 0; i < 8; i++) nm.push(String((settings.names || [])[i] || '').trim().slice(0, 8));
   settings.names = nm;
+  /* v5.11：大逃殺入口可以自己挑外觀＋命名。
+     這裡不能寫 CHARACTERS.length —— CHARACTERS 是在這個區塊「之後」才用 const 宣告的，
+     在這裡讀到會踩 TDZ（ReferenceError），整個設定正規化就會爆掉。 */
+  const brc = parseInt(settings.brChar, 10);
+  settings.brChar = (brc >= 0 && brc < 8) ? brc : 0;
+  settings.brName = String(settings.brName == null ? '' : settings.brName).trim().slice(0, 8);
 })();
   } catch (__e) { __bootFail('wire', __e); }
 // 玩家顯示名稱：有暱稱用暱稱，否則用角色名
@@ -7159,24 +7438,72 @@ const Input = (function () {
   window.addEventListener('keyup', function (e) { keys[e.code] = false; });
   window.addEventListener('blur', function () { for (const k in keys) keys[k] = false; });
 
+  /* v5.11：滑鼠鍵。只在「遊戲畫布」上才算，點選單／按鈕不會誤放炸彈。
+     左鍵＝放炸彈（Mouse0）／右鍵＝引爆（Mouse2）／中鍵＝衝刺（Mouse1）。 */
+  function mouseOnStage(t) {
+    if (!t) return false;
+    if (t.id === 'cv' || t.id === 'stageWrap') return true;
+    return !!(t.closest && t.closest('#stageWrap'));
+  }
+  window.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'touch') return;            // 觸控走 touchState，不要當成滑鼠左鍵
+    if (!mouseOnStage(e.target)) return;
+    const b = e.button | 0;
+    if (b > 2) return;
+    if (b === 1) { try { e.preventDefault(); } catch (err) {} }   // 中鍵不要跳自動捲動
+    if (!mbtn[b]) medge[b] = true;                    // 真的從放開變按下的那一幀才算
+    mbtn[b] = true;
+  }, true);
+  window.addEventListener('pointerup', function (e) {
+    if (e.pointerType === 'touch') return;
+    const b = e.button | 0;
+    if (b <= 2) mbtn[b] = false;
+  }, true);
+  window.addEventListener('pointercancel', function () { mbtn[0] = mbtn[1] = mbtn[2] = false; }, true);
+  window.addEventListener('blur', function () { mbtn[0] = mbtn[1] = mbtn[2] = false; });
+  // 右鍵在畫布上是「引爆」，不要跳瀏覽器右鍵選單
+  window.addEventListener('contextmenu', function (e) {
+    if (mouseOnStage(e.target)) { try { e.preventDefault(); } catch (err) {} }
+  }, true);
+
   // 每個玩家的控制方案
   const touchState = { up: false, down: false, left: false, right: false, action: false, det: false, fire: false, dash: false, ax: 0, ay: 0 };
+  /* v5.11：滑鼠鍵 —— 左鍵放炸彈、右鍵引爆、中鍵衝刺。
+     只給「鍵盤／自動」的 1P 用（2P 同一台電腦不會共用一顆滑鼠）。
+     值存在 mbtn，邊緣存在 medge；跟鍵盤一樣是「按下的那一幀才算一次」。 */
+  const mbtn = { 0: false, 1: false, 2: false };
+  const medge = { 0: false, 1: false, 2: false };
+  function mouseEdge(b) { return !!medge[b]; }
+  // 鍵位代號 → 現在有沒有按著／這一幀是不是剛按下（滑鼠鍵與鍵盤鍵共用一條路）
+  function keyHeld(code) {
+    if (!code) return false;
+    if (code.indexOf('Mouse') === 0) return !!mbtn[(parseInt(code.slice(5), 10) || 0)];
+    return !!keys[code];
+  }
+  function keyEdge(code) {
+    if (!code) return false;
+    if (code.indexOf('Mouse') === 0) return !!medge[(parseInt(code.slice(5), 10) || 0)];
+    return !!edges[code];
+  }
   // 可自訂鍵盤：即時讀 settings.keysN，改鍵立刻生效
-  function kbScheme(getMap) {
+  function kbScheme(getMap, withMouse) {
     return {
       dirs: function () {
         const map = getMap();
         const d = [];
-        if (keys[map.up]) d.push('up'); if (keys[map.down]) d.push('down');
-        if (keys[map.left]) d.push('left'); if (keys[map.right]) d.push('right');
+        if (keyHeld(map.up)) d.push('up'); if (keyHeld(map.down)) d.push('down');
+        if (keyHeld(map.left)) d.push('left'); if (keyHeld(map.right)) d.push('right');
         return d;
       },
-      action: function () { return !!edges[getMap().act]; },
-      actionHeld: function () { return !!keys[getMap().act]; },
-      detonate: function () { return !!edges[getMap().det]; },
-      fire: function () { return !!edges[getMap().fire]; },
-      // v5.0：衝刺 —— Shift（左右都吃，不用進設定改鍵）
-      dash: function () { return !!edges.ShiftLeft || !!edges.ShiftRight; }
+      action: function () { return keyEdge(getMap().act); },
+      actionHeld: function () { return keyHeld(getMap().act); },
+      detonate: function () { return keyEdge(getMap().det); },
+      fire: function () { return keyEdge(getMap().fire); },
+      // v5.0：衝刺 Shift（左右都吃）；v5.11 再加上滑鼠中鍵
+      dash: function () {
+        return !!edges.ShiftLeft || !!edges.ShiftRight || (withMouse ? mouseEdge(1) : false);
+      },
+      hasMouse: !!withMouse
     };
   }
   // 手把控制方案（可建立多支）
@@ -7206,8 +7533,8 @@ const Input = (function () {
   }
   const PAD0 = padScheme(0);
   const schemes = {
-    kb1: kbScheme(function () { return settings.keys1; }),
-    kb2: kbScheme(function () { return settings.keys2; }),
+    kb1: kbScheme(function () { return settings.keys1; }, true),
+    kb2: kbScheme(function () { return settings.keys2; }, false),
     pad: function (pi) { return pi === 0 ? PAD0 : padScheme(pi); },
     // 自動（玩家 1）：鍵盤／手把／觸控即時切換，插上手把按一下就能直接用
     auto: {
@@ -7393,8 +7720,12 @@ const Input = (function () {
     }
     return res;
   }
-  function flush() { for (const k in edges) edges[k] = false; }
+  function flush() {
+    for (const k in edges) edges[k] = false;
+    medge[0] = medge[1] = medge[2] = false;   // v5.11：滑鼠鍵的「剛按下」也要每幀清掉
+  }
   return { keys: keys, edges: edges, schemes: schemes, pollPads: pollPads, flush: flush, setTouch: setTouch, setTouchAxis: setTouchAxis, touchState: touchState,
+    mouse: mbtn, mouseEdge: mouseEdge, keyHeld: keyHeld, keyEdge: keyEdge,
     framePads: framePads, padEdge: padEdge, padDown: padDown, padAxis: padAxis,
     padInfo: padInfo, padAssign: padAssign, padReset: padReset, padPhys: padPhys };
       })();
@@ -8323,8 +8654,8 @@ const PAD_MAP = [
   ['A', '確認／選取　遊戲中：放炸彈（撿彈、丟彈也用它）'],
   ['B', '返回上一頁　遊戲中：暫停／繼續'],
   ['X', '遙控引爆（要有 📱 遙控器）'],
-  ['Y', '恐龍吐火（要有坐騎）'],
-  ['LB／RB', '選單：上一個／下一個項目（一定選得到每一個）'],
+  ['Y', '坐騎招式（恐龍吐火，要有坐騎）'],
+  ['LB／RB', '選單：上一個／下一個項目（一定選得到每一個）　遊戲中：RB 衝刺'],
   ['LT／RT', '遊戲中：縮小／放大畫面'],
   ['Start', '暫停／繼續']
 ];
@@ -8841,6 +9172,12 @@ const BELT_SPEED = 56;          // 輸送帶自身推力 px/s
 const BELT_FAST = 1.42;         // 順行速度倍率
 const BELT_SLOW = 0.82;         // 逆行速度倍率（v1.7：逆著走不再慢到像黏住）
 const BELT_CROSS = 1.28;
+/* v5.11：新的兩種「減速地面」。
+   水流：一格寬的不規則長河，踩進去像涉水；沙子：深色沙漠區塊，走起來陷腳。
+   兩者都不是障礙物（grid 仍是 0，炸彈／火焰／走位都照常），只是速度變慢。 */
+const WATER_MUL = 0.62;
+const SAND_MUL = 0.78;
+const SLOW_GROUND = { water: WATER_MUL, sand: SAND_MUL };
 
 function hazardAt(x, y) { return (Game.hazards[y] && Game.hazards[y][x]) || null; }
 function hazardUnder(p) {
@@ -8902,7 +9239,9 @@ function placeHideTiles(cols, rows, rnd, spawns, maxN) {
         // v4.69：整張圖被機關（冰面／輸送帶）鋪滿時，躲點會一個都長不出來
         //   （第 17 關「夜光彩城」實測 24 格冰面 → 只剩 1 個躲點）。這些格先當備取，
         //   乾淨空地不夠時再拿來用（躲點蓋掉那格機關，傳送門／其他躲點一律不動）。
-        if (hz.type === 'ice' || hz.type === 'convey') softSpots.push({ x: x, y: y });
+        if (hz.type === 'ice' || hz.type === 'convey' || hz.type === 'water' || hz.type === 'sand') {
+          softSpots.push({ x: x, y: y });
+        }
         continue;
       }
       spots.push({ x: x, y: y });
@@ -8927,7 +9266,10 @@ function placeHideTiles(cols, rows, rnd, spawns, maxN) {
 // 依「想走的方向」算輸送帶造成的速度倍率（1 = 無影響）
 function beltMulFor(p, mx, my) {
   const hz = hazardUnder(p);
-  if (!hz || hz.type !== 'convey' || (!mx && !my)) return 1;
+  if (!hz || (!mx && !my)) return 1;
+  // v5.11：水流／沙地不看方向，只要在移動就變慢
+  if (hz.type === 'water' || hz.type === 'sand') return SLOW_GROUND[hz.type] || 1;
+  if (hz.type !== 'convey') return 1;
   const d = DIRS[hz.dir];
   const dot = d.x * Math.sign(mx) + d.y * Math.sign(my);
   if (dot > 0) return BELT_FAST;
@@ -9207,6 +9549,7 @@ function makePlayer(slot, charIdx, scheme, spawn) {
     redDragon: false,                               // v1.8：吃到第二顆蛋 → 紅龍（四方向吐火）
     lives: 1, wins: 0, alive: true, invuln: 2,
     dashCd: 0, dashT: 0, dashDx: 0, dashDy: 0, tapDir: '', tapAt: 0,   // v5.0：衝刺／翻滾
+    aiDashGap: 0, aiTgtD: 99,                                           // v5.11：AI 衝刺節流／目標距離
     facing: 'up',
     walkT: 0, moving: false, carry: null, dead: false,
     score: 0, respawnT: 0, slide: null, warpCool: 0, gloat: 0, warpLock: '', beltMul: 1,
@@ -10588,7 +10931,8 @@ const CharPreview = (function () {
   function tick(dt) {
     if (!items.length) return;
     // 只有停在「選角」畫面上才跑動畫（v4.0：RPG 創角畫面也有選角）
-    if (Screen.current !== 'solo' && Screen.current !== 'rpg' && Screen.current !== 'battle') return;
+    // v5.11：大逃殺入口卡是在『首頁』開的 → title 也要跑，否則角色預覽會是一片空白
+    if (Screen.current !== 'solo' && Screen.current !== 'rpg' && Screen.current !== 'battle' && Screen.current !== 'title') return;
     t += dt;
     for (let i = 0; i < items.length; i++) {
       const k = items[i].ch;
@@ -10721,6 +11065,45 @@ const Daily = {
   today() { return dailyDayKey(); },
   seed() { return dailySeedOf(dailyDayKey()); },
   stage() { return dailyStageOf(dailySeedOf(dailyDayKey())); },
+  /* ---- v5.11：每日挑戰獎金 --------------------------------------------
+     以前過關只有名次，沒有實質回饋 → 「今天非玩不可」的理由不夠。
+     規則（越簡單越好懂）：
+       · 過關就發金幣：底薪 80 ＋ 速度獎金 0~220（3 分鐘用越快領越多）。
+       · 當天只認「最高的一筆獎金」：破紀錄才補差額，重玩不會重複發。
+       · 獎金紀錄存在本機，離線也記得（跟 Daily.best 一樣是本地資料）。 */
+  PRIZE_KEY: 'bombhero-daily-prize',
+  PRIZE_BASE: 80,
+  PRIZE_SPEED: 220,
+  prizes() {
+    try {
+      const o = JSON.parse(localStorage.getItem(Daily.PRIZE_KEY) || '{}');
+      return (o && typeof o === 'object') ? o : {};
+    } catch (e) { return {}; }
+  },
+  prizeOf(day) { return Daily.prizes()[day || dailyDayKey()] | 0; },
+  /* 這個秒數值多少（不寫入，單純算） */
+  prizePlan(ms) {
+    const total = Math.max(1, DAILY_TIME * 1000);
+    const left = Math.max(0, Math.min(total, total - Math.max(0, ms | 0)));
+    const speed = Math.round((left / total) * Daily.PRIZE_SPEED / 5) * 5;
+    return { base: Daily.PRIZE_BASE, speed: speed, total: Daily.PRIZE_BASE + speed };
+  },
+  /* 結算：回傳 { pay, total, full, best }，pay 是這次真正進錢包的金額 */
+  award(day, ms) {
+    const key = day || dailyDayKey();
+    const plan = Daily.prizePlan(ms);
+    const all = Daily.prizes();
+    const got = all[key] | 0;
+    const pay = Math.max(0, plan.total - got);
+    if (pay > 0) {
+      all[key] = plan.total;
+      const keys = Object.keys(all).sort();
+      while (keys.length > Daily.MAX_KEEP) delete all[keys.shift()];
+      try { localStorage.setItem(Daily.PRIZE_KEY, JSON.stringify(all)); } catch (e) {}
+      try { if (typeof Shop !== 'undefined' && Shop.addGold) Shop.addGold(pay); } catch (e) {}
+    }
+    return { pay: pay, total: Math.max(got, plan.total), plan: plan, before: got };
+  },
   /* 開始今天的挑戰（規則固定，不讓玩家改難度／時間） */
   begin() {
     AudioSys.ensure(); AudioSys.sfx('click');
@@ -14232,6 +14615,117 @@ function brIslAt(x, y) {
   return a[y][x] < 0 ? -1 : a[y][x];
 }
 
+/* v5.11：大逃殺的地形機關（使用者要求）——
+   ① 長條輸送帶：整條 6~11 格、同一個方向 → 踩上去被推著跑
+   ② 滑冰區塊：3×3 ~ 5×4 的「一整片」冰面（不是零散單格）
+   ③ 河流：一格寬的不規則長河（water → 移動變慢）
+   ④ 沙地：區塊狀的深色沙地（sand → 移動變慢）
+   一律只鋪在「走得過去的陸地」上：不碰岩層／軟磚／既有機關／出生點周圍 1 格。 */
+function placeBRTerrain(spawns, near) {
+  const cols = Game.cols, rows = Game.rows;
+  const R = Math.random;
+  const n = { belt: 0, ice: 0, water: 0, sand: 0 };
+  function free(x, y, softOk) {
+    if (x < 2 || y < 2 || x >= cols - 2 || y >= rows - 2) return false;
+    const g = Game.grid[y][x];
+    // 岩層一律不動；軟磚只有「輸送帶／冰面」可以壓過去（跟單人關卡的跑道同一個做法），
+    //   而且軟磚裡如果有藏道具就讓開（那格之後炸開還要掉東西）。
+    if (g === 1) return false;
+    if (g === 2) { if (!softOk || Game.hidden[y + ',' + x]) return false; }
+    if (Game.brIsl[y][x] < 0) return false;
+    if (Game.hazards[y][x]) return false;
+    if (near && near[y + ',' + x]) return false;
+    return true;
+  }
+  function allFree(cells, softOk) {
+    for (let i = 0; i < cells.length; i++) if (!free(cells[i].x, cells[i].y, softOk)) return false;
+    return true;
+  }
+  function paint(cells, obj, clearSoft) {
+    for (let i = 0; i < cells.length; i++) {
+      if (clearSoft) Game.grid[cells[i].y][cells[i].x] = 0;
+      Game.hazards[cells[i].y][cells[i].x] = obj;
+    }
+  }
+  // ① 長條輸送帶
+  for (let t = 0, guard = 0; t < 9 && guard < 700; guard++) {
+    const horiz = R() < .5;
+    const len = 6 + Math.floor(R() * 6);
+    const x0 = 2 + Math.floor(R() * Math.max(1, cols - 4 - (horiz ? len : 0)));
+    const y0 = 2 + Math.floor(R() * Math.max(1, rows - 4 - (horiz ? 0 : len)));
+    const cells = [];
+    for (let i = 0; i < len; i++) cells.push({ x: x0 + (horiz ? i : 0), y: y0 + (horiz ? 0 : i) });
+    if (!allFree(cells, true)) continue;
+    const dir = horiz ? (t % 2 ? 'left' : 'right') : (t % 2 ? 'up' : 'down');
+    paint(cells, { type: 'convey', dir: dir }, true);
+    n.belt++; t++;
+  }
+  // ② 滑冰區塊
+  for (let t = 0, guard = 0; t < 8 && guard < 500; guard++) {
+    const w = 3 + Math.floor(R() * 3), h = 3 + Math.floor(R() * 2);
+    const x0 = 2 + Math.floor(R() * Math.max(1, cols - 4 - w));
+    const y0 = 2 + Math.floor(R() * Math.max(1, rows - 4 - h));
+    const cells = [];
+    for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) cells.push({ x: x0 + xx, y: y0 + yy });
+    if (!allFree(cells, true)) continue;
+    paint(cells, { type: 'ice' }, true);
+    n.ice++; t++;
+  }
+  // ③ 河流：一格寬、會轉彎的長河。撞到不能走的地方就試著轉 90°，再不行就收工
+  for (let r = 0, guard = 0; r < 3 && guard < 400; guard++) {
+    let x = 2 + Math.floor(R() * (cols - 4));
+    let y = 2 + Math.floor(R() * (rows - 4));
+    if (!free(x, y, true)) continue;
+    let d = R() < .5 ? [1, 0] : [0, 1];
+    if (R() < .5) d = [-d[0], -d[1]];
+    const len = 34 + Math.floor(R() * 20);
+    const cells = [];
+    for (let i = 0; i < len; i++) {
+      if (!free(x, y, true)) break;
+      cells.push({ x: x, y: y });
+      // 22% 機率轉彎（保留原本的大方向感，看起來才像河不像迷宮）
+      if (R() < .22) {
+        const turn = R() < .5 ? [d[1], d[0]] : [-d[1], -d[0]];
+        if (free(x + turn[0], y + turn[1], true)) d = turn;
+      }
+      const nx = x + d[0], ny = y + d[1];
+      if (!free(nx, ny, true)) {
+        const turn = R() < .5 ? [d[1], d[0]] : [-d[1], -d[0]];
+        if (free(x + turn[0], y + turn[1], true)) { d = turn; continue; }
+        break;
+      }
+      x = nx; y = ny;
+    }
+    if (cells.length < 8) continue;
+    paint(cells, { type: 'water' }, true);
+    n.water++; r++;
+  }
+  // ④ 沙地：從一格開始往外長成一坨
+  for (let t = 0, guard = 0; t < 6 && guard < 500; guard++) {
+    const sx = 2 + Math.floor(R() * (cols - 4)), sy = 2 + Math.floor(R() * (rows - 4));
+    if (!free(sx, sy)) continue;
+    const want = 18 + Math.floor(R() * 24);
+    const seen = {}, out = [{ x: sx, y: sy }];
+    seen[sx + ',' + sy] = 1;
+    for (let i = 0; i < out.length && out.length < want; i++) {
+      const c = out[i];
+      const nb = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      for (let k = 3; k > 0; k--) { const j = Math.floor(R() * (k + 1)); const tmp = nb[k]; nb[k] = nb[j]; nb[j] = tmp; }
+      for (let k = 0; k < 4 && out.length < want; k++) {
+        const nx = c.x + nb[k][0], ny = c.y + nb[k][1], kk = nx + ',' + ny;
+        if (seen[kk]) continue;
+        seen[kk] = 1;
+        if (!free(nx, ny)) continue;
+        out.push({ x: nx, y: ny });
+      }
+    }
+    if (out.length < 10) continue;
+    paint(out, { type: 'sand' });
+    n.sand++; t++;
+  }
+  return n;
+}
+
 function buildBRMap() {
   const cols = BR.W, rows = BR.H;
   Game.cols = cols; Game.rows = rows;
@@ -14498,6 +14992,11 @@ function buildBRMap() {
     const o = open.splice(rand(open.length), 1)[0];
     spawnItem(o.x, o.y, pick(ITEM_POOL));
   }
+  // ---- 7.5) v5.11：地形機關（長條輸送帶／滑冰區塊／河流／沙地）----
+  //   放在躲點之前：躲點會避開已有機關的格子，順序反了就會把冰面蓋掉。
+  const hzN = (function () {
+    try { return placeBRTerrain(sp, near); } catch (e) { return { belt: 0, ice: 0, water: 0, sand: 0 }; }
+  })();
   // ---- 8) 可以躲人的物件（草叢／破屋／陶甕…；躲在裡面 AI 看不到）----
   const hideN = (function () {
     try { return placeHideTiles(cols, rows, Math.random, sp, BR.HIDE); } catch (e) { return 0; }
@@ -14506,7 +15005,7 @@ function buildBRMap() {
   markWallKinds();
   const themeIdx = [];
   for (let i = 0; i < 8; i++) themeIdx.push(seeds[i].ti);
-  return { spawns: sp, landN: landN, hardN: hardN, softN: softN, hideN: hideN, themes: themeIdx };
+  return { spawns: sp, landN: landN, hardN: hardN, softN: softN, hideN: hideN, themes: themeIdx, hz: hzN };
 }
 
 // 圈外：AI 往圓心走（回傳 true 表示這幀由我接管移動）
@@ -14844,7 +15343,8 @@ function startBR() {
   for (let i = 0; i < BR.N; i++) {
     const c = info.spawns[i] || { x: 1, y: 1 };
     const isMe = i === 0;
-    const p = makePlayer(i, isMe ? (settings.chIdx | 0) : randomChar(), isMe ? humanScheme : dummy,
+    // v5.11：玩家自己挑的外觀（大逃殺入口的選角），沒挑過就沿用單人選的角色
+    const p = makePlayer(i, isMe ? (settings.brChar | 0) : randomChar(), isMe ? humanScheme : dummy,
       { px: (c.x + .5) * Game.T, py: (c.y + .5) * Game.T });
     // makePlayer 的 x 是 (spawn.x+.5)*0+spawn.px → 沒給 spawn.x 會變 NaN（對戰是事後覆寫才沒事）
     p.x = (c.x + .5) * Game.T; p.y = (c.y + .5) * Game.T;
@@ -14853,7 +15353,7 @@ function startBR() {
     p.warpLock = ''; p.cart = false; p.cartCd = 0; p.gloat = 0; p.cartDir = null;
     p.brOut = 0; p.brHp = BR.HP;   // v4.74：30 人同場、10 分鐘一場 → 血量 4→10
     p.label = 'P' + (i + 1);
-    p.name = isMe ? (settings.playerName || String(settings.names[0] || '').trim() || '我') : ('AI·' + (i + 1));
+    p.name = isMe ? (String(settings.brName || '').trim() || settings.playerName || String(settings.names[0] || '').trim() || '我') : ('AI·' + (i + 1));
     if (!isMe) p.ai = true;
     p.team = BR.TEAM >= 2 ? Math.floor(i / BR.TEAM) : -1;
     Game.players.push(p);
@@ -16807,13 +17307,17 @@ function aiBrChoose(p, opts, cx, cy, tgt, tgtD2) {
   return { dir: best, bomb: bomb };
 }
 // ══════════════════════════════════════════════════════════════════
-//   v5.4：電腦玩家也會用衝刺
-//   · 逃命：腳下（或馬上就要）在火線上 → 往安全方向衝，0.16 秒跑 1.5 格，
-//     比一般走路快三倍多，常常就是「剛好躲掉」跟「被炸死」的差別。
-//   · 趕路：目標很遠（追人／撿道具／大逃殺往內圈）而且前方兩格都安全 → 偶爾衝一下。
-//   · 不衝的情況：前方有牆或軟磚、會衝進別人的火線、手上搬著炸彈（避免丟在半路）。
-//   衝刺本身帶 0.18 秒霸體（沿用玩家的 slamGuard，不會像 invuln 那樣閃白）。
+//   v5.11：衝刺收斂成「有意義才衝」
+//   使用者回報：AI 不管對戰或大逃殺都一直在衝，看起來像抽筋。
+//   以前只要冷卻好、前方兩格空、擲一次 Math.random() < lv.dash 就衝 ——
+//   也就是「漫無目的走路」時也在衝（趕路機率 16%，冷卻 1.2 秒，等於常常在衝）。
+//   現在：
+//     ① 逃命（腳下／落石）→ 一定衝。
+//     ② 趕路 → 必須「真的有目標」而且「目標還很遠（≥ 3.2 格）」才衝，
+//        而且兩次趕路衝刺之間再隔 2.2~4.4 秒，機率也調降。
+//     ③ 沒有目標（純亂走／巡邏）→ 永遠用走的。
 // ══════════════════════════════════════════════════════════════════
+const DASH_TRAVEL_CELLS = 3.2;   // 目標在這個距離以內就用走的
 function aiDashOk(p, cx, cy, dn) {
   const d = DIRS[dn];
   if (!d) return false;
@@ -16839,7 +17343,12 @@ function aiTryDash(p, lv, cx, cy) {
   let dn = null;
   if (p.aiDir && aiDashOk(p, cx, cy, p.aiDir)) {
     if (urgent) dn = p.aiDir;                                  // 命危 → 一定衝
-    else if (travelOk(p.aiDir) && Math.random() < (lv.dash == null ? .16 : lv.dash)) dn = p.aiDir;   // 趕路 → 看難度
+    // 趕路 → 要有目標、目標還遠、而且兩次之間留間隔（v5.11：不再「一直衝」）
+    else if (travelOk(p.aiDir) && (p.aiTgtD || 0) >= DASH_TRAVEL_CELLS &&
+             (p.aiDashGap || 0) <= 0 && Math.random() < (lv.dash == null ? .10 : lv.dash)) {
+      dn = p.aiDir;
+      p.aiDashGap = 2.2 + Math.random() * 2.2;
+    }
   }
   if (!dn && urgent) {
     // 想躲的方向被牆擋住 → 四方向找一條兩格內安全的衝出去
@@ -16863,6 +17372,7 @@ function controlAI(p, dt) {
   // v5.4：衝刺中 —— 交給 dashStep（跟玩家同一套），冷卻也在這裡跑
   if (p.dashT > 0) { p.moving = true; dashStep(p, dt); return; }
   if (p.dashCd > 0) p.dashCd -= dt;
+  if (p.aiDashGap > 0) p.aiDashGap -= dt;   // v5.11：趕路衝刺的間隔
   p.moving = false;
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
   const atCenter = Math.abs(p.x - (cx * T + T / 2)) < 3 && Math.abs(p.y - (cy * T + T / 2)) < 3;
@@ -16928,6 +17438,8 @@ function controlAI(p, dt) {
       } else {
         // v4.90：以前固定挑 safeOpts[0] → 附近所有 AI 全往同一格擠，改成挑最不擠的
         p.aiDir = flee || (safeOpts.length ? (BR_AI.on ? aiBrLeastCrowded(p, safeOpts, cx, cy) : safeOpts[0]) : (opts.length ? pick(opts) : null));
+        // v5.11：縮圈時「目標」就是內圈 → 離場地中心還遠才准趕路衝刺
+        p.aiTgtD = Math.hypot(cx - (Game.cols - 1) / 2, cy - (Game.rows - 1) / 2);
       }
       // 進攻：自己不在火線上、而且確認有逃命路線（flee 有值＝BFS 找得到往內圈的路）才放彈，
       //   不然會自己把退路封死。實測「站在安全區也主動開炸」會讓 AI 在落石中忙著放彈、
@@ -16962,6 +17474,7 @@ function controlAI(p, dt) {
     } else if (Math.random() > lv.chase) {
       // 弱 AI：很多時候只是隨便亂走
       p.aiDir = pick(safeOpts);
+      p.aiTgtD = 99;                 // v5.11：亂走不算「有目標」→ 不衝刺
     } else {
       // 目標：最近對手或道具
       let tgt = null, bestD = Infinity, bestScore = Infinity;
@@ -16994,6 +17507,8 @@ function controlAI(p, dt) {
         }
         choice = pref.filter(function (dn) { return safeOpts.indexOf(dn) >= 0; })[0];
       }
+      // v5.11：記下「離目標幾格」。沒有目標＝99（純巡邏就不會衝刺）
+      p.aiTgtD = tgt ? (Math.hypot(tgt.x - p.x, tgt.y - p.y) / T) : 99;
       // v4.90：大逃殺走「社交距離」決策（不再直接朝對手身上擠）
       let brBomb = false;
       if (BR_AI.on) {
@@ -17595,13 +18110,32 @@ function startWinJump(chIdx) {
 function showEnd(title, sub, good, chIdx) {
   Game.endShown = true;          // 標記「結束畫面已顯示」，重開時歸零
   const box = $id('ovBox');
-  box.innerHTML = '<h3></h3><p></p>' +
+  /* v5.11：把「大標題」做成一整組頒獎視覺（樣式見 .champ）。
+     對戰／大逃殺奪冠＝gold 大版（放射光芒＋皇冠＋閃光）；
+     單人過關＝soft 小版；失敗＝lose（灰掉、不慶祝）。
+     使用者原話：「奪冠顯示大標題的字型太 LOW，要有榮耀感跟情緒價值」。 */
+  const grand = !!good && (Game.mode === 'battle' || Game.mode === 'br');
+  const cls = good ? (grand ? 'champ grand' : 'champ soft') : 'champ lose';
+  let sparks = '';
+  if (good) for (let i = 0; i < 7; i++) sparks += '<i style="--i:' + i + '"></i>';
+  const kick = grand ? 'CHAMPION' : (good ? 'CLEAR' : '');
+  box.innerHTML =
+    '<div class="' + cls + '">' +
+      '<span class="ray"></span>' +
+      '<span class="crown">' + (good ? '👑' : '💀') + '</span>' +
+      (kick ? '<span class="kick">' + kick + '</span>' : '') +
+      '<h3></h3>' +
+      '<span class="sparks">' + sparks + '</span>' +
+      '<p></p>' +
+    '</div>' +
     '<canvas id="winJumpCv" width="170" height="168" style="display:none;margin:2px auto 4px"></canvas>' +
     '<div class="row" style="justify-content:center;gap:10px;">' +
     '<button class="mbtn warm" id="btnAgain" style="width:auto;padding:11px 26px;">' + t('over.again') + '</button>' +
     '<button class="ghostbtn" id="btnHome">' + t('over.home') + '</button></div>';
   box.querySelector('h3').textContent = tr(title);
   box.querySelector('p').textContent = tr(sub);
+  // 奪冠時補一記勝利音（既有音效，不新增檔案）
+  if (grand) { try { AudioSys.sfx('victory'); } catch (e) {} }
   startWinJump(good ? chIdx : null);
   $id('btnAgain').addEventListener('click', function () {
     AudioSys.sfx('click');
@@ -17632,6 +18166,11 @@ function dailyClear(p) {
   d.done = true;
   d.ms = Math.round(d.ms || 0);
   Daily.saveBest(d.day, d.ms);
+  // v5.11：獎金推送 —— 過關當下就把金幣進錢包，並記在 d.prize 給結算畫面顯示
+  try {
+    d.prize = Daily.award(d.day, d.ms);
+    if (d.prize && d.prize.pay > 0) toast('💰 ' + t('daily.prizeToast', { n: d.prize.pay }), 3);
+  } catch (e) { d.prize = null; }
   try { AudioSys.stopBGM(); } catch (e) {}
   battleEndFx(true, p ? p.x : 0, p ? p.y - Game.T : 0);
   setTimeout(function () { showDailyResult(true); }, 620);
@@ -17666,6 +18205,7 @@ function showDailyResult(ok) {
   if (!box) return;
   box.innerHTML =
     '<h3></h3><p></p>' +
+    '<div class="dprize" id="dailyPrize"></div>' +
     '<div class="lblist" id="dailyMini" style="margin:10px 0 4px"></div>' +
     '<div class="row" style="justify-content:center;gap:10px;flex-wrap:wrap;">' +
     '<button class="mbtn warm" id="btnDailyAgain" style="width:auto;padding:11px 22px;"></button>' +
@@ -17676,6 +18216,24 @@ function showDailyResult(ok) {
   pEl.textContent = ok
     ? t('daily.winSub', { t: fmtMs(ms), b: fmtMs(best) })
     : t('daily.loseSub', { n: Game.stage, t: fmtMs(ms) });
+
+  /* v5.11：獎金區塊（過關才有）。沒拿到錢也要講清楚「為什麼沒發」，
+     不然玩家會以為壞了（例如：重玩、沒有破紀錄）。 */
+  const pzBox = $id('dailyPrize');
+  if (pzBox) {
+    const pr = d.prize;
+    if (pr && pr.pay > 0) {
+      pzBox.className = 'dprize got';
+      pzBox.innerHTML = '<span class="ico">🎁</span><b>+' + (pr.pay | 0) + '</b>' +
+        '<span class="tx">' + hesc(t('daily.prizeGot', { n: pr.pay | 0, total: pr.total | 0 })) + '</span>';
+    } else if (pr) {
+      pzBox.className = 'dprize';
+      pzBox.innerHTML = '<span class="ico">🎁</span>' +
+        '<span class="tx">' + hesc(t('daily.prizeFull', { total: pr.total | 0 })) + '</span>';
+    } else {
+      pzBox.style.display = 'none';
+    }
+  }
 
   const mini = $id('dailyMini');
   const paint = function (list) {
@@ -17752,6 +18310,17 @@ function renderDailyScreen() {
   const best = Daily.best(day);
   const bEl = $id('dailyBest');
   if (bEl) { bEl.textContent = best ? fmtMs(best) : t('daily.noBest'); bEl.className = best ? 'ok' : ''; }
+  // v5.11：今日獎金進度（已領多少／最高能領多少）
+  const pzLab = $id('dailyPrizeLab');
+  if (pzLab) pzLab.textContent = t('daily.labPrize');
+  const pzNow = $id('dailyPrizeNow');
+  if (pzNow) {
+    const got = Daily.prizeOf(day);
+    pzNow.textContent = got > 0
+      ? t('daily.prizeHave', { n: got })
+      : t('daily.prizeNone', { n: Daily.PRIZE_BASE + Daily.PRIZE_SPEED });
+    pzNow.className = got > 0 ? 'ok' : '';
+  }
   const go = $id('btnDailyGo');
   if (go) go.textContent = t('daily.go', { t: fmtTime(DAILY_TIME) });
   set('lbTitle', t('lb.titleToday'));
@@ -20295,24 +20864,42 @@ function _paintBackdropArt(g, st, W, H, th) {
 //   沒載到（離線／單檔拿走）就整個跳過，沿用原本的程序繪製，不會破圖。
 //   對戰與大逃殺改用首頁封面底圖（跟八大關卡的競技場無關）。
 const BG_IMG = {};
-function bgPhoto(st) {
-  if (Game.mode === 'battle' || Game.mode === 'br') {
-    if (BG_IMG.__title !== undefined) return BG_IMG.__title;
-    BG_IMG.__title = null;
-    try {
-      const im = new Image();
-      im.onload = function () { BG_IMG.__title = im; };
-      im.src = IMG_TITLEBG;
-    } catch (e) {}
-    return null;
-  }
-  if (BG_IMG[st] !== undefined) return BG_IMG[st];
-  BG_IMG[st] = null;
+/* v5.11：底圖載入改成「會重試」。
+   以前是 `BG_IMG[st] = null;` 之後圖片一旦 onerror（離線、SW 回 504、連線抖一下），
+   這個 null 就永遠留著，整場都看不到那張底圖 → 玩家看到「每個關卡的底圖都不見了」。
+   現在記次數與退避時間，最多試 6 次（約 40 秒），載到就停。 */
+const BG_STATE = {};
+const BG_MAX_TRY = 6;
+function bgSrcOf(key) { return key === '__title' ? IMG_TITLEBG : ('bg/' + key + '.webp'); }
+function bgState(key) {
+  let s = BG_STATE[key];
+  if (!s) s = BG_STATE[key] = { tries: 0, next: 0, busy: false };
+  return s;
+}
+function bgTryLoad(key) {
+  const s = bgState(key);
+  s.tries++;
+  s.busy = true;
   try {
     const im = new Image();
-    im.onload = function () { BG_IMG[st] = im; };
-    im.src = 'bg/' + st + '.webp';       // 相對路徑：index.html 旁邊的 bg/
-  } catch (e) {}
+    im.onload = function () { BG_IMG[key] = im; s.busy = false; s.next = 0; };
+    im.onerror = function () {
+      s.busy = false;
+      // 1 次 0.6s、2 次 1.2s、3 次 2.4s…最多等 8 秒再試
+      s.next = Date.now() + Math.min(8000, 600 * Math.pow(2, s.tries - 1));
+    };
+    im.src = bgSrcOf(key);
+  } catch (e) {
+    s.busy = false;
+    s.next = Date.now() + 2000;
+  }
+}
+function bgPhoto(st) {
+  // 對戰與大逃殺改用首頁封面底圖（跟八大關卡的競技場無關）
+  const key = (Game.mode === 'battle' || Game.mode === 'br') ? '__title' : (st || 'forest');
+  if (BG_IMG[key]) return BG_IMG[key];
+  const s = bgState(key);
+  if (!s.busy && s.tries < BG_MAX_TRY && Date.now() >= s.next) bgTryLoad(key);
   return null;
 }
 // 照片式背景：cover 裁切（多留 18% 給視差）＋ 暗化 ＋ 暗角
@@ -20602,7 +21189,73 @@ function onScreen(x, y, pad) {
 }
 function paintHazardCell(x, y, hz, T) {
   const px = x * T, py = y * T;
-        if (hz.type === 'ice') {
+        if (hz.type === 'water') {
+          // v5.11：水流 —— 一格寬的河。深藍綠底 + 兩道會跑的波紋 + 邊緣反光，
+          //   刻意比地板「暗一階」，一眼看得出是水不是地板。
+          const tt = Game.gameT || 0;
+          const gg2 = (function () {
+            try {
+              const g = ctx.createLinearGradient(px, py, px, py + T);
+              g.addColorStop(0, '#1b6d86'); g.addColorStop(.55, '#2489a4'); g.addColorStop(1, '#1a627a');
+              return g;
+            } catch (e) { return '#20808f'; }
+          })();
+          ctx.fillStyle = gg2;
+          ctx.fillRect(px, py, T, T);
+          // 波紋：兩道不同相位的細線（用 gameT 推進，確定性、不用 random）
+          for (let k = 0; k < 2; k++) {
+            const ph = tt * (.8 + k * .45) + x * .7 + y * 1.3 + k * 2.1;
+            const yy2 = py + T * (.32 + k * .34) + Math.sin(ph) * T * .07;
+            ctx.strokeStyle = 'rgba(190,240,255,' + (k ? .30 : .42) + ')';
+            ctx.lineWidth = Math.max(1, T * .035);
+            ctx.beginPath();
+            for (let s = 0; s <= 4; s++) {
+              const u = s / 4;
+              const wx2 = px + u * T;
+              const wy2 = yy2 + Math.sin(ph + u * 5.2) * T * .06;
+              if (s === 0) ctx.moveTo(wx2, wy2); else ctx.lineTo(wx2, wy2);
+            }
+            ctx.stroke();
+          }
+          // 上緣一點亮邊（水面反光），下面壓暗（水深）
+          ctx.fillStyle = 'rgba(255,255,255,.16)';
+          ctx.fillRect(px, py + 1, T, Math.max(1, T * .05));
+          ctx.fillStyle = 'rgba(6,38,50,.22)';
+          ctx.fillRect(px, py + T * .84, T, T * .16);
+          ctx.lineWidth = 1;
+        } else if (hz.type === 'sand') {
+          // v5.11：沙地 —— 顏色比一般沙漠地板深一階，區塊狀（不是單格亂點）。
+          //   細點用座標雜湊決定，每次畫都一樣（不能用 Math.random，會閃）。
+          const h32 = function (a, b) {
+            let h = (a * 73856093) ^ (b * 19349663);
+            h = (h ^ (h >> 13)) * 1274126177;
+            return ((h ^ (h >> 16)) >>> 0) / 4294967296;
+          };
+          ctx.fillStyle = '#7d6038';
+          ctx.fillRect(px, py, T, T);
+          ctx.fillStyle = 'rgba(60,42,20,.20)';
+          ctx.fillRect(px, py + T * .72, T, T * .28);
+          for (let k = 0; k < 7; k++) {
+            const u = h32(x * 7 + k, y * 11 + k * 3);
+            const v = h32(x * 13 + k * 5, y * 5 + k);
+            const dx2 = px + u * T, dy2 = py + v * T;
+            const rr = T * (.022 + .026 * h32(x + k, y + k));
+            ctx.fillStyle = (k % 3 === 0) ? 'rgba(255,232,180,.20)' : 'rgba(58,40,18,.26)';
+            ctx.beginPath(); ctx.arc(dx2, dy2, rr, 0, 6.283); ctx.fill();
+          }
+          // 邊界：四鄰不是沙地的那一側畫一條深邊（看得出一塊一塊的沙丘範圍）
+          ctx.strokeStyle = 'rgba(72,50,22,.42)';
+          ctx.lineWidth = Math.max(1, T * .04);
+          const nb = [[1, 0, px + T, py, px + T, py + T], [-1, 0, px, py, px, py + T],
+                      [0, 1, px, py + T, px + T, py + T], [0, -1, px, py, px + T, py]];
+          for (let i = 0; i < 4; i++) {
+            const q = nb[i];
+            const o = hazardAt(x + q[0], y + q[1]);
+            if (o && o.type === 'sand') continue;
+            ctx.beginPath(); ctx.moveTo(q[2], q[3]); ctx.lineTo(q[4], q[5]); ctx.stroke();
+          }
+          ctx.lineWidth = 1;
+        } else if (hz.type === 'ice') {
           // v4.23：滑冰格改成「鏡面」—— 明度 ~50%（雪地 92%／冰塊 68%），
           //   一眼就知道「這格不一樣、踩上去會滑」：鏡面斜光 + 霓虹青邊框 + 雪花。
           const gx = (function () {
@@ -25770,8 +26423,70 @@ function updateAiHint() {
   el.innerHTML = t('hint.ai.' + settings.aiLevel) || '';
 }
 updateAiHint();
-refreshers.push(segWire('segBgm', function () { return settings.bgm; }, function (v) { settings.bgm = parseFloat(v); AudioSys.applyVolumes(); }));
-refreshers.push(segWire('segSfx', function () { return settings.sfx; }, function (v) { settings.sfx = parseFloat(v); AudioSys.applyVolumes(); }));
+// v5.11：設定頁分頁（操作設定／一般設定）
+(function wireSetTabs() {
+  const box = $id('setTabs');
+  const scr = $id('scr-settings');
+  if (!box || !scr) return;
+  const panes = scr.querySelectorAll('.setpane');
+  function pick(name) {
+    Array.prototype.forEach.call(box.querySelectorAll('.settab'), function (b) {
+      const on = b.getAttribute('data-tab') === name;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    Array.prototype.forEach.call(panes, function (p) {
+      p.classList.toggle('on', p.getAttribute('data-pane') === name);
+    });
+    try { if (window.ScrollHint && ScrollHint.sync) ScrollHint.sync(); } catch (e) {}
+    try { if (typeof PadUI !== 'undefined' && PadUI.refocus) PadUI.refocus(); } catch (e) {}
+  }
+  Array.prototype.forEach.call(box.querySelectorAll('.settab'), function (b) {
+    b.addEventListener('click', function () {
+      try { AudioSys.sfx('click'); } catch (e) {}
+      pick(b.getAttribute('data-tab'));
+    });
+  });
+  window.__setPick = pick;          // 測試／換頁回來時可以指定
+  pick('ctrl');
+})();
+// v5.11：音量改成 0~100 滑桿（原本只有 關／小／大 三段）
+(function wireVolume() {
+  const rb = $id('rngBgm'), rs = $id('rngSfx');
+  const lb = $id('bgmVal'), ls = $id('sfxVal');
+  function pct(v) { return Math.round(clamp(parseFloat(v) || 0, 0, 1) * 100); }
+  function paint() {
+    if (rb) rb.value = String(pct(settings.bgm));
+    if (rs) rs.value = String(pct(settings.sfx));
+    if (lb) lb.textContent = pct(settings.bgm) + '%';
+    if (ls) ls.textContent = pct(settings.sfx) + '%';
+  }
+  window.__volPaint = paint;
+  if (rb) rb.addEventListener('input', function () {
+    const was = settings.bgm;
+    settings.bgm = clamp(parseFloat(rb.value) / 100, 0, 1);
+    if (settings.bgm > 0) settings.bgmLast = settings.bgm;
+    try { AudioSys.applyVolumes(); } catch (e) {}
+    if (settings.bgm > 0 && !was) {
+      try { AudioSys.startBGM(Screen.current === 'game' ? stageBGM(Game.stage) : 'menu'); } catch (e) {}
+    }
+    if (settings.bgm === 0) { try { AudioSys.stopBGM(); } catch (e) {} }
+    paint(); saveSettings();
+    try { if (typeof updateNavUI === 'function') updateNavUI(); } catch (e) {}
+  });
+  if (rs) rs.addEventListener('input', function () {
+    settings.sfx = clamp(parseFloat(rs.value) / 100, 0, 1);
+    if (settings.sfx > 0) settings.sfxLast = settings.sfx;
+    try { AudioSys.applyVolumes(); } catch (e) {}
+    paint(); saveSettings();
+    try { if (typeof updateNavUI === 'function') updateNavUI(); } catch (e) {}
+  });
+  // 放開滑桿時試聽一下，才知道調到多大聲
+  if (rs) rs.addEventListener('change', function () { try { AudioSys.ensure(); AudioSys.sfx('click'); } catch (e) {} });
+  if (rb) rb.addEventListener('change', function () { try { AudioSys.ensure(); } catch (e) {} });
+  refreshers.push(paint);
+  paint();
+})();
 // v4.70：小地圖開關（1 = 開 / 0 = 關）
 refreshers.push(segWire('segMiniMap', function () { return settings.miniMap | 0; }, function (v) { settings.miniMap = parseInt(v, 10); }));
 
@@ -26209,6 +26924,11 @@ let keyPlayer = 1;
 let capturing = null;
 function keyName(code) {
   if (!code) return '未設定';
+  // v5.11：滑鼠鍵（'Mouse0' 左／'Mouse1' 中／'Mouse2' 右）
+  if (/^Mouse[0-9]$/.test(code)) {
+    const mb = { Mouse0: '滑鼠左鍵', Mouse1: '滑鼠中鍵', Mouse2: '滑鼠右鍵' };
+    return mb[code] || '滑鼠';
+  }
   const named = {
     Space: '空白鍵', Enter: 'Enter', Escape: 'ESC', Tab: 'Tab', Backspace: 'Backspace',
     ShiftLeft: 'Shift(左)', ShiftRight: 'Shift(右)', ControlLeft: 'Ctrl(左)', ControlRight: 'Ctrl(右)',
@@ -26224,6 +26944,17 @@ function keyName(code) {
   return code;
 }
 function curKeys() { return keyPlayer === 1 ? settings.keys1 : settings.keys2; }
+// v5.11：操作設定底部的現況摘要（改鍵或改滑鼠鍵都會跟著更新）
+function refreshCmdHint() {
+  const el = $id('setCmdHint');
+  if (!el) return;
+  const k = (keyPlayer === 1 ? settings.keys1 : settings.keys2) || {};
+  const esc = (typeof hesc === 'function') ? hesc : function (s) { return s; };
+  el.innerHTML = '現在（' + keyPlayer + 'P）：<b>' + esc(keyName(k.up)) + '／' + esc(keyName(k.left)) + '／' +
+    esc(keyName(k.down)) + '／' + esc(keyName(k.right)) + '</b> 移動 · <b>' + esc(keyName(k.act)) + '</b> 放炸彈 · <b>' +
+    esc(keyName(k.det)) + '</b> 引爆 · <b>中鍵／Shift</b> 衝刺 · <b>' + esc(keyName(k.fire)) + '</b> 坐騎招式。'
+    + '改鍵：<u>點一下按鈕，再按你要的鍵（也可以直接按滑鼠鍵）</u>。';
+}
 function renderKeyRow() {
   const row = $id('keyRow');
   if (!row) return;
@@ -26235,6 +26966,7 @@ function renderKeyRow() {
   Array.prototype.forEach.call(row.querySelectorAll('.keybtn'), function (btn) {
     btn.addEventListener('click', function () { startCapture(btn.getAttribute('data-k'), btn); });
   });
+  try { refreshCmdHint(); } catch (e) {}
 }
 function startCapture(k, btn) {
   if (capturing && capturing.el) {
@@ -26254,19 +26986,32 @@ function cancelCapture() {
   capturing = null;
   renderKeyRow();
 }
+function applyCapture(code) {
+  if (!capturing) return;
+  const map = curKeys();
+  const other = KEY_ORDER.filter(function (x) { return x !== capturing.k && map[x] === code; })[0];
+  if (other) map[other] = null;   // 同鍵衝突 → 舊的先清掉
+  map[capturing.k] = code;
+  saveSettings();
+  AudioSys.sfx('item');
+  capturing = null;
+  renderKeyRow();
+}
 window.addEventListener('keydown', function (e) {
   if (!capturing) return;
   if (e.preventDefault) e.preventDefault();
   if (e.stopPropagation) e.stopPropagation();
   if (e.code === 'Escape') { cancelCapture(); return; }
-  const map = curKeys();
-  const other = KEY_ORDER.filter(function (x) { return x !== capturing.k && map[x] === e.code; })[0];
-  if (other) map[other] = null;   // 同鍵衝突 → 舊的先清掉
-  map[capturing.k] = e.code;
-  saveSettings();
-  AudioSys.sfx('item');
-  capturing = null;
-  renderKeyRow();
+  applyCapture(e.code);
+}, true);
+// v5.11：改鍵也能直接「按一下滑鼠鍵」（放炸彈＝左鍵、引爆＝右鍵、衝刺＝中鍵）
+window.addEventListener('mousedown', function (e) {
+  if (!capturing) return;
+  if (e.preventDefault) e.preventDefault();
+  if (e.stopPropagation) e.stopPropagation();
+  const b = e.button | 0;
+  if (b > 2) return;
+  applyCapture('Mouse' + b);
 }, true);
   try {
 (function wireKeyUI() {
@@ -26932,6 +27677,156 @@ const Help = (function () {
     h += '</div></div>';
     return h;
   }
+  /* ══════════════════════════════════════════════════════════════
+     v5.11：操作教學圖 —— 鍵盤＋滑鼠／手把／手機，全部用 SVG 畫。
+     理由：① 文字會跟著版面縮放，手機橫屏也不會糊 ② 沒有美術檔要同步
+     ③ 按鍵位置能「指著講」，比一整排 <kbd> 好懂（玩家回報看不懂按哪裡）。
+     ══════════════════════════════════════════════════════════════ */
+  const CTRL_KIND_NAME = { kb: '💻 電腦（鍵盤＋滑鼠）', pad: '🎮 手把', touch: '📱 手機／平板（觸控）' };
+
+  function artKeyboardMouse(k1) {
+    const kn = (typeof keyName === 'function') ? keyName : function (c) { return c || ''; };
+    const HOT = 'fill="#ffcf8f" stroke="#e0903f"', COOL = 'fill="#f7f2e7" stroke="#cec2ae"';
+    function key(x, y, w, hh, label, hot, fs) {
+      return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + hh + '" rx="8" ' + (hot ? HOT : COOL) + ' stroke-width="1.5"/>'
+        + '<text x="' + (x + w / 2) + '" y="' + (y + hh / 2 + 5) + '" text-anchor="middle" font-size="' + (fs || 15) + '" font-weight="800" fill="' + (hot ? '#6a3300' : '#7d7361') + '">' + label + '</text>';
+    }
+    let s = '<svg class="cart" viewBox="0 0 430 168" role="img" aria-label="鍵盤與滑鼠操作位置圖">';
+    // 鍵盤：W／A S D ＋ 空白鍵（坐騎招式）＋ Shift（衝刺的替代鍵）
+    s += key(70, 6, 46, 40, kn(k1 && k1.up) || 'W', true);
+    s += key(14, 52, 46, 40, kn(k1 && k1.left) || 'A', true);
+    s += key(70, 52, 46, 40, kn(k1 && k1.down) || 'S', true);
+    s += key(126, 52, 46, 40, kn(k1 && k1.right) || 'D', true);
+    s += key(14, 98, 158, 38, '空白鍵　坐騎招式', true, 12.5);
+    s += key(180, 98, 62, 38, 'Shift', true, 12.5);
+    s += '<text x="118" y="152" text-anchor="middle" font-size="12" font-weight="800" fill="#7a6a90">WASD 移動</text>';
+    // 滑鼠：左鍵放炸彈／右鍵引爆／中鍵衝刺
+    s += '<rect x="296" y="6" width="42" height="56" rx="14" fill="#ffcf8f" stroke="#e0903f" stroke-width="1.5"/>';
+    s += '<rect x="348" y="6" width="42" height="56" rx="14" fill="#ffb972" stroke="#d8802c" stroke-width="1.5"/>';
+    s += '<rect x="334" y="24" width="18" height="30" rx="9" fill="#c9a5ea" stroke="#8a5fbb" stroke-width="1.5"/>';
+    s += '<rect x="296" y="66" width="94" height="76" rx="32" fill="#f7f2e7" stroke="#cec2ae" stroke-width="1.5"/>';
+    s += '<text x="317" y="40" text-anchor="middle" font-size="15" font-weight="900" fill="#6a3300">左</text>';
+    s += '<text x="369" y="40" text-anchor="middle" font-size="15" font-weight="900" fill="#6a3300">右</text>';
+    s += '<text x="343" y="44" text-anchor="middle" font-size="10" font-weight="900" fill="#4c2a70">中</text>';
+    s += '<text x="343" y="120" text-anchor="middle" font-size="12" font-weight="800" fill="#7d7361">滑鼠</text>';
+    s += '</svg>';
+    s += '<div class="cartlegend">'
+      + '<span><i style="background:#ffcf8f;border:1px solid #e0903f"></i>左鍵 放炸彈</span>'
+      + '<span><i style="background:#ffb972;border:1px solid #d8802c"></i>右鍵 引爆</span>'
+      + '<span><i style="background:#c9a5ea;border:1px solid #8a5fbb"></i>中鍵 衝刺</span>'
+      + '</div>';
+    return s;
+  }
+
+  function artPad() {
+    const HOT = '#ffcf8f', HOT_S = '#e0903f', COOL = '#f7f2e7', COOL_S = '#cec2ae';
+    let s = '<svg class="cart" viewBox="0 0 360 176" role="img" aria-label="手把按鈕位置圖">';
+    // 手把本體
+    s += '<rect x="22" y="44" width="316" height="90" rx="45" fill="#f4eefb" stroke="#c6b1de" stroke-width="1.6"/>';
+    // LB／RB
+    s += '<rect x="52" y="24" width="66" height="22" rx="9" fill="' + HOT + '" stroke="' + HOT_S + '" stroke-width="1.4"/>';
+    s += '<text x="85" y="39" text-anchor="middle" font-size="12" font-weight="900" fill="#6a3300">LB</text>';
+    s += '<rect x="242" y="24" width="66" height="22" rx="9" fill="' + HOT + '" stroke="' + HOT_S + '" stroke-width="1.4"/>';
+    s += '<text x="275" y="39" text-anchor="middle" font-size="12" font-weight="900" fill="#6a3300">RB</text>';
+    // 左：十字鍵
+    s += '<rect x="50" y="80" width="42" height="14" rx="4" fill="' + COOL + '" stroke="' + COOL_S + '" stroke-width="1.3"/>';
+    s += '<rect x="64" y="66" width="14" height="42" rx="4" fill="' + COOL + '" stroke="' + COOL_S + '" stroke-width="1.3"/>';
+    s += '<text x="71" y="140" text-anchor="middle" font-size="11" font-weight="800" fill="#7a6a90">十字鍵 移動</text>';
+    // 左蘑菇頭
+    s += '<circle cx="118" cy="87" r="15" fill="#fff" stroke="' + COOL_S + '" stroke-width="1.6"/>';
+    s += '<circle cx="118" cy="87" r="7" fill="#dfd3c3" stroke="' + COOL_S + '" stroke-width="1"/>';
+    s += '<text x="118" y="122" text-anchor="middle" font-size="10.5" font-weight="800" fill="#7a6a90">左蘑菇頭</text>';
+    // 右蘑菇頭
+    s += '<circle cx="212" cy="112" r="15" fill="#fff" stroke="#b39ad4" stroke-width="1.6"/>';
+    s += '<circle cx="212" cy="112" r="7" fill="#e3d4f6" stroke="#b39ad4" stroke-width="1"/>';
+    s += '<text x="212" y="148" text-anchor="middle" font-size="10.5" font-weight="800" fill="#7a6a90">右蘑菇頭 捲動</text>';
+    // 右：ABXY
+    s += '<circle cx="286" cy="64" r="14" fill="' + HOT + '" stroke="' + HOT_S + '" stroke-width="1.4"/>';
+    s += '<text x="286" y="69" text-anchor="middle" font-size="13" font-weight="900" fill="#6a3300">Y</text>';
+    s += '<circle cx="318" cy="92" r="14" fill="' + HOT + '" stroke="' + HOT_S + '" stroke-width="1.4"/>';
+    s += '<text x="318" y="97" text-anchor="middle" font-size="13" font-weight="900" fill="#6a3300">B</text>';
+    s += '<circle cx="286" cy="120" r="14" fill="' + HOT + '" stroke="' + HOT_S + '" stroke-width="1.4"/>';
+    s += '<text x="286" y="125" text-anchor="middle" font-size="13" font-weight="900" fill="#6a3300">A</text>';
+    s += '<circle cx="254" cy="92" r="14" fill="' + HOT + '" stroke="' + HOT_S + '" stroke-width="1.4"/>';
+    s += '<text x="254" y="97" text-anchor="middle" font-size="13" font-weight="900" fill="#6a3300">X</text>';
+    // Start
+    s += '<rect x="160" y="54" width="42" height="16" rx="8" fill="' + COOL + '" stroke="' + COOL_S + '" stroke-width="1.3"/>';
+    s += '<text x="181" y="66" text-anchor="middle" font-size="10.5" font-weight="900" fill="#7d7361">Start</text>';
+    s += '</svg>';
+    s += '<div class="cartlegend">'
+      + '<span><i style="background:#ffcf8f;border:1px solid #e0903f"></i>A 放炸彈</span>'
+      + '<span><i style="background:#ffcf8f;border:1px solid #e0903f"></i>X 引爆</span>'
+      + '<span><i style="background:#ffcf8f;border:1px solid #e0903f"></i>Y 坐騎招式</span>'
+      + '<span><i style="background:#ffcf8f;border:1px solid #e0903f"></i>B 返回／暫停</span>'
+      + '<span><i style="background:#f7f2e7;border:1px solid #cec2ae"></i>RB 衝刺</span>'
+      + '</div>';
+    return s;
+  }
+
+  function artTouch() {
+    let s = '<svg class="cart" viewBox="0 0 360 176" role="img" aria-label="手機觸控按鈕位置圖">';
+    s += '<rect x="10" y="10" width="340" height="156" rx="18" fill="#fbf8ff" stroke="#cfc0e4" stroke-width="1.6" stroke-dasharray="7 6"/>';
+    s += '<text x="180" y="30" text-anchor="middle" font-size="11" font-weight="800" fill="#9a8ab2">手機橫屏時，按鈕就在這兩個角落</text>';
+    // 左下：搖桿
+    s += '<circle cx="70" cy="110" r="30" fill="#efe6fb" stroke="#b39ad4" stroke-width="1.8"/>';
+    s += '<circle cx="70" cy="110" r="14" fill="#fff" stroke="#8a5fbb" stroke-width="1.6"/>';
+    s += '<text x="70" y="152" text-anchor="middle" font-size="11" font-weight="800" fill="#7a6a90">拇指推＝移動</text>';
+    // 右下：按鈕群
+    s += '<circle cx="274" cy="116" r="27" fill="#ffcf8f" stroke="#e0903f" stroke-width="1.8"/>';
+    s += '<text x="274" y="122" text-anchor="middle" font-size="20">💣</text>';
+    s += '<text x="274" y="158" text-anchor="middle" font-size="10.5" font-weight="800" fill="#7a6a90">放炸彈</text>';
+    s += '<circle cx="228" cy="62" r="17" fill="#ffb972" stroke="#d8802c" stroke-width="1.5"/>';
+    s += '<text x="228" y="68" text-anchor="middle" font-size="15">🔥</text>';
+    s += '<circle cx="278" cy="52" r="17" fill="#ffb972" stroke="#d8802c" stroke-width="1.5"/>';
+    s += '<text x="278" y="58" text-anchor="middle" font-size="15">🧨</text>';
+    s += '<circle cx="322" cy="72" r="17" fill="#ffb972" stroke="#d8802c" stroke-width="1.5"/>';
+    s += '<text x="322" y="78" text-anchor="middle" font-size="15">💨</text>';
+    s += '<text x="272" y="34" text-anchor="middle" font-size="10.5" font-weight="800" fill="#7a6a90">🔥 吐火　🧨 引爆　💨 衝刺</text>';
+    s += '</svg>';
+    s += '<div class="cartlegend">'
+      + '<span><i style="background:#efe6fb;border:1px solid #b39ad4"></i>左下 搖桿移動</span>'
+      + '<span><i style="background:#ffcf8f;border:1px solid #e0903f"></i>右下 💣 放彈／撿彈／丟彈</span>'
+      + '<span><i style="background:#ffb972;border:1px solid #d8802c"></i>🔥 吐火 · 🧨 引爆 · 💨 衝刺</span>'
+      + '</div>';
+    return s;
+  }
+
+  function ctrlSection(kind, k1, kn) {
+    let h = '<div class="hcard wide"><div class="htx"><div class="hn">' + CTRL_KIND_NAME[kind] + '</div>';
+    if (kind === 'kb') {
+      h += '<div class="cartwrap">' + artKeyboardMouse(k1) + '</div>';
+      h += '<dl class="hkv">';
+      h += '<dt>移動</dt><dd><kbd>' + hesc(kn(k1.up)) + '</kbd> <kbd>' + hesc(kn(k1.left)) + '</kbd> <kbd>' + hesc(kn(k1.down)) + '</kbd> <kbd>' + hesc(kn(k1.right)) + '</kbd>（WASD；方向鍵也通）</dd>';
+      h += '<dt>放炸彈</dt><dd><b>滑鼠左鍵</b>（撿彈、丟彈、排線圈也用它）</dd>';
+      h += '<dt>引爆</dt><dd><b>滑鼠右鍵</b>（要先拿到 📱 遙控器）</dd>';
+      h += '<dt>衝刺</dt><dd><b>滑鼠中鍵</b> 或 <kbd>Shift</kbd>（1.2 秒一次，無敵一小段）</dd>';
+      h += '<dt>坐騎招式</dt><dd><kbd>' + hesc(kn(k1.fire)) + '</kbd>（預設<b>空白鍵</b>；要有坐騎才放得出來）</dd>';
+      h += '<dt>縮放</dt><dd><kbd>1</kbd>／<kbd>2</kbd>（<kbd>0</kbd> 復原）或用滑鼠滾輪</dd>';
+      h += '<dt>暫停</dt><dd><kbd>ESC</kbd> 或右上角 ⏸</dd>';
+      h += '<dt>想改鍵</dt><dd>設定 → <b>操作設定</b> → 點按鈕後直接按你要的鍵（<b>滑鼠鍵也可以按</b>）。兩人同機時 2P 用「玩家 2」那組。</dd>';
+      h += '</dl>';
+    } else if (kind === 'pad') {
+      h += '<div class="cartwrap">' + artPad() + '</div>';
+      h += '<div class="hd">接上就自動偵測，不用設定。選單<b>全部</b>都能用手把操作：方向鍵／左蘑菇頭移動游標、<b>A 確認</b>、<b>B 返回</b>；'
+        + '<b>LB／RB</b> 照順序一項一項走，<b>保證每個選項都選得到</b>；<b>右蘑菇頭可以上下左右捲動選單</b>。</div>';
+      h += '<dl class="hkv">';
+      PAD_MAP.forEach(function (row) { h += '<dt>' + hesc(row[0]) + '</dt><dd>' + hesc(row[1]) + '</dd>'; });
+      h += '</dl>';
+    } else {
+      h += '<div class="cartwrap">' + artTouch() + '</div>';
+      h += '<dl class="hkv">';
+      h += '<dt>移動</dt><dd>左下角 <b>搖桿</b>（往哪推就往哪走，可以 45° 斜走）</dd>';
+      h += '<dt>主要按鈕</dt><dd>右下角 <b>💣 放彈</b>（也是撿彈／丟彈／排線圈）</dd>';
+      h += '<dt>其他按鈕</dt><dd><b>🔥 吐火</b>（要有坐騎）、<b>🧨 引爆</b>（要有遙控器）、<b>💨 衝刺</b></dd>';
+      h += '<dt>縮放</dt><dd><b>兩指捏合</b>放大縮小</dd>';
+      h += '<dt>暫停</dt><dd>右上角 <b>⏸</b> 或「← 上一頁」。邊緣滑動的系統返回手勢已擋掉，不會誤觸</dd>';
+      h += '<dt>按鈕大小／位置</dt><dd>設定 → <b>操作設定</b>：可以換搖桿在左／右、放彈鍵位置、按鈕大小，也能拖曳搖桿位置</dd>';
+      h += '</dl>';
+    }
+    h += '</div></div>';
+    return h;
+  }
+
   function buildBasic() {
     const k1 = (typeof settings !== 'undefined' && settings.keys1) ? settings.keys1 : {};
     const kn = (typeof keyName === 'function') ? keyName : function (c) { return c || ''; };
@@ -26940,28 +27835,16 @@ const Help = (function () {
     h += '<div class="hlead">' + hp(HELP_BASIC.goalOnline) + '</div>';
 
     h += '<div class="hsub">🕹️ 操作方式</div>';
-    h += '<div class="hcard wide"><div class="htx"><div class="hn">💻 電腦（鍵盤）</div>';
-    h += '<dl class="hkv">';
-    h += '<dt>移動</dt><dd><kbd>' + hesc(kn(k1.up)) + '</kbd> <kbd>' + hesc(kn(k1.left)) + '</kbd> <kbd>' + hesc(kn(k1.down)) + '</kbd> <kbd>' + hesc(kn(k1.right)) + '</kbd>（預設 WASD 或方向鍵）</dd>';
-    h += '<dt>放彈／動作</dt><dd><kbd>' + hesc(kn(k1.act)) + '</kbd>（預設 空白鍵／Enter；撿彈、丟彈、線圈彈都用它）</dd>';
-    h += '<dt>遙控引爆</dt><dd><kbd>' + hesc(kn(k1.det)) + '</kbd>（預設 E，要有 📱 才有用）</dd>';
-    h += '<dt>恐龍吐火</dt><dd><kbd>' + hesc(kn(k1.fire)) + '</kbd>（預設 F，要有坐騎才有用）</dd>';
-    h += '<dt>暫停</dt><dd><kbd>ESC</kbd> 或右上角 ⏸</dd>';
-    h += '</dl></div></div>';
-    h += '<div class="hcard wide"><div class="htx"><div class="hn">📱 手機／平板（觸控）</div>';
-    h += '<dl class="hkv">';
-    h += '<dt>移動</dt><dd>左下角 <b>搖桿</b>（往哪推就往哪走）</dd>';
-    h += '<dt>按鈕</dt><dd>右下角 <b>💣 放彈／動作</b>、<b>🔥 吐火</b>、<b>📱 引爆</b></dd>';
-    h += '<dt>暫停</dt><dd>右上角 <b>⏸</b> 或「← 上一頁」</dd>';
-    h += '<dt>小提醒</dt><dd>手機玩到一半想離開，請按 ⏸；邊緣滑動的系統返回手勢已自動擋掉，不會誤觸</dd>';
-    h += '</dl></div></div>';
-    h += '<div class="hcard wide"><div class="htx"><div class="hn">🎮 手把（接上就自動偵測，不用設定）</div>';
-    h += '<div class="hd">選單<b>全部</b>都可以用手把操作：方向鍵／左蘑菇頭移動游標、<b>A 確認</b>、<b>B 返回</b>；'
-      + '<b>LB／RB</b> 會照順序一項一項走，<b>保證每個選項都選得到</b>。'
-      + '<b>右蘑菇頭可以上下左右捲動選單</b>（長長一頁也不用一直按方向鍵）。</div>';
-    h += '<dl class="hkv">';
-    PAD_MAP.forEach(function (row) { h += '<dt>' + hesc(row[0]) + '</dt><dd>' + hesc(row[1]) + '</dd>'; });
-    h += '</dl></div></div>';
+    // v5.11：先教「你現在正在用的那個裝置」，其他兩個收在下面（要點開才看）
+    const detKind = (typeof ctrlMode === 'function') ? ctrlMode() : 'kb';
+    h += '<div class="cdet"><span class="ico">🎯</span>偵測到你現在用 <b>' + CTRL_KIND_NAME[detKind] +
+      '</b> 操作 —— 下面先教這個，其他裝置收在最下面。</div>';
+    h += ctrlSection(detKind, k1, kn);
+    const others = ['kb', 'pad', 'touch'].filter(function (x) { return x !== detKind; });
+    h += '<details class="hmore"><summary>看其他裝置怎麼操作（' +
+      others.map(function (x) { return CTRL_KIND_NAME[x]; }).join(' ／ ') + '）</summary>';
+    others.forEach(function (x) { h += ctrlSection(x, k1, kn); });
+    h += '</details>';
 
     h += '<div class="hsub">🧱 地圖上會看到什麼</div><div class="hgrid">';
     HELP_BASIC.elems.forEach(function (el) {
@@ -27207,6 +28090,11 @@ $id('btnHelp').addEventListener('click', function () {
 });
 function brCardHTML() {
   const o = BR.opt;
+  // v5.11：自己的角色索引（超出範圍或負數都收回 0~n-1）
+  function brIdx() {
+    const n = CHARACTERS.length;
+    return (((settings.brChar | 0) % n) + n) % n;
+  }
   function seg(k, arr) {
     return '<div class="brseg" data-k="' + k + '">' + arr.map(function (v) {
       return '<b data-v="' + v[0] + '"' + ((o[k] | 0) === (v[0] | 0) ? ' class="on"' : '') + '>' + v[1] + '</b>';
@@ -27223,6 +28111,15 @@ function brCardHTML() {
       seg('team', [[1, t('br.solo')], [2, t('br.teamN', { n: 2 })], [3, t('br.teamN', { n: 3 })], [4, t('br.teamN', { n: 4 })]]) + '</div>' +
     '<div class="brrow"><label class="brlab">' + t('br.time') + '</label>' +
       seg('dur', [[5, t('br.d5')], [10, t('br.d10')]]) + '</div>' +
+    /* v5.11：比照對戰的選角 —— 頭像左右切換 ＋ 可以自己命名（只影響顯示名字，不改帳號暱稱） */
+    '<div class="brrow brwho"><label class="brlab">' + t('br.myChar') + '</label>' +
+      '<div class="brchar">' +
+        '<button class="brarr" type="button" data-chd="-1" title="' + t('br.chPrev') + '">◀</button>' +
+        '<canvas class="chpv brchpv" width="220" height="200" data-ch="' + brIdx() + '"></canvas>' +
+        '<button class="brarr" type="button" data-chd="1" title="' + t('br.chNext') + '">▶</button>' +
+        '<input class="brname" id="brName" type="text" maxlength="8" autocomplete="off" ' +
+          'placeholder="' + hesc(charName(CHARACTERS[brIdx()])) + '" value="' + hesc(settings.brName || '') + '">' +
+      '</div></div>' +
     '<div class="brsum" id="brSum">' + brSumText() + '</div>' +
     '<div class="brgo-box"><button class="mbtn warm" id="brGo" type="button">' +
       (tm >= 2 ? t('br.goTeams', { a: Math.ceil(n / tm), b: tm }) : t('br.goSolo', { n: n })) +
@@ -27247,7 +28144,38 @@ $id('btnBR').addEventListener('click', function () {
   }
   ov.innerHTML = brCardHTML();
   ov.classList.remove('hide');
+  // v5.11：角色預覽（走動畫）＋ 命名輸入
+  (function () {
+    try { CharPreview.mount(ov); } catch (e) {}
+    const nmIn = $id('brName');
+    if (nmIn) {
+      nmIn.addEventListener('input', function () {
+        settings.brName = String(nmIn.value || '').slice(0, 8);
+        saveSettings();
+      });
+      // 打字時不要把按鍵送進遊戲（WASD 會被當成移動）
+      nmIn.addEventListener('keydown', function (ev) { ev.stopPropagation(); });
+    }
+  })();
   ov.onclick = function (ev) {
+    const tgt = ev.target;
+    // 選角箭頭（比照對戰：◀ ▶ 切換外觀，選了會記住）
+    const chBtn = (tgt && tgt.closest) ? tgt.closest('[data-chd]') : null;
+    if (chBtn) {
+      ev.stopPropagation();
+      const d = parseInt(chBtn.getAttribute('data-chd'), 10) || 1;
+      const n = CHARACTERS.length;
+      settings.brChar = ((((settings.brChar | 0) + d) % n) + n) % n;
+      saveSettings();
+      AudioSys.sfx('click');
+      const cv = ov.querySelector('.brchpv');
+      if (cv) cv.setAttribute('data-ch', String(settings.brChar));
+      try { CharPreview.mount(ov); CharPreview.hop(settings.brChar); } catch (e) {}
+      // 沒輸入名字時，輸入框的提示字就是角色名（跟對戰的 pbox 同一個做法）
+      const nm2 = $id('brName');
+      if (nm2) nm2.setAttribute('placeholder', charName(CHARACTERS[settings.brChar]));
+      return;
+    }
     const b = ev.target;
     if (b && b.tagName === 'B' && b.dataset && b.dataset.v) {
       const k = b.parentNode.getAttribute('data-k');
@@ -29276,7 +30204,19 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.10', date: '2026-11-05', now: true, items: [
+  { v: '5.11', date: '2026-11-05', now: true, items: [
+    '🖱️ <b>電腦操作改成「鍵盤＋滑鼠」</b>：WASD 走路照舊，<b>滑鼠左鍵放炸彈</b>、<b>右鍵引爆</b>、<b>中鍵或 Shift 衝刺</b>、<b>空白鍵坐騎招式</b>。設定頁也拆成<b>操作設定</b>與<b>一般設定</b>兩頁',
+    '🎯 <b>教學頁會自己判斷你現在用什麼在玩</b>：偵測到鍵盤滑鼠就畫<b>按鍵位置</b>、手把畫<b>按鈕位置</b>、手機<b>亮出要按的鈕</b>，只先教那一套，其他收在下面',
+    '🖼️ <b>換完 LOGO 後「每個關卡底圖都不見」修好了</b>：八張底圖改成<b>開機就先存進快取</b>，載不到會<b>自動退避重試</b>（以前失敗一次就永久空白）',
+    '🎮 <b>大逃殺入口比照對戰</b>：可以<b>挑外觀</b>（左右切換、會動的角色預覽）、可以<b>自己命名</b>，選過就記住',
+    '🧊 <b>大逃殺地形變豐富</b>：新增<b>長條輸送帶</b>（整條同方向推著你跑）、<b>滑冰區塊</b>、<b>一格寬的不規則河流</b>、<b>區塊狀的深色沙地</b>；踩在水裡、沙上<b>移動會變慢</b>',
+    '🏆 <b>奪冠大標題重新設計</b>：金色<b>放射光芒</b>＋皇冠＋<b>漸層金字</b>＋進場彈跳與閃光，對戰與大逃殺奪冠才有「我贏了」的感覺',
+    '💰 <b>每日挑戰有獎金了</b>：過關就發金幣（底薪 80 ＋ 速度獎金最多 220，<b>越快領越多</b>）；當天破紀錄會補差額，結算畫面直接顯示今天領了多少',
+    '🤖 <b>電腦對手不再一直衝刺</b>：改成「有目標而且距離還遠」或「逃離炸彈／落石」才衝，平常就用走的，看起來自然多了',
+    '🔊 <b>音樂與音效可以調音量</b>（0~100% 滑桿，拖了就聽得到差別；關到 0 等於靜音）',
+    '📱 首頁加一排<b>支援裝置小圖示</b>（電腦／手機／平板／手把／iOS／Android）＋一顆 <b>FB 連結</b>；版本字樣改為「<b>測試版</b>」'
+  ] },
+  { v: '5.10', date: '2026-11-05', now: false, items: [
     '🎮 <b>手把在選單裡「有些選項選不到」修好了</b>：以前只掃「目前畫面」裡的按鈕，但<b>冒險模式的「單人／RPG」二選一是在彈窗裡</b>（畫面之外）→ 手把怎麼推都沒反應。現在掃描範圍包含<b>所有彈窗</b>，並自動取<b>最上層</b>那一層；彈窗、暫停選單、簽到、帳號都能用手把操作',
     '🕹️ <b>手把插拔後整個選單沒反應</b>：以前死讀瀏覽器索引 0，手把被配到索引 2（中間拔過）就完全失效。現在走 <b>1P 槽位對應</b>，抓不到就退而用<b>第一支連線的手把</b>',
     '🔁 <b>方向鍵走到最下面會「卡住」</b>：以前最後一項再往下就沒反應。現在往下走<b>同一欄</b>、走到邊會<b>繞回另一頭</b>；<b>LB／RB</b> 可以照順序一項一項走，<b>保證每個選項都到得了</b>',
@@ -32901,11 +33841,20 @@ const Admin = (function () {
     }).join('');
   }
 
-  function renderDetail(a) {
+  function renderDetail(a, opt) {
+    opt = opt || {};
     const box = $id('bhDetail');
     if (!box) return;
+    /* v5.11：詳情欄有自己的捲軸。換一個帳號時瀏覽器會「保留捲軸位置」，
+       若上一筆剛好停在最下面的原始 JSON，換人之後看到的就是一大片 JSON——
+       在主觀上跟「點人沒反應／沒顯示資訊」一模一樣。所以每次重畫都捲回頂端。 */
+    const banner = opt.error
+      ? '<div class="bhnote w">⚠️ 完整資料讀不到（' + e2(opt.error) + '）。下面是名單上既有的欄位；' +
+        '請按右上角 🔄 重新整理，若一直失敗代表登入狀態過期，重新登入後再開後台。</div>'
+      : (opt.loading ? '<div class="bhnote">讀取完整資料中…</div>' : '');
     if (!a) {
-      box.innerHTML = '<div class="bhempty">← 從左邊選一個帳號看完整資料</div>';
+      box.innerHTML = banner + '<div class="bhempty">← 從左邊選一個帳號看完整資料</div>';
+      try { box.scrollTop = 0; } catch (e) {}
       return;
     }
     const al = a.alloc || {};
@@ -32924,7 +33873,7 @@ const Admin = (function () {
     }).join('') || '<div class="bhempty">（沒有足跡）</div>';
 
     const ips = (a.ips || []).join('、') || a.ip || '—';
-    box.innerHTML =
+    box.innerHTML = banner +
       '<button class="bhback" type="button" data-adm="back">← 返回名單</button>' +
       '<div class="bhwho"><b>' + e2(a.name) + '</b> <span class="mono" style="font-size:10.5px;color:#6f7f9c">' +
       e2(a.id) + '</span>' +
@@ -32971,6 +33920,7 @@ const Admin = (function () {
       split.classList.add('show-detail');
       if (pane) pane.classList.add('detail-on');   // 手機看詳情時把搜尋列收起來（省空間）
     }
+    try { box.scrollTop = 0; } catch (e) {}
   }
 
   /* ---------- 系統 ---------- */
@@ -33096,14 +34046,47 @@ const Admin = (function () {
     });
   }
 
+  /* v5.11：點人沒反應的真正原因，這裡一次補起來。
+     以前：`pick()` 只送一次 API，成功才畫、失敗只閃 2.4 秒 toast → 右邊永遠停在
+     「← 從左邊選一個帳號看完整資料」。使用者看到的就是「點人沒有顯示該員資訊」。
+     現在三段式：① 先用名單上已有的資料畫一版（一定會出現東西）
+               ② API 回來再覆蓋成完整資料
+               ③ 失敗也把錯誤碼寫在面板裡，不會靜靜消失。 */
   function pick(id) {
-    A.sel = id;
+    const want = String(id == null ? '' : id).trim();
+    A.sel = want;
     renderList();
     AudioSys.sfx('click');
-    return api('/api/admin/player?id=' + encodeURIComponent(id)).then(function (r) {
-      if (r && r.ok) renderDetail(r.account);
-      else toast('查不到這個玩家', 2.4);
+    let seed = null;
+    const all = (A.data && A.data.accounts) || [];
+    for (let i = 0; i < all.length; i++) {
+      if (String(all[i].id || '') === want) { seed = all[i]; break; }
+    }
+    if (seed) renderDetail(seed, { loading: true });
+    // 沒有 id（早期資料只把 id 當物件鍵、沒寫進欄位）→ 直接講清楚，不要讓它變成 404
+    if (!want || want === 'undefined' || want === 'null') {
+      renderDetail(null, { error: '這筆帳號缺少 id，請按右上角 🔄 重新整理' });
+      return Promise.resolve(null);
+    }
+    return api('/api/admin/player?id=' + encodeURIComponent(want)).then(function (r) {
+      if (r && r.ok && r.account) renderDetail(r.account);
+      else renderDetail(seed, { error: (r && r.err) || 'NET' });
+    }, function () {
+      renderDetail(seed, { error: 'NET' });
     });
+  }
+
+  /* v5.11：名單／最近活動共用一個入口。以前兩邊各寫一份 `pick(getAttribute('data-id'))`，
+     data-id 是空的時候會送出 `/api/admin/player?id=undefined` → 後端 404 → 只閃一句 toast。 */
+  function clickRow(row, toMembers) {
+    const id = row && row.getAttribute ? String(row.getAttribute('data-id') || '').trim() : '';
+    if (toMembers) setTab('members');
+    if (!id || id === 'undefined' || id === 'null') {
+      toast('這筆帳號缺少 id，請按右上角 🔄 重新整理', 2.8);
+      renderDetail(null, { error: '這筆帳號缺少 id，請按右上角 🔄 重新整理後再看' });
+      return;
+    }
+    pick(id);
   }
 
   function open() {
@@ -33317,15 +34300,13 @@ const Admin = (function () {
     const list = $id('bhList');
     if (list) list.addEventListener('click', function (e) {
       const row = e.target && e.target.closest ? e.target.closest('.bhrow[data-id]') : null;
-      if (row) pick(row.getAttribute('data-id'));
+      if (row) clickRow(row, false);
     });
     const recent = $id('bhRecent');
     if (recent) recent.addEventListener('click', function (e) {
       const row = e.target && e.target.closest ? e.target.closest('.bhrow[data-id]') : null;
       if (!row) return;
-      const id = row.getAttribute('data-id');
-      setTab('members');
-      pick(id);
+      clickRow(row, true);
     });
 
     const det = $id('bhDetail');
