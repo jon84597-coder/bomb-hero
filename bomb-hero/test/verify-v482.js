@@ -19,7 +19,7 @@ function head(t) { console.log('\n=== ' + t + ' ==='); }
 // 只切出 v4.82 這段 CSS：從自己的註解到下一段註解為止。
 // 不切的話，斷言 backdrop-filter／url() 會掃到整包 JS，全部誤判。
 const S = src.indexOf('v4.82：水晶高光按鈕');
-const E = src.indexOf('/* v4.53：選角卡片放大', S);
+const E = src.indexOf('/* v5.6：對戰選角換成', S);
 const V42 = S < 0 ? '' : src.slice(S, E > S ? E : S + 9000);
 ok(V42.length > 1500, 'v4.82 樣式區塊存在（' + V42.length + ' 字元）');
 
@@ -110,11 +110,12 @@ ok(/border-color: #f4703c/.test(stgSel), '關卡數字／角色卡的已選是�
 ok(/radial-gradient/.test(stgSel), '已選也用同一套弧形鏡面');
 const big = rule('.biggo {');
 ok(/radial-gradient/.test(big) && /inset 0 3px 0/.test(big), '開始遊戲大按鈕是橘色果凍');
-const dark = rule('#scr-battle #pSlots .crow button {');
-ok(/radial-gradient/.test(dark) && /#1d2842/.test(dark), '對戰選角的暗底小鈕用深色果凍');
-ok(/\.crow button\.aibtn/.test(V42), 'AI 開關鈕有獨立配色（不會被深色果凍蓋掉）');
+// v5.6：對戰選角改成 RPG 風大卡 —— 換角箭頭是石板灰水晶、AI 徽章是紫水晶
+const dark = rule('#scr-battle #pSlots .ppf .arr', src);   // v5.6 這組在 v4.82 區塊之後，掃全檔
+ok(/radial-gradient/.test(dark) && /#4d5a6f/.test(dark), '換角箭頭是石板灰水晶（未選色系）');
+ok(/\.ppf \.aibtn\.on\{[^}]*#8a5cf0/.test(src), 'AI 開關鈕有獨立配色（紫色水晶）');
 const brs = rule('.brseg b {');
-ok(/radial-gradient/.test(brs) && /#1b2740/.test(brs), '大逃殺面板的選項鈕有深色果凍（這一組當初漏掉過）');
+ok(/radial-gradient/.test(brs) && /#4d5a6f/.test(brs), '大逃殺面板的選項鈕改成同一套石板灰水晶');
 ok(/\.brseg b\.on \{[\s\S]{0,600}?radial-gradient/.test(V42), '大逃殺已選項是橘色果凍');
 ok(/#brOv #brGo \{[\s\S]{0,600}?radial-gradient/.test(V42), '出發鈕也吃到果凍（它用的是 .mbtn.warm，不在首頁選單底下）');
 

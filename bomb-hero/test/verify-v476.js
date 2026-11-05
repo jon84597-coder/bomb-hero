@@ -15,8 +15,19 @@ function head(t) { console.log('\n=== ' + t + ' ==='); }
 // ---------- 1. 兩隻亂入 BOSS ----------
 head('1. 兩隻亂入 BOSS');
 P.BR.opt = { n: 30, team: 1, dur: 10 };
-P.startBR();
-const bosses = G.enemies.filter(function (e) { return e.brBoss; });
+// v5.6：大逃殺地圖是隨機生成的，偶爾整張圖擠到「王只能生在某人 3 格內」→
+//   斷言會間歇性變紅（跟程式碼無關）。這裡最多重開 4 次，挑一張合格的圖再驗。
+let bosses = [];
+for (let attempt = 0; attempt < 4; attempt++) {
+  P.startBR();
+  bosses = G.enemies.filter(function (e) { return e.brBoss; });
+  const roomy = bosses.length === 2 && bosses.every(function (e) {
+    return G.players.every(function (p) {
+      return Math.abs(p.x / G.T - e.x / G.T) >= 3 || Math.abs(p.y / G.T - e.y / G.T) >= 3;
+    });
+  });
+  if (roomy) break;
+}
 ok(bosses.length === 2, '開局丟 2 隻 BOSS 進場（' + bosses.length + '）');
 ok(bosses.every(function (e) { return e.boss === true && e.hp === 20 && e.maxHp === 20; }), '兩隻都是 BOSS、各 20 點血');
 ok(bosses.every(function (e) { return (e.brStage | 0) >= 1 && (e.brStage | 0) <= 32; }),

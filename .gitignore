@@ -95,6 +95,7 @@ bomb-hero/art/pets/_*.png
 
 # 開發用臨時腳本（_mk_*／_add_changelog_* 等）
 tools/_*.js
+tools/_*.py
 tools/_*.html
 test/_tmp_*.js
 

@@ -3277,32 +3277,40 @@ body.touch #scr-title .menu .mgrid .mbtn .betaTag { right: 6px; top: 5px; font-s
     0 2px 0 rgba(0,0,0,.10);
 }
 
-/* 大逃殺設定面板（#brOv 暗底）：選項鈕同樣是果凍，只是換成深色版 */
+/* v5.6：大逃殺設定面板的選項鈕改成「全站同一套水晶」——
+   未選＝石板灰、已選＝橘色，跟單人／RPG 的分段鈕完全一致（不再是自己一套深藍果凍）。 */
 .brseg b {
   background:
-    radial-gradient(ellipse 96% 54% at 50% -4%, rgba(255,255,255,.20) 0%, rgba(255,255,255,.08) 94%, rgba(255,255,255,0) 97%),
-    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 52%, rgba(0,0,0,.22) 100%),
-    linear-gradient(180deg, #2c3d61 0%, #1b2740 100%);
-  border: 1px solid rgba(140,180,240,.22);
-  box-shadow:
-    0 2px 0 rgba(0,0,0,.42),
-    inset 0 0 0 1px rgba(255,255,255,.07),
-    inset 0 2px 0 rgba(255,255,255,.14);
-}
-.brseg b.on {
-  color: #3a1a00;
-  border-color: #ffd08a;
-  background:
-    radial-gradient(ellipse 96% 50% at 50% -2%, rgba(255,255,255,.62) 0%, rgba(255,255,255,.34) 94%, rgba(255,255,255,.10) 96%, rgba(255,255,255,0) 98%),
+    radial-gradient(ellipse 96% 50% at 50% -2%, rgba(255,255,255,.58) 0%, rgba(255,255,255,.30) 94%, rgba(255,255,255,.09) 96%, rgba(255,255,255,0) 98%),
     linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.26) 86%, rgba(255,255,255,0) 97%),
-    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 48%, rgba(0,0,0,.10) 74%, rgba(0,0,0,.20) 100%),
-    linear-gradient(180deg, #ffd07a 0%, #f7a13a 46%, #e07a12 100%);
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 48%, rgba(0,0,0,.07) 68%, rgba(0,0,0,.20) 100%),
+    linear-gradient(180deg, #9dabbf 0%, #76859c 52%, #4d5a6f 100%);
+  border: 1px solid rgba(0,0,0,.32);
+  color: #f2f6ff;
+  text-shadow: 0 1px 0 rgba(0,0,0,.38);
   box-shadow:
-    0 3px 0 #a85a08,
-    0 10px 18px -12px rgba(240,128,30,.85),
-    inset 0 0 0 2px rgba(255,255,255,.24),
-    inset 0 2px 0 rgba(255,255,255,.80),
-    inset 0 -2px 0 rgba(255,255,255,.30);
+    0 3px 0 #2f3a49,
+    0 10px 16px -12px rgba(0,0,0,.85),
+    inset 0 0 0 1px rgba(255,255,255,.18),
+    inset 0 2px 0 rgba(255,255,255,.72),
+    inset 0 -2px 0 rgba(255,255,255,.24);
+}
+.brseg b:hover { filter: brightness(1.06); }
+.brseg b.on {
+  color: #2a1400;
+  border-color: #ffd0a6;
+  text-shadow: 0 1px 0 rgba(255,255,255,.45);
+  background:
+    radial-gradient(ellipse 96% 50% at 50% -2%, rgba(255,255,255,.62) 0%, rgba(255,255,255,.38) 94%, rgba(255,255,255,.12) 96%, rgba(255,255,255,0) 98%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 84%, rgba(255,255,255,.30) 86%, rgba(255,255,255,0) 97%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 46%, rgba(0,0,0,.10) 72%, rgba(0,0,0,.22) 100%),
+    linear-gradient(180deg, #ffc98c 0%, #f4703c 46%, #d24a19 100%);
+  box-shadow:
+    0 3px 0 #b33c12,
+    0 12px 22px -14px rgba(200,70,30,.90),
+    inset 0 0 0 2px rgba(255,255,255,.22),
+    inset 0 2px 0 rgba(255,255,255,.82),
+    inset 0 -2px 0 rgba(255,255,255,.32);
 }
 .brc-x {
   background:
@@ -3330,32 +3338,69 @@ body.touch #scr-title .menu .mgrid .mbtn .betaTag { right: 6px; top: 5px; font-s
     inset 0 -2px 0 rgba(255,255,255,.30);
 }
 
-/* v4.53：選角卡片放大 —— 原本 ◀▶🤖 只有 20x17px，手機根本點不到，8 格擠成一團也不好看 */
-#scr-battle #pSlots{grid-template-columns:repeat(auto-fit,minmax(164px,1fr));gap:10px;justify-content:stretch}
-#scr-battle #pSlots .pbox{padding:10px 10px 9px;border-width:2px;border-radius:14px;
-background:linear-gradient(180deg,#18223c,#101728);
-box-shadow:0 3px 0 rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07)}
-#scr-battle #pSlots .pbox.ai{background:linear-gradient(180deg,#1d1636,#120e22)}
-#scr-battle #pSlots .pbox.joined{box-shadow:0 3px 0 rgba(0,0,0,.35),0 0 0 2px rgba(70,214,140,.5),inset 0 1px 0 rgba(255,255,255,.08)}
-#scr-battle #pSlots .pbox .pj{font-size:12.5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#scr-battle #pSlots .pbox canvas.pav{width:54px;height:54px;margin:4px auto 2px;border-radius:50%;
-background:radial-gradient(circle at 50% 36%,#2b3b62,#141b2d);box-shadow:inset 0 0 0 2px rgba(120,160,255,.16)}
-#scr-battle #pSlots .pbox.joined canvas.pav{box-shadow:inset 0 0 0 2px rgba(70,214,140,.45)}
-#scr-battle #pSlots .crow{gap:6px;margin-top:9px;align-items:center}
-#scr-battle #pSlots .crow button{width:44px;height:44px;font-size:17px;border-radius:11px;
-background:#1d2842;color:#dbe8ff;border:1px solid #374a74;cursor:pointer;
-display:flex;align-items:center;justify-content:center;transition:filter .1s,transform .08s}
-#scr-battle #pSlots .crow button:active{transform:translateY(2px);filter:brightness(1.25)}
-#scr-battle #pSlots .crow button.aibtn{background:#251c40;border-color:#4c3b7d;color:#c9a8ff}
-#scr-battle #pSlots .crow button.aibtn.on{background:#3d2d69;border-color:#8a5cf0;box-shadow:0 0 0 2px rgba(138,92,240,.35)}
-#scr-battle #pSlots .pbox .pname{margin-top:8px;height:32px;font-size:12px;border-radius:9px}
-#scr-battle #pSlots .pw{margin-top:5px;font-size:10.5px;line-height:1.3}
-#scr-battle #pSlots .ptm{height:30px;font-size:11px;border-radius:9px}
+/* v5.6：對戰選角換成「RPG 人物卡」那一套 ——
+   頭像改用 CharPreview（跟單人／RPG 選角同一套畫法，會走動），
+   玩家＝奶油底橘框、AI＝淡紫底紫框，框「底下」不再有任何文字；
+   換角箭頭壓在頭像左右、玩家／AI 切換壓在右上角，尺寸跟著卡片縮放。 */
+#scr-battle #pSlots{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;justify-content:stretch}
+#scr-battle #pSlots .pbox{padding:7px 7px 8px;border-width:2px;border-radius:15px;min-width:0;
+background:linear-gradient(180deg,#fffdf6,#ffeed6);border-color:#e8c39a;color:#7b4a1f;
+box-shadow:0 3px 0 #e2c8a6,0 12px 20px -14px rgba(120,80,40,.50),inset 0 2px 0 #fff}
+#scr-battle #pSlots .pbox.ai{background:linear-gradient(180deg,#f9f5ff,#eae0ff);border-color:#b7a2ea;
+box-shadow:0 3px 0 #c9b8ee,0 12px 20px -14px rgba(80,50,150,.45),inset 0 2px 0 #fff}
+#scr-battle #pSlots .pbox.joined{
+box-shadow:0 0 0 3px rgba(70,214,140,.34),0 3px 0 #e2c8a6,0 12px 20px -14px rgba(120,80,40,.50),inset 0 2px 0 #fff}
+#scr-battle #pSlots .pj{display:flex;align-items:center;gap:4px;margin:0 0 5px;min-width:0;
+font-size:11.5px;font-weight:900;letter-spacing:.02em;line-height:1.2;color:#7b4a1f}
+#scr-battle #pSlots .pbox.ai .pj{color:#5b3fa0}
+#scr-battle #pSlots .pj .plb{flex:none;font-size:12px;font-weight:900}
+#scr-battle #pSlots .pj .pname{flex:1 1 0%;min-width:0;width:auto;height:24px;margin:0;padding:2px 5px;
+font-size:11.5px;font-weight:800;text-align:center;color:inherit;
+background:rgba(255,255,255,.62);border:1px solid rgba(184,146,104,.45);border-radius:7px}
+#scr-battle #pSlots .pbox.ai .pj .pname{background:rgba(255,255,255,.72);border-color:rgba(150,120,220,.45)}
+#scr-battle #pSlots .pj .pname:focus{outline:none;border-color:#f4703c}
+#scr-battle #pSlots .pj .ptm{flex:0 0 auto;width:auto;height:24px;min-width:26px;padding:0 6px;font-size:11px;font-weight:900;
+border-radius:8px;background:rgba(255,255,255,.78);border:1.5px solid currentColor;cursor:pointer}
+/* 頭像框（RPG 卡的底框效果：奶油內凹＋細木框；AI 換成淡紫） */
+#scr-battle #pSlots .ppf{position:relative;border-radius:13px;overflow:hidden;
+background:radial-gradient(circle at 50% 32%,#fffdf8,#f6e7cd);
+box-shadow:inset 0 0 0 2px rgba(200,160,110,.38),inset 0 4px 9px rgba(160,120,70,.14)}
+#scr-battle #pSlots .pbox.ai .ppf{background:radial-gradient(circle at 50% 32%,#fdfaff,#ece3ff);
+box-shadow:inset 0 0 0 2px rgba(150,120,220,.34),inset 0 4px 9px rgba(90,60,160,.13)}
+#scr-battle #pSlots .ppf canvas.chpv{display:block;width:100%;height:auto;background:transparent}
+#scr-battle #pSlots .ppf .arr{position:absolute;top:50%;transform:translateY(-50%);
+width:40px;height:40px;padding:0;border-radius:50%;cursor:pointer;
+display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;
+color:#f2f6ff;border:2px solid rgba(0,0,0,.30);
+background:
+radial-gradient(ellipse 96% 50% at 50% -2%,rgba(255,255,255,.58) 0%,rgba(255,255,255,.28) 94%,rgba(255,255,255,0) 98%),
+linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 48%,rgba(0,0,0,.08) 68%,rgba(0,0,0,.22) 100%),
+linear-gradient(180deg,#9dabbf 0%,#76859c 52%,#4d5a6f 100%);
+box-shadow:0 3px 0 #2f3a49,inset 0 2px 0 rgba(255,255,255,.72),inset 0 -2px 0 rgba(255,255,255,.24);
+transition:filter .1s,transform .08s}
+#scr-battle #pSlots .ppf .arr.l{left:4px}
+#scr-battle #pSlots .ppf .arr.r{right:4px}
+#scr-battle #pSlots .ppf .arr:active{transform:translateY(-50%) scale(.94);filter:brightness(1.18)}
+/* 玩家／AI 切換：右上角小徽章（AI＝紫、玩家＝綠） */
+#scr-battle #pSlots .ppf .aibtn{position:absolute;right:5px;top:5px;width:34px;height:34px;padding:0;
+border-radius:11px;cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;
+color:#1d3b2a;border:2px solid rgba(0,0,0,.24);
+background:linear-gradient(180deg,#b9f2cd,#63c98d 55%,#2f8d5a);
+box-shadow:0 3px 0 #1e6a41,inset 0 2px 0 rgba(255,255,255,.75)}
+#scr-battle #pSlots .ppf .aibtn.on{color:#f4ecff;border-color:rgba(0,0,0,.30);
+background:linear-gradient(180deg,#cbb4f5,#8a5cf0 55%,#5b32b8);
+box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
+#scr-battle #pSlots .ppf .aibtn:active{transform:translateY(2px);filter:brightness(1.15)}
+#scr-battle #pSlots .pbox .pw{display:none}   /* v5.6：框底下的說明文字一律不顯示 */
 @media (max-width:520px){
 #scr-battle #pSlots{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-#scr-battle #pSlots .pbox{padding:8px 8px 7px;border-radius:12px}
-#scr-battle #pSlots .crow button{width:40px;height:40px;font-size:15px}
-#scr-battle #pSlots .pbox canvas.pav{width:46px;height:46px}
+#scr-battle #pSlots .pbox{padding:6px 6px 7px;border-radius:13px}
+#scr-battle #pSlots .ppf .arr{width:44px;height:44px;font-size:16px}
+#scr-battle #pSlots .ppf .aibtn{width:36px;height:36px;font-size:16px}
+#scr-battle #pSlots .pj{font-size:11px}
+}
+@media (min-width:900px){
+#scr-battle #pSlots{grid-template-columns:repeat(auto-fit,minmax(168px,1fr))}
 }
 .brc { width: min(93vw, 372px); max-height: 86vh; overflow: auto; border-radius: 18px; color: #eaf2ff;
   background: linear-gradient(180deg, rgba(17,25,42,.975), rgba(9,14,25,.975));
@@ -3507,8 +3552,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
    只換背景／邊框／陰影，不動 padding 與尺寸 —— 版面不會跑掉。
    ══════════════════════════════════════════════════════════════════ */
 .biggo, .qbtn, .seg button, .shopcard .shbuy, .bdbtn,
-.ghostbtn, .qbtn.ghost, .backrow .ghostbtn, .rowbtns .ghostbtn,
-#scr-solo .seg button, #scr-settings .seg button {
+.ghostbtn, .qbtn.ghost, .backrow .ghostbtn, .rowbtns .ghostbtn {
   --c1: #ffd9a8; --c2: #ff9a4d; --c3: #b4541c;
   background:
     radial-gradient(ellipse 18% 11% at 24% 12%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.40) 56%, rgba(255,255,255,0) 58%),
@@ -3612,7 +3656,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.5</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.6</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -3654,7 +3698,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">正式版 v<span id="verTxt">5.5</span></div>
+      <div class="ver beta">正式版 v<span id="verTxt">5.6</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4345,7 +4389,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.5';
+const VERSION = '5.6';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -10154,7 +10198,7 @@ const CharPreview = (function () {
   function tick(dt) {
     if (!items.length) return;
     // 只有停在「選角」畫面上才跑動畫（v4.0：RPG 創角畫面也有選角）
-    if (Screen.current !== 'solo' && Screen.current !== 'rpg') return;
+    if (Screen.current !== 'solo' && Screen.current !== 'rpg' && Screen.current !== 'battle') return;
     t += dt;
     for (let i = 0; i < items.length; i++) {
       const k = items[i].ch;
@@ -13362,20 +13406,22 @@ const Battle = {
       const tmNow = teamCount() ? teamMeta(s.team) : null;
       if (tmNow) d.style.borderColor = tmNow.hex;
       const c = CHARACTERS[s.ch % CHARACTERS.length];
-      const sub = !s.joined ? t('bt.padPlay')
-        : s.forceAi ? t('bt.aiHosted') : t(s.subKey || 'bt.padJoin', { n: s.subN });
-      d.innerHTML = '<div class="pj">' + s.label + ' ' + (ai ? '🤖 AI' : charName(c)) + '</div>' +
-        '<canvas class="pav" width="56" height="56" data-ch="' + s.ch + '"></canvas>' +
-        '<div class="crow">' +
-        '<button data-s="' + i + '" data-d="-1">◀</button>' +
-        '<button data-s="' + i + '" data-d="1">▶</button>' +
-        '<button data-ai="' + i + '" class="aibtn' + (ai ? ' on' : '') + '" title="切換人類／AI">' +
-          (ai ? '🤖' : '👤') + '</button></div>' +
-        '<input class="pname" data-n="' + i + '" maxlength="8" placeholder="' + charName(c) + '" value="' +
-          String(settings.names[i] || '').replace(/"/g, '&quot;') + '">' +
-        (tmNow ? '<div class="ptmrow"><button class="ptm" data-tm="' + i + '" title="點一下換隊" ' +
-          'style="color:' + tmNow.hex + ';border-color:' + tmNow.hex + '">' + tmNow.dot + ' ' + tmNow.name + '</button></div>' : '') +
-        '<div class="pw">' + sub + '</div>';
+      // v5.6：改用 RPG 人物卡那一套 —— 大頭像（CharPreview 會走動）＋換角箭頭＋右上角玩家／AI 徽章，
+      //   框底下不再放任何文字（原本的「按鍵1／AI 代打」說明整行移除）。
+      d.innerHTML =
+        '<div class="pj"><b class="plb">' + s.label + '</b>' +
+          '<input class="pname" data-n="' + i + '" maxlength="8" placeholder="' + charName(c) + '" value="' +
+            String(settings.names[i] || '').replace(/"/g, '&quot;') + '">' +
+          (tmNow ? '<button class="ptm" data-tm="' + i + '" title="' + tmNow.name + '" ' +
+            'style="color:' + tmNow.hex + '">' + tmNow.dot + '</button>' : '') +
+        '</div>' +
+        '<div class="ppf">' +
+          '<canvas class="chpv" width="132" height="120" data-ch="' + s.ch + '"></canvas>' +
+          '<button class="arr l" data-s="' + i + '" data-d="-1" title="上一個角色">◀</button>' +
+          '<button class="arr r" data-s="' + i + '" data-d="1" title="下一個角色">▶</button>' +
+          '<button data-ai="' + i + '" class="aibtn' + (ai ? ' on' : '') + '" title="切換人類／AI">' +
+            (ai ? '🤖' : '👤') + '</button>' +
+        '</div>';
       wrap.appendChild(d);
     });
     wrap.querySelectorAll('.pname').forEach(function (inp) {
@@ -13384,7 +13430,7 @@ const Battle = {
       });
       inp.addEventListener('keydown', function (e) { e.stopPropagation(); });
     });
-    wrap.querySelectorAll('.crow button').forEach(function (b) {
+    wrap.querySelectorAll('.ppf .arr, .ppf .aibtn').forEach(function (b) {
       b.addEventListener('click', function () {
         AudioSys.sfx('click');
         const s = Battle.slots[parseInt(b.getAttribute('data-s') || b.getAttribute('data-ai'), 10)];
@@ -13407,6 +13453,7 @@ const Battle = {
       });
     });
     drawAvatarsIn(wrap);
+    try { CharPreview.mount(wrap); } catch (e) {}   // v5.6：大頭像交給 CharPreview 走動
   }
 };
 
@@ -28703,7 +28750,13 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.5', date: '2026-11-05', now: true, items: [
+  { v: '5.6', date: '2026-11-05', now: true, items: [
+    '🎛️ <b>所有「選擇鈕」的選中狀態統一了</b>：選中的是<b>橘色水晶</b>、沒選的是<b>石板灰水晶</b>。以前單人闖關的難易度／關卡時間／地圖模式<b>全部都是橘色</b>，根本看不出現在選哪一個（現在跟 RPG 一樣，只有選中的那顆亮橘）',
+    '🏝️ <b>大逃殺的設定鈕也換成同一套水晶</b>：人數／組隊／時間不再是自己一套深藍色，改成<b>選中橘、未選灰</b>，跟其他畫面完全一致',
+    '🏷️ <b>換上新的 BOMB HERO 徽章 LOGO</b>：炸彈英雄徽章，已經<b>去背</b>（白邊也反算掉了），放在任何底色上都不會有一圈白邊',
+    '⚔️ <b>對戰選角改成 RPG 人物卡</b>：大頭像會走動、換角箭頭壓在頭像左右、玩家／AI 切換在右上角；<b>AI 是紫色框、玩家是奶油色框</b>，框底下那行說明文字全部拿掉，卡片與按鈕會跟著螢幕大小縮放（手機兩欄也點得到）'
+  ] },
+  { v: '5.5', date: '2026-11-05', now: false, items: [
     '🔍 <b>縮小看大地圖時不會再找不到自己</b>：畫面縮到 <b>42%~100%</b> 時，角色身上會出現一圈金色定位環＋頭上的呼吸箭頭（縮得越小越明顯，100% 完全不畫）。標示固定 15px、只有細線與淡光暈，<b>不擋視線、不影響操作</b>；單人／RPG／對戰／大逃殺全都適用',
     '🗑 <b>首頁右上角那顆 🛠 小圖示拿掉了</b>：畫面更乾淨，管理面板改用「版本號連點 3 下」（手機也行）或快捷鍵進入',
     '📊 <b>營運數據補齊了</b>：多了<b>歷史訪客／今日訪客／歷史瀏覽／今日瀏覽</b>與近 7 天直條圖，一眼看得出這週有沒有人在玩（玩家端看不到）',

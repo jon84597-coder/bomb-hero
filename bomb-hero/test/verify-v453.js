@@ -120,9 +120,10 @@ head('3. 推車：階梯式選格（1／2／3 格，到頂鎖定）');
 // ================================================================
 head('4. 選角卡片：觸控目標變大、AI 鍵有狀態');
 {
-  ok(/#scr-battle #pSlots \.crow button\{width:44px;height:44px/.test(css), '◀▶ 按鈕 44×44（原本 20×17）');
-  ok(/minmax\(164px,1fr\)/.test(css), '卡片最小寬度 164px（原本 104~132）');
-  ok(/canvas\.pav\{width:54px/.test(css), '頭像 54px（原本 34）');
+  // v5.6：◀▶ 改成壓在頭像兩側的圓形水晶鈕（桌機 40、手機 44），頭像換成 RPG 大圖
+  ok(/#scr-battle #pSlots \.ppf \.arr\{position:absolute[^}]*width:40px;height:40px/.test(css), '◀▶ 圓鈕 40×40（手機 44）');
+  ok(/minmax\(150px,1fr\)/.test(css), '卡片最小寬度 150px（原本 104~132）');
+  ok(/\.ppf canvas\.chpv\{display:block;width:100%/.test(css), '頭像吃滿卡片寬度（RPG 大圖）');
   ok(/@media \(max-width:520px\)\{[\s\S]{0,400}repeat\(2,minmax\(0,1fr\)\)/.test(css), '手機兩欄');
   ok(/\.aibtn\.on\{/.test(css), 'AI 開啟時有高亮樣式');
   ok(/'<button data-ai="' \+ i \+ '" class="aibtn' \+ \(ai \? ' on' : ''\)/.test(html), 'AI 鍵會依狀態加 class');
