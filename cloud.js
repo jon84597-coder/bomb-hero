@@ -284,8 +284,73 @@ function defaultRpg() {
     char: 0,
     deaths: 0,
     playSec: 0,
+    /* v5.19：營地 —— 永久強化 0~3、已學招式（id → 等級）、出戰 4 欄、這一場的補給 */
+    perm: { hp: 0, bomb: 0, fire: 0 },
+    sk: {},
+    skLoad: [],
+    bag: {},
     ver: 1
   };
+}
+
+/* ---------- v5.19：營地的價目與門檻（後端權威，跟前端 RPG_BAG／RPG_PERM_UP／RPG_SKILLS 對齊）
+   前端只送「買哪一個、學哪一招」，價格與點數在這裡算，
+   所以改前端也刷不出便宜的道具或跳級的招式。 */
+const CAMP_BAG = { hp1: 250, hp2: 600, arm1: 400, fire1: 500, rem1: 700, rev1: 1200 };
+const CAMP_PERM = {
+  hp: [600, 1200, 2400],
+  bomb: [800, 1600, 3200],
+  fire: [1000, 2000, 4000]
+};
+const CAMP_SK = {
+  det: { lv: 1, max: 3 }, shield: { lv: 7, max: 3 }, frost: { lv: 14, max: 3 }, quake: { lv: 20, max: 3 },
+  kick: { lv: 3, max: 1 }, pierce: { lv: 17, max: 1 }, bomb: { lv: 5, max: 3 },
+  fire: { lv: 9, max: 3 }, hp: { lv: 12, max: 3 }, def: { lv: 24, max: 3 }
+};
+const SK_ACT = { det: 1, shield: 1, frost: 1, quake: 1 };
+const SK_SLOTS = 4, SK_PER = 5, BAG_MAX = 9;
+
+/* 技能點：起始 1 點，之後每 5 級 +1（跟前端 rpgSkPts 同一條公式） */
+function rpgSkPtsOf(rpg) { return 1 + Math.floor(lvOfXp(ensureXp(rpg)).lv / SK_PER); }
+function rpgSkSpentOf(rpg) {
+  let t = 0;
+  const o = (rpg && rpg.sk) || {};
+  for (const k in o) if (CAMP_SK[k]) t += clampInt(o[k], 0, CAMP_SK[k].max, 0);
+  return t;
+}
+function rpgSkLeftOf(rpg) { return Math.max(0, rpgSkPtsOf(rpg) - rpgSkSpentOf(rpg)); }
+
+/* 把營地欄位夾成合法值（舊帳號沒有這些欄位時就補預設） */
+function sanitizeCamp(rpg) {
+  if (!rpg || typeof rpg !== 'object') return rpg;
+  const p = (rpg.perm && typeof rpg.perm === 'object') ? rpg.perm : {};
+  rpg.perm = {
+    hp: clampInt(p.hp, 0, 3, 0),
+    bomb: clampInt(p.bomb, 0, 3, 0),
+    fire: clampInt(p.fire, 0, 3, 0)
+  };
+  const raw = (rpg.sk && typeof rpg.sk === 'object') ? rpg.sk : {};
+  const sk = {};
+  Object.keys(CAMP_SK).forEach(function (k) {
+    const v = clampInt(raw[k], 0, CAMP_SK[k].max, 0);
+    if (v > 0) sk[k] = v;
+  });
+  rpg.sk = sk;
+  if (!Array.isArray(rpg.skLoad)) rpg.skLoad = [];
+  const seenL = {};
+  rpg.skLoad = rpg.skLoad.filter(function (id) {
+    if (typeof id !== 'string' || !SK_ACT[id] || !(sk[id] > 0) || seenL[id]) return false;
+    seenL[id] = 1;
+    return true;
+  }).slice(0, SK_SLOTS);
+  const rb = (rpg.bag && typeof rpg.bag === 'object') ? rpg.bag : {};
+  const bag = {};
+  Object.keys(CAMP_BAG).forEach(function (k) {
+    const v = clampInt(rb[k], 0, BAG_MAX, 0);
+    if (v > 0) bag[k] = v;
+  });
+  rpg.bag = bag;
+  return rpg;
 }
 
 /* ---------- v4.2：觸控版面（模式／左右半邊／大小／自訂搖桿位置） ----------
@@ -567,6 +632,33 @@ function mergeProgress(base, guest) {
     playSec: Math.max(b.playSec || 0, g.playSec || 0),
     ver: Math.max(b.ver || 1, g.ver || 1) + 1
   };
+  /* v5.19：營地狀態取聯集 —— 永久強化與招式取等級高的、補給取多的（合併時不重複給，也不會歸零） */
+  const bp = (b.perm || {}), gp = (g.perm || {});
+  out.perm = {
+    hp: Math.max(bp.hp | 0, gp.hp | 0),
+    bomb: Math.max(bp.bomb | 0, gp.bomb | 0),
+    fire: Math.max(bp.fire | 0, gp.fire | 0)
+  };
+  const bs = (b.sk || {}), gs = (g.sk || {});
+  const sk = {};
+  Object.keys(CAMP_SK).forEach(function (k) {
+    const v = Math.max(bs[k] | 0, gs[k] | 0);
+    if (v > 0) sk[k] = Math.min(CAMP_SK[k].max, v);
+  });
+  out.sk = sk;
+  const bl = Array.isArray(b.skLoad) ? b.skLoad : [], gl = Array.isArray(g.skLoad) ? g.skLoad : [];
+  const load = [];
+  bl.concat(gl).forEach(function (id) {
+    if (load.length < SK_SLOTS && SK_ACT[id] && sk[id] > 0 && load.indexOf(id) < 0) load.push(id);
+  });
+  out.skLoad = load;
+  const bb = (b.bag || {}), gb = (g.bag || {});
+  const bag = {};
+  Object.keys(CAMP_BAG).forEach(function (k) {
+    const v = Math.min(BAG_MAX, Math.max(bb[k] | 0, gb[k] | 0));
+    if (v > 0) bag[k] = v;
+  });
+  out.bag = bag;
   return out;
 }
 
@@ -1303,6 +1395,7 @@ function createCloud(options) {
   }
 
   function publicAccount(acc) {
+    try { sanitizeCamp(acc.rpg); } catch (e) {}
     const xp = ensureXp(acc.rpg);
     const lvNow = lvOfXp(xp);
     const points = pointsTotalFor(acc.rpg);
@@ -1324,6 +1417,8 @@ function createCloud(options) {
       xpTotal: xp,                  // 累積總經驗
       xpMax: XP_MAX,
       left: points - sumAlloc(acc.rpg.alloc),
+      skPts: rpgSkPtsOf(acc.rpg),          // v5.19：技能點總數（營地招式師用）
+      skLeft: rpgSkLeftOf(acc.rpg),        //        還沒花掉的
       // 開發者：全關卡解鎖（RPG 32 張全部直接可玩）
       unlocked: dev ? MAX_STAGE : Math.min(MAX_STAGE, acc.rpg.cleared + 1),
       layout: acc.layout || null,
@@ -2918,6 +3013,29 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           acc.rpg.ver = (acc.rpg.ver || 1) + 1;
           store.touch();
           return send(res, 200, { ok: true, account: publicAccount(acc), left: total - v.spent, total: total }), true;
+        }
+
+        /* ---- v5.19：營地（永久強化／招式／出戰欄／補給）----
+           金幣是 Shop 那一套（跟著整包存檔走），rpg.gold 是過關獎勵，兩者不同步，
+           所以這裡不當金幣裁判：只負責把營地狀態存進帳號，並夾回合法範圍。
+           永久強化 0~3、補給 0~9、招式等級 0~3、出戰欄最多 4 個「已學會的主動招」。 */
+        if (p === '/api/rpg/camp' && req.method === 'POST') {
+          if (!gate(req, res, 'campsave', 20, 8)) return true;
+          const body = await readJson(req, 4096);
+          if (!body) return fail(res, 400, 'BAD_BODY'), true;
+          acc.rpg.perm = body.perm;
+          acc.rpg.sk = body.sk;
+          acc.rpg.skLoad = body.skLoad;
+          acc.rpg.bag = body.bag;
+          sanitizeCamp(acc.rpg);
+          acc.rpg.ver = (acc.rpg.ver || 1) + 1;
+          store.touch();
+          return send(res, 200, {
+            ok: true,
+            account: publicAccount(acc),
+            skPts: rpgSkPtsOf(acc.rpg),
+            skLeft: rpgSkLeftOf(acc.rpg)
+          }), true;
         }
 
         if (p === '/api/rpg/stage-clear' && req.method === 'POST') {

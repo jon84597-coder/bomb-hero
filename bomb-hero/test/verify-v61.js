@@ -243,11 +243,12 @@ ok(/const HIDE_THEME_POOL = \[/.test(css) && /function hidePool\(\)/.test(css),
 
 // ================================================================
 head('5. RPG 小怪血量（v4.17 調回來）');
-ok(P.FOE_HP.slime === 3 && P.FOE_HP.crab === 3 && P.FOE_HP.mush === 3, '基礎怪 3 下（史萊姆／螃蟹／毒菇）');
-ok(P.FOE_HP.beetle === 4 && P.FOE_HP.skull === 4 && P.FOE_HP.lizard === 5, '中階怪 4～5 下（鐵甲蟲／骷髏兵／疾風蜥）');
-ok(Object.keys(P.FOE_HP).every(function (k) { return P.FOE_HP[k] >= 3 && P.FOE_HP[k] <= 5; }),
-  '全部落在 3～5 之間（' + Object.keys(P.FOE_HP).map(function (k) { return P.FOE_HP[k]; }).join('/') + '）');
-ok(P.RPG_FOE.slime.hp === 3 && P.RPG_FOE.lizard.hp === 5, 'RPG_FOE 跟著套用新血量');
+// v5.19：攻擊改成純傷害（2~14）→ 血量大一階
+ok(P.FOE_HP.slime === 4 && P.FOE_HP.crab === 4 && P.FOE_HP.mush === 4, '基礎怪 4 下（史萊姆／螃蟹／毒菇）');
+ok(P.FOE_HP.beetle === 5 && P.FOE_HP.skull === 5 && P.FOE_HP.lizard === 6, '中階怪 5～6 下（鐵甲蟲／骷髏兵／疾風蜥）');
+ok(Object.keys(P.FOE_HP).every(function (k) { return P.FOE_HP[k] >= 4 && P.FOE_HP[k] <= 6; }),
+  '全部落在 4～6 之間（' + Object.keys(P.FOE_HP).map(function (k) { return P.FOE_HP[k]; }).join('/') + '）');
+ok(P.RPG_FOE.slime.hp === 4 && P.RPG_FOE.lizard.hp === 6, 'RPG_FOE 跟著套用新血量');
 {
   // 單人闖關不受影響：一律一擊必殺
   P.startSolo(1, false);

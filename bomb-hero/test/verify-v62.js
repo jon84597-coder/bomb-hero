@@ -270,8 +270,8 @@ head('9. 小怪變多、血量回升、AI 更聰明');
     '每場都夾在 FOE_MAX_LIVE（12 隻）以內');
   ok(/Math\.round\(Math\.round\(4 \+ stage \* \.25\)/.test(css),
     'v4.69：RPG 小怪量改成跟單人同一條曲線（4 + stage×.25；隨機地圖模式用 T 圖的怪量）');
-  ok(P.FOE_HP.slime === 3 && P.FOE_HP.beetle === 4 && P.FOE_HP.lizard === 5, 'RPG 血量回升（3／4／5）');
-  ok(P.FOE_HP.bat === 3 && P.FOE_HP.eye === 4, '飛行怪血量也回升');
+  ok(P.FOE_HP.slime === 4 && P.FOE_HP.beetle === 5 && P.FOE_HP.lizard === 6, 'RPG 血量回升（4／5／6，v5.19）');
+  ok(P.FOE_HP.bat === 4 && P.FOE_HP.eye === 5, '飛行怪血量也回升（4／5）');
   const liz = P.ENEMY_SPECIES.filter(function (s) { return s.id === 'lizard'; })[0];
   const pe = P.makeEnemy(3, 3, 'lizard', 1, 1);
   ok(pe.smart === true, '疾風蜥也會躲炸彈了（smart）');
