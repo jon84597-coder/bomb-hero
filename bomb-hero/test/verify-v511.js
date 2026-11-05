@@ -17,6 +17,9 @@ function ok(cond, msg, extra) {
   else { fail++; console.log('  ✗ FAIL: ' + msg + (extra === undefined ? '' : ' → ' + JSON.stringify(extra))); }
 }
 function head(s) { console.log('\n' + s); }
+// 版本一律用元組比大小（parseFloat('5.10') 會變 5.1 → 比 5.9 小）
+function vt(v) { return String(v).split('.').map(function (x) { return parseInt(x, 10) || 0; }); }
+function vge(a, b) { const A = vt(a), B = vt(b); for (let i = 0; i < 3; i++) { const x = A[i] || 0, y = B[i] || 0; if (x !== y) return x > y; } return true; }
 
 const SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const CLOUD = fs.readFileSync(path.join(__dirname, '..', '..', 'cloud.js'), 'utf8');
@@ -24,11 +27,11 @@ const env = makeEnv();
 const B = env.BH, G = env.G;
 
 console.log('\n=== 0. 版本 ===');
-ok(B.VERSION === '5.11', 'VERSION = 5.11（實測 ' + B.VERSION + '）');
+ok(vge(B.VERSION, '5.11'), 'VERSION ≥ 5.11（實測 ' + B.VERSION + '）');
 ok(new RegExp('<span id="verTxt">' + B.VERSION + '</span>').test(SRC), '#verTxt 同步');
 ok(new RegExp('<span id="verLogVer">' + B.VERSION + '</span>').test(SRC), '#verLogVer 同步');
-ok(B.VERSION_LOG[0].v === '5.11' && B.VERSION_LOG[0].now === true, 'VERSION_LOG 首位是 5.11 且 now:true');
-ok(B.VERSION_LOG[1] && B.VERSION_LOG[1].now === false, '上一版（5.10）已改成 now:false');
+ok(vge(B.VERSION_LOG[0].v, '5.11') && B.VERSION_LOG[0].now === true, 'VERSION_LOG 首位 ≥ 5.11 且 now:true（實測 ' + B.VERSION_LOG[0].v + '）');
+ok(B.VERSION_LOG.slice(1).every(function (r) { return r.now !== true; }), '只有最新一筆是 now:true，其餘都已改成 false');
 ok(!/const VERSION_LOG[\s\S]{0,7000}?後台[\s\S]{0,200}?\n/.test(SRC), '版本紀錄（給玩家看的）沒有提到後台');
 
 console.log('\n=== 1. 電腦操作：鍵盤＋滑鼠 ===');

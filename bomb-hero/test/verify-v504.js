@@ -241,6 +241,10 @@ try {
   B.placeBomb(p, false, 1);
   const T = G.T, x0 = p.x, y0 = p.y;
   let sawDash = 0;
+  // v5.11：先確認「真的命危、真的衝得出去」——以前若這兩個條件不成立（例如炸彈被放到別格），
+  //   測試只會說「0 幀」，看不出是前置條件壞掉還是 AI 決策壞掉。
+  const preOk = B.aiDashOk(p, 2, 5, 'right') && B.dangerAt(2, 5, p);
+  ok(preOk, '前置條件：腳下有炸彈、往右兩格可以衝');
   for (let i = 0; i < 40; i++) { B.controlAI(p, 1 / 60); if (p.dashT > 0) sawDash++; }
   const moved = Math.hypot(p.x - x0, p.y - y0) / T;
   ok(sawDash > 0, 'controlAI 有進入衝刺狀態（' + sawDash + ' 幀）');

@@ -561,6 +561,25 @@ function createStore(dir, persist, remote) {
       visits: db.visits || { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() }   // v5.5：拜訪紀錄
     };
   }
+  /* v5.11：舊資料修補 —— 早期版本的帳號物件「只用物件鍵當索引」，沒有把 id 寫進欄位。
+     後台名單直接用 a.id 產生 data-id，於是：
+       名單的 UID 欄是空的 → data-id="" → 點人送出 /api/admin/player?id=undefined
+       → findById 找不到 → 404 → 前端只閃一句 toast，右邊詳情永遠是空白提示。
+     這裡在每次載入／套用遠端分片時補回 id（物件鍵才是權威），之後名單與查詢都拿得到。
+     同時修正 key 與 id 不一致的狀況（合併帳號搬移過資料的情形）。
+     ⚠️ 這支必須留在 createStore 內：applyPart／loadLocal 都在這裡，搬到 Cloud 建構函式裡
+        會變成「呼叫端看不到」→ ReferenceError → state.loaded 永遠 false（雲端存檔整條斷）。 */
+  function fixAccountIds() {
+    let n = 0;
+    for (const key in db.accounts) {
+      const a = db.accounts[key];
+      if (!a || typeof a !== 'object') continue;
+      if (!a.id) { a.id = key; n++; }
+      else if (String(a.id) !== key && !db.accounts[a.id]) { a.id = key; n++; }
+    }
+    return n;
+  }
+
   function applyPart(key, val) {
     if (!val || typeof val !== 'object') return false;
     if (key === 'accounts') {
@@ -846,6 +865,9 @@ function createCloud(options) {
     })[0];
     if (alt) { remote.key = cleanEnvKey(env[alt]); keyNameWarn = alt; }
   }
+  /* 測試用：注入 fetch 實作。**必須在 createStore 之前**，因為 store 一建立就立刻開始
+     向 Supabase 拉資料（loadRemote），晚一步設定就還是用到上一支（或原生 fetch）。 */
+  if (opt.fetch) fetchImpl = opt.fetch;
   const store = createStore(dir, persist, remote);
   const db = store.db;
   // v4.13：偵測「這個資料夾會不會在重新部署後被清空」
@@ -900,7 +922,6 @@ function createCloud(options) {
       return true;
     });
   }
-  if (opt.fetch) fetchImpl = opt.fetch;
 
   const states = new Map();     // OAuth state → { provider, bind, redirect, exp }
   const limiter = makeLimiter();
@@ -911,23 +932,6 @@ function createCloud(options) {
 
   /* ---------- 帳號 ---------- */
   function findById(id) { return db.accounts[id] || null; }
-
-  /* v5.11：舊資料修補 —— 早期版本的帳號物件「只用物件鍵當索引」，沒有把 id 寫進欄位。
-     後台名單直接用 a.id 產生 data-id，於是：
-       名單的 UID 欄是空的 → data-id="" → 點人送出 /api/admin/player?id=undefined
-       → findById 找不到 → 404 → 前端只閃一句 toast，右邊詳情永遠是空白提示。
-     這裡在每次載入／套用遠端分片時補回 id（物件鍵才是權威），之後名單與查詢都拿得到。
-     同時修正 key 與 id 不一致的狀況（合併帳號搬移過資料的情形）。 */
-  function fixAccountIds() {
-    let n = 0;
-    for (const key in db.accounts) {
-      const a = db.accounts[key];
-      if (!a || typeof a !== 'object') continue;
-      if (!a.id) { a.id = key; n++; }
-      else if (String(a.id) !== key && !findById(a.id)) { a.id = key; n++; }
-    }
-    return n;
-  }
 
   /* 用識別鍵找帳號（web:xxx / google:sub …），已合併的舊帳號不算 */
   function findByKey(key) {
