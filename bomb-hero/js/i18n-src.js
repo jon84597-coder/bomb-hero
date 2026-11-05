@@ -1496,4 +1496,34 @@ skill.remove|移除|移除|Remove|外す|해제
 skill.noneYet|還沒學會任何主動招式 —— 先去「學習招式」。|还没学会任何主动招式 —— 先去「学习招式」。|No active skills yet — learn one first.|アクティブスキル未習得。「スキル習得」へ。|액티브 스킬이 없다. 먼저 배우자.
 skill.equip|裝備|装备|Equip|装備|장착
 skill.equipped|已裝備|已装备|Equipped|装備中|장착됨
-skill.ownActives|已學會的主動招式（點一下放進空欄）|已学会的主动招式（点一下放进空栏）|Learned active skills (tap to equip)|習得済みアクティブ（押して装備）|배운 액티브 스킬(눌러서 장착)`;
+skill.ownActives|已學會的主動招式（點一下放進空欄）|已学会的主动招式（点一下放进空栏）|Learned active skills (tap to equip)|習得済みアクティブ（押して装備）|배운 액티브 스킬(눌러서 장착)
+lvl.sub|這一關升了 {n} 級|这一关升了 {n} 级|+{n} level(s)|今回で {n} レベル上がりました|이번에 {n}레벨 올랐습니다
+lvl.pts|配點|配点|Attribute points|能力ポイント|능력치 포인트
+lvl.sk|技能點|技能点|Skill points|スキルポイント|스킬 포인트
+lvl.ok|繼續冒險|继续冒险|Keep going|続ける|계속
+respec.none|目前沒有配點可以退回|目前没有配点可以退回|Nothing to reset|戻せるポイントがありません|되돌릴 포인트가 없습니다
+respec.confirm|把四項配點全部退回？退回之後要重新分配。|把四项配点全部退回？退回之后要重新分配。|Reset all attributes? You will need to re-allocate them.|4 項目をすべて戻しますか？再割り振りが必要です。|능력치를 모두 되돌릴까요? 다시 분배해야 합니다.
+respec.done|♻️ 配點已全部退回|♻️ 配点已全部退回|♻️ Points reset|♻️ ポイントを戻しました|♻️ 포인트를 되돌렸습니다
+respec.fail|退回失敗 —— 網路不穩，稍後再試|退回失败 —— 网络不稳，稍后再试|Reset failed — check your connection|戻せませんでした（通信エラー）|되돌리지 못했습니다(통신 오류)
+end.k|ADVENTURE CLEAR|冒险完成|ADVENTURE CLEAR|ADVENTURE CLEAR|ADVENTURE CLEAR
+end.t|32 關全破！|32 关全破！|All 32 stages cleared!|32 ステージ制覇！|32 스테이지 클리어!
+end.sub|你走完了整段冒險。下面是這一輪的成績。|你走完了整段冒险。下面是这一轮的成绩。|You finished the whole run. Here is how it went.|全ステージを踏破しました。今回の記録です。|모험을 모두 마쳤습니다. 이번 기록입니다.
+end.lv|最終等級|最终等级|Final level|最終レベル|최종 레벨
+end.xp|累積經驗|累积经验|Total EXP|累計経験値|누적 경험치
+end.sk|學會招式|学会招式|Skills learned|習得スキル|습득 스킬
+end.perm|永久強化|永久强化|Permanent upgrades|永久強化|영구 강화
+end.ok|回到角色畫面|回到角色画面|Back to character|キャラ画面へ|캐릭터 화면으로
+end.replayK|CLEAR|通关|CLEAR|CLEAR|CLEAR
+end.replayT|再次全破|再次全破|Cleared again|再クリア|재클리어
+gift.misRpgBoss|打倒 {n} 隻 RPG 魔王|打倒 {n} 只 RPG 魔王|Defeat {n} RPG boss(es)|RPG ボスを {n} 体たおす|RPG 보스 {n}마리 격파
+gift.misRpgLv|在 RPG 升 {n} 級|在 RPG 升 {n} 级|Gain {n} RPG level(s)|RPG で {n} レベル上げる|RPG에서 {n}레벨 올리기
+gift.misRpgClear|RPG 過關 {n} 次|RPG 过关 {n} 次|Clear {n} RPG stages|RPG ステージを {n} 回クリア|RPG 스테이지 {n}회 클리어
+codex.title|圖鑑|图鉴|Codex|図鑑|도감
+codex.tabFoe|怪物|怪物|Monsters|モンスター|몬스터
+codex.tabBoss|魔王|魔王|Bosses|ボス|보스
+codex.tabItem|道具|道具|Items|アイテム|아이템
+codex.tabSkill|招式|招式|Skills|スキル|스킬
+codex.hintFoe|打倒過的怪物會在這裡點亮。|打倒过的怪物会在这里点亮。|Monsters you defeat light up here.|倒したモンスターが記録されます。|처치한 몬스터가 기록됩니다.
+codex.hintBoss|打贏過的魔王會在這裡點亮。|打赢过的魔王会在这里点亮。|Bosses you beat light up here.|倒したボスが記録されます。|격파한 보스가 기록됩니다.
+codex.hintItem|撿過的道具會在這裡點亮。|捡过的道具会在这里点亮。|Items you pick up light up here.|拾ったアイテムが記録されます。|획득한 아이템이 기록됩니다.
+codex.hintSkill|學會的招式會在這裡點亮。|学会的招式会在这里点亮。|Skills you learn light up here.|習得したスキルが記録されます。|습득한 스킬이 기록됩니다.`;

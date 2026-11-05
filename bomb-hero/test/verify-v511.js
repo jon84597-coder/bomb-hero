@@ -71,19 +71,32 @@ ok(/dprize/.test(SRC) && /daily\.prizeFull/.test(SRC), '結算畫面有獎金卡
 
 console.log('\n=== 3. 大逃殺地形：輸送帶／滑冰／河流／沙地 ===');
 B.BR.opt.n = 30; B.BR.opt.team = 1; B.BR.opt.dur = 10;
-const info = B.buildBRMap();
-const hz = { convey: 0, ice: 0, water: 0, sand: 0 };
+/* 地形是程序化隨機擺的：河不一定夠長、沙不一定有（實測整套跑會抽到 0 塊沙的地圖）。
+   抽 12 張挑一張水和沙都齊的來驗 → 驗的是「生成器做得到」，不是「單張運氣」。 */
+function scanHz() {
+  const o = { convey: 0, ice: 0, water: 0, sand: 0 };
+  for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
+    const h = G.hazards[y] && G.hazards[y][x];
+    if (h && o[h.type] !== undefined) o[h.type]++;
+  }
+  return o;
+}
+let info = null, tries = 0, hz = null;
+for (; tries < 12; tries++) {
+  info = B.buildBRMap();
+  hz = scanHz();
+  if (hz.water >= 20 && hz.sand > 0) break;
+}
+hz = scanHz(); // 以最後這張為準，跟 G 對得上
 const wallOnSlow = [];
 for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
   const h = G.hazards[y] && G.hazards[y][x];
-  if (!h) continue;
-  if (hz[h.type] !== undefined) hz[h.type]++;
-  if ((h.type === 'water' || h.type === 'sand') && G.grid[y][x] !== 0) wallOnSlow.push(x + ',' + y);
+  if (h && (h.type === 'water' || h.type === 'sand') && G.grid[y][x] !== 0) wallOnSlow.push(x + ',' + y);
 }
 ok(info.hz && info.hz.belt > 0, '有長條輸送帶（' + (info.hz && info.hz.belt) + ' 條）');
 ok(info.hz && info.hz.ice > 0, '有滑冰區塊（' + (info.hz && info.hz.ice) + ' 塊）');
 ok(info.hz && info.hz.water > 0, '有河流（' + (info.hz && info.hz.water) + ' 條）');
-ok(info.hz && info.hz.sand > 0, '有沙地（' + (info.hz && info.hz.sand) + ' 塊）');
+ok(info.hz && info.hz.sand > 0, '有沙地（' + (info.hz && info.hz.sand) + ' 塊，抽 ' + (tries + 1) + ' 張）');
 ok(hz.water >= 20, '河流總格數 ' + hz.water + '（≥20，不是零星水坑）');
 ok(wallOnSlow.length === 0, '水／沙只鋪在可以走的格子（沒有壓在岩層上）');
 // 出生點不能被機關蓋住

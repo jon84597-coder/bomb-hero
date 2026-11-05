@@ -289,7 +289,10 @@ function defaultRpg() {
     sk: {},
     skLoad: [],
     bag: {},
-    ver: 1
+    ver: 1,
+    /* v5.20：營地存檔的樂觀鎖。每次寫入 +1，前端帶著自己看到的 baseRev 回來，
+       對不上就代表「另一台裝置改過」→ 回 409 讓前端重讀，而不是無聲蓋掉。 */
+    campRev: 0
   };
 }
 
@@ -350,6 +353,7 @@ function sanitizeCamp(rpg) {
     if (v > 0) bag[k] = v;
   });
   rpg.bag = bag;
+  rpg.campRev = clampInt(rpg.campRev, 0, 1e9, 0);
   return rpg;
 }
 
@@ -433,9 +437,12 @@ function applyClear(rpg, stage, meta, opts) {
   if (!force && s > rpg.cleared + 1) return { ok: false, err: 'STAGE_LOCKED', need: rpg.cleared + 1, got: s };
   const replay = s <= rpg.cleared;
   const lvBefore = lvOfXp(ensureXp(rpg)).lv;
+  /* v5.20：金幣合軌 —— 過關金幣一律由前端 Shop.addGold() 發（玩家眼前看到的那一個）。
+     舊版這裡也加一次 rpg.gold，於是同一個玩家有兩個「💰」：商店錢包會動、rpg.gold 也會動，
+     但兩邊數字不同步，買東西時永遠對不上。
+     現在 rpg.gold 只保留舊帳號的殘值（不再成長、也不再顯示），新帳號永遠是 0。 */
   if (!replay) {
     rpg.cleared = s;
-    rpg.gold = Math.max(0, (rpg.gold || 0) + stageReward(s));
   }
   if (meta) {
     if (meta.deaths != null) rpg.deaths = Math.max(rpg.deaths || 0, clampInt(meta.deaths, 0, 999999, 0));
@@ -1419,6 +1426,7 @@ function createCloud(options) {
       left: points - sumAlloc(acc.rpg.alloc),
       skPts: rpgSkPtsOf(acc.rpg),          // v5.19：技能點總數（營地招式師用）
       skLeft: rpgSkLeftOf(acc.rpg),        //        還沒花掉的
+      campRev: acc.rpg.campRev | 0,        // v5.20：營地存檔版本（前端拿來做樂觀鎖）
       // 開發者：全關卡解鎖（RPG 32 張全部直接可玩）
       unlocked: dev ? MAX_STAGE : Math.min(MAX_STAGE, acc.rpg.cleared + 1),
       layout: acc.layout || null,
@@ -3019,20 +3027,50 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
            金幣是 Shop 那一套（跟著整包存檔走），rpg.gold 是過關獎勵，兩者不同步，
            所以這裡不當金幣裁判：只負責把營地狀態存進帳號，並夾回合法範圍。
            永久強化 0~3、補給 0~9、招式等級 0~3、出戰欄最多 4 個「已學會的主動招」。 */
+        /* ---- v5.20：重新配點 ----
+           把四項歸零，點數全部回到「未分配」。
+           刻意不收費、不限次數：這是單機 RPG，配點有重量是好事，
+           但「點錯就毀了這輪」不是重量、是懲罰。想換打法的人應該隨時能試。
+           要注意的是陣營天賦（角色）不會跟著換 —— 那個要在角色畫面選。 */
+        if (p === '/api/rpg/respec' && req.method === 'POST') {
+          if (!gate(req, res, 'respec', 6, 2)) return true;
+          acc.rpg.alloc = { hp: 0, def: 0, spd: 0, atk: 0 };
+          acc.rpg.ver = (acc.rpg.ver || 1) + 1;
+          store.touch();
+          logEvent(acc, 'respec', {});
+          return send(res, 200, {
+            ok: true, account: publicAccount(acc),
+            left: pointsTotalFor(acc.rpg), total: pointsTotalFor(acc.rpg)
+          }), true;
+        }
+
         if (p === '/api/rpg/camp' && req.method === 'POST') {
           if (!gate(req, res, 'campsave', 20, 8)) return true;
           const body = await readJson(req, 4096);
           if (!body) return fail(res, 400, 'BAD_BODY'), true;
+          /* v5.20：樂觀鎖 —— 前端帶著它「看到的那個版本」回來。
+             對不上代表另一台裝置在這之間改過（買了東西、學了招），
+             直接覆寫會讓那邊的購買紀錄消失，所以回 409 + 目前帳號，讓前端重讀再重試。 */
+          const baseRev = body.baseRev;
+          const curRev = acc.rpg.campRev | 0;
+          if (baseRev != null && Number(baseRev) !== curRev) {
+            return send(res, 409, {
+              ok: false, err: 'CAMP_CONFLICT',
+              account: publicAccount(acc), campRev: curRev
+            }), true;
+          }
           acc.rpg.perm = body.perm;
           acc.rpg.sk = body.sk;
           acc.rpg.skLoad = body.skLoad;
           acc.rpg.bag = body.bag;
           sanitizeCamp(acc.rpg);
+          acc.rpg.campRev = curRev + 1;
           acc.rpg.ver = (acc.rpg.ver || 1) + 1;
           store.touch();
           return send(res, 200, {
             ok: true,
             account: publicAccount(acc),
+            campRev: acc.rpg.campRev,
             skPts: rpgSkPtsOf(acc.rpg),
             skLeft: rpgSkLeftOf(acc.rpg)
           }), true;

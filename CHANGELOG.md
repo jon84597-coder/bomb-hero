@@ -271,3 +271,19 @@
 |  | 🌐 i18n：新畫面文案 33 條進 5 語字典；`.campdesc` 的重點句改成整句上色（句子中間插 `<b>` 會被切成碎片，別的語言一定翻爛），營地技能點數改成單一節點由 `t()` 注入 |
 |  | 🧪 新增 verify-v519（103 項）：傷害對照表、範圍只看等級、天賦乘數、招式零傷害、技能點公式、出戰欄上限、補給與永久強化、畫面與匯出、i18n 五語齊全；同步更新 v45/v61/v62/v470 的規格斷言。`_runall` 119 支全綠、padtest 56 項 |
 |  | 🔄 版本號 **5.19**、sw.js `v5.19.0`（三份）、`package.json` 5.19.0 |
+| v5.20 | 🧩 <b>拆檔第一步</b>：162 KB 的 i18n 字典搬到 js/i18n-src.js（window.__I18N_SRC），主檔 1,867,772 → 1,727,446 字元；預算線同步收緊到 1,780,000（verify-v479） |
+|  | 📦 字典外移的連帶修正：沙盒把外部 js 併進 html 再丟給 vm（用正則抓 script 只會抓到第一個 inline 區塊），並匯出 html／rawHtml／i18nPre 三種來源，22 支測試逐支改讀正確來源 |
+|  | ♻️ <b>洗點</b> POST /api/rpg/respec：四項歸零、點數全退、免費不限次（gate 6 次 / 2 秒）；配點頁多一顆「全部退回」 |
+|  | ⚖️ <b>模式隔離</b>：Gift.setStars／soloNoHit／star3／每週最速榜全部加 solo 判斷，RPG 不再污染一般關卡的評價。key 沒動（避免既有星數歸零），只改「什麼時候呼叫」 |
+|  | 💰 <b>金幣合軌</b>：後端 applyClear 不再成長 rpg.gold（欄位保留給舊帳號的殘值），前端 Shop.addGold 是唯一錢包 |
+|  | 🏆 <b>全破成績單</b> finish()：32 關走完給等級／經驗／招式／強化四項統計，END_KEY 只彈一次，重打改走 toast |
+|  | 🎉 <b>升級演出卡</b> levelUp()：#rpgPop 容器 pointer-events:none、卡片 auto，關閉鈕與 toast 留退路 |
+|  | 🔒 <b>營地樂觀鎖</b>：campRev／baseRev，衝突回 409 CAMP_CONFLICT；RpgUI.campMerge 取永久強化最大值、招式聯集、補給取多、出戰欄本地優先，前端自動合併重送（玩家看不到 409） |
+|  | 🎯 <b>每日任務保底</b>：rollMissions 改成「2 通用 + 1 RPG」（rpgLv／rpgClear／rpgBoss），打 RPG 不再只是順便解掉擊殺 |
+|  | 📚 <b>圖鑑</b> Codex／CodexUI：4 分頁（怪物 48／魔王 8／道具 11／招式 10），存 localStorage bombhero-codex-v1；鎖住的格子畫黑色剪影（filter brightness(0) opacity(.26)），沒有立繪的招式才顯示問號 |
+|  | 🌐 新文案 30 條進 5 語字典（lvl.*／respec.*／end.*／gift.misRpg*／codex.*），英文 key 1,492 → 1,522 |
+|  | 🐛 修：campMerge 寫在 RpgUI 的 IIFE 內卻沒匯出，Cloud.campSave 靠 RpgUI.campMerge 取用會靜默退回「不合併」→ 補進匯出 |
+|  | 🐛 修：CodexUI.wire() 沒在啟動時呼叫，首頁浮動鈕點了沒反應；📖 在深藍底上幾乎看不見，換成 📚（四處） |
+|  | 🧪 新增 verify-v520（79 項）：洗點、模式隔離、升級卡、全破、樂觀鎖（含後端實跑 409 與衝突重送）、RPG 任務、圖鑑、金幣合軌 |
+|  | 🧪 verify-v511 的沙地／河流改成抽 12 張挑一張合格的來驗（隨機地形曾抽到 0 塊沙就整支判紅）；verify-v519 的版本斷言改成元組比較。_runall 120 支全綠、padtest 56 項 |
+|  | 🔄 版本號 5.20、sw.js v5.20.0（三份）、package.json 5.20.0；CORE 加 ./js/i18n-src.js |

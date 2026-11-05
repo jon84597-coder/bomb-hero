@@ -4328,6 +4328,107 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
   .skbtn { width: 44px; height: 44px; font-size: 19px; }
   .skbtn .skh { display: none; }
 }
+
+/* ===== v5.20：RPG 演出卡（升級與全破共用同一個元件） =====
+   刻意做 pointer-events: none —— 卡片以外的區域照樣點得到遊戲，
+   升級彈出時不會把玩家的操作卡住 2 秒。 */
+#rpgPop {
+  position: fixed; inset: 0; z-index: 1560; display: none;
+  align-items: center; justify-content: center; pointer-events: none;
+  background: radial-gradient(circle at 50% 42%, rgba(72,46,16,.42), rgba(6,10,20,.78));
+  animation: rpgPopFade .2s ease;
+}
+#rpgPop.on { display: flex; }
+@keyframes rpgPopFade { from { opacity: 0; } to { opacity: 1; } }
+.rpgpopcard {
+  pointer-events: auto; width: min(352px, calc(100vw - 44px)); text-align: center; box-sizing: border-box;
+  background: linear-gradient(180deg, #fffaf0, #ffeccb); border: 3px solid #e0a862; border-radius: 22px;
+  padding: 20px 18px 16px; box-shadow: 0 22px 60px rgba(0,0,0,.5), 0 0 0 6px rgba(255,236,200,.20);
+  animation: rpgPopUp .32s cubic-bezier(.2,.9,.3,1.24);
+}
+@keyframes rpgPopUp { from { transform: translateY(26px) scale(.93); opacity: 0; } }
+.rpgpopcard .rk { font-size: 11px; font-weight: 900; letter-spacing: .2em; color: #c98a3c; }
+.rpgpopcard .rt { font-size: 30px; font-weight: 900; color: #7b4a1f; line-height: 1.15; margin: 3px 0 4px; text-shadow: 0 2px 0 #fff; }
+.rpgpopcard .rs { font-size: 12.5px; color: #8a6a4a; line-height: 1.7; }
+.rpgpopcard .rgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 13px 0 2px; }
+.rpgpopcard .rgrid div { background: rgba(123,74,31,.07); border: 1px solid rgba(200,150,90,.34); border-radius: 12px; padding: 7px 4px; }
+.rpgpopcard .rgrid b { display: block; font-size: 18px; color: #b9641c; line-height: 1.25; }
+.rpgpopcard .rgrid span { font-size: 10.5px; color: #8a6a4a; }
+.rpgpopcard .rgo {
+  margin-top: 13px; width: 100%; border: 0; cursor: pointer; border-radius: 12px; padding: 11px;
+  font-size: 14.5px; font-weight: 900; color: #5c3410;
+  background: linear-gradient(180deg, #ffd27a, #f7a94a); box-shadow: 0 4px 0 #d98b2c;
+  -webkit-tap-highlight-color: transparent;
+}
+.rpgpopcard .rgo:active { transform: translateY(2px); box-shadow: 0 2px 0 #d98b2c; }
+@media (max-width: 420px) {
+  .rpgpopcard { padding: 17px 15px 14px; }
+  .rpgpopcard .rt { font-size: 26px; }
+}
+
+/* ===== v5.20：圖鑑 ===== */
+#codexBtn {
+  position: fixed; left: 12px; bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+  z-index: 57; width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  background: radial-gradient(circle at 50% 34%, #4a5f8a 0%, #23304a 74%);
+  box-shadow: 0 0 0 2px rgba(190,215,255,.5), 0 0 0 4px rgba(60,86,128,.7),
+              0 0 14px -2px rgba(120,180,255,.5), 0 8px 16px -8px rgba(0,0,0,.6);
+  -webkit-tap-highlight-color: transparent;
+}
+#codexBtn:active { transform: scale(.94); }
+#codexBk { position: fixed; inset: 0; z-index: 1500; display: none; background: rgba(6,10,20,.6); }
+#codexBk.on { display: block; }
+#codexModal {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.97);
+  z-index: 1502; display: none; width: min(560px, calc(100vw - 22px));
+  max-height: min(80vh, 680px); overflow: hidden; box-sizing: border-box;
+  background: linear-gradient(180deg, #fff9ef, #ffefd6); border: 2px solid #e8c39a; border-radius: 20px;
+  box-shadow: 0 26px 70px rgba(0,0,0,.5); color: #5c3d1e;
+}
+#codexModal.on { display: flex; flex-direction: column; transform: translate(-50%, -50%) scale(1); }
+#codexModal .cdxhd {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 13px 15px 10px; border-bottom: 1px solid rgba(200,150,90,.35);
+}
+#codexModal .cdxhd b { font-size: 16px; color: #7b4a1f; letter-spacing: .02em; }
+#codexModal .cdxhd .cdxcnt { font-size: 12px; font-weight: 800; color: #b9641c; }
+#codexModal .cdxx { border: 0; background: rgba(123,74,31,.10); color: #7b4a1f; width: 30px; height: 30px;
+  border-radius: 10px; font-size: 14px; font-weight: 900; cursor: pointer; }
+#codexTabs { display: flex; gap: 6px; padding: 10px 15px 0; flex-wrap: wrap; }
+#codexTabs button {
+  border: 1px solid rgba(200,150,90,.45); background: rgba(255,255,255,.5); color: #8a6a4a;
+  border-radius: 11px; padding: 7px 11px; font-size: 12px; font-weight: 800; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#codexTabs button.sel { background: linear-gradient(180deg,#ffd27a,#f7a94a); border-color: #e0a862; color: #5c3410; }
+#codexHint { padding: 8px 16px 2px; font-size: 11px; color: #a0805c; line-height: 1.6; }
+#codexBody {
+  padding: 10px 14px 16px; overflow: auto; -webkit-overflow-scrolling: touch;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px;
+}
+#codexBody .cdxcell {
+  background: rgba(255,255,255,.62); border: 1px solid rgba(200,150,90,.34); border-radius: 13px;
+  padding: 7px 4px 6px; text-align: center;
+}
+#codexBody .cdxcell.lk { background: rgba(123,74,31,.06); border-style: dashed; }
+#codexBody .cdximg { position: relative; height: 54px; display: flex; align-items: center; justify-content: center; }
+#codexBody .cdximg img { max-width: 54px; max-height: 54px; image-rendering: auto; filter: drop-shadow(0 2px 2px rgba(0,0,0,.18)); }
+#codexBody .cdxico { font-size: 26px; line-height: 1; }
+#codexBody .cdxq {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 900; color: rgba(123,74,31,.45);
+}
+#codexBody .cdxcell.lk .cdximg img { filter: brightness(0) opacity(.26); }
+#codexBody .cdxcell.lk .cdxico { filter: grayscale(1) opacity(.32); }
+#codexBody .cdxn { font-size: 10.5px; font-weight: 800; color: #7b4a1f; margin-top: 4px; line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#codexBody .cdxcell.lk .cdxn { color: #b39a80; }
+@media (max-width: 420px) {
+  #codexBody { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+  #codexBody .cdximg { height: 46px; }
+  #codexBody .cdximg img { max-width: 46px; max-height: 46px; }
+}
 </style>
 </head>
 <body>
@@ -4377,7 +4478,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.19</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.20</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4400,6 +4501,18 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     </div><!-- /toprow -->
     <!-- v4.87：每日簽到／每日任務／每週榜（固定在左下角，不佔用 2×3 選單格） -->
     <button id="giftBtn" type="button" title="每日簽到"><span class="gico">🎁</span><i class="gdot" id="giftDot"></i></button>
+    <!-- v5.20：圖鑑（浮動鈕，不佔首頁選單高度） -->
+    <button id="codexBtn" type="button" title="圖鑑">📚</button>
+    <div id="codexBk"></div>
+    <div id="codexModal" role="dialog" aria-label="codex">
+      <div class="cdxhd">
+        <div><b id="codexTitle">📚 圖鑑</b> <span class="cdxcnt" id="codexCount">0 / 0</span></div>
+        <button class="cdxx" id="codexX" type="button" aria-label="close">✕</button>
+      </div>
+      <div id="codexTabs"></div>
+      <div id="codexHint"></div>
+      <div id="codexBody"></div>
+    </div>
     <div class="bootdiag hide" id="bootDiag">
       <b>⚠️ 這個裝置有部分功能沒有載入成功</b>
       <p id="bootDiagMsg">商店／帳號／RPG／BOSS 可能按了沒反應。</p>
@@ -4420,7 +4533,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.19</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.20</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4656,6 +4769,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
       <div class="hint" style="margin:2px 0 10px">配好點就往營地：那裡可以買補給、學招式、選關卡再出發。</div>
       <div class="rowbtns">
         <button class="ghostbtn" id="btnRpgRandom" type="button">🎲 電腦隨機分配</button>
+        <button class="ghostbtn" id="btnRpgRespec" type="button">♻️ 全部退回</button>
         <button class="biggo" id="btnRpgStart" type="button">前往營地 →</button>
       </div>
       <div class="backrow">
@@ -5207,6 +5321,9 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
   <div class="tc-dots" id="tutDots"></div>
 </div>
 
+<!-- v5.20：RPG 升級／全破演出卡（由 RpgPop 控制內容） -->
+<div id="rpgPop"><div class="rpgpopcard" id="rpgPopCard"></div></div>
+
 <script src="js/i18n-src.js"></script>
 <script>
   try {
@@ -5360,7 +5477,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.19';
+const VERSION = '5.20';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -9484,6 +9601,8 @@ const HUD_OF_ITEM = {
 };
 function applyItem(p, type) {
   try { if (!p.ai && isMyPlayer(p)) Gift.add('item', 1); } catch (e) {}   // v4.87：每日任務「吃道具」
+  // v5.20：圖鑑 —— 撿過就點亮（type 就是道具的鍵：fire／bomb／speed…）
+  try { if (!p.ai && isMyPlayer(p)) Codex.mark('i', type); } catch (e) {}
   try { if (!p.ai && isMyPlayer(p)) Ach.count('itemGet', 1); } catch (e) {}
   switch (type) {
     case 'fire': p.power = Math.min(10, p.power + 1); break;
@@ -11452,6 +11571,11 @@ function AchFoe(e) {
   if (!e || typeof Ach === 'undefined') return;
   try {
     const boss = !!(e.boss || e.brBoss);
+    // v5.20：圖鑑 —— 打倒過就點亮（魔王用「第幾隻」編號，一般怪用物種 id）
+    try {
+      if (boss) Codex.mark('b', 'b' + Math.max(1, Math.min(8, Math.ceil((Game.stage || 1) / 4))));
+      else Codex.mark('f', e.spec || e.type);
+    } catch (err0) {}
     // 大逃殺裡的小怪不算「殺人數」（那是玩家對玩家）→ 只有單人／RPG 記
     if (Game.mode === 'solo' || Game.mode === 'daily') {
       Ach.count(boss ? 'soloBoss' : 'soloKill', 1);
@@ -12838,7 +12962,13 @@ const Gift = (function () {
         { id: 'item', n: 8, g: 100 },
         { id: 'clear', n: 2, g: 150 },
         { id: 'jump', n: 12, g: 110 },
-        { id: 'perfect', n: 1, g: 180 }
+        { id: 'perfect', n: 1, g: 180 },
+        /* v5.20：RPG 專屬（r: 1 標記）。以前六個任務全是「炸彈超人通用事件」，
+           結果 RPG 玩家打一小時只推動 kill／clear，投入與回報完全不成比例。
+           現在每天固定保底一個 RPG 目標，深的那個模式才接得上每日循環。 */
+        { id: 'rpgBoss', n: 1, g: 220, r: 1 },
+        { id: 'rpgLv', n: 1, g: 180, r: 1 },
+        { id: 'rpgClear', n: 2, g: 160, r: 1 }
       ];
       const MISSION_KINDS = {};
       POOL.forEach(function (m) { MISSION_KINDS[m.id] = 1; });
@@ -12914,14 +13044,17 @@ const Gift = (function () {
       /* ---------------- 每日任務 ---------------- */
       function rollMissions(day) {
         const rnd = rngFrom(dailySeedOf('mis-' + day));
-        const pool = POOL.slice();
-        const out = [];
-        for (let i = 0; i < 3 && pool.length; i++) {
-          const k = Math.floor(rnd() * pool.length) % pool.length;
-          const m = pool.splice(k, 1)[0];
-          out.push({ id: m.id, n: m.n, p: 0, got: false, g: m.g });
+        const generic = POOL.filter(function (m) { return !m.r; });
+        const rpg = POOL.filter(function (m) { return m.r; });
+        const picked = [];
+        // 兩個通用
+        for (let i = 0; i < 2 && generic.length; i++) {
+          picked.push(generic.splice(Math.floor(rnd() * generic.length) % generic.length, 1)[0]);
         }
-        return out;
+        // 一個 RPG（沒有 RPG 內容的玩家也可以靠簽到拿獎勵，只是這格會空著）
+        if (rpg.length) picked.push(rpg.splice(Math.floor(rnd() * rpg.length) % rpg.length, 1)[0]);
+        while (picked.length < 3 && generic.length) picked.push(generic.shift());
+        return picked.map(function (m) { return { id: m.id, n: m.n, p: 0, got: false, g: m.g }; });
       }
       function missions() {
         load();
@@ -13092,13 +13225,178 @@ const Gift = (function () {
   }
 })();
 
+/* ============================================================
+   v5.20：圖鑑
+   · 只記錄「玩家真的遇過的東西」—— 打倒過的怪、打贏過的魔王、撿過的道具、學會的招式
+   · 魔王與招式可以直接從存檔推導（cleared / skLevel），怪物與道具必須現開紀錄
+   · 存在本機（localStorage）。state() 已經留好，之後要上雲只要接一條存檔欄位
+   ============================================================ */
+const Codex = (function () {
+  const KEY = 'bombhero-codex-v1';
+  const D = { f: {}, b: {}, i: {} };
+  let loaded = false;
+  function load() {
+    if (loaded) return;
+    loaded = true;
+    try {
+      const o = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (o && typeof o === 'object') {
+        ['f', 'b', 'i'].forEach(function (k) {
+          if (o[k] && typeof o[k] === 'object') {
+            for (const id in o[k]) if (o[k][id]) D[k][id] = 1;
+          }
+        });
+      }
+    } catch (e) {}
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} }
+  function mark(kind, id) {
+    if (!id) return false;
+    load();
+    if (!D[kind]) D[kind] = {};
+    if (D[kind][id]) return false;
+    D[kind][id] = 1; save();
+    return true;
+  }
+  function has(kind, id) { load(); return !!(D[kind] && D[kind][id]); }
+  function count(kind) { load(); let n = 0; for (const k in D[kind]) n++; return n; }
+  return { mark: mark, has: has, count: count, state: function () { load(); return D; } };
+})();
+
+/* v5.20：圖鑑面板（四個分頁共用同一個格狀版面） */
+const CodexUI = (function () {
+  const TABS = [
+    { id: 'f', ico: '👾', n: 'codex.tabFoe' },
+    { id: 'b', ico: '👹', n: 'codex.tabBoss' },
+    { id: 'i', ico: '🎁', n: 'codex.tabItem' },
+    { id: 's', ico: '📚', n: 'codex.tabSkill' }
+  ];
+  let tab = 'f', wired = false;
+
+  function foeList() {
+    return ENEMY_SPECIES.map(function (sp) {
+      return { id: sp.id, name: sp.name, img: 'spr/foe-art-' + sp.id + '.webp', got: Codex.has('f', sp.id) };
+    });
+  }
+  function bossList() {
+    const out = [];
+    for (let i = 1; i <= 8; i++) {
+      out.push({
+        id: 'b' + i, name: themeName(i - 1),
+        img: 'spr/boss-b' + i + '-idle.webp',
+        // 打贏過就點亮；也可以直接從進度推導（第 4 關＝第 1 隻魔王）
+        got: Codex.has('b', 'b' + i) || (RPG.cleared | 0) >= i * 4
+      });
+    }
+    return out;
+  }
+  function itemList() {
+    const out = [];
+    for (const k in ITEMS) {
+      out.push({ id: k, name: ITEMS[k].name, ico: ITEMS[k].icon || '❔',
+        img: 'spr/item-art-' + k + '.webp', got: Codex.has('i', k) });
+    }
+    return out;
+  }
+  function skillList() {
+    return RPG_SKILLS.map(function (sk) {
+      return { id: sk.id, name: sk.n, ico: sk.ico, got: rpgSkLv(sk.id) > 0 };
+    });
+  }
+  function listOf(id) {
+    if (id === 'b') return bossList();
+    if (id === 'i') return itemList();
+    if (id === 's') return skillList();
+    return foeList();
+  }
+  function renderTabs() {
+    const box = $id('codexTabs');
+    if (!box) return;
+    box.innerHTML = TABS.map(function (t2) {
+      return '<button type="button" data-cdx="' + t2.id + '" class="' + (t2.id === tab ? 'sel' : '') + '">' +
+        t2.ico + ' ' + t(t2.n) + '</button>';
+    }).join('');
+  }
+  function render() {
+    if (!wired) return;
+    renderTabs();
+    const box = $id('codexBody');
+    if (!box) return;
+    const list = listOf(tab);
+    const gotN = list.filter(function (x) { return x.got; }).length;
+    if ($id('codexCount')) $id('codexCount').textContent = gotN + ' / ' + list.length;
+    const hintKey = tab === 'f' ? 'codex.hintFoe' : tab === 'b' ? 'codex.hintBoss'
+      : tab === 'i' ? 'codex.hintItem' : 'codex.hintSkill';
+    if ($id('codexHint')) $id('codexHint').textContent = t(hintKey);
+    /* 鎖住的格子：有圖就畫成剪影（比一整片「?」有辨識度，也讓人想湊齊），
+       沒圖的（招式）才顯示「?」。圖片載不到時退回 emoji，不會留下空白格。 */
+    box.innerHTML = list.map(function (x) {
+      const hasImg = !!x.img;
+      return '<div class="cdxcell' + (x.got ? '' : ' lk') + '">' +
+        '<div class="cdximg">' +
+        (hasImg ? '<img src="' + x.img + '" alt="" loading="lazy">' : '') +
+        '<span class="cdxico"' + (hasImg ? ' style="display:none"' : '') + '>' + (x.ico || '❔') + '</span>' +
+        (!x.got && !hasImg ? '<span class="cdxq">?</span>' : '') +
+        '</div>' +
+        '<div class="cdxn">' + (x.got ? tr(x.name) : '???') + '</div></div>';
+    }).join('');
+    if (box.querySelectorAll) {
+      const ims = box.querySelectorAll('img');
+      for (let i = 0; i < (ims.length || 0); i++) {
+        ims[i].onerror = (function (im) {
+          return function () {
+            im.style.display = 'none';
+            const sib = im.nextElementSibling;
+            if (sib) sib.style.display = '';
+          };
+        })(ims[i]);
+      }
+    }
+  }
+  function open(id) {
+    wire();
+    if (id) tab = id;
+    if ($id('codexTitle')) $id('codexTitle').textContent = '📚 ' + t('codex.title');
+    render();
+    const m = $id('codexModal'), b = $id('codexBk');
+    if (m) m.classList.add('on');
+    if (b) b.classList.add('on');
+    try { AudioSys.sfx('click'); } catch (e) {}
+  }
+  function close() {
+    const m = $id('codexModal'), b = $id('codexBk');
+    if (m) m.classList.remove('on');
+    if (b) b.classList.remove('on');
+  }
+  function wire() {
+    if (wired) return;
+    wired = true;
+    const btn = $id('codexBtn');
+    if (btn) btn.addEventListener('click', function () { open(); });
+    const x = $id('codexX');
+    if (x) x.addEventListener('click', function () { try { AudioSys.sfx('click'); } catch (e) {} close(); });
+    const bk = $id('codexBk');
+    if (bk) bk.addEventListener('click', close);
+    const tb = $id('codexTabs');
+    if (tb) tb.addEventListener('click', function (e) {
+      const b2 = e.target && e.target.closest ? e.target.closest('button') : null;
+      if (!b2) return;
+      tab = b2.getAttribute('data-cdx') || 'f';
+      try { AudioSys.sfx('click'); } catch (e2) {}
+      render();
+    });
+  }
+  return { open: open, close: close, render: render, wire: wire };
+})();
+
 // ----- v4.87：簽到／任務／每週榜的面板（首頁左下角 🎁） -----
 const GiftUI = (function () {
   try {
     return (function () {
       const MKEY = {
         kill: 'gift.misKill', brick: 'gift.misBrick', item: 'gift.misItem',
-        clear: 'gift.misClear', jump: 'gift.misJump', perfect: 'gift.misPerfect'
+        clear: 'gift.misClear', jump: 'gift.misJump', perfect: 'gift.misPerfect',
+        rpgBoss: 'gift.misRpgBoss', rpgLv: 'gift.misRpgLv', rpgClear: 'gift.misRpgClear'
       };
       let bound = false, weekCache = null;
 
@@ -14716,11 +15014,15 @@ function updateSolo(dt) {
             if (typeof Cloud !== 'undefined') Cloud.clearStage(cleared, { exp: gain });
             RPG.xpGain = 0;
             if (lvUp.up > 0) {
+              Gift.add('rpgLv', lvUp.up);                // v5.20：RPG 專屬每日任務「升級」
               const L = rpgLvOf(RPG.xp);
-              toast('🎉 升到 Lv.' + L.lv + '（+' + lvUp.up + ' 級）· 配點 +' + Math.floor(lvUp.up / 2), 3.2);
-              try { AudioSys.sfx('victory'); } catch (e2) {}
+              // v5.20：升級改成演出卡（成長感有一半在演出）
+              try { RpgUI.levelUp(lvUp, L.lv); }
+              catch (e2) { toast('🎉 升到 Lv.' + L.lv + '（+' + lvUp.up + ' 級）', 3.2); }
               try { updateHud(); } catch (e2) {}
             }
+            // v5.20：32 關走完 → 成績單（只彈一次，之後重打只給 toast）
+            if (cleared >= 32) { try { RpgUI.finish(); } catch (e2) {} }
             toast('⭐ 本關經驗 +' + gain, 2.4);
           }
         } catch (e) {}
@@ -14732,21 +15034,26 @@ function updateSolo(dt) {
         // v4.87：過關結算 —— 三星、每日任務、每週榜（每日挑戰不列入，避免污染正式進度）
         try {
           if (!Game.daily) {
+            /* v5.20：solo 與 RPG 共用同一組關號（1~32），所以星數／無傷／週榜一定要分開，
+               否則 RPG 角色帶著護甲、傷害加成與補給，會直接把 solo 的最速紀錄洗掉。
+               分工：星數・無傷・每週榜 = 只有 solo；RPG 自己的進度走 Ach 的 rpgClear。 */
+            const solo = Game.mode !== 'rpg';
             const hurt = (Game.hurtCount | 0) > 0;
             const stars = Gift.judgeStars(Game.timer, Game.timerMax, hurt);
-            if (Gift.setStars(cleared, stars)) {
+            if (solo && Gift.setStars(cleared, stars)) {
               toast(t('gift.starGain', { n: cleared, s: '★★★'.slice(0, stars) }), 2.4);
             }
             Gift.add('clear', 1);
-            if (!hurt) Gift.add('perfect', 1);
+            if (!solo) Gift.add('rpgClear', 1);          // v5.20：RPG 專屬每日任務
+            if (solo && !hurt) Gift.add('perfect', 1);
             try {
-              Ach.count(Game.mode === 'rpg' ? 'rpgClear' : 'soloClear', 1);
-              if (!hurt) Ach.count('soloNoHit', 1);
-              if (stars >= 3) Ach.star3(cleared);
+              Ach.count(solo ? 'soloClear' : 'rpgClear', 1);
+              if (solo && !hurt) Ach.count('soloNoHit', 1);
+              if (solo && stars >= 3) Ach.star3(cleared);
               Rank.submitSoon(3000);
             } catch (e) {}
-            // 每週榜：本週指定關卡 → 送最速通關秒數
-            if (cleared === Gift.weekStage() && isFinite(Game.timerMax) && Game.timerMax > 0) {
+            // 每週榜：本週指定關卡 → 送最速通關秒數（只收 solo 的成績）
+            if (solo && cleared === Gift.weekStage() && isFinite(Game.timerMax) && Game.timerMax > 0) {
               const used = Math.round((Game.timerMax - Game.timer) * 1000);
               if (used > 1000 && Gift.weekSetBest(used)) {
                 Lb.submitWeek(Gift.weekKey(), settings.playerName || '', used).then(function (res) {
@@ -31899,7 +32206,17 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.19', date: '2026-11-06', now: true, items: [
+  { v: '5.20', date: '2026-11-06', now: true, items: [
+    '♻️ <b>配點可以重來了</b>：能力配點頁多了「全部退回」，四項歸零、點數一個不少地還你，<b>不收費也不限次數</b>。以前點錯只能重開帳號，現在隨時換打法',
+    '📚 <b>新增圖鑑</b>：首頁左下角的 <b>📚</b> 打開 —— <b>48 種怪物、8 隻魔王、11 種道具、10 個招式</b>，打倒過、打贏過、撿過、學會過就會點亮，還沒遇到的用<b>剪影</b>提示長相',
+    '🎯 <b>RPG 也有每日任務了</b>：每天固定一個 RPG 目標（打倒魔王／升一級／過兩關），打 RPG 不再只是「順便解掉擊殺」',
+    '🏆 <b>32 關全破有成績單</b>：最終等級、累積經驗、學會幾招、強化到幾級，一次看完（只彈一次，之後重打不再打擾）',
+    '🎉 <b>升級改成演出卡</b>：升了幾級、多了幾點配點與技能點，一張卡講清楚，不再是角落一句小字',
+    '⚖️ <b>排行榜變公平了</b>：星數評價與每週最速榜<b>只算一般關卡</b>。RPG 角色帶著護甲與傷害加成，以前可以直接洗掉別人的紀錄',
+    '💰 <b>金幣合成一個錢包</b>：過關獎勵、商店、營地看到的都是同一個數字，不會再有「明明有錢卻買不到」',
+    '🔒 <b>兩台裝置同時玩不會互相蓋掉</b>：營地的購買與招式會<b>合併</b>而不是覆寫'
+  ] },
+  { v: '5.19', date: '2026-11-06', now: false, items: [
     '💥 <b>「攻擊」配點現在是真的傷害</b>：以前它同時管火力與傷害、跟撿到的火力道具打架，現在<b>每一點 +1.2 火焰傷害</b>（0 點打 2、10 點打 14），<b>爆炸範圍改由等級、永久強化與場上道具提供</b>（起始 2 格，每 15 級 +1）',
     '🧙 <b>選完角色先看到「角色畫面」</b>：等級、經驗條、實際能力（生命／護甲／速度／傷害／範圍／炸彈數）、出戰招式、冒險進度全部一頁看完，看完直接繼續冒險或換角色',
     '🏕️ <b>新增「營地」</b>：出發前先進營地 —— 找<b>雜貨商人</b>買這一場的補給（藥水／護甲片／火力符／遙控器／復活幣）或<b>永久強化</b>，找<b>招式師</b>用技能點學招式，然後選關卡出發',
@@ -33402,6 +33719,7 @@ const RPG = {
   skLoad: [],                          // 出戰的 4 個主動招式 id
   bag: {},                             // 已買好的補給 id → 數量（出發時消耗）
 
+  campRev: 0,      // v5.20：營地存檔版本（樂觀鎖；每次寫入 +1）
   unlocked: 32     // 32 = 沒有雲端時全部開放
 };
 // v4.1：可用總點數（9 + 每 5 關 1 點，最多 40）由伺服器算，前端只跟著顯示
@@ -33578,7 +33896,10 @@ function rpgGainFoeExp(e) {
   if (!e || Game.mode !== 'rpg') return 0;
   const g = Math.max(1, e.exp || rpgFoeXp(Game.stage || 1));
   RPG.xpGain = (RPG.xpGain | 0) + g;
-  if (e.boss) { try { pushPop(e.x, e.y - (e.r || 20), '+' + g + ' EXP', { color: '#ffe27a', size: .85 }); } catch (x) {} }
+  if (e.boss) {
+    try { pushPop(e.x, e.y - (e.r || 20), '+' + g + ' EXP', { color: '#ffe27a', size: .85 }); } catch (x) {}
+    try { Gift.add('rpgBoss', 1); } catch (x) {}     // v5.20：RPG 專屬每日任務「打倒魔王」
+  }
   return g;
 }
 
@@ -34968,6 +35289,21 @@ const Rpg = (function () {
       AudioSys.sfx('click');
       renderMaps();
     });
+    // v5.20：全部退回（洗點）
+    const rsBtn = $id('btnRpgRespec');
+    if (rsBtn) rsBtn.addEventListener('click', function () {
+      AudioSys.ensure(); AudioSys.sfx('click');
+      if (rpgSum(RPG.alloc) <= 0) { toast(t('respec.none'), 1.8); return; }
+      if (typeof confirm === 'function' && !confirm(t('respec.confirm'))) return;
+      RPG.alloc = { hp: 0, def: 0, spd: 0, atk: 0 };
+      renderStats();
+      if (Cloud.online()) {
+        Cloud.respec().then(function (r) {
+          if (r) { renderStats(); toast(t('respec.done'), 2); }
+          else toast(t('respec.fail'), 2.4);
+        });
+      } else toast(t('respec.done'), 2);
+    });
     const rndBtn = $id('btnRpgRandom');
     if (rndBtn) rndBtn.addEventListener('click', function () {
       AudioSys.ensure(); AudioSys.sfx('click');
@@ -35054,6 +35390,104 @@ function rpgApplyCamp(r) {
 
 const RpgUI = (function () {
   let shopTab = 'bag', skTab = 'learn';
+
+  /* ---------------- v5.20：演出卡（升級／全破共用） ---------------- */
+  const END_KEY = 'bombhero-rpg-end';
+  const RpgPop = (function () {
+    let timer = 0;
+    function hide() {
+      const p = $id('rpgPop');
+      if (p) p.classList.remove('on');
+      if (timer) { clearTimeout(timer); timer = 0; }
+    }
+    function show(html, opt) {
+      opt = opt || {};
+      const p = $id('rpgPop'), c = $id('rpgPopCard');
+      if (!p || !c) return;
+      c.innerHTML = html;
+      p.classList.add('on');
+      if (timer) clearTimeout(timer);
+      timer = 0;
+      if (opt.auto !== false) timer = setTimeout(hide, opt.ms || 2600);
+      try { AudioSys.sfx(opt.sfx || 'win'); } catch (e) {}
+      const b = c.querySelector('.rgo');
+      if (b) b.addEventListener('click', function () {
+        try { AudioSys.sfx('click'); } catch (e) {}
+        hide();
+        if (opt.onGo) { try { opt.onGo(); } catch (e) {} }
+      });
+      // 點卡片以外的暗處也可以關（pointer-events 在容器上是 none，這裡只是保險）
+      p.addEventListener('click', function (e) { if (e.target === p) hide(); });
+    }
+    return { show: show, hide: hide };
+  })();
+
+  /* 升級：把「升了幾級、多了幾點」講清楚 —— 這一代的成長感有一半在這裡 */
+  function levelUp(lvUp, lvNow) {
+    const up = (lvUp && lvUp.up) | 0;
+    if (up <= 0) return;
+    const pts = Math.floor(up / 2);
+    const skBefore = rpgSkPts() - Math.floor(lvNow / RPG_SK_PER);
+    const skGain = Math.max(0, rpgSkPts() - Math.max(0, skBefore + Math.floor((lvNow - up) / RPG_SK_PER)));
+    RpgPop.show(
+      '<div class="rk">LEVEL UP</div>' +
+      '<div class="rt">Lv.' + lvNow + '</div>' +
+      '<div class="rs">' + t('lvl.sub', { n: up }) + '</div>' +
+      '<div class="rgrid">' +
+      '<div><b>+' + pts + '</b><span>' + t('lvl.pts') + '</span></div>' +
+      '<div><b>+' + skGain + '</b><span>' + t('lvl.sk') + '</span></div>' +
+      '</div>' +
+      '<button class="rgo" type="button">' + t('lvl.ok') + '</button>',
+      { ms: 2800, sfx: 'victory' }
+    );
+  }
+
+  /* 全破：32 關走完給一張成績單。只彈一次（之後重打就用 toast）。 */
+  function finish() {
+    let seen = 0;
+    try { seen = localStorage.getItem(END_KEY) | 0; } catch (e) {}
+    const L = rpgLvOf(RPG.xp);
+    let skN = 0;
+    const sk = RPG.sk || {};
+    for (const k in sk) if (sk[k] > 0) skN++;
+    const pm = rpgPerm();
+    const permN = (pm.hp | 0) + (pm.bomb | 0) + (pm.fire | 0);
+    const body =
+      '<div class="rk">' + (seen ? t('end.replayK') : t('end.k')) + '</div>' +
+      '<div class="rt">' + (seen ? t('end.replayT') : t('end.t')) + '</div>' +
+      '<div class="rs">' + t('end.sub') + '</div>' +
+      '<div class="rgrid">' +
+      '<div><b>Lv.' + L.lv + '</b><span>' + t('end.lv') + '</span></div>' +
+      '<div><b>' + String(RPG.xp | 0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</b><span>' + t('end.xp') + '</span></div>' +
+      '<div><b>' + skN + ' / 10</b><span>' + t('end.sk') + '</span></div>' +
+      '<div><b>' + permN + ' / 9</b><span>' + t('end.perm') + '</span></div>' +
+      '</div>' +
+      '<button class="rgo" type="button">' + t('end.ok') + '</button>';
+    RpgPop.show(body, { ms: seen ? 4200 : 0, auto: !seen, sfx: 'victory', onGo: function () { openChar(); } });
+    try { localStorage.setItem(END_KEY, '1'); } catch (e) {}
+  }
+
+  /* v5.20：營地樂觀鎖 —— 兩台裝置的購買紀錄取聯集，不是「後寫的贏」 */
+  function campMerge(local, remote) {
+    const a = local || {}, b = remote || {};
+    const out = { perm: {}, sk: {}, skLoad: [], bag: {} };
+    ['hp', 'bomb', 'fire'].forEach(function (k) {
+      out.perm[k] = Math.max((a.perm && a.perm[k]) | 0, (b.perm && b.perm[k]) | 0);
+    });
+    const keys = {};
+    [a.sk || {}, b.sk || {}].forEach(function (o) { for (const k in o) keys[k] = 1; });
+    for (const k in keys) out.sk[k] = Math.max((a.sk && a.sk[k]) | 0, (b.sk && b.sk[k]) | 0);
+    // 出戰欄：先看本地（玩家剛編排的），再補遠端學過的主動招
+    const lo = (a.skLoad || []).filter(function (id) { return out.sk[id] > 0; });
+    (b.skLoad || []).forEach(function (id) {
+      if (lo.length < RPG_SK_SLOTS && out.sk[id] > 0 && lo.indexOf(id) < 0) lo.push(id);
+    });
+    out.skLoad = lo.slice(0, RPG_SK_SLOTS);
+    const bk = {};
+    [a.bag || {}, b.bag || {}].forEach(function (o) { for (const k in o) bk[k] = 1; });
+    for (const k in bk) out.bag[k] = Math.max((a.bag && a.bag[k]) | 0, (b.bag && b.bag[k]) | 0);
+    return out;
+  }
 
   function saveCamp() {
     const st = { perm: rpgPerm(), sk: RPG.sk || {}, skLoad: rpgLoadout(), bag: RPG.bag || {} };
@@ -35449,10 +35883,12 @@ const RpgUI = (function () {
     openShop: openShop, renderShop: renderShop,
     openSkill: openSkill, renderSkill: renderSkill,
     buyBag: buyBag, buyPerm: buyPerm, learn: learn, toggleSlot: toggleSlot,
-    saveCamp: saveCamp, applyCamp: rpgApplyCamp, depart: depart
+    saveCamp: saveCamp, applyCamp: rpgApplyCamp, depart: depart,
+    levelUp: levelUp, finish: finish, pop: RpgPop, campMerge: campMerge
   };
 })();
 try { RpgUI.wire(); } catch (e) { __bootFail('RpgUI', e); }
+try { CodexUI.wire(); } catch (e) { __bootFail('CodexUI', e); }   // v5.20：圖鑑的浮動鈕要先接線
 
 /* ============================================================================
  * v4.1：帳號 / 第三方登入 / 雲端存檔（伺服器權威）
@@ -35594,6 +36030,8 @@ const Cloud = (function () {
       }
       RPG.unlocked = a.unlocked | 0;
       RPG_POINTS_TOTAL = a.points | 0;
+      // v5.20：營地版本（舊帳號沒有 → 0）
+      RPG.campRev = (a.campRev != null ? a.campRev : (a.rpg.campRev | 0)) | 0;
     }
     // v4.2：雲端存檔裡有觸控版面就套用（只套一次，之後以本機操作為準）
     if (a.layout && !S.gotLayout) { S.gotLayout = true; applyRemoteLayout(a.layout); }
@@ -35959,6 +36397,15 @@ const Cloud = (function () {
       return null;
     }, function () { return null; });
   }
+  /* v5.20：重新配點 —— 四項歸零、點數全部退回。
+     不收費也不限次數：單機 RPG 的配點可以有重量，但「點錯就毀了這輪」是懲罰不是重量。 */
+  function respec() {
+    if (!S.online) return Promise.resolve(null);
+    return req('/api/rpg/respec', {}).then(function (r) {
+      if (r && r.ok) { adopt(r.account); return r; }
+      return null;
+    }, function () { return null; });
+  }
   function setAlloc(alloc) {
     if (!S.online) return Promise.resolve(null);
     return req('/api/rpg/alloc', { alloc: alloc }).then(function (r) {
@@ -35971,10 +36418,21 @@ const Cloud = (function () {
   /* v5.19：營地狀態（永久強化／招式／出戰欄／補給）
      離線時只寫 localStorage；上線時推給伺服器，回來的帳號會把數值夾回合法範圍
      （永久強化 0~3、補給 0~9、出戰欄最多 4 個），所以改前端也塞不出超規格的東西。 */
+  /* v5.20：帶 baseRev 上去（樂觀鎖）。
+     版本對不上 = 另一台裝置在這之間買了東西／學了招 → 直接覆寫會讓那邊的紀錄消失。
+     做法是「取聯集再送一次」：買過的不會消失，也不用叫玩家自己處理衝突。 */
   function campSave(st) {
     if (!S.online) return Promise.resolve(null);
-    return req('/api/rpg/camp', st || {}).then(function (r) {
+    const body = Object.assign({}, st || {}, { baseRev: RPG.campRev | 0 });
+    return req('/api/rpg/camp', body).then(function (r) {
       if (r && r.ok) { if (r.account) adopt(r.account); return r; }
+      if (r && r.err === 'CAMP_CONFLICT' && r.account) {
+        const merged = (typeof RpgUI !== 'undefined' && RpgUI.campMerge) ? RpgUI.campMerge(st || {}, (r.account.rpg || {})) : (st || {});
+        return req('/api/rpg/camp', Object.assign(merged, { baseRev: r.campRev | 0 })).then(function (r2) {
+          if (r2 && r2.ok) { if (r2.account) adopt(r2.account); return r2; }
+          return null;
+        }, function () { return null; });
+      }
       return null;
     }, function () { return null; });
   }
@@ -36166,7 +36624,7 @@ const Cloud = (function () {
   return {
     init: init, wireUi: wireUi, paint: paint, open: open, close: close,
     online: online, guest: isGuest, acc: acc, unlocked: unlocked, isDev: isDev,
-    spend: spend, setAlloc: setAlloc, clearStage: clearStage, sync: sync, campSave: campSave,
+    spend: spend, setAlloc: setAlloc, clearStage: clearStage, sync: sync, campSave: campSave, respec: respec,
     /* v4.85：整包存檔（單機進度／金幣／隨從／票券）—— 成功回 {ok,rev,ts} */
     saveGet: function () {
       return req('/api/save/get', {}).then(function (r) { return r || { ok: false }; }, function () { return { ok: false }; });
@@ -37734,6 +38192,8 @@ window.__BH = {
   RPG_SKILLS: RPG_SKILLS, RPG_BAG: RPG_BAG, RPG_PERM_UP: RPG_PERM_UP, rpgTakeBag: rpgTakeBag,
   RPG_SK_MAX: RPG_SK_MAX, RPG_SK_SLOTS: RPG_SK_SLOTS, RPG_SK_PER: RPG_SK_PER,
   charTalent: charTalent, CHAR_TALENTS: CHAR_TALENTS, rpgApplyCamp: rpgApplyCamp,
+  // v5.20：圖鑑
+  Codex: Codex, CodexUI: CodexUI,
   // v5.17：商店隨從大圖示（跟 CharPreview 同一套）
   PetPreview: PetPreview, PetArt: (typeof PetArt !== 'undefined' ? PetArt : null), PET_KINDS: PET_KINDS,
   // v1.7 新增：每關專屬 BGM
