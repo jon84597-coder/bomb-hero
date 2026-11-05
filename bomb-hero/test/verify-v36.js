@@ -34,14 +34,18 @@ ok(iTitle > 0 && iAnn > iTitle && iAnn < iCard, '公告欄放在 #scr-title 內�
 
 console.log('\n=== 2. 公告內容 ===');
 const body = (html.slice(html.indexOf('<div class="annbody" id="annBody">'), html.indexOf('<div class="title-card">')) || '');
-ok(body.indexOf('大家好，這是我利用 AI 的方式來研發生成的遊戲') > 0, '內容：AI 研發生成的遊戲');
-ok(body.indexOf('電腦 PC 的網頁上遊玩') > 0 && body.indexOf('手機的網頁上進行遊戲') > 0, '內容：PC／手機都能玩');
-ok(body.indexOf('目前還在開發測試階段') > 0 && body.indexOf('非營利') > 0, '內容：開發測試階段、非營利');
+// v5.15：公告全文改寫 → 斷言改成認「新的關鍵句」，而不是整段死字
+ok(body.indexOf('獨自一人從零開始研發製作的經典炸彈對戰遊戲') > 0, '內容：一個人從零開始做的炸彈對戰遊戲');
+ok(body.indexOf('電腦 PC 瀏覽器') > 0 && body.indexOf('手機瀏覽器') > 0 && body.indexOf('跨端網頁設計') > 0, '內容：PC／手機都能玩（跨端網頁）');
+ok(body.indexOf('開發測試階段') > 0 && body.indexOf('非營利') > 0, '內容：開發測試階段、非營利');
 ok(body.indexOf('✉️ 信箱') > 0 || body.indexOf('右上角的') > 0, '內容：引導點右上角信箱回報');
-ok(body.indexOf('祝大家天天開心快樂') > 0, '內容：結尾祝福');
+ok(body.indexOf('祝大家玩得開心') > 0, '內容：結尾祝福');
 const fbUrl = 'https://www.facebook.com/jon84597';
 ok(html.indexOf('href="' + fbUrl + '"') > 0, 'FB 連結：' + fbUrl);
 ok(html.indexOf('target="_blank"') > 0 && html.indexOf('rel="noopener noreferrer"') > 0, 'FB 連結另開新窗且安全 rel');
+const lineUrl = 'https://line.me/ti/p/HYY6HV9ybS';
+ok(body.indexOf('href="' + lineUrl + '"') > 0, 'LINE 連結：' + lineUrl);
+ok(body.indexOf('LINE：<a ') > 0, 'LINE 做成可點的連結（不是純文字）');
 ok(body.indexOf('— Jon.') > 0, '署名 Jon.');
 
 console.log('\n=== 3. CSS：區塊內排版 + 收起成膠囊 ===');

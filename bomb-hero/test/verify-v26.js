@@ -196,9 +196,12 @@ function aiFireRun(seconds) {
   return fired;
 }
 let aiFires = 0;
-for (let k = 0; k < 3; k++) { aiP.fireCd = 0; aiFires += aiFireRun(20); }
-ok(aiFires > 0, '電腦騎龍真的會吐火（60 秒吐了 ' + aiFires + ' 次）');
-const aiGap = 60 / Math.max(1, aiFires);
+// 2026-11 修：AI 的吐火間隔是 30～60 秒，只跑 60 秒會隨機吐 0 次（測試自己變紅）。
+//   拉長到 300 秒（15 輪 × 20 秒），把「隨機」的影響壓到可以忽略。
+const AI_SEC = 20 * 15;
+for (let k = 0; k < 15; k++) { aiP.fireCd = 0; aiFires += aiFireRun(20); }
+ok(aiFires > 0, '電腦騎龍真的會吐火（' + AI_SEC + ' 秒吐了 ' + aiFires + ' 次）');
+const aiGap = AI_SEC / Math.max(1, aiFires);
 ok(aiGap > P.DINO_FIRE_CD, '電腦吐火間隔 ' + aiGap.toFixed(1) + ' 秒 > 玩家的 ' + P.DINO_FIRE_CD + ' 秒（頻率明顯較低）');
 ok(!!P.AI_LEVELS.normal.dinoFire && P.AI_LEVELS.normal.dinoFire < .4, '觸發機率低（dinoFire=' + P.AI_LEVELS.normal.dinoFire + '）');
 ok(P.AI_LEVELS.weak.dinoFire < P.AI_LEVELS.strong.dinoFire, '弱 AI 吐得比強 AI 更少（' + P.AI_LEVELS.weak.dinoFire + ' < ' + P.AI_LEVELS.strong.dinoFire + '）');

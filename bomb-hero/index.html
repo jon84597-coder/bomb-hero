@@ -2162,6 +2162,16 @@ user-select: text; -webkit-user-select: text;
 .annbox .annbody a { color: #2f6fd0; font-weight: 800; text-decoration: underline; word-break: break-all; }
 .annbox .annfb { margin-top: 8px; }
 .annbox .annsign { margin-top: 7px; text-align: right; font-weight: 900; color: var(--ink-soft, #8a6a4a); }
+/* v5.15：公告改版 —— 一句一個區塊。重點樣式做在「整行」上，不要在句子中間插 <b>，
+   不然每一段都會被切成碎片，其他語言翻出來會是斷掉的半句。 */
+.annbox .annbody .annlead { font-weight: 900; color: #4a2c12; }
+.annbox .annbody .annplat {
+  margin-top: 7px; padding: 7px 9px 8px; border-radius: 11px;
+  background: rgba(244, 112, 60, .09); border: 1px solid rgba(244, 112, 60, .24);
+}
+.annbox .annbody .annplat i { display: block; font-style: normal; line-height: 1.7; }
+.annbox .annbody .annplat i + i { margin-top: 3px; }
+.annbox .annbody .annhi { font-weight: 700; color: #a8451f; }
 @media (min-width: 1400px) { .annbox { width: clamp(240px, 18vw, 340px); } .annbox .annbody { font-size: 13.5px; } }
 
 @media (max-width: 1199px) { .annbox { width: 100%; } }
@@ -4081,7 +4091,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.14</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.15</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4090,13 +4100,14 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         <span class="annico">📢</span><span class="annlabel">作者公告</span><span class="anncaret" id="annCaret">▾</span>
       </button>
       <div class="annbody" id="annBody">
-        <p>大家好，這是我利用 AI 的方式來研發生成的遊戲，</p>
-        <p>主要是可以在電腦 PC 的網頁上遊玩，也可以在手機的網頁上進行遊戲，看各位方便。</p>
-        <p>用電腦畫面視野可能會比較好，手機畫面小有些侷限但也方便遊玩。</p>
-        <p>目前還在開發測試階段，非營利、單純興趣研究這塊而已，很多東西都還沒完成，還有很多問題要解決。</p>
-        <p>大家不嫌棄的話可以玩看看；有遇到任何問題、在遊戲中遇到 BUG，或是有什麼遊戲上的建議，都很歡迎點選右上角的 <b>✉️ 信箱</b> 告知我唷！</p>
-        <p>謝謝大家的捧場～～ 祝大家天天開心快樂！</p>
-        <p class="annfb">FB 連結：<a href="https://www.facebook.com/jon84597" target="_blank" rel="noopener noreferrer">https://www.facebook.com/jon84597</a></p>
+        <p class="annlead">💣 大家好！這是我獨自一人從零開始研發製作的經典炸彈對戰遊戲</p>
+        <p>為了讓大家玩得最方便，遊戲完全採用「跨端網頁設計」：</p>
+        <div class="annplat"><i>💻 電腦 PC 瀏覽器：視野最廣、操作更流暢！</i><i>📱 手機瀏覽器：隨點隨玩，單手就能輕鬆開炸！</i></div>
+        <p>目前仍處於「開發測試階段」，這是我純粹出於興趣與研究製作的非營利作品。許多系統與玩法還在持續完善中，也還有不少問題需要逐步修復與優化。</p>
+        <p>如果您不嫌棄，非常歡迎進來體驗開炸！</p>
+        <p class="annhi">遊玩中遇到任何 BUG、系統卡頓，或對遊戲有任何寶貴建議，都歡迎點擊右上角的 ✉️「信箱」按鈕私訊告訴我！</p>
+        <p>❤️ 感謝大家的熱情捧場與支持，祝大家玩得開心，天天都有好心情！</p>
+        <p class="annfb">👉 歡迎關注 FB 粉絲頁獲取最新更新：<br><a href="https://www.facebook.com/jon84597" target="_blank" rel="noopener noreferrer">https://www.facebook.com/jon84597</a><br>LINE：<a href="https://line.me/ti/p/HYY6HV9ybS" target="_blank" rel="noopener noreferrer">jon84597</a></p>
         <p class="annsign">— Jon.</p>
       </div>
     </div>
@@ -4123,7 +4134,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.14</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.15</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4919,7 +4930,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.14';
+const VERSION = '5.15';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -5749,14 +5760,15 @@ z105|砂塵|砂尘|Dust|砂塵|모래먼지
 z106|自然氣息|自然气息|Nature|自然の気配|자연 기운
 shop.shareDesc|分享到下面任一平台，成功分享就送 <b>{n}</b> 金幣。每個平台只能領一次、每天最多領 3 次；要登入正式帳號（遊客不行）才能領。|分享到下面任一平台，成功分享就送 <b>{n}</b> 金币。每个平台只能领一次、每天最多领 3 次；要登入正式账号（游客不行）才能领。|Share to any platform below and get <b>{n}</b> coins. Once per platform, up to 3 times a day, and you must be signed in (guests can't claim).|下のいずれかのプラットフォームでシェアすると <b>{n}</b> コイン。同じプラットフォームは1回まで、1日3回まで。正式アカウントでのログインが必要です（ゲスト不可）。|아래 플랫폼 중 아무 곳에나 공유하면 <b>{n}</b> 코인을 드립니다. 플랫폼당 1회, 하루 최대 3회이며 정식 계정으로 로그인해야 합니다(게스트 불가).
 z107|爆爆英雄 BOMB HERO|爆爆英雄 BOMB HERO|BOMB HERO|爆爆英雄 BOMB HERO|BOMB HERO
-z108|大家好，這是我利用 AI 的方式來研發生成的遊戲，|大家好，这是我利用 AI 的方式来研发生成的游戏，|Hi everyone — this is a game I built by developing with AI.|こんにちは。これは AI を使って開発したゲームです。|안녕하세요. AI를 활용해 개발한 게임입니다.
-z109|主要是可以在電腦 PC 的網頁上遊玩，也可以在手機的網頁上進行遊戲，看各位方便。|主要是可以在电脑 PC 的网页上游玩，也可以在手机的网页上进行游戏，看各位方便。|You can play it in a browser on PC or on your phone — whichever suits you.|主に PC のブラウザでも、スマホのブラウザでも遊べます。使いやすい方でどうぞ。|주로 PC 웹 브라우저에서도, 휴대폰 웹에서도 플레이할 수 있습니다. 편한 쪽으로 하세요.
-z110|用電腦畫面視野可能會比較好，手機畫面小有些侷限但也方便遊玩。|用电脑画面视野可能会比较好，手机画面小有些局限但也方便游玩。|The PC screen gives you a wider view; a phone is smaller and a bit limited, but still handy.|PC の画面の方が視野が広くて快適です。スマホは画面が小さく少し制約がありますが、手軽に遊べます。|PC 화면이 시야가 넓어 더 좋습니다. 휴대폰은 화면이 작아 조금 제한적이지만 간편하게 즐길 수 있습니다.
-z111|目前還在開發測試階段，非營利、單純興趣研究這塊而已，很多東西都還沒完成，還有很多問題要解決。|目前还在开发测试阶段，非营利、单纯兴趣研究这块而已，很多东西都还没完成，还有很多问题要解决。|It's still in development and testing — non-profit, just a hobby project. Lots is unfinished and many issues remain.|まだ開発・テスト段階で、非営利の趣味研究です。未完成の部分や解決すべき課題がたくさんあります。|아직 개발·테스트 단계이고 비영리, 순수 취미 연구입니다. 미완성인 부분과 해결할 문제가 많습니다.
-z112|大家不嫌棄的話可以玩看看；有遇到任何問題、在遊戲中遇到 BUG，或是有什麼遊戲上的建議，都很歡迎點選右上角的|大家不嫌弃的话可以玩看看；有遇到任何问题、在游戏中遇到 BUG，或是有什么游戏上的建议，都很欢迎点选右上角的|Feel free to give it a try. If you hit any problem, find a bug or have a suggestion, you're very welcome to click the|よかったら遊んでみてください。問題やバグ、ゲームへの提案があれば、右上の|괜찮으시면 한번 해보세요. 문제나 버그, 게임 제안이 있으면 오른쪽 위의
-z113|✉️ 信箱|✉️ 信箱|✉️ Mailbox|✉️ メール|✉️ 메일
-z114|告知我唷！|告知我唷！|and tell me!|から知らせてください！|를 눌러 알려 주세요!
-z115|謝謝大家的捧場～～ 祝大家天天開心快樂！|谢谢大家的捧场～～ 祝大家天天开心快乐！|Thanks for all the support — wishing you happy days every day!|応援ありがとうございます～～ 毎日楽しく過ごせますように！|응원해 주셔서 감사합니다~~ 매일 즐겁게 지내세요!
+an1|💣 大家好！這是我獨自一人從零開始研發製作的經典炸彈對戰遊戲|💣 大家好！这是我独自一人从零开始研发制作的经典炸弹对战游戏|💣 Hi everyone! This is a classic bomb-battle game that I built all on my own, from scratch|💣 こんにちは！これは私が一人でゼロから開発したクラシックなボンバー対戦ゲームです|💣 안녕하세요! 제가 혼자서 처음부터 개발한 클래식 폭탄 대전 게임입니다
+an2|為了讓大家玩得最方便，遊戲完全採用「跨端網頁設計」：|为了让大家玩得最方便，游戏完全采用「跨端网页设计」：|To make it as easy as possible, the whole game is built as a cross-platform web app:|できるだけ手軽に遊べるよう、完全に「クロスプラットフォームな Web 設計」にしています：|최대한 편하게 즐길 수 있도록 게임을 완전한 크로스 플랫폼 웹 방식으로 만들었습니다:
+an3|💻 電腦 PC 瀏覽器：視野最廣、操作更流暢！|💻 电脑 PC 浏览器：视野最广、操作更流畅！|💻 PC browser: the widest view and the smoothest controls!|💻 PC ブラウザ：視野が最も広く、操作も快適！|💻 PC 브라우저: 시야가 가장 넓고 조작이 부드럽습니다!
+an4|📱 手機瀏覽器：隨點隨玩，單手就能輕鬆開炸！|📱 手机浏览器：随点随玩，单手就能轻松开炸！|📱 Phone browser: open and play — blow things up one-handed!|📱 スマホのブラウザ：開いてすぐ、片手で気軽に爆発！|📱 휴대폰 브라우저: 바로 열고 한 손으로 가볍게 폭파!
+an5|目前仍處於「開發測試階段」，這是我純粹出於興趣與研究製作的非營利作品。許多系統與玩法還在持續完善中，也還有不少問題需要逐步修復與優化。|目前仍处于「开发测试阶段」，这是我纯粹出于兴趣与研究制作的非营利作品。许多系统与玩法还在持续完善中，也还有不少问题需要逐步修复与优化。|The game is still in a development-and-testing stage — a non-profit project I built purely out of interest and for research. Many systems and modes are still being improved, and plenty of issues are still waiting to be fixed.|まだ「開発・テスト段階」で、純粋に趣味と研究のために作った非営利の作品です。多くのシステムや遊びはまだ調整中で、修正すべき問題もたくさんあります。|아직 개발·테스트 단계이며, 순수하게 흥미와 연구를 위해 만든 비영리 작품입니다. 많은 시스템과 플레이는 계속 다듬는 중이고, 고쳐야 할 문제도 적지 않습니다.
+an6|如果您不嫌棄，非常歡迎進來體驗開炸！|如果您不嫌弃，非常欢迎进来体验开炸！|If you don't mind, you're very welcome to jump in and start blowing things up!|よろしければ、ぜひ遊んで爆発を楽しんでください！|괜찮으시다면 언제든 들어와서 폭파를 즐겨 보세요!
+an7|遊玩中遇到任何 BUG、系統卡頓，或對遊戲有任何寶貴建議，都歡迎點擊右上角的 ✉️「信箱」按鈕私訊告訴我！|游玩中遇到任何 BUG、系统卡顿，或对游戏有任何宝贵建议，都欢迎点击右上角的 ✉️「信箱」按钮私讯告诉我！|If you hit a bug, see some lag, or have any suggestion about the game, just tap the ✉️ Mailbox button at the top right and send me a message!|バグや動作の重さ、ゲームへの提案があれば、右上の ✉️「メール」ボタンからメッセージを送ってください！|버그나 끊김, 게임에 대한 제안이 있으면 오른쪽 위 ✉️'메일' 버튼으로 메시지를 보내 주세요!
+an8|❤️ 感謝大家的熱情捧場與支持，祝大家玩得開心，天天都有好心情！|❤️ 感谢大家的热情捧场与支持，祝大家玩得开心，天天都有好心情！|❤️ Thanks so much for all the support — have fun, and have a great day every day!|❤️ 応援してくださって本当にありがとうございます。楽しんで、毎日いい気分で過ごせますように！|❤️ 응원해 주셔서 정말 감사합니다. 즐겁게 즐기시고 매일 좋은 하루 되세요!
+an9|👉 歡迎關注 FB 粉絲頁獲取最新更新：|👉 欢迎关注 FB 粉丝页获取最新更新：|👉 Follow the Facebook page for the latest updates:|👉 最新情報は FB ページをフォローしてください：|👉 최신 소식을 받으려면 FB 페이지를 팔로우하세요:
 z116|🦸 暱稱（最多 8 字，|🦸 昵称（最多 8 字，|🦸 Nickname (max 8 chars, |🦸 ニックネーム（最大8文字、|🦸 닉네임 (최대 8자, 
 z117|可以留空|可以留空|may be blank|空欄でもOK|비워도 됨
 z118|🛒 商店|🛒 商店|🛒 Shop|🛒 ショップ|🛒 상점
@@ -32097,7 +32109,13 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.14', date: '2026-11-05', now: true, items: [
+  { v: '5.15', date: '2026-11-06', now: true, items: [
+    '📢 <b>作者公告更新了</b>：寫清楚這是<b>一個人從零開始做的</b>炸彈對戰遊戲、電腦與手機都能玩（跨端網頁），以及目前還在<b>開發測試階段</b>、非營利',
+    '💬 公告最下面除了 FB 粉絲頁，多了 <b>LINE</b>（點一下就能加），有問題一樣可以點右上角 ✉️ 信箱告訴我',
+    '🎨 公告排版重做：電腦／手機兩種玩法用底色區塊並排，一眼就看懂；手機上一樣可以滑動閱讀，<b>不會擠到下面的按鈕</b>',
+    '📱 手機上公告預設收成「📢 作者公告」小膠囊，想看再點開；電腦版維持在標題上方，<b>不擋 LOGO 也不擋選單</b>'
+  ] },
+  { v: '5.14', date: '2026-11-05', now: false, items: [
     '🛠️ <b>黑底紫光的專屬名號</b>：隱藏稱號，<b>不用成就分</b> —— 只有遊戲作者本人的帳號會出現（成就 → 稱號頁可以自由戴上／卸下），遊戲中一樣畫在頭上',
     '🔔 <b>有人加你好友或傳訊息，首頁會亮驚嘆號</b>：選單上方出現一條「🔔 2 個好友邀請 · 1 則未讀訊息」，點一下直接跳到那個對話；入口按鈕上也會顯示未讀數字。通知只出現在首頁，<b>不會蓋到遊戲畫面</b>',
     '🤝 <b>好友邀請可以真的按了</b>：好友頁最上面列出「誰想加你」，直接<b>接受／忽略</b>（以前只寫「點名字加為好友」，名字其實不能點）',
