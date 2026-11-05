@@ -123,11 +123,11 @@ ok(/const lab = e\.label \? '　<span class="bhevlab">'/.test(SRC), '足跡列�
 head('④ 「我」的牌子改吃角色貼圖上緣');
 
 ok(/function charArtH\(T, animal\)/.test(SRC), '有 charArtH()（算角色貼圖總高）');
-ok(/function drawMeBadge\(x, y, R, T, headTop\)/.test(SRC), 'drawMeBadge 多收 headTop');
+ok(/function drawMeBadge\(x, y, R, T, headTop(?:, mode)?\)/.test(SRC), 'drawMeBadge 多收 headTop（v5.8 再收 mode）');
 ok(/const gap = Math\.max\(5, T \* \.16\) \+ h \* \.38;/.test(SRC), '牌子與頭頂之間留一道縫（含箭頭高度）');
 ok(/const top = \(headTop != null\)/.test(SRC) && /y - R \* 1\.30 - h \+ bob/.test(SRC),
   '有 headTop 就用它，沒有才退回舊公式（相容）');
-ok(/drawMeBadge\(x, y - jumpY, R, T, artTop\);/.test(SRC), 'drawPlayer 真的把量到的 artTop 傳進去');
+ok(/drawMeBadge\(x, y - jumpY, R, T, artTop, meMode\);/.test(SRC), 'drawPlayer 真的把量到的 artTop 傳進去（v5.8 再傳 mode）');
 
 // 行為：牌子一定在頭頂上方
 G.T = 32; G.gameT = 1;

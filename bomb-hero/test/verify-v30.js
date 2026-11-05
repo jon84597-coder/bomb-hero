@@ -58,10 +58,11 @@ console.log('\n=== 1. 多人對戰：自己的角色頭上顯示「我」 ===');
 ok(P.ME_BADGE_TXT === '我', '徽章文字是「我」');
 ok(/const ME_BADGE_TXT = '我';/.test(html), '原始碼有 ME_BADGE_TXT = 我');
 ok(/function isMyPlayer\(p\)/.test(html), '有 isMyPlayer() 判定誰是「我」');
-ok(/function drawMeBadge\(x, y, R, T, headTop\)/.test(html), '有 drawMeBadge() 繪製牌子（v5.7 多收 headTop）');
+ok(/function drawMeBadge\(x, y, R, T, headTop(?:, mode)?\)/.test(html), '有 drawMeBadge() 繪製牌子（v5.7 多收 headTop、v5.8 多收 mode）');
 // v4.74：大逃殺也顯示同一塊牌子（使用者要求「頭上跟對戰一樣顯示我」）
-ok(/if \(\(Game\.mode === 'battle' \|\| Game\.mode === 'br'\) && p\.alive && isMyPlayer\(p\)\) \{[\s\S]{0,600}?drawMeBadge\(x, y - jumpY, R, T, artTop\)/.test(html),
-   'drawPlayer 在「對戰／大逃殺 + 存活 + 是我」時才畫牌子');
+//   v5.8：改成「四個模式都畫，能不能畫交給 meBadgeMode() 判斷」
+ok(/const meMode = meBadgeMode\(\);[\s\S]{0,640}?drawMeBadge\(x, y - jumpY, R, T, artTop, meMode\)/.test(html),
+   'drawPlayer 在「存活 + 是我 + 標示還沒收掉」時畫牌子');
 
 // --- isMyPlayer 行為 ---
 ok(P.isMyPlayer(null) === false, 'null 不是我');
@@ -123,9 +124,15 @@ Net.on = savedNet.on; Net.pid = savedNet.pid; Net.slotOf = savedNet.slotOf; Net.
   rec.calls.length = 0; P.drawPlayer(p, G.T);
   ok(textsDrawn().indexOf('我') < 0, '對戰模式：AI 角色頭上不出現「我」');
 
-  p.ai = false; G.mode = 'solo';
+  // v5.8：單人／RPG 前 5 秒也會標「我」（找自己在哪），五秒後才收掉
+  p.ai = false; G.mode = 'solo'; G._meT = 0;
   rec.calls.length = 0; P.drawPlayer(p, G.T);
-  ok(textsDrawn().indexOf('我') < 0, '單人闖關：不出現「我」（只有一個人，不用標）');
+  ok(textsDrawn().indexOf('我') >= 0, '單人闖關：前 5 秒也會標「我」');
+
+  G._meT = 9;
+  rec.calls.length = 0; P.drawPlayer(p, G.T);
+  ok(textsDrawn().indexOf('我') < 0, '單人闖關：過了 5 秒就收掉（不擋畫面）');
+  G._meT = 0;
 
   G.mode = 'battle'; p.alive = false;
   rec.calls.length = 0; P.drawPlayer(p, G.T);

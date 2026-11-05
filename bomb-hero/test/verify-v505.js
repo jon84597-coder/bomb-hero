@@ -25,7 +25,12 @@ const B = env.BH, G = env.G;
 head('① 縮小看大地圖的「我在這裡」標示');
 ok(typeof B.drawSelfPin === 'function' && typeof B.selfPinAlpha === 'function', 'drawSelfPin / selfPinAlpha 存在');
 G.state = 'play';
-G.zoom = 1;    ok(B.selfPinAlpha() === 0, '100% 不畫（角色本來就看得見）');
+// v5.8：前 5 秒不管縮放都畫（開局最重要的就是找到自己在哪）；
+//       五秒後只有大逃殺留著，而且回到原本「42%~100%」這一段的規則。
+G._meT = 0; G.mode = 'br';
+G.zoom = 1;    ok(B.selfPinAlpha() === 1, 'v5.8：前 5 秒連 100% 都看得到（開局找自己）');
+G._meT = 9;    // 五秒後
+G.zoom = 1;    ok(B.selfPinAlpha() === 0, '五秒後 100% 不畫（角色本來就看得見）');
 G.zoom = .99;  ok(B.selfPinAlpha() === 0, '99% 也還不畫');
 G.zoom = .9;   const a90 = B.selfPinAlpha(); ok(a90 > 0 && a90 < 1, '90% 淡入中（' + a90.toFixed(2) + '）');
 G.zoom = .42;  ok(B.selfPinAlpha() === 1, '42%（最小）全亮');
@@ -33,6 +38,14 @@ G.zoom = .6;   ok(B.selfPinAlpha() === 1, '60% 全亮');
 G.zoom = .6; G.state = 'over';  ok(B.selfPinAlpha() === 0, '結束畫面不畫');
 G.zoom = .6; G.state = 'idle';  ok(B.selfPinAlpha() === 0, '選單狀態不畫');
 G.state = 'play';
+// v5.8：非大逃殺 → 五秒後就算縮到 42% 也不畫
+['solo', 'rpg', 'battle'].forEach(function (m) {
+  G.mode = m; G._meT = 9; G.zoom = .42;
+  ok(B.selfPinAlpha() === 0, 'v5.8：' + m + ' 五秒後收掉（縮到 42% 也不畫）');
+  G._meT = 0;
+  ok(B.selfPinAlpha() === 1, 'v5.8：' + m + ' 前五秒還是看得到');
+});
+G.mode = 'br'; G._meT = 9;
 
 // 螢幕座標換算：zoom=1、cam=0 時，世界座標＝螢幕座標
 G.zoom = 1; G.camX = 0; G.camY = 0;
@@ -46,9 +59,11 @@ ok(Math.abs(sp2.x - (W / 2 + .5 * (100 - W / 2))) < .001, '50% 時以畫面中�
 ok(Math.abs(sp2.y - (H / 2 + .5 * (60 - H / 2))) < .001, '50% 時以畫面中心縮放（y=' + sp2.y + '）');
 
 // 真的會畫：故意把玩家放在畫面中央，數 arc() 呼叫
-function countPin(zoom) {
+function countPin(zoom, mode, meT) {
   G.zoom = zoom;
   G.state = 'play';
+  G.mode = mode || 'br';
+  G._meT = (meT === undefined) ? 9 : meT;   // 預設「五秒後」
   G.T = 32; G.gameT = 1.2;
   G.players = [B.makePlayer(0, 0, null, { x: 5, y: 5, px: 5.5 * 32, py: 5.5 * 32 })];
   G.players[0].alive = true;
@@ -60,15 +75,18 @@ function countPin(zoom) {
 }
 const n100 = countPin(1);
 const n50 = countPin(.5);
-ok(n100 === 0, '100% 時一個 arc 都不畫（' + n100 + '）');
-ok(n50 >= 4, '50% 時畫出定位環＋箭頭（arc 呼叫 ' + n50 + ' 次）');
+ok(n100 === 0, '五秒後（大逃殺）100% 時一個 arc 都不畫（' + n100 + '）');
+ok(n50 >= 4, '五秒後（大逃殺）50% 時畫出定位環＋箭頭（arc 呼叫 ' + n50 + ' 次）');
 
-// 各模式共用：只依 Game.players[0]，不看 Game.mode
+// v5.8：五秒內四個模式都畫（連 100% 也畫）；五秒後只有大逃殺留著
 ['solo', 'rpg', 'battle', 'br'].forEach(function (m) {
-  G.mode = m;
-  const n = countPin(.5);
-  ok(n >= 4, m + ' 模式也有定位標示（' + n + '）');
+  ok(countPin(.5, m, 0) >= 4, m + ' 前五秒有定位標示（' + countPin(.5, m, 0) + '）');
+  ok(countPin(1, m, 0) >= 4, m + ' 前五秒連 100% 也有（' + countPin(1, m, 0) + '）');
 });
+['solo', 'rpg', 'battle'].forEach(function (m) {
+  ok(countPin(.5, m, 9) === 0, 'v5.8：' + m + ' 五秒後不再畫定位環');
+});
+ok(countPin(.5, 'br', 9) >= 4, 'v5.8：大逃殺五秒後繼續畫（' + countPin(.5, 'br', 9) + '）');
 
 // 死亡/沒有玩家 → 不畫（不能畫在 0,0）
 G.zoom = .5; G.players[0].alive = false; G.players[0].cart = null;

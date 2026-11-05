@@ -23,7 +23,7 @@ ok(/if \(!BR\.FREE && !dev\) \{/.test(src), '免費時不扣門票');
   ok(list.every(function (v) { return v[0] === 60; }), '每段 60 秒 → 整場 10 分鐘');
   ok(list.every(function (v, i) { return i === 0 || v[1] < list[i - 1][1]; }), '半徑逐段變小（' + list.map(function (v) { return v[1]; }).join('→') + '）');
 })();
-ok(/if \(\(Game\.mode === 'battle' \|\| Game\.mode === 'br'\) && p\.alive && isMyPlayer\(p\)\) \{[\s\S]{0,600}?drawMeBadge\(/.test(src), '大逃殺也顯示「我」的牌子');
+ok(/const meMode = meBadgeMode\(\);[\s\S]{0,640}?drawMeBadge\(x, y - jumpY, R, T, artTop, meMode\)/.test(src), '大逃殺也顯示「我」的牌子');
 ok(/function showBRDeath/.test(src) && /id = 'brEnd'/.test(src), '死亡提示是小卡（#brEnd）不是全螢幕');
 ok(/else \{\s*\/\/ v4\.74：輸了不蓋全螢幕/.test(src), '結算：贏了才開全螢幕');
 ok(/function aiEscape/.test(src) && /const inDanger = dangerAt\(cx, cy, p\)/.test(src), 'AI 站在炸彈上會逃（aiEscape）');

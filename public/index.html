@@ -3669,7 +3669,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.7</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.8</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -3711,7 +3711,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
       </div>
 
-      <div class="ver beta">正式版 v<span id="verTxt">5.7</span></div>
+      <div class="ver beta">正式版 v<span id="verTxt">5.8</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4402,7 +4402,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.7';
+const VERSION = '5.8';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -20888,6 +20888,12 @@ function drawMiniMap() {
 const SELF_PIN_R = 15;                      // 環半徑（CSS px，固定，不隨 zoom 縮放）
 function selfPinAlpha() {
   if (Game.state !== 'play' && Game.state !== 'countdown') return 0;
+  // v5.8：跟頭上的「我」牌子共用同一個 5 秒計時（meBadgeMode）
+  //   前 5 秒：不管縮放大小都要看得到（開局找自己在哪最重要）
+  //   五秒後：只剩大逃殺會留著，而且回到原本「42%~100% 這一段」的規則
+  const mm = meBadgeMode();
+  if (mm === 'off') return 0;
+  if (mm === 'blink') return 1;
   const z = Game.zoom || 1;
   if (z >= .99) return 0;                  // 99%~100% 完全不畫
   return clamp((.99 - z) / .12, 0, 1);     // 99% → 0；87% 以下全亮
@@ -20903,6 +20909,8 @@ function playerScreenPos(p) {
 function drawSelfPin() {
   const a = selfPinAlpha();
   if (a <= .02) return;
+  // v5.8：前 5 秒加一層閃爍（跟「我」牌子同一個節奏），五秒後就不閃了
+  const blink = (meBadgeMode() === 'blink') ? meBadgeBlink(Game.gameT || 0) : 1;
   const p = Game.players && Game.players[0];
   if (!p || (!p.alive && !p.cart)) return;
   const sp = playerScreenPos(p);
@@ -20912,7 +20920,7 @@ function drawSelfPin() {
   const t = Game.gameT || 0;
   const pulse = .5 + .5 * Math.sin(t * 4.2);
   const cx = sp.x, cy = sp.y - T * .5 * z;   // 腳往上一點＝身體中心
-  const al = function (v) { return (v * a).toFixed(3); };
+  const al = function (v) { return (v * a * blink).toFixed(3); };
   ctx.save();
   // ① 很淡的地面光暈：把視線吸過來，但不蓋掉格子內容
   ctx.fillStyle = 'rgba(255,214,96,' + al(.10) + ')';
@@ -24698,14 +24706,50 @@ function charArtH(T, animal) {
   return T * .40 * 3.75 * HERO_ART_SCALE * heroSizeK(animal);
 }
 
-/* v5.7：「我」的牌子改吃「角色貼圖的上緣」，不再用 R 乘固定倍率硬算。
+/* v5.8：「我」的位置標示 —— 前 5 秒每個模式都會閃，五秒後：
+     · 大逃殺 → 一直留著，牌子整個 42%~100% 呼吸縮放（閃爍收掉）
+     · 對戰／單人／RPG → 直接收掉（位置看幾秒就記住了，別擋畫面）
+   倒數階段就算在「前 5 秒」裡（那時候玩家還不能動，正是要找自己在哪），
+   5 秒是從 GO 之後開始算的。 */
+const ME_BLINK_SEC = 5;
+function meBadgeMode() {
+  if (Game.state === 'countdown') return 'blink';
+  if (Game.state !== 'play' && Game.state !== 'roundover') return 'off';
+  if ((Game._meT || 0) < ME_BLINK_SEC) return 'blink';
+  return (Game.mode === 'br') ? 'br' : 'off';
+}
+/* 每幀累計「這張地圖可以動之後過了多久」。三種情況歸零：
+   換地圖（mapSeq 變了）、從不在地圖中（結算／大廳）回到地圖裡、重新開一場。 */
+function meTick(dt) {
+  const st = Game.state;
+  const inMap = (st === 'countdown' || st === 'play' || st === 'roundover');
+  const was = (Game._meSt === 'countdown' || Game._meSt === 'play' || Game._meSt === 'roundover');
+  if (Game._meSeq !== Game.mapSeq || (inMap && !was)) {
+    Game._meSeq = Game.mapSeq;
+    Game._meT = 0;
+  }
+  Game._meSt = st;
+  if (st === 'play' || st === 'roundover') Game._meT = (Game._meT || 0) + dt;
+}
+/* 大逃殺常駐時的呼吸縮放：.71 ± .29 → 剛好 42%~100%（約 2.4 秒一輪） */
+function meBadgeZoom(t) { return .71 + .29 * Math.cos((t || 0) * 2.6); }
+/* 前 5 秒的閃爍：alpha .38~1.0（約 0.67 秒一輪） */
+function meBadgeBlink(t) { return .38 + .62 * (.5 + .5 * Math.sin((t || 0) * 9.4)); }
+/* v5.7：牌子的高度改吃「角色貼圖的上緣」，不再用 R 乘固定倍率硬算。
    舊公式（小屏 y - R*1.30、大屏 y - R*2.30 - 17）在大逃殺特別糟 ——
    大逃殺的地圖 56×44，格子小（T 常常 < 52）→ 走 small 分支，
    算出來的位置正好落在兔子頭裡面，牌子整個蓋住臉。
-   現在由呼叫端量出貼圖真正的最上缘（兔子耳朵、坐騎頭頂）再往上擺。 */
-function drawMeBadge(x, y, R, T, headTop) {
+   現在由呼叫端量出貼圖真正的最上緣（兔子耳朵、坐騎頭頂）再往上擺。 */
+function drawMeBadge(x, y, R, T, headTop, mode) {
   if (!ctx || !ctx.save) return;
+  mode = mode || 'on';
+  if (mode === 'off') return;
   const t = Game.gameT;
+  //   大逃殺常駐 → 牌子整體縮放（42%~100%）；其他模式固定原尺寸
+  const br = (mode === 'br') || (Game.mode === 'br');
+  const zoom = br ? meBadgeZoom(t) : 1;
+  //   前 5 秒閃爍
+  const fade = (mode === 'blink') ? meBadgeBlink(t) : 1;
   //   把手機玩家上方那一格完全遮住。
   const small = T < 52;
   const w = small ? Math.max(20, T * .56) : Math.max(24, T * .68);
@@ -24718,11 +24762,17 @@ function drawMeBadge(x, y, R, T, headTop) {
     : (small ? (y - R * 1.30 - h + bob) : (y - R * 2.3 - 17 - h + bob));
   const L = x - w / 2, Rr = Math.min(h / 2, w / 3);
   ctx.save();
+  ctx.globalAlpha = fade;
+  if (zoom !== 1) {
+    //   以牌子中心為縮放原點 → 牌子只會自己脹縮，不會上下漂
+    const zx = x, zy = top + h * .62;
+    ctx.translate(zx, zy); ctx.scale(zoom, zoom); ctx.translate(-zx, -zy);
+  }
   // 底下的柔光（混戰裡也一眼看到自己）
-  ctx.globalAlpha = .30 * (.62 + Math.sin(t * 6) * .28);
+  ctx.globalAlpha = fade * .30 * (.62 + Math.sin(t * 6) * .28);
   ctx.fillStyle = '#ffd166';
   ctx.beginPath(); ctx.ellipse(x, top + h / 2, w * .74, h * .84, 0, 0, 6.283); ctx.fill();
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = fade;
   // 指向頭頂的小三角
   ctx.beginPath();
   ctx.moveTo(x - h * .24, top + h - 1);
@@ -24983,9 +25033,12 @@ function drawPlayer(p, T) {
       ctx.textAlign = 'start';
     }
   }
-  // v2.4：多人對戰 → 自己的角色頭上頂一顆醒目的「我」牌子
+  // v2.4：自己的角色頭上頂一顆醒目的「我」牌子
   //   v5.7：改成量「貼圖上緣」再往上擺 —— 兔子耳朵再高、坐騎再大也不會被牌子蓋到。
-  if ((Game.mode === 'battle' || Game.mode === 'br') && p.alive && isMyPlayer(p)) {
+  //   v5.8：四個模式（對戰／單人／RPG／大逃殺）都畫，前 5 秒閃爍；
+  //         五秒後大逃殺繼續留著（縮放呼吸），其餘模式收掉。
+  const meMode = meBadgeMode();
+  if (meMode !== 'off' && p.alive && isMyPlayer(p)) {
     let artTop;
     if (p.dino) {
       // 坐騎是另外畫在角色底下的（而且高得多）→ 牌子要浮到坐騎頭頂
@@ -24995,7 +25048,7 @@ function drawPlayer(p, T) {
       const hh = (bd && bd.H) || charArtH(T, c.animal);
       artTop = (y - jumpY) + R * .82 - hh;      // 與 drawSpriteChar 的 footY - H 同一個算法
     }
-    drawMeBadge(x, y - jumpY, R, T, artTop);
+    drawMeBadge(x, y - jumpY, R, T, artTop, meMode);
   }
   // v1.9：頭暈指示（轉星星 + 😵）
   if (p.dizzy > 0) drawDizzyMark(x, y - jumpY, T);
@@ -25272,6 +25325,7 @@ function loop(ts) {
   if (Game._rsT > .4) { Game._rsT = 0; resizeView(); }
   if (Input.edges.Escape) togglePause();   // ESC 開啟／繼續
   if (paused) { try { Tut.tick(0); } catch (e) {} Input.flush(); return; }
+  meTick(dt);                              // v5.8：「我」標示的前 5 秒計時（暫停時不跑）
   Game.bannerT -= dt;
   if (Game.bannerT <= 0) $id('banner').style.display = 'none';
   Game.toastT -= dt;
@@ -28869,7 +28923,13 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.7', date: '2026-11-05', now: true, items: [
+  { v: '5.8', date: '2026-11-05', now: true, items: [
+    '🎯 <b>「我」的位置標示改成「開局幫你找自己」</b>：對戰／單人／RPG 只在<b>前 5 秒</b>閃爍顯示，五秒後<b>自動收掉</b>（位置記住了就別擋畫面）；<b>大逃殺</b>五秒後繼續留著，牌子會 <b>42%~100%</b> 呼吸縮放',
+    '🔍 <b>縮小看大地圖的定位環套同一套規則</b>：前 5 秒<b>不管縮放幾倍都看得到</b>（開局最重要的就是找到自己在哪）；五秒後只剩大逃殺依原本 <b>42%~100%</b> 的縮放範圍顯示，其他模式完全收掉',
+    '⏱️ <b>5 秒是從「GO!」開始算</b>：倒數階段本來就在標示時間內（那時候還不能動，正好用來認位置），所以不會一能動就消失',
+    '✨ <b>閃爍是真的「快閃」</b>：alpha 在 <b>0.38~1.0</b> 之間約 0.67 秒閃一輪；大逃殺的呼吸縮放則是約 <b>2.4 秒</b>一輪 —— 節奏不同，一眼就分得出現在是在「叫你找自己」還是「它一直在那」'
+  ] },
+  { v: '5.7', date: '2026-11-05', now: false, items: [
     '🧱 <b>大逃殺落石砸下來，底下的輸送帶／滑冰／傳送門沒被蓋掉</b>：石頭都畫好了，地表機關卻還疊在上面（看起來像石頭上長出一條輸送帶）。現在只要格子變成石頭就<b>不畫機關</b>，砸下去的當下也把那一格的機關<b>直接清掉</b>',
     '🕒 <b>管理面板的時間全部改成台灣時間</b>：伺服器在 UTC，以前「最後上線／加入時間」比台灣少 8 小時（連「今日」也是晚 8 小時換日）。現在時間字串一律 <b>UTC+8</b>，畫面也標上「台灣」，跨日換算正確',
     '🕹️ <b>管理面板看得到「誰在什麼時間玩了什麼」</b>：會員名單多一行<b>最近玩的模式＋關卡／房號＋時間</b>與今日場次；點進詳情有完整足跡（單人第幾關、RPG 第幾關、對戰幾人幾勝制、大逃殺幾人第幾名、線上配對房號），總覽多了「今日場次」',
@@ -33633,6 +33693,8 @@ window.__BH = {
   tileArtK: tileArtK, ART_REF_TILE: ART_REF_TILE, MOBILE_VIEW_FRAC: MOBILE_VIEW_FRAC,
   tileSize: tileSize, actOff2: actOff2,
   isMyPlayer: isMyPlayer, drawMeBadge: drawMeBadge, ME_BADGE_TXT: ME_BADGE_TXT, charArtH: charArtH,
+  meBadgeMode: meBadgeMode, meTick: meTick, ME_BLINK_SEC: ME_BLINK_SEC,
+  meBadgeZoom: meBadgeZoom, meBadgeBlink: meBadgeBlink,
   LANGS: LANGS, I18N: I18N, LANG: LANG, t: t, tr: tr, trLive: trLive, retranslateLive: retranslateLive, trPattern: trPattern, setLang: setLang, applyI18N: applyI18N,
   captureI18N: captureI18N, refreshI18NUI: refreshI18NUI, updateLangBtn: updateLangBtn,
   renderLangMenu: renderLangMenu, openLangMenu: openLangMenu, closeLangMenu: closeLangMenu,
