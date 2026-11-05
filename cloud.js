@@ -1590,6 +1590,36 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
     if (R.week !== w) { R.week = w; R.wk = {}; R.claims = {}; }   // 換週：週榜與領取紀錄歸零
     return R;
   }
+  /* v5.17：同一個帳號登上排行榜時，把「這台裝置」舊的那一格併進來再刪掉。
+     不然同一個人在總榜會有兩筆一模一樣的成績（換裝置就多一筆）。 */
+  function rankMergeDevice(pid, dkey) {
+    if (!pid || !dkey) return false;
+    const oldPid = pidOf('r', dkey);
+    if (!oldPid || oldPid === pid) return false;
+    const R = rankDb();
+    const old = R.all[oldPid];
+    if (!old) return false;
+    const a = R.all[pid] || (R.all[pid] = { n: old.n || '', ch: old.ch | 0, c: {}, t: old.t || 0 });
+    for (const k in old.c) {
+      const v = clampInt(old.c[k], 0, 1e9, 0);
+      if (v > (a.c[k] | 0)) a.c[k] = v;
+    }
+    if (!a.n) a.n = old.n || '';
+    if (!a.t || (old.t || 0) > a.t) a.t = old.t || a.t;
+    delete R.all[oldPid];
+    const ow = R.wk[oldPid];
+    if (ow) {
+      const b = R.wk[pid] || (R.wk[pid] = { n: ow.n || '', ch: ow.ch | 0, c: {}, t: ow.t || 0 });
+      for (const k in ow.c) {
+        const v = clampInt(ow.c[k], 0, 1e9, 0);
+        if (v > (b.c[k] | 0)) b.c[k] = v;
+      }
+      if (!b.n) b.n = ow.n || '';
+      delete R.wk[oldPid];
+    }
+    store.touch();
+    return true;
+  }
   function rankTrim(R) {
     const keys = Object.keys(R.all);
     if (keys.length <= RANK_MAX) return;
@@ -1745,6 +1775,45 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
     const drop = left.length - SOC_MAX;
     for (let i = 0; i < drop; i++) delete S.players[left[i]];
   }
+  /* v5.17：同一個帳號第一次改用「帳號身分」出現時，把這台裝置原本的遊客紀錄
+     （好友／邀請／黑名單）整併過來，然後刪掉舊的裝置紀錄。
+     以前身分只綁 deviceId → 同一個人在手機＋電腦會是兩個玩家（名單兩個同名、
+     成就分一模一樣），而且換登入方式就等於換一個人、好友名單直接消失。 */
+  function socMergeDevice(pid, dkey) {
+    if (!pid || !dkey) return false;
+    const oldPid = pidOf('p', dkey);
+    if (!oldPid || oldPid === pid) return false;
+    const S = socDb();
+    const old = S.players[oldPid];
+    if (!old) return false;
+    const me = socGet(pid);
+    ['friends', 'reqs', 'blocks'].forEach(function (f) {
+      const a = me[f] || (me[f] = []);
+      (old[f] || []).forEach(function (id) {
+        if (id && id !== pid && a.indexOf(id) < 0) a.push(id);
+      });
+    });
+    // 別人的清單裡指向舊 pid 的也改指向新 pid，不然好友會「單向消失」
+    for (const k in S.players) {
+      const p = S.players[k];
+      if (!p) continue;
+      ['friends', 'reqs', 'blocks'].forEach(function (f) {
+        const arr = p[f];
+        if (!Array.isArray(arr) || !arr.length) return;
+        let hit = false;
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i] === oldPid) { arr[i] = pid; hit = true; }
+        }
+        if (!hit) return;
+        const uniq = [];
+        arr.forEach(function (id) { if (id && uniq.indexOf(id) < 0) uniq.push(id); });
+        p[f] = uniq;
+      });
+    }
+    delete S.players[oldPid];
+    store.touch();
+    return true;
+  }
   function socPublic(pid, me) {
     return { pid: pid, name: me.n, ch: me.ch | 0, kind: me.k, gender: me.g, region: me.r, bio: me.b,
       join: me.join || 0, seen: me.seen || 0, sec: me.sec | 0, pts: me.pts | 0, wins: me.wins | 0, mode: me.mode,
@@ -1891,6 +1960,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           if (!body) return fail(res, 400, 'BAD_BODY', CORS_X), true;
           if (dev.length < 6) return fail(res, 400, 'BAD_DEVICE', CORS_X), true;
           const pid = pidOf('r', dev);
+          rankMergeDevice(pid, String(body.dkey || '').slice(0, 128));   // v5.17：帳號身分整併舊紀錄
           const R = rankPut(pid, body.name, body.ch, body.cats, body.week);
           return send(res, 200, {
             ok: true, week: R.week,
@@ -1957,6 +2027,8 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
 
         if (p === '/api/social/hb' && req.method === 'POST') {
           if (!body) return fail(res, 400, 'BAD_BODY', CORS_X), true;
+          // v5.17：登入帳號後身分改成「帳號 id」→ 第一次心跳順便把裝置上的舊紀錄整併過來
+          socMergeDevice(pid, String(body.dkey || '').slice(0, 128));
           const me = socApply(socGet(pid), body);
           socPrune(socDb());
           store.touch();

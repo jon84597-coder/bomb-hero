@@ -110,7 +110,7 @@ const plBox = rule('#scr-battle #pSlots .pbox{');
 ok(/#ffeed6/.test(plBox) && /#e8c39a/.test(plBox), '玩家的框是奶油底＋木框（跟 RPG 卡一樣）');
 ok(/\.ppf \.arr\{position:absolute/.test(src), '箭頭是絕對定位（不會把卡片撐高、也不會擠到人物）');
 ok(/@media \(max-width:520px\)\{[\s\S]{0,300}repeat\(2,minmax\(0,1fr\)\)/.test(src), '手機兩欄');
-ok(/@media \(max-width:520px\)\{[\s\S]{0,400}\.arr\{width:44px;height:44px/.test(src), '手機箭頭放大到 44px（好點）');
+ok(/@media \(max-width:520px\)\{[\s\S]{0,400}\.arr\{width:30px;height:30px/.test(src), '手機箭頭 30px（v5.17 從 44 縮小，才不會蓋到角色）');
 ok(/\.ppf canvas\.chpv\{display:block;width:100%/.test(src), '頭像吃滿卡片寬度（會跟著螢幕縮放）');
 
 head('⑤ 版號與資料同步');

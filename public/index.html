@@ -369,19 +369,31 @@ box-shadow: 0 4px 0 #d8bb84, 0 14px 24px -14px rgba(150,110,40,.5), inset 0 2px 
 margin: 4px 0 12px; font-size: 18px; color: #7d5a12; font-weight: 900; }
 .shopwallet b { font-size: 23px; letter-spacing: .5px; color: #b07400; }
 .shopwallet .swhint { font-size: 11.5px; font-weight: 600; color: #6f6350; opacity: 1; }
-.shopgrid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.shopgrid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+/* v5.17：桌機固定兩欄 —— 圖示要跟對戰選角一樣大，一欄塞不下四張 */
+@media (min-width: 780px) { .shopgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .shopcard { border: 1px solid #2f3d5e; border-radius: 14px; background: rgba(10,16,30,.66);
 padding: 12px 12px 11px; display: flex; flex-direction: column; gap: 7px; }
 .shopcard.owned { border-color: #46d68c; box-shadow: inset 0 0 0 1px rgba(70,214,140,.35); }
 .shopcard .shhead { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 900; color: #ffe6c2; }
 .shopcard .shico { font-size: 22px; line-height: 1; }
 /* v5.0：商店卡片的隨從頭像（直接用遊戲裡那張站立圖） */
-.shopcard .shport { width: 46px; height: 46px; display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 12px; background: radial-gradient(circle at 50% 35%, rgba(255,255,255,.16), rgba(255,255,255,.02) 70%); }
-.shopcard .shport img { width: 42px; height: 42px; object-fit: contain; image-rendering: auto;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
-.shopcard .shdesc { font-size: 11.5px; line-height: 1.6; color: #b9c6e0; min-height: 56px; }
+/* v5.17：隨從卡片＝左邊一張會走動的大圖示（框跟對戰選角同一套奶油內凹＋木框），
+   右邊放名字與說明，下面金額與按鈕位置完全不動。 */
+.shopcard .shmain { display: flex; align-items: flex-start; gap: 12px; }
+.shopcard .shstage { flex: 0 0 auto; width: 132px; height: 132px; border-radius: 16px; overflow: hidden;
+  position: relative;
+  background: radial-gradient(circle at 50% 32%, #fffdf8, #f6e7cd);
+  box-shadow: inset 0 0 0 2px rgba(200,160,110,.38), inset 0 4px 9px rgba(160,120,70,.14),
+    0 3px 10px -4px rgba(0,0,0,.55); }
+.shopcard .shstage canvas { display: block; width: 100%; height: 100%; }
+.shopcard .shmeta { flex: 1 1 auto; min-width: 0; padding-top: 2px; }
+.shopcard .shname { font-size: 15px; font-weight: 900; color: #ffe6c2; line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shopcard .shdesc { font-size: 12px; line-height: 1.65; color: #b9c6e0; margin-top: 5px; min-height: 0; }
 .shopcard .shfoot { display: flex; align-items: center; gap: 8px; margin-top: auto; }
+/* v5.17：卡片變寬，按鈕不要跟著拉成一大條（價格靠左、按鈕靠右固定寬度） */
+.shopcard .shfoot .shbuy { flex: 0 0 auto; min-width: 168px; margin-left: auto; padding: 9px 26px; }
 .shopcard .shprice { font-size: 13px; font-weight: 900; color: #ffd166; white-space: nowrap; }
 .shopcard .shbuy { flex: 1; border: 0; border-radius: 999px; padding: 9px 10px; font-weight: 900;
 font-size: 13px; cursor: pointer; color: #2a1c00;
@@ -3573,9 +3585,10 @@ box-shadow:inset 0 0 0 2px rgba(200,160,110,.38),inset 0 4px 9px rgba(160,120,70
 #scr-battle #pSlots .pbox.ai .ppf{background:radial-gradient(circle at 50% 32%,#fdfaff,#ece3ff);
 box-shadow:inset 0 0 0 2px rgba(150,120,220,.34),inset 0 4px 9px rgba(90,60,160,.13)}
 #scr-battle #pSlots .ppf canvas.chpv{display:block;width:100%;height:auto;background:transparent}
-#scr-battle #pSlots .ppf .arr{position:absolute;top:50%;transform:translateY(-50%);
-width:40px;height:40px;padding:0;border-radius:50%;cursor:pointer;
-display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;
+/* v5.17：箭頭本來 40px 疊在頭像正中央（會蓋到角色），縮成 26px 並降到框的下方兩角 */
+#scr-battle #pSlots .ppf .arr{position:absolute;bottom:7px;top:auto;transform:none;
+width:26px;height:26px;padding:0;border-radius:50%;cursor:pointer;
+display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;
 color:#f2f6ff;border:2px solid rgba(0,0,0,.30);
 background:
 radial-gradient(ellipse 96% 50% at 50% -2%,rgba(255,255,255,.58) 0%,rgba(255,255,255,.28) 94%,rgba(255,255,255,0) 98%),
@@ -3583,9 +3596,9 @@ linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 48%,rgba(0,0,0,.08) 68%,rg
 linear-gradient(180deg,#9dabbf 0%,#76859c 52%,#4d5a6f 100%);
 box-shadow:0 3px 0 #2f3a49,inset 0 2px 0 rgba(255,255,255,.72),inset 0 -2px 0 rgba(255,255,255,.24);
 transition:filter .1s,transform .08s}
-#scr-battle #pSlots .ppf .arr.l{left:4px}
-#scr-battle #pSlots .ppf .arr.r{right:4px}
-#scr-battle #pSlots .ppf .arr:active{transform:translateY(-50%) scale(.94);filter:brightness(1.18)}
+#scr-battle #pSlots .ppf .arr.l{left:7px}
+#scr-battle #pSlots .ppf .arr.r{right:7px}
+#scr-battle #pSlots .ppf .arr:active{transform:scale(.92);filter:brightness(1.18)}
 /* 玩家／AI 切換：右上角小徽章（AI＝紫、玩家＝綠） */
 #scr-battle #pSlots .ppf .aibtn{position:absolute;right:5px;top:5px;width:34px;height:34px;padding:0;
 border-radius:11px;cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;
@@ -3600,7 +3613,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 @media (max-width:520px){
 #scr-battle #pSlots{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 #scr-battle #pSlots .pbox{padding:6px 6px 7px;border-radius:13px}
-#scr-battle #pSlots .ppf .arr{width:44px;height:44px;font-size:16px}
+#scr-battle #pSlots .ppf .arr{width:30px;height:30px;font-size:12px}
 #scr-battle #pSlots .ppf .aibtn{width:36px;height:36px;font-size:16px}
 #scr-battle #pSlots .pj{font-size:11px}
 }
@@ -3846,7 +3859,9 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
      · 手機版一律「滿版可捲」，不做雙欄（v4.90 後台的教訓）
      · 面板本身吃 min(92vh, 900px)，內容自己捲 → 不會「看不到下面的東西」
    ===================================================================== */
-.bhmodal { position: fixed; inset: 0; z-index: 78; display: none; align-items: center; justify-content: center;
+/* v5.17：原本 z-index:78 < 工具列(#navBar 1200) → 手機上「✕」被右上角「⋮」壓住點不到，
+   標題整排也被工具列蓋掉。面板本來就是模态，往上抬到工具列之上。 */
+.bhmodal { position: fixed; inset: 0; z-index: 1230; display: none; align-items: center; justify-content: center;
   padding: 12px; background: rgba(48, 26, 8, .52); backdrop-filter: blur(3px); }
 .bhmodal.on { display: flex; }
 .bhpanel { width: min(760px, 100%); height: min(92vh, 900px); display: flex; flex-direction: column;
@@ -3867,10 +3882,12 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
   box-shadow: 0 2px 0 #b9741c; }
 .bhbody { flex: 1 1 auto; overflow: auto; padding: 10px 12px 16px; -webkit-overflow-scrolling: touch; }
 .bhfoot { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+  flex-wrap: wrap;
   background: #fff3dc; border-top: 1px solid #f0dcc0; font-size: 11.5px; color: #8a6a44; }
 .bhnote { padding: 9px 11px; border-radius: 12px; background: #fff2cf; border: 1px solid #efd39a;
   color: #8a5b1c; font-size: 12px; line-height: 1.6; margin-bottom: 9px; }
 .bhnote.w { background: #ffe6d8; border-color: #f0b48c; color: #8a3a10; }
+.bhfoot .bhbtn { flex: 0 0 auto; white-space: nowrap; }   /* v5.17：「一鍵領取／重新整理」不要被擠成兩行 */
 .bhbtn { padding: 8px 13px; border-radius: 11px; border: 2px solid #d8b184; background: #fff8ea; color: #8a4a1c;
   font-size: 12.5px; font-weight: 800; cursor: pointer; }
 .bhbtn.warm { background: linear-gradient(180deg, #ffd27a, #f6a63f); border-color: #d98b2c; color: #4a2400; }
@@ -3971,6 +3988,23 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .chatmsg.you { align-self: flex-start; background: #fff; border: 1.5px solid #efdcc0; color: #6b3a12; border-bottom-left-radius: 4px; }
 .chatmsg.sys { align-self: center; background: transparent; color: #a1815a; font-size: 10.5px; }
 .chatrow { flex: 0 0 auto; display: flex; gap: 6px; padding-top: 8px; border-top: 1px solid #f0dcc0; }
+/* v5.17：私訊的輸入框要「一進來就看得到」。
+   以前 .chatbox 用 height:100%，但父層 .bhbody 是 auto → 整塊被訊息撐高，
+   輸入框被推到面板外面，得往下滑才找得到。改成讓 .bhbody 變 flex 容器、只有訊息區滾動。 */
+.bhbody.chatmode { display: flex; flex-direction: column; overflow: hidden; }
+.bhbody.chatmode > .chatbox { flex: 1 1 auto; min-height: 0; height: auto; }
+.bhbody.chatmode .chatlog { min-height: 54px; }
+.chemj { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 11px; border: 2px solid #e6c8a0;
+  background: #fff8ea; color: #a05a20; font-size: 18px; line-height: 1; cursor: pointer; padding: 0; }
+.chemj.on { background: linear-gradient(180deg, #ffd27a, #f6a63f); border-color: #d98b2c; }
+.chemj:active { transform: translateY(1px); }
+.emojipick { flex: 0 0 auto; display: none; grid-template-columns: repeat(auto-fit, minmax(32px, 1fr));
+  gap: 2px; padding: 7px; margin-top: 7px; border-radius: 12px; background: #fff5e0;
+  border: 1.5px solid #eccb95; max-height: 136px; overflow: auto; }
+.emojipick.on { display: grid; }
+.emojipick button { border: 0; background: transparent; font-size: 19px; line-height: 1.15; padding: 3px 0;
+  border-radius: 8px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.emojipick button:active { background: #ffe0ae; }
 .chatin { flex: 1 1 auto; min-width: 0; padding: 9px 11px; border-radius: 11px; border: 2px solid #e6c8a0;
   background: #fffdf7; font-size: 12.5px; color: #5b3a1e; }
 .onprof { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
@@ -3978,6 +4012,9 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
   .bhmodal { padding: 0; }
   .bhpanel { width: 100%; height: 100%; max-height: 100%; border-radius: 0; border-left: 0; border-right: 0;
     padding-bottom: env(safe-area-inset-bottom, 0px); }   /* 底部那排分頁不要被 iPhone 的手勢條蓋住 */
+  /* v5.17：滿版時標題列要自己讓開瀏海／動態島，不然「✕」會貼在螢幕最上緣 */
+  .bhhead { padding-top: calc(11px + env(safe-area-inset-top, 0px)); }
+  .bhx { width: 36px; height: 36px; font-size: 15px; }
   .odgrid, .onprof { grid-template-columns: 1fr; }
 }
 
@@ -4116,7 +4153,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.16</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.17</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4159,7 +4196,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.16</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.17</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4981,7 +5018,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.16';
+const VERSION = '5.17';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -11306,6 +11343,96 @@ const CharPreview = (function () {
     }
   })();
 
+/* =====================================================================
+ * v5.17：商店隨從的大圖示（PetPreview）
+ * ---------------------------------------------------------------------
+ * 使用者要的是「圖示放大到跟對戰選角一樣大、而且會動」。
+ * 做法跟 CharPreview 同一套：一張 <canvas class="petpv" data-pet="key">，
+ * 共用同一個 rAF 迴圈（tick），邏輯尺寸 240×240、再乘 devicePixelRatio，
+ * 所以手機上放大顯示也不會糊。
+ *
+ * 每一幀都直接用遊戲裡那份四幀美術（PetArt）——站立／跑動1／跑動2／攻擊，
+ * 跑動兩幀交替＋左右踱步，每 3.4 秒插一次攻擊幀，看起來像在店裡巡邏。
+ * 只在商店畫面（Screen.current === 'shop'）才畫，其他畫面完全不耗工。
+ * ================================================================== */
+const PetPreview = (function () {
+  try {
+    return (function () {
+      let items = [], t = 0;
+      function mount(root) {
+        items = [];
+        if (!root || !root.querySelectorAll) return;
+        let pr = 1;
+        try { pr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1; } catch (e) { pr = 1; }
+        pr = Math.max(1, Math.min(3, pr));
+        function ga(el, k) {
+          try { return el.getAttribute ? el.getAttribute(k) : (el[k] != null ? String(el[k]) : null); }
+          catch (e) { return null; }
+        }
+        function sa(el, k, v) { try { if (el.setAttribute) el.setAttribute(k, v); } catch (e) {} }
+        root.querySelectorAll('canvas.petpv').forEach(function (cnv) {
+          let lw = parseInt(ga(cnv, 'data-lw'), 10) || 0;
+          let lh = parseInt(ga(cnv, 'data-lh'), 10) || 0;
+          if (!lw || !lh) {
+            lw = parseInt(ga(cnv, 'width'), 10) || 240;
+            lh = parseInt(ga(cnv, 'height'), 10) || 240;
+            sa(cnv, 'data-lw', lw); sa(cnv, 'data-lh', lh);
+          }
+          const bw = Math.round(lw * pr), bh = Math.round(lh * pr);
+          if (cnv.width !== bw) cnv.width = bw;
+          if (cnv.height !== bh) cnv.height = bh;
+          const g = cnv.getContext && cnv.getContext('2d');
+          if (!g) return;
+          if (g.setTransform) g.setTransform(pr, 0, 0, pr, 0, 0);
+          items.push({ cnv: cnv, g: g, w: lw, h: lh, kind: ga(cnv, 'data-pet') || 'blade' });
+        });
+      }
+      function drawOne(o, now) {
+        const W = o.w || 240, H = o.h || 240, g = o.g;
+        const kd = o.kind || 'blade';
+        g.clearRect(0, 0, W, H);
+        // 左右踱步（跟選角卡一樣的節奏，幅度小一點 → 不會撞到框邊）
+        const phase = now * .82 + kd.length;
+        const cx = W / 2 + Math.sin(phase) * W * .075;
+        const facing = Math.cos(phase) >= 0 ? 1 : -1;
+        const walk = now * 6.4;
+        // 每 3.4 秒揮一次（用攻擊幀，讓靜態的商店頁有「活的」感覺）
+        const cyc = (now + kd.charCodeAt(0) % 7) % 3.4;
+        const atk = cyc > 2.92;
+        const frame = atk ? 3 : (1 + (Math.floor(walk / 2.4) % 2));
+        const footY = H * .95;
+        const bodyH = H * .72;
+        // 地面影子（奶油底上用淡咖啡色，比黑色自然）
+        g.fillStyle = 'rgba(120,80,30,.16)';
+        g.beginPath();
+        g.ellipse(cx, footY, W * .21, H * .045, 0, 0, 6.283);
+        g.fill();
+        const ok = (typeof drawPetSprite === 'function') &&
+          drawPetSprite(g, kd, cx, footY, bodyH, facing,
+            { frame: frame, walk: walk, moving: true, idle: now });
+        if (!ok) {                                  // 圖還沒載到 → 先畫名字的 emoji 佔位
+          const pk = (typeof petKind === 'function') ? petKind(kd) : null;
+          g.font = Math.round(H * .38) + 'px "Segoe UI Emoji","Apple Color Emoji",sans-serif';
+          g.textAlign = 'center';
+          g.textBaseline = 'middle';
+          g.fillText((pk && pk.ico) || '🐾', W / 2, H * .56);
+        }
+      }
+      function tick(dt) {
+        if (!items.length) return;
+        if (Screen.current !== 'shop') return;       // 只有商店畫面要跑
+        t += dt;
+        for (let i = 0; i < items.length; i++) drawOne(items[i], t);
+      }
+      return { mount: mount, tick: tick, items: function () { return items; } };
+    })();
+  } catch (__e) {
+    __bootFail('PetPreview', __e);
+    return (typeof __stubModule === 'function') ? __stubModule('PetPreview')
+      : { mount: function () {}, tick: function () {}, items: function () { return []; } };
+  }
+})();
+
 // 單人難易度設定（敵人數量／速度／魔王血量／恐龍蛋數量）
 // v2.4：三種難度的 BOSS 統一 5 下（血條滿格 = 5，打五下就贏）
 const BOSS_HITS = 5;
@@ -11506,6 +11633,20 @@ const Lb = {
   },
   writeCache(day, list) {
     try { localStorage.setItem(Lb.cacheKey(day), JSON.stringify({ at: Date.now(), list: list })); } catch (e) {}
+  },
+  /* v5.17：線上名單／排行榜「我是誰」。
+     以前一律用 deviceId → 同一個帳號在手機＋電腦會變成兩個玩家（名單兩個同名、
+     成就分一模一樣、排行榜各佔一格）。現在登入正式帳號就用帳號 id，
+     遊客照舊用這台裝置；兩邊都不會互相蓋到。 */
+  idKey() {
+    try {
+      if (typeof Cloud !== 'undefined' && Cloud.online && Cloud.online() &&
+          !(Cloud.isGuest && Cloud.isGuest())) {
+        const a = Cloud.acc && Cloud.acc();
+        if (a && a.id) return 'acc-' + String(a.id);
+      }
+    } catch (e) {}
+    return Lb.deviceId();   // 遊客：原封不動回傳（改了會讓所有現有玩家的 pid 全部變號）
   },
   /* 這台裝置的匿名指紋：跟 Cloud 的遊客 id 共用，換裝置就是另一個人 */
   deviceId() {
@@ -12166,7 +12307,7 @@ const Rank = (function () {
         if (busy) return Promise.resolve(null);
         busy = true;
         const body = {
-          deviceId: Lb.deviceId(), name: myName(), ch: myChar(),
+          deviceId: Lb.idKey(), dkey: Lb.deviceId(), name: myName(), ch: myChar(),
           cats: mine('all'), week: mine('week'), wk: S.week, ver: VERSION
         };
         return Lb._post(Lb.origin() + '/api/rank/submit', body).then(function (j) {
@@ -12184,7 +12325,7 @@ const Rank = (function () {
         const c = String(cat || 'soloKill');
         const sc = (scope === 'week') ? 'week' : 'all';
         const url = Lb.origin() + '/api/rank/top?cat=' + encodeURIComponent(c) +
-          '&scope=' + sc + '&limit=50&deviceId=' + encodeURIComponent(Lb.deviceId());
+          '&scope=' + sc + '&limit=50&deviceId=' + encodeURIComponent(Lb.idKey());
         return Lb._get(url).then(function (j) {
           if (j && j.ok && j.list) {
             S.lb[sc + ':' + c] = { list: j.list, at: Date.now(), me: j.me || null, week: j.week || '' };
@@ -12202,7 +12343,7 @@ const Rank = (function () {
       function claimWeek() {
         const w = weekKey();
         return Lb._post(Lb.origin() + '/api/rank/claim', {
-          deviceId: Lb.deviceId(), wk: w, name: myName(), ch: myChar(),
+          deviceId: Lb.idKey(), wk: w, name: myName(), ch: myChar(),
           cats: mine('week')
         }).then(function (j) {
           if (j && j.ok) {
@@ -12323,6 +12464,10 @@ const Social = (function () {
   try {
     return (function () {
       const KEY = 'bombhero-soc-v1';
+      // v5.17：私訊可以打表情符號（不佔字數以外的空間，跟文字一起存）
+      const EMOJIS = ['😀', '😄', '😁', '😆', '😂', '🤣', '😊', '😍', '😘', '😎', '🤔', '😅',
+        '😭', '😱', '😡', '🥺', '👍', '👎', '👏', '🙏', '💪', '🎉', '🔥', '💣', '💥', '🏆',
+        '⭐', '💗', '💔', '💯', '🤝', '👋', '👀', '🎮', '🎁', '☕', '🚀', '🐲', '🐺', '🍀'];
       const HB_MS = 45000, LIST_MS = 20000, DM_MS = 12000;
       const GENDERS = ['不公開', '男', '女', '其他'];
 
@@ -12385,7 +12530,7 @@ const Social = (function () {
 
       function body(extra) {
         const o = {
-          deviceId: Lb.deviceId(), name: myName(), ch: myChar(), kind: myKind(),
+          deviceId: Lb.idKey(), dkey: Lb.deviceId(), name: myName(), ch: myChar(), kind: myKind(),
           gender: P.gender, region: P.region, bio: P.bio,
           mode: myMode(), sec: myPlaySec(), pts: myPts(), wins: myWins(),
           eq: (typeof Ach !== 'undefined' && Ach.equippedMini) ? Ach.equippedMini() : [],
@@ -12421,7 +12566,7 @@ const Social = (function () {
       }
 
       function fetchList() {
-        const q = '?deviceId=' + encodeURIComponent(Lb.deviceId()) + '&limit=80&name=' + encodeURIComponent(myName());
+        const q = '?deviceId=' + encodeURIComponent(Lb.idKey()) + '&limit=80&name=' + encodeURIComponent(myName());
         return Lb._get(Lb.origin() + '/api/social/list' + q).then(function (j) {
           if (j && j.ok) {
             S.on = true; S.err = '';
@@ -12477,7 +12622,7 @@ const Social = (function () {
       function pollDm(force) {
         if (!S.chatWith) return Promise.resolve(null);
         if (!force && dmT) return Promise.resolve(null);
-        const q = '?deviceId=' + encodeURIComponent(Lb.deviceId()) +
+        const q = '?deviceId=' + encodeURIComponent(Lb.idKey()) +
           '&with=' + encodeURIComponent(S.chatWith) + '&limit=60';
         return Lb._get(Lb.origin() + '/api/social/dm' + q).then(function (j) {
           if (j && j.ok) {
@@ -12837,7 +12982,7 @@ const Social = (function () {
       function avUpload(d) {
         if (S.avBusy) return;
         S.avBusy = true;
-        Lb._post(Lb.origin() + '/api/social/avatar', { deviceId: Lb.deviceId(), img: d })
+        Lb._post(Lb.origin() + '/api/social/avatar', { deviceId: Lb.idKey(), img: d })
           .then(function (j) {
             S.avBusy = false;
             if (j && j.ok) {
@@ -13002,13 +13147,19 @@ const Social = (function () {
         return '<button class="bhbtn" id="onChatBack" type="button" style="margin-bottom:9px">← 回資料</button>' +
           '<div class="bhnote">與 <b>' + esc(p.name) + '</b> 的對話' + (S.chatErr ? '　⚠️ ' + S.chatErr : '') + '</div>' +
           '<div class="chatbox"><div class="chatlog" id="onChatLog">' + log + '</div>' +
-          '<div class="chatrow"><input class="chatin" id="onChatIn" maxlength="60" placeholder="輸入訊息（最多 60 字）">' +
+          '<div class="emojipick" id="onEmoji">' + EMOJIS.map(function (e) {
+            return '<button type="button" data-emo="' + e + '">' + e + '</button>';
+          }).join('') + '</div>' +
+          '<div class="chatrow"><button class="chemj" id="onEmojiBtn" type="button" aria-label="表情符號" title="表情符號">😊</button>' +
+          '<input class="chatin" id="onChatIn" maxlength="60" placeholder="輸入訊息（最多 60 字）">' +
           '<button class="bhbtn warm" id="onChatSend" type="button">送出</button></div></div>';
       }
 
       function render() {
         const box = $id('onBody');
         if (!box) return;
+        // v5.17：私訊頁讓 body 變成 flex（輸入框固定在下方、只有訊息區滾動）
+        if (box.classList) box.classList.toggle('chatmode', S.view === 'chat');
         const tabs = $id('onTabs');
         if (tabs) {
           const T = [
@@ -13056,6 +13207,32 @@ const Social = (function () {
         if (t.closest('#onChatSend')) {
           const inp = $id('onChatIn');
           if (inp) { send(inp.value); inp.value = ''; }
+          return;
+        }
+        if (t.closest('#onEmojiBtn')) {                    // v5.17：表情符號面板開／關
+          const pk = $id('onEmoji');
+          if (pk && pk.classList) {
+            pk.classList.toggle('on');
+            const bb = t.closest('#onEmojiBtn');
+            if (bb && bb.classList) bb.classList.toggle('on');
+          }
+          return;
+        }
+        const em = t.closest('[data-emo]');                // v5.17：插在游標位置
+        if (em) {
+          const inp = $id('onChatIn');
+          const ch = em.getAttribute('data-emo') || '';
+          if (inp) {
+            const v = String(inp.value || '');
+            if (v.length + ch.length <= 60) {
+              const a = (inp.selectionStart == null) ? v.length : inp.selectionStart;
+              const b2 = (inp.selectionEnd == null) ? v.length : inp.selectionEnd;
+              inp.value = v.slice(0, a) + ch + v.slice(b2);
+              const np = a + ch.length;
+              try { inp.setSelectionRange(np, np); } catch (e) {}
+            }
+            try { inp.focus(); } catch (e) {}
+          }
           return;
         }
         if (t.closest('#socAvPick') || t.closest('#socAvBtn')) { avOpen(); return; }
@@ -28674,7 +28851,12 @@ function loop(ts) {
     Zoom.tick(dt);
   }
   if (Screen.current === 'game' && Input.padEdge(0, 9)) togglePause();   // 手把 Start 暫停
-  if (Screen.current !== 'game') { CharPreview.tick(dt); Input.flush(); return; }
+  if (Screen.current !== 'game') {
+    CharPreview.tick(dt);
+    try { PetPreview.tick(dt); } catch (e) {}      // v5.17：商店的隨從圖示
+    Input.flush();
+    return;
+  }
   // 尺寸變化（旋轉手機／切全螢幕／改視窗）→ 重新量測畫布
   Game._rsT = (Game._rsT || 0) + dt;
   if (Game._rsT > .4) { Game._rsT = 0; resizeView(); }
@@ -32570,7 +32752,15 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.16', date: '2026-11-06', now: true, items: [
+  { v: '5.17', date: '2026-11-06', now: true, items: [
+    '🐾 <b>商店的隨從圖示變大了</b>：跟對戰選角一樣大的圖框，隨從會<b>在框裡來回走動、三不五時揮一下</b>；右邊保留原本的說明，下面金額與按鈕位置沒動',
+    '◀▶ <b>對戰選角的換角箭頭縮小了</b>：從 40px 縮到 26px 並移到圖框下方兩角，<b>不會再蓋到角色的臉和身體</b>，手指還是點得到',
+    '✕ <b>成就／排名／線上玩家的關閉鈕不會被壓住了</b>：以前手機上「✕」剛好躲在右上角「⋮」下面，點不到也看不到；現在面板整個蓋在工具列之上，標題列也會讓開瀏海',
+    '💬 <b>私訊一打開就看得到輸入框</b>（不用再往下滑），輸入框左邊多了 <b>😊 表情符號</b>，點一下插在游標位置、最多 60 字',
+    '📱 <b>同一個帳號在手機和電腦不會再變成兩個人</b>：以前名單會出現兩筆同名、成就分一模一樣，排行榜還各佔一格；現在登入帳號就用<b>帳號</b>當身分，換裝置接續同一個玩家編號，好友與私訊也跟著走',
+    '🧪 新增 <b>verify-v517</b>（75 項）：隨從動畫、箭頭不遮角色的幾何檢查、私訊輸入框與表情、帳號身分與舊紀錄整併都跑過一遍'
+  ] },
+  { v: '5.16', date: '2026-11-06', now: false, items: [
     '📛 <b>配戴成就</b>：在成就面板按右邊的 📛，就能挑 <b>最多 3 個成就</b>掛在自己的個人資料上；線上其他玩家點你的名字就看得到（頭上仍然是稱號，兩者不衝突）',
     '📷 <b>可以上傳頭貼了</b>：選一張照片後，<b>拖曳調整要露哪一塊、拉桿縮放</b>，框裡看到什麼就上傳什麼；系統會自動壓成 128×128 的小圖（約 5～10 KB），<b>不佔頻寬也不拖慢名單</b>',
     '👀 上傳的頭貼<b>其他線上玩家都看得到</b>：名單、個人資料、聊天室都會顯示（沒有上傳的人維持原本的角色色球）',
@@ -33576,13 +33766,17 @@ const Shop = (function () {
       const own = has(k.key);
       const can = dev() || gold >= k.price;
       return '<div class="shopcard' + (own ? ' owned' : '') + '">' +
-        '<div class="shhead"><span class="shico shport"><img src="spr/pet-' + k.key + '-idle.webp" alt=""></span>' + k.name + '</div>' +
-        '<div class="shdesc">' + k.desc + '</div>' +
+        '<div class="shmain">' +
+          '<div class="shstage"><canvas class="petpv" width="240" height="240" data-pet="' + k.key + '"></canvas></div>' +
+          '<div class="shmeta"><div class="shname">' + k.name + '</div>' +
+            '<div class="shdesc">' + k.desc + '</div></div>' +
+        '</div>' +
         '<div class="shfoot"><span class="shprice">💰 ' + k.price + '</span>' +
         '<button class="shbuy' + (own ? ' owned' : '') + '" data-buy="' + k.key + '"' +
         (own || !can ? ' disabled' : '') + '>' +
         (own ? '✔ 已雇用' : (can ? '雇用' : '金幣不足')) + '</button></div></div>';
     }).join('') + ticketCard;
+    try { PetPreview.mount(grid); } catch (e) {}      // v5.17：隨從圖示會走動
     grid.querySelectorAll('[data-buy-ticket]').forEach(function (b) {
       b.addEventListener('click', function () {
         AudioSys.ensure();
@@ -37493,6 +37687,8 @@ window.__BH = {
   playerSpeed: playerSpeed, drawOstrich: drawOstrich, drawClawOn: drawClawOn,
   // v1.3 新增：8 隻動物選角 + 共用角色畫法 + 結束畫面重開
   CHARACTERS: CHARACTERS, CharPreview: CharPreview, drawCharBody: drawCharBody,
+  // v5.17：商店隨從大圖示（跟 CharPreview 同一套）
+  PetPreview: PetPreview, PetArt: (typeof PetArt !== 'undefined' ? PetArt : null), PET_KINDS: PET_KINDS,
   // v1.7 新增：每關專屬 BGM
   stageBGM: stageBGM, themeBGM: themeBGM, drawFlame: drawFlame,
   drawFaceExpr: drawFaceExpr, startWinJump: startWinJump, stopWinJump: stopWinJump,

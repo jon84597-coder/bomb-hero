@@ -121,7 +121,8 @@ head('3. 推車：階梯式選格（1／2／3 格，到頂鎖定）');
 head('4. 選角卡片：觸控目標變大、AI 鍵有狀態');
 {
   // v5.6：◀▶ 改成壓在頭像兩側的圓形水晶鈕（桌機 40、手機 44），頭像換成 RPG 大圖
-  ok(/#scr-battle #pSlots \.ppf \.arr\{position:absolute[^}]*width:40px;height:40px/.test(css), '◀▶ 圓鈕 40×40（手機 44）');
+  // v5.17：40px 會蓋到角色圖 → 縮成 26px 並降到框的下方兩角（手機 30）
+  ok(/#scr-battle #pSlots \.ppf \.arr\{position:absolute[^}]*width:26px;height:26px/.test(css), '◀▶ 圓鈕 26×26（手機 30）');
   ok(/minmax\(150px,1fr\)/.test(css), '卡片最小寬度 150px（原本 104~132）');
   ok(/\.ppf canvas\.chpv\{display:block;width:100%/.test(css), '頭像吃滿卡片寬度（RPG 大圖）');
   ok(/@media \(max-width:520px\)\{[\s\S]{0,400}repeat\(2,minmax\(0,1fr\)\)/.test(css), '手機兩欄');

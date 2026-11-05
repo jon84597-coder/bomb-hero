@@ -22,7 +22,8 @@ function head(t) { console.log('\n' + t); }
 /* ---------------------------------------------------------------- ① */
 head('① 版本與入口');
 const vm = SRC.match(/const VERSION = '([^']+)'/);
-ok(vm && vm[1] === '5.16', '版本是 5.16（' + (vm ? vm[1] : '?') + '）');
+// v5.17：版號往上跳了，這裡改驗「不比 5.16 舊」（每一版的版號測試都要能被後續版本沿用）
+ok(vm && vm[1].split('.').map(Number)[1] >= 16, '版本是 5.16 以上（' + (vm ? vm[1] : '?') + '）');
 ok(SRC.indexOf('id="avModal"') > 0, '有頭貼編輯彈窗 #avModal');
 ok(SRC.indexOf('id="avStage"') > 0 && SRC.indexOf('id="avCanvas"') > 0, '有裁切畫布');
 ok(SRC.indexOf('id="avZoom"') > 0 && /type="range"/.test(SRC), '有縮放拉桿');
