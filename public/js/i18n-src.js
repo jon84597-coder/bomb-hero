@@ -1526,4 +1526,7 @@ codex.tabSkill|招式|招式|Skills|スキル|스킬
 codex.hintFoe|打倒過的怪物會在這裡點亮。|打倒过的怪物会在这里点亮。|Monsters you defeat light up here.|倒したモンスターが記録されます。|처치한 몬스터가 기록됩니다.
 codex.hintBoss|打贏過的魔王會在這裡點亮。|打赢过的魔王会在这里点亮。|Bosses you beat light up here.|倒したボスが記録されます。|격파한 보스가 기록됩니다.
 codex.hintItem|撿過的道具會在這裡點亮。|捡过的道具会在这里点亮。|Items you pick up light up here.|拾ったアイテムが記録されます。|획득한 아이템이 기록됩니다.
-codex.hintSkill|學會的招式會在這裡點亮。|学会的招式会在这里点亮。|Skills you learn light up here.|習得したスキルが記録されます。|습득한 스킬이 기록됩니다.`;
+codex.hintSkill|學會的招式會在這裡點亮。|学会的招式会在这里点亮。|Skills you learn light up here.|習得したスキルが記録されます。|습득한 스킬이 기록됩니다.
+ach.seriesProg|系列進度|系列进度|Series progress|シリーズ進行|시리즈 진행
+ach.seriesFull|{done} / {total} 個系列全滿|{done} / {total} 个系列全满|{done} / {total} series complete|{done} / {total} シリーズ制覇|{done} / {total} 시리즈 완료
+`;

@@ -30,7 +30,8 @@ ok(/function aiEscape/.test(src) && /const inDanger = dangerAt\(cx, cy, p\)/.tes
 ok(/function brFlowBuild/.test(src) && /f\[nk\] >= 0 \|\| cellAt\(nx, ny\) !== 0/.test(src), 'AI 往圈內走是 BFS 距離場（只走空地）');
 ok(/BR_AI\.cfg\(aiLevelCfg\(\), Game\.brZone \? Game\.brZone\.phase : 0\)/.test(src), '大逃殺 AI 參數依毒圈階段調整');
 ok(/function aiBombOk\(p\)/.test(src) && /p\.brBombCd = BR_AI\.CD\[ph\]/.test(src), 'AI 放彈有冷卻（不會開局就互炸）');
-ok(/else if \(Game\.mode === 'br'\) updateBR\(dt\);/.test(src), 'update 分派到大逃殺');
+// v5.21：主迴圈的模擬改吃 gdt（頓幀後的時間），dt/gdt 都要認
+ok(/else if \(Game\.mode === 'br'\) updateBR\((?:dt|gdt)\);/.test(src), 'update 分派到大逃殺');
 ok(/if \(Game\.mode === 'battle' \|\| Game\.mode === 'br'\) killBattlePlayer/.test(src), '炸彈／火焰在大逃殺走「淘汰」');
 ok(/function viewRange\(T\)/.test(src) && /const vr = viewRange\(T\);/.test(src), 'render 有視口裁切');
 ok(/function themeAtCell\(x, y, th\)/.test(src), '逐格主題（八區各自地形）');

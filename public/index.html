@@ -3934,6 +3934,34 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
   font-weight: 900; color: #4a2400; background: linear-gradient(180deg, #ffd67a, #f7a63c); box-shadow: 0 2px 0 #c07f1c; }
 .achget:active { transform: translateY(1px); box-shadow: none; }
 .achdone { font-size: 10.5px; font-weight: 900; color: #2f8b52; }
+/* v5.21：系列總覽 —— 21 個系列一眼看完（原本只有一條條長列表，看不出「還差哪些」） */
+.achgh { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 12px 0 6px; }
+.achgh b { font-size: 13px; font-weight: 900; color: #7a3f10; }
+.achgh span { font-size: 10.5px; font-weight: 800; color: #b08b5c; }
+.achgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 4px; }
+@media (max-width: 460px) { .achgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; } }
+.achtile { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 4px 6px;
+  border-radius: 12px; background: #fffdf7; border: 1.5px solid #f1dfc4; cursor: pointer;
+  font-family: inherit; line-height: 1.15; min-width: 0; transition: transform .12s, border-color .12s; }
+.achtile:active { transform: scale(.96); }
+.achtile.on { border-color: #d99a2c; background: linear-gradient(180deg, #fff6dc, #fffdf7);
+  box-shadow: 0 0 0 2px #ffe4a8 inset; }
+.achtile.done { background: linear-gradient(180deg, #fff3cf, #fffdf6); border-color: #e8c37a; }
+.achtile .achti { font-size: 21px; line-height: 1.05; filter: grayscale(1) opacity(.52); transition: filter .18s; }
+.achtile.has .achti { filter: grayscale(.15) opacity(.96); }
+.achtile.done .achti { filter: none; text-shadow: 0 0 9px rgba(255,190,60,.95); }
+.achtile .achtl { font-size: 10px; font-weight: 900; color: #7a4a1e; width: 100%; text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.achtile .achmin { width: 90%; height: 5px; border-radius: 999px; background: #ece0cc; overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255,255,255,.75) inset, 0 0 0 1px rgba(214,190,155,.55); }
+.achtile .achmin i { display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, #ffc44d, #f4703c); }
+.achtile.done .achmin i { background: linear-gradient(90deg, #ffd76a, #ff9d2e); }
+.achtile .achtn { font-size: 9px; font-weight: 800; color: #a98a62; }
+/* 系列列的階級點（●●●○○）—— 比「3/8 階」更快看出節奏 */
+.achpips { display: inline-flex; gap: 2px; margin-left: 2px; }
+.achpips i { width: 5px; height: 5px; border-radius: 999px; background: #e6d3b6; }
+.achpips i.on { background: linear-gradient(180deg, #ffc44d, #f0803c); }
 
 /* 稱號：頭上的名牌（成就分累積到門檻就換一個） */
 .achtt { display: grid; grid-template-columns: 1fr; gap: 7px; }
@@ -4478,7 +4506,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.20</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.21</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4533,7 +4561,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.20</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.21</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5477,7 +5505,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.20';
+const VERSION = '5.21';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -12577,7 +12605,7 @@ const Social = (function () {
 const AchUI = (function () {
   try {
     return (function () {
-      const S = { tab: 'all', open: false, sel: '' };
+      const S = { tab: 'all', open: false, sel: '', openS: '' };   // openS：目前展開細項的系列
       function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
           return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -12618,14 +12646,39 @@ const AchUI = (function () {
                 : (g ? '<span class="achdone">已領 +' + a.gold + '</span>' : '<span class="achgold">💰 ' + a.gold + '</span>')) +
             '</div></div>');
         }
-        return '<div class="achrow' + (done ? ' got' : '') + '" style="align-items:flex-start">' +
+        /* v5.21：階級點（●●●○○）—— 一眼看出「還差幾階」，比純文字 3/8 更有節奏感 */
+        let pips = '';
+        for (let i2 = 0; i2 < p.max; i2++) pips += '<i class="' + (i2 < p.tier ? 'on' : '') + '"></i>';
+        const opened = (S.openS === se.key) ? ' open' : '';
+        return '<div class="achrow' + (done ? ' got' : '') + '" data-sec="' + se.key + '" style="align-items:flex-start">' +
           '<div class="achico" style="margin-top:2px">' + se.ico + '</div>' +
           '<div class="achmain"><div class="achname">' + esc(se.name) +
-            '<span class="lvt">' + p.tier + '/' + p.max + ' 階</span></div>' +
+            '<span class="lvt">' + p.tier + '/' + p.max + ' 階</span>' +
+            '<span class="achpips">' + pips + '</span></div>' +
             '<div class="achdesc">' + esc(head) + '</div>' +
             '<div class="achprog"><i style="width:' + pct + '%"></i></div></div></div>' +
-          '<details style="margin:-2px 0 9px;padding-left:8px"><summary style="font-size:11px;color:#a1794c;cursor:pointer;' +
+          '<details' + opened + ' style="margin:-2px 0 9px;padding-left:8px"><summary style="font-size:11px;color:#a1794c;cursor:pointer;' +
           'font-weight:800;padding:4px 0">查看 ' + p.max + ' 個階級</summary>' + rows.join('') + '</details>';
+      }
+
+      /* v5.21：系列總覽 —— 21 格一眼看完。點一格就展開那個系列的 8 個階級 */
+      function gridHTML(list) {
+        let full = 0;
+        list.forEach(function (se) { const p = Ach.progress(se); if (p.tier >= p.max) full++; });
+        let h = '<div class="achgh"><b>' + t('ach.seriesProg') + '</b><span>' +
+          t('ach.seriesFull', { done: full, total: list.length }) + '</span></div><div class="achgrid">';
+        list.forEach(function (se) {
+          const p = Ach.progress(se);
+          const done = p.tier >= p.max;
+          const pc = Math.round(p.tier / Math.max(1, p.max) * 100);
+          h += '<button class="achtile' + (p.tier > 0 ? ' has' : '') + (done ? ' done' : '') + (S.openS === se.key ? ' on' : '') +
+            '" type="button" data-achse="' + se.key + '" title="' + esc(se.name) + ' ' + p.tier + '/' + p.max + ' 階">' +
+            '<span class="achti">' + se.ico + '</span>' +
+            '<span class="achtl">' + esc(se.name) + '</span>' +
+            '<span class="achmin"><i style="width:' + pc + '%"></i></span>' +
+            '<span class="achtn">' + p.tier + '/' + p.max + '</span></button>';
+        });
+        return h + '</div>';
       }
 
       function titlesHTML() {
@@ -12716,6 +12769,7 @@ const AchUI = (function () {
           '</b> / ' + Ach.LIST.length + ' 個成就 · 待領 ' + Ach.unclaimed().length + ' 個</div>' +
           '<div class="achbarwrap"><div class="achbar" style="width:' +
           Math.round(Ach.unlockedCount() / Math.max(1, Ach.LIST.length) * 100) + '%"></div></div></div></div>';
+        h += gridHTML(list);          // v5.21：先給一張「21 個系列」的總覽
         let lastCat = '';
         list.forEach(function (se) {
           if (S.tab === 'all' && se.cat !== lastCat) {
@@ -12757,6 +12811,21 @@ const AchUI = (function () {
         const body = $id('achBody');
         if (body) body.addEventListener('click', function (e) {
           if (!e.target || !e.target.closest) return;
+          // v5.21：點系列總覽的格子 → 展開該系列並捲到它
+          const seb = e.target.closest('[data-achse]');
+          if (seb) {
+            const k = seb.getAttribute('data-achse');
+            S.openS = (S.openS === k) ? '' : k;
+            render();
+            if (S.openS) {
+              try {
+                const bx = $id('achBody');
+                const tg = bx && bx.querySelector ? bx.querySelector('[data-sec="' + k + '"]') : null;
+                if (tg && tg.scrollIntoView) tg.scrollIntoView({ block: 'center', behavior: 'smooth' });
+              } catch (er) {}
+            }
+            return;
+          }
           const eqb = e.target.closest('[data-eq]');          // v5.16：配戴／取消配戴成就
           if (eqb) {
             const r = Ach.equip(eqb.getAttribute('data-eq'));
@@ -14477,8 +14546,10 @@ function petHeroThreat(hero, reach) {
 // 隨從打怪（單人怪 1 下就死；RPG 扣 1 點血）
 function petHitEnemy(e, dmg) {
   if (!e || e.dead) return false;
-  e.hp = (e.hp || 1) - (dmg || 1);
+  const dmP = (dmg || 1);
+  e.hp = (e.hp || 1) - dmP;
   e.hitT = Math.max(e.hitT || 0, .18);
+  try { dmgPop(e.x, e.y - (enemyArtR(e) || 20) * 1.1, dmP, { size: .78 }); } catch (x) {}
   burst(e.x, e.y, '#ffffff', 8, 170);
   if (e.hp <= 0) {
     e.dead = true;
@@ -15391,7 +15462,9 @@ function enemyFlameDamage(e, dt) {
     const f = Game.flames[i];
     if (f.cx === Math.floor(e.x / T) && f.cy === Math.floor(e.y / T)) {
       if (e.hitT <= 0) {
-        e.hp = (e.hp || 1) - flameHitDamage(e);
+        const dm1 = flameHitDamage(e);          // v5.21：先算出來，才知道要跳多少
+        e.hp = (e.hp || 1) - dm1;
+        try { foeHitFx(e, dm1); } catch (x) {}
         if (e.hp > 0) {
           e.hitT = .55;
           burst(e.x, e.y, '#ffffff', 8, 150);
@@ -15412,6 +15485,8 @@ function enemyFlameDamage(e, dt) {
 }
 
 function updateEnemy(e, dt) {
+  // v5.21：受擊白閃的計時（頓幀時 dt≈0 → 閃光會跟著凍住，看起來才「卡」得住）
+  if (e.flashT > 0) e.flashT = Math.max(0, e.flashT - dt);
   // v4.76：大逃殺的亂入 BOSS 走自己的一套（沒有地盤、追 4 格內最近的活人）
   if (e.boss) { if (e.brBoss) updateBRBoss(e, dt); else updateBoss(e, dt); return; }
   // v4.12：暈眩只代表「不能移動」，不代表免疫傷害。
@@ -15510,7 +15585,9 @@ function updateEnemy(e, dt) {
     const f = Game.flames[i];
     if (f.cx === Math.floor(e.x / T) && f.cy === Math.floor(e.y / T)) {
       if (e.hitT <= 0) {                    // 受擊後短暫無敵：讓「高血量」有意義，不再每幀狂扣
-        e.hp = (e.hp || 1) - flameHitDamage(e);
+        const dm2 = flameHitDamage(e);      // v5.21：同上，傷害數字要拿到實際值
+        e.hp = (e.hp || 1) - dm2;
+        try { foeHitFx(e, dm2); } catch (x) {}
         if (e.hp > 0) {                     // 鐵甲蟲 / 骷髏兵要炸好幾次
           e.hitT = .55;
           burst(e.x, e.y, '#ffffff', 8, 150);
@@ -16024,6 +16101,7 @@ function updateBoss(e, dt) {
     if (f.owner == null) continue;      // 自己的炸彈炸不到自己（不然每顆都自爆）
     if (f.cx === Math.floor(e.x / T) && f.cy === Math.floor(e.y / T) && e.hitT <= 0) {
       e.hp -= 1; e.hitT = .8;
+      try { foeHitFx(e, 1); } catch (x) {}    // v5.21：魔王關的小怪也跳字
       burst(e.x, e.y, '#fff', 12, 200);
       AudioSys.sfx('hurt');
       if (e.hp <= 0) {
@@ -17170,6 +17248,7 @@ function updateBRBoss(e, dt) {
     if (f.owner == null) continue;
     if (f.cx === Math.floor(e.x / T) && f.cy === Math.floor(e.y / T) && e.hitT <= 0) {
       e.hp -= BR.BOSS_HIT;
+      try { foeHitFx(e, BR.BOSS_HIT); } catch (x) {}   // v5.21：大逃殺 BOSS 也吃得到打擊感
       e.lastHitBy = f.owner;          // v4.77：記最後一下，BOSS 倒下的那一幀直接把龍交給牠
       e.hitT = .55;
       burst(e.x, e.y, '#fff', 14, 220);
@@ -23053,6 +23132,82 @@ function viewRange(T) {
 //   · T 一定是整數（tileSize 都過 round／floor），所以貼圖像素對齊、不會糊
 const FLR_N = 8;
 const FLR_MAX = 56;                       // 快取上限（超過就整批丟掉，記憶體不會無限長）
+
+/* v5.21：接縫 AO —— 地板貼著牆的那一側壓一條漸層陰影。
+   以前地板是一整片純色，牆像是「畫上去的貼紙」；有了 AO，牆才有「立起來」的重量。
+   畫在烘焙裡（floorChunk 第二次迴圈），執行期一次 drawImage 就打完了。 */
+function drawFloorAO(gx0, gy0, w, h, T) {
+  // 地圖外的格子不算牆（回 0）：地圖邊緣本來就沒有「牆面」，硬壓陰影會在
+  //   大逃殺的海島外圈留下一圈假的暗邊；真的牆（grid≠0）自然會讓鄰格長出陰影。
+  const solidAt = function (X, Y) {
+    if (!Game.grid || !Game.grid[Y]) return 0;
+    const row = Game.grid[Y];
+    if (X < 0 || X >= row.length) return 0;
+    return row[X] ? 1 : 0;
+  };
+  const L = T * .40;                       // 陰影長度（約 0.4 格）
+  const A0 = .34;                          // 貼牆那一側的濃度
+  const band = function (x0, y0, x1, y1) {
+    let g = null;
+    try { g = ctx.createLinearGradient(x0, y0, x1, y1); } catch (e) { return null; }
+    if (!g || !g.addColorStop) return null;
+    g.addColorStop(0, 'rgba(6,8,16,' + A0 + ')');
+    g.addColorStop(1, 'rgba(6,8,16,0)');
+    return g;
+  };
+  for (let yy = 0; yy < h; yy++) {
+    for (let xx = 0; xx < w; xx++) {
+      const gx = gx0 + xx, gy = gy0 + yy;
+      if (solidAt(gx, gy)) continue;        // 牆／軟磚本身不壓陰影
+      const px = xx * T, py = yy * T;
+      if (solidAt(gx, gy - 1)) { const g = band(px, py, px, py + L); if (g) { ctx.fillStyle = g; ctx.fillRect(px, py, T, L); } }
+      if (solidAt(gx, gy + 1)) { const g = band(px, py + T, px, py + T - L); if (g) { ctx.fillStyle = g; ctx.fillRect(px, py + T - L, T, L); } }
+      if (solidAt(gx - 1, gy)) { const g = band(px, py, px + L, py); if (g) { ctx.fillStyle = g; ctx.fillRect(px, py, L, T); } }
+      if (solidAt(gx + 1, gy)) { const g = band(px + T, py, px + T - L, py); if (g) { ctx.fillStyle = g; ctx.fillRect(px + T - L, py, L, T); } }
+    }
+  }
+}
+
+/* v5.21：螢幕空間暗角 —— 以前每幀在「整張地圖」上畫一次大漸層（50×50 的大逃殺地图
+   每幀要填 2500 格大小的矩形）。改成離屏快取一張畫面大小的暗角，每幀一次 drawImage。
+   好處：① 快很多 ② 不管鏡頭移到哪裡，暗角永遠框住「你正在看的視窗」，電影感更強。 */
+let _vigCv = null, _vigKey = '';
+function vignetteCanvas() {
+  const w = Math.max(1, Math.round(typeof VIEW_W === 'number' ? VIEW_W : 360));
+  const h = Math.max(1, Math.round(typeof VIEW_H === 'number' ? VIEW_H : 640));
+  const key = w + 'x' + h;
+  if (_vigCv && _vigKey === key) return _vigCv;
+  let cv = null;
+  try {
+    if (typeof document === 'undefined' || !document.createElement) return null;
+    const pr = Math.min(2, PIXEL_RATIO || 1);
+    cv = document.createElement('canvas');
+    cv.width = Math.round(w * pr); cv.height = Math.round(h * pr);
+    const g = cv.getContext && cv.getContext('2d');
+    if (!g) return null;
+    g.setTransform(pr, 0, 0, pr, 0, 0);
+    const rg = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .30, w / 2, h / 2, Math.max(w, h) * .74);
+    rg.addColorStop(0, 'rgba(0,0,0,0)');
+    rg.addColorStop(.62, 'rgba(4,3,10,.14)');
+    rg.addColorStop(1, 'rgba(4,3,10,.46)');
+    g.fillStyle = rg; g.fillRect(0, 0, w, h);
+    const tg = g.createLinearGradient(0, 0, 0, h * .34);
+    tg.addColorStop(0, 'rgba(255,246,222,.09)');
+    tg.addColorStop(1, 'rgba(255,246,222,0)');
+    g.fillStyle = tg; g.fillRect(0, 0, w, h * .34);
+    const bg = g.createLinearGradient(0, h, 0, h * .80);
+    bg.addColorStop(0, 'rgba(0,0,0,.18)');
+    bg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = bg; g.fillRect(0, h * .80, w, h * .20);
+  } catch (e) { return null; }
+  _vigCv = cv; _vigKey = key;
+  return cv;
+}
+function drawVignette() {
+  const cv = vignetteCanvas();
+  if (!cv) return;
+  try { ctx.drawImage(cv, 0, 0, VIEW_W, VIEW_H); } catch (e) {}
+}
 let _flrSig = '', _flrMap = {}, _flrN = 0;
 function floorCellSkip(gx, gy) {
   return !!(Game.wallKind && Game.wallKind[gy] && Game.wallKind[gy][gx] === 0 && Game.grid[gy][gx] === 1);
@@ -23095,6 +23250,8 @@ function floorChunk(cx, cy) {
               }
             }
           }
+          // v5.21：接縫 AO 最後畫（要蓋在地板之上、牆之下 —— 牆已經在同一輪畫好了）
+          try { drawFloorAO(cx * FLR_N, cy * FLR_N, w, h, T); } catch (e) {}
         } finally { ctx = old; }
       }
     }
@@ -23405,18 +23562,8 @@ function render() {
   if (Game.mode === 'br' && Game.brZone) drawBRZone(T);
   // 場地光影：中央打光 + 四周暗角（讓平面地圖有層次）
   const fw = Game.cols * T, fh = Game.rows * T;
-  const vg = ctx.createRadialGradient(fw / 2, fh / 2, Math.min(fw, fh) * .26,
-                                      fw / 2, fh / 2, Math.max(fw, fh) * .70);
-  vg.addColorStop(0, 'rgba(0,0,0,0)');
-  vg.addColorStop(1, 'rgba(0,0,0,.18)');
-  ctx.fillStyle = vg;
-  ctx.fillRect(0, 0, fw, fh);
-  const lg = ctx.createLinearGradient(0, 0, 0, fh);
-  lg.addColorStop(0, 'rgba(255,244,214,.07)');
-  lg.addColorStop(.42, 'rgba(255,244,214,0)');
-  lg.addColorStop(1, 'rgba(0,0,0,.08)');
-  ctx.fillStyle = lg;
-  ctx.fillRect(0, 0, fw, fh);
+  // v5.21：世界座標的暗角改到「螢幕座標」一次畫完（drawVignette），這裡不再每幀
+  //   在整張地圖上填一次大漸層 —— 大逃殺 50×50 的地圖光這一步就要填 2500 格。
   drawAmbient(T, 0);
   // v4.89：鴕鳥落地震波 —— 核心白閃 + 三圈衝擊波 + 塵土 + （風暴）紫電
   //   全部貼地畫成橢圓（看得出是「震」不是「燒」），kind 決定畫法
@@ -23674,6 +23821,7 @@ function render() {
   try { Tut.drawWorld(ctx); } catch (e) {}
   // v4.5：邊緣紅光貼在畫布四周，中央完全透明（不受 shake 位移影響，所以先還原座標）
   ctx.setTransform(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0);
+  try { drawVignette(); } catch (e) {}   // v5.21：螢幕空間暗角（貼著視窗邊緣，不隨鏡頭跑）
   drawHurtEdge();
   // v4.70：小地圖與隊色 HUD 都是「畫面座標」，畫在所有世界物件之上（此時 transform = CSS 像素）
   try { drawSelfPin(); } catch (e) {}        // v5.5：縮小時「我在這裡」
@@ -24938,7 +25086,9 @@ function drawEnemy(e, T) {
     : 0;
   const shkY = castK > 0 ? Math.sin(Game.gameT * 41 + e.y * .05) * T * .016 * castK : 0;
   const x = e.x + shk, y = e.y + shkY;
-  const flash = e.hitT > 0;
+  // v5.21：白閃改用獨立的 flashT（0.13 秒）—— 以前借用 hitT（0.55 秒無敵時間），
+  //   結果怪物被打之後會白整整半秒，看起來像貼圖壞掉
+  const flash = (e.flashT > 0) || (e.hitT > .42);
   // 飛行怪：影子在正下方地面、隨高度變淡
   // v2.4：小怪外型放大 → 影子跟著放大
   const ar = enemyArtR(e);
@@ -28287,6 +28437,10 @@ function loop(ts) {
   if (!last) last = ts;
   let dt = Math.min(.05, (ts - last) / 1000);
   last = ts;
+  /* v5.21：頓幀 —— 命中那幾幀把「遊戲時間」壓到 8%，畫面／UI／飄字照常跑。
+     只影響模擬（updateSolo/updateBR/updateBattle），不影響相機與選單。 */
+  let gdt = dt;
+  if (Game.stopT > 0) { Game.stopT = Math.max(0, Game.stopT - dt); gdt = dt * .08; }
   Input.framePads();                       // 手把整幀快照（遊戲與選單共用）
   // v3.9：手機按鈕圖示（炸彈火苗／遙控 LED）跟著時間動；20fps 就夠，省電
   if (document.body && document.body.classList.contains('touch')) {
@@ -28327,9 +28481,9 @@ function loop(ts) {
   if (Game.state === 'play' || Game.state === 'roundover') {
     if (Net.on && Net.role === 'guest') {
       /* 線上客人：不做本地模擬，畫面完全照房主快照 */
-    } else if (Game.mode === 'solo' || Game.mode === 'rpg') updateSolo(dt);
-    else if (Game.mode === 'br') updateBR(dt);
-    else updateBattle(dt);
+    } else if (Game.mode === 'solo' || Game.mode === 'rpg') updateSolo(gdt);
+    else if (Game.mode === 'br') updateBR(gdt);
+    else updateBattle(gdt);
   }
   if (Net.on && Net.role === 'guest') Net.guestTick(dt);
   else if (Net.on && Net.role === 'host') Net.hostTick(dt);
@@ -32206,7 +32360,16 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.20', date: '2026-11-06', now: true, items: [
+  { v: '5.21', date: '2026-11-06', now: true, items: [
+    '💥 <b>打下去有感覺了</b>：怪物頭上會跳出<b>傷害數字</b>（擊殺是金色、大傷害會加大），受擊瞬間<b>白閃</b>變短變準，命中那 2~5 幀會<b>頓一下</b> —— 這是動作遊戲「打得痛」的關鍵',
+    '🧱 <b>牆終於立起來了</b>：地板貼著牆的地方加了<b>接縫陰影</b>，牆不再是「畫在地上的貼紙」，整張地圖有厚度了',
+    '🌑 <b>暗角改成跟著畫面走</b>：以前暗角是畫在整張地圖上（地圖越大越糊、也越吃效能），現在貼著你的視窗邊緣 —— 大場地明顯更順、畫面也更聚焦',
+    '📊 <b>成就面板多了「系列進度」總覽</b>：21 個系列一格一格列出來，每格都有進度條與階級數，<b>點一格就展開</b>那系列的 8 個階級 —— 以前只能在長長的名單裡滾',
+    '🔵 系列列上多了<b>階級點</b>（●●●○○）：一眼看出「還差幾階」，不用再讀 3/8 這種數字',
+    '🎯 打擊感是<b>全部模式共通</b>的：單人、RPG、大逃殺、魔王關的小怪與大逃殺 BOSS 都吃得到；隨從打怪也會跳字',
+    '⚙️ 頓幀有<b>上限</b>（每次最多 0.1 秒）：一顆炸彈同時燒到一群怪也只會頓一下，不會整場卡住'
+  ] },
+  { v: '5.20', date: '2026-11-06', now: false, items: [
     '♻️ <b>配點可以重來了</b>：能力配點頁多了「全部退回」，四項歸零、點數一個不少地還你，<b>不收費也不限次數</b>。以前點錯只能重開帳號，現在隨時換打法',
     '📚 <b>新增圖鑑</b>：首頁左下角的 <b>📚</b> 打開 —— <b>48 種怪物、8 隻魔王、11 種道具、10 個招式</b>，打倒過、打贏過、撿過、學會過就會點亮，還沒遇到的用<b>剪影</b>提示長相',
     '🎯 <b>RPG 也有每日任務了</b>：每天固定一個 RPG 目標（打倒魔王／升一級／過兩關），打 RPG 不再只是「順便解掉擊殺」',
@@ -34581,6 +34744,56 @@ const POP_LIFE = .8;          // 單顆飄字總壽命（0.5 秒上飄 + 0.3 秒
 const POP_RISE = .5;          // 上飄走完的時間
 const POP_UP = .8;            // 上飄距離（乘上空格 T）
 
+/* ===================================================================
+ * v5.21：打擊感三件套 —— 傷害跳字 ／ 受擊白閃 ／ 頓幀（hitstop）
+ *   以前只有「玩家受傷」會飄字（pushPop），怪物被打時只有血條少一格，
+ *   看不出這一下多痛、也感覺不到節奏。這裡補上三件事：
+ *     · dmgPop   怪物頭上的傷害數字（擊殺／爆擊有不同顏色與大小）
+ *     · hitStop  命中瞬間把遊戲時間凍住 2~5 幀（經典橫向動作遊戲的做法）
+ *     · foeHitFx 上面兩者的統一入口，順便給怪物一串短白閃
+ * ================================================================== */
+function hitStop(sec) {
+  if (typeof Game === 'undefined' || !Game) return;
+  if (Game.state !== 'play' && Game.state !== 'roundover') return;
+  // 連續命中會累加 → 一定要有上限，否則一顆炸彈燒到 8 隻怪會整個畫面卡住
+  Game.stopT = Math.min(.10, (Game.stopT || 0) + (sec || .03));
+}
+function dmgPop(x, y, v, opt) {
+  opt = opt || {};
+  const T = (Game && Game.T) || 40;
+  const num = Math.max(0, v | 0);
+  const crit = !!opt.crit, kill = !!opt.kill;
+  const col = opt.color || (kill ? '#ffd166' : crit ? '#ffb020' : '#ffffff');
+  const size = opt.size || (crit ? 1.34 : kill ? 1.20 : .96);
+  if (!Game.pops) Game.pops = [];
+  Game.pops.push({
+    x: x + (Math.random() - .5) * T * .22,
+    y: y - T * .12,
+    txt: (kill ? '💥' : '') + (num > 0 ? String(num) : ''),
+    color: col, size: size,
+    t: 0, life: kill ? .74 : (crit ? .80 : .58),
+    seed: Math.random() * 6.28,
+    drift: (Math.random() - .5) * 1.5,
+    crit: crit, kill: kill
+  });
+  while (Game.pops.length > 14) Game.pops.shift();
+}
+/* 怪物被打到的統一入口：跳字 ＋ 白閃 ＋ 頓幀（＋ 大傷害時畫面抖一下） */
+function foeHitFx(e, dmg, opt) {
+  if (!e) return;
+  opt = opt || {};
+  const T = (Game && Game.T) || 40;
+  const boss = !!e.boss || e.type === 'boss';
+  const ar = (typeof enemyArtR === 'function') ? enemyArtR(e) : (e.r || T * .4);
+  const dead = e.hp <= 0;
+  dmgPop(e.x, e.y - ar * (boss ? 2.5 : 1.12), dmg, {
+    kill: dead, crit: (dmg >= 3) || boss, size: boss ? 1.55 : 0
+  });
+  e.flashT = .13;
+  hitStop(dead ? (boss ? .09 : .055) : .028);
+  if (boss || dmg >= 3) Game.shake = Math.max(Game.shake || 0, .15);
+}
+
 function pushPop(x, y, txt, opts) {
   opts = opts || {};
   if (!Game.pops) Game.pops = [];
@@ -34644,18 +34857,33 @@ function drawPops(T) {
     const minY = Math.max(14, T * .55);   // canvas 頂端留半顆字高，不要被裁掉就好
     if (sy < minY) y += (minY - sy);
     const pop = Math.min(1, d.t / .08);               // 冒出瞬間放大一下
-    const sc = .72 + .28 * pop;
+    // v5.21：爆擊／擊殺在「冒出」那一下多彈 22%，之後回正 —— 數字才會有重量
+    const kick = d.crit ? .22 * Math.max(0, 1 - d.t / .26) : 0;
+    const sc = (.72 + .28 * pop) * (1 + kick);
     const fs = Math.round(T * .44 * (d.size || 1));
+    // 傷害數字往兩側微微散開，連續命中才不會疊成一團（玩家受傷的字維持原地）
+    const dxp = (d.drift || 0) * T * .16 * ease;
     ctx.save();
     ctx.globalAlpha = a;
-    ctx.translate(d.x, y);
+    ctx.translate(d.x + dxp, y);
     ctx.scale(sc, sc);
-    ctx.font = '900 ' + fs + 'px "Microsoft JhengHei", "PingFang TC", sans-serif';
+    // 擊殺／爆擊：字後面先鋪一團光，邊緣在草地與磚牆上才咬得住
+    if ((d.crit || d.kill) && ctx.createRadialGradient) {
+      try {
+        const gr = ctx.createRadialGradient(0, 0, 1, 0, 0, fs * 1.5);
+        gr.addColorStop(0, d.kill ? 'rgba(255,196,80,.46)' : 'rgba(255,176,32,.34)');
+        gr.addColorStop(1, 'rgba(255,160,32,0)');
+        ctx.fillStyle = gr;
+        ctx.beginPath(); ctx.arc(0, 0, fs * 1.5, 0, 6.283); ctx.fill();
+      } catch (e) {}
+    }
+    // v5.21：傷害數字用更粗的字面（Arial Black）—— 數字才有「打下去」的重量；中文仍會自動退回系統字
+    ctx.font = '900 ' + fs + 'px "Arial Black", "Microsoft JhengHei", "PingFang TC", sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     // 三層描邊：深色外框 → 白色內框 → 彩色字。草地、深灰磚、奶油底都讀得到
     if (ctx.strokeText) {
-      ctx.lineWidth = Math.max(3, fs * .34);
-      ctx.strokeStyle = 'rgba(26,10,18,.88)';
+      ctx.lineWidth = Math.max(3.4, fs * .38);
+      ctx.strokeStyle = 'rgba(18,7,13,.92)';
       ctx.strokeText(d.txt, 0, 0);
       ctx.lineWidth = Math.max(1.6, fs * .15);
       ctx.strokeStyle = 'rgba(255,255,255,.9)';
@@ -38098,6 +38326,8 @@ window.__BH = {
   nearSpawn: nearSpawn, startSolo: startSolo, buildSoloStage: buildSoloStage,
   buildRpgStage: buildRpgStage, startRpg: startRpg, rpgHurt: rpgHurt,
   flameHitDamage: flameHitDamage, drawRpgHud: drawRpgHud, rngFrom: rngFrom, map32Name: map32Name,
+  hitStop: hitStop, dmgPop: dmgPop, foeHitFx: foeHitFx, drawFloorAO: drawFloorAO,
+  drawVignette: drawVignette, vignetteCanvas: vignetteCanvas,
   // v4.1 帳號 / 雲端存檔
   Cloud: Cloud, rpgAdjust: rpgAdjust, Admin: Admin,
   Save: Save,   // v4.87：測試要驗「gift 有沒有真的進存檔」

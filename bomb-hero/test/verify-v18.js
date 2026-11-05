@@ -356,8 +356,11 @@ ok(/function drawEnemy[\s\S]{0,600}softShadow\(/.test(html), '怪物有落地陰
 ok(/function drawBomb[\s\S]{0,700}softShadow\(/.test(html), '炸彈有落地陰影（飛行時變小）');
 ok(/function drawCart[\s\S]{0,400}softShadow\(/.test(html), '推車有落地陰影');
 ok(html.indexOf('softShadow(px, it.cy * T + T / 2 + T * .30') >= 0, '道具也有落地陰影');
-ok(html.indexOf('createRadialGradient(fw / 2, fh / 2') >= 0, '場地中央打光＋四周暗角');
-ok(html.indexOf('createLinearGradient(0, 0, 0, fh)') >= 0, '上下打光漸層（立體感）');
+// v5.21：暗角從「世界座標（整張地圖）」改成「螢幕座標」的離屏快取 ——
+//   每幀一次 drawImage 取代整張地圖的大漸層，而且暗角永遠框住視窗。
+ok(/vignetteCanvas|drawVignette/.test(html), '場地中央打光＋四周暗角');
+ok(/createRadialGradient\(w \/ 2, h \/ 2/.test(html) && /createLinearGradient\(0, 0, 0, h \* \.34\)/.test(html),
+  '上下打光漸層（立體感）');
 ok(html.indexOf('R * 1.045') >= 0, '角色頭部有描邊（立體輪廓）');
 ok(html.indexOf('topY + R * .34, R * .93, 0, Math.PI') >= 0, '角色頭部有環境遮蔽陰影');
 ok(html.indexOf('rgba(255,255,255,.14)') >= 0, '角色頭部有反光高光');

@@ -20,16 +20,20 @@ const html = rawHtml;
 
 /* ================================================================ ⓪ */
 head('⓪ 版本');
-ok(P.VERSION === '5.20', 'VERSION = 5.20（' + P.VERSION + '）');
-ok(html.indexOf('id="verTxt">5.20') > 0, '首頁徽章 5.20');
-ok(html.indexOf('id="verLogVer">5.20') > 0, '版本紀錄標題 5.20');
-ok(P.VERSION_LOG[0].v === '5.20' && P.VERSION_LOG[0].now === true, '版本紀錄最上面是 5.20 且 now:true');
-ok(P.VERSION_LOG[1].v === '5.19' && P.VERSION_LOG[1].now === false, '5.19 已轉為舊版');
-ok(P.VERSION_LOG[0].items.length >= 4, '5.20 至少 4 條更新（' + P.VERSION_LOG[0].items.length + ' 條）');
+// v5.21：版本斷言改成「不低於 5.20」，升版不會再紅一支
+const VN = P.VERSION.split('.').map(Number);
+const MIN = [5, 20];
+ok(VN[1] >= MIN[1], '版本不低於 5.20（' + P.VERSION + '）');
+ok(html.indexOf('id="verTxt">' + P.VERSION) > 0, '首頁徽章與 VERSION 同步（' + P.VERSION + '）');
+ok(html.indexOf('id="verLogVer">' + P.VERSION) > 0, '版本紀錄標題與 VERSION 同步');
+ok(P.VERSION_LOG[0].now === true, '版本紀錄最上面是 now:true');
+const has520 = P.VERSION_LOG.filter(function (x) { return x.v === '5.20'; })[0];
+ok(!!has520 && has520.now === false, '5.20 那一筆已經轉成舊版');
+ok(has520 && has520.items.length >= 4, '5.20 版本紀錄至少 4 條（' + (has520 ? has520.items.length : 0) + ' 條）');
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (rel) {
   const f = path.join(__dirname, rel);
   const v = (/SW_VERSION = '([^']+)'/.exec(fs.readFileSync(f, 'utf8')) || [])[1] || '';
-  ok(v === 'v5.20.0', rel + ' SW_VERSION = v5.20.0（' + v + '）');
+  ok(Number(v.replace(/^v/, '').split('.')[1]) >= MIN[1], rel + ' SW_VERSION 不低於 v5.20（' + v + '）');
 });
 
 /* ================================================================ ① */

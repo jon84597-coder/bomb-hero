@@ -161,7 +161,8 @@ ok(src(/updatePops\(dt\);/), '主迴圈每幀更新飄字');
 ok(src(/if \(Game\.edgeFx > 0\) Game\.edgeFx = Math\.max\(0, Game\.edgeFx - dt \* 3\.2\)/), '主迴圈遞減邊緣紅光');
 ok(src(/drawPops\(T\);/), 'render 內有畫飄字');
 ok(src(/drawHurtEdge\(\);/), 'render 內有畫邊緣紅光');
-ok(src(/ctx\.setTransform\(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0\);\r?\n  drawHurtEdge\(\);/),
+// v5.21：中間多了 drawVignette()（螢幕空間暗角），放寬成「同一段還原座標之後」
+ok(src(/ctx\.setTransform\(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0\);[\s\S]{0,160}?drawHurtEdge\(\);/),
   '邊緣紅光在還原座標後才畫（不受 shake 位移影響）');
 const clearCount = (html.match(/Game\.pops = \[\]; Game\.edgeFx = 0;/g) || []).length;
 ok(clearCount >= 3, '換場／換關會清掉殘留反饋（≥3 處）', clearCount);

@@ -131,7 +131,8 @@ ok(P.VERSION_LOG[0].items.length >= 3, '本版至少 3 條更新（實際 ' + P.
 ok(fs.readFileSync(ROOT + '/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >= 0, 'sw.js 跟著升版');
 ok(fs.readFileSync(ROOT + '/../public/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >= 0, 'public/sw.js 跟著升版');
 ok(fs.readFileSync(ROOT + '/../bomberman-online/public/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >= 0, 'bomberman-online/public/sw.js 跟著升版');
-ok(src.length < 1900000, '字元 ' + src.length + ' < 1.9M');   // v5.18：預算線跟著長
+// v5.20 起 src = 字典（外部檔）＋主檔，這裡量的是「整頁」；主檔自己的預算線在 verify-v479
+ok(src.length < 1960000, '字元 ' + src.length + ' < 1.96M');
 ok(src.indexOf('\r') === -1, '整檔 LF（CR 0）');
 
 console.log('\n========================================');
