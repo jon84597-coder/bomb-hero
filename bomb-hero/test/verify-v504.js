@@ -229,9 +229,15 @@ try {
 
 head('⑦ 行為：controlAI 真的會把衝刺跑完');
 try {
+  // v5.5：原本用隨機地圖找「三格連續空地」，但衝刺還要求「落點不在火線上」，
+  //   隨機圖常出現「四方向全不合格」（實測 20 次 8 次）→ 測試間歇性變紅，
+  //   跟程式碼無關。這裡自己鋪一條固定走廊，條件完全可控。
   B.buildMap(15, 13, B.THEMES[0], {});
-  const spot = findOpenLine();
-  const p = mkAI(spot.x, spot.y);
+  for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) G.grid[y][x] = 1;
+  for (let x = 2; x <= 10; x++) G.grid[5][x] = 0;
+  B.markWallKinds();
+  const p = mkAI(2, 5);
+  p.aiDir = 'right';                 // 命危時往走廊另一端衝
   B.placeBomb(p, false, 1);
   const T = G.T, x0 = p.x, y0 = p.y;
   let sawDash = 0;
