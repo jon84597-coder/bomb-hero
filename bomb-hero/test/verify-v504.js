@@ -34,6 +34,18 @@ function findOpenLine() {
       }
     }
   }
+  // v5.5：經典圖是「隨機鋪軟磚」，實測約 1/3 的機率整張找不到三格連續空地，
+  //   測試就間歇性變紅（跟程式碼無關）。這裡改成：找不到就自己清一條三格走廊，
+  //   要驗的是「有連續空地時 AI 會不會衝」，不是「地圖剛好長怎樣」。
+  for (let y = 1; y < G.rows - 1; y++) {
+    for (let x = 3; x < G.cols - 1; x++) {
+      if (B.cellAt(x, y) === 0 && B.cellAt(x - 1, y) === 0) {
+        G.grid[y][x - 2] = 0;
+        B.markWallKinds();
+        return { x: x - 2, y: y, dx: 1, dy: 0 };
+      }
+    }
+  }
   return null;
 }
 function mkAI(cx, cy) {

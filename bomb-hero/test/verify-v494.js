@@ -53,7 +53,7 @@ ok(missing.length === 0, '$id() 取的 id 都真的存在於 HTML', missing);
 
 /* ================= ④ 入口沒有被改壞 ================= */
 console.log('=== ④ 入口 ===');
-ok(/id="devBtn"/.test(SRC), '#devBtn 還在');
+ok(!/id="devBtn"/.test(SRC), '首頁已無 🛠 按鈕（v5.5 移除；入口改走連點／快捷鍵／#admin）');
 ok(/e\.altKey && \(e\.ctrlKey \|\| e\.shiftKey\)/.test(SRC), 'Ctrl+Alt+D 還在');
 ok(/indexOf\('admin=1'\)/.test(SRC), '?admin=1 還在');
 ok(/function open\(\) \{[\s\S]{0,600}?m\.classList\.add\('on'\)/.test(SRC), 'open() 仍然用 class "on" 顯示');

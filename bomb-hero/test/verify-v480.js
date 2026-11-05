@@ -143,7 +143,7 @@ ok(/function renderLbList\(force\)/.test(src), 'renderLbList 吃 force 參數');
 head('5. 排行榜（後端）');
 const cloudSrc = fs.readFileSync(path.join(ROOT, '..', 'cloud.js'), 'utf8');
 const srvSrc = fs.readFileSync(path.join(ROOT, '..', 'server.js'), 'utf8');
-ok(/isLb\) return false/.test(cloudSrc) && /p\.indexOf\('\/api\/lb\/'\) === 0/.test(cloudSrc), 'cloud.js 接了 /api/lb/* 路由');
+ok(/!isLb/.test(cloudSrc) && /p\.indexOf\('\/api\/lb\/'\) === 0/.test(cloudSrc), 'cloud.js 接了 /api/lb/* 路由');
 ok(/url\.pathname\.indexOf\('\/api\/lb\/'\) === 0/.test(srvSrc), 'server.js 把 /api/lb/* 轉給 cloud');
 ok(/Access-Control-Allow-Origin': '\*'/.test(cloudSrc), '排行榜端點回 CORS 萬用字元（Pages 才讀得到）');
 ok(/LB_MAX_MS = 3600000, LB_MIN_MS = 3000/.test(cloudSrc), '只收 3 秒 ~ 60 分鐘的時間（亂填的直接擋掉）');

@@ -27,13 +27,15 @@ const openTags = (SRC.match(/<script[\s>]/g) || []).length;
 const closeTags = (SRC.match(new RegExp(scriptEnd, 'g')) || []).length;
 ok(openTags === closeTags, 'script 開／閉標籤數量相符（註解裡沒有誤寫結束標籤）', { openTags, closeTags });
 
-/* ================= ② 看得見的入口 #devBtn ================= */
-console.log('=== ② 看得見的入口 ===');
-ok(/<button class="verlogbtn devbtn" id="devBtn"/.test(SRC), '首頁頂部有 #devBtn 按鈕');
-ok(/\.devbtn \{ display: none;/.test(SRC), '.devbtn 預設 display:none（一般玩家看不到）');
-ok(/\.devbtn\.on \{ display: inline-flex; \}/.test(SRC), '.devbtn.on 才顯示');
-ok(/if \(showIt\) bd\.classList\.add\('on'\);/.test(SRC), '只有 DEV_BUILD 或白名單帳號才加 .on');
-ok(/bd\.addEventListener\('click'/.test(SRC), '#devBtn 綁了 click');
+/* ================= ② 首頁入口（v5.5：🛠 小圖示已移除） ================= */
+console.log('=== ② 首頁入口 ===');
+// v5.5：使用者要求把首頁那顆 🛠 拿掉（太顯眼）。入口本身不能跟著消失，
+//   所以這裡改成「圖示不在」＋「另外三條入口還在」。
+ok(!/id="devBtn"/.test(SRC), '首頁沒有 #devBtn 小圖示（v5.5 依需求移除）');
+ok(!/\.devbtn/.test(SRC), '也沒有殘留 .devbtn 樣式');
+ok(/const toggle = function \(\) \{ if \(A\.open\) close\(\); else open\(\); \};/.test(SRC), 'toggle 仍在');
+ok(/addEventListener\('keydown'/.test(SRC), '仍有鍵盤入口');
+ok(/id="verTxt"/.test(SRC), '仍有版本號（連點 3 下）入口');
 
 /* ================= ③ wire() 不能因為 DOM 沒到就整體早退 ================= */
 console.log('=== ③ wire() 早退陷阱 ===');

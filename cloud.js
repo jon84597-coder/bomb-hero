@@ -496,7 +496,10 @@ function makeLimiter() {
 function createStore(dir, persist, remote) {
   const file = path.join(dir, 'accounts.json');
   // v4.80：lb = 每日挑戰排行榜（跟帳號同一份檔案，一起 flush）
-  const db = { v: 1, accounts: {}, devices: {}, tamper: 0, created: Date.now(), lb: { v: 1, days: {} }, announce: null };
+  // v5.5：visits＝拜訪紀錄（歷史／當日人數）。跟帳號同一份檔一起 flush，
+  //   分片推送時是獨立的一個 key，所以改一個數字不會重推全部帳號。
+  const db = { v: 1, accounts: {}, devices: {}, tamper: 0, created: Date.now(), lb: { v: 1, days: {} }, announce: null,
+    visits: { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() } };
   let timer = null;
   let dirty = false;
   let retry = 0;
@@ -530,7 +533,8 @@ function createStore(dir, persist, remote) {
     return {
       meta: { v: db.v, tamper: db.tamper, created: db.created, announce: db.announce, sec: db.sec || '' },
       accounts: { accounts: db.accounts, devices: db.devices },
-      lb: db.lb
+      lb: db.lb,
+      visits: db.visits || { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() }   // v5.5：拜訪紀錄
     };
   }
   function applyPart(key, val) {
@@ -541,6 +545,10 @@ function createStore(dir, persist, remote) {
       return true;
     }
     if (key === 'lb') { db.lb = val.days ? val : { v: 1, days: {} }; return true; }
+    if (key === 'visits') {
+      db.visits = (val && typeof val === 'object') ? val : { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() };
+      return true;
+    }
     if (key === 'meta') {
       db.v = val.v || 1;
       db.tamper = val.tamper || 0;
@@ -565,6 +573,7 @@ function createStore(dir, persist, remote) {
       db.announce = obj.announce || null;      // v4.3：全服公告
       db.sec = typeof obj.sec === 'string' ? obj.sec : '';
       db.lb = obj.lb && obj.lb.days ? obj.lb : { v: 1, days: {} };   // v4.80：排行榜
+      db.visits = (obj.visits && typeof obj.visits === 'object') ? obj.visits : db.visits;   // v5.5：拜訪紀錄
     } catch (e) {
       // 壞檔 → 備份起來再看，不要讓伺服器起不來
       try { fs.renameSync(file, file + '.bad-' + Date.now()); } catch (e2) {}
@@ -1242,6 +1251,71 @@ function createCloud(options) {
     return out;
   }
 
+  /* ---------------- v5.5：拜訪紀錄（後台「歷史／今日拜訪人數」） ----------------
+   * /api/health 只有「當下連線數」、帳號數只有「註冊過的人」，
+   * 看不出「今天有多少人打開過遊戲」→ 這裡自己記。
+   *   · 用裝置雜湊去重（同一台同一天只算 1 人）；原始 deviceId 不落地，只存 sha256 前 16 碼
+   *   · pv / dev 是歷史總量（永久累加）；days[day] 只留近 60 天（後台畫 7 天直條圖）
+   */
+  const VISIT_KEEP_DAYS = 60;
+  const VISIT_MAX_DEV = 50000;
+  function visitState() {
+    if (!db.visits || typeof db.visits !== 'object') {
+      db.visits = { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() };
+    }
+    const v = db.visits;
+    if (!v.dev || typeof v.dev !== 'object') v.dev = {};
+    if (!v.days || typeof v.days !== 'object') v.days = {};
+    if (!(v.pv >= 0)) v.pv = 0;
+    if (!v.first) v.first = Date.now();
+    return v;
+  }
+  function visitDayPeek(day) {
+    const v = visitState();
+    const d = v.days[day || lbToday()];
+    return (d && typeof d === 'object') ? d : null;
+  }
+  function visitPrune() {
+    const v = visitState();
+    const keys = Object.keys(v.days).sort();
+    const over = keys.length - VISIT_KEEP_DAYS;
+    for (let i = 0; i < over; i++) delete v.days[keys[i]];
+  }
+  function visitOut() {
+    const v = visitState();
+    const t = visitDayPeek();
+    const days = [];
+    const keys = Object.keys(v.days).sort().slice(-7);
+    for (let i = 0; i < keys.length; i++) {
+      const d = v.days[keys[i]] || {};
+      days.push({ day: keys[i], pv: d.pv | 0, uv: Object.keys(d.dev || {}).length });
+    }
+    return {
+      pv: v.pv | 0,
+      uv: Object.keys(v.dev).length,
+      first: v.first || 0,
+      last: v.last || 0,
+      today: lbToday(),
+      todayUv: t ? Object.keys(t.dev || {}).length : 0,
+      todayPv: t ? (t.pv | 0) : 0,
+      days: days
+    };
+  }
+  function visitRecord(hash) {
+    const v = visitState();
+    v.pv = (v.pv | 0) + 1;
+    v.last = Date.now();
+    if (hash && !v.dev[hash] && Object.keys(v.dev).length < VISIT_MAX_DEV) v.dev[hash] = Date.now();
+    const day = lbToday();
+    if (!v.days[day] || typeof v.days[day] !== 'object') v.days[day] = { pv: 0, dev: {} };
+    const d = v.days[day];
+    if (!d.dev) d.dev = {};
+    d.pv = (d.pv | 0) + 1;
+    if (hash) d.dev[hash] = 1;
+    visitPrune();
+    return v;
+  }
+
   function providerInfo(p) {
     const def = PROVIDERS[p];
     const id = env[def.idEnv] || '';
@@ -1267,6 +1341,9 @@ function createCloud(options) {
       created: a.created || 0, createdStr: stamp(a.created),
       lastSeen: a.lastSeen || 0, lastSeenStr: stamp(a.lastSeen),
       logins: a.loginCount | 0,
+      // v5.5：累計遊玩（帳號層級，所有模式）＋ 現在是否在線（5 分鐘內有動作）
+      playSec: (a.playSec | 0) || (a.rpg ? (a.rpg.playSec | 0) : 0),
+      online: (Date.now() - (a.lastSeen || 0)) < 300000,
       cleared: a.rpg ? (a.rpg.cleared | 0) : 0,
       gold: a.rpg ? (a.rpg.gold | 0) : 0,
       hasPass: !!a.pass
@@ -1291,13 +1368,19 @@ function createCloud(options) {
     list.sort(function (x, y) { return (y.created || 0) - (x.created || 0); });
     return {
       ok: true,
-      stats: {
-        accounts: members + guests, members: members, guests: guests, devs: devs,
-        banned: banned, newToday: today, online24h: online,
-        tamper: stats.tamper, rateLimited: stats.rateLimited,
-        registers: stats.registers, webLogins: stats.webLogins,
-        logins: stats.logins, bindings: stats.bindings
-      },
+      stats: (function () {
+        const vo = visitOut();     // v5.5：拜訪紀錄（歷史／今日）
+        return {
+          accounts: members + guests, members: members, guests: guests, devs: devs,
+          banned: banned, newToday: today, online24h: online,
+          tamper: stats.tamper, rateLimited: stats.rateLimited,
+          registers: stats.registers, webLogins: stats.webLogins,
+          logins: stats.logins, bindings: stats.bindings,
+          visitors: vo.uv, visitPv: vo.pv,
+          visitToday: vo.todayUv, visitPvToday: vo.todayPv,
+          visitDays: vo.days
+        };
+      })(),
       announce: announceOut(),
       accounts: list.slice(0, 300),
       devEmails: DEV_EMAILS,
@@ -1316,7 +1399,8 @@ function createCloud(options) {
     const isAdmin = p.indexOf('/api/admin/') === 0;
     const isShare = p.indexOf('/api/share/') === 0;
     const isLb = p.indexOf('/api/lb/') === 0;              // v4.80：每日挑戰排行榜
-    if (!isAuth && !isRpg && !isAdmin && !isShare && !isLb) return false;
+    const isVisit = (p === '/api/visit');                  // v5.5：拜訪紀錄（不需要登入）
+    if (!isAuth && !isRpg && !isAdmin && !isShare && !isLb && !isVisit) return false;
 
     /* ---- 共用：全域 IP 限流（每分鐘 300 次，避免被腳本掃） ---- */
     if (!limiter.take('ip:' + ip(req), 300, 5).ok) {
@@ -1325,6 +1409,29 @@ function createCloud(options) {
     }
 
     try {
+      /* ---------------- v5.5：拜訪紀錄 ----------------
+       * 只記「有人打開了遊戲」：同一台裝置同一天只算 1 個訪客，pv 每次呼叫都 +1。
+       * 刻意不帶 cookie（前端用 credentials:'omit'）→ 從 GitHub Pages 也能打，
+       * 所以一定要回 Access-Control-Allow-Origin。
+       */
+      if (isVisit && req.method === 'POST') {
+        const CORS_V = { 'Access-Control-Allow-Origin': '*' };
+        if (!gate(req, res, 'visit', 30, .5, CORS_V)) return true;
+        const body = await readJson(req, 4096);
+        if (!body) return fail(res, 400, 'BAD_BODY', CORS_V), true;
+        const dev = String(body.deviceId || '').slice(0, 128);
+        if (dev.length < 6) return fail(res, 400, 'BAD_DEVICE', CORS_V), true;
+        const hash = sha256(dev + '|visit|' + secret).slice(0, 16);
+        visitRecord(hash);
+        store.touch();
+        const o = visitOut();
+        return send(res, 200, {
+          ok: true, pv: o.pv, uv: o.uv,
+          today: { day: o.today, pv: o.todayPv, uv: o.todayUv }
+        }, CORS_V), true;
+      }
+      if (isVisit) return fail(res, 404, 'NO_SUCH_API'), true;
+
       /* ---------------- v4.80：每日挑戰排行榜 ---------------- */
       // 這兩個端點刻意「不帶 cookie」：前端從 GitHub Pages（純靜態）也能直接跨網域讀寫，
       // 所以一定要回 Access-Control-Allow-Origin；帳號相關的端點完全不受影響。
@@ -1753,13 +1860,20 @@ function createCloud(options) {
           return send(res, 200, {
             ok: true,
             at: now,
-            stats: {
-              accounts: members + guests, members: members, guests: guests, devs: devs,
-              banned: banned, newToday: today, online24h: online,
-              tamper: stats.tamper, rateLimited: stats.rateLimited,
-              registers: stats.registers, webLogins: stats.webLogins,
-              logins: stats.logins, bindings: stats.bindings
-            },
+            stats: (function () {
+              const vo = visitOut();
+              return {
+                accounts: members + guests, members: members, guests: guests, devs: devs,
+                banned: banned, newToday: today, online24h: online,
+                tamper: stats.tamper, rateLimited: stats.rateLimited,
+                registers: stats.registers, webLogins: stats.webLogins,
+                logins: stats.logins, bindings: stats.bindings,
+                visitors: vo.uv, visitPv: vo.pv,
+                visitToday: vo.todayUv, visitPvToday: vo.todayPv,
+                visitDays: vo.days
+              };
+            })(),
+            visits: visitOut(),        // v5.5：整包拜訪紀錄（近 60 天）
             accounts: all,
             devices: db.devices,
             lb: db.lb,
@@ -1789,7 +1903,9 @@ function createCloud(options) {
           row.cleared = acc.rpg ? (acc.rpg.cleared | 0) : 0;
           row.points = pointsTotalFor(row.cleared);
           row.spent = acc.rpg ? sumAlloc(acc.rpg.alloc) : 0;
-          row.playSec = acc.rpg ? (acc.rpg.playSec | 0) : 0;
+          // v5.5：playSec = 帳號層級（所有模式累加）；playRpgSec = 舊的 RPG 通關用時
+          row.playSec = (acc.playSec | 0) || (acc.rpg ? (acc.rpg.playSec | 0) : 0);
+          row.playRpgSec = acc.rpg ? (acc.rpg.playSec | 0) : 0;
           row.stages = acc.stages || {};
           row.events = (acc.events || []).slice(-30).reverse().map(function (e) {
             return Object.assign({}, e, { str: stamp(e.t) });
@@ -1967,6 +2083,24 @@ function createCloud(options) {
           logEvent(acc, type, st ? { stage: st } : null);
           store.touch();
           return send(res, 200, { ok: true }), true;
+        }
+
+        /* v5.5：累計遊玩時間（前端每 60 秒回報一次「這次玩了几秒」）
+           為什麼要獨立一支：舊版只有 stage-clear 帶 playSec，而且用 Math.max 取大
+           → 幾乎永遠是第一個值（0）。這裡改成「加法」，帳號層級累加所有模式
+           （單人／RPG／對戰／大逃殺都算）。單次上限 2 小時，避免有人一次塞天文數字。 */
+        if (p === '/api/rpg/play' && req.method === 'POST') {
+          if (!gate(req, res, 'play', 12, .5)) return true;
+          const body = await readJson(req, 2048);
+          if (!body) return fail(res, 400, 'BAD_BODY'), true;
+          const sec = Math.round(Number(body.sec));
+          if (!isFinite(sec) || sec < 1) return fail(res, 400, 'BAD_SEC'), true;
+          const add = Math.min(7200, sec);
+          const cap = 86400 * 365 * 5;                 // 上限 5 年，防止數字爆掉
+          acc.playSec = Math.min(cap, (acc.playSec | 0) + add);
+          acc.playTs = Date.now();
+          store.touch();
+          return send(res, 200, { ok: true, playSec: acc.playSec }), true;
         }
 
         /* 存檔同步：前端帶回伺服器簽發的信封，先驗章再驗內容 */

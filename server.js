@@ -999,7 +999,8 @@ const server = http.createServer(function (req, res) {
       url.pathname.indexOf('/api/admin/') === 0 ||
       url.pathname.indexOf('/api/lb/') === 0 ||        // v4.80：每日挑戰排行榜
       url.pathname.indexOf('/api/save/') === 0 ||      // v4.85：整包存檔（跨裝置同步）
-      url.pathname.indexOf('/api/share/') === 0) {
+      url.pathname.indexOf('/api/share/') === 0 ||
+      url.pathname === '/api/visit') {           // v5.5：拜訪紀錄（免登入，cloud.js 內限流）
     cloud.handle(req, res, url).then(function (done) {
       if (!done) sendJSON(res, 404, { ok: false, err: 'no such api' });
     }).catch(function (e) {

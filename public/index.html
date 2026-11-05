@@ -394,10 +394,7 @@ font-size: 10.5px; font-weight: 900; color: #fff;
 background: #f4703c; border-radius: 999px; padding: 1px 7px;
 }
 body.touch .verlogbtn { font-size: 11px; padding: 5px 10px; }
-/* v4.93：開發者後台入口 —— 預設不顯示，只有 devbtn.on 才現身（一般玩家看不到） */
-.devbtn { display: none; padding: 5px 9px; font-size: 13px; line-height: 1; }
-.devbtn.on { display: inline-flex; }
-body.touch .devbtn.on { padding: 5px 9px; }
+/* v5.5：首頁那顆 🛠 入口已移除（使用者要求）；後台改用連點版本號／Ctrl+Alt+D／#admin */
 /* v4.0：版本更新面板（全螢幕遮罩 ＋ 可捲動卡片） */
 .vlog {
 position: fixed; inset: 0; z-index: 1400; display: flex; align-items: center; justify-content: center;
@@ -2517,10 +2514,24 @@ color: #d8e2f5; box-shadow: 0 20px 60px rgba(0,0,0,.65); overflow: hidden;
 .bhsec2 { flex: 0 0 auto; font-size: 11px; font-weight: 900; color: #8ea3c6; letter-spacing: .04em; margin-top: 2px; }
 .bhsec2::before { content: ''; display: inline-block; width: 3px; height: 11px; background: #3d5273; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
 .bhann, .bhsearch, .bhbtnrow, .bhrow2 { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #9db0d0; flex: 0 0 auto; flex-wrap: wrap; }
-.bhann input[type=text], .bhann input[type=number], .bhsearch input, .bhrow2 select {
+.bhann input[type=text], .bhann input[type=number], .bhsearch input, .bhsearch select, .bhrow2 select {
 background: #0c1017; border: 1.5px solid #2a3348; border-radius: 9px; color: #d8e2f5;
 font-family: inherit; font-size: 12.5px; padding: 7px 9px; outline: none;
 }
+.bhsearch select { flex: 0 0 auto; max-width: 44%; }
+/* v5.5：拜訪紀錄（近 7 天直條圖 ＋ 今日 / 歷史數字） */
+.bhvisits { display: flex; align-items: flex-end; gap: 6px; flex: 0 0 auto; padding: 2px 1px 0;
+max-width: 520px; width: 100%; }
+.bhvcol { flex: 1 1 0; max-width: 58px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.bhvbar { width: 100%; height: 34px; display: flex; align-items: flex-end;
+background: rgba(255,255,255,.04); border-radius: 4px; }
+.bhvbar > i { display: block; width: 100%; border-radius: 3px 3px 0 0;
+background: linear-gradient(180deg, #6ad8a0, #2d7f56); min-height: 3px; }
+.bhvcol.today .bhvbar > i { background: linear-gradient(180deg, #ffd98a, #d99b32); }
+.bhvcol span { font-size: 8.5px; color: #7b8aa8; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bhvcol b { font-size: 10px; color: #a9bcd8; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.bhvcol.today b { color: #ffd98a; }
+.bhpill.on { background: #1e4a2c; color: #8cf0b4; }
 .bhann input[type=text], .bhsearch input { flex: 1 1 160px; min-width: 0; }
 .bhann input[type=number] { width: 64px; }
 .bhann button, .bhsearch button, .bhbtnrow button, .bhrow2 button {
@@ -2528,15 +2539,15 @@ background: #2b3a55; border: 1.5px solid #3d5273; color: #cfe0ff; border-radius:
 padding: 7px 12px; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
 }
 .bhann button:active, .bhsearch button:active, .bhbtnrow button:active { transform: translateY(1px); }
-.bhsplit { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(290px, .92fr) minmax(360px, 1.4fr); gap: 8px; }
-.bhlist { min-height: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; }
+.bhsplit { flex: 1 1 auto; min-height: 0; min-width: 0; display: grid; grid-template-columns: minmax(290px, .92fr) minmax(360px, 1.4fr); gap: 8px; }
+.bhlist { min-height: 0; min-width: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; }
 .bhdetail { min-height: 0; overflow: auto; border: 1.5px solid #253045; border-radius: 11px; background: #0b1017; padding: 9px 11px; }
 .bhrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; padding: 7px 9px; border-bottom: 1px solid #1a2331; cursor: pointer; }
 .bhrow:hover { background: #141d29; }
 .bhrow.on { background: #1b2637; box-shadow: inset 3px 0 0 #5b8def; }
-.bhrow .bhnm { font-size: 12.5px; font-weight: 800; color: #e6eeff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bhrow .bhnm { font-size: 12.5px; font-weight: 800; color: #e6eeff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .bhrow .bhuid { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #6f7f9c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bhrow .bhmt { grid-column: 1 / 2; font-size: 10.5px; color: #8ea3c6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bhrow .bhmt { grid-column: 1 / 2; font-size: 10.5px; color: #8ea3c6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .bhrow .bhst { grid-column: 2 / 3; grid-row: 1 / 3; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .bhpill { font-size: 9.5px; font-weight: 900; border-radius: 999px; padding: 1px 6px; white-space: nowrap; }
 .bhpill.g { background: #2a3448; color: #9db0d0; }
@@ -2586,6 +2597,8 @@ padding: 7px 12px; font-family: inherit; font-size: 12px; font-weight: 800; curs
 .bhkv { grid-template-columns: 1fr; }
 .bhann input[type=text] { flex: 1 1 100%; }
 .bhsearch input { flex: 1 1 auto; min-width: 0; }
+.bhsearch select { flex: 1 1 100%; max-width: none; }
+.bhvisits .bhvcol span { font-size: 8.5px; }
 .bhann button { flex: 1 1 auto; padding: 9px 10px; }
 .bhsearch button { flex: 0 0 auto; padding: 9px 12px; }
 }
@@ -3599,10 +3612,9 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.4</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.5</span></span>
     </button>
-    <!-- v4.93：開發者後台入口（DEV_BUILD 或白名單帳號才顯示） -->
-    <button class="verlogbtn devbtn" id="devBtn" type="button" title="開發者後台">🛠</button>
+    <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
     <div class="annbox" id="annBox">
       <button class="annhead" id="annHead" type="button" title="點一下展開／收起作者公告">
@@ -3642,7 +3654,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">正式版 v<span id="verTxt">5.4</span></div>
+      <div class="ver beta">正式版 v<span id="verTxt">5.5</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4333,7 +4345,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.4';
+const VERSION = '5.5';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -20586,6 +20598,7 @@ function render() {
   ctx.setTransform(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0);
   drawHurtEdge();
   // v4.70：小地圖與隊色 HUD 都是「畫面座標」，畫在所有世界物件之上（此時 transform = CSS 像素）
+  try { drawSelfPin(); } catch (e) {}        // v5.5：縮小時「我在這裡」
   try { drawMiniMap(); } catch (e) {}
   try { drawTeamHud(); } catch (e) {}
   try { drawBRHud(); } catch (e) {}
@@ -20730,6 +20743,71 @@ function drawMiniMap() {
       ctx.lineWidth = 1;
     }
   });
+  ctx.restore();
+}
+
+// ====
+//   v5.5：縮小看大地圖時的「我在這裡」定位標示
+//   · 只在 zoom < 100%（也就是 42%~100% 這一段）出現，越小球越亮；100% 完全不畫
+//     —— 100% 時角色本來就夠大，畫了只是多一圈雜訊。
+//   · 畫在「螢幕座標」而且固定像素大小：42% 時角色可能只剩 8px，這圈仍然是 15px。
+//   · 只有細環＋箭頭＋很淡的光暈，不吃點擊、不影響碰撞／視線判定。
+//   · 所有模式共用：它是 render() 的最後一層，單人／RPG／對戰／大逃殺都吃得到。
+// ====
+const SELF_PIN_R = 15;                      // 環半徑（CSS px，固定，不隨 zoom 縮放）
+function selfPinAlpha() {
+  if (Game.state !== 'play' && Game.state !== 'countdown') return 0;
+  const z = Game.zoom || 1;
+  if (z >= .99) return 0;                  // 99%~100% 完全不畫
+  return clamp((.99 - z) / .12, 0, 1);     // 99% → 0；87% 以下全亮
+}
+// 世界座標 → 螢幕座標（render 的變換是 translate(中心) scale(z) translate(-中心) translate(cam)）
+function playerScreenPos(p) {
+  const z = Game.zoom || 1;
+  return {
+    x: VIEW_W / 2 + z * (p.x + Game.camX - VIEW_W / 2),
+    y: VIEW_H / 2 + z * (p.y + Game.camY - VIEW_H / 2)
+  };
+}
+function drawSelfPin() {
+  const a = selfPinAlpha();
+  if (a <= .02) return;
+  const p = Game.players && Game.players[0];
+  if (!p || (!p.alive && !p.cart)) return;
+  const sp = playerScreenPos(p);
+  if (!isFinite(sp.x) || !isFinite(sp.y)) return;
+  if (sp.x < -30 || sp.x > VIEW_W + 30 || sp.y < -30 || sp.y > VIEW_H + 30) return;
+  const z = Game.zoom || 1, T = Game.T || 16;
+  const t = Game.gameT || 0;
+  const pulse = .5 + .5 * Math.sin(t * 4.2);
+  const cx = sp.x, cy = sp.y - T * .5 * z;   // 腳往上一點＝身體中心
+  const al = function (v) { return (v * a).toFixed(3); };
+  ctx.save();
+  // ① 很淡的地面光暈：把視線吸過來，但不蓋掉格子內容
+  ctx.fillStyle = 'rgba(255,214,96,' + al(.10) + ')';
+  ctx.beginPath(); ctx.arc(cx, cy, SELF_PIN_R + 7 + pulse * 3, 0, 6.283); ctx.fill();
+  // ② 深色描邊墊底 → 雪地／冰原這種淺色地板也看得清楚
+  ctx.lineWidth = 3.4; ctx.strokeStyle = 'rgba(8,12,20,' + al(.55) + ')';
+  ctx.beginPath(); ctx.arc(cx, cy, SELF_PIN_R, 0, 6.283); ctx.stroke();
+  // ③ 金色主環
+  ctx.lineWidth = 1.8; ctx.strokeStyle = 'rgba(255,226,124,' + al(.92) + ')';
+  ctx.beginPath(); ctx.arc(cx, cy, SELF_PIN_R, 0, 6.283); ctx.stroke();
+  // ④ 三圈慢速旋轉的短弧 → 一眼分辨「這是我」而不是道具
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,' + al(.55) + ')';
+  for (let k = 0; k < 3; k++) {
+    const a0 = t * 1.5 + k * 2.0944;
+    ctx.beginPath(); ctx.arc(cx, cy, SELF_PIN_R + 5.5, a0, a0 + .55); ctx.stroke();
+  }
+  // ⑤ 頭上往下指的箭頭（上下呼吸 4px）
+  const by = cy - SELF_PIN_R - 13 + pulse * 4;
+  ctx.beginPath();
+  ctx.moveTo(cx, by + 9); ctx.lineTo(cx - 6.5, by - 3); ctx.lineTo(cx + 6.5, by - 3);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,226,124,' + al(.95) + ')'; ctx.fill();
+  ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(8,12,20,' + al(.6) + ')'; ctx.stroke();
+  // ⑥ 中心小白點：角色真的縮到看不見時，至少還有個準心
+  ctx.fillStyle = 'rgba(255,255,255,' + al(.9) + ')';
+  ctx.beginPath(); ctx.arc(cx, cy, 2.2, 0, 6.283); ctx.fill();
   ctx.restore();
 }
 
@@ -25053,6 +25131,7 @@ function loop(ts) {
   }
   if (Net.on && Net.role === 'guest') Net.guestTick(dt);
   else if (Net.on && Net.role === 'host') Net.hostTick(dt);
+  try { PlayStat.tick(dt); } catch (e) {}    // v5.5：累計遊玩時間（只算 state==='play'）
   // 清掉死亡敵人（v4.36：先跑一次死亡行為，例如分裂）
   for (let i = Game.enemies.length - 1; i >= 0; i--) {
     if (Game.enemies[i].dead) {
@@ -28624,7 +28703,14 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.4', date: '2026-11-05', now: true, items: [
+  { v: '5.5', date: '2026-11-05', now: true, items: [
+    '🔍 <b>縮小看大地圖時不會再找不到自己</b>：畫面縮到 <b>42%~100%</b> 時，角色身上會出現一圈金色定位環＋頭上的呼吸箭頭（縮得越小越明顯，100% 完全不畫）。標示固定 15px、只有細線與淡光暈，<b>不擋視線、不影響操作</b>；單人／RPG／對戰／大逃殺全都適用',
+    '🗑 <b>首頁右上角那顆 🛠 小圖示拿掉了</b>：畫面更乾淨，管理面板改用「版本號連點 3 下」（手機也行）或快捷鍵進入',
+    '📊 <b>營運數據補齊了</b>：多了<b>歷史訪客／今日訪客／歷史瀏覽／今日瀏覽</b>與近 7 天直條圖，一眼看得出這週有沒有人在玩（玩家端看不到）',
+    '↕️ <b>會員名單可以排序了</b>：可依「最後上線（新→舊／舊→新）」「在線優先」「加入時間」「登入次數（多→少／少→多）」「遊玩時間」「註冊會員優先」「名稱」排列，選擇會記住；在線的人旁邊有綠色標籤',
+    '⏱ <b>累計遊玩時間修好了</b>：以前永遠是 0h00m（前端根本沒回報過）。現在只算「真的在玩」的秒數，每分鐘累加一次、關頁前再補一次，離線也會先存本機等下次補送'
+  ] },
+  { v: '5.4', date: '2026-11-05', now: false, items: [
     '💨 <b>電腦玩家也會用衝刺</b>：腳下被放炸彈時會往安全方向衝出去（一定衝，不看難度），平常趕路、追人、撿道具也會看情況衝一下 —— 依難度調整頻率，弱 AI 很少用、強 AI 很常衝',
     '🐝 <b>飛行怪不會再飛到外牆以外</b>：以前只把牠夾在地圖邊界內，隨機大圖外牆之外那一大片岩體／海面照樣飄過去，火焰燒不到、你只能乾等牠飛回來。現在活動範圍限定在<b>外牆以內</b>（空地四周兩格＋不含外牆岩體），飛出去也會自己飛回來',
     '🧱 <b>越牆的特色保留</b>：場內一兩格厚的牆、軟磚照樣飛得過去，只是不會再飄到場外送死'
@@ -31923,9 +32009,25 @@ const Admin = (function () {
   /* v4.90：後台改成「分頁 ＋ 雙欄」，桌機不用捲、手機不用左右拉。
      五個頁籤：總覽（統計＋伺服器狀態）／會員（名單＋詳情）／
      即時（排行榜）／系統（dump 摘要＋原始 JSON）／工具（公告、匯出）。 */
+  const SORT_KEY = 'bombhero-adm-sort';
+  // v5.5：名單排序（使用者要求：上線／在線／加入時間／登入次數／註冊會員）
+  const SORTS = {
+    lastDesc: '最後上線：新 → 舊', lastAsc: '最後上線：舊 → 新', online: '在線優先',
+    joinDesc: '加入時間：新 → 舊', joinAsc: '加入時間：舊 → 新',
+    loginDesc: '登入次數：多 → 少', loginAsc: '登入次數：少 → 多',
+    playDesc: '遊玩時間：長 → 短', memberFirst: '註冊會員優先', nameAsc: '名稱：A → Z'
+  };
+  // 「在線」＝最後心跳在 5 分鐘內（伺服器在每次 /api/* 都會更新 lastSeen）
+  const ONLINE_MS = 5 * 60 * 1000;
+  function sortSaved() {
+    let v = '';
+    try { v = localStorage.getItem(SORT_KEY) || ''; } catch (e) {}
+    return SORTS[v] ? v : 'lastDesc';
+  }
   const A = { open: false, data: null, dump: null, health: null, q: '', sel: null,
     tab: 'home', lb: null, lbMode: 'daily', busy: false, err: '',
-    // v4.93：entryWired＝入口監聽（鍵盤／連點／#admin／🛠 鈕）已綁
+    sort: sortSaved(),
+    // v4.93：entryWired＝入口監聽（鍵盤／連點／#admin）已綁
     //        wiredModal＝#bhModal 內部按鈕已綁（那塊 HTML 寫在 script 標籤之後，會晚一步）
     entryWired: false, wiredModal: false, pending: false };
 
@@ -31996,12 +32098,40 @@ const Admin = (function () {
     const cells = [
       ['總帳號', st.accounts], ['正式會員', st.members], ['遊客', st.guests],
       ['開發者', st.devs], ['今日註冊', st.newToday], ['24h 上線', st.online24h],
+      // v5.5：拜訪人數（歷史／當日）
+      ['歷史訪客', st.visitors], ['今日訪客', st.visitToday],
+      ['歷史瀏覽', st.visitPv], ['今日瀏覽', st.visitPvToday],
       ['停權中', st.banned], ['註冊次數', st.registers], ['登入次數', st.logins],
       ['綁定', st.bindings], ['竄改攔阻', st.tamper], ['限流攔阻', st.rateLimited]
     ];
     box.innerHTML = cells.map(function (c) {
       return '<div class="bhstat"><b>' + (c[1] == null ? 0 : c[1]) + '</b><span>' + c[0] + '</span></div>';
     }).join('');
+  }
+
+  /* v5.5：近 7 天拜訪（每根直條＝當天不重複裝置數，金色＝今天）
+     數字來源是後端 /api/admin/overview 的 visitDays，前端不自己算。 */
+  function renderVisits(st) {
+    const box = $id('bhVisits'), tag = $id('bhVisitTag');
+    if (!box) return;
+    const days = (st && st.visitDays) || [];
+    if (!days.length) { box.innerHTML = '<div class="bhempty">還沒有拜訪紀錄</div>'; return; }
+    let max = 1;
+    for (let i = 0; i < days.length; i++) max = Math.max(max, days[i].uv | 0);
+    const todayKey = days[days.length - 1] ? days[days.length - 1].day : '';
+    box.innerHTML = days.map(function (d) {
+      const uv = d.uv | 0, pv = d.pv | 0;
+      const h = Math.max(3, Math.round((uv / max) * 32));
+      const cls = d.day === todayKey ? 'bhvcol today' : 'bhvcol';
+      return '<div class="' + cls + '" title="' + e2(d.day) + '：' + uv + ' 人／' + pv + ' 次">' +
+        '<b>' + uv + '</b>' +
+        '<div class="bhvbar"><i style="height:' + h + 'px"></i></div>' +
+        '<span>' + e2(String(d.day || '').slice(5)) + '</span></div>';
+    }).join('');
+    if (tag) {
+      tag.textContent = '今日 ' + ((st.visitToday | 0)) + ' 人 / ' + ((st.visitPvToday | 0)) + ' 次';
+      tag.className = 'bhtag';
+    }
   }
 
   function renderHealth() {
@@ -32063,20 +32193,55 @@ const Admin = (function () {
         .toLowerCase().indexOf(q) >= 0;
     });
   }
+  /* v5.5：「在線」判定 —— 伺服器每次 /api/* 都會更新 lastSeen，5 分鐘內算在線 */
+  function isOnline(a) { return !!(a && a.lastSeen && (Date.now() - a.lastSeen) < ONLINE_MS); }
+  /* v5.5：名單排序。每一種都再以「最後上線」當第二鍵，同分時最近玩過的排前面。 */
+  function sortRows(rows) {
+    const out = rows.slice();
+    const m = A.sort || 'lastDesc';
+    const tie = function (x, y) { return (y.lastSeen || 0) - (x.lastSeen || 0); };
+    const num = function (f, desc) {
+      out.sort(function (x, y) {
+        const a = f(x) || 0, b = f(y) || 0;
+        return (a === b) ? tie(x, y) : ((a < b) === !!desc ? 1 : -1);
+      });
+    };
+    if (m === 'lastAsc') num(function (a) { return a.lastSeen; }, false);
+    else if (m === 'online') out.sort(function (x, y) {
+      return ((isOnline(y) ? 1 : 0) - (isOnline(x) ? 1 : 0)) || tie(x, y);
+    });
+    else if (m === 'joinDesc') num(function (a) { return a.created; }, true);
+    else if (m === 'joinAsc') num(function (a) { return a.created; }, false);
+    else if (m === 'loginDesc') num(function (a) { return a.logins; }, true);
+    else if (m === 'loginAsc') num(function (a) { return a.logins; }, false);
+    else if (m === 'playDesc') num(function (a) { return a.playSec; }, true);
+    else if (m === 'memberFirst') out.sort(function (x, y) {
+      // 正式會員（1）排在遊客（0）前面；同類之間用加入時間新→舊
+      return ((y.kind === 'member' ? 1 : 0) - (x.kind === 'member' ? 1 : 0)) || ((y.created || 0) - (x.created || 0));
+    });
+    else if (m === 'nameAsc') out.sort(function (x, y) {
+      const a = String(x.name || '').toLowerCase(), b = String(y.name || '').toLowerCase();
+      return a < b ? -1 : (a > b ? 1 : tie(x, y));
+    });
+    else num(function (a) { return a.lastSeen; }, true);
+    return out;
+  }
   function renderList() {
     const box = $id('bhList');
     if (!box) return;
     if (!A.data) { box.innerHTML = '<div class="bhempty">載入中…</div>'; return; }
-    const rows = rowsFiltered();
+    const rows = sortRows(rowsFiltered());
     if (!rows.length) { box.innerHTML = '<div class="bhempty">沒有符合的帳號</div>'; return; }
     box.innerHTML = rows.map(function (a) {
       return '<div class="bhrow' + (A.sel === a.id ? ' on' : '') + '" data-id="' + e2(a.id) + '">' +
         '<div class="bhnm">' + e2(a.name) + (a.dev ? ' <span class="bhpill d">DEV</span>' : '') + '</div>' +
         '<div class="bhst">' + srcLabel(a) +
+        (isOnline(a) ? '<span class="bhpill on">在線</span>' : '') +
         (a.banned ? '<span class="bhpill b">停權</span>' : '') + '</div>' +
         '<div class="bhuid">' + e2(a.id) + '</div>' +
         '<div class="bhmt">關卡 ' + (a.cleared | 0) + '/32　💰' + (a.gold | 0) +
-        '　登入 ' + (a.logins | 0) + '　' + e2(a.createdStr || dt(a.created)) + '</div>' +
+        '　登入 ' + (a.logins | 0) + '　遊玩 ' + fmtDur(a.playSec || 0) +
+        '　上線 ' + e2(a.lastSeenStr || dt(a.lastSeen)) + '</div>' +
         '</div>';
     }).join('');
   }
@@ -32237,6 +32402,7 @@ const Admin = (function () {
       }
       A.data = r;
       renderStats(r.stats);
+      renderVisits(r.stats);
       renderHealth();
       renderRecent();
       renderList();
@@ -32253,8 +32419,8 @@ const Admin = (function () {
       const help = $id('bhHelp');
       if (help) {
         help.innerHTML =
-          '<div>· <b>總覽</b>：帳號統計 ＋ <code>/api/health</code> 全部欄位（儲存後端、金鑰指紋、容器啟動時間、運行秒數）。</div>' +
-          '<div>· <b>會員</b>：搜尋 UID／Email／名稱／IP；點一列看完整欄位、各關卡次數、最近 30 筆足跡，最下方有該帳號的原始 JSON。</div>' +
+          '<div>· <b>總覽</b>：帳號統計 ＋ 拜訪紀錄（近 7 天不重複人數／今日人次）＋ <code>/api/health</code> 全部欄位。</div>' +
+          '<div>· <b>會員</b>：搜尋 UID／Email／名稱／IP；左上角下拉可依「最後上線／在線／加入時間／登入次數／遊玩時間／註冊會員」排序；點一列看完整欄位、各關卡次數、最近 30 筆足跡。</div>' +
           '<div>· <b>即時</b>：每日／每週排行榜的實際內容（前 100 名），用來確認分數有沒有正常寫入。</div>' +
           '<div>· <b>系統</b>：<code>/api/admin/dump</code> 的摘要與整包原始 JSON，可複製或匯出。</div>' +
           '<div>· 手機：清單與詳情是「換頁」不是左右擠，點列進來、按「← 返回名單」回去。</div>';
@@ -32329,21 +32495,8 @@ const Admin = (function () {
     //   ③ 網址加 #admin 或 ?admin=1 → 可存成書籤，冷啟動也能直接進
     const toggle = function () { if (A.open) close(); else open(); };
 
-    // ⓪ v4.93：看得見的入口。原本線上版只有「帳號彈窗裡的白名單按鈕」，
-    //   開發者帳號旗標一掉、或那一版被瀏覽器快取黏住，就完全沒有辦法進後台。
-    //   這顆只有開發者版（DEV_BUILD）或白名單帳號才會顯示，一般玩家看不到。
-    (function () {
-      const bd = $id('devBtn');
-      if (!bd) return;
-      let showIt = DEV_BUILD;
-      if (!showIt) { try { showIt = !!(Cloud && Cloud.isDev && Cloud.isDev()); } catch (e) { showIt = false; } }
-      if (showIt) bd.classList.add('on');
-      bd.addEventListener('click', function (e) {
-        if (e && e.preventDefault) e.preventDefault();
-        if (e && e.stopPropagation) e.stopPropagation();
-        toggle();
-      });
-    })();
+    // ⓪ v5.5：原本還有一顆首頁 🛠 按鈕，依使用者要求移除（太顯眼）。
+    //   入口剩下三條（連點版本號／Ctrl+Alt+D／#admin），功能完全不受影響。
 
     document.addEventListener('keydown', function (e) {
       const isD = (e.code === 'KeyD') || e.key === 'd' || e.key === 'D';
@@ -32413,6 +32566,24 @@ const Admin = (function () {
       try { if (Cloud && Cloud.open) Cloud.open(); } catch (err) {}
     });
     const rf = $id('bhRefresh'); if (rf) rf.addEventListener('click', function () { refresh(); });
+
+    // v5.5：名單排序下拉（選了就重畫清單，並記住選擇）
+    (function () {
+      const sel = $id('bhSort');
+      if (!sel) return;
+      // 選項從 SORTS 生成（key 就是排序代碼）
+      sel.innerHTML = Object.keys(SORTS).map(function (k) {
+        return '<option value="' + k + '">' + e2(SORTS[k]) + '</option>';
+      }).join('');
+      sel.value = A.sort;
+      sel.addEventListener('change', function () {
+        const v = String(sel.value || '');
+        A.sort = SORTS[v] ? v : 'lastDesc';
+        try { localStorage.setItem(SORT_KEY, A.sort); } catch (e) {}
+        renderList();
+        AudioSys.sfx('click');
+      });
+    })();
 
     const tabs = $id('bhTabs');
     if (tabs) tabs.addEventListener('click', function (e) {
@@ -32525,7 +32696,10 @@ const Admin = (function () {
     });
   }
 
-  return { open: open, close: close, wire: wire, refresh: refresh, state: A, setTab: setTab };
+  return { open: open, close: close, wire: wire, refresh: refresh, state: A, setTab: setTab,
+    // v5.5：測試接縫（排序／重畫清單／選項表）—— 正式流程完全不會走到這裡
+    _sort: sortRows, _render: renderList, _visits: renderVisits, _stats: renderStats,
+    SORTS: SORTS, ONLINE_MS: ONLINE_MS };
       })();
     } catch (__e) {
       __bootFail('Admin', __e);
@@ -32944,6 +33118,113 @@ function rpgAdjust(k, d) {
 })();
   } catch (__e) { __bootFail('wire', __e); }
 
+/* ============================================================================
+ * v5.5：累計遊玩時間 ＋ 拜訪紀錄（前端側）
+ * ----------------------------------------------------------------------------
+ * 後台的「會員 → 累計遊玩」一直顯示 0h00m，原因是前端從來沒有把時間送給後端
+ * （舊版只有 stage-clear 帶 playSec，而那個值又只做 Math.max → 幾乎永遠是 0）。
+ * 這裡的做法：
+ *   · 每幀只看 Game.state === 'play'（倒數／暫停／選單都不算），累加到本機
+ *   · 每 60 秒把「還沒回報的秒數」POST /api/rpg/play；關頁／切背景再補一次
+ *   · 離線（沒 session、或 GitHub Pages 靜態站）就留在本機，等有 session 再補
+ *   · 另外每次開啟頁面 ping 一次 /api/visit（後台「歷史／今日拜訪人數」）
+ * ========================================================================== */
+const PlayStat = (function () {
+  const K_LOCAL = 'bombhero-playsec';        // 這台裝置累計玩了幾秒
+  const K_SENT = 'bombhero-playsec-sent';    // 其中已經回報給伺服器幾秒
+  const MODES = { solo: 1, rpg: 1, battle: 1, br: 1 };
+  const FLUSH_EVERY = 60000;                 // 60 秒回報一次
+  const MAX_PER_POST = 7200;                 // 單次上限 2 小時（後端也有一樣的夾制）
+  let local = 0, sent = 0, sinceSave = 0, busy = false, booted = false;
+  function num(k) {
+    try { const v = parseInt(localStorage.getItem(k) || '0', 10); return (isFinite(v) && v > 0) ? v : 0; }
+    catch (e) { return 0; }
+  }
+  function load() { local = num(K_LOCAL); sent = Math.min(num(K_SENT), local); }
+  function save() {
+    try {
+      localStorage.setItem(K_LOCAL, String(local | 0));
+      localStorage.setItem(K_SENT, String(sent | 0));
+    } catch (e) {}
+  }
+  function cloudOnline() {
+    try {
+      const C = (typeof window !== 'undefined' && window.__BH && window.__BH.Cloud) || null;
+      return !!(C && C.online && C.online());
+    } catch (e) { return false; }
+  }
+  function modeOk(m) { return !!MODES[m]; }
+  /* 每幀呼叫：只有「真的在玩」才累加 */
+  function tick(dt) {
+    if (!(dt > 0) || dt > .5) return;
+    if (Game.state !== 'play') return;
+    if (!modeOk(Game.mode)) return;
+    local += dt;
+    sinceSave += dt;
+    if (sinceSave >= 10) { sinceSave = 0; save(); }
+  }
+  function pending() { return Math.max(0, Math.floor(local - sent)); }
+  function flush(force) {
+    const n = pending();
+    if (busy || n < (force ? 1 : 5)) return Promise.resolve(false);
+    if (typeof fetch !== 'function') return Promise.resolve(false);
+    if (!cloudOnline()) return Promise.resolve(false);   // 沒 session 先留在本機，下次再補
+    const sec = Math.min(MAX_PER_POST, n);
+    busy = true;
+    return fetch(apiPath('/api/rpg/play'), {
+      method: 'POST', credentials: 'same-origin', keepalive: true,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sec: sec })
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      busy = false;
+      if (j && j.ok) { sent += sec; save(); return true; }
+      return false;
+    }, function () { busy = false; return false; });
+  }
+  /* 拜訪紀錄：Pages（跨網域）時打 Render 的絕對網址，同源就直接用相對路徑 */
+  function visitUrl() {
+    try {
+      const o = (typeof Lb !== 'undefined' && Lb.origin) ? Lb.origin() : '';
+      if (o) return o + '/api/visit';
+    } catch (e) {}
+    return apiPath('/api/visit');
+  }
+  function ping() {
+    if (typeof fetch !== 'function') return;
+    let dev = '';
+    try { dev = (typeof Lb !== 'undefined' && Lb.deviceId) ? Lb.deviceId() : ''; } catch (e) { dev = ''; }
+    if (!dev || dev.length < 6) return;
+    try {
+      fetch(visitUrl(), {
+        method: 'POST', credentials: 'omit', keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId: dev, v: (typeof VERSION !== 'undefined' ? VERSION : '') })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (j && j.ok) { try { window.__BHVISIT = j; } catch (e) {} }
+      }, function () {});
+    } catch (e) {}
+  }
+  function boot() {
+    if (booted) return;
+    booted = true;
+    load();
+    try { if (typeof setInterval === 'function') setInterval(function () { flush(false); }, FLUSH_EVERY); } catch (e) {}
+    try {
+      window.addEventListener('pagehide', function () { save(); flush(true); });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') { save(); flush(true); }
+      });
+    } catch (e) {}
+    try { setTimeout(ping, 1500); } catch (e) {}
+  }
+  return {
+    boot: boot, tick: tick, flush: flush, ping: ping, pending: pending,
+    state: function () { return { local: local | 0, sent: sent | 0, pending: pending(), busy: busy }; },
+    _reset: function () { local = 0; sent = 0; sinceSave = 0; save(); },
+    _load: load, _save: save, FLUSH_EVERY: FLUSH_EVERY, MAX_PER_POST: MAX_PER_POST
+  };
+})();
+
 window.__BH = {
   Game: Game, Solo: Solo, Battle: Battle, Screen: Screen, settings: settings, SIZES: SIZES, Input: Input, IS_TOUCH: IS_TOUCH,
   // v4.80：每日挑戰 / 排行榜
@@ -33130,6 +33411,9 @@ window.__BH = {
   drawPops: drawPops, drawHurtEdge: drawHurtEdge, rpgHurt: rpgHurt,
   // v4.70：小地圖／隊色 HUD（測試／除錯用）
   drawMiniMap: drawMiniMap, miniMapOn: miniMapOn, miniMapBox: miniMapBox, drawTeamHud: drawTeamHud,
+  // v5.5：縮小時的自我定位標示（測試用）
+  drawSelfPin: drawSelfPin, selfPinAlpha: selfPinAlpha, playerScreenPos: playerScreenPos, SELF_PIN_R: SELF_PIN_R,
+  PlayStat: (typeof PlayStat !== 'undefined' ? PlayStat : null),
   // v4.72：大逃殺（測試／除錯用）
   setDevBuild: function (v) { DEV_BUILD = !!v; },
   brTip: brTip, brCardHTML: brCardHTML,
@@ -33151,6 +33435,9 @@ window.__BH = {
   pwaHint: pwaHint, pwaHintClose: pwaHintClose, pwaRefreshHint: pwaRefreshHint,
   AudioSys: AudioSys, songSeconds: function (n) { return AudioSys.songSeconds(n); }
 };
+
+// v5.5：累計遊玩時間 ＋ 拜訪紀錄 的計時器（一定要等 __BH 建好，Cloud 才查得到）
+try { PlayStat.boot(); } catch (e) {}
 
 // v3.6：統計列要等 Net（線上模組）宣告好之後才能初始化，所以放在檔案最末尾
 
@@ -33205,6 +33492,8 @@ document.addEventListener('pointerdown', function once() {
 
     <div class="bhpane on" data-pane="home">
       <div class="bhstats" id="bhStats"></div>
+      <div class="bhsec2">拜訪紀錄<span class="bhtag" id="bhVisitTag">—</span></div>
+      <div class="bhvisits" id="bhVisits"></div>
       <div class="bhsec2">伺服器即時狀態<span class="bhtag" id="bhHealthTag">讀取中</span></div>
       <div class="bhkv" id="bhHealth"></div>
       <div class="bhsec2">最近活動的帳號</div>
@@ -33213,6 +33502,8 @@ document.addEventListener('pointerdown', function once() {
 
     <div class="bhpane" data-pane="members">
       <div class="bhsearch">
+        <!-- v5.5：選項由 SORTS 表動態產生（單一來源，也避免靜態中文文案逃過翻譯檢查） -->
+        <select id="bhSort" title="名單排序方式"></select>
         <input id="bhQ" type="text" placeholder="搜尋 UID / Email / 名稱 / IP（Enter 直接查）">
         <button id="bhQGo" type="button">查詢</button>
       </div>

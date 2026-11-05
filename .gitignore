@@ -97,3 +97,6 @@ bomb-hero/art/pets/_*.png
 tools/_*.js
 tools/_*.html
 test/_tmp_*.js
+
+# v5.5：本機驗證截圖（headless chrome 產物）
+outputs/
