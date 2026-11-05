@@ -193,7 +193,9 @@ function gt(a, b) { const x = vt(a), y = vt(b); for (let i = 0; i < 3; i++) { if
 ok(gt(B.VERSION, '5.0'), 'VERSION 比 5.0 新（' + B.VERSION + '）');
 ok(B.VERSION_LOG[0].v === B.VERSION, '版本紀錄第一筆 = VERSION');
 ok(B.VERSION_LOG[0].now === true && B.VERSION_LOG[1].now === false, '只有最新一筆標 now');
-ok(B.VERSION_LOG[0].items.length >= 5, '最新一筆至少有 5 條說明（' + B.VERSION_LOG[0].items.length + '）');
+// v5.2：這條原本驗「最新一筆」的清單長度，結果每次改版都要回來改測試 → 改成驗 5.1 那一筆自己的內容
+const v51 = B.VERSION_LOG.filter(function (e) { return e.v === '5.1'; })[0];
+ok(v51 && v51.items.length >= 5, '5.1 那一筆至少有 5 條說明（' + (v51 ? v51.items.length : 0) + '）');
 ok(SRC.indexOf('id="verTxt">' + B.VERSION + '<') > 0, '首頁版本標籤同步');
 ['../sw.js', '../../public/sw.js'].forEach(function (rel) {
   const p2 = path.join(__dirname, rel);

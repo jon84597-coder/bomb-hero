@@ -3599,7 +3599,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.1</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.2</span></span>
     </button>
     <!-- v4.93：開發者後台入口（DEV_BUILD 或白名單帳號才顯示） -->
     <button class="verlogbtn devbtn" id="devBtn" type="button" title="開發者後台">🛠</button>
@@ -3642,7 +3642,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">正式版 v<span id="verTxt">5.1</span></div>
+      <div class="ver beta">正式版 v<span id="verTxt">5.2</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4333,7 +4333,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.1';
+const VERSION = '5.2';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -13723,6 +13723,13 @@ function buildBRMap() {
     Game.themeAt[y][x] = THEMES[seeds[Game.brIsl[y][x]].ti];
     landN++;
   }
+  /* v5.1b：外牆／岩體也要有自己的分區風格。
+     以前只有「陸地」寫 themeAt，海岸那圈石頭全落在 null → 一律退回全場主題（深海），
+     整座島的外框看起來就只有一種。這裡把沒寫到的格子（水、邊框、岩層）也補上最近的分區。 */
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    if (Game.themeAt[y][x]) continue;
+    Game.themeAt[y][x] = THEMES[seeds[regionAt(x, y)].ti];
+  }
   // ---- 3) 硬牆：零星岩層團塊，只佔約 8%（v4.74：以前太多，繞不過去）----
   const hardTarget = Math.round(landN * .08);
   let hardN = 0, guard = 0;
@@ -13988,7 +13995,16 @@ function brSteer(p, dt) {
 function spawnBRBosses() {
   const T = Game.T, born = [];
   for (let i = 0; i < BR.BOSS_N; i++) {
-    const st = 1 + rand(SOLO_STAGES);
+    /* v5.1b：亂入 BOSS 換成八隻新王 —— 每場開局把 1~8 洗牌，依序抽出場的王。
+       以前是 `1 + rand(32)` 抽「關卡」，但美術是看 Game.stage（大逃殺固定 = 1）
+       → 不管抽到第幾關，畫面上永遠是同一隻。 */
+    const pool = Game.brBossPool;
+    let blk;
+    if (pool && pool.length) {
+      blk = pool[(Game.brBossPoolAt | 0) % pool.length];
+      Game.brBossPoolAt = (Game.brBossPoolAt | 0) + 1;
+    } else blk = 1 + rand(8);
+    const st = blk * 4;                                        // 取該區的魔王關（體型／速度係數沿用舊算法）
     let x = -1, y = -1;
     // 三輪放寬：先挑「離人 8 格、兩隻相隔 14 格」，30 人擠滿地圖時再說，最後一定生得出來
     const STEPS = [[8, 14], [5, 9], [3, 6]];
@@ -14015,6 +14031,8 @@ function spawnBRBosses() {
     const k = st / SOLO_STAGES;                                // 0~1：越後面的關卡越壯
     e.brBoss = true;
     e.brStage = st;
+    e.brBlock = blk;                                           // v5.1b：這隻王是哪一區的（美術／元素特效／名字）
+    e.artKey = 'b' + blk;                                      // 讓 drawBossSprite 用這隻王自己的四幀圖
     e.r = 18 + Math.round(k * 6);                              // 大圖格子小 → 半徑比單人小一點
     e.sizeMul = 1.15 + k * .3;
     e.speedMul = .9 + k * .34;
@@ -14188,6 +14206,14 @@ function startBR() {
     }
   }
   Game.mode = 'br';
+  // v5.1b：每場重洗 1~8，亂入 BOSS 從這副牌依序抽 → 同一場不會撞兩隻一樣的，每場組合都不同
+  Game.brBossPool = [];
+  for (let bi = 1; bi <= 8; bi++) Game.brBossPool.push(bi);
+  for (let bi = Game.brBossPool.length - 1; bi > 0; bi--) {
+    const rj = rand(bi + 1), tmp = Game.brBossPool[bi];
+    Game.brBossPool[bi] = Game.brBossPool[rj]; Game.brBossPool[rj] = tmp;
+  }
+  Game.brBossPoolAt = 0;
   Game.brSpec = false;
   try { const be = $id('brEnd'); if (be) be.classList.add('hide'); } catch (e) {}
   Game.pets = [];
@@ -17790,9 +17816,12 @@ const TileArt = (function () {
     total: function () { return totalN; },
     readyCount: function () { return readyN; },
     has: function (k) { return !!pick(k, 0); },
-    draw: function (k, seed, px, py, T) {
+    /* v5.1b：以前這裡只看 Game.theme.style（全場一個主題）→ 大逃殺的八塊大陸
+       全部畫成同一種地板（只有 atlas 裡那兩張在輪）。改成可由呼叫端指定這一格的風格，
+       沒有指定才退回全場主題（單人／RPG／對戰行為不變）。 */
+    draw: function (k, seed, px, py, T, style) {
       if (k !== 'floor') return false;
-      const st = (Game.theme && Game.theme.style) || '';
+      const st = style || (Game.theme && Game.theme.style) || '';
       const ALT = {
         sand: 'floorSand', ice: 'floorIce', lava: 'floorLava',
         neon: 'floorNeon', sea: 'floorSea', sky: 'floorSky', dark: 'floorDark'
@@ -19399,7 +19428,7 @@ function paintGroundDecor(x, y, px, py, T, st) {
 function paintFloorStyle(x, y, px, py, T, th, st) {
   // v4.59：天空關的地板是內嵌貼圖（畫死的），改色表不會生效 → 事後蓋一層藍灰把它壓深
   const tint = st === 'sky' ? 'rgba(58,84,138,.30)' : '';
-  if (TileArt.draw('floor', x * 31 + y * 17, px, py, T)) {
+  if (TileArt.draw('floor', x * 31 + y * 17, px, py, T, st)) {
     if (tint) { ctx.fillStyle = tint; ctx.fillRect(px, py, T, T); }
     paintGroundDecor(x, y, px, py, T, (th && th.style) || 'forest');
     return;
@@ -21326,7 +21355,8 @@ function bossArtKey() {
   return 'b' + ch;
 }
 function drawBossSprite(e, x, footY, H, flash) {
-  const key = bossArtKey();
+  // v5.1b：王可以自帶美術（大逃殺的亂入王不是用當前關卡決定的）
+  const key = (e && e.artKey) || bossArtKey();
   if (typeof BossArt === 'undefined' || !BossArt.has(key)) return false;
   const M = BOSS_ART[key];
   // v5.0b：依狀態挑幀（出招 > 跑動 > 站立）
@@ -21348,6 +21378,202 @@ function drawBossSprite(e, x, footY, H, flash) {
   ctx.drawImage(img, -W / 2, -H, W, H);
   ctx.restore();
   return true;
+}
+
+// ====
+//   v5.1b：BOSS 身上的「地區屬性元素特效」
+//     每一區的王都帶著自己地盤的元素在身上繞：草原＝飄葉、沙漠＝飛沙、
+//     冰雪＝雪花、熔岩＝火星、霓虹＝電弧、深海＝氣泡、天空＝氣流、魔界＝紫焰。
+//     全部是程序繪製（不吃美術預算），兩層：layer 0 畫在角色後面（光暈＋光環＋粒子）、
+//     layer 1 畫在前面（少量、半透明，讓粒子「繞過身體」）。
+//   粒子位置一律用確定性種子（sin／i 的倍數），不用 Math.random，才不會每幀亂跳。
+// ====
+const BOSS_ELEM = {
+  1: { k: 'leaf',   rgb: '126,224,122', rgb2: '232,255,196', spd: .34, n: 9, dot: 'rgba(60,140,70,' },
+  2: { k: 'sand',   rgb: '255,214,140', rgb2: '255,246,214', spd: .30, n: 10, dot: 'rgba(150,106,54,' },
+  3: { k: 'ice',    rgb: '160,232,255', rgb2: '255,255,255', spd: .28, n: 11, dot: 'rgba(70,150,190,' },
+  4: { k: 'ember',  rgb: '255,168,74',  rgb2: '255,240,190', spd: .58, n: 11, dot: 'rgba(190,60,20,' },
+  5: { k: 'spark',  rgb: '255,150,232', rgb2: '255,255,255', spd: .85, n: 9, dot: 'rgba(120,70,200,' },
+  6: { k: 'bubble', rgb: '140,240,255', rgb2: '255,255,255', spd: .26, n: 10, dot: 'rgba(40,120,150,' },
+  7: { k: 'gust',   rgb: '224,240,255', rgb2: '255,255,255', spd: .70, n: 8, dot: 'rgba(120,160,200,' },
+  8: { k: 'flame',  rgb: '196,132,255', rgb2: '240,214,255', spd: .50, n: 10, dot: 'rgba(70,30,110,' }
+};
+function bossElemOf(e) {
+  const blk = (e && e.brBlock) || ((typeof blockOf === 'function') ? blockOf(Game.stage || 1) : 1);
+  return BOSS_ELEM[blk] || BOSS_ELEM[1];
+}
+function drawBossElemFx(e, x, footY, H, T, layer) {
+  if (!(H > 0)) return;
+  const C = bossElemOf(e);
+  const t = Game.gameT || 0;
+  const A = function (a) { return 'rgba(' + C.rgb + ',' + a.toFixed(3) + ')'; };
+  const A2 = function (a) { return 'rgba(' + C.rgb2 + ',' + a.toFixed(3) + ')'; };
+  const seedA = (e.x * .013 + e.y * .017);
+  const T2 = T || 32;
+  ctx.save();
+  if (!layer) {
+    /* 1) 身體外的元素光暈（橢圓、跟著呼吸） */
+    const cy = footY - H * .50;
+    const puls = .5 + .5 * Math.sin(t * 2.1 + seedA);
+    try {
+      const rg = ctx.createRadialGradient(x, cy, H * .03, x, cy, H * .70);
+      rg.addColorStop(0, A(.30 + .10 * puls));
+      rg.addColorStop(.45, A(.14 + .06 * puls));
+      rg.addColorStop(1, A(0));
+      ctx.fillStyle = rg;
+      ctx.beginPath(); ctx.ellipse(x, cy, H * .58, H * .74, 0, 0, 6.283); ctx.fill();
+    } catch (err) {}
+    /* 2) 腳下光環 ＋ 腰間光環（兩圈反向呼吸，最容易被看見） */
+    for (let r2 = 0; r2 < 2; r2++) {
+      const rr = H * (r2 ? .30 : .44) * (1 + .055 * Math.sin(t * (r2 ? 3.1 : 2.3) + r2 + seedA));
+      ctx.strokeStyle = A(r2 ? .26 : .18);
+      ctx.lineWidth = Math.max(1.2, T2 * (r2 ? .030 : .022));
+      ctx.beginPath();
+      ctx.ellipse(x, footY - H * (r2 ? .46 : .05), rr, rr * .34, 0, 0, 6.283);
+      ctx.stroke();
+    }
+    /* 3) 貼地的元素流光（跑動時像拖著自己的屬性） */
+    ctx.strokeStyle = A(.13);
+    ctx.lineWidth = Math.max(1, T2 * .045);
+    ctx.beginPath();
+    ctx.ellipse(x, footY + T2 * .02, H * .40, H * .13, 0, 0, 6.283);
+    ctx.stroke();
+    /* 3.5) 環繞身體的三顆元素光珠（帶拖尾）—— 最顯眼的一層，一眼看出這隻王帶什麼屬性 */
+    for (let o = 0; o < 3; o++) {
+      const spin = t * (.95 + o * .16) + o * 2.094 + seedA;
+      for (let tr = 3; tr >= 0; tr--) {                        // tr=0 是光珠本體，其餘是拖尾
+        const ang = spin - tr * .16;
+        const orx = x + Math.cos(ang) * H * .62;
+        const ory = footY - H * .46 + Math.sin(ang) * H * .17 + Math.sin(t * 2.4 + o) * H * .018;
+        const fade = tr === 0 ? 1 : (.46 - tr * .11);
+        const rr2 = H * (.034 + (o === 0 ? .010 : 0)) * (tr === 0 ? 1 : (1 - tr * .18));
+        try {
+          const og = ctx.createRadialGradient(orx, ory, 0, orx, ory, rr2 * 4.0);
+          og.addColorStop(0, A2(.95 * fade));
+          og.addColorStop(.28, A(.80 * fade));
+          og.addColorStop(1, A(0));
+          ctx.fillStyle = og;
+          ctx.beginPath(); ctx.arc(orx, ory, rr2 * 4.0, 0, 6.283); ctx.fill();
+        } catch (e1) {}
+        if (tr === 0) {
+          ctx.fillStyle = A2(.98);
+          ctx.beginPath(); ctx.arc(orx, ory, rr2 * .70, 0, 6.283); ctx.fill();
+        }
+      }
+    }
+    /* 3.6) 身體中段的元素光環（清楚的一圈，不是模糊光暈） */
+    for (let r3 = 0; r3 < 2; r3++) {
+      const rw = H * (r3 ? .74 : .60) * (1 + .04 * Math.sin(t * 2.6 + r3));
+      ctx.strokeStyle = A(r3 ? .16 : .34);
+      ctx.lineWidth = Math.max(1.4, T2 * (r3 ? .020 : .045));
+      ctx.beginPath();
+      ctx.ellipse(x, footY - H * .48, rw, rw * .30, 0, 0, 6.283);
+      ctx.stroke();
+    }
+  }
+  /* 4) 上升的元素粒子（繞在身體外圍 → 不會被身軀整個蓋住） */
+  if (layer) {
+    // 前面的細光環 —— 前後各畫一次，湊成完整一圈（特效才有「包住王」的感覺）
+    const rw = H * .64;
+    ctx.strokeStyle = A(.24);
+    ctx.lineWidth = Math.max(1.2, T2 * .024);
+    ctx.beginPath();
+    ctx.ellipse(x, footY - H * .48, rw, rw * .30, 0, 0, 6.283);
+    ctx.stroke();
+  }
+  const n = layer ? Math.max(2, Math.round(C.n * .40)) : C.n;
+  for (let i = 0; i < n; i++) {
+    const base = layer ? 5 : 0;
+    const ph = ((t * C.spd + (i + base) * .127 + seedA * .1) % 1);
+    if (ph < 0) continue;
+    const ang = i * 2.399 + seedA;
+    const rad = H * (.34 + .48 * (((i * .37 + .11) % 1)));
+    const wob = Math.sin(t * 1.9 + i * 1.7) * H * .035;
+    const px = x + Math.cos(ang) * rad + wob;
+    const py = footY - H * (.06 + ph * 1.12);
+    const a = (.42 + .58 * Math.sin(ph * Math.PI)) * (layer ? .55 : 1);
+    if (a <= .01) continue;
+    ctx.globalAlpha = 1;
+    switch (C.k) {
+      case 'leaf':            // 草原：小葉片打著轉往上飄
+        ctx.fillStyle = A(a * .85);
+        ctx.beginPath();
+        ctx.ellipse(px, py, H * .038, H * .015, ang + t * 1.3 + i, 0, 6.283);
+        ctx.fill();
+        break;
+      case 'sand':            // 沙漠：細沙往側邊掃
+        ctx.fillStyle = C.dot + (a * .7).toFixed(3) + ')';
+        ctx.fillRect(px + Math.sin(t * 2.2 + i) * H * .05, py, H * .020, H * .014);
+        ctx.fillStyle = A(a * .55);
+        ctx.fillRect(px + H * .022, py - H * .012, H * .012, H * .010);
+        break;
+      case 'ice':             // 冰雪：四角雪花（菱形＋十字）；先描一圈深色再上亮色 → 淺色地板上也看得見
+        const s1 = H * .046;
+        for (let pass = 0; pass < 2; pass++) {
+          ctx.strokeStyle = pass ? A(a * .95) : (C.dot + (a * .75).toFixed(3) + ')');
+          ctx.lineWidth = Math.max(1, T2 * (pass ? .022 : .050));
+          ctx.beginPath();
+          ctx.moveTo(px, py - s1); ctx.lineTo(px + s1 * .55, py); ctx.lineTo(px, py + s1); ctx.lineTo(px - s1 * .55, py);
+          ctx.closePath();
+          ctx.moveTo(px - s1 * 1.15, py); ctx.lineTo(px + s1 * 1.15, py);
+          ctx.moveTo(px - s1 * .55, py - s1 * .95); ctx.lineTo(px + s1 * .55, py + s1 * .95);
+          ctx.moveTo(px + s1 * .55, py - s1 * .95); ctx.lineTo(px - s1 * .55, py + s1 * .95);
+          ctx.stroke();
+        }
+        break;
+      case 'ember':           // 熔岩：火星（外圈橘、中心白熱、帶短尾）
+        ctx.fillStyle = A(a * .50);
+        ctx.beginPath(); ctx.arc(px, py + H * .035, H * .042, 0, 6.283); ctx.fill();
+        ctx.fillStyle = A(a);
+        ctx.beginPath(); ctx.arc(px, py, H * .028, 0, 6.283); ctx.fill();
+        ctx.fillStyle = A2(Math.min(1, a * 1.1));
+        ctx.beginPath(); ctx.arc(px, py, H * .016, 0, 6.283); ctx.fill();
+        break;
+      case 'spark':           // 霓虹：會閃的電弧
+        if (Math.sin(t * 34 + i * 2.1) < -.15) break;
+        ctx.strokeStyle = A(a);
+        ctx.lineWidth = Math.max(1, T2 * .026);
+        const s2 = H * .045;
+        ctx.beginPath();
+        ctx.moveTo(px - s2, py - s2 * .5);
+        ctx.lineTo(px, py + s2 * .35);
+        ctx.lineTo(px + s2 * .35, py - s2 * .25);
+        ctx.lineTo(px + s2, py + s2 * .6);
+        ctx.stroke();
+        ctx.strokeStyle = A2(a * .8);
+        ctx.lineWidth = Math.max(1, T2 * .012);
+        ctx.stroke();
+        break;
+      case 'bubble':          // 深海：氣泡上升（空心＋高光）
+        ctx.strokeStyle = A(a * .9);
+        ctx.lineWidth = Math.max(1, T2 * .020);
+        const br = H * (.022 + .016 * ((i * .29) % 1));
+        ctx.beginPath(); ctx.arc(px, py, br, 0, 6.283); ctx.stroke();
+        ctx.fillStyle = A2(a * .55);
+        ctx.beginPath(); ctx.arc(px - br * .35, py - br * .35, br * .28, 0, 6.283); ctx.fill();
+        break;
+      case 'gust':            // 天空：氣流弧線（同樣先描深色，白雲地板上才看得見）
+        for (let pass = 0; pass < 2; pass++) {
+          ctx.strokeStyle = pass ? A(a * .85) : (C.dot + (a * .7).toFixed(3) + ')');
+          ctx.lineWidth = Math.max(1, T2 * (pass ? .020 : .046));
+          ctx.beginPath();
+          ctx.arc(px, py, H * .058, ang + t * 3.2, ang + t * 3.2 + 1.25);
+          ctx.stroke();
+        }
+        break;
+      default:                // 魔界：紫焰（水滴狀）
+        ctx.fillStyle = A(a * .85);
+        ctx.beginPath();
+        ctx.moveTo(px, py - H * .055);
+        ctx.quadraticCurveTo(px + H * .034, py - H * .012, px, py + H * .014);
+        ctx.quadraticCurveTo(px - H * .034, py - H * .012, px, py - H * .055);
+        ctx.fill();
+        ctx.fillStyle = A2(a * .7);
+        ctx.beginPath(); ctx.arc(px, py - H * .006, H * .010, 0, 6.283); ctx.fill();
+        break;
+    }
+  }
+  ctx.restore();
 }
 
 function drawEnemy(e, T) {
@@ -21377,6 +21603,8 @@ function drawEnemy(e, T) {
     const BH = e.r * 4.9 * BS * AK;
     const bFoot = y + e.r * 1.45 * (BS > 1 ? 1.08 : 1) * AK;
     const dir = DIRS[e.dirName] ? e.dirName : (e.vx < 0 ? 'left' : e.vx > 0 ? 'right' : 'down');
+    // v5.1b：地區屬性元素特效（下層：光暈／光環／粒子）
+    try { drawBossElemFx(e, x, bFoot, BH, T, 0); } catch (er) {}
     // v5.0b：集氣徵兆 —— 腳下一圈往內收的光環（顏色＝這隻王的屬性色）
     if (e.castT > 0) {
       const ck = 1 - e.castT / (e.castMax || .9);
@@ -21428,6 +21656,8 @@ function drawEnemy(e, T) {
       ctx.fillStyle = '#5e1a86';
       ctx.beginPath(); ctx.ellipse(x, y + R * .45, R * .12, R * .08, 0, 0, 6.283); ctx.fill();
     }
+    // v5.1b：上層的少量粒子（從身體前面繞過去，特效才有「包住」的感覺）
+    try { drawBossElemFx(e, x, bFoot, BH, T, 1); } catch (er) {}
     // 血條（跟著老虎的高度走）
     //   v4.76：大逃殺的 BOSS 美術上下留白比較多 → 血條用身體高度算會飄在半空中，另外給一組係數
     const barY = e.brBoss ? (y - BH * .60 - 8) : (bFoot - BH - Game.T * .10);
@@ -21440,10 +21670,14 @@ function drawEnemy(e, T) {
     ctx.font = '700 ' + Math.round(Game.T * (e.brBoss ? .28 : .34)) + 'px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     if (e.brBoss) {
-      const lab = t('br.bossStage', { n: e.brStage || 1 });
+      // v5.1b：直接寫這隻新王的名字（顏色＝牠的屬性色），比「第 N 關亂入」好認
+      const blk = e.brBlock || ((typeof blockOf === 'function') ? blockOf(e.brStage || 1) : 1);
+      const nk = 'boss.' + blk;
+      const nm = (typeof t === 'function') ? t(nk) : '';
+      const lab = (nm && nm !== nk) ? nm : t('br.bossStage', { n: e.brStage || 1 });
       ctx.lineWidth = 2.6; ctx.strokeStyle = 'rgba(22,6,26,.92)';
       ctx.strokeText(lab, x, barY - Game.T * .24);
-      ctx.fillStyle = '#ffd9f2';
+      ctx.fillStyle = ((typeof BOSS_KIT !== 'undefined' && BOSS_KIT[blk]) || {}).col || '#ffd9f2';
       ctx.fillText(lab, x, barY - Game.T * .24);
       ctx.lineWidth = 1;
     } else {
@@ -27834,40 +28068,9 @@ const Tut = (function () {
         resetPlayerStats(p);
         paused = false;
       }
-      /* v5.0：教學實戰的道具要藏在「遠一點」的軟磚裡 ——
-         原本隨機藏，常常就藏在出生點旁邊，玩家還沒學會走路就撞到。
-         這裡把離出生點最近的那個隱藏道具搬到場上最遠的軟磚（避開出口門）。 */
-      function tutFixHidden() {
-        try {
-          const pl = Game.players && Game.players[0];
-          if (!pl) return;
-          const T = Game.T;
-          const px = Math.floor(pl.x / T), py = Math.floor(pl.y / T);
-          const hid = Game.hidden || {};
-          let nearKey = null, nearD = 1e9, nearItem = null;
-          Object.keys(hid).forEach(function (k) {
-            const v = hid[k];
-            if (v === 'door') return;
-            const xy = k.split(',');
-            const d = Math.abs((xy[1] | 0) - px) + Math.abs((xy[0] | 0) - py);
-            if (d < nearD) { nearD = d; nearKey = k; nearItem = v; }
-          });
-          if (!nearKey) return;
-          let far = null, farD = -1;
-          for (let y = 1; y < Game.rows - 1; y++) {
-            for (let x = 1; x < Game.cols - 1; x++) {
-              if (Game.grid[y][x] !== 2) continue;
-              if (Game.door && Game.door.x === x && Game.door.y === y) continue;
-              if (hid[y + ',' + x]) continue;
-              const d = Math.abs(x - px) + Math.abs(y - py);
-              if (d > farD) { farD = d; far = { x: x, y: y }; }
-            }
-          }
-          if (!far || farD < 2) return;
-          delete hid[nearKey];
-          hid[far.y + ',' + far.x] = nearItem;
-        } catch (e) {}
-      }
+      /* v5.1b：教學道具回到原本的位置（軟磚 (4,1) 底下）——
+         v5.0 曾把它「搬到離出生點最遠的軟磚」，結果 ④ 炸軟磚與 ⑤ 撿道具兩步
+         指的不是同一格，玩家炸完那格卻發現沒東西掉出來。這裡回到舊行為。 */
       function startPlay() {
         closeCard(); on = false;
         try {
@@ -27881,7 +28084,6 @@ const Tut = (function () {
           Screen.show('game');
           resizeView();
           buildMap();
-          tutFixHidden();
           updateHud();
           flags = {}; goal = 0;
           on = true; part = 'play';
@@ -28231,7 +28433,13 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.1', date: '2026-11-05', now: true, items: [
+  { v: '5.2', date: '2026-11-05', now: true, items: [
+    '🐛 <b>教學「撿道具」回到原本的位置</b>：炸開那塊木箱，火力道具就掉在腳邊。上一版把它搬去地圖另一頭，結果炸完那一格什麼都沒有',
+    '🔥 <b>每隻王身上都有自己地區的元素特效</b>：草原飄葉、沙漠飛沙、冰雪雪花、熔岩火星、霓虹電弧、深海氣泡、天空氣流、魔界紫焰 —— 外圈光暈＋兩道光環＋三顆會繞著身體轉的元素光珠，遠遠就看得出這隻王帶什麼屬性',
+    '👹 <b>大逃殺的亂入 BOSS 換成八隻新王</b>：每場開局重新洗牌，<b>同一場不會撞兩隻一樣的</b>，每場遇到的組合都不同；血條上方直接寫王的名字與屬性色',
+    '🗺️ <b>大逃殺地板終於有八區變化</b>：草原／沙漠／冰雪／熔岩／霓虹／深海／天空／魔界各有自己的地板材質（以前整座島只有兩種），連海岸那一圈岩石也會跟著換色'
+  ] },
+  { v: '5.1', date: '2026-11-05', now: false, items: [
     '👹 <b>八位關卡王全部換上專屬美術</b>：牧草巨獸・骸骨沙蟲・霜牙雪怪・熔核魔像・爆音機兵・深潮海妖・疾風鷹王・業火魔君，每隻都有<b>站立・跑動 2 幀・出招</b>共四幀，跟小怪同一套厚塗質感',
     '⚔️ <b>每隻王三種專屬大招（共 24 招）</b>：羊毛震波／骸骨拖拽／冰封地板／火柱／節拍爆音／觸手／俯衝／影分身…，依距離與血量換招。出手前會先亮<b>屬性色光環</b>集氣，集氣時<b>站定不動、可以打斷</b>',
     '🐺 <b>隨從體型校正</b>：武士狼、爆彈猴現在<b>和主角一樣高</b>，盾犀高 20% —— 以前隨從明顯小一號',
@@ -32666,6 +32874,12 @@ window.__BH = {
   // v5.0b：八位 BOSS 的招式表（測試用）
   BOSS_KIT: (typeof BOSS_KIT !== 'undefined' ? BOSS_KIT : null), bossKitOf: bossKitOf,
   bossFire: bossFire, bossCastTick: bossCastTick,
+  // v5.2：地區屬性元素特效 ＋ 大逃殺亂入王（測試用）
+  BOSS_ELEM: (typeof BOSS_ELEM !== 'undefined' ? BOSS_ELEM : null), bossElemOf: bossElemOf,
+  drawBossElemFx: (typeof drawBossElemFx !== 'undefined' ? drawBossElemFx : null),
+  spawnBRBosses: (typeof spawnBRBosses !== 'undefined' ? spawnBRBosses : null),
+  TileArt: (typeof TileArt !== 'undefined' ? TileArt : null),
+  buildBRMap: (typeof buildBRMap !== 'undefined' ? buildBRMap : null),
   PET_ART: (typeof PET_ART !== 'undefined' ? PET_ART : null), petBodyH: petBodyH, petSizeK: petSizeK,
   DASH_CD: DASH_CD, DASH_T: DASH_T, DASH_IFRAME: DASH_IFRAME, DASH_TILES: DASH_TILES,
   phonePortrait: phonePortrait, hasRotateHint: function () { return !!rotHintEl; },
