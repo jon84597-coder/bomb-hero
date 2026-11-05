@@ -140,6 +140,8 @@ ok(SRC.indexOf("'&scope=' + sc + '&limit=50&deviceId=' + encodeURIComponent(Lb.i
   '查自己的名次也用同一個身分');
 ok(SRC.indexOf("'?deviceId=' + encodeURIComponent(Lb.idKey()) + '&limit=80") > 0, '名單查詢同步');
 ok(/avatar', \{ deviceId: Lb\.idKey\(\), img: d \}/.test(SRC), '頭貼也跟著帳號（換裝置不用重傳）');
+ok(SRC.indexOf("if (typeof Cloud.guest === 'function') return Cloud.guest() ? 'guest' : 'member';") > 0,
+  '名單上的「遊客／會員」也修好了（以前 myKind 用不存在的 Cloud.isGuest，全部人都標成會員）');
 ok(SRC.indexOf('deviceId: Lb.deviceId(), name: myName(), ch: myChar(), kind: myKind()') < 0,
   '舊的「一律用裝置編號」寫法已清掉');
 
@@ -151,9 +153,14 @@ ok(SRC.indexOf('deviceId: Lb.deviceId(), name: myName(), ch: myChar(), kind: myK
   ok(/^dev-/.test(g1), '遊客身分是 dev- 開頭（' + g1.slice(0, 12) + '…）');
   ok(B.Lb.idKey() === g1, '同一台裝置每次算出來都一樣');
 
-  // 換成「已登入的會員」→ 身分立刻變成帳號
+  // 有上線但還是「遊客」→ 不能用帳號 id（Cloud 對外叫 guest()，不是 isGuest）
   B.Cloud.online = function () { return true; };
-  B.Cloud.isGuest = function () { return false; };
+  B.Cloud.guest = function () { return true; };
+  B.Cloud.acc = function () { return { id: 'u_guest' }; };
+  ok(B.Lb.idKey() === g1, '遊客就算已上線，也還是用這台裝置的 id');
+
+  // 換成「已登入的會員」→ 身分立刻變成帳號
+  B.Cloud.guest = function () { return false; };
   B.Cloud.acc = function () { return { id: 'u_abc123' }; };
   ok(B.Lb.idKey() === 'acc-u_abc123', '登入後改用帳號 id');
   B.Cloud.acc = function () { return { id: 'u_zzz999' }; };

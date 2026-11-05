@@ -11640,8 +11640,11 @@ const Lb = {
      遊客照舊用這台裝置；兩邊都不會互相蓋到。 */
   idKey() {
     try {
-      if (typeof Cloud !== 'undefined' && Cloud.online && Cloud.online() &&
-          !(Cloud.isGuest && Cloud.isGuest())) {
+      // Cloud 對外叫 guest()（不是 isGuest），兩個都認，才不會把遊客誤判成會員
+      const isGuest = (typeof Cloud === 'undefined') ? true
+        : (typeof Cloud.guest === 'function' ? !!Cloud.guest()
+          : (typeof Cloud.isGuest === 'function' ? !!Cloud.isGuest() : true));
+      if (typeof Cloud !== 'undefined' && Cloud.online && Cloud.online() && !isGuest) {
         const a = Cloud.acc && Cloud.acc();
         if (a && a.id) return 'acc-' + String(a.id);
       }
@@ -12508,7 +12511,10 @@ const Social = (function () {
         try {
           if (typeof Cloud === 'undefined') return 'guest';
           if (!Cloud.online || !Cloud.online()) return 'guest';
-          return Cloud.isGuest && Cloud.isGuest() ? 'guest' : 'member';
+          // v5.17：Cloud 對外是 guest()，以前寫成 isGuest（不存在）→ 遊客全被標成「會員」
+          if (typeof Cloud.guest === 'function') return Cloud.guest() ? 'guest' : 'member';
+          if (typeof Cloud.isGuest === 'function') return Cloud.isGuest() ? 'guest' : 'member';
+          return 'guest';
         } catch (e) { return 'guest'; }
       }
       function myMode() {
@@ -32758,7 +32764,8 @@ const VERSION_LOG = [
     '✕ <b>成就／排名／線上玩家的關閉鈕不會被壓住了</b>：以前手機上「✕」剛好躲在右上角「⋮」下面，點不到也看不到；現在面板整個蓋在工具列之上，標題列也會讓開瀏海',
     '💬 <b>私訊一打開就看得到輸入框</b>（不用再往下滑），輸入框左邊多了 <b>😊 表情符號</b>，點一下插在游標位置、最多 60 字',
     '📱 <b>同一個帳號在手機和電腦不會再變成兩個人</b>：以前名單會出現兩筆同名、成就分一模一樣，排行榜還各佔一格；現在登入帳號就用<b>帳號</b>當身分，換裝置接續同一個玩家編號，好友與私訊也跟著走',
-    '🧪 新增 <b>verify-v517</b>（75 項）：隨從動畫、箭頭不遮角色的幾何檢查、私訊輸入框與表情、帳號身分與舊紀錄整併都跑過一遍'
+    '🪪 順手修好：名單上的「遊客／會員」以前<b>全部顯示成會員</b>（判斷用了一個不存在的函式），現在遊客就是遊客',
+    '🧪 新增 <b>verify-v517</b>（79 項）：隨從動畫、箭頭不遮角色的幾何檢查、私訊輸入框與表情、帳號身分與舊紀錄整併都跑過一遍'
   ] },
   { v: '5.16', date: '2026-11-06', now: false, items: [
     '📛 <b>配戴成就</b>：在成就面板按右邊的 📛，就能挑 <b>最多 3 個成就</b>掛在自己的個人資料上；線上其他玩家點你的名字就看得到（頭上仍然是稱號，兩者不衝突）',
