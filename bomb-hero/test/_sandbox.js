@@ -10,6 +10,12 @@ const HTML_PATH = (function () {
   return fs.existsSync(a) ? a : b;
 })();
 const html = fs.readFileSync(HTML_PATH, 'utf8');
+// v5.20：i18n 字典抽成外部檔 —— 對外仍然提供「邏輯全文」（字典 + 主檔），
+// 這樣所有「在原始碼裡找文案」的舊測試都不用改。
+const I18N_PRE = (function () {
+  const q = __dirname + '/../js/i18n-src.js';
+  return fs.existsSync(q) ? fs.readFileSync(q, 'utf8') + '\n' : '';
+})();
 
 function makeEnv(opts) {
   opts = opts || {};
@@ -18,6 +24,9 @@ function makeEnv(opts) {
   const m = src.match(/<script>([\s\S]*?)<\/script>/);
   if (!m) throw new Error('no script');
   const code = m[1];
+  // v5.20：i18n 字典抽成外部檔（js/i18n-src.js）—— 沙盒比照瀏覽器，先載入再跑主程式。
+  // 舊版備份檔（opts.file）字典還內嵌，重複載入也無害（後面的 const 會蓋掉 window 變數）。
+  const pre = I18N_PRE;
 
   // calls = 方法呼叫；sets = 屬性指派（fillStyle / strokeStyle …）
   // sets 設上限，避免長時間 render 把記憶體吃光（測試要自己 rec.sets.length = 0 清空）
@@ -141,12 +150,15 @@ function makeEnv(opts) {
   sandbox.globalThis = sandbox;
   sandbox.window.window = sandbox;
   vm.createContext(sandbox);
-  vm.runInContext(code, sandbox, { filename: 'index.html' });
+  vm.runInContext(pre + code, sandbox, { filename: 'index.html' });
 
   const BH = sandbox.window.__BH;
   if (!BH) throw new Error('no __BH');
-  return { html: src, sandbox, BH, rec, mkCtx2D, getId, listeners, storage, els,
+  // v5.20：html 回傳「邏輯全文」（外部字典 + 主檔）—— 舊測試會直接在裡面找中文文案
+  return { html: pre + src, sandbox, BH, rec, mkCtx2D, getId, listeners, storage, els,
            G: BH.Game, P: BH, fakeImg: (w, h) => ({ naturalWidth: w, naturalHeight: h, __fake: true }) };
 }
 
-module.exports = { makeEnv, html };
+// rawHtml：只有 index.html（給「量主檔大小」「掃靜態文案」這種必須看真實檔案的測試用）
+// i18nPre：外部字典原始碼（給自己另開 vm 的測試用，例如 verify-v22）
+module.exports = { makeEnv, html: I18N_PRE + html, rawHtml: html, i18nPre: I18N_PRE };

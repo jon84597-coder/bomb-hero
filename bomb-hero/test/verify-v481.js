@@ -209,11 +209,14 @@ ok(Buffer.byteLength(src) < 4250000, '位元組 ' + Buffer.byteLength(src).toLoc
 ok((src.match(/\r/g) || []).length === 0, '整檔 LF（0 個 \\r）');
 // 每個字典列都必須剛好 6 欄
 {
-  const i = src.indexOf('const I18N_SRC');
-  const j = src.indexOf('`;', i);
-  const lines = src.slice(i, j).split('\n').slice(1).filter(function (l) { return l.indexOf('|') > 0; });
+  // v5.20：字典抽到 js/i18n-src.js —— 有外部檔就讀它，沒有才退回主檔內嵌
+  const extP = path.join(__dirname, '..', 'js', 'i18n-src.js');
+  const dsrc = fs.existsSync(extP) ? fs.readFileSync(extP, 'utf8') : src;
+  const i = dsrc.indexOf('`');
+  const j = dsrc.lastIndexOf('`;');
+  const lines = dsrc.slice(i, j).split('\n').filter(function (l) { return l.indexOf('|') > 0; });
   const bad = lines.filter(function (l) { return l.split('|').length !== 6; });
-  ok(bad.length === 0, '字典每列 11 欄（共 ' + lines.length + ' 列）' + (bad.length ? '（壞 ' + bad.length + ' 列）' : ''));
+  ok(bad.length === 0, '字典每列 6 欄（共 ' + lines.length + ' 列）' + (bad.length ? '（壞 ' + bad.length + ' 列）' : ''));
 }
 
 console.log('\n' + (fail ? '✗ ' + fail + ' 失敗 / ' + pass + ' 通過' : '✅ v4.81：' + pass + ' 通過 / 0 失敗'));

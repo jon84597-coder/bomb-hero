@@ -9,7 +9,9 @@ const fs = require('fs');
 const ART = require('./_artcheck');
 const vm = require('vm');
 
-const html = fs.readFileSync(__dirname + '/../index.html', 'utf8');
+// v5.20：i18n 字典在 js/i18n-src.js —— 用沙盒的「邏輯全文」，文案才找得到
+const SB = require('./_sandbox');
+const html = SB.html;
 const m = html.match(/<script>([\s\S]*?)<\/script>/);
 if (!m) { console.error('no script'); process.exit(1); }
 const code = m[1];
@@ -100,7 +102,8 @@ sandbox.removeEventListener = () => {};
 sandbox.globalThis = sandbox;
 sandbox.window.window = sandbox;
 vm.createContext(sandbox);
-vm.runInContext(code, sandbox, { filename: 'index.html' });
+// v5.20：字典在外部檔 → 先跑它，否則所有 t() 都會回傳 key
+vm.runInContext(SB.i18nPre + code, sandbox, { filename: 'index.html' });
 
 const BH = sandbox.window.__BH;
 if (!BH) { console.error('no __BH'); process.exit(1); }

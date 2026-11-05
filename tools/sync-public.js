@@ -38,7 +38,7 @@ const SRC = opt('src', path.join(ROOT, 'bomb-hero'));
 const DST = opt('dst', path.join(ROOT, 'public'));
 
 const FILES = ['index.html', 'sw.js', 'manifest.json'];
-const DIRS = ['spr', 'bg', 'icons'];
+const DIRS = ['spr', 'bg', 'icons', 'js'];
 
 function sha(p) {
   return crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex').slice(0, 16);

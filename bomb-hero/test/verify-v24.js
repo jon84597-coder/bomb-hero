@@ -667,12 +667,17 @@ ok(edge.x >= 0 && edge.y >= 0, '飛行怪不會飛出地圖外（' + edge.x.toFi
 // =====================================================================
 console.log('\n=== 9. 網頁打得開（單檔零外鏈） ===');
 ok(parseFloat(P.VERSION) >= 1.9, '版本 = 1.9（' + P.VERSION + '）');
-ok(/^<!DOCTYPE html>/i.test(html), '有 DOCTYPE（瀏覽器標準模式）');
+// v5.20：html 現在是「字典＋主檔」的邏輯全文，DOCTYPE 要看主檔本身
+ok(/^<!DOCTYPE html>/i.test(require('./_sandbox').rawHtml), '有 DOCTYPE（瀏覽器標準模式）');
 ok(/<meta charset="UTF-8">/i.test(html), '有 UTF-8 charset（中文不會亂碼）');
 ok(/name="viewport"/.test(html), '有 viewport meta（手機不會縮成一小塊）');
 // v4.6：多了 <head> 的 PWA 註冊小程式（inline，不是外部檔），所以變成 2 個區塊
-ok((html.match(/<script/g) || []).length === 2, '只有 2 個 inline script 區塊（主程式＋PWA，沒有外部檔）');
-ok(!/<script[^>]+src=/.test(html), '沒有外部 js 檔（不會 404 白畫面）');
+// v5.20：i18n 字典（162KB 純資料）抽成 js/i18n-src.js。外部 js 只准這一個，
+//   而且主檔一定要有 `|| ''` 的退路 —— 檔案 404 時只是沒有翻譯，不會白畫面。
+const extJs = html.match(/<script[^>]+src="([^"]+)"/g) || [];
+ok(extJs.length === 1 && extJs[0].indexOf('js/i18n-src.js') > 0, '唯一外部 js 是 i18n 字典（' + extJs.join(',') + '）');
+ok(/window\.__I18N_SRC\s*\)\s*\?\s*window\.__I18N_SRC\s*:\s*''/.test(html), '字典載入失敗有退路（不會白畫面）');
+ok((html.match(/<script(?![^>]*src=)/g) || []).length === 2, '2 個 inline script 區塊（主程式＋PWA）');
 ok(!/<link[^>]+href="http/.test(html), '沒有外部 css（不會等不到樣式）');
 ok(!/src="http/.test(html), '沒有外部圖片網址（離線也能開）');
 ok(!/@import/.test(html), '沒有 @import 外鏈');

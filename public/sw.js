@@ -20,6 +20,7 @@ var NAV_TIMEOUT = 2200;   // v4.22：Render 冷啟動一定超過，早點回快
 var CORE = [
   './',
   './index.html',
+  './js/i18n-src.js',
   './bg/title.webp',
   './spr/title-logo.webp?v=59',
   './manifest.json',

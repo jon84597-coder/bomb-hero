@@ -183,7 +183,9 @@ ok(ui === 'ok', 'GiftUI.render()/alertOn() 不會拋錯', ui);
 ok(typeof B.GiftUI.hasReward === 'function', 'GiftUI.hasReward() 存在（紅點判斷）');
 
 console.log('=== ⑧ 十語系與後端 ===');
-const raw = (SRC.match(/const I18N_SRC = `([\s\S]*?)`;/) || [])[1] || '';
+// v5.20：字典抽到 js/i18n-src.js（讀不到才退回主檔內嵌的舊格式）
+const DICT = (function () { try { return fs.readFileSync(path.join(ROOT, 'js', 'i18n-src.js'), 'utf8'); } catch (e) { return SRC; } })();
+const raw = (DICT.match(/window\.__I18N_SRC = `([\s\S]*?)`;/) || DICT.match(/const I18N_SRC = `([\s\S]*?)`;/) || [])[1] || '';
 const rows = raw.split('\n').filter(Boolean);
 const gRows = rows.filter(r => r.indexOf('gift.') === 0);
 ok(gRows.length >= 30, 'gift.* 字典條目 ' + gRows.length + ' 條');

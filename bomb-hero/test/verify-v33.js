@@ -77,7 +77,8 @@ try { P.applyI18N(); } catch (e) { domErr = e; }
 ok(!domErr, '假 DOM 環境下 applyI18N() 不噴錯（真瀏覽器才會真的翻譯）' + (domErr ? '：' + domErr.message : ''));
 // 把靜態 HTML 裡看得到的文字抓出來，檢查有沒有進字典
 (function () {
-  const body = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '');
+  // v5.20：字典已外移，這裡只掃主檔（rawHtml）—— 把字典算進來會變成「字典自己覆蓋自己」
+  const body = require('./_sandbox').rawHtml.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '');
   const found = [];
   (body.match(/>([^<>]{1,160})</g) || []).forEach(function (m) {
     const t = m.slice(1, -1).trim();

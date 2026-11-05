@@ -9,7 +9,9 @@ function ok(cond, msg, extra) {
   if (cond) { pass++; console.log('  ✓ ' + msg); }
   else { fail++; console.log('  ✗ FAIL: ' + msg + (extra === undefined ? '' : ' → ' + JSON.stringify(extra))); }
 }
-const SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+// v5.20：字典已外移 → 接在後面，讓「^key|」的逐列搜尋一樣有效
+const SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8') +
+  '\n' + (function () { try { return fs.readFileSync(path.join(__dirname, '..', 'js', 'i18n-src.js'), 'utf8'); } catch (e) { return ''; } })();
 
 console.log('=== ① 常數 ===');
 const env = makeEnv();

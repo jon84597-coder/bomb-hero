@@ -9,7 +9,8 @@ const { makeEnv } = require('./_sandbox');
 const fs = require('fs'), path = require('path'), zlib = require('zlib'), crypto = require('crypto');
 const env = makeEnv();
 const P = env.BH;
-const src = env.html;
+// v5.20：預算線量真實主檔（字典已外移到 js/i18n-src.js，不能算進來）
+const src = require('./_sandbox').rawHtml;
 const ROOT = path.join(__dirname, '..');
 let pass = 0, fail = 0;
 function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++; console.log('  ✗ FAIL: ' + m); } }
@@ -74,7 +75,9 @@ const gz = zlib.gzipSync(Buffer.from(src, 'utf8'), { level: 9 }).length;
 // v5.14：成就面板／排名／線上名單／通知／後台足跡說明讓主檔多了約 15K，預算線由 1.75M 調到 1.80M。
 //   這條是「別讓主檔無聲膨脹」的提醒，不是平台上限（真正的上限是下面那條 3.9M/4.25M）。
 // v5.18：等級／經驗系統再加一批 → 預算線 1.80M → 1.90M
-ok(chars < 1900000, '主檔 ' + chars + ' 字元（原本 3,345,500）');
+// v5.20：i18n 字典（162KB）抽成 js/i18n-src.js → 主檔從 1.87M 掉到 1.71M。
+//   預算線跟著收緊到 1.78M，把省下來的空間真的留給新功能，而不是變成新的堆積空間。
+ok(chars < 1780000, '主檔 ' + chars + ' 字元（原本 3,345,500）');
 ok(gz < 900000, 'gzip 後 ' + Math.round(gz / 1024) + ' KB（原本 1.98 MB）');
 ok(chars < 3900000 && bytes < 4250000, '容量上限 3,900,000 字元 / 4,250,000 位元組（與其他驗證一致）');
 const crlf = (src.match(/\r/g) || []).length;

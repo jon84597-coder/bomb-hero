@@ -9,7 +9,8 @@ function ok(cond, msg, extra) {
   if (cond) { pass++; console.log('  ✓ ' + msg); }
   else { fail++; console.log('  ✗ FAIL: ' + msg + (extra === undefined ? '' : ' → ' + JSON.stringify(extra))); }
 }
-const SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+// v5.20：字典已外移 → 用邏輯全文（外部字典 + 主檔）
+const SRC = require('./_sandbox').html;
 
 console.log('=== ① 常數與美術 ===');
 const env = makeEnv();

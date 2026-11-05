@@ -355,8 +355,10 @@ ok(/'\.png': 'image\/png'/.test(srv), '圖示 MIME 是 image/png');
 
 // ==================================================================
 console.log('\n=== 13. 不破壞既有功能 ===');
-ok((html.match(/<script/g) || []).length === 2, '仍是單檔（2 個 inline script：PWA 前置＋主程式）');
-ok(!/<script[^>]+src=/.test(html), '沒有外部 js（不會 404 白畫面）');
+// v5.20：字典外移，唯一的外部 js 只能是它（純資料，壞了只是沒翻譯）
+const extJs52 = html.match(/<script[^>]+src="([^"]+)"/g) || [];
+ok((html.match(/<script(?![^>]*src=)/g) || []).length === 2, '2 個 inline script（PWA 前置＋主程式）');
+ok(extJs52.length === 1 && extJs52[0].indexOf('js/i18n-src.js') > 0, '唯一外部 js 是 i18n 字典');
 ok(!/src="http/.test(html), '沒有外部圖片網址（離線也能開）');
 ok(html.indexOf("const VERSION = '" + P.VERSION + "';") > 0, '版本常數 = ' + P.VERSION);
 const L46 = (P.VERSION_LOG.filter(function (x) { return x.v === '4.6'; })[0] || { items: [] });
