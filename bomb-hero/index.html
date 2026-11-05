@@ -2549,6 +2549,9 @@ padding: 7px 12px; font-family: inherit; font-size: 12px; font-weight: 800; curs
 .bhrow .bhuid { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #6f7f9c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bhrow .bhmt { grid-column: 1 / 2; font-size: 10.5px; color: #8ea3c6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .bhrow .bhst { grid-column: 2 / 3; grid-row: 1 / 3; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+/* v5.7：名單是 2 欄 grid，新的「最近遊玩」要明講放第 1 欄，否則會被自動塞到第 2 欄
+   跟「關卡／金幣／登入」擠在同一行（看起來像整行被截斷） */
+.bhrow .bhplay { grid-column: 1 / 2; }
 .bhpill { font-size: 9.5px; font-weight: 900; border-radius: 999px; padding: 1px 6px; white-space: nowrap; }
 .bhpill.g { background: #2a3448; color: #9db0d0; }
 .bhpill.p { background: #1e3a2c; color: #7ee0a5; }
@@ -2573,6 +2576,16 @@ padding: 7px 12px; font-family: inherit; font-size: 12px; font-weight: 800; curs
 .bhev { display: flex; gap: 8px; align-items: center; font-size: 11px; padding: 3px 0; border-bottom: 1px dashed #1f2a3c; color: #c3d0e6; }
 .bhev .mono { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #6f7f9c; flex: 0 0 auto; }
 .bhev b { color: #7ee0a5; font-weight: 800; }
+/* v5.7：名單上的「最近玩了什麼」＋足跡的關卡名＋台灣時間小標 */
+.bhplay { margin-top: 2px; font-size: 10.5px; font-weight: 700; color: #93b7d8; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; }
+.bhplay .bhpvic { flex: none; }
+/* 模式／關卡名可能很長（「大逃殺 30 人・單人・第 3 名」）→ 自己省略，不要把後面的時間與場次擠出去 */
+.bhplay .bhpv { flex: 1 1 60px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bhplay .dim { color: #5b6a82; font-weight: 600; }
+.bhplay .mono { flex: none; font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #7f95b3; }
+.bhplay .bhpill { flex: none; }
+.bhev .bhevlab { color: #b9cbe4; font-size: 10.5px; }
+.bhtw { display: inline-block; font-size: 9px; font-weight: 900; padding: 0 5px; border-radius: 999px; background: #2a2438; color: #c8b6ff; vertical-align: 1px; }
 .bhpre { flex: 1 1 auto; min-height: 120px; margin: 0; padding: 9px 10px; background: #080c12; border: 1.5px solid #1f2a3c; border-radius: 10px; color: #9fd4b4; font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; line-height: 1.5; overflow: auto; white-space: pre; }
 .bhtag { display: inline-block; font-size: 9.5px; font-weight: 900; padding: 1px 6px; border-radius: 999px; background: #1e3a2c; color: #7ee0a5; margin-left: 4px; }
 .bhtag.w { background: #4a3a1a; color: #ffd9a8; }
@@ -3656,7 +3669,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.6</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.7</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -3689,7 +3702,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     </div>
     <div class="title-card">
       <div class="titlewrap">
-        <img class="title-logo" id="titleLogo" alt="BOMB HERO 爆爆英雄" draggable="false" src="spr/title-logo.webp" onerror="window.__titleLogoFail&&window.__titleLogoFail()">
+        <img class="title-logo" id="titleLogo" alt="BOMB HERO 爆爆英雄" draggable="false" src="spr/title-logo.webp?v=57" onerror="window.__titleLogoFail&&window.__titleLogoFail()">
         <!-- v4.83：LOGO 抓不到時的替身。單獨打開 index.html（旁邊沒有 spr/）就會走這條，
              至少首頁還是完整的，不會露出破圖和 alt 文字。 -->
         <div class="title-fallback" id="titleFallback" aria-hidden="true">
@@ -3698,7 +3711,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
       </div>
 
-      <div class="ver beta">正式版 v<span id="verTxt">5.6</span></div>
+      <div class="ver beta">正式版 v<span id="verTxt">5.7</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4389,7 +4402,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.6';
+const VERSION = '5.7';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -10082,7 +10095,7 @@ const Solo = {
     grid.innerHTML = CHARACTERS.map(function (c, i) {
       return '<button class="chcard' + (i === sel ? ' sel' : '') + '" data-i="' + i + '" ' +
         'title="' + charName(c) + '（' + c.en + '）· ' + charTag(c) + '">' +
-        '<canvas class="chpv" width="132" height="120" data-ch="' + i + '"></canvas>' +
+        '<canvas class="chpv" width="220" height="200" data-ch="' + i + '"></canvas>' +
         '<span class="ck">✓</span>' +
         '<span class="cn" style="color:' + shadeHex(c.color, .52) + '">' + charName(c) + '</span>' +
         '<span class="ct">' + charTag(c) + '</span>' +
@@ -10158,18 +10171,45 @@ const CharPreview = (function () {
     try {
       return (function () {
   let items = [], t = 0, hops = {};
+  /* v5.7：畫布改成「高解析度」。
+     舊版 canvas 固定 132×120，但 CSS 讓它吃滿卡片寬度（桌機 ~180px、手機 ~150px），
+     等於每張圖都被放大 1.2~1.5 倍 → 角色看起來糊糊的；而且完全沒吃 devicePixelRatio，
+     在手機（dpr 2~3）等於再糊一倍。
+     現在：邏輯尺寸放大到 220×200（卡片再大也不會被放大），
+     背景緩衝再乘 devicePixelRatio，繪圖座標用 setTransform 維持在邏輯尺寸上，畫法不用改。 */
   function mount(root) {
     items = [];
     if (!root || !root.querySelectorAll) return;
+    let pr = 1;
+    try { pr = (typeof window !== 'undefined' && window.devicePixelRatio) || PIXEL_RATIO || 1; } catch (e) { pr = 1; }
+    pr = Math.max(1, Math.min(3, pr));
+    // 測試沙盒的假 canvas 沒有 getAttribute／setAttribute → 一律走安全取值
+    function ga(el, k) {
+      try { return el.getAttribute ? el.getAttribute(k) : (el[k] != null ? String(el[k]) : null); }
+      catch (e) { return null; }
+    }
+    function sa(el, k, v) { try { if (el.setAttribute) el.setAttribute(k, v); } catch (e) {} }
     root.querySelectorAll('canvas.chpv').forEach(function (cnv) {
+      // 邏輯尺寸記在 data-lw／data-lh，重複 mount 才不會把已乘過 dpr 的寬度再乘一次
+      let lw = parseInt(ga(cnv, 'data-lw'), 10) || 0;
+      let lh = parseInt(ga(cnv, 'data-lh'), 10) || 0;
+      if (!lw || !lh) {
+        lw = parseInt(ga(cnv, 'width'), 10) || 220;
+        lh = parseInt(ga(cnv, 'height'), 10) || 200;
+        sa(cnv, 'data-lw', lw); sa(cnv, 'data-lh', lh);
+      }
+      const bw = Math.round(lw * pr), bh = Math.round(lh * pr);
+      if (cnv.width !== bw) cnv.width = bw;
+      if (cnv.height !== bh) cnv.height = bh;
       const g = cnv.getContext && cnv.getContext('2d');
       if (!g) return;
-      items.push({ cnv: cnv, g: g, ch: parseInt(cnv.getAttribute('data-ch'), 10) || 0 });
+      if (g.setTransform) g.setTransform(pr, 0, 0, pr, 0, 0);
+      items.push({ cnv: cnv, g: g, w: lw, h: lh, ch: parseInt(ga(cnv, 'data-ch'), 10) || 0 });
     });
   }
   function hop(i) { hops[i] = 1; }        // 被選中 → 輕輕彈一下
   function drawOne(o, now) {
-    const W = o.cnv.width, H = o.cnv.height, g = o.g;
+    const W = o.w || o.cnv.width, H = o.h || o.cnv.height, g = o.g;   // v5.7：邏輯尺寸（實際像素已乘 dpr）
     const c = CHARACTERS[o.ch % CHARACTERS.length];
     g.clearRect(0, 0, W, H);
     // 來回踱步：慢速左右走 + 轉身（走路動作放慢，手腳才看得出來在動）
@@ -10181,7 +10221,8 @@ const CharPreview = (function () {
     const hp = hops[o.ch] || 0;
     const jump = hp > 0 ? Math.sin((1 - hp) * Math.PI) * H * .075 : 0;
     const hasImg = !!Sprites.get(c.animal);
-    const R = hasImg ? (H * .70) / 3.75 : W * .27;
+    // v5.7：角色在卡片裡本來只佔 70% 高（看起來又小又糊）→ 放大到 84%
+    const R = hasImg ? (H * .84) / 3.75 : W * .30;
     const footY = hasImg ? H * .955 - jump : H * .70 - jump;
     // 地面影子（跳起來會縮小變淡）
     g.fillStyle = 'rgba(0,0,0,' + Math.max(.08, .30 - jump / H * .8).toFixed(3) + ')';
@@ -10940,8 +10981,6 @@ const GiftUI = (function () {
 })();
 
 function startSolo(stage, bossRush, daily) {
-  // v4.3：行為足跡（後台客服核對「卡在哪一關」用）
-  try { if (typeof Cloud !== 'undefined' && Cloud.track) Cloud.track(bossRush ? 'boss' : 'play', stage); } catch (e) {}
   Game.mode = 'solo';
   // v4.17：修舊 bug —— 玩過 RPG 之後 Game.rpg 一直是 true，
   //   回到單人闖關會走 RPG 的扣血邏輯（hpCur 是 undefined → 永遠不會死）。
@@ -10965,6 +11004,14 @@ function startSolo(stage, bossRush, daily) {
   Game.stage = stage;
   Game.theme = THEMES[soloInfo(stage).theme] || THEMES[0];
   Game.mapInfo = soloInfo(stage);
+  // v4.3：行為足跡（後台客服核對「卡在哪一關」用）
+  //   v5.7：改成啟動之後才送，並帶「第幾關＋關卡名」，後台直接看得懂
+  try {
+    if (typeof Cloud !== 'undefined' && Cloud.track) {
+      Cloud.track(bossRush ? 'boss' : 'solo', stage,
+        (daily ? '每日挑戰 ' : '') + '第 ' + stage + ' 關・' + map32Name(stage - 1));
+    }
+  } catch (e) {}
   Game.players = [];
   Game.endShown = false;        // 重新開始 → 結束畫面標記歸零
   Game.state = 'idle';          // 清掉上一場的 'over' / 'roundover'，避免卡住不更新
@@ -12342,7 +12389,11 @@ function updateSolo(dt) {
         } catch (e) {}
         // v4.1：RPG 過關回報後端（伺服器驗證「只能依序過關」，金幣也由後端算）
         try { if (Game.mode === 'rpg' && typeof Cloud !== 'undefined') Cloud.clearStage(cleared); } catch (e) {}
-        try { if (typeof Cloud !== 'undefined' && Cloud.track) Cloud.track('clear', cleared); } catch (e) {}
+        try {
+          if (typeof Cloud !== 'undefined' && Cloud.track) {
+            Cloud.track('clear', cleared, '通過第 ' + cleared + ' 關・' + map32Name(cleared - 1));
+          }
+        } catch (e) {}
         // v4.87：過關結算 —— 三星、每日任務、每週榜（每日挑戰不列入，避免污染正式進度）
         try {
           if (!Game.daily) {
@@ -13416,7 +13467,7 @@ const Battle = {
             'style="color:' + tmNow.hex + '">' + tmNow.dot + '</button>' : '') +
         '</div>' +
         '<div class="ppf">' +
-          '<canvas class="chpv" width="132" height="120" data-ch="' + s.ch + '"></canvas>' +
+          '<canvas class="chpv" width="220" height="200" data-ch="' + s.ch + '"></canvas>' +
           '<button class="arr l" data-s="' + i + '" data-d="-1" title="上一個角色">◀</button>' +
           '<button class="arr r" data-s="' + i + '" data-d="1" title="下一個角色">▶</button>' +
           '<button data-ai="' + i + '" class="aibtn' + (ai ? ' on' : '') + '" title="切換人類／AI">' +
@@ -13468,6 +13519,19 @@ function startBattle() {
   }
   Game.bossRush = false;
   Game.round = 1;
+  // v5.7：後台要看「幾點玩了對戰（幾人／分隊／幾勝制）」
+  try {
+    if (typeof Cloud !== 'undefined' && Cloud.track) {
+      const n = clampCount(settings.count), tm = teamCount();
+      const lab = n + ' 人・' + (tm >= 2 ? tm + ' 隊' : '混戰') +
+        '・' + (parseInt(settings.wins, 10) || 2) + ' 勝制';
+      if (typeof Net !== 'undefined' && Net.on) {
+        Cloud.track('online', 0, '線上配對' + (Net.code ? ' #' + Net.code : '') + '・' + lab);
+      } else {
+        Cloud.track('battle', 0, '本機對戰・' + lab);
+      }
+    }
+  } catch (e) {}
   Game.matchOver = false;
   Game.endShown = false;
   Game.state = 'idle';
@@ -13646,6 +13710,9 @@ function updateBattle(dt) {
           Game.grid[c[1]][c[0]] = 1;
           if (!Game.sdRock) Game.sdRock = {};
           Game.sdRock[c[1] * Game.cols + c[0]] = 1;   // v4.64：記下來，這格要整片畫
+          // v5.7：石頭壓下來的格子不能再有地板機關 —— 不然機關會畫在石頭上面（穿幫），
+          //   而且走過去還會被判定成滑冰／輸送帶（人根本走不上石頭，但光束／道具會誤觸）。
+          if (Game.hazards && Game.hazards[c[1]]) Game.hazards[c[1]][c[0]] = null;
           // v4.54：落石也會改牆，重算分類。v5.3：當場算完 —— 只有「真的變了」的分塊會被重烘，
           //   不要再等到下一次 render 才重算（中間那一格會先畫成舊地板）。
           markWallKinds();
@@ -14398,6 +14465,14 @@ function startBR() {
   }
   Game.brBossPoolAt = 0;
   Game.brSpec = false;
+  // v5.7：後台要看「幾點開始大逃殺」
+  try {
+    if (typeof Cloud !== 'undefined' && Cloud.track) {
+      const n = clamp(BR.opt.n | 0, 20, 50), tm = clamp(BR.opt.team | 0, 1, 4);
+      Cloud.track('br', 0, '大逃殺 ' + n + ' 人・' + (tm >= 2 ? tm + ' 人一隊' : '單人') +
+        '・' + (BR.opt.dur | 0) + ' 分');
+    }
+  } catch (e) {}
   try { const be = $id('brEnd'); if (be) be.classList.add('hide'); } catch (e) {}
   Game.pets = [];
   Game.bossRush = false; Game.round = 1; Game.matchOver = false; Game.endShown = false;
@@ -14706,7 +14781,12 @@ function brFinish(winner) {
   if (place <= 3) {
     try { Shop.grantTicket(1); tk = Shop.tickets(); } catch (e) {}
   }
-  try { if (typeof Cloud !== 'undefined' && Cloud.track) Cloud.track('br', place); } catch (e) {}
+  try {
+    if (typeof Cloud !== 'undefined' && Cloud.track) {
+      const tm = (BR.TEAM | 0) >= 2 ? (BR.TEAM | 0) + ' 人一隊' : '單人';
+      Cloud.track('br', place, '大逃殺 ' + BR.N + ' 人・' + tm + '・第 ' + place + ' 名');
+    }
+  } catch (e) {}
   const title = win ? ((BR.TEAM | 0) >= 2 ? '🏆 你們這隊奪冠！' : '🏆 大逃殺冠軍！') : ('🏝️ 第 ' + place + ' 名 / ' + BR.N);
   const sub = (win ? '整座群島只剩你一個。' : '再撐一下就更前面了。') +
     '\n金幣 +' + gold + (place <= 3 ? '　🎟️ 門票 +1（現有 ' + tk + ' 張）' : '');
@@ -20297,7 +20377,11 @@ function render() {
   drawFloorLayer(vr, T);
   for (let y = vr.y0; y <= vr.y1; y++) {
     for (let x = vr.x0; x <= vr.x1; x++) {
-      const hz = Game.hazards[y] && Game.hazards[y][x];
+      // v5.7：輸送帶／滑冰／傳送門是「地板畫完再疊上去」的圖層，
+      //   所以格子變成牆或軟磚之後機關還是照畫 —— 縮圈落石砸到機關格時，
+      //   就會看到「石頭上還有一條輸送帶」。這裡先確認格子是空的才畫。
+      const gv = (Game.grid && Game.grid[y]) ? Game.grid[y][x] : 1;
+      const hz = (gv === 0) ? (Game.hazards[y] && Game.hazards[y][x]) : null;
       if (hz) paintHazardCell(x, y, hz, T);
     }
   }
@@ -24608,7 +24692,18 @@ function drawMateTag(q, T) {
   ctx.restore();
 }
 
-function drawMeBadge(x, y, R, T) {
+// v5.7：角色貼圖的「總高度」＝ drawSpriteChar 用的那個 H（含耳朵／尾巴）。
+//   給臨時算不到 bd.H 的地方當備援。
+function charArtH(T, animal) {
+  return T * .40 * 3.75 * HERO_ART_SCALE * heroSizeK(animal);
+}
+
+/* v5.7：「我」的牌子改吃「角色貼圖的上緣」，不再用 R 乘固定倍率硬算。
+   舊公式（小屏 y - R*1.30、大屏 y - R*2.30 - 17）在大逃殺特別糟 ——
+   大逃殺的地圖 56×44，格子小（T 常常 < 52）→ 走 small 分支，
+   算出來的位置正好落在兔子頭裡面，牌子整個蓋住臉。
+   現在由呼叫端量出貼圖真正的最上缘（兔子耳朵、坐騎頭頂）再往上擺。 */
+function drawMeBadge(x, y, R, T, headTop) {
   if (!ctx || !ctx.save) return;
   const t = Game.gameT;
   //   把手機玩家上方那一格完全遮住。
@@ -24616,8 +24711,11 @@ function drawMeBadge(x, y, R, T) {
   const w = small ? Math.max(20, T * .56) : Math.max(24, T * .68);
   const h = small ? Math.max(15, T * .42) : Math.max(19, T * .52);
   const bob = Math.sin(t * 5.2) * Math.max(1.2, T * .035);
-  const top = small ? (y - R * 1.30 - h + bob)
-    : (y - R * 2.3 - 17 - h + bob);
+  // 牌子下緣（含指向箭頭）與頭頂留一道縫：小屏至少 5px，大屏 0.16 格
+  const gap = Math.max(5, T * .16) + h * .38;
+  const top = (headTop != null)
+    ? (headTop - gap - h + bob)
+    : (small ? (y - R * 1.30 - h + bob) : (y - R * 2.3 - 17 - h + bob));
   const L = x - w / 2, Rr = Math.min(h / 2, w / 3);
   ctx.save();
   // 底下的柔光（混戰裡也一眼看到自己）
@@ -24886,7 +24984,19 @@ function drawPlayer(p, T) {
     }
   }
   // v2.4：多人對戰 → 自己的角色頭上頂一顆醒目的「我」牌子
-  if ((Game.mode === 'battle' || Game.mode === 'br') && p.alive && isMyPlayer(p)) drawMeBadge(x, y - jumpY, R, T);
+  //   v5.7：改成量「貼圖上緣」再往上擺 —— 兔子耳朵再高、坐騎再大也不會被牌子蓋到。
+  if ((Game.mode === 'battle' || Game.mode === 'br') && p.alive && isMyPlayer(p)) {
+    let artTop;
+    if (p.dino) {
+      // 坐騎是另外畫在角色底下的（而且高得多）→ 牌子要浮到坐騎頭頂
+      const dh = p.ostrich ? T * 1.86 : T * (p.redDragon ? 1.82 : 1.70);
+      artTop = p.y + T * .52 - dh;
+    } else {
+      const hh = (bd && bd.H) || charArtH(T, c.animal);
+      artTop = (y - jumpY) + R * .82 - hh;      // 與 drawSpriteChar 的 footY - H 同一個算法
+    }
+    drawMeBadge(x, y - jumpY, R, T, artTop);
+  }
   // v1.9：頭暈指示（轉星星 + 😵）
   if (p.dizzy > 0) drawDizzyMark(x, y - jumpY, T);
   if (p.alive && isMyPlayer(p) && bombUnderFoot(p)) {
@@ -27527,6 +27637,15 @@ const Net = {
   enterAsGuest: function () {
     if (Net.role !== 'guest') return;
     if (Screen.current === 'game') return;
+    // v5.7：客人端也記一筆「線上配對」（只記第一次進入，重繪不會洗版）
+    if (!Net.trkOnce) {
+      Net.trkOnce = true;
+      try {
+        if (typeof Cloud !== 'undefined' && Cloud.track) {
+          Cloud.track('online', 0, '線上配對' + (Net.code ? ' #' + Net.code : '') + '・加入他人房間');
+        }
+      } catch (e) {}
+    }
     Game.mode = 'battle';
     Game.round = 1;
     Game.matchOver = false;
@@ -28750,7 +28869,15 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.6', date: '2026-11-05', now: true, items: [
+  { v: '5.7', date: '2026-11-05', now: true, items: [
+    '🧱 <b>大逃殺落石砸下來，底下的輸送帶／滑冰／傳送門沒被蓋掉</b>：石頭都畫好了，地表機關卻還疊在上面（看起來像石頭上長出一條輸送帶）。現在只要格子變成石頭就<b>不畫機關</b>，砸下去的當下也把那一格的機關<b>直接清掉</b>',
+    '🕒 <b>管理面板的時間全部改成台灣時間</b>：伺服器在 UTC，以前「最後上線／加入時間」比台灣少 8 小時（連「今日」也是晚 8 小時換日）。現在時間字串一律 <b>UTC+8</b>，畫面也標上「台灣」，跨日換算正確',
+    '🕹️ <b>管理面板看得到「誰在什麼時間玩了什麼」</b>：會員名單多一行<b>最近玩的模式＋關卡／房號＋時間</b>與今日場次；點進詳情有完整足跡（單人第幾關、RPG 第幾關、對戰幾人幾勝制、大逃殺幾人第幾名、線上配對房號），總覽多了「今日場次」',
+    '🎯 <b>「我」的牌子真的浮到頭上了</b>：以前用固定倍率硬算高度，大逃殺格子小（T&lt;52）時牌子剛好落在兔子頭裡。現在改成量<b>角色貼圖真正的最上緣</b>（耳朵、坐騎頭頂都算），再往上留一道縫，兔子耳朵也不會被蓋到',
+    '🔍 <b>對戰選角的角色圖變清楚了</b>：畫布從 132×120 放大到 <b>220×200</b>、再乘上<b>螢幕像素比（dpr）</b>，卡片裡的角色也從 70% 放大到 84% —— 手機視網膜螢幕上不再糊成一片',
+    '🏷️ <b>LOGO 重新換上（完整版）</b>：這次只從邊界去白底，<b>沒有再刪任何碎石／火花</b>，並用預乘 alpha 縮圖（深底不會有白毛）；網址加了版本參數，換圖一定換得到（不會再被快取成舊的）'
+  ] },
+  { v: '5.6', date: '2026-11-05', now: false, items: [
     '🎛️ <b>所有「選擇鈕」的選中狀態統一了</b>：選中的是<b>橘色水晶</b>、沒選的是<b>石板灰水晶</b>。以前單人闖關的難易度／關卡時間／地圖模式<b>全部都是橘色</b>，根本看不出現在選哪一個（現在跟 RPG 一樣，只有選中的那顆亮橘）',
     '🏝️ <b>大逃殺的設定鈕也換成同一套水晶</b>：人數／組隊／時間不再是自己一套深藍色，改成<b>選中橘、未選灰</b>，跟其他畫面完全一致',
     '🏷️ <b>換上新的 BOMB HERO 徽章 LOGO</b>：炸彈英雄徽章，已經<b>去背</b>（白邊也反算掉了），放在任何底色上都不會有一圈白邊',
@@ -31109,6 +31236,12 @@ function startRpg(stage) {
   let st = stage || 1;
   try { if (typeof Cloud !== 'undefined' && Cloud.online() && st > RPG.unlocked) st = RPG.unlocked; } catch (e) {}
   Game.stage = st;
+  // v5.7：後台要看「幾點玩了 RPG 哪一關」
+  try {
+    if (typeof Cloud !== 'undefined' && Cloud.track) {
+      Cloud.track('rpg', st, 'RPG 第 ' + st + ' 關・' + map32Name(st - 1));
+    }
+  } catch (e) {}
   Game.endShown = false;
   Game.state = 'idle';
   Game.players = [];
@@ -31226,7 +31359,7 @@ const Rpg = (function () {
     grid.innerHTML = CHARACTERS.map(function (c, i) {
       return '<button class="chcard' + (i === RPG.char ? ' sel' : '') + '" data-i="' + i + '" ' +
         'title="' + charName(c) + '（' + c.en + '）· ' + charTag(c) + '">' +
-        '<canvas class="chpv" width="132" height="120" data-ch="' + i + '"></canvas>' +
+        '<canvas class="chpv" width="220" height="200" data-ch="' + i + '"></canvas>' +
         '<span class="ck">✓</span>' +
         '<span class="cn" style="color:' + shadeHex(c.color, .52) + '">' + charName(c) + '</span>' +
         '<span class="ct">' + charTag(c) + '</span></button>';
@@ -31425,9 +31558,13 @@ const Cloud = (function () {
 
   /* v4.3：行為足跡（開關卡／拿道具／配點…）→ 後台客服核對用；節流避免洗版 */
   let evq = [], evT = null;
-  function track(type, stage) {
+  /* v5.7：多帶一個 label（例：「第 3-2 關　綠野草原」「8 人・組隊 5 分」）
+     → 後台不用再自己猜「stage=1 是什麼意思」，直接顯示人看得懂的字。 */
+  function track(type, stage, label) {
     if (!S.online || !S.acc) return;
-    evq.push({ type: String(type || 'act'), stage: stage || 0 });
+    const ev = { type: String(type || 'act'), stage: stage || 0 };
+    if (label) ev.label = String(label).slice(0, 48);
+    evq.push(ev);
     if (evq.length > 12) evq.shift();
     if (evT) return;
     evT = setTimeout(function () {
@@ -32102,13 +32239,39 @@ const Admin = (function () {
     const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
     return h + 'h' + (m < 10 ? '0' : '') + m + 'm';
   }
+  /* v5.7：後台所有時間一律顯示「台灣時間（UTC+8）」。
+     舊版用 new Date(ms).getHours() ＝「看的人這台裝置的時區」，
+     而伺服器（Render＝UTC）回的 lastSeenStr 又是 UTC 字串，
+     兩邊混用就變成「在線的人時間跟台灣對不起來」（差 8 小時）。
+     現在統一：時間戳 +8 小時後用 getUTC* 取欄位，跟裝置時區、伺服器時區都無關。 */
+  const TW_MS = 8 * 3600 * 1000;
   function dt(ms) {
     if (!ms) return '—';
     try {
-      const d = new Date(ms), p = function (n) { return n < 10 ? '0' + n : '' + n; };
-      return (d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' +
-        p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()));
+      const d = new Date(Number(ms) + TW_MS), p = function (n) { return n < 10 ? '0' + n : '' + n; };
+      return (d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate()) + ' ' +
+        p(d.getUTCHours()) + ':' + p(d.getUTCMinutes()) + ':' + p(d.getUTCSeconds()));
     } catch (e) { return '—'; }
+  }
+  /* 只有時分（名單用） */
+  function hm(ms) {
+    const v = dt(ms);
+    return v === '—' ? v : v.slice(5, 16);
+  }
+  /* 事件模式的中文名（後端也會給，這裡當備援／翻譯） */
+  const EV_NAME = {
+    solo: '單人闖關', boss: 'BOSS 連戰', rpg: 'RPG', clear: '過關',
+    play: '開始遊玩', battle: '本機對戰', br: '大逃殺', online: '線上配對', act: '操作'
+  };
+  function evName(e) { return (e && (EV_NAME[e.type] || e.mode)) || (e && e.type) || '遊玩'; }
+  /* v5.7：名單那一行「最近玩了什麼」。
+     大逃殺的 label 本身就長成「大逃殺 30 人・單人・第 3 名」，
+     前面再加一次模式名就變「大逃殺・大逃殺 …」→ 重複。已經以模式名開頭就直接用 label。 */
+  function playText(lp) {
+    if (!lp) return '';
+    const nm = evName(lp), lab = lp.label || '';
+    if (!lab) return nm;
+    return lab.indexOf(nm) === 0 ? lab : (nm + '・' + lab);
   }
   function srcLabel(a) {
     if (a.kind === 'guest') return '<span class="bhpill g">遊客</span>';
@@ -32154,6 +32317,7 @@ const Admin = (function () {
       // v5.5：拜訪人數（歷史／當日）
       ['歷史訪客', st.visitors], ['今日訪客', st.visitToday],
       ['歷史瀏覽', st.visitPv], ['今日瀏覽', st.visitPvToday],
+      ['今日場次', st.playsToday],           // v5.7：今天（台灣時間）所有帳號合計玩了幾場
       ['停權中', st.banned], ['註冊次數', st.registers], ['登入次數', st.logins],
       ['綁定', st.bindings], ['竄改攔阻', st.tamper], ['限流攔阻', st.rateLimited]
     ];
@@ -32230,8 +32394,11 @@ const Admin = (function () {
         '<div class="bhnm">' + e2(a.name) + (a.dev ? ' <span class="bhpill d">DEV</span>' : '') + '</div>' +
         '<div class="bhst">' + srcLabel(a) +
         (a.banned ? '<span class="bhpill b">停權</span>' : '') + '</div>' +
-        '<div class="bhmt">最後上線 ' + e2(a.lastSeenStr || dt(a.lastSeen)) +
+        '<div class="bhmt">最後上線 ' + e2(a.lastSeen ? dt(a.lastSeen) : (a.lastSeenStr || '—')) +
         '　關卡 ' + (a.cleared | 0) + '/32　💰' + (a.gold | 0) + '</div>' +
+        '<div class="bhplay">' + (a.lastPlay
+          ? '<span class="bhpvic">🕹</span><span class="bhpv">' + e2(playText(a.lastPlay)) + '</span>'
+          : '<span class="bhpv dim">尚未有遊玩紀錄</span>') + '</div>' +
         '</div>';
     }).join('');
   }
@@ -32294,7 +32461,14 @@ const Admin = (function () {
         '<div class="bhuid">' + e2(a.id) + '</div>' +
         '<div class="bhmt">關卡 ' + (a.cleared | 0) + '/32　💰' + (a.gold | 0) +
         '　登入 ' + (a.logins | 0) + '　遊玩 ' + fmtDur(a.playSec || 0) +
-        '　上線 ' + e2(a.lastSeenStr || dt(a.lastSeen)) + '</div>' +
+        '　上線 ' + e2(a.lastSeen ? dt(a.lastSeen) : (a.lastSeenStr || '—')) + '</div>' +
+        // v5.7：最近一次「玩了什麼模式／哪一關」＋今天玩了幾場（一眼看出在玩什麼）
+        '<div class="bhplay">' + (a.lastPlay
+          ? '<span class="bhpvic">🕹</span><span class="bhpv">' + e2(playText(a.lastPlay)) + '</span>' +
+            '<span class="mono">' + e2(hm(a.lastPlay.t)) + '</span>'
+          : '<span class="bhpv dim">尚未有遊玩紀錄</span>') +
+          (a.playsToday ? '<span class="bhpill g">今日 ' + a.playsToday + ' 場</span>' : '') +
+        '</div>' +
         '</div>';
     }).join('');
   }
@@ -32310,11 +32484,14 @@ const Admin = (function () {
     const stg = a.stages || {};
     const stgTxt = Object.keys(stg).sort(function (x, y) { return x - y; })
       .map(function (k) { return k + '×' + stg[k]; }).join('、') || '（無）';
+    /* v5.7：足跡原本只印 type（solo／br／clear），後台根本看不出玩了哪一關。
+       現在：台灣時間 → 模式名 → 事件附帶的 label（「第 3-2 關・綠野草原」）。 */
     const evs = (a.events || []).map(function (e) {
-      return '<div class="bhev"><span class="mono">' + e2(e.str || dt(e.t)) + '</span>' +
-        '<b>' + e2(e.type) + '</b>' +
-        (e.stage ? ' <span class="bhpill g">關 ' + e.stage + '</span>' : '') +
-        (e.cleared != null ? ' <span class="bhpill g">cleared=' + e.cleared + '</span>' : '') +
+      const lab = e.label ? '　<span class="bhevlab">' + e2(e.label) + '</span>' : '';
+      return '<div class="bhev"><span class="mono">' + e2(e.t ? dt(e.t) : (e.str || '—')) + '</span>' +
+        '<b>' + e2(evName(e)) + '</b>' + lab +
+        (!e.label && e.stage ? ' <span class="bhpill g">關 ' + e.stage + '</span>' : '') +
+        (e.cleared != null ? ' <span class="bhpill g">進度 ' + e.cleared + '</span>' : '') +
         '</div>';
     }).join('') || '<div class="bhempty">（沒有足跡）</div>';
 
@@ -32334,14 +32511,18 @@ const Admin = (function () {
         ['註冊 IP', e2(a.firstIp || a.ip || '—'), 'mono'],
         ['最近 IP', e2(a.ip || '—'), 'mono'],
         ['IP 歷史', e2(ips), 'mono'],
-        ['加入時間', e2(a.createdStr || dt(a.created)), 'mono'],
-        ['最後上線', e2(a.lastSeenStr || dt(a.lastSeen)), 'mono'],
+        ['加入時間', e2(a.created ? dt(a.created) : (a.createdStr || '—')) + '　<span class="bhtw">台灣</span>', 'mono'],
+        ['最後上線', e2(a.lastSeen ? dt(a.lastSeen) : (a.lastSeenStr || '—')) + '　<span class="bhtw">台灣</span>', 'mono'],
         ['登入次數', (a.logins | 0)],
         ['RPG 進度', (a.cleared | 0) + ' / 32'],
         ['金幣', '💰 ' + (a.gold | 0)],
         ['配點', '❤️' + (al.hp | 0) + ' 🛡️' + (al.def | 0) + ' 👟' + (al.spd | 0) + ' 💥' + (al.atk | 0)],
         ['可用 / 已用點數', (a.points == null ? '—' : a.points) + ' / ' + (a.spent == null ? '—' : a.spent)],
         ['累計遊玩', fmtDur(a.playSec || 0)],
+        ['最近遊玩', a.lastPlay
+          ? (e2(playText(a.lastPlay)) + '　' + e2(hm(a.lastPlay.t)) + '　<span class="bhtw">台灣</span>')
+          : '—'],
+        ['今日場次', (a.playsToday | 0) + ' 場'],
         ['停權資訊', a.banned ? (e2(a.banned.reason || '未填') + '　' + dt(a.banned.at)) : '正常']
       ]) + '</div>' +
       '<div class="bhsec"><span>各關卡遊玩次數</span><div>' + e2(stgTxt) + '</div></div>' +
@@ -33451,7 +33632,7 @@ window.__BH = {
   ENEMY_ART_BASE: ENEMY_ART_BASE, ENEMY_ART_SLOPE: ENEMY_ART_SLOPE, enemyArtR: enemyArtR, foeTouchR: foeTouchR, BOSS_HITS: BOSS_HITS, SOLO_DIFF: SOLO_DIFF,
   tileArtK: tileArtK, ART_REF_TILE: ART_REF_TILE, MOBILE_VIEW_FRAC: MOBILE_VIEW_FRAC,
   tileSize: tileSize, actOff2: actOff2,
-  isMyPlayer: isMyPlayer, drawMeBadge: drawMeBadge, ME_BADGE_TXT: ME_BADGE_TXT,
+  isMyPlayer: isMyPlayer, drawMeBadge: drawMeBadge, ME_BADGE_TXT: ME_BADGE_TXT, charArtH: charArtH,
   LANGS: LANGS, I18N: I18N, LANG: LANG, t: t, tr: tr, trLive: trLive, retranslateLive: retranslateLive, trPattern: trPattern, setLang: setLang, applyI18N: applyI18N,
   captureI18N: captureI18N, refreshI18NUI: refreshI18NUI, updateLangBtn: updateLangBtn,
   renderLangMenu: renderLangMenu, openLangMenu: openLangMenu, closeLangMenu: closeLangMenu,

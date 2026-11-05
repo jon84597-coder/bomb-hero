@@ -149,12 +149,36 @@ function devEmailList(env) {
   return list;
 }
 /* 後台「加入時間」要精確到秒：yyyy-mm-dd hh:mm:ss（伺服器本地時區） */
+/* v5.7：時間字串一律輸出「台灣時間（UTC+8）」。
+   以前用 getHours()＝「伺服器本機時區」，而 Render／Docker 容器是 UTC，
+   於是後台看到的「最後上線／加入時間」都比台灣實際時間少 8 小時（玩家反映對不起來就是這個）。
+   改成 getUTC* + 固定 +8 偏移 → 不管伺服器放在哪個時區，輸出都是同一種時間。
+   注意：時間戳（a.created／a.lastSeen）本身一直是 UTC 毫秒，這支只影響「顯示字串」。 */
+const TW_OFFSET_MS = 8 * 3600 * 1000;
 function stamp(ms) {
-  const d = new Date(ms || Date.now());
+  const d = new Date((ms || Date.now()) + TW_OFFSET_MS);
   function two(n) { return (n < 10 ? '0' : '') + n; }
-  return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' +
-    two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds());
+  return d.getUTCFullYear() + '-' + two(d.getUTCMonth() + 1) + '-' + two(d.getUTCDate()) + ' ' +
+    two(d.getUTCHours()) + ':' + two(d.getUTCMinutes()) + ':' + two(d.getUTCSeconds());
 }
+
+/* v5.7：「今天」一律以台灣時間切日（伺服器在 UTC，用 setHours(0,0,0,0) 會晚 8 小時換日） */
+function twDayStart(ms) {
+  const d = new Date((ms || Date.now()) + TW_OFFSET_MS);
+  d.setUTCHours(0, 0, 0, 0);
+  return d.getTime() - TW_OFFSET_MS;
+}
+
+/* v5.7：後台「誰在什麼時間玩了什麼」用的分類
+   STAGE_EVENTS：帶關號、且要計入「各關卡遊玩次數」的事件
+   PLAY_EVENTS ：算「玩了一場」的事件（總覽的今日場次／名單的最近遊玩） */
+const STAGE_EVENTS = { solo: 1, boss: 1, rpg: 1, clear: 1, play: 1 };
+const PLAY_EVENTS = { solo: 1, boss: 1, rpg: 1, clear: 1, play: 1, battle: 1, br: 1, online: 1 };
+/* 給後台顯示用的中文模式名（前端也會自己翻譯，這裡是後端備援） */
+const EVENT_LABEL = {
+  solo: '單人闖關', boss: 'BOSS 連戰', rpg: 'RPG 模式', clear: '過關',
+  play: '開始遊玩', battle: '本機對戰', br: '大逃殺', online: '線上配對', act: '操作'
+};
 
 function sumAlloc(a) {
   let n = 0;
@@ -922,6 +946,7 @@ function createCloud(options) {
   function logEvent(acc, type, data) {
     if (!acc) return;
     const ev = Object.assign({ t: Date.now(), type: String(type || '').slice(0, 24) }, data || {});
+    if (ev.label) ev.label = String(ev.label).slice(0, 48);
     const arr = acc.events || (acc.events = []);
     arr.push(ev);
     if (arr.length > 40) arr.splice(0, arr.length - 40);
@@ -1331,8 +1356,24 @@ function createCloud(options) {
     return { text: String(a.text).slice(0, 300), ts: a.ts || 0, until: a.until || 0 };
   }
 
+  /* v5.7：這個帳號「最近玩了什麼」＋「台灣時間今天玩了幾場」
+     只掃記憶體裡的事件（最多 40 筆），300 個帳號也不會慢。 */
+  function playDigest(a) {
+    const ev = (a && a.events) || [];
+    const dayStart = twDayStart();
+    let last = null, today = 0;
+    for (let i = ev.length - 1; i >= 0; i--) {
+      const e = ev[i];
+      if (!PLAY_EVENTS[e.type]) continue;
+      if (!last) last = e;
+      if ((e.t || 0) >= dayStart) today++;
+    }
+    return { last: last, today: today };
+  }
+
   /* v4.3：後台專用資料（只給開發者看，一般玩家一律 403） */
   function adminRow(a) {
+    const pd = playDigest(a);
     return {
       id: a.id, kind: a.kind, name: a.name, username: a.username || '',
       email: a.email || '', provider: a.provider || 'guest', sub: a.sub || '',
@@ -1346,15 +1387,21 @@ function createCloud(options) {
       online: (Date.now() - (a.lastSeen || 0)) < 300000,
       cleared: a.rpg ? (a.rpg.cleared | 0) : 0,
       gold: a.rpg ? (a.rpg.gold | 0) : 0,
-      hasPass: !!a.pass
+      hasPass: !!a.pass,
+      // v5.7：最近一次「玩」的事件（模式／關卡／時間）＋ 今天玩了幾場
+      lastPlay: pd.last ? {
+        t: pd.last.t || 0, type: pd.last.type || '',
+        stage: pd.last.stage || 0, label: pd.last.label || '',
+        mode: EVENT_LABEL[pd.last.type] || pd.last.type || ''
+      } : null,
+      playsToday: pd.today
     };
   }
 
   function adminOverview() {
     const list = [];
-    let members = 0, guests = 0, devs = 0, banned = 0, today = 0, online = 0;
-    const now = Date.now(), day0 = new Date(); day0.setHours(0, 0, 0, 0);
-    const d0 = day0.getTime(), h24 = now - 86400000;
+    let members = 0, guests = 0, devs = 0, banned = 0, today = 0, online = 0, playsToday = 0;
+    const now = Date.now(), d0 = twDayStart(now), h24 = now - 86400000;
     for (const id in db.accounts) {
       const a = db.accounts[id];
       if (a.mergedInto) continue;
@@ -1363,7 +1410,9 @@ function createCloud(options) {
       if (a.banned) banned++;
       if ((a.created || 0) >= d0) today++;
       if ((a.lastSeen || 0) >= h24) online++;
-      list.push(adminRow(a));
+      const row = adminRow(a);
+      playsToday += row.playsToday | 0;
+      list.push(row);
     }
     list.sort(function (x, y) { return (y.created || 0) - (x.created || 0); });
     return {
@@ -1378,7 +1427,8 @@ function createCloud(options) {
           logins: stats.logins, bindings: stats.bindings,
           visitors: vo.uv, visitPv: vo.pv,
           visitToday: vo.todayUv, visitPvToday: vo.todayPv,
-          visitDays: vo.days
+          visitDays: vo.days,
+          playsToday: playsToday          // v5.7：今天（台灣時間）所有帳號合計玩了幾場
         };
       })(),
       announce: announceOut(),
@@ -1843,9 +1893,8 @@ function createCloud(options) {
            不含密碼雜湊（adminRow 只給 hasPass 布林），避免整包外流就能離線爆破。 */
         if (p === '/api/admin/dump' && req.method === 'GET') {
           const all = [];
-          let members = 0, guests = 0, devs = 0, banned = 0, today = 0, online = 0;
-          const now = Date.now(), day0 = new Date(); day0.setHours(0, 0, 0, 0);
-          const d0 = day0.getTime(), h24 = now - 86400000;
+          let members = 0, guests = 0, devs = 0, banned = 0, today = 0, online = 0, playsToday = 0;
+          const now = Date.now(), d0 = twDayStart(now), h24 = now - 86400000;
           for (const id in db.accounts) {
             const a = db.accounts[id];
             if (a.mergedInto) continue;
@@ -1854,7 +1903,9 @@ function createCloud(options) {
             if (a.banned) banned++;
             if ((a.created || 0) >= d0) today++;
             if ((a.lastSeen || 0) >= h24) online++;
-            all.push(adminRow(a));
+            const row = adminRow(a);
+            playsToday += row.playsToday | 0;
+            all.push(row);
           }
           all.sort(function (x, y) { return (y.created || 0) - (x.created || 0); });
           return send(res, 200, {
@@ -1870,7 +1921,8 @@ function createCloud(options) {
                 logins: stats.logins, bindings: stats.bindings,
                 visitors: vo.uv, visitPv: vo.pv,
                 visitToday: vo.todayUv, visitPvToday: vo.todayPv,
-                visitDays: vo.days
+                visitDays: vo.days,
+                playsToday: playsToday
               };
             })(),
             visits: visitOut(),        // v5.5：整包拜訪紀錄（近 60 天）
@@ -1908,7 +1960,10 @@ function createCloud(options) {
           row.playRpgSec = acc.rpg ? (acc.rpg.playSec | 0) : 0;
           row.stages = acc.stages || {};
           row.events = (acc.events || []).slice(-30).reverse().map(function (e) {
-            return Object.assign({}, e, { str: stamp(e.t) });
+            return Object.assign({}, e, {
+              str: stamp(e.t),
+              mode: EVENT_LABEL[e.type] || e.type || ''
+            });
           });
           return send(res, 200, { ok: true, account: row }), true;
         }
@@ -2076,11 +2131,18 @@ function createCloud(options) {
           const type = String(body.type || '').slice(0, 24);
           if (!type) return fail(res, 400, 'BAD_TYPE'), true;
           const st = body.stage != null ? clampInt(body.stage, 0, MAX_STAGE, 0) : 0;
-          if (st) {
+          const label = body.label ? String(body.label).slice(0, 48) : '';
+          // v5.7：只有「關卡型」事件才算進各關卡遊玩次數。
+          //   以前任何帶 stage 的事件都算 —— 大逃殺把名次當 stage 傳進來，
+          //   stages[1..N] 就被名次灌爆，看不出真正玩了哪一關。
+          if (st && STAGE_EVENTS[type]) {
             acc.stages = acc.stages || {};
             acc.stages[st] = (acc.stages[st] | 0) + 1;
           }
-          logEvent(acc, type, st ? { stage: st } : null);
+          const extra = {};
+          if (st) extra.stage = st;
+          if (label) extra.label = label;
+          logEvent(acc, type, (st || label) ? extra : null);
           store.touch();
           return send(res, 200, { ok: true }), true;
         }
@@ -2302,5 +2364,8 @@ module.exports = {
   hashPassword: hashPassword, verifyPassword: verifyPassword,
   validIdent: validIdent, pwProblem: pwProblem, stamp: stamp,
   devEmailList: devEmailList, DEV_EMAILS_DEFAULT: DEV_EMAILS_DEFAULT,
-  PW_MIN: PW_MIN
+  PW_MIN: PW_MIN,
+  /* v5.7：後台時間與遊玩足跡（測試用） */
+  TW_OFFSET_MS: TW_OFFSET_MS, twDayStart: twDayStart,
+  STAGE_EVENTS: STAGE_EVENTS, PLAY_EVENTS: PLAY_EVENTS, EVENT_LABEL: EVENT_LABEL
 };

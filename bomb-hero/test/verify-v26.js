@@ -149,7 +149,7 @@ P.Screen.show('title');
 // ================================================================
 console.log('\n=== 4. 首頁標題：拿掉 ICON，BOMB HERO 大字 / 爆爆英雄中字 / 測試版小字 ===');
 ok(html.indexOf('class="logo-big"') < 0, 'ICON 圖塊已拿掉（首頁沒有 .logo-big）');
-ok(/<img class="title-logo" id="titleLogo" alt="BOMB HERO 爆爆英雄"[^>]*src="spr\/title-logo\.webp"/.test(html) && ART.isArtOk('spr/title-logo.webp') && ART.artFile('spr/title-logo.webp').length > 20000, 'v2.1：標題改用美術 LOGO 圖（spr/title-logo.webp、夠大不是佔位）');
+ok(/<img class="title-logo" id="titleLogo" alt="BOMB HERO 爆爆英雄"[^>]*src="spr\/title-logo\.webp(\?[^"]*)?"/.test(html) && ART.isArtOk('spr/title-logo.webp') && ART.artFile('spr/title-logo.webp').length > 20000, 'v2.1：標題改用美術 LOGO 圖（spr/title-logo.webp、夠大不是佔位）');
 ok(html.indexOf('title-en') < 0 && html.indexOf('title-zh') < 0, 'v2.1：舊的文字標題（.title-en／.title-zh）已完全移除');
 ok(/<div class="ver beta">(測試版|正式版) v<span id="verTxt">/.test(html), '「測試版／正式版 v」小字徽章（版號由 VERSION 帶入）');
 const logoRule = html.match(/\.title-logo \{[^}]*width: clamp\(([^)]*)\)/);

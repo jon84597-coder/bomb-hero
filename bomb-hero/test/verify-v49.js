@@ -187,9 +187,9 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
     '登入／開遊客時會一併收公告');
 
   console.log('\n=== 13. 行為足跡（客服核對用） ===');
-  ok(src(/function track\(type, stage\)/), '有 track() 足跡上報');
-  ok(src(/Cloud\.track\(bossRush \? 'boss' : 'play', stage\)/), '開關卡會記一筆');
-  ok(src(/Cloud\.track\('clear', cleared\)/), '通關會記一筆');
+  ok(src(/function track\(type, stage, label\)/), '有 track() 足跡上報（v5.7 多帶 label）');
+  ok(src(/Cloud\.track\(bossRush \? 'boss' : 'solo', stage,/), '開關卡會記一筆（帶關卡名）');
+  ok(src(/Cloud\.track\('clear', cleared,/), '通關會記一筆（帶關卡名）');
   ok(src(/Cloud\.track\('alloc'\)/), '配點會記一筆');
   ok(src(/'\/api\/rpg\/event'/), '有 /api/rpg/event 端點');
 

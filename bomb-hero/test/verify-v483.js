@@ -20,7 +20,7 @@ const HEAD_END = src.indexOf('</head>');
 const HEAD = src.slice(0, HEAD_END > 0 ? HEAD_END : 20000);
 
 head('① 標題區的 DOM 結構');
-ok(/<img class="title-logo" id="titleLogo"[^>]*src="spr\/title-logo\.webp"/.test(src), '#titleLogo 仍指向 spr/title-logo.webp');
+ok(/<img class="title-logo" id="titleLogo"[^>]*src="spr\/title-logo\.webp(\?[^"]*)?"/.test(src), '#titleLogo 仍指向 spr/title-logo.webp');
 ok(/id="titleLogo"[^>]*onerror="window\.__titleLogoFail&&window\.__titleLogoFail\(\)"/.test(src), '#titleLogo 有 inline onerror 兜底');
 const wrap = (src.match(/<div class="titlewrap">[\s\S]*?<\/div>\s*<\/div>/) || [''])[0];
 ok(/id="titleFallback"/.test(wrap), '替身 #titleFallback 就在 .titlewrap 裡面');

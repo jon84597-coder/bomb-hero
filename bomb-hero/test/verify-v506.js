@@ -90,13 +90,13 @@ ok(w >= 600 && w <= 1000 && h > 0, '寬度 ' + w + '×' + h + '（夠大又不�
 ok(w / (h || 1) > 1.4 && w / (h || 1) < 2.0, '長寬比 ' + (w / (h || 1)).toFixed(2) + '（徽章構圖，不會太瘦長）');
 const logoImgs = src.match(/<img[^>]*class="title-logo"/g) || [];
 ok(logoImgs.length === 1, '靜態 <img> 只有 #titleLogo 這一個（其餘是 JS 動態產生的頭像）');
-ok(/<img class="title-logo" id="titleLogo"[^>]*src="spr\/title-logo.webp"/.test(src), '#titleLogo 指向 spr/title-logo.webp');
+ok(/<img class="title-logo" id="titleLogo"[^>]*src="spr\/title-logo.webp(\?[^"]*)?"/.test(src), '#titleLogo 指向 spr/title-logo.webp');
 ok(fs.readFileSync(path.join(ROOT, 'spr', '_list.json'), 'utf8').indexOf('title-logo.webp') > 0,
   'title-logo.webp 仍在預熱清單（spr/_list.json）裡');
 
 head('④ 對戰選角＝RPG 人物卡');
 ok(/'<div class="ppf">'/.test(src), '卡片有獨立的人物框 .ppf');
-ok(/<canvas class="chpv" width="132" height="120" data-ch=/.test(src), '頭像用 CharPreview 的 .chpv（132×120，跟選角畫面同一套）');
+ok(/<canvas class="chpv" width="220" height="200" data-ch=/.test(src), '頭像用 CharPreview 的 .chpv（220×200，v5.7 起改高解析度）');
 ok(/class="arr l"/.test(src) && /class="arr r"/.test(src), '換角箭頭壓在頭像左右（.arr.l／.arr.r）');
 ok(/data-ai="' \+ i \+ '" class="aibtn/.test(src), '玩家／AI 切換鈕還在（data-ai）');
 ok(!/'<div class="pw">'/.test(src), '框底下不再輸出任何說明文字（.pw 整行移除）');
@@ -115,7 +115,16 @@ ok(/\.ppf canvas\.chpv\{display:block;width:100%/.test(src), '頭像吃滿卡片
 
 head('⑤ 版號與資料同步');
 const V = (src.match(/const VERSION = '([\d.]+)'/) || [])[1];
-ok(V === '5.6', 'VERSION = ' + V);
+// 不要把版號寫死 —— 之後每一版都要能跑（只驗「不低於 5.6」且格式是純數字）
+function vnum2(v) { return String(v).split('.').map(function (n) { return parseInt(n, 10) || 0; }); }
+function vlt2(a, b) {
+  const A = vnum2(a), B2 = vnum2(b);
+  for (let i = 0; i < Math.max(A.length, B2.length); i++) {
+    if ((A[i] || 0) !== (B2[i] || 0)) return (A[i] || 0) < (B2[i] || 0);
+  }
+  return false;
+}
+ok(/^\d+(\.\d+)*$/.test(V || '') && !vlt2(V, '5.6'), 'VERSION = ' + V + '（純數字且不低於 5.6）');
 ok(src.indexOf('<span id="verTxt">' + V + '</span>') > 0, '首頁版本文字同步 ' + V);
 ok(src.indexOf('<span id="verLogVer">' + V + '</span>') > 0, '版本面板標題同步 ' + V);
 const vl = (src.match(/VERSION_LOG = \[\s*\{ v: '([\d.]+)'/) || [])[1];
