@@ -24,7 +24,7 @@ const DT = 1 / 60;
 head('1. 作者公告不再蓋住選單（這是「按鈕點不到」的元凶）');
 {
   // 先把 CSS 註解拿掉，否則「舊版是 position:fixed」這種說明文字會被誤判
-  const cssNoCmt = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const cssNoCmt = css.replace(/(?<![\w\/])\/\*[\s\S]*?\*\//g, '');
   // 只取獨立的 `.annbox {` 規則（v4.23 起還有 `.toprow .annbox {`，別抓錯）
   const m = cssNoCmt.match(/\n\s*\.annbox \{([\s\S]*?)\}/);
   const block = m ? m[1] : '';
@@ -43,7 +43,7 @@ head('1. 作者公告不再蓋住選單（這是「按鈕點不到」的元凶�
 
 head('2. 內容比視窗高時，頂端不會被切掉');
 {
-  ok(!/body \{[\s\S]{0,200}?align-items:\s*center/.test(css.replace(/\/\*[\s\S]*?\*\//g, '')), 'body 不再用 align-items:center（會把頂端推到畫面外）');
+  ok(!/(?:^|\n)\s*body \{[\s\S]{0,200}?align-items:\s*center/.test(css.replace(/(?<![\w\/])\/\*[\s\S]*?\*\//g, '')), 'body 不再用 align-items:center（會把頂端推到畫面外；只看真正的 body 選擇器，.bhbody 之類不算）');
   ok(/align-items:\s*flex-start/.test(css), 'body 改成靠上對齊');
   ok(/\.wrap \{[^}]*margin-block:\s*auto/.test(css), '.wrap 用 auto margin 置中（空間不夠時自動靠上）');
 }
@@ -61,7 +61,7 @@ head('3. 公告可以展開／收合');
 head('4. 商店／RPG／帳號：先切畫面，再畫內容');
 {
   // 原始碼順序鎖：Screen.show 必須排在 render 之前
-  const css1 = css.replace(/\/\*[\s\S]*?\*\//g, '');        // 註解不列入順序判斷
+  const css1 = css.replace(/(?<![\w\/])\/\*[\s\S]*?\*\//g, '');        // 註解不列入順序判斷
   const shopAt = css1.indexOf('const Shop = (function ()');
   const shopOpen = css1.slice(css1.indexOf('function open() {', shopAt), css1.indexOf('function open() {', shopAt) + 700);
   ok(shopOpen.indexOf("Screen.show('shop')") > 0, 'Shop.open 有切到商店畫面');

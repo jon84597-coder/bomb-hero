@@ -25,7 +25,12 @@ function parse(out) {
     const ff = ln.match(/(\d+)\s*(?:項)?\s*失敗/);
     if (pf) { pass = +pf[1]; fail = ff ? +ff[1] : 0; break; }
     // 「通過 97 項」「通過 28」
-    if ((m = ln.match(/通過\s*(\d+)\s*(?:項)?/))) { pass = +m[1]; fail = 0; break; }
+    if ((m = ln.match(/通過\s*(\d+)\s*(?:項)?/))) {
+      pass = +m[1];
+      const f2 = ln.match(/失敗\s*(\d+)/);   // 「通過 76 項，失敗 7 項」不能當成 0 失敗
+      fail = f2 ? +f2[1] : 0;
+      break;
+    }
   }
   return { pass, fail };
 }

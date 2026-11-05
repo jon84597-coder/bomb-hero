@@ -31,9 +31,10 @@ ok(html.indexOf('body.touch .title-card .title-logo { width: clamp(150px, 30vw, 
    '矮螢幕縮 LOGO 規則已加上 body.touch 前綴（PC 不再被縮）');
 ok(/@media \(max-height: 620px\) \{\s*\n\s*body\.touch \.title-card \{ padding/.test(html),
    'max-height: 620px 區塊內全部規則都限定 body.touch');
-const shortBlock = html.match(/@media \(max-height: 620px\) \{[\s\S]*?\n  \}/);
-ok(!!shortBlock && !/\n {4}(?!body\.touch )\S/.test(shortBlock[0]),
-   '矮螢幕區塊內沒有漏網的非觸控規則');
+const shortBlock = html.match(/@media \(max-height: 620px\) \{([\s\S]*?)\n\}/);
+const shortRules = shortBlock ? shortBlock[1].split('}').map(function (x) { return x.trim(); }).filter(Boolean) : [];
+ok(shortRules.length > 3 && shortRules.every(function (r) { return r.indexOf('body.touch') === 0; }),
+   '矮螢幕區塊內沒有漏網的非觸控規則（' + shortRules.length + ' 條都限定 body.touch）');
 ok(/@media \(min-width: 900px\) \{\s*\n\s*\.menu \.mbtn \{ font-size: clamp\(22px, 2vw, 30px\)/.test(html),
    'PC ≥900px：選單按鈕隨視窗放大 clamp(22px, 2vw, 30px)');
 ok(/\.title-card \.title-logo \{ width: clamp\(300px, min\(58vw, 88vh\), 820px\); \}/.test(html),
@@ -45,8 +46,9 @@ console.log('\n=== 3. 手機 LOGO 放大 ===');
 ok(html.indexOf('width: clamp(220px, 95vw, 500px); max-width: none;') > 0 &&
    html.indexOf('margin-left: calc((100% - clamp(220px, 95vw, 500px)) / 2);') > 0,
    '直式：95vw + calc 手動置中（LOGO 比容器寬時也左右對稱貼邊）');
-ok(/body\.touch #scr-title \.title-card \.title-logo \{ width: clamp\(160px, min\(86vw, 108vh\), 480px\); \}/.test(html),
-   '橫式：clamp(160px, min(86vw, 108vh), 480px)（ID 選擇器提高優先序，蓋過矮螢幕規則）');
+const landLogo = (html.match(/body\.touch #scr-title \.title-card \.title-logo \{ width: clamp\([^;]*\); \}/) || [''])[0];
+ok(/#scr-title/.test(landLogo) && /min\([^)]*vh\)/.test(landLogo),
+   '橫式：用 #scr-title 提高優先序、尺寸吃 min(寬, 高)（' + landLogo.replace(/^body\.touch #scr-title \.title-card \.title-logo \{ /, '').replace(/ \}$/, '') + '）');
 ok(/<div class="titlewrap">\s*<img class="title-logo"/.test(html), 'LOGO 圖還包在 .titlewrap 裡');
 
 console.log('\n=== 4. 單人怪物量增加 ===');

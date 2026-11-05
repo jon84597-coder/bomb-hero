@@ -18,7 +18,7 @@ function ok(cond, msg) {
 function head(t) { console.log('\n=== ' + t + ' ==='); }
 
 const src = html.replace(/\r/g, '');
-const noCmt = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+const noCmt = src.replace(/(?<![\w\/])\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const swjs = fs.readFileSync(__dirname + '/../sw.js', 'utf8').replace(/\r/g, '');
 
 /* ------------------------------------------------------------------ 1 */
@@ -82,7 +82,7 @@ head('3. 首頁不再重複一顆「帳號登入」大按鈕');
   // v4.81：右上角 acctChip 一直是常駐入口，首頁那顆等於第二個門，已移除
   ok(src.indexOf('id="btnAcctBig"') < 0, '首頁的大顆「帳號登入」已移除（不會有兩個入口）');
   ok(src.indexOf('id="acctChip"') > 0, '右上角帳號膠囊仍在（唯一入口）');
-  ok(src.indexOf("$id('acctChip').addEventListener('click'") > 0, '膠囊有綁 click');
+  ok(/const chip = \$id\('acctChip'\);\s*\n\s*if \(chip\) chip\.addEventListener\('click'/.test(src), '膠囊有綁 click（點下去開綁定視窗）');
   const seg = src.slice(src.indexOf('id="homeMenu"'), src.indexOf('id="btnStore"'));
   ok(seg.indexOf('帳號') < 0, '首頁選單區塊裡沒有帳號字樣');
 }
@@ -166,19 +166,19 @@ head('7. 卡在舊版時的「強制更新」後路');
 }
 
 /* ------------------------------------------------------------------ 8 */
-head('8. 10 語言都有 menu.acct');
+head('8. 每個語言都有 menu.acct（v5.0 起壓縮成「key|5 語言」一行）');
 {
-  const langs = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko', 'th', 'vi', 'ru', 'de', 'it'];
-  ok(langs.length === 10, '預期 10 個語言');
-  const cnt = (src.match(/'menu\.acct': /g) || []).length;
-  ok(cnt === 10, "'menu.acct' 出現 " + cnt + ' 次（要 10）');
-  const cnt2 = (src.match(/'menu\.acct\.sub': /g) || []).length;
-  ok(cnt2 === 10, "'menu.acct.sub' 出現 " + cnt2 + ' 次（要 10）');
-  const vals = src.match(/'menu\.acct': '([^']*)'/g) || [];
-  ok(vals.every(v => v.replace(/'menu\.acct': '/, '').replace(/'$/, '').trim().length > 2),
-    '每個語言都有實際文字（不是空字串）');
-  const subs = src.match(/'menu\.acct\.sub': '([^']*)'/g) || [];
-  ok(subs.every(v => v.length > 24), '每個語言的副標都有內容');
+  const nLang = (src.match(/const LANGS = \[([\s\S]*?)\];/) || [null, ''])[1].split(/\{ id: /).length - 1;
+  ok(nLang === 5, '目前 ' + nLang + ' 種語言（v5.0 從 10 種精簡）');
+  function row(k) {
+    const m = new RegExp('^' + k.replace(/\./g, '\\.') + '\\|([^\\n]*)', 'm').exec(src);
+    return m ? m[1].split('|') : null;
+  }
+  const a = row('menu.acct'), b2 = row('menu.acct.sub');
+  ok(a && a.length === nLang, "'menu.acct' 有 " + (a ? a.length : 0) + ' 欄（要 ' + nLang + '）');
+  ok(b2 && b2.length === nLang, "'menu.acct.sub' 有 " + (b2 ? b2.length : 0) + ' 欄（要 ' + nLang + '）');
+  ok(a && a.every(function (v) { return v.trim().length > 2; }), '每個語言都有實際文字（不是空字串）');
+  ok(b2 && b2.every(function (v) { return v.trim().length > 10; }), '每個語言的副標都有內容');
 }
 
 /* ------------------------------------------------------------------ 8 */

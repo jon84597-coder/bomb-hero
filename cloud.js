@@ -396,6 +396,47 @@ function sanitizeSave(obj) {
     }
   }
   if (/^\d{4}-W\d{2}:\d{1,9}$/.test(String(gf.wbest || ''))) out.gift.wbest = String(gf.wbest);
+  /* ---------------- v5.13：成就／排名基準／線上個人資料 ----------------
+     成就的計數器是「生涯統計」，只會往前 → 一律夾成 0~1e12 的非負整數；
+     解鎖與領取用集合存（key 是成就 id），最多 400 筆（目前 ~190 個成就）。
+     這裡刻意不做「合理上限」的業務判斷 —— 前端才是規則的主人，後端只擋爆量。 */
+  out.ach = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {} };
+  const ac = (o.ach && typeof o.ach === 'object') ? o.ach : null;
+  if (ac) {
+    if (ac.c && typeof ac.c === 'object') {
+      Object.keys(ac.c).slice(0, 80).forEach(function (k) {
+        if (!/^[A-Za-z0-9_]{1,24}$/.test(k)) return;
+        out.ach.c[k] = clampInt(ac.c[k], 0, 1e12, 0);
+      });
+    }
+    ['u', 'g', 'star3'].forEach(function (f) {
+      if (ac[f] && typeof ac[f] === 'object') {
+        Object.keys(ac[f]).slice(0, 400).forEach(function (k) {
+          if (/^[A-Za-z0-9_\-]{1,24}$/.test(k)) out.ach[f][k] = 1;
+        });
+      }
+    });
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(ac.lastDay || ''))) out.ach.lastDay = String(ac.lastDay);
+  }
+  out.rank = { v: 1, week: '', base: {}, claimed: '' };
+  const rk = (o.rank && typeof o.rank === 'object') ? o.rank : null;
+  if (rk) {
+    if (/^\d{4}-W\d{2}$/.test(String(rk.week || ''))) out.rank.week = String(rk.week);
+    if (rk.base && typeof rk.base === 'object') {
+      Object.keys(rk.base).slice(0, 20).forEach(function (k) {
+        if (!/^[A-Za-z]{2,12}$/.test(k)) return;
+        out.rank.base[k] = clampInt(rk.base[k], 0, 1e12, 0);
+      });
+    }
+    if (/^\d{4}-W\d{2}$/.test(String(rk.claimed || ''))) out.rank.claimed = String(rk.claimed);
+  }
+  out.soc = { gender: '', region: '', bio: '' };
+  const so = (o.soc && typeof o.soc === 'object') ? o.soc : null;
+  if (so) {
+    out.soc.gender = String(so.gender || '').slice(0, 8);
+    out.soc.region = String(so.region || '').slice(0, 12);
+    out.soc.bio = String(so.bio || '').slice(0, 24);
+  }
   return out;
 }
 
@@ -523,7 +564,10 @@ function createStore(dir, persist, remote) {
   // v5.5：visits＝拜訪紀錄（歷史／當日人數）。跟帳號同一份檔一起 flush，
   //   分片推送時是獨立的一個 key，所以改一個數字不會重推全部帳號。
   const db = { v: 1, accounts: {}, devices: {}, tamper: 0, created: Date.now(), lb: { v: 1, days: {} }, announce: null,
-    visits: { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() } };
+    visits: { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() },
+    // v5.13：排名（十項總榜＋週榜）與線上玩家（名單／好友／私訊）
+    rank: { v: 1, week: '', all: {}, wk: {}, claims: {} },
+    social: { v: 1, players: {}, dm: {}, dmN: 0 } };
   let timer = null;
   let dirty = false;
   let retry = 0;
@@ -558,7 +602,9 @@ function createStore(dir, persist, remote) {
       meta: { v: db.v, tamper: db.tamper, created: db.created, announce: db.announce, sec: db.sec || '' },
       accounts: { accounts: db.accounts, devices: db.devices },
       lb: db.lb,
-      visits: db.visits || { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() }   // v5.5：拜訪紀錄
+      visits: db.visits || { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() },  // v5.5：拜訪紀錄
+      rank: db.rank || { v: 1, week: '', all: {}, wk: {}, claims: {} },              // v5.13：排名
+      social: db.social || { v: 1, players: {}, dm: {}, dmN: 0 }                     // v5.13：線上玩家
     };
   }
   /* v5.11：舊資料修補 —— 早期版本的帳號物件「只用物件鍵當索引」，沒有把 id 寫進欄位。
@@ -589,6 +635,16 @@ function createStore(dir, persist, remote) {
       return true;
     }
     if (key === 'lb') { db.lb = val.days ? val : { v: 1, days: {} }; return true; }
+    if (key === 'rank') {
+      db.rank = (val && typeof val === 'object' && val.all) ? val : { v: 1, week: '', all: {}, wk: {}, claims: {} };
+      return true;
+    }
+    if (key === 'social') {
+      db.social = (val && typeof val === 'object') ? val : { v: 1, players: {}, dm: {}, dmN: 0 };
+      if (!db.social.players) db.social.players = {};
+      if (!db.social.dm) db.social.dm = {};
+      return true;
+    }
     if (key === 'visits') {
       db.visits = (val && typeof val === 'object') ? val : { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() };
       return true;
@@ -619,6 +675,8 @@ function createStore(dir, persist, remote) {
       db.sec = typeof obj.sec === 'string' ? obj.sec : '';
       db.lb = obj.lb && obj.lb.days ? obj.lb : { v: 1, days: {} };   // v4.80：排行榜
       db.visits = (obj.visits && typeof obj.visits === 'object') ? obj.visits : db.visits;   // v5.5：拜訪紀錄
+      db.rank = (obj.rank && typeof obj.rank === 'object') ? obj.rank : db.rank;             // v5.13
+      db.social = (obj.social && typeof obj.social === 'object') ? obj.social : db.social;    // v5.13
     } catch (e) {
       // 壞檔 → 備份起來再看，不要讓伺服器起不來
       try { fs.renameSync(file, file + '.bad-' + Date.now()); } catch (e2) {}
@@ -1463,6 +1521,188 @@ function createCloud(options) {
     };
   }
 
+  /* ================================================================
+   * v5.13：排名（/api/rank/*）＆ 線上玩家（/api/social/*）
+   * ----------------------------------------------------------------
+   * 這兩組刻意「不帶 cookie」，身分用 deviceId 推導：
+   *   · 遊戲可能放在 GitHub Pages（純靜態），跨網域帶不了 session cookie
+   *   · pid = sha256(類別|deviceId|secret) 前 10 碼 → 客戶端無法指定別人的 pid
+   * 排名：總榜只增不減（取 max）；週榜每週一 08:00（UTC+8）重置，前 10 名有金幣。
+   * 線上：150 秒內有動靜＝在線；好友／邀請／封鎖都存在 player 物件裡。
+   * ================================================================ */
+  const RANK_CATS = { soloKill: 1, soloBoss: 1, rpgKill: 1, rpgBoss: 1, brKill: 1, brWin: 1, btKill: 1, btWin: 1, onKill: 1, onWin: 1 };
+  const RANK_REWARD = [1000, 700, 500, 350, 350, 200, 200, 200, 200, 200];
+  const RANK_MAX = 4000;
+  const SOC_TTL = 150000;              // 在線判定：150 秒
+  const SOC_KEEP = 7 * 86400000;       // 七天沒來就清掉
+  const SOC_MAX = 600;                 // 最多記 600 個玩家
+  const DM_MAX = 120, DM_KEEP = 3000;  // 每個對話留 120 則、最多 3000 個對話
+
+  function p2(n) { return (n < 10 ? '0' : '') + n; }
+  function wkNow() {
+    const u = new Date(Date.now() + 8 * 3600000);
+    const day = (u.getUTCDay() + 6) % 7;
+    const thu = new Date(Date.UTC(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate() - day + 3));
+    const year = thu.getUTCFullYear();
+    const jan1 = new Date(Date.UTC(year, 0, 1));
+    const week = 1 + Math.floor((thu - jan1) / 86400000 / 7);
+    return year + '-W' + p2(week);
+  }
+  function cleanName(s, n) {
+    const v = String(s == null ? '' : s).replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, n || 12);
+    return v || '無名玩家';
+  }
+  function pidOf(kind, dev) {
+    return (kind === 'p' ? 'p_' : 'r_') + sha256(kind + '|' + dev + '|' + secret).slice(0, 10);
+  }
+
+  function rankDb() {
+    if (!db.rank || typeof db.rank !== 'object') db.rank = { v: 1, week: '', all: {}, wk: {}, claims: {} };
+    const R = db.rank;
+    if (!R.all) R.all = {};
+    if (!R.wk) R.wk = {};
+    if (!R.claims) R.claims = {};
+    const w = wkNow();
+    if (R.week !== w) { R.week = w; R.wk = {}; R.claims = {}; }   // 換週：週榜與領取紀錄歸零
+    return R;
+  }
+  function rankTrim(R) {
+    const keys = Object.keys(R.all);
+    if (keys.length <= RANK_MAX) return;
+    keys.sort(function (a, b) { return (R.all[a].t || 0) - (R.all[b].t || 0); });
+    const drop = keys.length - RANK_MAX;
+    for (let i = 0; i < drop; i++) { delete R.all[keys[i]]; delete R.wk[keys[i]]; }
+  }
+  function rankPut(pid, name, ch, cats, week) {
+    const R = rankDb();
+    const a = R.all[pid] || (R.all[pid] = { n: '', ch: 0, c: {}, t: 0 });
+    a.n = cleanName(name, 12);
+    a.ch = clampInt(ch, 0, 7, 0);
+    a.t = Date.now();
+    for (const k in RANK_CATS) {
+      const v = clampInt(cats && cats[k], 0, 1e9, 0);
+      if (v > (a.c[k] | 0)) a.c[k] = v;
+    }
+    const b = R.wk[pid] || (R.wk[pid] = { n: a.n, ch: a.ch, c: {}, t: 0 });
+    b.n = a.n; b.ch = a.ch; b.t = a.t;
+    for (const k in RANK_CATS) {
+      const v = clampInt(week && week[k], 0, 1e9, 0);
+      if (v > (b.c[k] | 0)) b.c[k] = v;
+    }
+    rankTrim(R);
+    store.touch();
+    return R;
+  }
+  function rankList(cat, scope, limit) {
+    const R = rankDb();
+    const src = (scope === 'week') ? R.wk : R.all;
+    const out = [];
+    for (const pid in src) {
+      const p = src[pid];
+      const v = (p.c && p.c[cat]) | 0;
+      if (v > 0) out.push({ pid: pid, name: p.n || '無名玩家', ch: p.ch | 0, v: v, t: p.t || 0 });
+    }
+    out.sort(function (x, y) { return (y.v - x.v) || ((x.t || 0) - (y.t || 0)); });
+    return out.slice(0, limit || 50);
+  }
+  function weekScore(p) {
+    let n = 0;
+    for (const k in RANK_CATS) n += (p && p.c && p.c[k]) | 0;
+    return n;
+  }
+
+  function socDb() {
+    if (!db.social || typeof db.social !== 'object') db.social = { v: 1, players: {}, dm: {}, dmN: 0 };
+    const S = db.social;
+    if (!S.players) S.players = {};
+    if (!S.dm) S.dm = {};
+    if (!S.dmN) S.dmN = 0;
+    return S;
+  }
+  function socGet(pid) {
+    const S = socDb();
+    let me = S.players[pid];
+    if (!me) {
+      me = S.players[pid] = { n: '無名玩家', ch: 0, g: '', r: '', b: '', k: 'guest', join: Date.now(),
+        seen: 0, sec: 0, pts: 0, wins: 0, mode: '大廳', friends: [], reqs: [], blocks: [] };
+    }
+    if (!me.friends) me.friends = [];
+    if (!me.reqs) me.reqs = [];
+    if (!me.blocks) me.blocks = [];
+    return me;
+  }
+  function socApply(me, body) {
+    me.n = cleanName(body.name, 12);
+    me.ch = clampInt(body.ch, 0, 7, 0);
+    me.g = String(body.gender || '').slice(0, 8);
+    me.r = String(body.region || '').slice(0, 12);
+    me.b = String(body.bio || '').replace(/[\u0000-\u001f<>]/g, '').slice(0, 24);
+    me.k = (body.kind === 'member') ? 'member' : 'guest';
+    me.sec = clampInt(body.sec, 0, 1e9, 0);
+    me.pts = clampInt(body.pts, 0, 1e6, 0);
+    me.wins = clampInt(body.wins, 0, 1e6, 0);
+    me.mode = String(body.mode || '大廳').slice(0, 8);
+    me.seen = Date.now();
+    return me;
+  }
+  function socPrune(S) {
+    const now = Date.now();
+    const keys = Object.keys(S.players);
+    keys.forEach(function (k) {
+      const p = S.players[k];
+      if (!p) return;
+      if (now - (p.seen || 0) > SOC_KEEP && !(p.friends && p.friends.length)) delete S.players[k];
+    });
+    const left = Object.keys(S.players);
+    if (left.length <= SOC_MAX) return;
+    left.sort(function (a, b) { return (S.players[a].seen || 0) - (S.players[b].seen || 0); });
+    const drop = left.length - SOC_MAX;
+    for (let i = 0; i < drop; i++) delete S.players[left[i]];
+  }
+  function socPublic(pid, me) {
+    return { pid: pid, name: me.n, ch: me.ch | 0, kind: me.k, gender: me.g, region: me.r, bio: me.b,
+      join: me.join || 0, seen: me.seen || 0, sec: me.sec | 0, pts: me.pts | 0, wins: me.wins | 0, mode: me.mode };
+  }
+  function socOnline(pid, limit) {
+    const S = socDb();
+    const now = Date.now();
+    const mine = pid ? S.players[pid] : null;
+    const out = [];
+    for (const k in S.players) {
+      if (k === pid) continue;
+      const p = S.players[k];
+      if (!p || now - (p.seen || 0) > SOC_TTL) continue;
+      if (mine) {
+        if (mine.blocks.indexOf(k) >= 0) continue;             // 我封鎖的人不顯示
+        if ((p.blocks || []).indexOf(pid) >= 0) continue;      // 封鎖我的人也不顯示
+      }
+      out.push(socPublic(k, p));
+    }
+    out.sort(function (a, b) { return (b.seen || 0) - (a.seen || 0); });
+    return out.slice(0, limit || 80);
+  }
+  function socCount() {
+    const S = socDb();
+    const now = Date.now();
+    let n = 0;
+    for (const k in S.players) if (now - (S.players[k].seen || 0) <= SOC_TTL) n++;
+    return n;
+  }
+  function dmKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+  function dmList(a, b, limit) {
+    const S = socDb();
+    const arr = S.dm[dmKey(a, b)] || [];
+    return arr.slice(-Math.max(1, Math.min(200, limit || 60))).map(function (m) {
+      return { id: m.id, from: m.from, t: m.t, m: m.m };
+    });
+  }
+  function socOut(pid) {
+    const S = socDb();
+    const me = socGet(pid);
+    return { me: socPublic(pid, me), friends: me.friends.slice(0, 200), blocks: me.blocks.slice(0, 200),
+      reqs: me.reqs.slice(0, 100), list: socOnline(pid, 80), total: socCount() };
+  }
+
   async function handle(req, res, url) {
     const p = url.pathname;
     if (p.indexOf('/api/') !== 0) return false;
@@ -1473,7 +1713,9 @@ function createCloud(options) {
     const isShare = p.indexOf('/api/share/') === 0;
     const isLb = p.indexOf('/api/lb/') === 0;              // v4.80：每日挑戰排行榜
     const isVisit = (p === '/api/visit');                  // v5.5：拜訪紀錄（不需要登入）
-    if (!isAuth && !isRpg && !isAdmin && !isShare && !isLb && !isVisit) return false;
+    const isRank = p.indexOf('/api/rank/') === 0;          // v5.13：十項排名（免登入、CORS）
+    const isSoc = p.indexOf('/api/social/') === 0;         // v5.13：線上玩家／好友／私訊（免登入、CORS）
+    if (!isAuth && !isRpg && !isAdmin && !isShare && !isLb && !isVisit && !isRank && !isSoc) return false;
 
     /* ---- 共用：全域 IP 限流（每分鐘 300 次，避免被腳本掃） ---- */
     if (!limiter.take('ip:' + ip(req), 300, 5).ok) {
@@ -1504,6 +1746,199 @@ function createCloud(options) {
         }, CORS_V), true;
       }
       if (isVisit) return fail(res, 404, 'NO_SUCH_API'), true;
+
+      /* ================= v5.13：排名 ================= */
+      const CORS_X = { 'Access-Control-Allow-Origin': '*' };
+      if (isRank) {
+        if (!gate(req, res, 'rank', 120, 2, CORS_X)) return true;
+        const body = (req.method === 'POST') ? await readJson(req, 8192) : null;
+        const dev = String((body && body.deviceId) || url.searchParams.get('deviceId') || '').slice(0, 128);
+
+        if (p === '/api/rank/submit' && req.method === 'POST') {
+          if (!body) return fail(res, 400, 'BAD_BODY', CORS_X), true;
+          if (dev.length < 6) return fail(res, 400, 'BAD_DEVICE', CORS_X), true;
+          const pid = pidOf('r', dev);
+          const R = rankPut(pid, body.name, body.ch, body.cats, body.week);
+          return send(res, 200, {
+            ok: true, week: R.week,
+            me: { pid: pid, cats: (R.all[pid] || {}).c || {}, week: (R.wk[pid] || {}).c || {} }
+          }, CORS_X), true;
+        }
+
+        if (p === '/api/rank/top' && req.method === 'GET') {
+          const cat = String(url.searchParams.get('cat') || 'soloKill');
+          if (!RANK_CATS[cat]) return fail(res, 400, 'BAD_CAT', CORS_X), true;
+          const scope = url.searchParams.get('scope') === 'week' ? 'week' : 'all';
+          const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get('limit'), 10) || 50));
+          const list = rankList(cat, scope, limit);
+          let me = null;
+          if (dev.length >= 6) {
+            const pid = pidOf('r', dev);
+            const R = rankDb();
+            const src = (scope === 'week') ? R.wk[pid] : R.all[pid];
+            let rank = 0;
+            for (let i = 0; i < list.length; i++) if (list[i].pid === pid) { rank = i + 1; break; }
+            me = { pid: pid, rank: rank, v: src ? ((src.c && src.c[cat]) | 0) : 0 };
+          }
+          return send(res, 200, { ok: true, cat: cat, scope: scope, week: rankDb().week, list: list, me: me }, CORS_X), true;
+        }
+
+        if (p === '/api/rank/claim' && req.method === 'POST') {
+          if (!body) return fail(res, 400, 'BAD_BODY', CORS_X), true;
+          if (dev.length < 6) return fail(res, 400, 'BAD_DEVICE', CORS_X), true;
+          const R = rankDb();
+          if (body.wk && String(body.wk) !== R.week) {
+            return fail(res, 409, 'WRONG_WEEK', Object.assign({ week: R.week }, CORS_X)), true;
+          }
+          const pid = pidOf('r', dev);
+          rankPut(pid, body.name, body.ch, {}, body.cats || body.week);   // 先把本週成績記下來
+          // 「活動排名」= 十項本週成績加總（單看一項會被某一種玩法吃死）
+          const arr = [];
+          for (const k in R.wk) arr.push({ pid: k, v: weekScore(R.wk[k]) });
+          arr.sort(function (x, y) { return y.v - x.v; });
+          let rank = 0;
+          for (let i = 0; i < arr.length; i++) if (arr[i].pid === pid) { rank = i + 1; break; }
+          const gold = (rank >= 1 && rank <= 10) ? RANK_REWARD[rank - 1] : 0;
+          R.claims[R.week] = R.claims[R.week] || {};
+          const already = !!R.claims[R.week][pid];
+          if (gold > 0 && !already) { R.claims[R.week][pid] = 1; store.touch(); }
+          return send(res, 200, {
+            ok: true, week: R.week, rank: rank, score: arr.length ? arr[Math.max(0, rank - 1)].v : 0,
+            gold: already ? 0 : gold, claimed: already || gold > 0
+          }, CORS_X), true;
+        }
+        return fail(res, 404, 'NO_SUCH_API', CORS_X), true;
+      }
+
+      /* ================= v5.13：線上玩家 / 好友 / 私訊 ================= */
+      if (isSoc) {
+        if (!gate(req, res, 'social', 180, 3, CORS_X)) return true;
+        const body = (req.method === 'POST') ? await readJson(req, 8192) : null;
+        const dev = String((body && body.deviceId) || url.searchParams.get('deviceId') || '').slice(0, 128);
+        if (dev.length < 6) return fail(res, 400, 'BAD_DEVICE', CORS_X), true;
+        const pid = pidOf('p', dev);
+
+        if (p === '/api/social/hb' && req.method === 'POST') {
+          if (!body) return fail(res, 400, 'BAD_BODY', CORS_X), true;
+          const me = socApply(socGet(pid), body);
+          socPrune(socDb());
+          store.touch();
+          const o = socOut(pid);
+          return send(res, 200, {
+            ok: true, me: o.me, total: o.total, list: o.list,
+            friends: o.friends, blocks: o.blocks, reqs: o.reqs
+          }, CORS_X), true;
+        }
+
+        if (p === '/api/social/list' && req.method === 'GET') {
+          if (url.searchParams.get('name')) {
+            // 只是路過（例如手機切回分頁）也順便更新一下在線時間，不必再打一次 hb
+            const g = socGet(pid);
+            g.n = cleanName(url.searchParams.get('name'), 12);
+            g.seen = Date.now();
+            store.touch();
+          }
+          const o = socOut(pid);
+          return send(res, 200, {
+            ok: true, me: o.me, total: o.total, list: o.list,
+            friends: o.friends, blocks: o.blocks, reqs: o.reqs
+          }, CORS_X), true;
+        }
+
+        if (p === '/api/social/act' && req.method === 'POST') {
+          if (!body) return fail(res, 400, 'BAD_BODY', CORS_X), true;
+          const S = socDb();
+          const me = socGet(pid);
+          const action = String(body.action || '');
+          const target = String(body.target || '').slice(0, 24);
+          if (!target) return fail(res, 400, 'NO_TARGET', CORS_X), true;
+          if (target === pid) return fail(res, 400, 'SELF', CORS_X), true;
+          const him = S.players[target];
+          if (!him) return fail(res, 404, 'NO_TARGET', CORS_X), true;
+          let note = '';
+          function rm(arr, v) { const i = arr.indexOf(v); if (i >= 0) arr.splice(i, 1); }
+          function add(arr, v, cap) { if (arr.indexOf(v) < 0 && arr.length < (cap || 200)) arr.push(v); }
+          if (action === 'block') {
+            add(me.blocks, target);
+            rm(me.friends, target); rm(him.friends, pid);
+            rm(me.reqs, target); rm(him.reqs, pid);
+            note = '已封鎖，對方不會出現在名單也不能私訊你';
+          } else if (action === 'unblock') {
+            rm(me.blocks, target);
+            note = '已解除封鎖';
+          } else if (action === 'friend') {
+            if (me.blocks.indexOf(target) >= 0) return fail(res, 403, 'BLOCKED', CORS_X), true;
+            if (me.friends.length >= 100) return fail(res, 400, 'LIMIT', CORS_X), true;
+            if ((him.reqs || []).indexOf(pid) >= 0) {
+              add(me.friends, target); add(him.friends, pid);
+              rm(me.reqs, target); rm(him.reqs, pid);
+              note = '你們成為好友了 🤝';
+            } else if (me.friends.indexOf(target) >= 0) {
+              note = '已經是好友了';
+            } else {
+              add(him.reqs, pid, 100);
+              note = '已送出好友邀請';
+            }
+          } else if (action === 'accept') {
+            if ((me.reqs || []).indexOf(target) >= 0) {
+              add(me.friends, target); add(him.friends, pid);
+              rm(me.reqs, target); rm(him.reqs, pid);
+              note = '已成為好友 🤝';
+            }
+          } else if (action === 'unfriend') {
+            rm(me.friends, target); rm(him.friends, pid);
+            rm(me.reqs, target); rm(him.reqs, pid);
+            note = '已移除好友';
+          } else {
+            return fail(res, 400, 'BAD_ACTION', CORS_X), true;
+          }
+          me.seen = Date.now();
+          store.touch();
+          return send(res, 200, { ok: true, note: note, friends: me.friends, blocks: me.blocks, reqs: me.reqs }, CORS_X), true;
+        }
+
+        if (p === '/api/social/dm' && req.method === 'GET') {
+          const withPid = String(url.searchParams.get('with') || '').slice(0, 24);
+          if (!withPid) return fail(res, 400, 'NO_TARGET', CORS_X), true;
+          const limit = Math.max(1, Math.min(200, parseInt(url.searchParams.get('limit'), 10) || 60));
+          const me = socGet(pid);
+          me.seen = Date.now();
+          return send(res, 200, { ok: true, list: dmList(pid, withPid, limit) }, CORS_X), true;
+        }
+
+        if (p === '/api/social/dm' && req.method === 'POST') {
+          if (!body) return fail(res, 400, 'BAD_BODY', CORS_X), true;
+          const S = socDb();
+          const me = socGet(pid);
+          const to = String(body.to || '').slice(0, 24);
+          const him = S.players[to];
+          if (!him) return fail(res, 404, 'NO_TARGET', CORS_X), true;
+          if (to === pid) return fail(res, 400, 'SELF', CORS_X), true;
+          if (me.blocks.indexOf(to) >= 0) return fail(res, 403, 'BLOCKED', CORS_X), true;
+          if ((him.blocks || []).indexOf(pid) >= 0) return fail(res, 403, 'BLOCKED_BY', CORS_X), true;
+          const text = String(body.text || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 60);
+          if (!text) return fail(res, 400, 'BAD_TEXT', CORS_X), true;
+          const key = dmKey(pid, to);
+          const arr = S.dm[key] || (S.dm[key] = []);
+          arr.push({ id: ++S.dmN, from: pid, t: Date.now(), m: text });
+          if (arr.length > DM_MAX) arr.splice(0, arr.length - DM_MAX);
+          const ks = Object.keys(S.dm);
+          if (ks.length > DM_KEEP) {
+            ks.sort(function (a, b) {
+              const A = S.dm[a] || [], B = S.dm[b] || [];
+              return ((A[A.length - 1] || {}).t | 0) - ((B[B.length - 1] || {}).t | 0);
+            });
+            const drop = ks.length - DM_KEEP;
+            for (let i = 0; i < drop; i++) delete S.dm[ks[i]];
+          }
+          me.seen = Date.now();
+          store.touch();
+          return send(res, 200, { ok: true, list: dmList(pid, to, 60) }, CORS_X), true;
+        }
+
+        return fail(res, 404, 'NO_SUCH_API', CORS_X), true;
+      }
+
 
       /* ---------------- v4.80：每日挑戰排行榜 ---------------- */
       // 這兩個端點刻意「不帶 cookie」：前端從 GitHub Pages（純靜態）也能直接跨網域讀寫，

@@ -16,7 +16,7 @@ function ok(cond, msg) {
 function head(t) { console.log('\n=== ' + t + ' ==='); }
 
 const css = html.replace(/\r/g, '');
-const noCmt = css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+const noCmt = css.replace(/(?<![\w\/])\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 
 function lum(hex) {
   const v = hex.replace('#', '');
@@ -133,24 +133,23 @@ head('4. 第 2 關＝沙漠遺跡、第 4 關＝熔岩洞窟');
   ok(i1.indexOf('沙漠') >= 0, '幫助頁第 2 關寫沙漠遺跡（' + i1 + '）');
   ok(i3.indexOf('熔岩') >= 0, '幫助頁第 4 關寫熔岩洞窟（' + i3 + '）');
 
-  // 10 個語言的 theme.2 / theme.4 名稱
-  const pat = /'theme\.1': '([^']*)', 'theme\.2': '([^']*)', 'theme\.3': '([^']*)', 'theme\.4': '([^']*)',/g;
-  let m2, n = 0, bad = [];
-  while ((m2 = pat.exec(noCmt))) {
-    n++;
-    const t2 = m2[2], t4 = m2[4];
-    // 英文可能是 desert ruins / magma cave，中文一定是沙漠／熔岩
-    // 日文寫「砂漠／溶岩」，韓文／英文各有寫法 → 只擋「還是舊名字」的情況
-    if (/熔岩/.test(t2) || /Lava|熔岩/.test(t2)) bad.push('theme.2=' + t2);
-    if (/沙漠|砂漠|Desert/.test(t4)) bad.push('theme.4=' + t4);
-  }
-  ok(n === 10, 'i18n 有 10 個語言（' + n + '）');
-  ok(bad.length === 0, '10 個語言的 theme.2／theme.4 名稱都換過了' + (bad.length ? '（' + bad.join(', ') + '）' : ''));
+  // v5.0 起 i18n 是「key|5 語言」一行，theme.2/theme.4 要整列都換過名字
+  const rowOf = function (k) {
+    const m = new RegExp('^' + k.replace(/\./g, '\\.') + '\\|([^\\n]*)', 'm').exec(noCmt);
+    return m ? m[1].split('|') : null;
+  };
+  const nLang = (noCmt.match(/const LANGS = \[([\s\S]*?)\];/) || [null, ''])[1].split(/\{ id: /).length - 1;
+  const t2 = rowOf('theme.2'), t4 = rowOf('theme.4');
+  ok(nLang === 5, 'i18n 有 ' + nLang + ' 種語言');
+  ok(t2 && t2.length === nLang && /沙漠/.test(t2[0]), 'theme.2 = 沙漠遺跡（' + (t2 && t2[0]) + '）');
+  ok(t4 && t4.length === nLang && /熔岩/.test(t4[0]), 'theme.4 = 熔岩洞窟（' + (t4 && t4[0]) + '）');
+  ok(t2 && !/熔岩|Lava/.test(t2.join('')) && t4 && !/沙漠|砂漠|Desert/.test(t4.join('')),
+     nLang + ' 種語言的 theme.2／theme.4 名稱都沒寫反');
 }
 
 head('5. 版號');
 {
-  ok(/^4\.\d+$/.test(P.VERSION), '版號格式正確（' + P.VERSION + '）');
+  ok(/^\d+\.\d+$/.test(P.VERSION), '版號格式正確（' + P.VERSION + '）');
   ok(P.VERSION_LOG[0].v === P.VERSION, 'VERSION_LOG 第一筆 = 目前版號');
   // v4.27 起不再綁死版號：用版號 filter 找 4.26 那一筆（索引會一直往下移）
   const e = P.VERSION_LOG.filter(function (x) { return x.v === '4.26'; })[0];

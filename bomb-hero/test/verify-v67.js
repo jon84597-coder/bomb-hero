@@ -20,7 +20,7 @@ function head(t) { console.log('\n=== ' + t + ' ==='); }
 
 const css = html.replace(/\r/g, '');
 const src = css;
-const noCmt = css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+const noCmt = css.replace(/(?<![\w\/])\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 
 head('1. 模組隔離（一段壞掉不會拖垮全部）');
 {
@@ -54,7 +54,7 @@ head('2. 開機錯誤收集器 + 首頁診斷卡');
   ok(/id="bootDiag"/.test(src), '首頁有 #bootDiag 診斷卡');
   ok(/id="bootDiagFix"/.test(src), '診斷卡有「強制更新」按鈕');
   ok(/id="bootDiagMore"/.test(src), '診斷卡有「顯示細節」按鈕');
-  const m = noCmt.match(/\n\s{2}\.bootdiag \{([\s\S]*?)\}/);
+  const m = noCmt.match(/\n\s*\.bootdiag \{([\s\S]*?)\}/);
   ok(!!m && !/position:\s*fixed/.test(m[1]), '診斷卡在正常排版裡（不是浮層）');
   ok(/\.bootdiag\.hide \{ display: none; \}/.test(noCmt), '診斷卡預設隱藏（沒事不會嚇到玩家）');
   ok(/setTimeout\(paint, 900\)/.test(noCmt) && /setTimeout\(paint, 2600\)/.test(noCmt),
@@ -63,7 +63,7 @@ head('2. 開機錯誤收集器 + 首頁診斷卡');
 
 head('3. 「版本更新內容」不再浮在選單上');
 {
-  const m = noCmt.match(/\n\s{2}\.verlogbtn \{([\s\S]*?)\}/);
+  const m = noCmt.match(/\n\s*\.verlogbtn \{([\s\S]*?)\}/);
   ok(!!m, '找得到 .verlogbtn 樣式');
   ok(m && !/position:\s*fixed/.test(m[1]), '.verlogbtn 不再是 position:fixed（以前會蓋住選單）');
   ok(!/body\.touch \.verlogbtn \{[^}]*top:/.test(noCmt), '手機不再用 top 硬壓位置');
@@ -109,11 +109,11 @@ head('5. 首頁選單分層（v4.81：6 張玩法卡 + 更多抽屜）');
   const grid = src.slice(src.indexOf('<div class="mgrid">'), src.indexOf('id="mDrawer"'));
   const cards = (grid.match(/class="mbtn/g) || []).length;
   ok(cards === 6, '首頁主玩法剛好 6 張卡（' + cards + '）');
-  ['btnSolo', 'btnBR', 'btnDaily', 'btnMulti', 'btnRpg', 'btnMoreMenu'].forEach(function (id) {
+  ['btnAdventure', 'btnBR', 'btnDaily', 'btnMulti', 'btnStore', 'btnMoreMenu'].forEach(function (id) {
     ok(grid.indexOf('id="' + id + '"') > 0, '卡片 #' + id + ' 在 grid 裡');
   });
   const drawer = src.slice(src.indexOf('id="mDrawer"'), src.indexOf('id="mDrawer"') + 900);
-  ['btnStore', 'btnHelp', 'btnSettings', 'btnQuit'].forEach(function (id) {
+  ['btnHelp', 'btnSettings', 'btnQuit'].forEach(function (id) {
     ok(drawer.indexOf('id="' + id + '"') > 0, '抽屜 #' + id + ' 收在裡面');
   });
   // 併掉的入口不能再出現在首頁

@@ -3827,6 +3827,159 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
   border-color: #46527a; box-shadow: none; filter: none; color: #9fb0cc;
 }
 .seg button:disabled { opacity: .45; }
+/* =====================================================================
+   v5.13：成就 / 排名 / 線上玩家 —— 三個面板共用一套外框
+   設計原則：
+     · 首頁是奶油色＋木頭框，面板不要做成深色後台，不然像另一個網站
+     · 手機版一律「滿版可捲」，不做雙欄（v4.90 後台的教訓）
+     · 面板本身吃 min(92vh, 900px)，內容自己捲 → 不會「看不到下面的東西」
+   ===================================================================== */
+.bhmodal { position: fixed; inset: 0; z-index: 78; display: none; align-items: center; justify-content: center;
+  padding: 12px; background: rgba(48, 26, 8, .52); backdrop-filter: blur(3px); }
+.bhmodal.on { display: flex; }
+.bhpanel { width: min(760px, 100%); height: min(92vh, 900px); display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #fffdf6, #fff6e4); border: 3px solid #e2c39a; border-radius: 20px;
+  box-shadow: 0 20px 46px rgba(60, 30, 0, .34); overflow: hidden; }
+.bhhead { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 11px 12px;
+  background: linear-gradient(180deg, #ffe9c4, #ffdca6); border-bottom: 2px solid #e2c39a; }
+.bhhead b { font-size: 16px; color: #7a3f10; }
+.bhhead .bhsub { font-size: 11.5px; color: #a1794c; font-weight: 700; }
+.bhx { margin-left: auto; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 10px; cursor: pointer;
+  border: 2px solid #d8b184; background: #fff8ea; color: #8a4a1c; font-size: 14px; font-weight: 900; }
+.bhx:active { transform: translateY(1px); }
+.bhtabs { flex: 0 0 auto; display: flex; gap: 6px; padding: 8px 10px; overflow-x: auto; background: #fff3dc;
+  border-bottom: 1px solid #f0dcc0; scrollbar-width: thin; }
+.bhtab { flex: 0 0 auto; padding: 6px 11px; border-radius: 999px; border: 2px solid #e6c8a0; background: #fffaf0;
+  color: #8a5b2c; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.bhtab.on { background: linear-gradient(180deg, #ffd27a, #f7a94a); border-color: #d98b2c; color: #4a2400;
+  box-shadow: 0 2px 0 #b9741c; }
+.bhbody { flex: 1 1 auto; overflow: auto; padding: 10px 12px 16px; -webkit-overflow-scrolling: touch; }
+.bhfoot { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+  background: #fff3dc; border-top: 1px solid #f0dcc0; font-size: 11.5px; color: #8a6a44; }
+.bhnote { padding: 9px 11px; border-radius: 12px; background: #fff2cf; border: 1px solid #efd39a;
+  color: #8a5b1c; font-size: 12px; line-height: 1.6; margin-bottom: 9px; }
+.bhnote.w { background: #ffe6d8; border-color: #f0b48c; color: #8a3a10; }
+.bhbtn { padding: 8px 13px; border-radius: 11px; border: 2px solid #d8b184; background: #fff8ea; color: #8a4a1c;
+  font-size: 12.5px; font-weight: 800; cursor: pointer; }
+.bhbtn.warm { background: linear-gradient(180deg, #ffd27a, #f6a63f); border-color: #d98b2c; color: #4a2400; }
+.bhbtn:disabled { opacity: .45; cursor: default; }
+
+/* ---------------- 成就 ---------------- */
+.achsum { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 10px;
+  border-radius: 14px; background: linear-gradient(135deg, #fff4d6, #ffe7b8); border: 2px solid #eccb95; }
+.achsum .big { font-size: 26px; font-weight: 900; color: #a9560f; line-height: 1; }
+.achsum .txt { font-size: 11.5px; color: #96703f; line-height: 1.5; }
+.achbarwrap { flex: 1 1 auto; min-width: 90px; height: 9px; border-radius: 999px; background: #f0dcc0; overflow: hidden; }
+.achbar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #ffc44d, #f4703c); transition: width .4s; }
+.achgrp { margin: 12px 0 6px; display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 900; color: #7a3f10; }
+.achgrp i { font-style: normal; font-size: 15px; }
+.achrow { display: flex; align-items: center; gap: 9px; padding: 8px 9px; border-radius: 12px;
+  background: #fffdf7; border: 1.5px solid #f1dfc4; margin-bottom: 6px; }
+.achrow.got { background: linear-gradient(90deg, #fff6dc, #fffdf5); border-color: #e8c37a; }
+.achrow.lock { opacity: .72; }
+.achico { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center;
+  justify-content: center; font-size: 17px; background: #f6e6c9; border: 1.5px solid #e6cba3; }
+.achrow.got .achico { background: linear-gradient(180deg, #ffe08a, #f7b64a); border-color: #d99a2c; }
+.achmain { flex: 1 1 auto; min-width: 0; }
+.achname { font-size: 12.5px; font-weight: 900; color: #6b3a12; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.achname .lvt { font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 999px; background: #f0dcc0; color: #8a5b2c; }
+.achdesc { font-size: 10.5px; color: #a1815a; margin-top: 1px; }
+.achprog { height: 5px; border-radius: 999px; background: #f0e3cd; margin-top: 5px; overflow: hidden; }
+.achprog i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #ffc44d, #f4703c); }
+.achrw { flex: 0 0 auto; text-align: right; }
+.achgold { font-size: 11px; font-weight: 900; color: #b8791c; white-space: nowrap; }
+.achget { margin-top: 3px; padding: 4px 9px; border-radius: 9px; border: 0; cursor: pointer; font-size: 11px;
+  font-weight: 900; color: #4a2400; background: linear-gradient(180deg, #ffd67a, #f7a63c); box-shadow: 0 2px 0 #c07f1c; }
+.achget:active { transform: translateY(1px); box-shadow: none; }
+.achdone { font-size: 10.5px; font-weight: 900; color: #2f8b52; }
+
+/* 稱號：頭上的名牌（成就分累積到門檻就換一個） */
+.achtt { display: grid; grid-template-columns: 1fr; gap: 7px; }
+.ttrow { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 13px;
+  background: #fffdf7; border: 1.5px solid #f1dfc4; }
+.ttrow.on { border-color: #d99a2c; box-shadow: 0 0 0 2px #ffe4a8 inset; }
+.ttframe { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center;
+  justify-content: center; font-size: 20px; border: 2px solid transparent; }
+.ttmeta { flex: 1 1 auto; min-width: 0; }
+.ttname { font-size: 13px; font-weight: 900; }
+.ttneed { font-size: 10.5px; color: #a1815a; margin-top: 2px; }
+
+/* ---------------- 排名 ---------------- */
+.rkbar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 9px; }
+.rkpills { display: flex; gap: 6px; flex-wrap: wrap; }
+.rkp { padding: 5px 10px; border-radius: 999px; border: 1.5px solid #e6c8a0; background: #fffaf0; color: #8a5b2c;
+  font-size: 11.5px; font-weight: 800; cursor: pointer; }
+.rkp.on { background: #ffe0a6; border-color: #d99a2c; color: #6b3a10; }
+.rklist { display: flex; flex-direction: column; gap: 5px; }
+.rkrow { display: flex; align-items: center; gap: 9px; padding: 7px 10px; border-radius: 11px;
+  background: #fffdf7; border: 1.5px solid #f2e2c8; font-size: 12.5px; }
+.rkrow.me { background: linear-gradient(90deg, #fff2cf, #fffdf7); border-color: #e5bd75; }
+.rkno { flex: 0 0 auto; width: 26px; text-align: center; font-weight: 900; color: #a1794c; }
+.rkno.g1 { color: #c98800; } .rkno.g2 { color: #8b97a6; } .rkno.g3 { color: #b06a3a; }
+.rkname { flex: 1 1 auto; min-width: 0; font-weight: 800; color: #6b3a12; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.rkval { flex: 0 0 auto; font-weight: 900; color: #a9560f; }
+.rkempty { padding: 22px 10px; text-align: center; color: #a1815a; font-size: 12.5px; }
+.rkweek { padding: 8px 10px; border-radius: 11px; background: #eef8ee; border: 1.5px solid #bfe0bf;
+  color: #2f6b3a; font-size: 11.5px; line-height: 1.6; margin-bottom: 9px; }
+
+/* ---------------- 線上玩家 ---------------- */
+.onbar { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; font-size: 11.5px; color: #8a6b45; }
+.ondot { width: 8px; height: 8px; border-radius: 50%; background: #39c46a; box-shadow: 0 0 0 3px rgba(57,196,106,.18); }
+.onlist { display: flex; flex-direction: column; gap: 6px; }
+.onrow { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 12px;
+  background: #fffdf7; border: 1.5px solid #f2e2c8; cursor: pointer; }
+.onrow:active { background: #fff3dc; }
+.onrow.blk { opacity: .5; }
+.onav { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 15px; background: #ffe7bd; border: 2px solid #e6c48f; }
+.onmeta { flex: 1 1 auto; min-width: 0; }
+.onname { font-size: 12.5px; font-weight: 900; color: #6b3a12; display: flex; align-items: center; gap: 5px; }
+.onname em { font-style: normal; font-size: 9.5px; font-weight: 900; padding: 1px 5px; border-radius: 999px;
+  background: #e7eefc; color: #3a5ea8; }
+.onname em.g { background: #eee9f8; color: #6a4aa0; }
+.onsub { font-size: 10.5px; color: #a1815a; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.onmode { flex: 0 0 auto; font-size: 10px; font-weight: 900; color: #8a5b2c; background: #fff0d2;
+  border: 1px solid #edd0a2; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+.ondetail { padding: 12px; border-radius: 14px; background: #fffdf7; border: 2px solid #eccb95; margin-bottom: 9px; }
+.odtop { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.odav { width: 52px; height: 52px; border-radius: 15px; display: flex; align-items: center; justify-content: center;
+  font-size: 24px; background: linear-gradient(180deg, #ffe7bd, #ffd08a); border: 2px solid #e0b478; }
+.odname { font-size: 16px; font-weight: 900; color: #6b3a12; }
+.odid { font-size: 10.5px; color: #a1815a; margin-top: 2px; letter-spacing: .02em; }
+.odgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.odcell { padding: 7px 9px; border-radius: 10px; background: #fff6e4; border: 1px solid #f0dcb9; font-size: 11px;
+  color: #8a6b45; display: flex; justify-content: space-between; gap: 6px; }
+.odcell b { color: #6b3a12; }
+.odact { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
+.chatbox { display: flex; flex-direction: column; height: 100%; min-height: 240px; }
+.chatlog { flex: 1 1 auto; overflow: auto; display: flex; flex-direction: column; gap: 5px; padding: 6px 2px 10px; }
+.chatmsg { max-width: 82%; padding: 6px 10px; border-radius: 12px; font-size: 12px; line-height: 1.5; word-break: break-word; }
+.chatmsg.me { align-self: flex-end; background: linear-gradient(180deg, #ffd980, #f8b04a); color: #4a2400; border-bottom-right-radius: 4px; }
+.chatmsg.you { align-self: flex-start; background: #fff; border: 1.5px solid #efdcc0; color: #6b3a12; border-bottom-left-radius: 4px; }
+.chatmsg.sys { align-self: center; background: transparent; color: #a1815a; font-size: 10.5px; }
+.chatrow { flex: 0 0 auto; display: flex; gap: 6px; padding-top: 8px; border-top: 1px solid #f0dcc0; }
+.chatin { flex: 1 1 auto; min-width: 0; padding: 9px 11px; border-radius: 11px; border: 2px solid #e6c8a0;
+  background: #fffdf7; font-size: 12.5px; color: #5b3a1e; }
+.onprof { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+@media (max-width: 520px) {
+  .bhmodal { padding: 0; }
+  .bhpanel { width: 100%; height: 100%; max-height: 100%; border-radius: 0; border-left: 0; border-right: 0; }
+  .odgrid, .onprof { grid-template-columns: 1fr; }
+}
+
+/* 首頁三顆社群入口（成就／排名／線上玩家） */
+.quickrow { display: flex; gap: 7px; margin: 9px 0 4px; }
+.qchip { flex: 1 1 0; position: relative; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 6px; border-radius: 13px; border: 2px solid #e6c8a0; background: #fffaf0; color: #8a5b2c;
+  font-family: inherit; font-size: 12.5px; font-weight: 900; cursor: pointer;
+  box-shadow: 0 2px 0 rgba(180, 130, 60, .18); }
+.qchip:active { transform: translateY(1px); box-shadow: none; }
+.qchip .qico2 { font-size: 15px; }
+.qdot { position: absolute; top: 4px; right: 6px; width: 8px; height: 8px; border-radius: 50%;
+  background: #f24d3d; box-shadow: 0 0 0 2px #fff6e0; }
+.qdot-g { background: #39c46a; }
+
 </style>
 </head>
 <body>
@@ -3876,7 +4029,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.12</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.13</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -3918,7 +4071,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.12</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.13</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -3940,6 +4093,14 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
           <button class="drawbtn" id="btnSettings" type="button" data-ico="⚙️">設定</button>
           <button class="drawbtn" id="btnQuit" type="button" data-ico="🚪">離開遊戲</button>
         </div>
+  <!-- v5.13：社群三入口（成就／排名／線上玩家）——刻意放在 .mgrid 外面，
+       因為 v4.81 的測試斷言「主玩法剛好 6 張卡」，塞進去會直接弄壞版面規則 -->
+  <div class="quickrow" id="quickRow">
+    <button class="qchip" id="btnAch" type="button" title="成就與稱號"><span class="qico2">🏆</span><b>成就</b><i class="qdot hide" id="achDot"></i></button>
+    <button class="qchip" id="btnRank" type="button" title="各項排行榜"><span class="qico2">📊</span><b>排名</b></button>
+    <button class="qchip" id="btnPlayers" type="button" title="線上玩家名單"><span class="qico2">👥</span><b>線上玩家</b><i class="qdot qdot-g hide" id="onDot"></i></button>
+  </div>
+
       </div>
       <!-- v5.11：支援平台（純顯示，不可點）＋ 作者 FB（網址取自作者公告的 ANN_URL） -->
       <div class="platrow" id="platRow">
@@ -3998,6 +4159,55 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
       <button class="qbtn ghost" id="bhPickBack" type="button" style="margin-top:10px">← 返回</button>
     </div>
   </div>
+
+  <!-- ===================== v5.13：成就 ===================== -->
+  <div class="bhmodal" id="achModal" role="dialog" aria-modal="true" aria-label="成就">
+    <div class="bhpanel">
+      <div class="bhhead">
+        <b>🏆 成就</b><span class="bhsub" id="achPts">0 分</span>
+        <button class="bhx" id="achX" type="button" aria-label="關閉">✕</button>
+      </div>
+      <div class="bhtabs" id="achTabs"></div>
+      <div class="bhbody" id="achBody"></div>
+      <div class="bhfoot">
+        <button class="bhbtn warm" id="achClaimAll" type="button">💰 一鍵領取</button>
+        <span id="achHint">完成成就就能領金幣；成就分累積到門檻會自動換頭上的稱號。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== v5.13：排名 ===================== -->
+  <div class="bhmodal" id="rankModal" role="dialog" aria-modal="true" aria-label="排名">
+    <div class="bhpanel">
+      <div class="bhhead">
+        <b>📊 排名</b><span class="bhsub" id="rkSub">各項累積排行榜</span>
+        <button class="bhx" id="rankX" type="button" aria-label="關閉">✕</button>
+      </div>
+      <div class="bhtabs" id="rkTabs"></div>
+      <div class="bhbody" id="rkBody"></div>
+      <div class="bhfoot">
+        <button class="bhbtn" id="rkReload" type="button">↻ 重新整理</button>
+        <span id="rkHint">每週活動榜週一早上 08:00（台灣時間）重置，前 10 名有金幣獎勵。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== v5.13：線上玩家 ===================== -->
+  <div class="bhmodal" id="onModal" role="dialog" aria-modal="true" aria-label="線上玩家">
+    <div class="bhpanel">
+      <div class="bhhead">
+        <b>👥 線上玩家</b><span class="bhsub" id="onSub">—</span>
+        <button class="bhx" id="onX" type="button" aria-label="關閉">✕</button>
+      </div>
+      <div class="bhtabs" id="onTabs"></div>
+      <div class="bhbody" id="onBody"></div>
+      <div class="bhfoot">
+        <button class="bhbtn" id="onRefresh" type="button">↻ 重新整理</button>
+        <span id="onHint">點一位玩家可以看資料、加好友、私訊或封鎖。</span>
+      </div>
+    </div>
+  </div>
+
 
 
   <!-- 商店（v4.17 開放：隨從） -->
@@ -4650,7 +4860,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.12';
+const VERSION = '5.13';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4759,6 +4969,16 @@ menu.battle.sub|2～8 人混戰|2～8 人混战 · 可改名 · 没人就 AI 补
 menu.team|👥 組隊 對戰|👥 组队 对战|👥 Team Battle|👥 チーム対戦|👥 팀 대전
 menu.team.sub|紅／藍／綠／黃 4 隊 · 2～8 人|红／蓝／绿／黄 4 队 · 2～8 人|Red / Blue / Green / Yellow · 2–8 players|赤／青／緑／黄 4 チーム · 2～8 人|빨강／파랑／초록／노랑 4팀 · 2～8인
 menu.online|線上配對|在线匹配|Online Match|オンライン対戦|온라인 매치
+ui.ach|🏆 成就|🏆 成就|🏆 Achievements|🏆 実績|🏆 업적
+ui.achPts|0 分|0 分|0 pts|0 点|0 점
+ui.claimAll|💰 一鍵領取|💰 一键领取|💰 Claim all|💰 まとめて受け取る|💰 한 번에 받기
+ui.achFoot|完成成就就能領金幣；成就分累積到門檻會自動換頭上的稱號。|完成成就就能领金币；成就分累积到门槛会自动换头上的称号。|Finish achievements to earn coins. Your title above your head upgrades as your achievement score grows.|実績を達成するとコインがもらえます。実績ポイントが一定になると頭上の称号が変わります。|업적을 달성하면 코인을 받습니다. 업적 점수가 쌓이면 머리 위 칭호가 바뀝니다.
+ui.rank|📊 排名|📊 排名|📊 Rankings|📊 ランキング|📊 순위
+ui.rankSub|各項累積排行榜|各项累积排行榜|All-time and weekly boards|累計ランキング|누적 순위
+ui.rankFoot|每週活動榜週一早上 08:00（台灣時間）重置，前 10 名有金幣獎勵。|每周活动榜周一早上 08:00（台湾时间）重置，前 10 名有金币奖励。|The weekly board resets Mondays 08:00 (UTC+8); the top 10 earn coins.|毎週ボードは月曜 08:00（UTC+8）にリセット。上位 10 人にコイン。|주간 보드는 월요일 08:00(UTC+8)에 초기화되며 상위 10명에게 코인을 지급합니다.
+ui.online|👥 線上玩家|👥 在线玩家|👥 Players online|👥 オンライン|👥 접속 중
+ui.onlineFoot|點一位玩家可以看資料、加好友、私訊或封鎖。|点一位玩家可以看资料、加好友、私信或屏蔽。|Tap a player to view their profile, add a friend, message or block.|プレイヤーを選ぶとプロフィール・フレンド・メッセージ・ブロックができます。|플레이어를 선택하면 프로필, 친구 추가, 메시지, 차단이 가능합니다.
+ui.onlineSub|—|—|—|—|—
 menu.online.sub|房號連線 · 朋友同樂|房号连线 · 等待室 · 朋友一起打|Room code · lobby · play with friends|ルーム番号 · 待機室 · 友達と対戦|방 번호 · 대기실 · 친구와 함께
 menu.settings|設定|设置|Settings|設定|설정
 menu.settings.sub|控制 · 音量 · 語言|地图尺寸 · 控制方式 · 音量|Map size · controls · volume|マップサイズ · 操作 · 音量|맵 크기 · 조작 · 음량
@@ -9814,6 +10034,7 @@ function placeBomb(p) {
   if (bombAt(cx, cy)) return false;
   const mineCount = Game.bombs.filter(function (b) { return b.owner === p; }).length;
   if (mineCount >= p.maxBombs) return false;
+  try { if (isMyPlayer(p)) Ach.count('bomb', 1); } catch (e) {}
   const b = {
     cx: cx, cy: cy, px: cx * T + T / 2, py: cy * T + T / 2,
     timer: p.remote ? 9999 : 2.4, power: (p.skull === 'mini' || (p.curseT || 0) > 0) ? 1 : p.power, owner: p,
@@ -10108,6 +10329,7 @@ function destroySoft(x, y) {
   burst(x * T + T / 2, y * T + T / 2, '#c98d4b', 8, 130);
   try { Tut.hit('soft'); } catch (e) {}
   try { Gift.add('brick', 1); } catch (e) {}     // v4.87：每日任務「炸軟磚」
+  try { if (isMyPlayer(p)) Ach.count('brick', 1); } catch (e) {}
 }
 function spawnItem(x, y, type) {
   Game.items.push({ cx: x, cy: y, type: type, bob: Math.random() * 6.28 });
@@ -10121,6 +10343,7 @@ const HUD_OF_ITEM = {
 };
 function applyItem(p, type) {
   try { if (!p.ai && isMyPlayer(p)) Gift.add('item', 1); } catch (e) {}   // v4.87：每日任務「吃道具」
+  try { if (!p.ai && isMyPlayer(p)) Ach.count('itemGet', 1); } catch (e) {}
   switch (type) {
     case 'fire': p.power = Math.min(10, p.power + 1); break;
     case 'bomb': p.maxBombs = Math.min(8, p.maxBombs + 1); break;
@@ -10320,6 +10543,7 @@ function eggAt(x, y) {
 }
 function rideDino(p, red) {
   p.dino = true; p.dinoT = 0; p.fireCd = 0;
+  try { if (isMyPlayer(p)) Ach.count('mountDragon', 1); } catch (e) {}
   p.ostrich = false; p.air = 0; p.jumpLift = 0;        // v4.87：換坐騎時把鴕鳥狀態清乾淨
   p.storm = false; p.dived = false; p.slamGuard = 0;   // v4.89
   AudioSys.sfx('item');
@@ -10343,6 +10567,7 @@ function rideOstrich(p, storm) {
   p.dino = true; p.dinoT = up ? (p.dinoT || 0) : 0; p.fireCd = 0;
   p.ostrich = true; p.redDragon = false; p.air = 0; p.jumpLift = 0; p.dived = false;
   p.storm = !!storm;
+  try { if (isMyPlayer(p)) { Ach.count('mountOstrich', 1); if (storm) Ach.count('stormMount', 1); } } catch (e) {}
   AudioSys.sfx(up ? 'storm' : 'item');
   if (isMyPlayer(p)) toast(t(up ? 'toast.storm' : 'toast.ostrich'), 2.8, 'g:ostrich');
   if (up) {
@@ -10374,7 +10599,7 @@ function swapMountBurst(p) {
     e.hp = (e.hp || 1) - 2;
     e.hitT = Math.max(e.hitT || 0, .4);
     burst(e.x, e.y, '#fff', 8, 160);
-    if (e.hp <= 0) { e.dead = true; Game.players.forEach(function (q) { q.score += 500; }); burst(e.x, e.y, e.color || '#fff', 16, 200); }
+    if (e.hp <= 0) { e.dead = true; try { AchFoe(e); } catch (x) {} Game.players.forEach(function (q) { q.score += 500; }); burst(e.x, e.y, e.color || '#fff', 16, 200); }
   });
 }
 // 吃到蛋（人類與 AI 共用）：沒坐騎 → 依蛋種上坐騎；已有坐騎 → 升級成紅龍
@@ -10619,6 +10844,7 @@ function ostrichLand(p) {
     burst(e.x, e.y, '#fff', 12, 210);
     if (e.hp <= 0) {
       e.dead = true;
+      try { AchFoe(e); } catch (x) {}
       try { Gift.add('kill', 1); } catch (err) {}
       burst(e.x, e.y, '#c9a7f2', 34, 290);
       Game.players.forEach(function (q) { q.score += 1000; });
@@ -11230,6 +11456,1373 @@ const Lb = {
     });
   }
 };
+
+/* =====================================================================
+ * v5.13：成就系統（Ach）
+ * ---------------------------------------------------------------------
+ * 為什麼要自己一套計數器：
+ *   · 遊戲裡本來只有「這一場的分數」，跨場次的累積（生涯殺幾隻、玩幾小時）
+ *     全部沒有存。成就要看的是生涯，所以先建一份 counters 再往上長成就。
+ *   · counters 是「只增不減」的整數，合併雲端存檔時取 max 就是正確的（不會被舊資料蓋掉）。
+ *
+ * 成就分（pts）：每一階給 (階級序 + 1) × 2 分 → 第一階 2 分、第九階 18 分。
+ *   為什麼不直接算「數量」：使用者要的門檻是 10/50/75/100/250/500/750/1000，
+ *   但全部成就只有 ~190 個，用「數量」永遠到不了 1000；用分數就合理了。
+ *   分數累積到門檻 → 自動換頭上的稱號（顏色／外框／名字都不一樣）。
+ * ================================================================== */
+const Ach = (function () {
+  try {
+    return (function () {
+      const KEY = 'bombhero-ach-v1';
+      const DAY = 86400000;
+
+      /* 成就分 → 稱號。need 是成就分門檻。 */
+      const TITLES = [
+        { need: 10, name: '見習英雄', ico: '🌱', color: '#6b4a1f', bg: '#fff4dc', frame: 'linear-gradient(180deg,#ead6b0,#c9a87a)' },
+        { need: 50, name: '流浪傭兵', ico: '⚔️', color: '#4a5560', bg: '#eef2f6', frame: 'linear-gradient(180deg,#e8eef3,#b7c3ce)' },
+        { need: 75, name: '荒野守衛', ico: '🛡️', color: '#2f6b52', bg: '#e6f4ec', frame: 'linear-gradient(180deg,#cde8db,#8cbda5)' },
+        { need: 100, name: '烈焰戰士', ico: '🔥', color: '#a9560f', bg: '#ffe9cf', frame: 'linear-gradient(180deg,#ffd08c,#e8892a)' },
+        { need: 250, name: '深藍精英', ico: '💠', color: '#2a5c8a', bg: '#e4f1fb', frame: 'linear-gradient(180deg,#a9d6f7,#5b9ad6)' },
+        { need: 500, name: '黃金英雄', ico: '👑', color: '#8a5a00', bg: '#fff4cf', frame: 'linear-gradient(180deg,#ffe07a,#dfa318)' },
+        { need: 750, name: '紫電傳說', ico: '🌟', color: '#6a3aa0', bg: '#f2e9ff', frame: 'linear-gradient(180deg,#d3b6ff,#9a63e0)' },
+        { need: 1000, name: '不朽神話', ico: '🏆', color: '#b3242f', bg: '#ffe8e9', frame: 'linear-gradient(180deg,#ffb2ba,#d63c4a)' }
+      ];
+
+      /* 每個系列 = 一個計數器 + 一串門檻。
+         need / names 一一對應；gold 是「係數」，實際金幣 = round(gold × (階級+1)² × 12)。 */
+      const SERIES = [
+        /* ---- 大逃殺 ---- */
+        { key: 'brKill', cat: 'br', ico: '☠️', name: '大逃殺擊殺', unit: '人', gold: 1.6,
+          need: [10, 25, 50, 100, 250, 500, 750, 1000, 2000],
+          names: ['初試身手', '冷血新兵', '島上獵人', '血染沙灘', '無情劊子手', '死神學徒', '百人屠夫', '千殺之王', '群島噩夢'] },
+        { key: 'brTop10', cat: 'br', ico: '🎖️', name: '大逃殺前十名', unit: '次', gold: 1,
+          need: [5, 10, 25, 50, 100, 250, 500, 1000],
+          names: ['站穩腳步', '前十常客', '前段班', '生存專家', '苟活大師', '不死鳥', '前十霸主', '永恆倖存者'] },
+        { key: 'brTop3', cat: 'br', ico: '🥉', name: '大逃殺前三名', unit: '次', gold: 1.3,
+          need: [1, 5, 10, 25, 50, 75, 100, 250],
+          names: ['首次登台', '頒獎台熟客', '銅牆鐵壁', '準決賽之王', '前三機器', '榮耀階梯', '季軍收藏家', '永遠的前三'] },
+        { key: 'brWin', cat: 'br', ico: '🏆', name: '大逃殺冠軍', unit: '次', gold: 2,
+          need: [1, 5, 10, 25, 50, 75, 100, 250],
+          names: ['初次封王', '五冠新星', '十冠王者', '群島霸主', '半百傳奇', '七十五冠', '百冠王朝', '兩百五冠神話'] },
+        /* ---- 對戰 ---- */
+        { key: 'btKill', cat: 'bt', ico: '💥', name: '對戰擊殺', unit: '人', gold: 1.5,
+          need: [10, 25, 50, 100, 250, 500, 750, 1000, 2000],
+          names: ['開葷', '手感來了', '混戰好手', '百人斬', '爆破專家', '戰場清道夫', '屠殺名單', '千殺猛將', '混戰之神'] },
+        { key: 'btWin', cat: 'bt', ico: '👑', name: '對戰冠軍', unit: '次', gold: 1.8,
+          need: [1, 5, 10, 25, 50, 75, 100],
+          names: ['第一座獎盃', '五連霸起步', '十冠俱樂部', '常勝將軍', '半百王者', '七十五冠', '百冠宗師'] },
+        /* ---- 線上配對 ---- */
+        { key: 'onKill', cat: 'on', ico: '🌐', name: '線上配對擊殺', unit: '人', gold: 2,
+          need: [10, 25, 50, 100, 250, 500, 750, 1000],
+          names: ['連線新秀', '遠端殺手', '跨裝置獵人', '網路百人斬', '連線劊子手', '延遲無感', '線上霸主', '雲端死神'] },
+        { key: 'onWin', cat: 'on', ico: '🛰️', name: '線上配對冠軍', unit: '次', gold: 2.4,
+          need: [1, 5, 10, 25, 50, 100],
+          names: ['第一場連線勝利', '連線五冠', '遠端王者', '二十五連勝', '線上傳奇', '百場冠軍'] },
+        /* ---- 單人闖關 ---- */
+        { key: 'soloKill', cat: 'solo', ico: '🎯', name: '單人殺怪', unit: '隻', gold: 1.3,
+          need: [10, 25, 50, 100, 250, 500, 750, 1000, 2000],
+          names: ['小試身手', '清怪入門', '草地清道夫', '百怪殺手', '關卡收割機', '五百斬', '七百五', '千怪獵人', '無雙掃蕩'] },
+        { key: 'soloBoss', cat: 'solo', ico: '👹', name: '單人討伐 BOSS', unit: '隻', gold: 2.2,
+          need: [1, 5, 10, 25, 50, 75, 100, 250],
+          names: ['屠龍初體驗', 'BOSS 獵人', '十王討伐', '王座破壞者', '半百討伐', '七十五王', '百王斬', '魔王終結者'] },
+        { key: 'soloClear', cat: 'solo', ico: '🚩', name: '單人過關', unit: '關', gold: 1.6,
+          need: [1, 10, 25, 50, 100, 250],
+          names: ['踏出第一步', '十關達成', '二十五關', '半百關卡', '百關老手', '兩百五'] },
+        { key: 'soloNoHit', cat: 'solo', ico: '🛡️', name: '無傷過關', unit: '次', gold: 2,
+          need: [1, 5, 10, 25, 50, 100],
+          names: ['毫髮無傷', '完美閃避', '十次無傷', '鐵壁身手', '半百無傷', '不可能任務'] },
+        { key: 'star3', cat: 'solo', ico: '⭐', name: '三星關卡', unit: '關', gold: 1.8,
+          need: [1, 5, 10, 20, 32],
+          names: ['第一顆星', '五星關卡', '十全十美', '二十關三星', '全關卡三星'] },
+        /* ---- RPG ---- */
+        { key: 'rpgKill', cat: 'rpg', ico: '🧙', name: 'RPG 殺怪', unit: '隻', gold: 1.5,
+          need: [10, 25, 50, 100, 250, 500, 750, 1000, 2000],
+          names: ['冒險起步', '野外求生', '練等達人', '百怪經驗', '刷怪狂人', '五百戰役', '七百五', '千怪宗師', '無盡農場'] },
+        { key: 'rpgBoss', cat: 'rpg', ico: '🐲', name: 'RPG 討伐 BOSS', unit: '隻', gold: 2.4,
+          need: [1, 5, 10, 25, 50, 75, 100, 250],
+          names: ['首殺 BOSS', '副本常客', '十王挑戰', '王座終結者', '半百討伐', '七十五王', '百王傳說', '魔王噩夢'] },
+        { key: 'rpgClear', cat: 'rpg', ico: '📜', name: 'RPG 過關', unit: '關', gold: 1.8,
+          need: [1, 10, 25, 50, 100, 250],
+          names: ['踏上旅途', '十關歷練', '二十五關', '半百征途', '百關英雄', '兩百五'] },
+        /* ---- 坐騎 ---- */
+        { key: 'mountDragon', cat: 'mount', ico: '🦖', name: '取得龍坐騎', unit: '次', gold: 3,
+          need: [1], names: ['龍騎士'] },
+        { key: 'mountOstrich', cat: 'mount', ico: '🪶', name: '取得鴕鳥坐騎', unit: '次', gold: 3,
+          need: [1], names: ['鴕鳥馴服者'] },
+        { key: 'stormMount', cat: 'mount', ico: '🌩️', name: '進化風暴鴕鳥', unit: '次', gold: 4,
+          need: [1], names: ['風暴降臨'] },
+        { key: 'dragonKill', cat: 'mount', ico: '🔥', name: '龍坐騎擊殺', unit: '人', gold: 2,
+          need: [10, 25, 50, 100, 250, 500, 750, 1000],
+          names: ['龍焰初燒', '巨龍獠牙', '龍騎士之怒', '百人焦土', '火焰暴君', '五百焚城', '七百五', '龍焰末日'] },
+        { key: 'ostrichKill', cat: 'mount', ico: '💨', name: '鴕鳥坐騎擊殺', unit: '人', gold: 2,
+          need: [10, 25, 50, 100, 250, 500, 750, 1000],
+          names: ['衝撞見習', '羽翼旋風', '高速輾壓', '百人踩踏', '沙塵暴', '五百衝鋒', '七百五', '鴕鳥末日'] },
+        /* ---- 累積 ---- */
+        { key: 'playSec', cat: 'life', ico: '⏳', name: '累積遊玩時間', unit: '小時', gold: 1.2,
+          need: [86400, 604800, 1209600, 2592000, 5184000, 10368000, 15552000, 31536000],
+          names: ['玩了一整天', '一週硬核', '兩週不歸路', '滿月玩家', '兩個月', '四個月', '半年人生', '一年傳說'] },
+        { key: 'death', cat: 'life', ico: '💀', name: '被擊倒次數', unit: '次', gold: .8,
+          need: [1, 5, 10, 25, 50, 75, 100, 250, 500],
+          names: ['第一次陣亡', '五連敗', '十次教訓', '跌倒二十五次', '半百陣亡', '七十五次', '百敗成鋼', '兩百五', '五百次重生'] },
+        { key: 'brick', cat: 'life', ico: '🧱', name: '炸掉磚塊', unit: '塊', gold: .7,
+          need: [100, 500, 1000, 5000, 10000, 50000],
+          names: ['拆牆入門', '五百磚', '千磚爆破', '五千拆遷', '萬磚狂人', '五萬拆城'] },
+        { key: 'itemGet', cat: 'life', ico: '🍬', name: '吃到的道具', unit: '個', gold: .7,
+          need: [10, 50, 100, 500, 1000, 5000],
+          names: ['撿到寶', '五十個', '百寶箱', '五百補給', '千件收藏', '五千雜貨'] },
+        { key: 'bomb', cat: 'life', ico: '💣', name: '放置炸彈', unit: '顆', gold: .6,
+          need: [100, 500, 1000, 5000, 10000, 50000],
+          names: ['火力新手', '五百顆', '千彈齊發', '五千轟炸', '萬彈之王', '五萬焦土'] },
+        { key: 'goldEarn', cat: 'life', ico: '💰', name: '累積獲得金幣', unit: '枚', gold: .5,
+          need: [1000, 10000, 50000, 100000, 500000, 1000000],
+          names: ['第一桶金', '萬元戶', '五萬存款', '十萬富翁', '五十萬大亨', '百萬財神'] },
+        { key: 'loginDays', cat: 'life', ico: '📅', name: '登入天數', unit: '天', gold: 1,
+          need: [1, 7, 14, 30, 60, 100, 365],
+          names: ['初次報到', '連續一週', '兩週忠實', '滿月常客', '兩個月', '百日老友', '一年陪伴'] },
+        { key: 'dailyDone', cat: 'life', ico: '🗓️', name: '完成每日挑戰', unit: '次', gold: 1.5,
+          need: [1, 7, 30, 100, 365],
+          names: ['今天的挑戰', '一週全勤', '三十天', '百次挑戰', '一年不斷'] }
+      ];
+
+      const CATS = [
+        { key: 'all', lab: '全部', ico: '🏆' },
+        { key: 'br', lab: '大逃殺', ico: '🏝️' },
+        { key: 'bt', lab: '對戰', ico: '⚔️' },
+        { key: 'on', lab: '線上配對', ico: '🌐' },
+        { key: 'solo', lab: '單人闖關', ico: '🎯' },
+        { key: 'rpg', lab: 'RPG', ico: '🧙' },
+        { key: 'mount', lab: '坐騎', ico: '🦖' },
+        { key: 'life', lab: '累積', ico: '⏳' },
+        { key: 'title', lab: '稱號', ico: '📛' }
+      ];
+
+      function today() {
+        const t = new Date(Date.now() + 8 * 3600000);
+        const p = function (n) { return (n < 10 ? '0' : '') + n; };
+        return t.getUTCFullYear() + '-' + p(t.getUTCMonth() + 1) + '-' + p(t.getUTCDate());
+      }
+
+      const S = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {} };
+      let ready = false, dirty = false, timeAcc = 0;
+      const listeners = [];
+
+      /* 成就清單展開（只做一次） */
+      const LIST = [];
+      SERIES.forEach(function (se) {
+        se.need.forEach(function (n, i) {
+          LIST.push({
+            id: se.key + '_' + i, key: se.key, cat: se.cat, ico: se.ico, name: se.names[i] || se.name,
+            series: se.name, need: n, tier: i, unit: se.unit,
+            gold: Math.max(20, Math.round((se.gold || 1) * (i + 1) * (i + 1) * 12)),
+            pts: (i + 1) * 2
+          });
+        });
+      });
+      const BY_ID = {};
+      LIST.forEach(function (a) { BY_ID[a.id] = a; });
+
+      function load() {
+        try {
+          const o = JSON.parse(localStorage.getItem(KEY) || 'null');
+          if (o && typeof o === 'object') {
+            S.c = (o.c && typeof o.c === 'object') ? o.c : {};
+            S.u = (o.u && typeof o.u === 'object') ? o.u : {};
+            S.g = (o.g && typeof o.g === 'object') ? o.g : {};
+            S.lastDay = String(o.lastDay || '');
+            S.star3 = (o.star3 && typeof o.star3 === 'object') ? o.star3 : {};
+          }
+        } catch (e) {}
+        ready = true;
+        flushDay();
+      }
+      function store() {
+        try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+      }
+      function save() { store(); dirty = true; listeners.forEach(function (f) { try { f(); } catch (e) {} }); }
+      let stT = 0;
+      function saveSoon() {
+        if (stT) return;
+        stT = setTimeout(function () { stT = 0; save(); }, 700);
+      }
+
+      /* 每天第一次開啟 → 登入天數 +1（用 UTC+8 換日，跟每日挑戰／簽到同一條線） */
+      function flushDay() {
+        const d = today();
+        if (S.lastDay === d) return false;
+        S.lastDay = d;
+        S.c.loginDays = (S.c.loginDays | 0) + 1;
+        save();
+        return true;
+      }
+
+      function stat(k) { return Math.max(0, S.c[k] | 0); }
+
+      /* 檢查所有門檻 → 回傳這次新解鎖的清單 */
+      function check() {
+        const out = [];
+        for (let i = 0; i < LIST.length; i++) {
+          const a = LIST[i];
+          if (S.u[a.id]) continue;
+          if (stat(a.key) >= a.need) {
+            S.u[a.id] = 1;
+            out.push(a);
+          }
+        }
+        if (out.length) save();
+        return out;
+      }
+
+      function points() {
+        let n = 0;
+        for (let i = 0; i < LIST.length; i++) if (S.u[LIST[i].id]) n += LIST[i].pts;
+        return n;
+      }
+      function titleOf(pts) {
+        const p = (pts == null) ? points() : pts;
+        let cur = null;
+        for (let i = 0; i < TITLES.length; i++) if (p >= TITLES[i].need) cur = TITLES[i];
+        return cur;
+      }
+      function nextTitle() {
+        const p = points();
+        for (let i = 0; i < TITLES.length; i++) if (p < TITLES[i].need) return TITLES[i];
+        return null;
+      }
+
+      function count(k, n) {
+        if (!k) return 0;
+        const add = (n == null) ? 1 : n;
+        if (!isFinite(add) || add === 0) return stat(k);
+        S.c[k] = Math.max(0, Math.min(1e12, (S.c[k] | 0) + Math.round(add)));
+        // 這幾個計數器很常動（放炸彈／炸磚），不要每次都觸發解鎖掃描
+        const light = (k === 'bomb' || k === 'brick' || k === 'itemGet' || k === 'playSec' || k === 'goldEarn');
+        if (!light) {
+          const got = check();
+          if (got.length) announce(got);
+          else saveSoon();
+        } else {
+          // 每 20 次或每 5 秒掃一次，避免每個炸彈都跑 190 筆
+          if (Math.random() < .05) { const got = check(); if (got.length) announce(got); }
+          saveSoon();
+        }
+        return S.c[k] | 0;
+      }
+      function setMax(k, n) {
+        const v = Math.max(0, Math.round(Number(n) || 0));
+        if (k && v > stat(k)) { S.c[k] = v; const got = check(); if (got.length) announce(got); else saveSoon(); }
+      }
+
+      function announce(list) {
+        if (!list || !list.length) return;
+        const first = list[0];
+        const more = list.length > 1 ? ' 等 ' + list.length + ' 個' : '';
+        try { toast('🏆 成就達成：' + first.name + more, 3.2); } catch (e) {}
+        try { AudioSys.sfx('victory'); } catch (e) {}
+        try { if (typeof AchUI !== 'undefined') AchUI.alertOn(); } catch (e) {}
+      }
+
+      function unclaimed() {
+        return LIST.filter(function (a) { return S.u[a.id] && !S.g[a.id]; });
+      }
+      function claim(id) {
+        const a = BY_ID[id];
+        if (!a || !S.u[id] || S.g[id]) return 0;
+        S.g[id] = 1;
+        save();
+        try { Shop.addGold(a.gold); } catch (e) {}
+        try { Ach.count('goldEarn', a.gold); } catch (e) {}
+        return a.gold;
+      }
+      function claimAll() {
+        const list = unclaimed();
+        let sum = 0;
+        list.forEach(function (a) { S.g[a.id] = 1; sum += a.gold; });
+        if (sum > 0) {
+          save();
+          try { Shop.addGold(sum); } catch (e) {}
+          S.c.goldEarn = (S.c.goldEarn | 0) + sum;
+          store();
+          try { toast('💰 領取 ' + list.length + ' 個成就，金幣 +' + sum, 3); } catch (e) {}
+        }
+        return sum;
+      }
+
+      /* 三星關卡：同一關只算一次（重複刷不算） */
+      function star3(stage) {
+        const k = String(stage | 0);
+        if (!stage || S.star3[k]) return false;
+        S.star3[k] = 1;
+        count('star3', 1);
+        store();
+        return true;
+      }
+
+      /* 遊玩時間：主迴圈每秒餵一次（只在 play 狀態累積） */
+      function addTime(dt) {
+        if (!isFinite(dt) || dt <= 0) return;
+        timeAcc += dt;
+        if (timeAcc < 1) return;
+        const whole = Math.floor(timeAcc);
+        timeAcc -= whole;
+        S.c.playSec = Math.min(1e12, (S.c.playSec | 0) + whole);
+        if (Math.random() < .06) check();
+        saveSoon();
+      }
+
+      function state() {
+        return { v: 1, c: S.c, u: S.u, g: S.g, lastDay: S.lastDay, star3: S.star3 };
+      }
+      function setState(o) {
+        if (!o || typeof o !== 'object') return false;
+        if (o.c && typeof o.c === 'object') {
+          for (const k in o.c) {
+            const v = Math.max(0, Math.min(1e12, Number(o.c[k]) || 0));
+            if (v > stat(k)) S.c[k] = Math.round(v);
+          }
+        }
+        if (o.u && typeof o.u === 'object') for (const k in o.u) if (BY_ID[k]) S.u[k] = 1;
+        if (o.g && typeof o.g === 'object') for (const k in o.g) if (BY_ID[k]) S.g[k] = 1;
+        if (o.star3 && typeof o.star3 === 'object') for (const k in o.star3) S.star3[k] = 1;
+        if (o.lastDay && String(o.lastDay) > S.lastDay) S.lastDay = String(o.lastDay);
+        check();
+        store();
+        return true;
+      }
+      /* 合併（雲端 vs 本地）：計數取大、解鎖取聯集、已領取取聯集 */
+      function merge(a, b) {
+        const out = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {} };
+        [a, b].forEach(function (o) {
+          if (!o || typeof o !== 'object') return;
+          if (o.c) for (const k in o.c) out.c[k] = Math.max(out.c[k] | 0, Math.min(1e12, Number(o.c[k]) || 0));
+          if (o.u) for (const k in o.u) if (BY_ID[k]) out.u[k] = 1;
+          if (o.g) for (const k in o.g) if (BY_ID[k]) out.g[k] = 1;
+          if (o.star3) for (const k in o.star3) out.star3[k] = 1;
+          if (o.lastDay && String(o.lastDay) > out.lastDay) out.lastDay = String(o.lastDay);
+        });
+        return out;
+      }
+
+      const api = {
+        KEY: KEY, TITLES: TITLES, SERIES: SERIES, CATS: CATS, LIST: LIST,
+        stat: stat, count: count, setMax: setMax, check: check,
+        points: points, titleOf: titleOf, nextTitle: nextTitle,
+        unclaimed: unclaimed, claim: claim, claimAll: claimAll, star3: star3, addTime: addTime,
+        state: state, setState: setState, merge: merge, save: save,
+        isUnlocked: function (id) { return !!S.u[id]; },
+        isClaimed: function (id) { return !!S.g[id]; },
+        unlockedCount: function () { return Object.keys(S.u).length; },
+        byId: function (id) { return BY_ID[id] || null; },
+        progress: function (se) {
+          const cur = stat(se.key);
+          let n = 0;
+          for (let i = 0; i < se.need.length; i++) if (cur >= se.need[i]) n++;
+          return { cur: cur, tier: n, max: se.need.length, next: se.need[n] || 0 };
+        },
+        on: function (f) { if (typeof f === 'function') listeners.push(f); },
+        get dirty() { return dirty; },
+        clearDirty: function () { dirty = false; }
+      };
+      load();
+      window.Ach = api;
+      return api;
+    })();
+  } catch (e) {
+    console.error('[Ach] 初始化失敗（成就停用，其他功能照常）：', e);
+    return { stat: function () { return 0; }, count: function () { return 0; }, setMax: function () {},
+      points: function () { return 0; }, titleOf: function () { return null; }, nextTitle: function () { return null; },
+      unclaimed: function () { return []; }, claim: function () { return 0; }, claimAll: function () { return 0; },
+      star3: function () { return false; }, addTime: function () {}, state: function () { return null; },
+      setState: function () {}, merge: function (a, b) { return a || b; }, save: function () {},
+      isUnlocked: function () { return false; }, isClaimed: function () { return false; },
+      unlockedCount: function () { return 0; }, byId: function () { return null; },
+      progress: function () { return { cur: 0, tier: 0, max: 1, next: 0 }; }, on: function () {},
+      dirty: false, clearDirty: function () {}, LIST: [], SERIES: [], CATS: [], TITLES: [] };
+  }
+})();
+
+/* =====================================================================
+ * v5.13：排名系統（Rank）
+ * ---------------------------------------------------------------------
+ * 十個榜：單人殺怪／單人 BOSS／RPG 殺怪／RPG BOSS／大逃殺擊殺／大逃殺冠軍／
+ *         對戰擊殺／對戰冠軍／線上配對擊殺／線上配對冠軍
+ *
+ * 兩種視角：
+ *   總榜（歷史累積）—— 只增不減，伺服器對每個裝置記最大值
+ *   週榜（本週活動）—— 每週一 08:00（UTC+8）重置；前 10 名可領金幣
+ *
+ * 為什麼「週榜」要用差值：總計是累積的，直接拿總數當週成績，老玩家永遠第一。
+ *   所以本週開始時記一份基準（S.base），週成績 = 現在 - 基準。
+ * ================================================================== */
+const Rank = (function () {
+  try {
+    return (function () {
+      const KEY = 'bombhero-rank-v1';
+      const DAY = 86400000;
+
+      const CATS = [
+        { k: 'soloKill', lab: '單人殺怪', ico: '🎯', unit: '隻' },
+        { k: 'soloBoss', lab: '單人 BOSS', ico: '👹', unit: '隻' },
+        { k: 'rpgKill', lab: 'RPG 殺怪', ico: '🧙', unit: '隻' },
+        { k: 'rpgBoss', lab: 'RPG BOSS', ico: '🐲', unit: '隻' },
+        { k: 'brKill', lab: '大逃殺擊殺', ico: '☠️', unit: '人' },
+        { k: 'brWin', lab: '大逃殺冠軍', ico: '🏆', unit: '次' },
+        { k: 'btKill', lab: '對戰擊殺', ico: '💥', unit: '人' },
+        { k: 'btWin', lab: '對戰冠軍', ico: '👑', unit: '次' },
+        { k: 'onKill', lab: '線上擊殺', ico: '🌐', unit: '人' },
+        { k: 'onWin', lab: '線上冠軍', ico: '🛰️', unit: '次' }
+      ];
+      /* 週榜獎金（第 1~10 名） */
+      const REWARD = [1000, 700, 500, 350, 350, 200, 200, 200, 200, 200];
+
+      const S = { v: 1, week: '', base: {}, claimed: '', lb: {}, at: 0 };
+      let busy = false, subT = 0;
+
+      function p2(n) { return (n < 10 ? '0' : '') + n; }
+      function weekKey(d) {
+        const base = d ? new Date(d) : new Date();
+        const u = new Date(base.getTime() + 8 * 3600000);
+        const day = (u.getUTCDay() + 6) % 7;
+        const thu = new Date(Date.UTC(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate() - day + 3));
+        const year = thu.getUTCFullYear();
+        const jan1 = new Date(Date.UTC(year, 0, 1));
+        const week = 1 + Math.floor((thu - jan1) / 86400000 / 7);
+        return year + '-W' + p2(week);
+      }
+
+      function load() {
+        try {
+          const o = JSON.parse(localStorage.getItem(KEY) || 'null');
+          if (o && typeof o === 'object') {
+            S.week = String(o.week || '');
+            S.base = (o.base && typeof o.base === 'object') ? o.base : {};
+            S.claimed = String(o.claimed || '');
+            S.lb = (o.lb && typeof o.lb === 'object') ? o.lb : {};
+            S.at = o.at | 0;
+          }
+        } catch (e) {}
+        syncWeek();
+      }
+      function store() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+      function cur(k) {
+        try { return Ach.stat(k) | 0; } catch (e) { return 0; }
+      }
+      /* 換週：把上週的「現在值」當新基準（週成績從 0 開始） */
+      function syncWeek() {
+        const w = weekKey();
+        if (S.week === w) return false;
+        S.week = w;
+        S.base = {};
+        CATS.forEach(function (c) { S.base[c.k] = cur(c.k); });
+        S.claimed = '';
+        store();
+        return true;
+      }
+      function delta(k) {
+        syncWeek();
+        return Math.max(0, cur(k) - (S.base[k] | 0));
+      }
+      function weekOf(k) { return delta(k); }
+      function mine(scope) {
+        const o = {};
+        CATS.forEach(function (c) { o[c.k] = scope === 'week' ? delta(c.k) : cur(c.k); });
+        return o;
+      }
+
+      /* 名稱／角色：跟大逃殺／對戰一致，用首頁暱稱 */
+      function myName() {
+        try { return String((settings && (settings.brName || settings.playerName)) || '').slice(0, 12); } catch (e) { return ''; }
+      }
+      function myChar() {
+        try { return (settings && (settings.brChar | 0)) || 0; } catch (e) { return 0; }
+      }
+
+      function submit() {
+        if (busy) return Promise.resolve(null);
+        busy = true;
+        const body = {
+          deviceId: Lb.deviceId(), name: myName(), ch: myChar(),
+          cats: mine('all'), week: mine('week'), wk: S.week, ver: VERSION
+        };
+        return Lb._post(Lb.origin() + '/api/rank/submit', body).then(function (j) {
+          busy = false;
+          if (j && j.ok) { S.at = Date.now(); store(); }
+          return j;
+        }, function () { busy = false; return null; });
+      }
+      function submitSoon(ms) {
+        if (subT) return;
+        subT = setTimeout(function () { subT = 0; submit(); }, ms || 2500);
+      }
+
+      function top(cat, scope) {
+        const c = String(cat || 'soloKill');
+        const sc = (scope === 'week') ? 'week' : 'all';
+        const url = Lb.origin() + '/api/rank/top?cat=' + encodeURIComponent(c) +
+          '&scope=' + sc + '&limit=50&deviceId=' + encodeURIComponent(Lb.deviceId());
+        return Lb._get(url).then(function (j) {
+          if (j && j.ok && j.list) {
+            S.lb[sc + ':' + c] = { list: j.list, at: Date.now(), me: j.me || null, week: j.week || '' };
+            store();
+            return S.lb[sc + ':' + c];
+          }
+          const c2 = S.lb[sc + ':' + c];
+          return c2 || { list: [], at: 0, me: null, offline: true };
+        }, function () {
+          const c2 = S.lb[sc + ':' + c];
+          return c2 || { list: [], at: 0, me: null, offline: true };
+        });
+      }
+
+      function claimWeek() {
+        const w = weekKey();
+        return Lb._post(Lb.origin() + '/api/rank/claim', {
+          deviceId: Lb.deviceId(), wk: w, name: myName(), ch: myChar(),
+          cats: mine('week')
+        }).then(function (j) {
+          if (j && j.ok) {
+            if (j.gold > 0) {
+              try { Shop.addGold(j.gold); } catch (e) {}
+              try { toast('💰 週榜第 ' + j.rank + ' 名，金幣 +' + j.gold, 3.4); } catch (e) {}
+              try { Ach.count('goldEarn', j.gold); } catch (e) {}
+            }
+            if (j.claimed) S.claimed = w;
+            store();
+          }
+          return j;
+        }, function () { return null; });
+      }
+
+      const api = {
+        CATS: CATS, REWARD: REWARD, weekKey: weekKey,
+        cur: cur, delta: delta, weekOf: weekOf, mine: mine,
+        submit: submit, submitSoon: submitSoon, top: top, claimWeek: claimWeek,
+        claimedThisWeek: function () { return S.claimed === weekKey(); },
+        cache: function (cat, scope) { return S.lb[((scope === 'week') ? 'week' : 'all') + ':' + cat] || null; },
+        lastAt: function () { return S.at; },
+        state: function () { return { v: 1, week: S.week, base: S.base, claimed: S.claimed, at: S.at }; },
+        setState: function (o) {
+          if (!o || typeof o !== 'object') return false;
+          if (o.week && String(o.week) === weekKey()) {
+            if (o.base && typeof o.base === 'object') {
+              // 基準只能往「高」修，避免舊存檔把週成績算大
+              CATS.forEach(function (c) {
+                const v = Math.max(0, Number(o.base[c.k]) || 0);
+                if (v > (S.base[c.k] | 0)) S.base[c.k] = v;
+              });
+            }
+            if (o.claimed) S.claimed = String(o.claimed);
+          }
+          store();
+          return true;
+        },
+        merge: function (a, b) {
+          const A = (a && typeof a === 'object') ? a : null;
+          const B = (b && typeof b === 'object') ? b : null;
+          const w = weekKey();
+          const out = { v: 1, week: w, base: {}, claimed: '' };
+          const src = (A && A.week === w) ? A : ((B && B.week === w) ? B : null);
+          if (src && src.base) for (const k in src.base) out.base[k] = Math.max(0, Number(src.base[k]) || 0);
+          out.claimed = (A && A.claimed === w) ? w : ((B && B.claimed === w) ? w : '');
+          return out;
+        }
+      };
+      load();
+      window.Rank = api;
+      return api;
+    })();
+  } catch (e) {
+    console.error('[Rank] 初始化失敗（排名停用）：', e);
+    return { CATS: [], REWARD: [], weekKey: function () { return ''; }, cur: function () { return 0; },
+      delta: function () { return 0; }, weekOf: function () { return 0; }, mine: function () { return {}; },
+      submit: function () { return Promise.resolve(null); }, submitSoon: function () {},
+      top: function () { return Promise.resolve({ list: [], me: null }); },
+      claimWeek: function () { return Promise.resolve(null); }, claimedThisWeek: function () { return false; },
+      cache: function () { return null; }, lastAt: function () { return 0; },
+      state: function () { return null; }, setState: function () {}, merge: function (a) { return a; } };
+  }
+})();
+
+
+/* =====================================================================
+ * v5.13：成就／排名 的統一計數入口
+ * ---------------------------------------------------------------------
+ * 遊戲裡「怪死掉」有 6 個地方、「玩家死掉」有 2 條路徑（單人／對戰大逃殺）。
+ * 與其在那 8 個地方各寫一次判斷，這裡收成兩支：AchFoe / AchPvp。
+ * 好處：以後新增模式只要改這兩支，不用回頭找每個死亡點。
+ * 全部都用 try 包起來 —— 成就壞掉不可以影響遊戲本身。
+ * ================================================================== */
+function AchFoe(e) {
+  if (!e || typeof Ach === 'undefined') return;
+  try {
+    const boss = !!(e.boss || e.brBoss);
+    // 大逃殺裡的小怪不算「殺人數」（那是玩家對玩家）→ 只有單人／RPG 記
+    if (Game.mode === 'solo' || Game.mode === 'daily') {
+      Ach.count(boss ? 'soloBoss' : 'soloKill', 1);
+    } else if (Game.mode === 'rpg') {
+      Ach.count(boss ? 'rpgBoss' : 'rpgKill', 1);
+    }
+  } catch (err) {}
+}
+
+function AchPvp(victim, killer) {
+  if (typeof Ach === 'undefined') return;
+  try {
+    const me = Game.players && Game.players[0];
+    if (victim && victim === me) Ach.count('death', 1);
+    if (!killer || killer === victim || !me || killer !== me) return;
+    const br = Game.mode === 'br';
+    const online = (typeof Net !== 'undefined' && Net && Net.on && Game.mode === 'battle');
+    if (br) Ach.count('brKill', 1);
+    else if (online) Ach.count('onKill', 1);
+    else Ach.count('btKill', 1);
+    if (killer.dino) {
+      if (killer.ostrich) Ach.count('ostrichKill', 1);
+      else Ach.count('dragonKill', 1);
+    }
+    try { Rank.submitSoon(4000); } catch (e2) {}
+  } catch (err) {}
+}
+
+/* =====================================================================
+ * v5.13：線上玩家名單（Social）＋ 好友／私訊／黑名單
+ * ---------------------------------------------------------------------
+ * 身分：用「這台裝置」當識別（跟排行榜同一套 deviceId），伺服器再雜湊成
+ *       p_xxxxxxx 的玩家編號。這樣 GitHub Pages（純靜態、沒有 cookie）也能用。
+ *       ★ 換裝置／清快取＝換一個身分，好友名單不會跟著跑（之後綁帳號才能跨裝置）。
+ *
+ * 為什麼心跳要 45 秒：線上判定是「150 秒內有動靜」。太短會一直打伺服器，
+ *   太長則人走了還掛在名單上。45 秒剛好三次心跳覆蓋一個判定窗。
+ * ================================================================== */
+const Social = (function () {
+  try {
+    return (function () {
+      const KEY = 'bombhero-soc-v1';
+      const HB_MS = 45000, LIST_MS = 20000, DM_MS = 12000;
+      const GENDERS = ['不公開', '男', '女', '其他'];
+
+      const P = { gender: '', region: '', bio: '' };     // 本機個人資料（只存在這台裝置）
+      const S = {
+        on: false, list: [], total: 0, at: 0, err: '',
+        me: null, friends: [], blocks: [], reqs: [],
+        tab: 'online', view: 'list', sel: null,
+        chatWith: '', msgs: [], chatAt: 0, chatErr: '', sending: false
+      };
+      let hbT = 0, listT = 0, dmT = 0, opened = false;
+
+      function loadP() {
+        try {
+          const o = JSON.parse(localStorage.getItem(KEY) || 'null');
+          if (o && typeof o === 'object') {
+            P.gender = String(o.gender || '');
+            P.region = String(o.region || '').slice(0, 12);
+            P.bio = String(o.bio || '').slice(0, 24);
+          }
+        } catch (e) {}
+      }
+      function saveP() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
+
+      function myName() {
+        try {
+          const n = String((settings && (settings.brName || settings.playerName)) || '').trim();
+          return n ? n.slice(0, 12) : '無名玩家';
+        } catch (e) { return '無名玩家'; }
+      }
+      function myChar() { try { return settings && (settings.brChar | 0) || 0; } catch (e) { return 0; } }
+      function myKind() {
+        try {
+          if (typeof Cloud === 'undefined') return 'guest';
+          if (!Cloud.online || !Cloud.online()) return 'guest';
+          return Cloud.isGuest && Cloud.isGuest() ? 'guest' : 'member';
+        } catch (e) { return 'guest'; }
+      }
+      function myMode() {
+        try {
+          if (Game.state === 'play') {
+            if (Game.mode === 'br') return '大逃殺';
+            if (Game.mode === 'battle') return '對戰';
+            if (Game.mode === 'rpg') return 'RPG';
+            if (Game.mode === 'solo') return '單人';
+          }
+        } catch (e) {}
+        return '大廳';
+      }
+      function myPlaySec() { try { return Ach.stat('playSec') | 0; } catch (e) { return 0; } }
+      function myPts() { try { return Ach.points() | 0; } catch (e) { return 0; } }
+      function myWins() {
+        try { return (Ach.stat('brWin') | 0) + (Ach.stat('btWin') | 0) + (Ach.stat('onWin') | 0); } catch (e) { return 0; }
+      }
+
+      function body(extra) {
+        const o = {
+          deviceId: Lb.deviceId(), name: myName(), ch: myChar(), kind: myKind(),
+          gender: P.gender, region: P.region, bio: P.bio,
+          mode: myMode(), sec: myPlaySec(), pts: myPts(), wins: myWins(),
+          ver: VERSION
+        };
+        if (extra) for (const k in extra) o[k] = extra[k];
+        return o;
+      }
+
+      function hb() {
+        return Lb._post(Lb.origin() + '/api/social/hb', body()).then(function (j) {
+          if (j && j.ok) {
+            S.on = true; S.err = '';
+            if (j.me) S.me = j.me;
+            S.total = j.total | 0;
+            if (Array.isArray(j.friends)) S.friends = j.friends;
+            if (Array.isArray(j.blocks)) S.blocks = j.blocks;
+            if (Array.isArray(j.reqs)) S.reqs = j.reqs;
+            if (Array.isArray(j.list)) { S.list = j.list; S.at = Date.now(); }
+            paintSoon();
+          } else if (j) {
+            S.on = false;
+            S.err = j.err || 'ERR';
+            paintSoon();
+          }
+          return j;
+        }, function () {
+          S.on = false; S.err = 'NET';
+          paintSoon();
+          return null;
+        });
+      }
+
+      function fetchList() {
+        const q = '?deviceId=' + encodeURIComponent(Lb.deviceId()) + '&limit=80&name=' + encodeURIComponent(myName());
+        return Lb._get(Lb.origin() + '/api/social/list' + q).then(function (j) {
+          if (j && j.ok) {
+            S.on = true; S.err = '';
+            S.list = Array.isArray(j.list) ? j.list : [];
+            S.total = j.total | 0;
+            S.me = j.me || S.me;
+            if (Array.isArray(j.friends)) S.friends = j.friends;
+            if (Array.isArray(j.blocks)) S.blocks = j.blocks;
+            if (Array.isArray(j.reqs)) S.reqs = j.reqs;
+            S.at = Date.now();
+          } else if (j) {
+            S.err = j.err || 'ERR'; S.on = false;
+          }
+          paintSoon();
+          return j;
+        }, function () { S.err = 'NET'; S.on = false; paintSoon(); return null; });
+      }
+
+      function act(action, target) {
+        return Lb._post(Lb.origin() + '/api/social/act', body({ action: action, target: target }))
+          .then(function (j) {
+            if (j && j.ok) {
+              if (Array.isArray(j.friends)) S.friends = j.friends;
+              if (Array.isArray(j.blocks)) S.blocks = j.blocks;
+              if (Array.isArray(j.reqs)) S.reqs = j.reqs;
+              if (j.note) { try { toast(j.note, 2.4); } catch (e) {} }
+              fetchList();
+              paint();
+            } else if (j) {
+              try { toast(errText(j.err), 2.4); } catch (e) {}
+            }
+            return j;
+          }, function () { try { toast('網路不穩，請稍後再試', 2.4); } catch (e) {} return null; });
+      }
+
+      function errText(e) {
+        const M = {
+          SELF: '不能對自己做事啦', NO_TARGET: '找不到這位玩家', BLOCKED: '你封鎖了對方',
+          BLOCKED_BY: '對方不接受你的訊息', TOO_FAST: '傳太快了，喘口氣',
+          TOO_LONG: '訊息太長（最多 60 字）', OFFLINE: '對方已離線', LIMIT: '好友數量已滿'
+        };
+        return M[e] || '操作失敗（' + (e || 'ERR') + '）';
+      }
+
+      function openChat(pid) {
+        S.chatWith = pid; S.view = 'chat'; S.msgs = []; S.chatErr = '';
+        paint();
+        pollDm(true);
+      }
+      function closeChat() { S.view = 'detail'; paint(); }
+
+      function pollDm(force) {
+        if (!S.chatWith) return Promise.resolve(null);
+        if (!force && dmT) return Promise.resolve(null);
+        const q = '?deviceId=' + encodeURIComponent(Lb.deviceId()) +
+          '&with=' + encodeURIComponent(S.chatWith) + '&limit=60';
+        return Lb._get(Lb.origin() + '/api/social/dm' + q).then(function (j) {
+          if (j && j.ok) {
+            S.msgs = Array.isArray(j.list) ? j.list : [];
+            S.chatErr = '';
+            S.chatAt = Date.now();
+            paint();
+          } else if (j) {
+            S.chatErr = errText(j.err);
+            paint();
+          }
+          return j;
+        }, function () { S.chatErr = 'NET'; return null; });
+      }
+
+      function send(text) {
+        const m = String(text || '').trim().slice(0, 60);
+        if (!m || !S.chatWith || S.sending) return Promise.resolve(null);
+        S.sending = true;
+        return Lb._post(Lb.origin() + '/api/social/dm', body({ to: S.chatWith, text: m }))
+          .then(function (j) {
+            S.sending = false;
+            if (j && j.ok) {
+              if (Array.isArray(j.list)) { S.msgs = j.list; paint(); }
+              else pollDm(true);
+            } else {
+              try { toast(errText(j && j.err), 2.2); } catch (e) {}
+            }
+            return j;
+          }, function () { S.sending = false; try { toast('網路不穩，訊息沒有送出', 2.4); } catch (e) {} return null; });
+      }
+
+      /* ---------------- 畫面 ---------------- */
+      let paintT = 0;
+      function paintSoon() { if (paintT) return; paintT = setTimeout(function () { paintT = 0; paint(); }, 220); }
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+        });
+      }
+      function pcode(pid) { return String(pid || '').replace(/^p_/, '').toUpperCase().slice(0, 8) || '—'; }
+      function fmtDur(sec) {
+        const s = Math.max(0, sec | 0);
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+        if (h > 0) return h + ' 小時 ' + m + ' 分';
+        return m + ' 分';
+      }
+      function ago(t) {
+        const d = Math.max(0, Date.now() - (t || 0)) / 1000;
+        if (d < 60) return '剛剛';
+        if (d < 3600) return Math.floor(d / 60) + ' 分鐘前';
+        if (d < 86400) return Math.floor(d / 3600) + ' 小時前';
+        return Math.floor(d / 86400) + ' 天前';
+      }
+      function findPid(pid) {
+        for (let i = 0; i < S.list.length; i++) if (S.list[i].pid === pid) return S.list[i];
+        if (S.me && S.me.pid === pid) return S.me;
+        return null;
+      }
+
+      function rowHTML(p) {
+        const isF = S.friends.indexOf(p.pid) >= 0;
+        const isB = S.blocks.indexOf(p.pid) >= 0;
+        const kind = p.kind === 'member' ? '<em>會員</em>' : '<em class="g">遊客</em>';
+        return '<div class="onrow' + (isB ? ' blk' : '') + '" data-pid="' + esc(p.pid) + '">' +
+          '<div class="onav">' + (p.ch != null ? ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠', '⚪', '⚫'][p.ch & 7] : '🙂') + '</div>' +
+          '<div class="onmeta"><div class="onname">' + esc(p.name || '無名玩家') + kind +
+          (isF ? '<em>好友</em>' : '') + '</div>' +
+          '<div class="onsub">' + esc(p.gender || '不公開') + ' · ' + esc(p.region || '未知') +
+          ' · 玩 ' + fmtDur(p.sec) + (p.pts ? ' · 成就 ' + p.pts + ' 分' : '') + '</div></div>' +
+          '<div class="onmode">' + esc(p.mode || '大廳') + '</div></div>';
+      }
+
+      function renderList() {
+        let arr = S.list.filter(function (p) { return S.blocks.indexOf(p.pid) < 0; });
+        if (S.tab === 'friend') arr = arr.filter(function (p) { return S.friends.indexOf(p.pid) >= 0; });
+        if (S.tab === 'block') {
+          const blocks = S.blocks.map(function (id) { return findPid(id) || { pid: id, name: '（已離線）' + pcode(id) }; });
+          if (!blocks.length) return '<div class="rkempty">黑名單是空的。<br>在玩家資料裡按「🚫 封鎖」就會出現在這裡。</div>';
+          return '<div class="bhnote">被封鎖的玩家不會出現在名單、也不能私訊你。</div><div class="onlist">' +
+            blocks.map(function (p) {
+              return '<div class="onrow blk" data-pid="' + esc(p.pid) + '"><div class="onav">🚫</div>' +
+                '<div class="onmeta"><div class="onname">' + esc(p.name) + '</div>' +
+                '<div class="onsub">編號 ' + pcode(p.pid) + '</div></div><div class="onmode">已封鎖</div></div>';
+            }).join('') + '</div>';
+        }
+        if (!arr.length) {
+          return '<div class="rkempty">' + (S.tab === 'friend'
+            ? '還沒有好友。<br>在「線上」點一位玩家，再按「➕ 加好友」。'
+            : '目前沒有人在線上。<br>（名單只顯示 150 秒內有動靜的玩家）') + '</div>';
+        }
+        return '<div class="onbar"><span class="ondot"></span>線上 ' + S.total +
+          ' 人 · 更新於 ' + ago(S.at) + '</div><div class="onlist">' + arr.map(rowHTML).join('') + '</div>';
+      }
+
+      function renderMe() {
+        const me = S.me || {};
+        const opt = GENDERS.map(function (g) {
+          return '<option value="' + g + '"' + (P.gender === g ? ' selected' : '') + '>' + g + '</option>';
+        }).join('');
+        return '<div class="ondetail"><div class="odtop"><div class="odav">🙂</div><div>' +
+          '<div class="odname">' + esc(myName()) + '</div>' +
+          '<div class="odid">玩家編號 ' + pcode(me.pid) + ' · ' + (myKind() === 'member' ? '會員' : '遊客') + '</div></div></div>' +
+          '<div class="bhnote">這些資料會顯示給其他線上玩家看。' +
+          (myKind() === 'member' ? '' : '（遊客身分也能用，但換裝置就換一個身分）') + '</div>' +
+          '<div class="onprof">' +
+            '<label class="odcell">性別 <select class="chatin" id="socGender" style="padding:4px 6px">' + opt + '</select></label>' +
+            '<label class="odcell">來自 <input class="chatin" id="socRegion" maxlength="12" style="padding:4px 6px" placeholder="例：台灣・高雄" value="' + esc(P.region) + '"></label>' +
+          '</div>' +
+          '<label class="odcell" style="margin-top:6px;display:block">一句話（最多 24 字）' +
+          '<input class="chatin" id="socBio" maxlength="24" style="padding:6px 8px;width:100%;margin-top:4px" placeholder="例：只玩大逃殺" value="' + esc(P.bio) + '"></label>' +
+          '<div class="odact"><button class="bhbtn warm" id="socSave" type="button">儲存並更新</button>' +
+          '<button class="bhbtn" id="socHb" type="button">↻ 重新連線</button></div>' +
+          '<div class="bhnote" style="margin-top:9px">累積遊玩 ' + fmtDur(myPlaySec()) + ' · 成就 ' + myPts() + ' 分 · 冠軍 ' + myWins() + ' 次</div>' +
+          '</div>';
+      }
+
+      function renderDetail() {
+        const p = S.sel;
+        if (!p) return '<div class="rkempty">找不到這位玩家（可能已離線）。</div>';
+        const isF = S.friends.indexOf(p.pid) >= 0;
+        const isB = S.blocks.indexOf(p.pid) >= 0;
+        const isMe = S.me && S.me.pid === p.pid;
+        return '<button class="bhbtn" id="onBack" type="button" style="margin-bottom:9px">← 回名單</button>' +
+          '<div class="ondetail"><div class="odtop"><div class="odav">' +
+          (p.ch != null ? ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠', '⚪', '⚫'][p.ch & 7] : '🙂') + '</div><div>' +
+          '<div class="odname">' + esc(p.name || '無名玩家') + '</div>' +
+          '<div class="odid">玩家編號 ' + pcode(p.pid) + ' · ' + (p.kind === 'member' ? '會員' : '遊客') +
+          ' · ' + ago(p.seen) + '有動靜</div></div></div>' +
+          '<div class="odgrid">' +
+            '<div class="odcell">性別<b>' + esc(p.gender || '不公開') + '</b></div>' +
+            '<div class="odcell">來自<b>' + esc(p.region || '未知') + '</b></div>' +
+            '<div class="odcell">加入時間<b>' + (p.join ? new Date(p.join).toLocaleDateString('zh-TW') : '—') + '</b></div>' +
+            '<div class="odcell">累積遊玩<b>' + fmtDur(p.sec) + '</b></div>' +
+            '<div class="odcell">成就分<b>' + (p.pts | 0) + '</b></div>' +
+            '<div class="odcell">冠軍次數<b>' + (p.wins | 0) + '</b></div>' +
+            '<div class="odcell">目前狀態<b>' + esc(p.mode || '大廳') + '</b></div>' +
+            '<div class="odcell">身分<b>' + (p.kind === 'member' ? '會員' : '遊客') + '</b></div>' +
+          '</div>' +
+          (p.bio ? '<div class="bhnote" style="margin-top:8px">💬 ' + esc(p.bio) + '</div>' : '') +
+          '<div class="odact">' +
+            (isMe ? '<span class="bhnote">這是你自己</span>' :
+              '<button class="bhbtn warm" id="onFriend" type="button">' + (isF ? '✅ 移除好友' : '➕ 加好友') + '</button>' +
+              '<button class="bhbtn" id="onDm" type="button">💬 私訊</button>' +
+              '<button class="bhbtn" id="onBlock" type="button">' + (isB ? '↩️ 解除封鎖' : '🚫 封鎖') + '</button>') +
+          '</div></div>';
+      }
+
+      function renderChat() {
+        const p = findPid(S.chatWith) || { pid: S.chatWith, name: '玩家' };
+        const log = S.msgs.map(function (m) {
+          const mine = m.from === (S.me && S.me.pid);
+          return '<div class="chatmsg ' + (mine ? 'me' : 'you') + '">' + esc(m.m) + '</div>';
+        }).join('') || '<div class="chatmsg sys">還沒有訊息，打個招呼吧 👋</div>';
+        return '<button class="bhbtn" id="onChatBack" type="button" style="margin-bottom:9px">← 回資料</button>' +
+          '<div class="bhnote">與 <b>' + esc(p.name) + '</b> 的對話' + (S.chatErr ? '　⚠️ ' + S.chatErr : '') + '</div>' +
+          '<div class="chatbox"><div class="chatlog" id="onChatLog">' + log + '</div>' +
+          '<div class="chatrow"><input class="chatin" id="onChatIn" maxlength="60" placeholder="輸入訊息（最多 60 字）">' +
+          '<button class="bhbtn warm" id="onChatSend" type="button">送出</button></div></div>';
+      }
+
+      function render() {
+        const box = $id('onBody');
+        if (!box) return;
+        const tabs = $id('onTabs');
+        if (tabs) {
+          const T = [
+            { k: 'online', lab: '🟢 線上' },
+            { k: 'friend', lab: '🤝 好友' + (S.reqs.length ? ' (' + S.reqs.length + ')' : '') },
+            { k: 'block', lab: '🚫 黑名單' },
+            { k: 'me', lab: '🙂 我的資料' }
+          ];
+          tabs.innerHTML = T.map(function (t) {
+            return '<button class="bhtab' + (S.tab === t.k ? ' on' : '') + '" data-ontab="' + t.k + '" type="button">' + t.lab + '</button>';
+          }).join('');
+        }
+        const sub = $id('onSub');
+        if (sub) sub.textContent = S.on ? ('線上 ' + S.total + ' 人') : (S.err ? '連線失敗（' + S.err + '）' : '連線中…');
+        if (S.tab === 'me') { box.innerHTML = renderMe(); return; }
+        if (S.view === 'detail') { box.innerHTML = renderDetail(); return; }
+        if (S.view === 'chat') { box.innerHTML = renderChat(); const lg = $id('onChatLog'); if (lg) lg.scrollTop = lg.scrollHeight; return; }
+        box.innerHTML = (S.reqs.length && S.tab === 'friend'
+          ? '<div class="bhnote">🤝 有 ' + S.reqs.length + ' 個好友邀請：' + S.reqs.map(function (id) {
+              const p = findPid(id); return esc(p ? p.name : pcode(id));
+            }).join('、') + '（點名字加為好友）</div>' : '') + renderList();
+      }
+
+      function paint() { try { render(); } catch (e) { console.warn('[Social] 畫面更新失敗', e); } }
+
+      function open() {
+        opened = true;
+        const m = $id('onModal');
+        if (m) m.classList.add('on');
+        S.view = 'list';
+        paint();
+        hb();
+        fetchList();
+        if (!hbT) hbT = setInterval(function () { if (opened && !document.hidden) hb(); }, HB_MS);
+        if (!listT) listT = setInterval(function () { if (opened && !document.hidden && S.tab !== 'me') fetchList(); }, LIST_MS);
+        if (!dmT) dmT = setInterval(function () { if (opened && !document.hidden && S.view === 'chat') pollDm(true); }, DM_MS);
+      }
+      function close() { opened = false; const m = $id('onModal'); if (m) m.classList.remove('on'); }
+
+      /* 事件（用委派，重畫不會掉 listener） */
+      function onBodyClick(e) {
+        const t = e.target;
+        if (!t || !t.closest) return;
+        if (t.closest('#onBack')) { S.view = 'list'; S.sel = null; paint(); return; }
+        if (t.closest('#onChatBack')) { S.view = 'detail'; paint(); return; }
+        if (t.closest('#onChatSend')) {
+          const inp = $id('onChatIn');
+          if (inp) { send(inp.value); inp.value = ''; }
+          return;
+        }
+        if (t.closest('#socSave')) {
+          const g = $id('socGender'), r = $id('socRegion'), b = $id('socBio');
+          P.gender = g ? g.value : P.gender;
+          P.region = r ? String(r.value || '').slice(0, 12) : P.region;
+          P.bio = b ? String(b.value || '').slice(0, 24) : P.bio;
+          saveP();
+          hb().then(function () { try { toast('✅ 資料已更新', 2); } catch (e2) {} });
+          return;
+        }
+        if (t.closest('#socHb')) { hb().then(fetchList); return; }
+        const fr = t.closest('#onFriend');
+        if (fr && S.sel) { act(S.friends.indexOf(S.sel.pid) >= 0 ? 'unfriend' : 'friend', S.sel.pid); return; }
+        const dm = t.closest('#onDm');
+        if (dm && S.sel) { openChat(S.sel.pid); return; }
+        const bl = t.closest('#onBlock');
+        if (bl && S.sel) { act(S.blocks.indexOf(S.sel.pid) >= 0 ? 'unblock' : 'block', S.sel.pid); return; }
+        const row = t.closest('[data-pid]');
+        if (row) {
+          const pid = row.getAttribute('data-pid');
+          S.sel = findPid(pid) || { pid: pid, name: '（已離線）' + pcode(pid) };
+          S.view = 'detail';
+          paint();
+          return;
+        }
+      }
+      function onTabClick(e) {
+        const t = e.target;
+        const b = t && t.closest ? t.closest('[data-ontab]') : null;
+        if (!b) return;
+        S.tab = b.getAttribute('data-ontab');
+        S.view = 'list';
+        paint();
+        if (S.tab !== 'me') fetchList();
+      }
+
+      function init() {
+        loadP();
+        const bodyEl = $id('onBody');
+        if (bodyEl) bodyEl.addEventListener('click', onBodyClick);
+        const tabsEl = $id('onTabs');
+        if (tabsEl) tabsEl.addEventListener('click', onTabClick);
+        const ob = $id('btnPlayers');
+        if (ob) ob.addEventListener('click', open);
+        const mb = $id('onModal');
+        if (mb) mb.addEventListener('click', function (e) { if (e.target === mb) close(); });
+        const x = $id('onX');
+        if (x) x.addEventListener('click', close);
+        const rf = $id('onRefresh');
+        if (rf) rf.addEventListener('click', function () { hb(); fetchList(); if (S.view === 'chat') pollDm(true); });
+        // 玩了一段時間才慢慢把心跳打開（首頁不動時不必一直打）
+        setTimeout(function () { if (!document.hidden) hb(); }, 4000);
+        setInterval(function () { if (!document.hidden && (opened || Math.random() < .5)) hb(); }, HB_MS);
+        // 換名字／換角色 → 下一次心跳就更新
+        try { Ach.on(function () { }); } catch (e) {}
+      }
+
+      window.Social = { open: open, close: close, hb: hb, list: fetchList, render: paint, init: init,
+        state: function () { return { gender: P.gender, region: P.region, bio: P.bio }; },
+        setState: function (o) {
+          if (!o) return;
+          if (o.gender) P.gender = String(o.gender).slice(0, 8);
+          if (o.region) P.region = String(o.region).slice(0, 12);
+          if (o.bio) P.bio = String(o.bio).slice(0, 24);
+          saveP();
+        },
+        _s: S, _p: P
+      };
+      return window.Social;
+    })();
+  } catch (e) {
+    console.error('[Social] 初始化失敗（線上名單停用）：', e);
+    return { open: function () {}, close: function () {}, hb: function () {}, list: function () {}, render: function () {},
+      state: function () { return {}; }, setState: function () {} };
+  }
+})();
+
+/* =====================================================================
+ * v5.13：成就面板（AchUI）
+ * ================================================================== */
+const AchUI = (function () {
+  try {
+    return (function () {
+      const S = { tab: 'all', open: false, sel: '' };
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+        });
+      }
+      function fmtUnit(se, v) {
+        if (se.key === 'playSec') return Math.floor(v / 3600) + ' 小時';
+        return v + ' ' + (se.unit || '');
+      }
+      function seriesHTML(se) {
+        const p = Ach.progress(se);
+        const cur = p.cur;
+        const nextNeed = p.next;
+        const lv = Math.min(p.tier + 1, p.max);
+        const pct = nextNeed ? Math.min(100, Math.round(cur / nextNeed * 100)) : 100;
+        // 下一個要達成的成就（已全解鎖就顯示最後一個）
+        const nextIdx = p.next ? p.tier : (p.max - 1);
+        const nextA = Ach.byId(se.key + '_' + nextIdx);
+        const done = p.tier >= p.max;
+        const head = done
+          ? '全部 ' + p.max + ' 階完成'
+          : '下一個：' + (nextA ? nextA.name : '—') + ' · ' + fmtUnit(se, nextNeed) + '（目前 ' + fmtUnit(se, cur) + '）';
+        const rows = [];
+        for (let i = 0; i < se.need.length; i++) {
+          const a = Ach.byId(se.key + '_' + i);
+          if (!a) continue;
+          const u = Ach.isUnlocked(a.id), g = Ach.isClaimed(a.id);
+          rows.push('<div class="achrow' + (u ? ' got' : ' lock') + '" style="margin-bottom:4px">' +
+            '<div class="achico">' + (u ? '✅' : '🔒') + '</div>' +
+            '<div class="achmain"><div class="achname">' + esc(a.name) +
+              ' <span class="lvt">' + (i + 1) + ' 階</span></div>' +
+              '<div class="achdesc">' + esc(se.name) + ' ' + fmtUnit(se, a.need) + ' · ' + a.pts + ' 分</div></div>' +
+            '<div class="achrw">' +
+              (u && !g
+                ? '<button class="achget" data-claim="' + a.id + '" type="button">領 ' + a.gold + '</button>'
+                : (g ? '<span class="achdone">已領 +' + a.gold + '</span>' : '<span class="achgold">💰 ' + a.gold + '</span>')) +
+            '</div></div>');
+        }
+        return '<div class="achrow' + (done ? ' got' : '') + '" style="align-items:flex-start">' +
+          '<div class="achico" style="margin-top:2px">' + se.ico + '</div>' +
+          '<div class="achmain"><div class="achname">' + esc(se.name) +
+            '<span class="lvt">' + p.tier + '/' + p.max + ' 階</span></div>' +
+            '<div class="achdesc">' + esc(head) + '</div>' +
+            '<div class="achprog"><i style="width:' + pct + '%"></i></div></div></div>' +
+          '<details style="margin:-2px 0 9px;padding-left:8px"><summary style="font-size:11px;color:#a1794c;cursor:pointer;' +
+          'font-weight:800;padding:4px 0">查看 ' + p.max + ' 個階級</summary>' + rows.join('') + '</details>';
+      }
+
+      function titlesHTML() {
+        const pts = Ach.points();
+        const cur = Ach.titleOf(pts);
+        const nx = Ach.nextTitle();
+        let h = '<div class="achsum"><div><div class="big">' + pts + '</div><div class="txt">成就分</div></div>' +
+          '<div class="txt" style="flex:1"><b>' + (cur ? cur.ico + ' ' + cur.name : '尚未取得稱號') + '</b><br>' +
+          (nx ? '再 ' + (nx.need - pts) + ' 分 → ' + nx.ico + ' ' + nx.name : '已達最高稱號') + '</div></div>';
+        h += '<div class="bhnote">稱號會顯示在你頭上（遊戲中／大逃殺都看得到）。成就分＝解鎖成就時拿到的分數，' +
+          '越難的階級分數越高。</div><div class="achtt">';
+        Ach.TITLES.forEach(function (t) {
+          const on = cur && t.need === cur.need;
+          const got = pts >= t.need;
+          h += '<div class="ttrow' + (on ? ' on' : '') + '" style="opacity:' + (got ? 1 : .55) + '">' +
+            '<div class="ttframe" style="background:' + t.frame + ';border-color:rgba(120,70,20,.25)">' + t.ico + '</div>' +
+            '<div class="ttmeta"><div class="ttname" style="color:' + t.color + '">' + t.name +
+            (on ? ' <span style="font-size:10px;color:#2f8b52">（使用中）</span>' : '') + '</div>' +
+            '<div class="ttneed">需要 ' + t.need + ' 成就分' + (got ? ' · 已達成' : ' · 還差 ' + (t.need - pts)) + '</div></div>' +
+            '<div class="achgold">' + (got ? '✅' : '🔒') + '</div></div>';
+        });
+        return h + '</div>';
+      }
+
+      function render() {
+        const box = $id('achBody');
+        if (!box) return;
+        const tabs = $id('achTabs');
+        if (tabs) {
+          tabs.innerHTML = Ach.CATS.map(function (c) {
+            return '<button class="bhtab' + (S.tab === c.key ? ' on' : '') + '" data-acht="' + c.key + '" type="button">' +
+              c.ico + ' ' + c.lab + '</button>';
+          }).join('');
+        }
+        const pts = Ach.points();
+        const el = $id('achPts');
+        if (el) el.textContent = pts + ' 分 · ' + Ach.unlockedCount() + '/' + Ach.LIST.length + ' 個';
+        if (S.tab === 'title') { box.innerHTML = titlesHTML(); return; }
+        const list = Ach.SERIES.filter(function (se) { return S.tab === 'all' || se.cat === S.tab; });
+        let h = '<div class="achsum"><div><div class="big">' + pts + '</div><div class="txt">成就分</div></div>' +
+          '<div style="flex:1"><div class="txt" style="margin-bottom:4px">已解鎖 <b>' + Ach.unlockedCount() +
+          '</b> / ' + Ach.LIST.length + ' 個成就 · 待領 ' + Ach.unclaimed().length + ' 個</div>' +
+          '<div class="achbarwrap"><div class="achbar" style="width:' +
+          Math.round(Ach.unlockedCount() / Math.max(1, Ach.LIST.length) * 100) + '%"></div></div></div></div>';
+        let lastCat = '';
+        list.forEach(function (se) {
+          if (S.tab === 'all' && se.cat !== lastCat) {
+            lastCat = se.cat;
+            const c = Ach.CATS.filter(function (x) { return x.key === se.cat; })[0];
+            h += '<div class="achgrp"><i>' + (c ? c.ico : '•') + '</i>' + (c ? c.lab : se.cat) + '</div>';
+          }
+          h += seriesHTML(se);
+        });
+        box.innerHTML = h;
+      }
+
+      function open() {
+        S.open = true;
+        const m = $id('achModal');
+        if (m) m.classList.add('on');
+        render();
+        alertOff();
+        try { AudioSys.sfx('click'); } catch (e) {}
+      }
+      function close() { S.open = false; const m = $id('achModal'); if (m) m.classList.remove('on'); }
+      function alertOn() {
+        const d = $id('achDot');
+        if (d) d.classList.remove('hide');
+      }
+      function alertOff() {
+        const d = $id('achDot');
+        if (d) d.classList.add('hide');
+      }
+
+      function init() {
+        const tabs = $id('achTabs');
+        if (tabs) tabs.addEventListener('click', function (e) {
+          const b = e.target && e.target.closest ? e.target.closest('[data-acht]') : null;
+          if (!b) return;
+          S.tab = b.getAttribute('data-acht');
+          render();
+        });
+        const body = $id('achBody');
+        if (body) body.addEventListener('click', function (e) {
+          const b = e.target && e.target.closest ? e.target.closest('[data-claim]') : null;
+          if (!b) return;
+          const id = b.getAttribute('data-claim');
+          const g = Ach.claim(id);
+          if (g > 0) { try { toast('💰 金幣 +' + g, 2); } catch (err) {} }
+          render();
+        });
+        const all = $id('achClaimAll');
+        if (all) all.addEventListener('click', function () {
+          const sum = Ach.claimAll();
+          if (sum <= 0) { try { toast('目前沒有可領取的成就', 2); } catch (e) {} }
+          render();
+        });
+        const x = $id('achX');
+        if (x) x.addEventListener('click', close);
+        const m = $id('achModal');
+        if (m) m.addEventListener('click', function (e) { if (e.target === m) close(); });
+        const btn = $id('btnAch');
+        if (btn) btn.addEventListener('click', open);
+        // 有成就達成但沒領 → 入口亮小紅點
+        try { Ach.on(function () { if (Ach.unclaimed().length) alertOn(); }); } catch (e) {}
+        if (Ach.unclaimed().length) alertOn();
+      }
+      window.AchUI = { open: open, close: close, render: render, alertOn: alertOn, alertOff: alertOff, init: init };
+      return window.AchUI;
+    })();
+  } catch (e) {
+    console.error('[AchUI] 初始化失敗：', e);
+    return { open: function () {}, close: function () {}, render: function () {}, alertOn: function () {}, alertOff: function () {} };
+  }
+})();
+
+/* =====================================================================
+ * v5.13：排名面板（RankUI）
+ * ================================================================== */
+const RankUI = (function () {
+  try {
+    return (function () {
+      const S = { cat: 'soloKill', scope: 'all', open: false, data: null, busy: false };
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+        });
+      }
+      function catOf(k) {
+        return Rank.CATS.filter(function (c) { return c.k === k; })[0] || Rank.CATS[0];
+      }
+      function render() {
+        const box = $id('rkBody');
+        if (!box) return;
+        const tabs = $id('rkTabs');
+        if (tabs) {
+          tabs.innerHTML = Rank.CATS.map(function (c) {
+            return '<button class="bhtab' + (S.cat === c.k ? ' on' : '') + '" data-rkcat="' + c.k + '" type="button">' +
+              c.ico + ' ' + c.lab + '</button>';
+          }).join('');
+        }
+        const c = catOf(S.cat);
+        const cache = Rank.cache(S.cat, S.scope);
+        const list = (cache && cache.list) || [];
+        const me = (cache && cache.me) || null;
+        let h = '<div class="rkbar"><div class="rkpills">' +
+          '<button class="rkp' + (S.scope === 'all' ? ' on' : '') + '" data-rkscope="all" type="button">🏆 歷史總榜</button>' +
+          '<button class="rkp' + (S.scope === 'week' ? ' on' : '') + '" data-rkscope="week" type="button">📅 本週活動</button>' +
+          '</div></div>';
+        if (S.scope === 'week') {
+          const got = Rank.claimedThisWeek();
+          h += '<div class="rkweek">本週 ' + Rank.weekKey() + '（週一 08:00 重置）<br>' +
+            '前 10 名獎金：' + Rank.REWARD.slice(0, 5).join(' / ') + ' / 200 …<br>' +
+            (got ? '✅ 本週獎勵已領取' : '達到名次後按下面按鈕領取。') + '</div>' +
+            '<div class="rkbar"><button class="bhbtn warm" id="rkClaim" type="button"' +
+            (got ? ' disabled' : '') + '>💰 領取本週獎勵</button>' +
+            '<span style="font-size:11px;color:#8a6b45">我的本週：' + Rank.delta(S.cat) + ' ' + c.unit + '</span></div>';
+        } else {
+          h += '<div class="rkbar"><span style="font-size:11.5px;color:#8a6b45">我的累積：<b>' +
+            Rank.cur(S.cat) + '</b> ' + c.unit + '</span></div>';
+        }
+        if (!list.length) {
+          h += '<div class="rkempty">這個榜還沒有人上榜。<br>玩一場就會自動記錄（不用手動報名）。</div>';
+        } else {
+          h += '<div class="rklist">' + list.map(function (r, i) {
+            const no = i + 1;
+            return '<div class="rkrow' + (me && r.pid && me.pid && r.pid === me.pid ? ' me' : '') + '">' +
+              '<div class="rkno' + (no <= 3 ? ' g' + no : '') + '">' + (no === 1 ? '🥇' : no === 2 ? '🥈' : no === 3 ? '🥉' : no) + '</div>' +
+              '<div class="rkname">' + esc(r.name || '無名玩家') + '</div>' +
+              '<div class="rkval">' + (r.v | 0) + ' ' + c.unit + '</div></div>';
+          }).join('') + '</div>';
+        }
+        if (me && me.rank) {
+          h += '<div class="rkweek" style="margin-top:9px">你目前第 <b>' + me.rank + '</b> 名（' + (me.v | 0) + ' ' + c.unit + '）</div>';
+        }
+        box.innerHTML = h;
+      }
+      function reload() {
+        if (S.busy) return;
+        S.busy = true;
+        const box = $id('rkBody');
+        if (box && !Rank.cache(S.cat, S.scope)) box.innerHTML = '<div class="rkempty">讀取中…</div>';
+        Rank.top(S.cat, S.scope).then(function () { S.busy = false; render(); }, function () { S.busy = false; render(); });
+      }
+      function open() {
+        S.open = true;
+        const m = $id('rankModal');
+        if (m) m.classList.add('on');
+        render();
+        Rank.submit();
+        reload();
+        try { AudioSys.sfx('click'); } catch (e) {}
+      }
+      function close() { S.open = false; const m = $id('rankModal'); if (m) m.classList.remove('on'); }
+
+      function init() {
+        const tabs = $id('rkTabs');
+        if (tabs) tabs.addEventListener('click', function (e) {
+          const b = e.target && e.target.closest ? e.target.closest('[data-rkcat]') : null;
+          if (!b) return;
+          S.cat = b.getAttribute('data-rkcat');
+          render();
+          reload();
+        });
+        const body = $id('rkBody');
+        if (body) body.addEventListener('click', function (e) {
+          const b = e.target && e.target.closest ? e.target.closest('[data-rkscope]') : null;
+          if (b) { S.scope = b.getAttribute('data-rkscope'); render(); reload(); return; }
+          const cl = e.target && e.target.closest ? e.target.closest('#rkClaim') : null;
+          if (cl) {
+            cl.disabled = true;
+            Rank.claimWeek().then(function (j) {
+              if (j && j.ok && j.gold <= 0 && j.rank > 10) toast('你這週第 ' + j.rank + ' 名，下次再加油！', 3);
+              render();
+            });
+          }
+        });
+        const x = $id('rankX');
+        if (x) x.addEventListener('click', close);
+        const m = $id('rankModal');
+        if (m) m.addEventListener('click', function (e) { if (e.target === m) close(); });
+        const btn = $id('btnRank');
+        if (btn) btn.addEventListener('click', open);
+        const rf = $id('rkReload');
+        if (rf) rf.addEventListener('click', function () { Rank.submit(); reload(); });
+      }
+      window.RankUI = { open: open, close: close, render: render, reload: reload, init: init };
+      return window.RankUI;
+    })();
+  } catch (e) {
+    console.error('[RankUI] 初始化失敗：', e);
+    return { open: function () {}, close: function () {}, render: function () {}, reload: function () {} };
+  }
+})();
+
 // ============================================================================
 //  v4.87：每日簽到 ／ 每日 3 任務 ／ 關卡三星 ／ 每週榜
 //  設計原則：
@@ -12598,6 +14191,7 @@ function petHitEnemy(e, dmg) {
   burst(e.x, e.y, '#ffffff', 8, 170);
   if (e.hp <= 0) {
     e.dead = true;
+    try { AchFoe(e); } catch (x) {}
     Game.players.forEach(function (p) { p.score += 200; });
     burst(e.x, e.y, e.color || '#fff', 18, 210);
     AudioSys.sfx('hurt');
@@ -13136,6 +14730,12 @@ function updateSolo(dt) {
             }
             Gift.add('clear', 1);
             if (!hurt) Gift.add('perfect', 1);
+            try {
+              Ach.count(Game.mode === 'rpg' ? 'rpgClear' : 'soloClear', 1);
+              if (!hurt) Ach.count('soloNoHit', 1);
+              if (stars >= 3) Ach.star3(cleared);
+              Rank.submitSoon(3000);
+            } catch (e) {}
             // 每週榜：本週指定關卡 → 送最速通關秒數
             if (cleared === Gift.weekStage() && isFinite(Game.timerMax) && Game.timerMax > 0) {
               const used = Math.round((Game.timerMax - Game.timer) * 1000);
@@ -13246,6 +14846,7 @@ function killPlayer(p, silent, killer) {
     b.passers = [];
   }
   p.alive = false; p.dead = true;
+  try { if (p === Game.players[0]) Ach.count('death', 1); } catch (e) {}
   p.lives -= 1;
   p.respawnT = 1.6;
   p.cry = 2.8;                    // v1.7：被炸到要亮相大哭臉
@@ -13478,6 +15079,7 @@ function enemyFlameDamage(e, dt) {
           break;
         }
         e.dead = true;
+        try { AchFoe(e); } catch (x) {}
         Game.players.forEach(function (p) { p.score += 100; });
         burst(e.x, e.y, e.color, 14, 180);
         bubbleDeathPair(e, f.owner, e.r * 2 + 14, Game.T * 1.98);
@@ -13596,6 +15198,7 @@ function updateEnemy(e, dt) {
           break;
         }
         e.dead = true;
+        try { AchFoe(e); } catch (x) {}
         Game.players.forEach(function (p) { p.score += 100; });
         burst(e.x, e.y, e.color, 14, 180);
         bubbleDeathPair(e, f.owner, e.r * 2 + 14, Game.T * 1.98);
@@ -14105,6 +15708,7 @@ function updateBoss(e, dt) {
       AudioSys.sfx('hurt');
       if (e.hp <= 0) {
         e.dead = true;
+        try { AchFoe(e); } catch (x) {}
         try { Gift.add('kill', 1); } catch (err2) {}      // v4.87：每日任務「擊殺」
         Game.players.forEach(function (p2) { p2.score += 1000; });
         burst(e.x, e.y, '#c93aff', 40, 300);
@@ -14551,6 +16155,7 @@ function killBattlePlayer(p, killer) {
     b.px = p.x; b.py = p.y; b.passers = [];
   }
   p.alive = false; p.dead = true; p.respawnT = 1;
+  try { AchPvp(p, killer); } catch (e) {}
   p.cry = 2.8;                    // v1.7：被炸到要亮相大哭臉
   if (Game.mode === 'br') brOnDeath(p);      // v4.72：大逃殺記名次（不會復活、不坐推車）
   AudioSys.sfx('die');
@@ -15631,6 +17236,12 @@ function brFinish(winner) {
     try { Shop.grantTicket(1); tk = Shop.tickets(); } catch (e) {}
   }
   try {
+    if (place <= 10) Ach.count('brTop10', 1);
+    if (place <= 3) Ach.count('brTop3', 1);
+    if (win) Ach.count('brWin', 1);
+    Rank.submitSoon(1200);
+  } catch (e) {}
+  try {
     if (typeof Cloud !== 'undefined' && Cloud.track) {
       const tm = (BR.TEAM | 0) >= 2 ? (BR.TEAM | 0) + ' 人一隊' : '單人';
       Cloud.track('br', place, '大逃殺 ' + BR.N + ' 人・' + tm + '・第 ' + place + ' 名');
@@ -15947,6 +17558,12 @@ function nextBattleRound(winner, winTeam) {
     : !!(winner && winner.wins >= Game.winsNeeded);
   if (done) {
     Game.state = 'over';
+    try {
+      const meP = Game.players[0];
+      const won = byTeam ? (!!meP && meP.team >= 0 && winTeam === meP.team) : (winner === meP);
+      if (won) Ach.count((typeof Net !== 'undefined' && Net && Net.on) ? 'onWin' : 'btWin', 1);
+      Rank.submitSoon(1200);
+    } catch (e) {}
     let title, scoreLine;
     if (byTeam) {
       title = '🏆 ' + t('bt.crown', { n: teamName(winTeam) });
@@ -18164,6 +19781,7 @@ function dailyClear(p) {
   const d = Game.daily;
   if (!d || d.done) return;
   d.done = true;
+  try { Ach.count('dailyDone', 1); } catch (e) {}
   d.ms = Math.round(d.ms || 0);
   Daily.saveBest(d.day, d.ms);
   // v5.11：獎金推送 —— 過關當下就把金幣進錢包，並記在 d.prize 給結算畫面顯示
@@ -25805,6 +27423,36 @@ function drawMeBadge(x, y, R, T, headTop, mode) {
   ctx.fillText(tr(ME_BADGE_TXT), x, top + h * .56);
   ctx.fillStyle = '#4a1c00';
   ctx.fillText(tr(ME_BADGE_TXT), x, top + h * .5);
+  /* v5.13：成就稱號（畫在「我」名牌上方；顏色與外框跟著稱號等級走） */
+  try {
+    const tt = (typeof Ach !== 'undefined' && Ach.titleOf) ? Ach.titleOf() : null;
+    if (tt && fade > .05) {
+      const fh = Math.max(13, h * .82);
+      ctx.globalAlpha = fade;
+      ctx.font = '900 ' + Math.round(fh * .64) + 'px system-ui, "Microsoft JhengHei", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const label = tt.ico + ' ' + tt.name;
+      const tw = Math.min(w * 3.4, ctx.measureText(label).width + fh * .72);
+      const ty = top - fh * .86;
+      const lx = x - tw / 2, ly = ty - fh * .5, rr2 = Math.min(fh * .5, tw / 3);
+      ctx.beginPath();
+      ctx.moveTo(lx + rr2, ly);
+      ctx.lineTo(lx + tw - rr2, ly);
+      ctx.quadraticCurveTo(lx + tw, ly, lx + tw, ly + rr2);
+      ctx.lineTo(lx + tw, ly + fh - rr2);
+      ctx.quadraticCurveTo(lx + tw, ly + fh, lx + tw - rr2, ly + fh);
+      ctx.lineTo(lx + rr2, ly + fh);
+      ctx.quadraticCurveTo(lx, ly + fh, lx, ly + fh - rr2);
+      ctx.lineTo(lx, ly + rr2);
+      ctx.quadraticCurveTo(lx, ly, lx + rr2, ly);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(32,16,0,.66)'; ctx.fill();
+      ctx.lineWidth = Math.max(1.2, T * .034); ctx.strokeStyle = tt.color; ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.fillStyle = '#fff8e6';
+      ctx.fillText(label, x, ty + .5);
+    }
+  } catch (e) {}
   ctx.restore();
 }
 
@@ -26345,6 +27993,7 @@ function loop(ts) {
   if (Net.on && Net.role === 'guest') Net.guestTick(dt);
   else if (Net.on && Net.role === 'host') Net.hostTick(dt);
   try { PlayStat.tick(dt); } catch (e) {}    // v5.5：累計遊玩時間（只算 state==='play'）
+  try { Ach.addTime(dt); } catch (e) {}       // v5.13：成就用（同一條判定，只有真的在玩才算）
   // 清掉死亡敵人（v4.36：先跑一次死亡行為，例如分裂）
   for (let i = Game.enemies.length - 1; i >= 0; i--) {
     if (Game.enemies[i].dead) {
@@ -30204,7 +31853,15 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.12', date: '2026-11-05', now: true, items: [
+  { v: '5.13', date: '2026-11-05', now: true, items: [
+    '🏆 <b>成就系統上線</b>：八個分類、<b>192 個成就</b>（大逃殺擊殺／前十／前三／冠軍、對戰擊殺與冠軍、線上配對、單人殺怪與討伐 BOSS、RPG、坐騎、累積時數與登入天數…），<b>每個成就都有自己的名字</b>，達成就能領金幣（越難領越多）',
+    '📛 <b>頭上有名號了</b>：成就分累積到 <b>10／50／75／100／250／500／750／1000</b> 會依序換稱號 —— 見習英雄 → 流浪傭兵 → 荒野守衛 → 烈焰戰士 → 深藍精英 → 黃金英雄 → 紫電傳說 → 不朽神話，<b>名字、顏色、外框都不一樣</b>，遊戲中與大逃殺都看得到',
+    '📊 <b>十項排名</b>：單人殺怪／單人 BOSS／RPG 殺怪／RPG BOSS／大逃殺擊殺／大逃殺冠軍／對戰擊殺／對戰冠軍／線上配對擊殺／線上配對冠軍，<b>歷史總榜</b>＋<b>本週活動榜</b>（週一 08:00 重置，前 10 名有金幣，最高 1000）',
+    '👥 <b>線上玩家名單</b>：看得到誰在線上、正在玩什麼；點進去看<b>暱稱／性別／玩家編號／遊客或會員／來自哪／加入時間／累積遊玩時數／成就分／冠軍次數</b>，可以<b>加好友、私訊聊天、封鎖</b>',
+    '💾 成就、排名、個人資料都跟著帳號存到雲端 —— <b>換裝置或清快取不會歸零</b>（線上名單的身分是綁裝置的，換裝置等於換一個玩家編號）',
+    '🧪 新增 <b>verify-v513</b>：把成就門檻／領獎／合併、排名提交與週重置、線上名單與好友私訊的後端邏輯都跑過一遍'
+  ] },
+  { v: '5.12', date: '2026-11-05', now: false, items: [
     '☁️ <b>緊急修復：雲端存檔沒有真的寫回去</b>。上一個版本動到一個內部函式的擺放位置，導致伺服器一啟動就出錯 —— 帳號還讀得到、遊戲也照玩，但<b>新進度不會寫回雲端</b>（省電休眠或重新部署後可能回到舊進度）。現在已修好並加上<b>真的連一次資料庫</b>的測試，以後這種「看起來正常、其實沒存」的錯會直接被抓出來',
     '🧪 新增 <b>verify-v512</b>（21 項）：實際跑一次「從雲端載入分片 → 補齊舊帳號 id → 寫回雲端」的完整流程；另外驗證雲端連不上時<b>仍然不會用空資料蓋掉</b>線上存檔',
     '🔐 <b>帳號與登入完全沒受影響</b>：資料一直都在（讀得到、玩得到），出問題的只有「寫回去」這一步；已註冊的帳號不用重辦、進度也不會被清掉',
@@ -31115,6 +32772,7 @@ const Shop = (function () {
     n = Math.round(Number(n) || 0);
     if (n <= 0) return gold;
     gold += n; save();
+    try { Ach.count('goldEarn', n); } catch (e) {}
     return gold;
   }
   // v4.18：開發者帳號金幣無限（錢包顯示 ∞、買東西不扣錢）
@@ -32504,6 +34162,7 @@ function rpgHurt(p, silent, killer) {
   AudioSys.sfx('hurt');
   if (p.hpCur <= 0) {                                // 生命歸零 → 冒險失敗
     p.alive = false; p.dead = true; p.lives = 0; p.respawnT = 1.2; p.cry = 2.8;
+    try { if (p === Game.players[0]) Ach.count('death', 1); } catch (e) {}
     AudioSys.sfx('die');
     burst(p.x, p.y, p.ch.color, 22, 220);
     startGloat(killer, p);
@@ -34475,7 +36134,8 @@ function rpgAdjust(k, d) {
     }
 
     function snapshot() {
-      const st = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {}, gift: null };
+      const st = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {}, gift: null,
+        ach: null, rank: null, soc: null };
       try { st.stage = num(Solo.unlocked, 1, 1, SOLO_STAGES); } catch (e) {}
       try {
         const s = Shop.state ? Shop.state() : null;
@@ -34488,6 +36148,10 @@ function rpgAdjust(k, d) {
       try { st.tut = (Tut.state ? Tut.state() : null) || {}; } catch (e) {}
       try { st.daily = Daily.all() || {}; } catch (e) {}
       try { st.gift = (typeof Gift !== 'undefined' && Gift.state) ? Gift.state() : null; } catch (e) {}
+      // v5.13：成就（生涯計數器）／排名基準／線上個人資料 → 跟著帳號跨裝置
+      try { st.ach = (typeof Ach !== 'undefined' && Ach.state) ? Ach.state() : null; } catch (e) {}
+      try { st.rank = (typeof Rank !== 'undefined' && Rank.state) ? Rank.state() : null; } catch (e) {}
+      try { st.soc = (typeof Social !== 'undefined' && Social.state) ? Social.state() : null; } catch (e) {}
       return st;
     }
 
@@ -34542,7 +36206,8 @@ function rpgAdjust(k, d) {
     function merge(remote, local) {
       if (!remote) return local;
       if (!local) return remote;
-      const out = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {}, gift: null };
+      const out = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {}, gift: null,
+        ach: null, rank: null, soc: null };
       // 進度只前進不後退
       out.stage = Math.max(num(remote.stage, 1, 1, SOLO_STAGES), num(local.stage, 1, 1, SOLO_STAGES));
       // 金幣／票券會花掉，不能取大 → 以「本地非空就用本地」為準（本地才是玩家眼前看到的）
@@ -34571,6 +36236,10 @@ function rpgAdjust(k, d) {
       });
       // v4.87：簽到／任務／三星／每週最佳
       out.gift = mergeGift(remote.gift, local.gift);
+      // v5.13：成就算的是「生涯」，合併只能取大／取聯集，不能被另一台裝置的舊資料蓋小
+      try { out.ach = (typeof Ach !== 'undefined' && Ach.merge) ? Ach.merge(remote.ach, local.ach) : null; } catch (e) {}
+      try { out.rank = (typeof Rank !== 'undefined' && Rank.merge) ? Rank.merge(remote.rank, local.rank) : null; } catch (e) {}
+      out.soc = (local.soc && typeof local.soc === 'object') ? local.soc : ((remote.soc && typeof remote.soc === 'object') ? remote.soc : null);
       return out;
     }
 
@@ -34591,6 +36260,9 @@ function rpgAdjust(k, d) {
         if (st.gift && typeof Gift !== 'undefined' && Gift.setState) Gift.setState(st.gift);
         if (typeof GiftUI !== 'undefined' && GiftUI.alertOn) GiftUI.alertOn();
       } catch (e) {}
+      try { if (st.ach && typeof Ach !== 'undefined') Ach.setState(st.ach); } catch (e) {}
+      try { if (st.rank && typeof Rank !== 'undefined') Rank.setState(st.rank); } catch (e) {}
+      try { if (st.soc && typeof Social !== 'undefined') Social.setState(st.soc); } catch (e) {}
       return true;
     }
 
@@ -34761,6 +36433,9 @@ function rpgAdjust(k, d) {
     try { Save.onBoot(); } catch (e) {}
     try { Save.wireBackup(); } catch (e) {}
     try { GiftUI.wire(); } catch (e) {}        // v4.87：首頁左下角 🎁（簽到／任務／每週榜）
+    try { AchUI.init(); } catch (e) { __bootFail('AchUI', e); }     // v5.13：🏆 成就
+    try { RankUI.init(); } catch (e) { __bootFail('RankUI', e); }   // v5.13：📊 排名
+    try { Social.init(); } catch (e) { __bootFail('Social', e); }   // v5.13：👥 線上玩家
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
@@ -34878,6 +36553,9 @@ window.__BH = {
   Game: Game, Solo: Solo, Battle: Battle, Screen: Screen, settings: settings, SIZES: SIZES, Input: Input, IS_TOUCH: IS_TOUCH,
   // v4.80：每日挑戰 / 排行榜
   Daily: Daily, Lb: Lb, dailyDayKey: dailyDayKey, dailySeedOf: dailySeedOf, dailyStageOf: dailyStageOf,
+  // v5.13：成就 / 排名 / 線上玩家
+  Ach: Ach, AchUI: AchUI, Rank: Rank, RankUI: RankUI, Social: Social,
+  AchFoe: AchFoe, AchPvp: AchPvp, Save: (typeof Save !== 'undefined' ? Save : null),
   // v4.87：簽到 / 每日任務 / 三星 / 每週榜
   Gift: Gift, GiftUI: GiftUI,
   // v4.81：首頁分層

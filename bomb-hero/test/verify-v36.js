@@ -45,8 +45,9 @@ ok(html.indexOf('target="_blank"') > 0 && html.indexOf('rel="noopener noreferrer
 ok(body.indexOf('— Jon.') > 0, '署名 Jon.');
 
 console.log('\n=== 3. CSS：區塊內排版 + 收起成膠囊 ===');
-const cssAnn = (html.match(/\/\* =+\s*\n\s*v3\.0：作者公告欄[\s\S]*?body\.touch \.annbox \.annhead \{[^}]*\}/) || [''])[0];
-ok(cssAnn.length > 200, 'CSS 有 v3.0 公告欄區塊');
+const cssAnn = (html.match(/\.annbox \{[\s\S]*?\.annbox\.min \.annhead \{[^}]*\}/) || [''])[0];
+ok(cssAnn.length > 200 && /\.annbox \.annhead \{/.test(cssAnn) && /\.annbox\.min /.test(cssAnn),
+   'CSS 有公告欄區塊（住得進去，也能收成膠囊）');
 // v4.21：公告欄不再是 fixed 浮層（展開時會蓋住下面的選單按鈕 → 按鈕點不到）
 ok(/position: relative; z-index: 0;/.test(html), '.annbox 是正常排版（relative），不再是浮層');
 ok(!/\.annbox \{[\s\S]{0,200}?position: fixed/.test(html), '不再用 position: fixed（不會蓋住選單按鈕）');
