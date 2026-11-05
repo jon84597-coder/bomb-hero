@@ -497,6 +497,19 @@ font-size: 10px; font-weight: 900; letter-spacing: .06em; vertical-align: middle
 color: #3a1c00; background: linear-gradient(180deg, #ffe6a3, #ffb347);
 border-radius: 999px; padding: 2px 8px; margin-left: 6px;
 }
+/* v5.18：RPG 等級／經驗列（放在能力配點上面） */
+.rpgbar { margin: 0 0 10px; padding: 9px 11px; border-radius: 12px;
+  background: linear-gradient(180deg, rgba(38,52,84,.92), rgba(24,34,58,.92));
+  border: 1.5px solid #3c4f78; }
+.rpgbar .lvrow { display: flex; align-items: center; gap: 9px; }
+.rpgbar .lvtag { font-size: 13px; font-weight: 900; color: #ffd166; letter-spacing: .04em; white-space: nowrap; }
+.rpgbar .lvxp { flex: 1; height: 9px; border-radius: 999px; overflow: hidden;
+  background: rgba(8,14,28,.85); border: 1px solid #2c3c5e; }
+.rpgbar .lvxp i { display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, #ffd166, #f4703c); transition: width .35s ease; }
+.rpgbar .lvnum { font-size: 11px; font-weight: 800; color: #9fb4d8; white-space: nowrap;
+  font-variant-numeric: tabular-nums; }
+.rpgbar .lvhint { font-size: 10.5px; color: #8ea3c6; margin-top: 5px; line-height: 1.5; }
 .rpgrows { display: flex; flex-direction: column; gap: 9px; }
 .rpgrow {
 display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 9px;
@@ -4084,6 +4097,19 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .onav img, .odav img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .odav { overflow: hidden; }
 .odav.pick { cursor: pointer; }
+/* v5.18：稱號（個人資料／名單／別人的名片） */
+.odtt { margin: 3px 0 2px; display: flex; flex-wrap: wrap; gap: 6px; }
+.ttchip { display: inline-flex; align-items: center; gap: 4px; padding: 2.5px 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 900; line-height: 1.5; border: 1.5px solid rgba(120,70,20,.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7); white-space: nowrap; }
+.ttchip.off { color: #98a2b4; background: #f1f4f9; border-color: #dbe2ee; font-weight: 800; }
+.ttchip.dev { border-color: #7b4bd4; box-shadow: 0 0 0 1px rgba(160,120,255,.35), inset 0 1px 0 rgba(255,255,255,.25); }
+.ttmini { font-size: 12px; margin-right: 3px; }
+.ttpicks { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0 2px; }
+.ttpick { padding: 4px 10px; border-radius: 999px; border: 1.5px solid #d8c3a2; background: #fff8ea;
+  color: #8a4a1c; font-size: 11.5px; font-weight: 800; cursor: pointer; }
+.ttpick.on { background: #ffe0b0; border-color: #d89a3c; box-shadow: 0 0 0 2px rgba(216,154,60,.22); }
+.ttnote { font-size: 10.5px; color: #a1815a; margin-top: 4px; }
 .odeq { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 0 2px; }
 .odeq .eqi { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center;
   justify-content: center; font-size: 17px; background: #fff6e3; border: 1.5px solid #e6c48f; }
@@ -4153,7 +4179,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.17</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.18</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4196,7 +4222,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.17</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.18</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4422,6 +4448,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
       <div class="field"><label>① 選角色</label>
         <div class="chargrid" id="rpgCharRow"></div>
       </div>
+      <div class="rpgbar" id="rpgLvBar"></div>
       <div class="field"><label>② 能力配點</label>
         <div class="hint" style="margin:-2px 0 7px">剩餘 <b id="rpgLeft" style="color:#d4491f">9</b> 點 · 每項上限 10 格</div>
         <div class="rpgrows" id="rpgRows"></div>
@@ -5018,7 +5045,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.17';
+const VERSION = '5.18';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -11890,7 +11917,8 @@ const Ach = (function () {
 
       /* devT：開發者稱號要不要戴（1 = 戴、0 = 收起；帳號不是開發者時一律不戴） */
       /* eq：v5.16 配戴成就（最多 3 個成就 id，只放已解鎖的） */
-      const S = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, devT: 1, eq: [] };
+      // v5.18：title = 玩家自己挑的稱號（'auto' 依成就分自動／'none' 不戴／'dev' 開發者／'0'~'7' 指定階級）
+      const S = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, devT: 1, eq: [], title: 'auto' };
       let ready = false, dirty = false, timeAcc = 0;
       const listeners = [];
 
@@ -11986,17 +12014,63 @@ const Ach = (function () {
       function devOn() { return devAllowed() && S.devT !== 0; }
       function setDev(on) {
         S.devT = on ? 1 : 0;
+        // v5.18：稱號改成可挑選之後，開關也要跟著切（否則「卸下」會被 pickedTitle 蓋回去）
+        S.title = on ? 'dev' : 'auto';
         save();
         return S.devT;
       }
 
-      function titleOf(pts) {
-        if (devOn()) return DEV_TITLE;                 // 開發者稱號優先於所有成就稱號
+      /* 成就分自動升的那個（不含開發者、也不含玩家自己挑的） */
+      function autoTitle(pts) {
         const p = (pts == null) ? points() : pts;
         let cur = null;
         for (let i = 0; i < TITLES.length; i++) if (p >= TITLES[i].need) cur = TITLES[i];
         return cur;
       }
+      /* 洗成合法值：壞資料一律退回 'auto'（存檔被改也不會讓頭上變空白） */
+      function pickedTitle() {
+        const sel = String(S.title || 'auto');
+        if (sel === 'auto' || sel === 'none' || sel === 'dev') return sel;
+        const i = parseInt(sel, 10);
+        return (i >= 0 && i < TITLES.length) ? String(i) : 'auto';
+      }
+      /* 現在「戴著」的稱號。頭上、名片、名單全部走這一個，不會三邊不一致。 */
+      function titleOf(pts) {
+        const sel = pickedTitle();
+        const p = (pts == null) ? points() : pts;
+        if (sel === 'none') return null;
+        if (sel === 'dev') return devAllowed() ? DEV_TITLE : autoTitle(p);
+        if (sel !== 'auto') {
+          const t = TITLES[parseInt(sel, 10)];
+          return (t && p >= t.need) ? t : autoTitle(p);   // 分數掉了就退回自動
+        }
+        if (devOn()) return DEV_TITLE;                     // 開發者開關優先於成就稱號
+        return autoTitle(p);
+      }
+      /* 給線上名單用的代號：-1 沒戴、0~7 成就階級、8 開發者 */
+      function wornIdx(pts) {
+        const t = titleOf(pts);
+        if (!t) return -1;
+        if (t === DEV_TITLE || t.dev) return 8;
+        for (let i = 0; i < TITLES.length; i++) if (TITLES[i] === t) return i;
+        return -1;
+      }
+      /* 'auto' | 'none' | 'dev' | '0'~'7'；回傳 false = 沒解鎖／參數不對 */
+      function setTitle(sel) {
+        const v = String(sel == null ? 'auto' : sel);
+        if (v === 'auto' || v === 'none') S.title = v;
+        else if (v === 'dev') { if (!devAllowed()) return false; S.title = 'dev'; S.devT = 1; }
+        else {
+          const i = parseInt(v, 10);
+          if (!(i >= 0 && i < TITLES.length)) return false;
+          if (points() < TITLES[i].need) return false;
+          S.title = String(i);
+        }
+        save();
+        return true;
+      }
+      /* 點「自動」以外的選項時，開發者開關要一起關掉，否則會被自動蓋回開發者 */
+      function titleSel() { return pickedTitle(); }
       function nextTitle() {
         const p = points();
         for (let i = 0; i < TITLES.length; i++) if (p < TITLES[i].need) return TITLES[i];
@@ -12125,7 +12199,7 @@ const Ach = (function () {
 
       function state() {
         return { v: 1, c: S.c, u: S.u, g: S.g, lastDay: S.lastDay, star3: S.star3, devT: S.devT | 0,
-          eq: S.eq.slice(0, 3) };
+          eq: S.eq.slice(0, 3), title: pickedTitle() };
       }
       function setState(o) {
         if (!o || typeof o !== 'object') return false;
@@ -12140,6 +12214,11 @@ const Ach = (function () {
         if (o.star3 && typeof o.star3 === 'object') for (const k in o.star3) S.star3[k] = 1;
         if (o.lastDay && String(o.lastDay) > S.lastDay) S.lastDay = String(o.lastDay);
         if (o.devT === 0 || o.devT === 1) S.devT = o.devT;
+        if (o.title != null) {
+          const before = S.title;
+          S.title = String(o.title);
+          if (pickedTitle() !== String(o.title)) S.title = before;   // 不合法就別動
+        }
         if (Array.isArray(o.eq)) {
           S.eq = o.eq.filter(function (k) { return BY_ID[k] && S.u[k]; }).slice(0, 3);
         }
@@ -12149,7 +12228,7 @@ const Ach = (function () {
       }
       /* 合併（雲端 vs 本地）：計數取大、解鎖取聯集、已領取取聯集 */
       function merge(a, b) {
-        const out = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, devT: 1, eq: [] };
+        const out = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, devT: 1, eq: [], title: 'auto' };
         [a, b].forEach(function (o) {
           if (!o || typeof o !== 'object') return;
           if (o.c) for (const k in o.c) out.c[k] = Math.max(out.c[k] | 0, Math.min(1e12, Number(o.c[k]) || 0));
@@ -12158,6 +12237,7 @@ const Ach = (function () {
           if (o.star3) for (const k in o.star3) out.star3[k] = 1;
           if (o.lastDay && String(o.lastDay) > out.lastDay) out.lastDay = String(o.lastDay);
           if (o.devT === 0) out.devT = 0;        // 任何一台收起來就收起來
+          if (o.title && o.title !== 'auto') out.title = String(o.title);   // 挑過的稱號帶著走
         });
         // 配戴的成就屬於「這台裝置想展示什麼」，以本機（b）為準；本機沒有才用雲端那份
         const pick = (b && Array.isArray(b.eq) && b.eq.length) ? b.eq : ((a && Array.isArray(a.eq)) ? a.eq : []);
@@ -12169,6 +12249,7 @@ const Ach = (function () {
         KEY: KEY, TITLES: TITLES, SERIES: SERIES, CATS: CATS, LIST: LIST,
         stat: stat, count: count, setMax: setMax, check: check,
         points: points, titleOf: titleOf, nextTitle: nextTitle,
+        autoTitle: autoTitle, wornIdx: wornIdx, setTitle: setTitle, titleSel: titleSel,
         DEV_TITLE: DEV_TITLE, canDev: canDev, devAllowed: devAllowed, devOn: devOn, setDev: setDev, forceDev: forceDev,
         unclaimed: unclaimed, claim: claim, claimAll: claimAll, star3: star3, addTime: addTime,
         state: state, setState: setState, merge: merge, save: save,
@@ -12430,6 +12511,7 @@ function AchFoe(e) {
       Ach.count(boss ? 'soloBoss' : 'soloKill', 1);
     } else if (Game.mode === 'rpg') {
       Ach.count(boss ? 'rpgBoss' : 'rpgKill', 1);
+      rpgGainFoeExp(e);              // v5.18：打死怪 → 這一關的經驗
     }
   } catch (err) {}
 }
@@ -12540,6 +12622,8 @@ const Social = (function () {
           gender: P.gender, region: P.region, bio: P.bio,
           mode: myMode(), sec: myPlaySec(), pts: myPts(), wins: myWins(),
           eq: (typeof Ach !== 'undefined' && Ach.equippedMini) ? Ach.equippedMini() : [],
+          // v5.18：目前戴的稱號（只送代號：-1 沒戴、0~7 成就階級、8 開發者）
+          tt: (typeof Ach !== 'undefined' && Ach.wornIdx) ? Ach.wornIdx() : -1,
           ver: VERSION
         };
         if (extra) for (const k in extra) o[k] = extra[k];
@@ -13020,11 +13104,49 @@ const Social = (function () {
         const kind = p.kind === 'member' ? '<em>會員</em>' : '<em class="g">遊客</em>';
         return '<div class="onrow' + (isB ? ' blk' : '') + '" data-pid="' + esc(p.pid) + '">' +
           avBox(p, 'onav') +
-          '<div class="onmeta"><div class="onname">' + esc(p.name || '無名玩家') + kind +
+          '<div class="onmeta"><div class="onname">' + (function () {
+            const t = titleByNo(p.tt);
+            return t ? '<span class="ttmini" title="' + esc(t.name) + '" style="color:' + t.color + '">' + t.ico + '</span>' : '';
+          })() + esc(p.name || '無名玩家') + kind +
           (isF ? '<em>好友</em>' : '') + '</div>' +
           '<div class="onsub">' + esc(p.gender || '不公開') + ' · ' + esc(p.region || '未知') +
           ' · 玩 ' + fmtDur(p.sec) + (p.pts ? ' · 成就 ' + p.pts + ' 分' : '') + '</div></div>' +
           '<div class="onmode">' + esc(p.mode || '大廳') + '</div></div>';
+      }
+
+      /* v5.18：稱號。名單只帶代號，顏色／名字由自己的字典解（不用把色碼送來送去） */
+      function titleByNo(k) {
+        const i = parseInt(k, 10);
+        if (!(i >= 0)) return null;
+        if (typeof Ach === 'undefined') return null;
+        if (i === 8) return Ach.DEV_TITLE;
+        return Ach.TITLES[i] || null;
+      }
+      function titleChip(t) {
+        if (!t) return '<span class="ttchip off">🏷️ 沒有稱號</span>';
+        return '<span class="ttchip' + (t.dev ? ' dev' : '') + '" style="color:' + t.color +
+          ';background:' + t.bg + '">' + t.ico + ' ' + esc(t.name) + '</span>';
+      }
+      /* 我的資料：目前戴的 + 可以挑的清單 */
+      function myTitleHTML() {
+        if (typeof Ach === 'undefined' || !Ach.titleOf) return '';
+        const cur = Ach.titleOf();
+        const pts = Ach.points ? Ach.points() : 0;
+        const sel = Ach.titleSel ? Ach.titleSel() : 'auto';
+        const chips = ['<button class="ttpick' + (sel === 'auto' ? ' on' : '') + '" data-mytitle="auto" type="button">🎲 自動</button>'];
+        (Ach.TITLES || []).forEach(function (t, i) {
+          if (pts < t.need) return;
+          chips.push('<button class="ttpick' + (cur === t ? ' on' : '') + '" data-mytitle="' + i +
+            '" type="button" style="color:' + t.color + '">' + t.ico + ' ' + esc(t.name) + '</button>');
+        });
+        if (Ach.devAllowed && Ach.devAllowed()) {
+          chips.push('<button class="ttpick' + (Ach.devOn() ? ' on' : '') + '" data-mytitle="dev" type="button">🛠️ 遊戲開發者</button>');
+        }
+        chips.push('<button class="ttpick' + (sel === 'none' ? ' on' : '') + '" data-mytitle="none" type="button">🚫 不戴</button>');
+        return '<div class="achgrp" style="margin-top:10px"><i>🏷️</i>我的稱號</div>' +
+          '<div class="odtt">' + titleChip(cur) + '</div>' +
+          '<div class="ttpicks">' + chips.join('') + '</div>' +
+          '<div class="ttnote">' + (pts ? '成就分 ' + pts + ' · 解鎖過的都能自由挑' : '解鎖成就拿到分數，就會有稱號可以戴') + '</div>';
       }
 
       /* 配戴的成就：別人的資料直接吃名單帶回來的 eq（只有圖示＋名字） */
@@ -13100,6 +13222,7 @@ const Social = (function () {
           (myKind() === 'member' ? '' : '（遊客身分也能用，但換裝置就換一個身分）') + '</div>' +
           '<div class="odact" style="margin:8px 0 10px"><button class="bhbtn" id="socAvBtn" type="button">📷 換頭貼</button>' +
           '<span class="bhnote" style="align-self:center">上傳後可以拖曳、縮放，決定要露哪一塊</span></div>' +
+          myTitleHTML() +
           eqHTML(null, true) +
           '<div class="onprof">' +
             '<label class="odcell">性別 <select class="chatin" id="socGender" style="padding:4px 6px">' + opt + '</select></label>' +
@@ -13122,6 +13245,7 @@ const Social = (function () {
         return '<button class="bhbtn" id="onBack" type="button" style="margin-bottom:9px">← 回名單</button>' +
           '<div class="ondetail"><div class="odtop">' + avBox(p, 'odav') + '<div>' +
           '<div class="odname">' + esc(p.name || '無名玩家') + '</div>' +
+          '<div class="odtt">' + titleChip(titleByNo(p.tt)) + '</div>' +
           '<div class="odid">玩家編號 ' + pcode(p.pid) + ' · ' + (p.kind === 'member' ? '會員' : '遊客') +
           ' · ' + ago(p.seen) + '有動靜</div></div></div>' +
           '<div class="odgrid">' +
@@ -13239,6 +13363,19 @@ const Social = (function () {
             }
             try { inp.focus(); } catch (e) {}
           }
+          return;
+        }
+        const tp = t.closest('[data-mytitle]');            // v5.18：換名片上的稱號
+        if (tp) {
+          const v = tp.getAttribute('data-mytitle');
+          let ok = false;
+          try {
+            ok = (v === 'dev') ? !!Ach.setDev(true) : Ach.setTitle(v);
+            const nt = Ach.titleOf();
+            if (ok) toast('🏷️ 稱號換成「' + (nt ? nt.name : '不戴') + '」', 2.2);
+          } catch (err) {}
+          paint();
+          if (ok) hb();
           return;
         }
         if (t.closest('#socAvPick') || t.closest('#socAvBtn')) { avOpen(); return; }
@@ -13428,8 +13565,8 @@ const AchUI = (function () {
         let h = '<div class="achsum"><div><div class="big">' + pts + '</div><div class="txt">成就分</div></div>' +
           '<div class="txt" style="flex:1"><b>' + (cur ? cur.ico + ' ' + cur.name : '尚未取得稱號') + '</b><br>' +
           (nx ? '再 ' + (nx.need - pts) + ' 分 → ' + nx.ico + ' ' + nx.name : '已達最高稱號') + '</div></div>';
-        h += '<div class="bhnote">稱號會顯示在你頭上（遊戲中／大逃殺都看得到）。成就分＝解鎖成就時拿到的分數，' +
-          '越難的階級分數越高。</div>';
+        h += '<div class="bhnote">稱號會顯示在你頭上（遊戲中／大逃殺都看得到），也會出現在線上玩家的個人資料裡。' +
+          '成就分＝解鎖成就時拿到的分數，越難的階級分數越高。<b>解鎖過的稱號可以自由挑一個戴</b>，不用被迫用最高的。</div>';
         /* v5.16：配戴的成就（給別人看的），在這裡可以一鍵卸下 */
         const eq = Ach.equipped();
         h += '<div class="achgrp"><i>📛</i>個人資料上展示的成就（' + eq.length + '/' + Ach.EQ_MAX + '）</div>' +
@@ -13440,16 +13577,33 @@ const AchUI = (function () {
               }).join('')
             : '<span class="eqe">還沒挑 —— 到下面各分類的成就，按右邊的 📛 就能配戴</span>') + '</div>';
         h += '<div class="achtt">';
-        Ach.TITLES.forEach(function (t) {
-          const on = cur && t.need === cur.need;
+        const sel = Ach.titleSel();
+        Ach.TITLES.forEach(function (t, ti) {
+          const on = cur === t;
           const got = pts >= t.need;
           h += '<div class="ttrow' + (on ? ' on' : '') + '" style="opacity:' + (got ? 1 : .55) + '">' +
             '<div class="ttframe" style="background:' + t.frame + ';border-color:rgba(120,70,20,.25)">' + t.ico + '</div>' +
             '<div class="ttmeta"><div class="ttname" style="color:' + t.color + '">' + t.name +
             (on ? ' <span style="font-size:10px;color:#2f8b52">（使用中）</span>' : '') + '</div>' +
             '<div class="ttneed">需要 ' + t.need + ' 成就分' + (got ? ' · 已達成' : ' · 還差 ' + (t.need - pts)) + '</div></div>' +
-            '<div class="achgold">' + (got ? '✅' : '🔒') + '</div></div>';
+            (got
+              ? '<button class="bhbtn' + (on ? '' : ' warm') + '" type="button" data-ahtitle="' + ti + '">' +
+                (on ? '使用中' : '戴上') + '</button>'
+              : '<div class="achgold">🔒</div>') + '</div>';
         });
+        /* v5.18：自動／不戴 —— 讓玩家自己決定名片上要放什麼 */
+        h += '<div class="ttrow' + (sel === 'auto' ? ' on' : '') + '" style="margin-top:6px">' +
+          '<div class="ttframe" style="background:linear-gradient(180deg,#eef2f8,#c9d4e4);border-color:#b9c6da">🎲</div>' +
+          '<div class="ttmeta"><div class="ttname" style="color:#41506a">自動</div>' +
+          '<div class="ttneed">依成就分自動選最高的那個</div></div>' +
+          '<button class="bhbtn' + (sel === 'auto' ? '' : ' warm') + '" type="button" data-ahtitle="auto">' +
+          (sel === 'auto' ? '使用中' : '選這個') + '</button></div>' +
+          '<div class="ttrow' + (sel === 'none' ? ' on' : '') + '">' +
+          '<div class="ttframe" style="background:linear-gradient(180deg,#e6e9ef,#b9c0cc);border-color:#aab2c0">🚫</div>' +
+          '<div class="ttmeta"><div class="ttname" style="color:#5a6579">不戴稱號</div>' +
+          '<div class="ttneed">頭上與名片都不顯示</div></div>' +
+          '<button class="bhbtn' + (sel === 'none' ? '' : ' warm') + '" type="button" data-ahtitle="none">' +
+          (sel === 'none' ? '使用中' : '選這個') + '</button></div>';
         /* v5.14：開發者稱號固定排在最後（不參與成就分階梯） */
         const D = Ach.DEV_TITLE;
         if (Ach.devAllowed()) {
@@ -13543,6 +13697,17 @@ const AchUI = (function () {
             } else if (r.err === 'NOT_UNLOCKED') {
               try { toast('這個成就還沒解鎖', 2); } catch (err) {}
             }
+            render();
+            return;
+          }
+          const tb = e.target.closest('[data-ahtitle]');      // v5.18：自己挑要戴哪個稱號
+          if (tb) {
+            const v = tb.getAttribute('data-ahtitle');
+            const ok = (v === 'dev') ? !!Ach.setDev(true) : Ach.setTitle(v);
+            try {
+              const nt = Ach.titleOf();
+              toast(ok ? ('🏷️ 稱號換成「' + (nt ? nt.name : '不戴') + '」') : '這個稱號還沒解鎖', 2.4);
+            } catch (err) {}
             render();
             return;
           }
@@ -15595,7 +15760,23 @@ function updateSolo(dt) {
           toast('💰 本關金幣 ' + coins + ' ＋ 過關獎勵 ' + base + '　→　商店金幣 ' + Shop.gold(), 3);
         } catch (e) {}
         // v4.1：RPG 過關回報後端（伺服器驗證「只能依序過關」，金幣也由後端算）
-        try { if (Game.mode === 'rpg' && typeof Cloud !== 'undefined') Cloud.clearStage(cleared); } catch (e) {}
+        // v5.18：這一關賺到的經驗一起送上去（後端會夾上限），本機先入帳讓畫面立刻有反應
+        let lvUp = null;
+        try {
+          if (Game.mode === 'rpg') {
+            const gain = RPG.xpGain | 0;
+            lvUp = rpgAddXp(gain);
+            if (typeof Cloud !== 'undefined') Cloud.clearStage(cleared, { exp: gain });
+            RPG.xpGain = 0;
+            if (lvUp.up > 0) {
+              const L = rpgLvOf(RPG.xp);
+              toast('🎉 升到 Lv.' + L.lv + '（+' + lvUp.up + ' 級）· 配點 +' + Math.floor(lvUp.up / 2), 3.2);
+              try { AudioSys.sfx('victory'); } catch (e2) {}
+              try { updateHud(); } catch (e2) {}
+            }
+            toast('⭐ 本關經驗 +' + gain, 2.4);
+          }
+        } catch (e) {}
         try {
           if (typeof Cloud !== 'undefined' && Cloud.track) {
             Cloud.track('clear', cleared, '通過第 ' + cleared + ' 關・' + map32Name(cleared - 1));
@@ -15646,9 +15827,11 @@ function updateSolo(dt) {
             battleEndFx(true, p.x, p.y - Game.T);
             if (Game.bossRush) AudioSys.startBGM('menu');
           } else {
+            const _lvn = rpgLvOf(RPG.xp);
             showOverlay({
               title: t('solo.clearTitle'),
-              sub: t('solo.clearSub', { s: p.score, n: (Game.stage + 1), name: (Game.mode === 'rpg' ? (MAP32[(Game.stage - 1) % 32].n) : soloInfo(Game.stage + 1).n) }),
+              sub: t('solo.clearSub', { s: p.score, n: (Game.stage + 1), name: (Game.mode === 'rpg' ? (MAP32[(Game.stage - 1) % 32].n) : soloInfo(Game.stage + 1).n) }) +
+                (Game.mode === 'rpg' ? '\n⭐ Lv.' + _lvn.lv + '　EXP ' + _lvn.cur + '/' + (_lvn.need || 'MAX') : ''),
               btn: t('solo.clearBtn'),
               action: function () {
                 Game.stage += 1;
@@ -15678,6 +15861,8 @@ function updateSolo(dt) {
     if (p.respawnT <= 0) {
       if (p.lives <= 0) {
         Game.state = 'over';          // 凍結更新（loop 只跑 play/roundover）
+        // v5.18：沒過關就拿不到經驗（跟金幣不同 —— 經驗是「通關獎勵」）
+        RPG.xpGain = 0;
         // v4.21：這關賺到的金幣還是你的（陣亡不沒收，但沒有過關獎勵）
         try {
           const coins = Math.max(0, Math.round(p.score || 0));
@@ -20927,9 +21112,16 @@ function updateHud() {
         (p.armorMax > 0 ? '<div class="chip" data-k="armor"><span class="ic">🛡️</span><b>' +
           Math.max(0, p.armorCur | 0) + '/' + p.armorMax + '</b></div>' : '')
       : '<div class="chip" data-k="hp"><span class="ic">' + (p.alive ? '❤️' : '💀') + '</span><b>' + Math.max(0, p.lives) + '</b></div>';
+    const lvChip = rpgMode ? (function () {
+      const L = rpgLvOf(RPG.xp);
+      return '<div class="chip" data-k="lv" title="等級 ' + L.lv + '／' + RPG_LV_MAX +
+        '　經驗 ' + L.cur + '/' + (L.need || 'MAX') + '　（每 2 級 +1 配點）">' +
+        '<span class="ic">⭐</span><b>Lv.' + L.lv + '</b></div>';
+    })() : '';
     html = '<div class="chip" data-k="stage"><span class="ic">🗺️</span><b>' + Game.stage + '</b>' +
       '<i class="thn">' + ((typeof Tut !== 'undefined' && Tut.on && Tut.part === 'play') ? t('learn.tag') : themeName(thIdx)) + '</i></div>' +
       '<div class="chip" data-k="score" title="本關金幣 · 過關（或陣亡）後會放進商店錢包"><span class="ic">💰</span><b>' + p.score + '</b></div>' +
+      lvChip +
       hpChip +
       '<div class="chip" data-k="pow"><span class="ic">🔥</span><b>' + p.power + '</b></div>' +
       '<div class="chip" data-k="bomb"><span class="ic">💣</span><b>' + p.maxBombs + '</b></div>' +
@@ -32758,7 +32950,14 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.17', date: '2026-11-06', now: true, items: [
+  { v: '5.18', date: '2026-11-06', now: true, items: [
+    '🏷️ <b>稱號可以自己挑了</b>：以前只能自動用「成就分最高的那個」，現在<b>解鎖過的每一個都能挑一個戴</b>，還多了「🎲 自動」與「🚫 不戴」。在「線上玩家 → 🙂 我的資料」就能直接換',
+    '🪪 <b>稱號會出現在個人資料上</b>：線上名單、別人的名片都看得到你選的稱號（連黑紫色的專屬稱號也一樣）',
+    '⭐ <b>RPG 有等級了：1～65 級</b>，<b>每 2 級 +1 點配點</b>。打怪和過關都會給經驗，升級會補滿血並提醒你多了一點',
+    '👾 <b>怪物也有等級</b>：第 1 關 Lv.1、第八大關最後一關 Lv.63；<b>越後面血越厚、給的經驗越多</b>（第 32 關單隻經驗是第 1 關的 12 倍）。打完 32 關大約 60～65 級',
+    '🧪 新增 <b>verify-v518</b>（90 項）：稱號四種狀態、經驗曲線、升級配點、單關經驗上限都跑過一遍'
+  ] },
+  { v: '5.17', date: '2026-11-06', now: false, items: [
     '🐾 <b>商店的隨從圖示變大了</b>：跟對戰選角一樣大的圖框，隨從會<b>在框裡來回走動、三不五時揮一下</b>；右邊保留原本的說明，下面金額與按鈕位置沒動',
     '◀▶ <b>對戰選角的換角箭頭縮小了</b>：從 40px 縮到 26px 並移到圖框下方兩角，<b>不會再蓋到角色的臉和身體</b>，手指還是點得到',
     '✕ <b>成就／排名／線上玩家的關閉鈕不會被壓住了</b>：以前手機上「✕」剛好躲在右上角「⋮」下面，點不到也看不到；現在面板整個蓋在工具列之上，標題列也會讓開瀏海',
@@ -34227,6 +34426,10 @@ const RPG = {
   sub: 0,
   cleared: 0,      // v4.1：雲端回來的冒險進度
   gold: 0,
+  xp: 0,           // v5.18：累積經驗（等級由它推導）
+  lv: 1,           // v5.18：目前等級（畫面上用）
+  xpGain: 0,       // v5.18：這一關已經賺到的經驗（過關才入帳）
+
   unlocked: 32     // 32 = 沒有雲端時全部開放
 };
 // v4.1：可用總點數（9 + 每 5 關 1 點，最多 40）由伺服器算，前端只跟著顯示
@@ -34256,6 +34459,56 @@ function rpgRandomAlloc() {
   }
   RPG.alloc = a;
   return a;
+}
+
+/* ================= v5.18：RPG 等級（1～65）＋ 經驗值 =================
+   · 每升 2 級 +1 點配點（65 級共 32 點，加創角 9 點 = 41，上限仍是 40＝四項全滿）
+   · 經驗來源：打死怪（怪的等級越高給越多）＋ 過關獎勵
+   · 等級不存檔，只存累積經驗 → 任何時候都不會出現「等級和經驗對不上」
+   數字與 cloud.js 那一份必須一致（改一邊就要改另一邊）。 */
+const RPG_LV_MAX = 65;
+const RPG_XP_E0 = 8, RPG_XP_E1 = 1.8;        // 每隻怪：8 + 1.8 × 怪等級
+const RPG_XP_C0 = 40, RPG_XP_C1 = 10;        // 過關：40 + 10 × 關號
+const RPG_XP_N0 = 80, RPG_XP_N1 = 2.34;      // 升級需求：80 + 2.34 × Lv^1.5
+
+function rpgFoeLv(stage) {
+  const st = Math.max(1, Math.min(32, stage | 0 || 1));
+  return Math.max(1, Math.min(RPG_LV_MAX - 1, 1 + Math.round((st - 1) * 2)));
+}
+function rpgFoeXp(stage) { return Math.round(RPG_XP_E0 + RPG_XP_E1 * rpgFoeLv(stage)); }
+function rpgXpNeed(lv) { return Math.round(RPG_XP_N0 + RPG_XP_N1 * Math.pow(Math.max(1, lv | 0 || 1), 1.5)); }
+function rpgLvOf(xp) {
+  let left = Math.max(0, Math.floor(Number(xp) || 0)), lv = 1;
+  while (lv < RPG_LV_MAX && left >= rpgXpNeed(lv)) { left -= rpgXpNeed(lv); lv++; }
+  return {
+    lv: lv, cur: left,
+    need: lv < RPG_LV_MAX ? rpgXpNeed(lv) : 0,
+    pct: lv < RPG_LV_MAX ? Math.min(100, Math.round(left / rpgXpNeed(lv) * 100)) : 100
+  };
+}
+function rpgXpTotalOf(lv) {
+  const L = Math.max(1, Math.min(RPG_LV_MAX, lv | 0 || 1));
+  let sum = 0;
+  for (let i = 1; i < L; i++) sum += rpgXpNeed(i);
+  return sum;
+}
+function rpgPointsOf(lv) { return Math.min(RPG_CAP * 4, RPG_POINTS + Math.floor(Math.max(1, lv | 0) / 2)); }
+/* 本機入帳（過關時呼叫）。回傳 { gain, lv, up } */
+function rpgAddXp(gain) {
+  const before = rpgLvOf(RPG.xp).lv;
+  RPG.xp = Math.min(rpgXpTotalOf(RPG_LV_MAX), Math.max(0, (RPG.xp | 0) + (gain | 0)));
+  const now = rpgLvOf(RPG.xp);
+  RPG.lv = now.lv;
+  try { if (typeof Cloud === 'undefined' || !Cloud.online()) RPG_POINTS_TOTAL = rpgPointsOf(now.lv); } catch (e) {}
+  return { gain: gain | 0, lv: now.lv, up: now.lv - before };
+}
+/* 打死一隻怪的經驗（RPG 模式才有） */
+function rpgGainFoeExp(e) {
+  if (!e || Game.mode !== 'rpg') return 0;
+  const g = Math.max(1, e.exp || rpgFoeXp(Game.stage || 1));
+  RPG.xpGain = (RPG.xpGain | 0) + g;
+  if (e.boss) { try { pushPop(e.x, e.y - (e.r || 20), '+' + g + ' EXP', { color: '#ffe27a', size: .85 }); } catch (x) {} }
+  return g;
 }
 
 // 固定種子的亂數（同一張地圖每次長得一樣，玩家可以記圖）
@@ -35139,6 +35392,9 @@ function buildRpgStage(stage, fresh) {
   p.armorCur = p.armorMax;                 // 每過一關護甲補滿
   // ---- 敵人 ----
   Game.enemies = [];
+  // v5.18：怪也有等級（第 1 關 1 級、第 32 關 63 級）。等級越高血越厚、給的經驗越多
+  const foeLv = rpgFoeLv(stage);
+  const foeHpMul = 1 + (foeLv - 1) * 0.03;
   const types = rpgFoePool(stage);
   const pool = types.slice();           // 先輪流出一輪，保證每種都登場
   // v4.69：數量改成跟單人闖關同一條曲線（原本 7 + 關號×0.95，後段比單人多快 3 倍）
@@ -35166,7 +35422,9 @@ function buildRpgStage(stage, fresh) {
     const type = pool.length ? pool.shift() : pick(types);
     const e = makeEnemy(x, y, type, Math.min(8, Math.floor(stage / 4) + 1), 1);
     const F = RPG_FOE[type] || { hp: 1, def: 0, spd: 1 };
-    e.hp = F.hp; e.maxHp = F.hp; e.def = F.def;
+    e.lv = foeLv; e.exp = rpgFoeXp(stage);
+    e.hp = Math.max(1, Math.round(F.hp * foeHpMul));
+    e.maxHp = e.hp; e.def = F.def;
     e.speed = e.speed * F.spd;
     Game.enemies.push(e);
   }
@@ -35176,6 +35434,7 @@ function buildRpgStage(stage, fresh) {
     const fin = stage >= 32;
     const bc = pickBossCell(clamp(Math.floor(cols / 2), 1, cols - 2), Math.max(1, rows - 2), cols, rows);
     const boss = makeBoss(bc.x, bc.y, fin ? 12 + Math.round(stage * .35) : 4 + blockOf(stage));
+    boss.lv = foeLv; boss.exp = rpgFoeXp(stage) * 5;
     boss.dirName = 'up';
     if (fin) {
       boss.def = 1;
@@ -35216,6 +35475,7 @@ function startRpg(stage) {
   } catch (e) {}
   Game.endShown = false;
   Game.state = 'idle';
+  RPG.xpGain = 0;
   Game.players = [];
   paused = false;
   const scheme = settings.ctrl === 'auto' ? Input.schemes.auto
@@ -35238,7 +35498,9 @@ function startRpg(stage) {
   showOverlay({
     title: t('rpg.ovTitle', { n: Game.stage }),
     sub: map32Name(Game.stage - 1) + '\n' +
-      t('rpg.ovSub', { hp: p.hpMax, ar: p.armorMax, sp: Math.round((d.spdMul - 1) * 100), rg: d.range, dm: d.dmg }),
+      t('rpg.ovSub', { hp: p.hpMax, ar: p.armorMax, sp: Math.round((d.spdMul - 1) * 100), rg: d.range, dm: d.dmg }) +
+      '\n⭐ Lv.' + rpgLvOf(RPG.xp).lv + '　EXP ' + rpgLvOf(RPG.xp).cur + '/' + (rpgLvOf(RPG.xp).need || 'MAX') +
+      '　👾 怪物 Lv.' + rpgFoeLv(Game.stage),
     btn: t('rpg.go'),
     action: function () { beginCountdown('battle'); }
   });
@@ -35281,6 +35543,13 @@ function drawRpgHud(T) {
     ctx.fillStyle = g;
   } else ctx.fillStyle = hpF > .5 ? '#5fd070' : '#e0533f';
   ctx.fillRect(x, y, w * hpF, h);
+  // v5.18：護甲條上面再一條細細的經驗條（打怪／過關時看得到它在長）
+  const xl = rpgLvOf(RPG.xp);
+  const ey = p.armorMax > 0 ? y - h * 1.8 - 4 : y - h - 4;
+  ctx.fillStyle = 'rgba(6,10,20,.72)';
+  ctx.fillRect(x - 1.5, ey - 1.2, w + 3, Math.max(2.4, h * .45) + 2);
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(x, ey, w * (xl.pct / 100), Math.max(2.4, h * .45));
   if (p.armorMax > 0) {
     const af = clamp(p.armorCur / p.armorMax, 0, 1);
     ctx.fillStyle = 'rgba(6,10,20,.75)';
@@ -35304,6 +35573,17 @@ const Rpg = (function () {
   function renderStats() {
     const box = $id('rpgRows');
     if (!box) return;
+    // v5.18：等級／經驗（每 2 級 1 點）
+    const lb = $id('rpgLvBar');
+    if (lb) {
+      const L = rpgLvOf(RPG.xp);
+      const nx = L.lv < RPG_LV_MAX ? (2 - (L.lv % 2)) : 0;
+      lb.innerHTML = '<div class="lvrow"><span class="lvtag">⭐ Lv.' + L.lv + '</span>' +
+        '<span class="lvxp"><i style="width:' + L.pct + '%"></i></span>' +
+        '<span class="lvnum">' + (L.need ? L.cur + ' / ' + L.need : 'MAX') + '</span></div>' +
+        '<div class="lvhint">' + (L.lv >= RPG_LV_MAX ? '已滿級（' + RPG_LV_MAX + '）· 配點 ' + RPG_POINTS_TOTAL + ' 點'
+          : '累積經驗就會升級 · 每 2 級 +1 配點（再 ' + nx + ' 級 +1）· 目前 ' + RPG_POINTS_TOTAL + ' 點') + '</div>';
+    }
     const left = rpgLeft();
     box.innerHTML = RPG_ATTRS.map(function (a) {
       const v = RPG.alloc[a.k] || 0;
@@ -35573,6 +35853,14 @@ const Cloud = (function () {
       }
       RPG.cleared = a.rpg.cleared | 0;
       RPG.gold = a.rpg.gold | 0;
+      // v5.18：經驗以伺服器為準（前端送的 exp 後端會夾上限），等級再由經驗推導
+      if (isFinite(a.rpg.xp)) {
+        RPG.xp = Math.max(0, a.rpg.xp | 0);
+        RPG.lv = rpgLvOf(RPG.xp).lv;
+      } else if (isFinite(a.xpTotal)) {
+        RPG.xp = Math.max(0, a.xpTotal | 0);
+        RPG.lv = rpgLvOf(RPG.xp).lv;
+      }
       RPG.unlocked = a.unlocked | 0;
       RPG_POINTS_TOTAL = a.points | 0;
     }
@@ -35948,9 +36236,9 @@ const Cloud = (function () {
       return null;
     }, function () { return null; });
   }
-  function clearStage(n) {
+  function clearStage(n, opt) {
     if (!S.online) { toast(t('acct.offline')); return Promise.resolve(null); }
-    return req('/api/rpg/stage-clear', { stage: n }).then(function (r) {
+    return req('/api/rpg/stage-clear', { stage: n, exp: (opt && opt.exp) || 0 }).then(function (r) {
       if (r && r.ok) { adopt(r.account); toast(t('acct.saveDone', { n: n })); return r; }
       if (r && r.err === 'RATE_LIMIT') return null;      // 太頻繁就靜靜略過
       if (r && r.err === 'STAGE_LOCKED') return null;    // 重打舊關
@@ -37590,6 +37878,10 @@ window.__BH = {
   VERSION: VERSION, Help: (typeof Help !== 'undefined' ? Help : null),
   // v4.0：RPG 模式
   RPG: RPG, RPG_ATTRS: RPG_ATTRS, RPG_POINTS: RPG_POINTS, RPG_CAP: RPG_CAP, RPG_FOE: RPG_FOE, FOE_HP: FOE_HP,
+  // v5.18：等級／經驗（測試與 UI 共用同一份）
+  RPG_LV_MAX: RPG_LV_MAX, rpgFoeLv: rpgFoeLv, rpgFoeXp: rpgFoeXp, rpgXpNeed: rpgXpNeed,
+  rpgLvOf: rpgLvOf, rpgXpTotalOf: rpgXpTotalOf, rpgPointsOf: rpgPointsOf, rpgAddXp: rpgAddXp,
+  rpgGainFoeExp: rpgGainFoeExp,
   MAP32: MAP32, SOLO_STAGES: SOLO_STAGES, soloInfo: soloInfo, tryGlovePickup: tryGlovePickup,
   // v4.16：只有第 32 關有 BOSS ＋ 可躲人的樹叢／破屋
   soloIsBoss: soloIsBoss, isChapterFinal: isChapterFinal, hideTileAt: hideTileAt, playerHiding: playerHiding,

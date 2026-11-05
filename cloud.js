@@ -194,10 +194,75 @@ function sumAlloc(a) {
 
 /* ---------------------------------------------------------------- 進度數學 */
 
-/* 每 5 關多給 1 點配點（最多 40 點＝四項全滿），全部由後端決定 */
-function pointsTotalFor(cleared) {
-  const c = clampInt(cleared, 0, MAX_STAGE, 0);
-  return Math.min(MAX_POINTS, BASE_POINTS + Math.floor(c / 5));
+/* ================= v5.18：RPG 等級（1～65）與經驗值 =================
+   經驗值只在後端計：前端送「這一關賺到多少」，這裡一律夾在
+   「幾隻怪就算幾隻」的上限內，改機也塞不出天文數字。
+   等級不存 —— 只存 xp，等級永遠由 xp 推導，兩邊不會不同步。 */
+const LV_MAX = 65;
+const XP_E0 = 8, XP_E1 = 1.8;          // 每隻怪：E0 + E1 × 怪物等級
+const XP_C0 = 40, XP_C1 = 10;          // 過關：C0 + C1 × 關號
+const XP_N0 = 80, XP_N1 = 2.34;        // 升到下一級需要：N0 + N1 × Lv^1.5
+const XP_MIGRATE_FOES = 10;            // 舊帳號換算用（一關平均約 10 隻）
+const XP_CAP_FOES = 22;                // 單關經驗上限（最多 20 隻怪 + 魔王，留一點餘裕）
+
+function foeLvOfStage(stage) {
+  const s = clampInt(stage, 1, MAX_STAGE, 1);
+  return Math.min(LV_MAX - 1, 1 + Math.round((s - 1) * 2));   // 第 1 關 1 級、第 32 關 63 級
+}
+function foeXpOf(stage) {
+  return Math.round(XP_E0 + XP_E1 * foeLvOfStage(stage));
+}
+function stageXpOf(stage, foes) {
+  const s = clampInt(stage, 1, MAX_STAGE, 1);
+  const f = clampInt(foes == null ? XP_MIGRATE_FOES : foes, 0, 40, XP_MIGRATE_FOES);
+  let g = f * foeXpOf(s);
+  if (s % 4 === 0) g += 5 * foeXpOf(s);            // 章節魔王
+  return g + XP_C0 + XP_C1 * s;
+}
+function xpNeed(lv) {
+  return Math.round(XP_N0 + XP_N1 * Math.pow(Math.max(1, clampInt(lv, 1, LV_MAX, 1)), 1.5));
+}
+function lvOfXp(xp) {
+  let left = Math.max(0, Math.floor(Number(xp) || 0));
+  let lv = 1;
+  while (lv < LV_MAX && left >= xpNeed(lv)) { left -= xpNeed(lv); lv++; }
+  return { lv: lv, cur: left, need: lv < LV_MAX ? xpNeed(lv) : 0 };
+}
+function xpTotalOfLv(lv) {
+  const L = clampInt(lv, 1, LV_MAX, 1);
+  let sum = 0;
+  for (let i = 1; i < L; i++) sum += xpNeed(i);
+  return sum;
+}
+const XP_MAX = xpTotalOfLv(LV_MAX);
+
+/* 舊帳號沒有 xp → 用「已過幾關」換算一次（之後就以 xp 為準） */
+function ensureXp(rpg) {
+  if (!rpg || typeof rpg !== 'object') return 0;
+  let xp = Math.floor(Number(rpg.xp));
+  if (!isFinite(xp) || xp < 0) {
+    xp = 0;
+    const c = clampInt(rpg.cleared, 0, MAX_STAGE, 0);
+    for (let i = 1; i <= c; i++) xp += stageXpOf(i, XP_MIGRATE_FOES);
+    rpg.xp = xp;
+  }
+  if (xp > XP_MAX) rpg.xp = xp = XP_MAX;
+  return xp;
+}
+
+/* 配點總數：創角 9 點 +「每 2 級 1 點」（65 級共 32 點 → 41，上限 40＝四項全滿）
+   參數可以是 rpg 物件（新呼叫點）或「已過關數」（舊呼叫點，換算成等價經驗） */
+function pointsTotalFor(rpgOrCleared) {
+  let lv;
+  if (rpgOrCleared && typeof rpgOrCleared === 'object') {
+    lv = lvOfXp(ensureXp(rpgOrCleared)).lv;
+  } else {
+    let xp = 0;
+    const c = clampInt(rpgOrCleared, 0, MAX_STAGE, 0);
+    for (let i = 1; i <= c; i++) xp += stageXpOf(i, XP_MIGRATE_FOES);
+    lv = lvOfXp(xp).lv;
+  }
+  return Math.min(MAX_POINTS, BASE_POINTS + Math.floor(lv / 2));
 }
 /* 每關金幣獎勵（每 4 關一個主題，越後面越多） */
 function stageReward(stage) {
@@ -215,6 +280,7 @@ function defaultRpg() {
     alloc: { hp: 3, def: 2, spd: 2, atk: 2 },
     cleared: 0,
     gold: 0,
+    xp: 0,                     // v5.18：累積經驗（等級由它推導）
     char: 0,
     deaths: 0,
     playSec: 0,
@@ -301,6 +367,7 @@ function applyClear(rpg, stage, meta, opts) {
   const force = !!(opts && opts.force);
   if (!force && s > rpg.cleared + 1) return { ok: false, err: 'STAGE_LOCKED', need: rpg.cleared + 1, got: s };
   const replay = s <= rpg.cleared;
+  const lvBefore = lvOfXp(ensureXp(rpg)).lv;
   if (!replay) {
     rpg.cleared = s;
     rpg.gold = Math.max(0, (rpg.gold || 0) + stageReward(s));
@@ -309,10 +376,18 @@ function applyClear(rpg, stage, meta, opts) {
     if (meta.deaths != null) rpg.deaths = Math.max(rpg.deaths || 0, clampInt(meta.deaths, 0, 999999, 0));
     if (meta.playSec != null) rpg.playSec = Math.max(rpg.playSec || 0, clampInt(meta.playSec, 0, 86400 * 60, 0));
   }
+  /* v5.18：這一關賺到的經驗（前端依「實際打死幾隻」算，這裡只負責夾上限） */
+  let gain = 0;
+  if (meta && meta.exp != null) {
+    gain = clampInt(meta.exp, 0, stageXpOf(s, XP_CAP_FOES), 0);
+    rpg.xp = Math.min(XP_MAX, ensureXp(rpg) + gain);
+  }
+  const now = lvOfXp(ensureXp(rpg));
   rpg.ver = (rpg.ver || 1) + 1;
   return {
     ok: true, replay: replay, rpg: rpg,
-    gold: rpg.gold, points: pointsTotalFor(rpg.cleared), unlocked: Math.min(MAX_STAGE, rpg.cleared + 1)
+    gold: rpg.gold, points: pointsTotalFor(rpg), unlocked: Math.min(MAX_STAGE, rpg.cleared + 1),
+    expGain: gain, lv: now.lv, lvBefore: lvBefore, lvUp: now.lv - lvBefore, xp: now.cur, xpNeed: now.need
   };
 }
 
@@ -473,7 +548,8 @@ function mergeProgress(base, guest) {
   const b = base || defaultRpg();
   const g = guest || defaultRpg();
   const cleared = Math.max(b.cleared || 0, g.cleared || 0);
-  const cap = pointsTotalFor(cleared);
+  const xp = Math.max(ensureXp(b), ensureXp(g));
+  const cap = pointsTotalFor({ xp: xp });
   const bSpent = sumAlloc(b.alloc), gSpent = sumAlloc(g.alloc);
   // 誰的冒險進度比較遠就沿用誰的配點；一樣遠就選點得比較多的那個
   let picked;
@@ -485,6 +561,7 @@ function mergeProgress(base, guest) {
     alloc: alloc,
     cleared: cleared,
     gold: Math.max(b.gold || 0, g.gold || 0, 0),
+    xp: xp,
     char: (b.cleared || 0) >= (g.cleared || 0) ? clampInt(b.char, 0, 7, 0) : clampInt(g.char, 0, 7, 0),
     deaths: Math.max(b.deaths || 0, g.deaths || 0),
     playSec: Math.max(b.playSec || 0, g.playSec || 0),
@@ -1226,7 +1303,9 @@ function createCloud(options) {
   }
 
   function publicAccount(acc) {
-    const points = pointsTotalFor(acc.rpg.cleared);
+    const xp = ensureXp(acc.rpg);
+    const lvNow = lvOfXp(xp);
+    const points = pointsTotalFor(acc.rpg);
     const dev = isDev(acc);
     return {
       id: acc.id,
@@ -1239,6 +1318,11 @@ function createCloud(options) {
       created: acc.created,
       rpg: acc.rpg,
       points: points,
+      lv: lvNow.lv,                 // v5.18：等級（1～65）
+      xp: lvNow.cur,                // 這一級已經累積的經驗
+      xpNeed: lvNow.need,           // 升下一級需要多少（65 級為 0）
+      xpTotal: xp,                  // 累積總經驗
+      xpMax: XP_MAX,
       left: points - sumAlloc(acc.rpg.alloc),
       // 開發者：全關卡解鎖（RPG 32 張全部直接可玩）
       unlocked: dev ? MAX_STAGE : Math.min(MAX_STAGE, acc.rpg.cleared + 1),
@@ -1738,7 +1822,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
     let me = S.players[pid];
     if (!me) {
       me = S.players[pid] = { n: '無名玩家', ch: 0, g: '', r: '', b: '', k: 'guest', join: Date.now(),
-        seen: 0, sec: 0, pts: 0, wins: 0, mode: '大廳', friends: [], reqs: [], blocks: [], read: {} };
+        seen: 0, sec: 0, pts: 0, wins: 0, mode: '大廳', friends: [], reqs: [], blocks: [], read: {}, tt: -1 };
     }
     if (!me.friends) me.friends = [];
     if (!me.reqs) me.reqs = [];
@@ -1758,6 +1842,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
     me.wins = clampInt(body.wins, 0, 1e6, 0);
     me.mode = String(body.mode || '大廳').slice(0, 8);
     if (body.eq !== undefined) me.eq = cleanEq(body.eq);   // v5.16：配戴成就（最多 3 格）
+    if (body.tt !== undefined) me.tt = clampInt(body.tt, -1, 8, -1);   // v5.18：戴的稱號代號
     me.seen = Date.now();
     return me;
   }
@@ -1817,7 +1902,8 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
   function socPublic(pid, me) {
     return { pid: pid, name: me.n, ch: me.ch | 0, kind: me.k, gender: me.g, region: me.r, bio: me.b,
       join: me.join || 0, seen: me.seen || 0, sec: me.sec | 0, pts: me.pts | 0, wins: me.wins | 0, mode: me.mode,
-      avt: me.avt || 0, eq: Array.isArray(me.eq) ? me.eq : [] };   // v5.16：頭貼版本／配戴成就
+      avt: me.avt || 0, eq: Array.isArray(me.eq) ? me.eq : [],
+      tt: (me.tt == null ? -1 : me.tt) };   // v5.16 頭貼／配戴成就、v5.18 稱號
   }
   function socOnline(pid, limit) {
     const S = socDb();
@@ -2670,6 +2756,8 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           row.alloc = acc.rpg ? Object.assign({}, acc.rpg.alloc) : null;
           row.cleared = acc.rpg ? (acc.rpg.cleared | 0) : 0;
           row.points = pointsTotalFor(row.cleared);
+          row.lv = lvOfXp(ensureXp(acc.rpg)).lv;
+          row.xp = ensureXp(acc.rpg);
           row.spent = acc.rpg ? sumAlloc(acc.rpg.alloc) : 0;
           // v5.5：playSec = 帳號層級（所有模式累加）；playRpgSec = 舊的 RPG 通關用時
           row.playSec = (acc.playSec | 0) || (acc.rpg ? (acc.rpg.playSec | 0) : 0);
@@ -2837,7 +2925,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           const body = await readJson(req, 2048);
           if (!body) return fail(res, 400, 'BAD_BODY'), true;
           // v4.3：開發者可以跳關（一般玩家照規矩，只能打下一關）
-          const r = applyClear(acc.rpg, body.stage, { deaths: body.deaths, playSec: body.playSec },
+          const r = applyClear(acc.rpg, body.stage, { deaths: body.deaths, playSec: body.playSec, exp: body.exp },
             { force: isDev(acc) });
           if (!r.ok) {
             if (r.err === 'STAGE_LOCKED') stats.tamper++;
@@ -3079,6 +3167,9 @@ module.exports = {
   // 給測試用的純函式
   ATTRS: ATTRS, BASE_POINTS: BASE_POINTS, CAP: CAP, MAX_POINTS: MAX_POINTS, MAX_STAGE: MAX_STAGE,
   pointsTotalFor: pointsTotalFor, goldFor: goldFor, stageReward: stageReward,
+  applyClear: applyClear, spendPoint: spendPoint,
+  LV_MAX: LV_MAX, XP_MAX: XP_MAX, xpNeed: xpNeed, lvOfXp: lvOfXp, xpTotalOfLv: xpTotalOfLv,
+  foeLvOfStage: foeLvOfStage, foeXpOf: foeXpOf, stageXpOf: stageXpOf, ensureXp: ensureXp,
   defaultRpg: defaultRpg, validateAlloc: validateAlloc, spendPoint: spendPoint,
   defaultLayout: defaultLayout, sanitizeLayout: sanitizeLayout,
   applyClear: applyClear, mergeProgress: mergeProgress, fitAlloc: fitAlloc,
