@@ -30,7 +30,12 @@ ok(/if \(!document\.body\.classList\.contains\('touch'\)\) \{\s*\n\s*try \{ togg
 ok(html.indexOf("window.addEventListener('popstate'") > 0 || /popstate/.test(html), 'popstate 監聽存在');
 
 console.log('\n=== 2. 手機暫停的其他入口仍在 ===');
-ok(/if \(Screen\.current === 'game'\) \{ togglePause\(\); return; \}/.test(html), 'navBar「← 上一頁」在遊戲中仍可暫停');
+// v5.10：導覽改成 PadUI／Screen.back() 共用一條，寫死的字面會整支紅。
+//   改成驗「有這麼一條規則」：遊戲中 → togglePause() 然後收工。
+ok(/Screen(?:\.|\s*\?\s*[^:]{0,40}:\s*Screen\.)current === 'game'[\s\S]{0,60}togglePause\(\)[\s\S]{0,40}return/.test(html),
+   'navBar「← 上一頁」在遊戲中仍可暫停');
+ok(/function back\(\) \{\s*\n\s*if \(cur === 'game'\) \{ try \{ togglePause\(\); \} catch \(e\) \{\} return; \}/.test(html),
+   'Screen.back() 本身在遊戲中就是暫停（上一頁／手把 B 都走這條）');
 ok(html.indexOf("$id('pauseBtn').addEventListener('click', togglePause)") > 0, '⏸ ESC 按鈕仍可暫停');
 ok(/Input\.edges\.Escape\) togglePause\(\)/.test(html), '鍵盤 ESC 仍可暫停');
 ok(/if \(Net\.on && Net\.role === 'guest'\) \{ guestPause\(\); return; \}/.test(html), '客人暫停走 guestPause（行為不變）');

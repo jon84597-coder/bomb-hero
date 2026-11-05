@@ -501,9 +501,10 @@ body.touch #scr-rpg .card { max-height: none; overflow: visible; }
 .rowbtns .ghostbtn { flex: 0 0 auto; }
 
 .padfocus {
+/* v5.10：手把光環要在深色卡片與淺色（設定頁）都看得清楚 → 外圈先墊一圈深色再發光 */
 outline: 3px solid #ffd166 !important; outline-offset: 3px !important;
-box-shadow: 0 0 0 6px rgba(255,209,102,.18), 0 0 22px rgba(255,209,102,.55) !important;
-position: relative; z-index: 3;
+box-shadow: 0 0 0 7px rgba(12,8,2,.62), 0 0 24px rgba(255,209,102,.75) !important;
+position: relative; z-index: 4; scroll-margin: 12px;
 }
 
 
@@ -2033,8 +2034,10 @@ box-shadow: 0 4px 0 #502a7a, 0 16px 26px -12px rgba(120,60,180,.6), inset 0 2px 
 .mbtn.bossbtn small { color: #eed9ff; }
 .mbtn.bossbtn:hover { border-color: #f0e2ff; box-shadow: 0 6px 0 #502a7a, 0 18px 30px -12px rgba(140,80,200,.65), inset 0 2px 0 rgba(255,255,255,.4); }
 .padfocus {
-outline: 3px solid #f4703c !important; outline-offset: 3px !important;
-box-shadow: 0 0 0 6px rgba(244,112,60,.20), 0 0 22px rgba(244,112,60,.55) !important;
+/* v5.10：跟上面那一份保持一致（淺色卡片上橘線容易糊掉 → 墊深色再發光） */
+outline: 3px solid #ffd166 !important; outline-offset: 3px !important;
+box-shadow: 0 0 0 7px rgba(12,8,2,.62), 0 0 24px rgba(255,209,102,.75) !important;
+position: relative; z-index: 4; scroll-margin: 12px;
 }
 /* v4.23：開機診斷卡（只有模組載入失敗時才出現） */
 .bootdiag {
@@ -3669,7 +3672,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.9</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.10</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -3711,7 +3714,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
       </div>
 
-      <div class="ver beta">正式版 v<span id="verTxt">5.9</span></div>
+      <div class="ver beta">正式版 v<span id="verTxt">5.10</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4402,7 +4405,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.9';
+const VERSION = '5.10';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -7886,99 +7889,418 @@ function copyMail(addr) {
 })();
   } catch (__e) { __bootFail('wire', __e); }
 
-// ---------- 手把選單導航：方向鍵／蘑菇頭選項目、A 確認、B 返回 ----------
+// ---------- 手把選單導航（v5.10 重寫） ----------
+//   ① 掃描範圍＝「畫面上最上層的那一層」，不再只認 .screen.on：
+//      .screen.on ＋ 所有彈窗（[role="dialog"]／.overlay-in／.modal.on），取 z-index 最高的那一層。
+//      → 冒險模式的「單人／RPG」二選一在 #bhPick（.screen 外面），以前手把完全選不到。
+//   ② 手把索引走 Input.padPhys(0)，拿不到就退而用「第一支連線的手把」。
+//      以前直接讀瀏覽器索引 0 → 手把被配到索引 2（插拔留洞）時整個選單沒反應。
+//   ③ 方向鍵／左蘑菇頭：走到邊會繞回另一頭；LB／RB 逐項前後（保證每個項目都選得到）。
+//   ④ 右蘑菇頭：上下左右捲動選單（自動找最近的可捲動容器）。
+//   ⑤ A 確認、B 返回（遊戲中＝暫停）、Start 暫停（在遊戲迴圈裡）。
 const PadUI = (function () {
     try {
       return (function () {
-  let focusEl = null, lastDir = null, repeatAt = 0, lastScr = '';
-  function scopeEl() { return document.querySelector('.screen.on') || document.body; }
-  function items() {
-    const root = scopeEl();
-    const raw = root.querySelectorAll('button:not([disabled]), input, .roomitem, .pbox');
+  const LAYER_SEL = '.screen.on, [role="dialog"], .overlay-in, .modal.on';
+  const FOCUS_SEL = 'button, [role="button"], a[href], input:not([type="hidden"]), select, textarea, ' +
+    '[tabindex]:not([tabindex="-1"]), .roomitem, .pbox';
+  const SKIP_ID = { tutCard: 1, banner: 1, doorHint: 1 };   // 遊戲中的提示卡不搶焦點
+
+  const DEAD = .55;            // 左蘑菇頭死區
+  const REPEAT_FIRST = 340;    // 按住後第一次重複前的等待
+  const REPEAT_GAP = 130;      // 之後每次間隔
+  const SCROLL_SP = 980;       // 右蘑菇頭滿舵捲動速度（px/秒）
+
+  let focusEl = null, focusId = '', focusPos = -1;
+  let lastScr = '', lastT = 0, lastDir = null, repAt = 0;
+  let cacheAt = 0, cacheScope = null, cacheItems = [];
+  let armed = false;                 // 有人真的在用手把才顯示光環
+
+  // ---- 可見性：display/visibility/透明度/尺寸 任一不對就不算 ----
+  function visible(el) {
+    if (!el || el.nodeType !== 1 || !el.getBoundingClientRect) return false;
+    if (el.disabled) return false;
+    if (el.classList && el.classList.contains('hide')) return false;
+    const r = el.getBoundingClientRect();
+    if (r.width < 6 || r.height < 6) return false;
+    let cs = null;
+    try { cs = getComputedStyle(el); } catch (e) { cs = null; }
+    if (!cs) return true;
+    if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+    if (cs.opacity !== '' && parseFloat(cs.opacity) < .05) return false;
+    return true;
+  }
+  // ---- 有效 z-index（往上找第一個不是 auto 的）----
+  function zOf(el) {
+    let cur = el, i = 0;
+    while (cur && cur.nodeType === 1 && i < 30) {
+      const z = getComputedStyle(cur).zIndex;
+      if (z && z !== 'auto') return parseInt(z, 10) || 0;
+      cur = cur.parentElement; i++;
+    }
+    return 0;
+  }
+  function layerRoots() {
     const out = [];
+    let all;
+    try { all = document.querySelectorAll(LAYER_SEL); } catch (e) { return out; }
+    for (let i = 0; i < all.length; i++) {
+      const el = all[i];
+      if (SKIP_ID[el.id]) continue;
+      if (!visible(el)) continue;
+      out.push({ el: el, z: zOf(el), i: i });
+    }
+    out.sort(function (a, b) { return (a.z - b.z) || (a.i - b.i); });
+    return out;
+  }
+  function itemsIn(root) {
+    const out = [];
+    if (!root || !root.querySelectorAll) return out;
+    let raw;
+    try { raw = root.querySelectorAll(FOCUS_SEL); } catch (e) { return out; }
     for (let i = 0; i < raw.length; i++) {
       const el = raw[i];
-      const r = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
-      if (!r || r.width < 3 || r.height < 3) continue;
+      if (el.getAttribute && el.getAttribute('aria-disabled') === 'true') continue;
+      if (el.closest && el.closest('.hide')) continue;
+      if (!visible(el)) continue;
       out.push(el);
     }
     return out;
   }
-  function clear() {
-    document.querySelectorAll('.padfocus').forEach(function (e) { e.classList.remove('padfocus'); });
+  // 最上層、而且真的還有可按的東西 → 那一層就是這一刻的操作範圍
+  function resolveScope() {
+    const ls = layerRoots();
+    const inGame = (typeof Screen !== 'undefined' && Screen.current === 'game');
+    for (let i = ls.length - 1; i >= 0; i--) {
+      const el = ls[i].el;
+      if (inGame && el.id === 'scr-game') continue;    // 遊戲中不要把 HUD（⏸）變成選單焦點
+      if (itemsIn(el).length) return el;
+    }
+    return null;
   }
-  function focus(el) {
-    clear();
+  function refresh(force) {
+    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (!force && now - cacheAt < 120) return;
+    cacheAt = now;
+    cacheScope = resolveScope();
+    cacheItems = itemsIn(cacheScope);
+    if (focusEl && (focusEl.isConnected === false || cacheItems.indexOf(focusEl) < 0)) {
+      clearPaint();
+      focusEl = null;
+    }
+  }
+  function items() { refresh(false); return cacheItems; }
+
+  function clearPaint() {
+    let els;
+    try { els = document.querySelectorAll('.padfocus'); } catch (e) { return; }
+    for (let i = 0; i < els.length; i++) els[i].classList.remove('padfocus');
+  }
+  function setFocus(el, doScroll) {
+    if (focusEl && focusEl !== el) { try { focusEl.classList.remove('padfocus'); } catch (e) {} }
+    clearPaint();
     focusEl = el;
+    focusId = (el && el.id) || '';
     if (!el) return;
-    el.classList.add('padfocus');
-    try { if (el.scrollIntoView) el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
+    try { el.classList.add('padfocus'); } catch (e) {}
+    if (doScroll !== false) {
+      try { el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
+    }
   }
   function ensureFocus() {
     const list = items();
-    if (!list.length) { focus(null); return null; }
-    if (!focusEl || list.indexOf(focusEl) < 0) focus(list[0]);
-    return focusEl;
+    if (!list.length) { if (focusEl) { clearPaint(); focusEl = null; } return null; }
+    if (focusEl && list.indexOf(focusEl) >= 0) { focusPos = list.indexOf(focusEl); return focusEl; }
+    let pick = null;
+    if (focusId) {
+      for (let i = 0; i < list.length; i++) if (list[i].id === focusId) { pick = list[i]; break; }
+    }
+    // 沒有 id 的元素（對戰槽位卡、商店格子…）重繪後認不回來 → 用「上次的位置」接回去，
+    // 不然逐項走訪會中途跳回第一項（使用者會覺得「怎麼一直跳回上面」）
+    if (!pick && focusPos >= 0 && focusPos < list.length) pick = list[focusPos];
+    if (!pick) {
+      // 預設不要落在輸入框（A 會直接叫出鍵盤）→ 先找第一個「按鈕類」；
+      // 再優先挑主要動作（大按鈕／選單卡），而不是角落的版本鈕、公告這種小東西
+      const PRIMARY = 'biggo, bigbtn, qbtn, mbtn';
+      for (let i = 0; i < list.length; i++) {
+        const c = typeof list[i].className === 'string' ? list[i].className : '';
+        if (c && PRIMARY.split(', ').some(function (k) { return c.indexOf(k) >= 0; })) { pick = list[i]; break; }
+      }
+    }
+    if (!pick) {
+      for (let i = 0; i < list.length; i++) {
+        const tg = (list[i].tagName || '').toUpperCase();
+        if (tg !== 'INPUT' && tg !== 'TEXTAREA' && tg !== 'SELECT') { pick = list[i]; break; }
+      }
+    }
+    if (!pick) pick = list[0];
+    setFocus(pick, false);
+    focusPos = list.indexOf(pick);
+    return pick;
+  }
+
+  /* 純函式（測試直接呼叫）：list=[{x,y,w,h}]，回傳要跳過去的索引。
+     做法是「先決定下一排／下一欄，再在同一排裡挑最近的那一個」——
+     純比「距離最近的元素」會在浮動小按鈕（左上角版本鈕、右上角公告）上歪掉：
+     往下的時候它會直接垂直落到右欄，左邊一整欄就再也走不到。
+     wrap=true ＝ 走到邊了要繞回另一頭（取最遠的那一端）。 */
+  const ROW_TOL = 26;
+  function pickBest(list, curIdx, dir, wrap) {
+    if (!list || !list.length) return -1;
+    const cur = list[curIdx];
+    if (!cur) return -1;
+    const cx = cur.x + cur.w / 2, cy = cur.y + cur.h / 2;
+    const vert = (dir === 'up' || dir === 'down');
+    const sign = (dir === 'down' || dir === 'right') ? 1 : -1;
+
+    const cand = [];
+    for (let i = 0; i < list.length; i++) {
+      if (i === curIdx) continue;
+      const r = list[i];
+      const along = ((vert ? (r.y + r.h / 2) - cy : (r.x + r.w / 2) - cx)) * sign;
+      const across = Math.abs(vert ? (r.x + r.w / 2) - cx : (r.y + r.h / 2) - cy);
+      cand.push({ i: i, along: along, across: across });
+    }
+    if (!cand.length) return -1;
+
+    // 水平移動先鎖「同一排」（不然會跳到很遠的下一排去）
+    let pool = cand;
+    if (!vert) {
+      const rowTol = Math.max(24, cur.h * .6);
+      const sameRow = pool.filter(function (c) { return c.across <= rowTol; });
+      if (sameRow.length) pool = sameRow;
+    }
+
+    const ahead = pool.filter(function (c) { return c.along > 4; });
+    const behind = pool.filter(function (c) { return c.along <= 4; });
+    if (!wrap) pool = ahead;
+    else pool = ahead.length ? ahead : behind;
+    if (!pool.length) return -1;
+
+    // 最近的下一排（或繞回時最遠的那一端）→ 只在那一排裡挑
+    const edge = pool.reduce(function (m, c) { return c.along < m ? c.along : m; }, Infinity);
+    const band = pool.filter(function (c) { return c.along <= edge + ROW_TOL; });
+    let best = band[0];
+    for (let k = 1; k < band.length; k++) if (band[k].across < best.across) best = band[k];
+    return best.i;
+  }
+
+  function rectsOf(list) {
+    const out = [];
+    for (let i = 0; i < list.length; i++) {
+      const r = list[i].getBoundingClientRect();
+      out.push({ x: r.left, y: r.top, w: r.width, h: r.height });
+    }
+    return out;
   }
   function move(dir) {
     const list = items();
+    if (!list.length) return false;
     const cur = ensureFocus();
-    if (!cur || list.length < 2) return;
-    const cr = cur.getBoundingClientRect();
-    const cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2;
-    let best = null, bs = Infinity;
-    for (let i = 0; i < list.length; i++) {
-      const el = list[i];
-      if (el === cur) continue;
-      const r = el.getBoundingClientRect();
-      const dx = (r.left + r.width / 2) - cx, dy = (r.top + r.height / 2) - cy;
-      let primary = 0;
-      if (dir === 'up') { if (dy > -6) continue; primary = -dy; }
-      else if (dir === 'down') { if (dy < 6) continue; primary = dy; }
-      else if (dir === 'left') { if (dx > -6) continue; primary = -dx; }
-      else { if (dx < 6) continue; primary = dx; }
-      const score = primary + (dir === 'up' || dir === 'down' ? Math.abs(dx) : Math.abs(dy)) * 2.4;
-      if (score < bs) { bs = score; best = el; }
+    if (!cur) return false;
+    if (list.length < 2) return false;
+    const rects = rectsOf(list);
+    const ci = list.indexOf(cur);
+    let idx = pickBest(rects, ci, dir, false);
+    if (idx < 0) idx = pickBest(rects, ci, dir, true);   // 走到邊 → 繞回另一頭
+    if (idx < 0 || idx === ci) return false;
+    setFocus(list[idx], true);
+    focusPos = idx;
+    try { AudioSys.sfx('click'); } catch (e) {}
+    return true;
+  }
+  // LB／RB：照 DOM 順序一項一項走，保證每個都選得到（不管版面怎麼排）
+  function step(d) {
+    const list = items();
+    if (!list.length) return false;
+    let base = focusEl ? list.indexOf(focusEl) : -1;
+    if (base < 0 && focusId) {
+      for (let i = 0; i < list.length; i++) if (list[i].id === focusId) { base = i; break; }
     }
-    if (best) { focus(best); AudioSys.sfx('click'); }
+    if (base < 0) base = (focusPos >= 0 && focusPos < list.length) ? focusPos : (d > 0 ? -1 : 0);
+    const i = (base + d + list.length) % list.length;
+    setFocus(list[i], true);
+    focusPos = i;
+    try { AudioSys.sfx('click'); } catch (e) {}
+    return true;
   }
   function activate() {
     const el = ensureFocus();
-    if (!el) return;
-    AudioSys.ensure();
-    if (el.tagName === 'INPUT') { el.focus(); if (el.select) el.select(); return; }
-    el.click();
-    AudioSys.sfx('click');
+    if (!el) return false;
+    try { AudioSys.ensure(); } catch (e) {}
+    const tg = (el.tagName || '').toUpperCase();
+    if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') {
+      try { el.focus(); if (el.select) el.select(); } catch (e) {}
+      try { AudioSys.sfx('click'); } catch (e) {}
+      return true;
+    }
+    try { el.click(); } catch (e) {}
+    try { AudioSys.sfx('click'); } catch (e) {}
+    cacheAt = 0;                 // 點完 DOM 可能重畫 → 下一幀重掃
+    return true;
+  }
+  function backBtn(scope) {
+    if (!scope || !scope.querySelectorAll) return null;
+    const bs = scope.querySelectorAll('[data-back], button');
+    for (let i = 0; i < bs.length; i++) {
+      const b = bs[i];
+      if (!visible(b)) continue;
+      if (b.hasAttribute && b.hasAttribute('data-back')) return b;
+      const txt = (b.textContent || '').replace(/\s+/g, '');
+      if (/^←|返回|關閉|取消|回主選單/.test(txt)) return b;
+    }
+    return null;
   }
   function back() {
-    if (Screen.current === 'game') { togglePause(); return; }
-    const b = document.querySelector('.screen.on [data-back]');
-    if (b) { AudioSys.sfx('click'); b.click(); }
+    const ae = document.activeElement;
+    if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName || '')) {
+      try { ae.blur(); } catch (e) {}
+      return true;
+    }
+    if (typeof Screen !== 'undefined' && Screen.current === 'game') { try { togglePause(); } catch (e) {} return true; }
+    const b = backBtn(cacheScope || (typeof document !== 'undefined' ? document.querySelector('.screen.on') : null));
+    if (b) { try { b.click(); } catch (e) {} try { AudioSys.sfx('click'); } catch (e) {} return true; }
+    try { Screen.back(); } catch (e) {}
+    return true;
   }
+
+  // ---- 右蘑菇頭：找「最近的可捲動容器」，沒有就捲整頁（彈窗內不捲背景）----
+  function scrollTarget(el) {
+    let cur = el || cacheScope;
+    while (cur && cur.nodeType === 1 && cur !== document.body) {
+      let cs = null;
+      try { cs = getComputedStyle(cur); } catch (e) { cs = null; }
+      if (cs) {
+        if (/(auto|scroll)/.test(cs.overflowY) && cur.scrollHeight > cur.clientHeight + 4) return cur;
+        if (/(auto|scroll)/.test(cs.overflowX) && cur.scrollWidth > cur.clientWidth + 4) return cur;
+      }
+      cur = cur.parentElement;
+    }
+    const isScreen = !cacheScope || (cacheScope.classList && cacheScope.classList.contains('screen'));
+    return isScreen ? (document.scrollingElement || document.documentElement) : null;
+  }
+  function scrollBy(dt, rx, ry) {
+    if (!dt) return;
+    const dz = .18;
+    const ax = Math.abs(rx) < dz ? 0 : (rx - Math.sign(rx) * dz) / (1 - dz);
+    const ay = Math.abs(ry) < dz ? 0 : (ry - Math.sign(ry) * dz) / (1 - dz);
+    if (!ax && !ay) return;
+    const t = scrollTarget(focusEl);
+    if (!t) return;
+    if (ay) t.scrollTop += ay * SCROLL_SP * (1 + Math.abs(ay) * .6) * dt;
+    if (ax) t.scrollLeft += ax * SCROLL_SP * dt;
+  }
+
+  // ---- 手把索引：槽 0 → 沒有就用第一支連線的 ----
+  function padIndex() {
+    let pi = -1;
+    try { pi = Input.padPhys(0); } catch (e) { pi = -1; }
+    if (pi >= 0) return pi;
+    let gps = [];
+    try { gps = navigator.getGamepads ? navigator.getGamepads() : []; } catch (e) { gps = []; }
+    for (let i = 0; i < (gps ? gps.length : 0); i++) {
+      const gp = gps[i];
+      if (gp && gp.connected !== false) return i;
+    }
+    return -1;
+  }
+
   function tick() {
-    if (Screen.current !== lastScr) { lastScr = Screen.current; focusEl = null; clear(); }
-    if (Screen.current === 'game') { if (focusEl) { clear(); focusEl = null; } return; }
+    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const dt = lastT ? Math.min(.1, (now - lastT) / 1000) : 0;
+    lastT = now;
+
+    if (typeof Screen !== 'undefined' && Screen.current !== lastScr) {
+      lastScr = Screen.current;
+      focusEl = null; focusId = ''; focusPos = -1; lastDir = null; repAt = 0;
+      clearPaint(); cacheAt = 0;
+    }
     if (!navigator.getGamepads) return;
-    if (!Pad.list().length) return;
-    const now = Date.now();
-    const pressed = Input.padEdge(0, 12) ? 'up' : Input.padEdge(0, 13) ? 'down'
-      : Input.padEdge(0, 14) ? 'left' : Input.padEdge(0, 15) ? 'right' : null;
-    const a = Input.padAxis(0);
-    const axisDir = a.y < -.55 ? 'up' : a.y > .55 ? 'down' : a.x < -.55 ? 'left' : a.x > .55 ? 'right' : null;
-    if (pressed) { move(pressed); repeatAt = now + 330; lastDir = pressed; }
-    else if (axisDir && axisDir !== lastDir) { move(axisDir); repeatAt = now + 330; lastDir = axisDir; }
-    else if (axisDir && now > repeatAt) { move(axisDir); repeatAt = now + 160; }
-    if (!axisDir) lastDir = null;
-    if (Input.padEdge(0, 0)) activate();       // A 確認
-    if (Input.padEdge(0, 1)) back();           // B 返回
+    const pi = padIndex();
+    if (pi < 0) { if (focusEl) { clearPaint(); focusEl = null; } return; }
+    // 只有「真的有人在用手把」才顯示光環（插著手把但用滑鼠的人不會一直被光環騷擾）
+    if (!armed) { if (!padActive(pi)) return; armed = true; }
+
+    refresh(false);
+    if (cacheScope) ensureFocus();          // 有手把在用 → 換頁／重畫後光環會自己回來
+
+    const a = Input.padAxis(pi);
+    scrollBy(dt, a.rx, a.ry);               // 右蘑菇頭：上下左右捲動
+
+    // ---- 左蘑菇頭／十字鍵 ----
+    if (cacheScope) {
+      let dir = null, edge = false;
+      if (Input.padDown(pi, 12)) { dir = 'up'; edge = Input.padEdge(pi, 12); }
+      else if (Input.padDown(pi, 13)) { dir = 'down'; edge = Input.padEdge(pi, 13); }
+      else if (Input.padDown(pi, 14)) { dir = 'left'; edge = Input.padEdge(pi, 14); }
+      else if (Input.padDown(pi, 15)) { dir = 'right'; edge = Input.padEdge(pi, 15); }
+      else {
+        if (Math.abs(a.x) >= Math.abs(a.y)) {
+          if (a.x > DEAD) dir = 'right'; else if (a.x < -DEAD) dir = 'left';
+        } else {
+          if (a.y > DEAD) dir = 'down'; else if (a.y < -DEAD) dir = 'up';
+        }
+      }
+      if (dir) {
+        if (edge || dir !== lastDir) { move(dir); repAt = now + REPEAT_FIRST; lastDir = dir; }
+        else if (now >= repAt) { move(dir); repAt = now + REPEAT_GAP; }
+      } else lastDir = null;
+    } else lastDir = null;
+
+    // ---- 按鍵：就算沒有選單（遊戲中）也要能按，B＝暫停 ----
+    if (Input.padEdge(pi, 0)) activate();       // A 確認
+    if (Input.padEdge(pi, 1)) back();           // B 返回／遊戲中暫停
+    if (cacheScope) {
+      if (Input.padEdge(pi, 4)) step(-1);       // LB 上一項
+      if (Input.padEdge(pi, 5)) step(1);        // RB 下一項
+    }
   }
-  return { tick: tick, refocus: function () { focusEl = null; }, items: items };
+
+  // 手把有沒有在被使用（按鍵、十字鍵、任一蘑菇頭）—— 決定要不要顯示光環
+  function padActive(pi) {
+    for (let b = 0; b < 16; b++) if (Input.padDown(pi, b)) return true;
+    const a = Input.padAxis(pi);
+    return Math.abs(a.x) > .32 || Math.abs(a.y) > .32 || Math.abs(a.rx) > .32 || Math.abs(a.ry) > .32;
+  }
+
+  // 用滑鼠／觸控操作時把光環收掉，並暫停「手把模式」，免得「明明用滑鼠還在發光」
+  try {
+    document.addEventListener('pointerdown', function () {
+      armed = false;
+      if (focusEl) { clearPaint(); focusEl = null; }
+    }, true);
+  } catch (e) {}
+
+  return {
+    tick: tick,
+    refocus: function () { focusEl = null; focusId = ''; focusPos = -1; cacheAt = 0; },
+    items: items,
+    move: move, step: step, activate: activate, back: back,
+    pickBest: pickBest, padIndex: padIndex,
+    get scope() { return cacheScope; },
+    get focused() { return focusEl; },
+    get armed() { return armed; },
+    set armed(v) { armed = !!v; }
+  };
       })();
     } catch (__e) {
       __bootFail('PadUI', __e);
       return (typeof __stubModule === 'function') ? __stubModule('PadUI') : {};
     }
   })();
+
+/* 手把對應表 —— 說明頁與測試共用同一份，改一處兩邊都跟著改 */
+const PAD_MAP = [
+  ['左蘑菇頭／十字鍵', '選單：移動游標　遊戲中：移動角色（8 向）'],
+  ['右蘑菇頭', '選單：上下左右捲動畫面　遊戲中：上下縮放視野'],
+  ['A', '確認／選取　遊戲中：放炸彈（撿彈、丟彈也用它）'],
+  ['B', '返回上一頁　遊戲中：暫停／繼續'],
+  ['X', '遙控引爆（要有 📱 遙控器）'],
+  ['Y', '恐龍吐火（要有坐騎）'],
+  ['LB／RB', '選單：上一個／下一個項目（一定選得到每一個）'],
+  ['LT／RT', '遊戲中：縮小／放大畫面'],
+  ['Start', '暫停／繼續']
+];
 
 // ---------- 角色外觀（原創：8 隻可愛的胖胖動物，對應選角圖的 8 隻） ----------
 const CHARACTERS = [
@@ -26606,9 +26928,13 @@ const Help = (function () {
     h += '<dt>暫停</dt><dd>右上角 <b>⏸</b> 或「← 上一頁」</dd>';
     h += '<dt>小提醒</dt><dd>手機玩到一半想離開，請按 ⏸；邊緣滑動的系統返回手勢已自動擋掉，不會誤觸</dd>';
     h += '</dl></div></div>';
-    h += '<div class="hcard wide"><div class="htx"><div class="hn">🎮 手把</div>';
-    h += '<div class="hd">接上手把就會自動偵測，可在「設定 → 控制方式」指定把手與按鍵；沒手把也能用 🤖 AI 補位或直接對戰。</div>';
-    h += '</div></div>';
+    h += '<div class="hcard wide"><div class="htx"><div class="hn">🎮 手把（接上就自動偵測，不用設定）</div>';
+    h += '<div class="hd">選單<b>全部</b>都可以用手把操作：方向鍵／左蘑菇頭移動游標、<b>A 確認</b>、<b>B 返回</b>；'
+      + '<b>LB／RB</b> 會照順序一項一項走，<b>保證每個選項都選得到</b>。'
+      + '<b>右蘑菇頭可以上下左右捲動選單</b>（長長一頁也不用一直按方向鍵）。</div>';
+    h += '<dl class="hkv">';
+    PAD_MAP.forEach(function (row) { h += '<dt>' + hesc(row[0]) + '</dt><dd>' + hesc(row[1]) + '</dd>'; });
+    h += '</dl></div></div>';
 
     h += '<div class="hsub">🧱 地圖上會看到什麼</div><div class="hgrid">';
     HELP_BASIC.elems.forEach(function (el) {
@@ -28923,7 +29249,15 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.9', date: '2026-11-05', now: true, items: [
+  { v: '5.10', date: '2026-11-05', now: true, items: [
+    '🎮 <b>手把在選單裡「有些選項選不到」修好了</b>：以前只掃「目前畫面」裡的按鈕，但<b>冒險模式的「單人／RPG」二選一是在彈窗裡</b>（畫面之外）→ 手把怎麼推都沒反應。現在掃描範圍包含<b>所有彈窗</b>，並自動取<b>最上層</b>那一層；彈窗、暫停選單、簽到、帳號都能用手把操作',
+    '🕹️ <b>手把插拔後整個選單沒反應</b>：以前死讀瀏覽器索引 0，手把被配到索引 2（中間拔過）就完全失效。現在走 <b>1P 槽位對應</b>，抓不到就退而用<b>第一支連線的手把</b>',
+    '🔁 <b>方向鍵走到最下面會「卡住」</b>：以前最後一項再往下就沒反應。現在往下走<b>同一欄</b>、走到邊會<b>繞回另一頭</b>；<b>LB／RB</b> 可以照順序一項一項走，<b>保證每個選項都到得了</b>',
+    '🖱️ <b>右蘑菇頭可以上下左右捲動選單</b>：自動找最近的可捲動區域，輕輕推慢慢滑、推到底就快 —— 長長一頁不用一直按方向鍵（遊戲中右蘑菇頭仍然是縮放）',
+    '🎯 <b>B 鍵＝返回，遊戲中＝暫停</b>：暫停選單本身也能用手把操作；只有<b>真的在用手把</b>時才顯示金色光環，滑鼠一動就自動收掉，不會互相搶',
+    '📖 說明頁新增<b>完整手把對應表</b>（與程式共用同一份資料，以後改一處兩邊同步）'
+  ] },
+  { v: '5.9', date: '2026-11-05', now: false, items: [
     '🏷️ <b>LOGO 終於真的換掉了（v5.7 那張其實沒上線）</b>：原因是<b>部署來源的圖檔沒跟著換</b> —— 遊戲是從 <b>public/</b> 起服務，v5.7 只把新 LOGO 放進開發目錄，public/ 裡還是上一版的舊檔，所以線上一直拿到舊圖（而測試只讀開發目錄，才會全綠卻看不出問題）',
     '🧰 <b>新增一支同步工具</b>：<b>tools/sync-public.js</b> 把開發目錄的 index.html／sw.js／manifest／美術圖<b>一次同步到 public/</b>，加 <b>--check</b> 只檢查不動手；交付目錄少檔、內容不同、多出舊檔都會直接點名',
     '🧪 <b>新增交付一致性測試</b>：<b>verify-v509</b> 逐檔比對開發目錄與 public/（含全部美術圖），以後<b>忘記同步</b>就會紅，不會再出現「測試全綠、線上是舊圖」',
@@ -33615,7 +33949,7 @@ window.__BH = {
   WARP_COLORS: WARP_COLORS, hazardAt: hazardAt, hazardTick: hazardTick, beltMulFor: beltMulFor,
   BELT_SPEED: BELT_SPEED, BELT_FAST: BELT_FAST, BELT_SLOW: BELT_SLOW, moveSpeed: moveSpeed,
   confetti: confetti, battleEndFx: battleEndFx,
-  Pad: Pad, PadUI: PadUI, SOLO_DIFF: SOLO_DIFF, soloDiffCfg: soloDiffCfg, soloTimeVal: soloTimeVal,
+  Pad: Pad, PadUI: PadUI, PAD_MAP: PAD_MAP, SOLO_DIFF: SOLO_DIFF, soloDiffCfg: soloDiffCfg, soloTimeVal: soloTimeVal,
   startBossRush: startBossRush, detonateRemote: detonateRemote, aiRemoteTick: aiRemoteTick, pickBossCell: pickBossCell,
   spawnEggs: spawnEggs, eggAt: eggAt, rideDino: rideDino, breakDino: breakDino, fireBreath: fireBreath,
   takeEgg: takeEgg, CART_LV: CART_LV, CART_CHARGE_MAX: CART_CHARGE_MAX, cartChargeLevel: cartChargeLevel, mixHex: mixHex, CART_STEP1: CART_STEP1, CART_STEP2: CART_STEP2,

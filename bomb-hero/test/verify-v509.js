@@ -213,7 +213,19 @@ head('⑥ 版號四個地方對得上');
 const VER = (/const VERSION = '([\d.]+)'/.exec(pubIdx) || [])[1] || '';
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 ok(/^\d+\.\d+$/.test(VER), 'public/index.html 的 VERSION 是 x.y（' + VER + '）');
-ok(VER === '5.9', '這一版是 5.9');
+// v5.10 教訓：這條原本寫死 VER === '5.9'，一升版就紅。
+//   改成「純數字 x.y 且不低於 5.9」，並且要跟開發目錄那份完全一致。
+const devVer = (/const VERSION = '([\d.]+)'/.exec(devIdx) || [])[1] || '';
+function vtup(v) { return String(v).split('.').map(function (n) { return parseInt(n, 10) || 0; }); }
+function vge(a, b) {
+  const A = vtup(a), B2 = vtup(b);
+  for (let i = 0; i < Math.max(A.length, B2.length); i++) {
+    if ((A[i] || 0) !== (B2[i] || 0)) return (A[i] || 0) > (B2[i] || 0);
+  }
+  return true;
+}
+ok(/^\d+\.\d+$/.test(VER) && vge(VER, '5.9'), '這一版不低於 5.9（' + VER + '）');
+ok(devVer === VER, 'bomb-hero 與 public 的 VERSION 一致（' + VER + '）');
 ok(new RegExp('<span id="verTxt">' + VER.replace(/\./g, '\\.') + '<\\/span>').test(pubIdx), '首頁顯示的版號同步');
 ok(new RegExp('<span id="verLogVer">' + VER.replace(/\./g, '\\.') + '<\\/span>').test(pubIdx), '版本日誌標題同步');
 const swv = function (p) { return (/var SW_VERSION = 'v([\d.]+)'/.exec(fs.readFileSync(p, 'utf8')) || [])[1] || ''; };

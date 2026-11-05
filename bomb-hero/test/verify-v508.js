@@ -42,7 +42,11 @@ ok(new RegExp('<span id="verLogVer">' + VSTR + '<\\/span>').test(SRC), '版本�
 ok(new RegExp("var SW_VERSION = 'v" + VSTR + "\\.0';").test(SW1), 'bomb-hero/sw.js = v' + B.VERSION + '.0');
 ok(new RegExp("var SW_VERSION = 'v" + VSTR + "\\.0';").test(SW2), 'public/sw.js = v' + B.VERSION + '.0');
 ok(B.VERSION_LOG[0].v === B.VERSION && B.VERSION_LOG[0].now === true, '日誌最新一筆 = 當前版本且標 now');
-ok(B.VERSION_LOG[1].v === '5.8' && B.VERSION_LOG[1].now === false, '5.8 的 now 已取消');
+// v5.10 教訓：不要假設「5.8 一定在第二筆」——每升一版它就被往後推一格。
+//   改成「5.8 那一筆還在，而且不再是 now」＋「除了第一筆以外沒有任何 now」。
+const v58 = (B.VERSION_LOG || []).filter(function (e) { return e.v === '5.8'; })[0];
+ok(!!v58 && v58.now === false, '5.8 那一筆還在，且 now 已取消');
+ok((B.VERSION_LOG || []).slice(1).every(function (e) { return e.now !== true; }), '只有最新一筆標 now（其餘都已取消）');
 ok(B.VERSION_LOG.length >= 2 && B.VERSION_LOG[0].items.length >= 2, '本版有寫更新內容');
 
 // ---------------------------------------------------------------
