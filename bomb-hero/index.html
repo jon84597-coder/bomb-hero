@@ -3599,7 +3599,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.3</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.4</span></span>
     </button>
     <!-- v4.93：開發者後台入口（DEV_BUILD 或白名單帳號才顯示） -->
     <button class="verlogbtn devbtn" id="devBtn" type="button" title="開發者後台">🛠</button>
@@ -3642,7 +3642,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">正式版 v<span id="verTxt">5.3</span></div>
+      <div class="ver beta">正式版 v<span id="verTxt">5.4</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4333,7 +4333,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.3';
+const VERSION = '5.4';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -8533,6 +8533,7 @@ function resetMapCellState() {
   Game.sdList = [];
   Game.artK = 1;               // 大逃殺（T≈30 大圖）會縮怪物比例，別帶到別的模式
   BR_AI.on = false;            // 大逃殺 AI 的節奏（交戰距離／放彈頻率）也不要帶進單人／RPG
+  Game.flyZ = null;            // v5.4：飛行怪的可飛範圍（外牆以內）跟著地圖走，換圖一定要丟
   Game.mapSeq = (Game.mapSeq | 0) + 1;   // 地板烘焙快取／小地圖底圖一起換
   //   牆與落石都烘在地板分塊裡 → 分類一變，快取一定要丟（否則剛落的石頭不會畫出來）
   if (typeof floorChunkDirty === 'function') floorChunkDirty(null);
@@ -12456,6 +12457,108 @@ function updateBubbles(dt) {
 }
 
 
+// ══════════════════════════════════════════════════════════════════
+//   v5.4：飛行怪的「可飛範圍」= 外牆以內的空間
+//   以前的問題：只把牠夾在「地圖陣列」的邊界內（x∈[1,cols-1]），
+//     但有機地圖／隨機大圖的外牆之外還有一大片岩體或海面 —— 飛行怪照樣飄出去，
+//     那裏沒有地板、火焰燒不到，玩家只能看著牠在外面繞、等老半天才飛回來。
+//   判定方式：直接吃牆分類。wallKind === 1 ＝ 外牆／連到地圖外框的岩體（不准飛），
+//     空地、軟磚、場內硬牆（wallKind 2）都可以 → 保留「飛行怪越牆」的特色。
+//   一張地圖只算一次（用 mapSeq 當戳記），之後每幀只是 Uint8Array 查表。
+// ══════════════════════════════════════════════════════════════════
+function flyZoneReady() {
+  const cols = Game.cols | 0, rows = Game.rows | 0;
+  if (Game.flyZ && Game.flyZSeq === Game.mapSeq &&
+      Game.flyZ.cols === cols && Game.flyZ.rows === rows) return Game.flyZ;
+  if (!Game.wallKind || Game.wallSize !== (cols + 'x' + rows)) markWallKinds();
+  const wk = Game.wallKind, g = Game.grid || [];
+  // ① 多源 BFS：所有「場內可站立的地方」（空地＋軟磚）距離 0，往外擴 FLY_MARGIN 圈。
+  //    這樣飛行怪可以越過一兩格厚的場內牆，但飛不進「一眼望去都是石頭」的死區。
+  const FLY_MARGIN = 2;
+  const dist = new Int16Array(cols * rows); dist.fill(-1);
+  const q = [];
+  for (let y = 0; y < rows; y++) {
+    const row = g[y];
+    if (!row) continue;
+    for (let x = 0; x < cols; x++) if (row[x] !== 1) { const i = y * cols + x; dist[i] = 0; q.push(i); }
+  }
+  for (let qi = 0; qi < q.length; qi++) {
+    const i = q[qi], dd = dist[i];
+    if (dd >= FLY_MARGIN) continue;
+    const x = i % cols, y = (i / cols) | 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const nx = x + dx, ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+      const ni = ny * cols + nx;
+      if (dist[ni] >= 0) continue;
+      dist[ni] = dd + 1; q.push(ni);
+    }
+  }
+  // ② 再排除外牆／連到地圖外框的岩體（wallKind 1）—— 那些格子外面沒有地板，飛過去就是去送死等
+  const m = new Uint8Array(cols * rows);
+  for (let y = 0; y < rows; y++) {
+    const wr = wk && wk[y];
+    for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      if (dist[i] < 0) continue;
+      if (wr && wr[x] === 1) continue;
+      m[i] = 1;
+    }
+  }
+  Game.flyZ = { cols: cols, rows: rows, m: m };
+  Game.flyZSeq = Game.mapSeq;
+  return Game.flyZ;
+}
+function flyOk(x, y) {
+  const Z = flyZoneReady();
+  if (x < 0 || y < 0 || x >= Z.cols || y >= Z.rows) return false;
+  return Z.m[y * Z.cols + x] === 1;
+}
+// 離 (cx,cy) 最近的可行格 —— 給「已經飛到不該去的地方」的怪自己飛回來
+function flyerHomeCell(cx, cy) {
+  for (let r = 1; r <= 8; r++) {
+    let best = null, bd = Infinity;
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      if (!flyOk(cx + dx, cy + dy)) continue;
+      const d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = { x: cx + dx, y: cy + dy }; }
+    }
+    if (best) return best;
+  }
+  return null;
+}
+// 飛行怪移動的唯一入口：越界就分軸反彈，已經在界外就直線飛回最近的可行格
+function flyerMove(e, dt, mul) {
+  const T = Game.T;
+  const s = (e.spdBoost || 1) * (mul || 1);
+  const cx0 = Math.floor(e.x / T), cy0 = Math.floor(e.y / T);
+  if (!flyOk(cx0, cy0)) {
+    // 已經飛到不該去的地方（換地圖殘留／被技能推出去）→ 直接朝最近的可行格飛，
+    //   這時候不反彈，不然會卡在岩體裡來回抖、永遠回不來。
+    const home = flyerHomeCell(cx0, cy0);
+    if (home) {
+      const sp = Math.hypot(e.vx, e.vy) || e.speed || 30;
+      const a = Math.atan2((home.y + .5) * T - e.y, (home.x + .5) * T - e.x);
+      e.vx = Math.cos(a) * sp; e.vy = Math.sin(a) * sp;
+    }
+    e.x += e.vx * s * dt; e.y += e.vy * s * dt;
+    return;
+  }
+  let nx = e.x + e.vx * s * dt, ny = e.y + e.vy * s * dt;
+  const cx1 = Math.floor(nx / T), cy1 = Math.floor(ny / T);
+  if (!flyOk(cx1, cy1)) {
+    const okX = flyOk(cx1, cy0), okY = flyOk(cx0, cy1);
+    if (okX && okY) {
+      // 斜著撞牆：離哪一軸的格線比較近就先止住那一軸（看起來像擦著牆滑過去）
+      if (Math.abs(nx - (cx1 * T + T / 2)) < Math.abs(ny - (cy1 * T + T / 2))) { ny = e.y; e.vy = -e.vy; }
+      else { nx = e.x; e.vx = -e.vx; }
+    } else if (okX) { ny = e.y; e.vy = -e.vy; }
+    else if (okY) { nx = e.x; e.vx = -e.vx; }
+    else { nx = e.x; ny = e.y; e.vx = -e.vx; e.vy = -e.vy; }
+  }
+  e.x = nx; e.y = ny;
+}
 // 飛行怪（D）：在天上亂飛、可穿牆，邊界反彈＋隨機轉向
 function updateFlyer(e, dt) {
   const T = Game.T;
@@ -12468,7 +12571,7 @@ function updateFlyer(e, dt) {
   if (e.swoopT > 0) {
     e.swoopT -= dt;
     const sp = Math.hypot(e.vx, e.vy) || e.speed;
-    e.x += e.vx * dt * 1.9; e.y += e.vy * dt * 1.9;
+    flyerMove(e, dt, 1.9);                     // v5.4：俯衝一樣不准飛出外牆
     e.walkT += dt;
     if (Math.random() < .5) burst(e.x, e.y, '#d8fff4', 1, 40);
     if (e.swoopT <= 0) { e.vx = Math.cos(Math.random() * 6.28) * sp; e.vy = Math.sin(Math.random() * 6.28) * sp; e.turnT = 1.0; }
@@ -12505,9 +12608,11 @@ function updateFlyer(e, dt) {
     }
     e.vx = Math.cos(a) * sp; e.vy = Math.sin(a) * sp;
   }
-  e.x += e.vx * e.spdBoost * dt; e.y += e.vy * e.spdBoost * dt;
+  // v5.4：v4.58 那條只夾在地圖陣列邊界內，有機地圖／隨機大圖外牆之外還有一大片岩體或海面
+  //   → 改走 flyerMove()（可飛範圍＝外牆以內）：撞到就分軸反彈，不會再飄到場外乾等牠回來。
+  //   下面這段 clamp 留著當最後保險（陣列邊界永遠是最寬的界）。
+  flyerMove(e, dt, 1);
   e.walkT += dt;
-  // v4.58：不能飛到外牆那一圈 —— 牆外沒有地板，火焰燒不到，玩家只能乾等牠飄回來
   const m = T * 1.02 + (e.r || T * .4);
   const maxX = Game.cols * T - m, maxY = Game.rows * T - m;
   if ((e.x < m && e.vx < 0) || (e.x > maxX && e.vx > 0)) e.vx = -e.vx;
@@ -15865,9 +15970,10 @@ const AI_LEVELS = {
   // v4.17：lob = 隔牆「丟」炸彈的機率、lobCd = 丟完的冷卻秒數
   //   一開局就像被追殺。現在 AI 起手一定比玩家慢，想變快只能自己去吃速度鞋，
   //   而且再往上也有硬上限（AI_SPEED_CAP，見 controlAI）。
-  weak:   { think: [.5, 1.0], chase: .35, bomb: .28, flee: .55, spd: .70, foeR: 2.6, soft: .5,  dinoFire: .10, dinoFireCd: 3.2, lob: .22, lobCd: 5.2 },
-  normal: { think: [.2, .5],  chase: 1,   bomb: .85, flee: 1,   spd: .84, foeR: 3.4, soft: 1,   dinoFire: .20, dinoFireCd: 2.5, lob: .52, lobCd: 3.4 },
-  strong: { think: [.09, .2], chase: 1,   bomb: .97, flee: 1,   spd: 1.0,  foeR: 4.8, soft: 1,   dinoFire: .34, dinoFireCd: 1.9, lob: .78, lobCd: 2.5 }
+  // v5.4：dash = 每次重新思考時「要不要用衝刺趕路」的機率（逃命時不看機率，一定衝）
+  weak:   { think: [.5, 1.0], chase: .35, bomb: .28, flee: .55, spd: .70, foeR: 2.6, soft: .5,  dinoFire: .10, dinoFireCd: 3.2, lob: .22, lobCd: 5.2, dash: .06 },
+  normal: { think: [.2, .5],  chase: 1,   bomb: .85, flee: 1,   spd: .84, foeR: 3.4, soft: 1,   dinoFire: .20, dinoFireCd: 2.5, lob: .52, lobCd: 3.4, dash: .16 },
+  strong: { think: [.09, .2], chase: 1,   bomb: .97, flee: 1,   spd: 1.0,  foeR: 4.8, soft: 1,   dinoFire: .34, dinoFireCd: 1.9, lob: .78, lobCd: 2.5, dash: .28 }
 };
 //   AI 一樣要靠撿道具才會變快，但吃滿也不會變成飛車。
 const AI_SPEED_CAP = 146 + 2 * 20;
@@ -15894,7 +16000,8 @@ const BR_AI = {
     const c = {
       think: lv.think, chase: lv.chase * .55, bomb: lv.bomb * BR_AI.BK[ph], flee: lv.flee, spd: lv.spd,
       foeR: lv.foeR * .55, soft: lv.soft * .70, dinoFire: lv.dinoFire,
-      dinoFireCd: lv.dinoFireCd, lob: (lv.lob || 0) * .45, lobCd: (lv.lobCd || 3) * 1.7
+      dinoFireCd: lv.dinoFireCd, lob: (lv.lob || 0) * .45, lobCd: (lv.lobCd || 3) * 1.7,
+      dash: lv.dash || .12,                       // v5.4：大逃殺也一樣會用衝刺趕路／躲火線
     };
     lv._brCache[key] = c;
     return c;
@@ -16211,6 +16318,51 @@ function aiBrChoose(p, opts, cx, cy, tgt, tgtD2) {
   }
   return { dir: best, bomb: bomb };
 }
+// ══════════════════════════════════════════════════════════════════
+//   v5.4：電腦玩家也會用衝刺
+//   · 逃命：腳下（或馬上就要）在火線上 → 往安全方向衝，0.16 秒跑 1.5 格，
+//     比一般走路快三倍多，常常就是「剛好躲掉」跟「被炸死」的差別。
+//   · 趕路：目標很遠（追人／撿道具／大逃殺往內圈）而且前方兩格都安全 → 偶爾衝一下。
+//   · 不衝的情況：前方有牆或軟磚、會衝進別人的火線、手上搬著炸彈（避免丟在半路）。
+//   衝刺本身帶 0.18 秒霸體（沿用玩家的 slamGuard，不會像 invuln 那樣閃白）。
+// ══════════════════════════════════════════════════════════════════
+function aiDashOk(p, cx, cy, dn) {
+  const d = DIRS[dn];
+  if (!d) return false;
+  // 衝刺實際會跨到「下一格之後」（1.5 格）：兩格都不能有牆／軟磚／炸彈，不然會半路撞停
+  for (let k = 1; k <= 2; k++) {
+    const nx = cx + d.x * k, ny = cy + d.y * k;
+    if (cellAt(nx, ny) !== 0) return false;
+    if (bombAt(nx, ny)) return false;
+    if (sdSoon(nx, ny, 12)) return false;
+  }
+  // 火線只看「落點」—— 腳下就是炸彈時，前面那一格一定還在火線上，
+  //   再要求那一格安全的話就永遠躲不掉（衝刺本來就是要穿過火線邊緣跑出去）。
+  if (dangerAt(cx + d.x * 2, cy + d.y * 2, p)) return false;
+  return true;
+}
+function aiTryDash(p, lv, cx, cy) {
+  if (!p || !p.alive || p.carry || p.air > 0 || p.dashT > 0 || (p.dashCd || 0) > 0) return false;
+  const urgent = !!dangerAt(cx, cy, p) || sdSoon(cx, cy, 6);
+  function travelOk(dn) {              // 單純趕路時：連第一格也不能在火線上
+    const d = DIRS[dn];
+    return !!d && !dangerAt(cx + d.x, cy + d.y, p);
+  }
+  let dn = null;
+  if (p.aiDir && aiDashOk(p, cx, cy, p.aiDir)) {
+    if (urgent) dn = p.aiDir;                                  // 命危 → 一定衝
+    else if (travelOk(p.aiDir) && Math.random() < (lv.dash == null ? .16 : lv.dash)) dn = p.aiDir;   // 趕路 → 看難度
+  }
+  if (!dn && urgent) {
+    // 想躲的方向被牆擋住 → 四方向找一條兩格內安全的衝出去
+    const opts = ['up', 'down', 'left', 'right'].filter(function (k) { return aiDashOk(p, cx, cy, k); });
+    if (opts.length) dn = pick(opts);
+  }
+  if (!dn) return false;
+  p.facing = dn;
+  startDash(p, [dn]);
+  return true;
+}
 function controlAI(p, dt) {
   const T = Game.T;
   const lv = BR_AI.on ? BR_AI.cfg(aiLevelCfg(), Game.brZone ? Game.brZone.phase : 0) : aiLevelCfg();
@@ -16220,6 +16372,9 @@ function controlAI(p, dt) {
   if (p.brBombCd > 0) p.brBombCd -= dt;
   // v1.9：頭暈中 —— AI 也一樣停手
   if (p.dizzy > 0) { p.dizzy -= dt; p.moving = false; return; }
+  // v5.4：衝刺中 —— 交給 dashStep（跟玩家同一套），冷卻也在這裡跑
+  if (p.dashT > 0) { p.moving = true; dashStep(p, dt); return; }
+  if (p.dashCd > 0) p.dashCd -= dt;
   p.moving = false;
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
   const atCenter = Math.abs(p.x - (cx * T + T / 2)) < 3 && Math.abs(p.y - (cy * T + T / 2)) < 3;
@@ -16397,6 +16552,8 @@ function controlAI(p, dt) {
       }
     }
   }
+  // v5.4：方向決定好之後，看看要不要改用衝刺（衝刺會直接改座標 → 一定要在 tryMove 之前）
+  if (p.aiDir && aiTryDash(p, lv, cx, cy)) return;
   if (p.aiDir) {
     const d = DIRS[p.aiDir];
     p.facing = p.aiDir;
@@ -28467,7 +28624,12 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.3', date: '2026-11-05', now: true, items: [
+  { v: '5.4', date: '2026-11-05', now: true, items: [
+    '💨 <b>電腦玩家也會用衝刺</b>：腳下被放炸彈時會往安全方向衝出去（一定衝，不看難度），平常趕路、追人、撿道具也會看情況衝一下 —— 依難度調整頻率，弱 AI 很少用、強 AI 很常衝',
+    '🐝 <b>飛行怪不會再飛到外牆以外</b>：以前只把牠夾在地圖邊界內，隨機大圖外牆之外那一大片岩體／海面照樣飄過去，火焰燒不到、你只能乾等牠飛回來。現在活動範圍限定在<b>外牆以內</b>（空地四周兩格＋不含外牆岩體），飛出去也會自己飛回來',
+    '🧱 <b>越牆的特色保留</b>：場內一兩格厚的牆、軟磚照樣飛得過去，只是不會再飄到場外送死'
+  ] },
+  { v: '5.3', date: '2026-11-05', now: false, items: [
     '🔧 <b>修掉「玩完大逃殺再進單人，地板與牆混到別張關卡」</b>：換模式時上一張圖的逐格地形（大逃殺八塊大陸）、牆分類、縮圈落石、怪物比例全部沒被清掉 → 單人／RPG／隨機圖／對戰都會吃到殘留。現在所有地圖產生器走同一個清理入口，不用重開遊戲也正常',
     '🪨 <b>修掉「對戰時間到開始落石，落石卻看不到」</b>：牆與落石是烘在地板分塊裡的，以前只重算牆、沒丟掉烘好的圖 → 石頭準時壓下來但畫面還是舊地板。現在牆一變就重烘，落石會準時出現',
     '🧠 <b>大逃殺的 AI 節奏不會再帶進別的模式</b>：交戰距離、放彈頻率、群體分離都只在大逃殺生效，單人與 RPG 的怪物行為回到原本設定'
@@ -32924,6 +33086,9 @@ window.__BH = {
   buildBRMap: (typeof buildBRMap !== 'undefined' ? buildBRMap : null),
   PET_ART: (typeof PET_ART !== 'undefined' ? PET_ART : null), petBodyH: petBodyH, petSizeK: petSizeK,
   DASH_CD: DASH_CD, DASH_T: DASH_T, DASH_IFRAME: DASH_IFRAME, DASH_TILES: DASH_TILES,
+  // v5.4：飛行怪的可飛範圍（外牆以內）＋ AI 衝刺（測試用）
+  flyZoneReady: flyZoneReady, flyOk: flyOk, flyerMove: flyerMove, flyerHomeCell: flyerHomeCell,
+  aiTryDash: aiTryDash, aiDashOk: aiDashOk,
   phonePortrait: phonePortrait, hasRotateHint: function () { return !!rotHintEl; },
   ITEM_POOL: ITEM_POOL, ITEMS: ITEMS, DINO_FIRE_CD: DINO_FIRE_CD, DINO_FIRE_RANGE: DINO_FIRE_RANGE,
   // v4.87：鴕鳥神獸
