@@ -238,6 +238,10 @@ try {
   B.markWallKinds();
   const p = mkAI(2, 5);
   p.aiDir = 'right';                 // 命危時往走廊另一端衝
+  /* 2026-11 修：隨機地圖偶爾會在走廊上留落石（hazards），炸彈放不下去 →
+     dangerAt 永遠 false，前置條件就紅了（跟 AI 無關）。這裡先把走廊清乾淨。 */
+  if (G.hazards) for (let x = 2; x <= 10; x++) G.hazards[5][x] = null;
+  if (G.bombs) G.bombs.length = 0;
   B.placeBomb(p, false, 1);
   const T = G.T, x0 = p.x, y0 = p.y;
   let sawDash = 0;

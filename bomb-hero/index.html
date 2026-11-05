@@ -4042,6 +4042,31 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .onreq { display: flex; gap: 5px; flex: 0 0 auto; }
 .onreq button { padding: 4px 9px; font-size: 11px; border-radius: 8px; }
 
+/* ===== v5.16：頭貼與配戴成就 ===== */
+.onav.has, .odav.has { padding: 0; overflow: hidden; }
+.onav img, .odav img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.odav { overflow: hidden; }
+.odav.pick { cursor: pointer; }
+.odeq { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 0 2px; }
+.odeq .eqi { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center;
+  justify-content: center; font-size: 17px; background: #fff6e3; border: 1.5px solid #e6c48f; }
+.odeq button.eqi { cursor: pointer; }
+.odeq .eqi.on { background: #ffe9c4; border-color: #d79a3d; }
+.odeq .eqe { font-size: 11px; color: #a1815a; line-height: 1.4; }
+.achpin { flex: 0 0 auto; border: 1px solid #ecd3a8; background: #fffaf0; color: #8a6a3a; font-size: 12px;
+  line-height: 1; padding: 5px 6px; border-radius: 8px; cursor: pointer; margin-right: 4px; }
+.achpin.on { background: #ffe9c4; border-color: #d79a3d; color: #8a5a00; }
+.avwrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.avstage { position: relative; width: 100%; max-width: 300px; aspect-ratio: 1 / 1; border-radius: 18px;
+  overflow: hidden; background: #0f1524; border: 1px solid #24304a; touch-action: none; cursor: grab;
+  user-select: none; -webkit-user-select: none; }
+.avstage:active { cursor: grabbing; }
+.avstage canvas { display: block; width: 100%; height: 100%; }
+.avring { position: absolute; inset: 7%; border-radius: 50%; border: 2px dashed rgba(255,255,255,.75);
+  box-shadow: 0 0 0 9999px rgba(6, 9, 18, .52); pointer-events: none; }
+.avzoom { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 300px;
+  font-size: 11px; color: #8ea3c6; }
+.avzoom input { flex: 1 1 auto; }
 </style>
 </head>
 <body>
@@ -4091,7 +4116,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.15</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.16</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4134,7 +4159,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.15</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.16</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4279,6 +4304,32 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
   </div>
 
 
+
+  <!-- ===================== v5.16：頭貼（選照片 → 拖曳／縮放 → 壓圖上傳） ===================== -->
+  <div class="bhmodal" id="avModal" role="dialog" aria-modal="true" aria-label="設定頭貼">
+    <div class="bhpanel">
+      <div class="bhhead">
+        <b id="avTitle">📷 設定頭貼</b><span class="bhsub" id="avSub">拖曳移動 · 拉桿縮放</span>
+        <button class="bhx" id="avX" type="button" aria-label="關閉">✕</button>
+      </div>
+      <div class="bhbody">
+        <div class="avwrap">
+          <div class="avstage" id="avStage">
+            <canvas id="avCanvas" width="512" height="512"></canvas>
+            <div class="avring"></div>
+          </div>
+          <div class="avzoom"><span>－</span><input type="range" id="avZoom" min="100" max="340" value="100" step="1" aria-label="縮放"><span>＋</span></div>
+          <div class="bhnote" id="avTip" style="max-width:300px;text-align:center">照片會壓成 128×128 的小圖（約 5～10 KB），存在雲端名單裡，其他線上玩家看得到。</div>
+          <div class="odact" style="justify-content:center">
+            <button class="bhbtn" id="avPick" type="button">📁 選照片</button>
+            <button class="bhbtn warm" id="avApply" type="button">✅ 套用</button>
+            <button class="bhbtn" id="avDel" type="button">🗑 移除</button>
+          </div>
+          <input type="file" id="avFile" accept="image/*" style="display:none">
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 商店（v4.17 開放：隨從） -->
   <div class="screen" id="scr-shop">
@@ -4930,7 +4981,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.15';
+const VERSION = '5.16';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -5049,6 +5100,16 @@ ui.rankFoot|每週活動榜週一早上 08:00（台灣時間）重置，前 10 �
 ui.online|👥 線上玩家|👥 在线玩家|👥 Players online|👥 オンライン|👥 접속 중
 ui.onlineFoot|點一位玩家可以看資料、加好友、私訊或封鎖。|点一位玩家可以看资料、加好友、私信或屏蔽。|Tap a player to view their profile, add a friend, message or block.|プレイヤーを選ぶとプロフィール・フレンド・メッセージ・ブロックができます。|플레이어를 선택하면 프로필, 친구 추가, 메시지, 차단이 가능합니다.
 ui.onlineSub|—|—|—|—|—
+ui.labAch|成就|成就|Achievements|実績|업적
+ui.labRank|排名|排名|Ranking|ランキング|순위
+ui.labPlayers|線上玩家|线上玩家|Players|オンライン|접속 중
+ui.snNew|有新訊息|有新消息|New message|新着メッセージ|새 메시지
+ui.snView|查看 ›|查看 ›|View ›|見る ›|보기 ›
+ui.avTitle|📷 設定頭貼|📷 设置头像|📷 Set your photo|📷 アイコン設定|📷 프로필 사진
+ui.avPick|📁 選照片|📁 选照片|📁 Choose photo|📁 写真を選ぶ|📁 사진 선택
+ui.avApply|✅ 套用|✅ 套用|✅ Apply|✅ 適用|✅ 적용
+ui.avDel|🗑 移除|🗑 移除|🗑 Remove|🗑 削除|🗑 삭제
+ui.avDrag|拖曳移動 · 拉桿縮放|拖动移动 · 拉杆缩放|Drag to move · slide to zoom|ドラッグで移動・スライダーで拡大|드래그로 이동 · 슬라이더로 확대
 menu.online.sub|房號連線 · 朋友同樂|房号连线 · 等待室 · 朋友一起打|Room code · lobby · play with friends|ルーム番号 · 待機室 · 友達と対戦|방 번호 · 대기실 · 친구와 함께
 menu.settings|設定|设置|Settings|設定|설정
 menu.settings.sub|控制 · 音量 · 語言|地图尺寸 · 控制方式 · 音量|Map size · controls · volume|マップサイズ · 操作 · 音量|맵 크기 · 조작 · 음량
@@ -11684,7 +11745,8 @@ const Ach = (function () {
       }
 
       /* devT：開發者稱號要不要戴（1 = 戴、0 = 收起；帳號不是開發者時一律不戴） */
-      const S = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, devT: 1 };
+      /* eq：v5.16 配戴成就（最多 3 個成就 id，只放已解鎖的） */
+      const S = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, devT: 1, eq: [] };
       let ready = false, dirty = false, timeAcc = 0;
       const listeners = [];
 
@@ -11713,6 +11775,9 @@ const Ach = (function () {
             S.lastDay = String(o.lastDay || '');
             S.star3 = (o.star3 && typeof o.star3 === 'object') ? o.star3 : {};
             S.devT = (o.devT === 0) ? 0 : 1;
+            S.eq = Array.isArray(o.eq)
+              ? o.eq.filter(function (k) { return typeof k === 'string' && BY_ID[k]; }).slice(0, 3)
+              : [];
           }
         } catch (e) {}
         ready = true;
@@ -11792,6 +11857,46 @@ const Ach = (function () {
         const p = points();
         for (let i = 0; i < TITLES.length; i++) if (p < TITLES[i].need) return TITLES[i];
         return null;
+      }
+
+      /* ---------------- v5.16：配戴成就 ----------------
+         使用者要的是「自己挑幾個成就，掛在個人資料上給別人看」。
+         刻意不去改 titleOf：稱號是成就分自動升的階梯，配戴是「選擇要展示什麼」，
+         兩者可以同時存在（頭上掛稱號、名片上掛成就）。 */
+      const EQ_MAX = 3;
+      function eqList() {
+        const out = [];
+        for (let i = 0; i < S.eq.length; i++) {
+          const a = BY_ID[S.eq[i]];
+          if (a && S.u[a.id]) out.push(a);
+        }
+        return out;
+      }
+      function equipped() { return eqList(); }
+      function isEquipped(id) { return S.eq.indexOf(id) >= 0; }
+      /* 回傳 { ok:1, on:0|1 } 或 { ok:0, err:'BAD_ID'|'NOT_UNLOCKED'|'FULL' } */
+      function equip(id) {
+        const a = BY_ID[id];
+        if (!a) return { ok: 0, err: 'BAD_ID' };
+        if (!S.u[id]) return { ok: 0, err: 'NOT_UNLOCKED' };
+        const i = S.eq.indexOf(id);
+        if (i >= 0) { S.eq.splice(i, 1); save(); return { ok: 1, on: 0, list: eqList() }; }
+        if (S.eq.length >= EQ_MAX) return { ok: 0, err: 'FULL' };
+        S.eq.push(id);
+        save();
+        return { ok: 1, on: 1, list: eqList() };
+      }
+      function unequip(id) {
+        const i = S.eq.indexOf(String(id || ''));
+        if (i < 0) return false;
+        S.eq.splice(i, 1);
+        save();
+        return true;
+      }
+      function clearEq() { S.eq = []; save(); return true; }
+      /* 給線上名單用：只帶「圖示＋名字」，不帶 id、也不帶整份成就表 */
+      function equippedMini() {
+        return eqList().map(function (a) { return { i: a.ico, n: String(a.name).slice(0, 16) }; });
       }
 
       function count(k, n) {
@@ -11875,7 +11980,8 @@ const Ach = (function () {
       }
 
       function state() {
-        return { v: 1, c: S.c, u: S.u, g: S.g, lastDay: S.lastDay, star3: S.star3, devT: S.devT | 0 };
+        return { v: 1, c: S.c, u: S.u, g: S.g, lastDay: S.lastDay, star3: S.star3, devT: S.devT | 0,
+          eq: S.eq.slice(0, 3) };
       }
       function setState(o) {
         if (!o || typeof o !== 'object') return false;
@@ -11890,13 +11996,16 @@ const Ach = (function () {
         if (o.star3 && typeof o.star3 === 'object') for (const k in o.star3) S.star3[k] = 1;
         if (o.lastDay && String(o.lastDay) > S.lastDay) S.lastDay = String(o.lastDay);
         if (o.devT === 0 || o.devT === 1) S.devT = o.devT;
+        if (Array.isArray(o.eq)) {
+          S.eq = o.eq.filter(function (k) { return BY_ID[k] && S.u[k]; }).slice(0, 3);
+        }
         check();
         store();
         return true;
       }
       /* 合併（雲端 vs 本地）：計數取大、解鎖取聯集、已領取取聯集 */
       function merge(a, b) {
-        const out = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, devT: 1 };
+        const out = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, devT: 1, eq: [] };
         [a, b].forEach(function (o) {
           if (!o || typeof o !== 'object') return;
           if (o.c) for (const k in o.c) out.c[k] = Math.max(out.c[k] | 0, Math.min(1e12, Number(o.c[k]) || 0));
@@ -11906,6 +12015,9 @@ const Ach = (function () {
           if (o.lastDay && String(o.lastDay) > out.lastDay) out.lastDay = String(o.lastDay);
           if (o.devT === 0) out.devT = 0;        // 任何一台收起來就收起來
         });
+        // 配戴的成就屬於「這台裝置想展示什麼」，以本機（b）為準；本機沒有才用雲端那份
+        const pick = (b && Array.isArray(b.eq) && b.eq.length) ? b.eq : ((a && Array.isArray(a.eq)) ? a.eq : []);
+        out.eq = pick.filter(function (k) { return BY_ID[k] && out.u[k]; }).slice(0, 3);
         return out;
       }
 
@@ -11916,6 +12028,8 @@ const Ach = (function () {
         DEV_TITLE: DEV_TITLE, canDev: canDev, devAllowed: devAllowed, devOn: devOn, setDev: setDev, forceDev: forceDev,
         unclaimed: unclaimed, claim: claim, claimAll: claimAll, star3: star3, addTime: addTime,
         state: state, setState: setState, merge: merge, save: save,
+        EQ_MAX: EQ_MAX, equip: equip, unequip: unequip, clearEq: clearEq,
+        equipped: equipped, isEquipped: isEquipped, equippedMini: equippedMini,
         isUnlocked: function (id) { return !!S.u[id]; },
         isClaimed: function (id) { return !!S.g[id]; },
         unlockedCount: function () { return Object.keys(S.u).length; },
@@ -11942,6 +12056,9 @@ const Ach = (function () {
       star3: function () { return false; }, addTime: function () {}, state: function () { return null; },
       setState: function () {}, merge: function (a, b) { return a || b; }, save: function () {},
       isUnlocked: function () { return false; }, isClaimed: function () { return false; },
+      EQ_MAX: 3, equip: function () { return { ok: 0, err: 'OFF' }; }, unequip: function () { return false; },
+      clearEq: function () { return false; }, equipped: function () { return []; },
+      isEquipped: function () { return false; }, equippedMini: function () { return []; },
       unlockedCount: function () { return 0; }, byId: function () { return null; },
       progress: function () { return { cur: 0, tier: 0, max: 1, next: 0 }; }, on: function () {},
       dirty: false, clearDirty: function () {}, LIST: [], SERIES: [], CATS: [], TITLES: [] };
@@ -12209,14 +12326,16 @@ const Social = (function () {
       const HB_MS = 45000, LIST_MS = 20000, DM_MS = 12000;
       const GENDERS = ['不公開', '男', '女', '其他'];
 
-      const P = { gender: '', region: '', bio: '' };     // 本機個人資料（只存在這台裝置）
+      const P = { gender: '', region: '', bio: '', av: '' };   // 本機個人資料（只存在這台裝置；av = 自己的頭貼快取）
       const S = {
         on: false, list: [], total: 0, at: 0, err: '',
         me: null, friends: [], blocks: [], reqs: [],
         tab: 'online', view: 'list', sel: null,
         chatWith: '', msgs: [], chatAt: 0, chatErr: '', sending: false,
         /* v5.14：通知狀態（req = 好友邀請數、dm = 未讀私訊數、by = 誰傳的） */
-        nt: { n: 0, req: 0, dm: 0, by: {} }, dismiss: false
+        nt: { n: 0, req: 0, dm: 0, by: {} }, dismiss: false,
+        /* v5.16：頭貼快取（pid → {t: 版本, d: dataURL}）＋ 上次去抓圖的時間 */
+        av: {}, avAt: 0, avBusy: false
       };
       let hbT = 0, listT = 0, dmT = 0, opened = false;
 
@@ -12227,6 +12346,7 @@ const Social = (function () {
             P.gender = String(o.gender || '');
             P.region = String(o.region || '').slice(0, 12);
             P.bio = String(o.bio || '').slice(0, 24);
+            if (typeof o.av === 'string' && o.av.length < 24000) P.av = o.av;
           }
         } catch (e) {}
       }
@@ -12268,6 +12388,7 @@ const Social = (function () {
           deviceId: Lb.deviceId(), name: myName(), ch: myChar(), kind: myKind(),
           gender: P.gender, region: P.region, bio: P.bio,
           mode: myMode(), sec: myPlaySec(), pts: myPts(), wins: myWins(),
+          eq: (typeof Ach !== 'undefined' && Ach.equippedMini) ? Ach.equippedMini() : [],
           ver: VERSION
         };
         if (extra) for (const k in extra) o[k] = extra[k];
@@ -12494,17 +12615,286 @@ const Social = (function () {
         return null;
       }
 
+      /* ================= v5.16：頭貼 =================
+         為什麼要自己壓圖：手機拍的照片動輒 3～8 MB，
+         直接 base64 上傳會把整個名單分片撐爆（而且每次心跳都重送）。
+         這裡固定輸出 128×128（顯示最大 56px，高解析度螢幕也夠），
+         WebP 品質 0.72 → 一般 5～9 KB；不支援 WebP 才退回 JPEG。 */
+      const AV_KEY = 'bombhero-av-v1';
+      const AV_OUT = 128, AV_Q = .72, AV_MAX_CHARS = 22000;
+
+      function avCacheLoad() {
+        try {
+          const o = JSON.parse(localStorage.getItem(AV_KEY) || 'null');
+          if (o && typeof o === 'object') {
+            for (const k in o) {
+              const r = o[k];
+              if (r && typeof r.d === 'string' && typeof r.t === 'number') S.av[k] = r;
+            }
+          }
+        } catch (e) {}
+        if (P.av && S.me && S.me.pid && !S.av[S.me.pid]) S.av[S.me.pid] = { t: 0, d: P.av };
+      }
+      function avCacheSave() {
+        try {
+          const ks = Object.keys(S.av);
+          if (ks.length > 60) {
+            ks.sort(function (a, b) { return (S.av[a].t || 0) - (S.av[b].t || 0); });
+            for (let i = 0; i < ks.length - 60; i++) delete S.av[ks[i]];
+          }
+          localStorage.setItem(AV_KEY, JSON.stringify(S.av));
+        } catch (e) {}
+      }
+      function avUrl(p) {
+        if (!p || !p.pid) return '';
+        const r = S.av[p.pid];
+        if (!r || !r.d) return '';
+        return ((r.t || 0) >= (p.avt || 0)) ? r.d : '';
+      }
+      function avBox(p, cls) {
+        const u = avUrl(p);
+        /* 沒有頭貼就退回角色色球（維持原本的樣子，不會變成空白圓） */
+        const ico = (p && p.ch != null) ? ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠', '⚪', '⚫'][p.ch & 7] : '🙂';
+        if (!u) return '<div class="' + cls + '">' + ico + '</div>';
+        return '<div class="' + cls + ' has"><img src="' + u + '" alt=""></div>';
+      }
+      /* 名單只回傳 avt（頭貼版本）；版本一變才來補圖 → 不拖慢 20 秒一次的清單 */
+      function ensureAv() {
+        const t = Date.now();
+        if (t - (S.avAt || 0) < 4000) return;
+        const want = [], vers = {};
+        function need(p) {
+          if (!p || !p.pid || !(p.avt > 0) || vers[p.pid]) return;
+          const r = S.av[p.pid];
+          if (r && (r.t || 0) >= p.avt) return;
+          vers[p.pid] = p.avt;
+          want.push(p.pid);
+        }
+        if (S.me) need(S.me);
+        for (let i = 0; i < S.list.length && want.length < 24; i++) need(S.list[i]);
+        if (!want.length) return;
+        S.avAt = t;
+        Lb._get(Lb.origin() + '/api/social/av?pids=' + encodeURIComponent(want.join(','))).then(function (j) {
+          if (!j || !j.ok) return;
+          want.forEach(function (pid) {
+            const r = j.av && j.av[pid];
+            S.av[pid] = (r && r.d) ? { t: r.t || vers[pid], d: r.d } : { t: vers[pid], d: '' };
+          });
+          avCacheSave();
+          if (S.me && S.me.pid && S.av[S.me.pid] && S.av[S.me.pid].d) P.av = S.av[S.me.pid].d;
+          paint();
+        }, function () { S.avAt = 0; });
+      }
+
+      /* ---------- 裁切編輯器（拖曳移動＋拉桿縮放） ---------- */
+      const Ed = { img: null, s: 1, x: 0, y: 0, w: 260, h: 260, base: 1, drag: null };
+      function edSize() {
+        const st = $id('avStage');
+        if (!st || !st.getBoundingClientRect) return;
+        const r = st.getBoundingClientRect();
+        const n = Math.max(120, Math.min(r.width || 260, r.height || 260));
+        Ed.w = n; Ed.h = n;
+      }
+      function edFit() {
+        if (!Ed.img) return;
+        edSize();
+        const iw = Ed.img.width || Ed.img.naturalWidth || 1;
+        const ih = Ed.img.height || Ed.img.naturalHeight || 1;
+        Ed.base = Math.max(Ed.w / iw, Ed.h / ih);   // cover：短邊先填滿，不留黑邊
+        Ed.s = 1;
+        const z = $id('avZoom');
+        if (z) z.value = '100';
+        Ed.x = (Ed.w - iw * Ed.base) / 2;
+        Ed.y = (Ed.h - ih * Ed.base) / 2;
+        edClamp();
+        edDraw();
+      }
+      function edClamp() {
+        if (!Ed.img) return;
+        const iw = Ed.img.width || 1, ih = Ed.img.height || 1;
+        const dw = iw * Ed.base * Ed.s, dh = ih * Ed.base * Ed.s;
+        Ed.x = Math.min(0, Math.max(Ed.w - dw, Ed.x));
+        Ed.y = Math.min(0, Math.max(Ed.h - dh, Ed.y));
+      }
+      function edDraw() {
+        const cv = $id('avCanvas');
+        if (!cv || !Ed.img || !cv.getContext) return;
+        const dpr = Math.min(3, (window.devicePixelRatio || 1));
+        const px = Math.round(Ed.w * dpr);
+        if (cv.width !== px || cv.height !== px) { cv.width = px; cv.height = px; }
+        const c = cv.getContext('2d');
+        if (!c) return;
+        const k = px / Ed.w;
+        c.setTransform(1, 0, 0, 1, 0, 0);
+        c.clearRect(0, 0, px, px);
+        c.fillStyle = '#0f1524';
+        c.fillRect(0, 0, px, px);
+        const iw = Ed.img.width || 1, ih = Ed.img.height || 1;
+        const dw = iw * Ed.base * Ed.s, dh = ih * Ed.base * Ed.s;
+        c.drawImage(Ed.img, Ed.x * k, Ed.y * k, dw * k, dh * k);
+      }
+      /* 真正要上傳的那張：128×128，跟畫面上看到的框完全一致 */
+      function edOut(q, size) {
+        if (!window.document || !document.createElement) return '';
+        const cv = document.createElement('canvas');
+        cv.width = size; cv.height = size;
+        const c = cv.getContext && cv.getContext('2d');
+        if (!c) return '';
+        c.fillStyle = '#ffffff';
+        c.fillRect(0, 0, size, size);
+        const iw = Ed.img.width || 1, ih = Ed.img.height || 1;
+        const dw = iw * Ed.base * Ed.s, dh = ih * Ed.base * Ed.s;
+        const k = size / Ed.w;
+        c.drawImage(Ed.img, Ed.x * k, Ed.y * k, dw * k, dh * k);
+        let d = '';
+        try { d = cv.toDataURL('image/webp', q); } catch (e) { d = ''; }
+        if (!d || d.indexOf('data:image/webp') !== 0) {
+          try { d = cv.toDataURL('image/jpeg', Math.min(.9, q + .08)); } catch (e2) { d = ''; }
+        }
+        return d;
+      }
+      function avOpen() {
+        const m = $id('avModal');
+        if (!m) return;
+        m.classList.add('on');
+        Ed.img = null;
+        Ed.drag = null;
+        const cv = $id('avCanvas');
+        if (cv && cv.getContext) {
+          const c = cv.getContext('2d');
+          if (c) { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height); }
+        }
+        const f = $id('avFile');
+        try { if (f) f.value = ''; } catch (e) {}
+        const tip = $id('avSub');
+        if (tip) { try { tip.textContent = t('ui.avDrag'); } catch (e2) { tip.textContent = '拖曳移動 · 拉桿縮放'; } }
+        setTimeout(edSize, 30);
+      }
+      function avClose() { const m = $id('avModal'); if (m) m.classList.remove('on'); }
+      function avPickFile() { const f = $id('avFile'); if (f && f.click) f.click(); }
+      function avLoadFile(file) {
+        if (!file) return;
+        if (file.size > 12 * 1024 * 1024) { try { toast('照片太大（建議 12 MB 以下）', 2.6); } catch (e) {} return; }
+        const fr = new FileReader();
+        fr.onload = function () {
+          const img = new Image();
+          img.onload = function () {
+            Ed.img = img;
+            edFit();
+            const tip2 = $id('avSub');
+            if (tip2) { try { tip2.textContent = t('ui.avDrag'); } catch (e2) { tip2.textContent = '拖曳移動 · 拉桿縮放'; } }
+          };
+          img.onerror = function () { try { toast('這張照片讀不進來，換一張試試', 2.4); } catch (e) {} };
+          img.src = String(fr.result || '');
+        };
+        fr.onerror = function () {};
+        fr.readAsDataURL(file);
+      }
+      function edZoom(v) {
+        if (!Ed.img) return;
+        const old = Ed.s || 1;
+        Ed.s = Math.max(1, Math.min(3.4, v));
+        const k = Ed.s / old;
+        Ed.x = Ed.w / 2 - (Ed.w / 2 - Ed.x) * k;
+        Ed.y = Ed.h / 2 - (Ed.h / 2 - Ed.y) * k;
+        edClamp();
+        edDraw();
+      }
+      function edDown(e) {
+        if (!Ed.img) return;
+        const st = $id('avStage');
+        if (st && st.setPointerCapture && e.pointerId != null) { try { st.setPointerCapture(e.pointerId); } catch (x) {} }
+        Ed.drag = { x: e.clientX, y: e.clientY, ox: Ed.x, oy: Ed.y };
+        if (e.preventDefault) e.preventDefault();
+      }
+      function edMove(e) {
+        if (!Ed.drag) return;
+        Ed.x = Ed.drag.ox + (e.clientX - Ed.drag.x);
+        Ed.y = Ed.drag.oy + (e.clientY - Ed.drag.y);
+        edClamp();
+        edDraw();
+        if (e.preventDefault) e.preventDefault();
+      }
+      function edUp() { Ed.drag = null; }
+      function edWheel(e) {
+        if (!Ed.img) return;
+        const z = $id('avZoom');
+        const cur = parseInt(z ? z.value : 100, 10) || 100;
+        const nv = Math.max(100, Math.min(340, cur + (e.deltaY < 0 ? 14 : -14)));
+        if (z) z.value = String(nv);
+        edZoom(nv / 100);
+        if (e.preventDefault) e.preventDefault();
+      }
+      function avApply() {
+        if (!Ed.img) { try { toast('先按「選照片」挑一張', 2.2); } catch (e) {} avPickFile(); return; }
+        let d = edOut(AV_Q, AV_OUT);
+        if (!d) { try { toast('這張照片轉不出來，換一張試試', 2.4); } catch (e) {} return; }
+        if (d.length > AV_MAX_CHARS) d = edOut(.62, 112);
+        if (d.length > AV_MAX_CHARS) d = edOut(.52, 96);
+        if (d.length > AV_MAX_CHARS) { try { toast('照片太複雜，換一張或縮小一點', 2.6); } catch (e) {} return; }
+        avUpload(d);
+      }
+      function avUpload(d) {
+        if (S.avBusy) return;
+        S.avBusy = true;
+        Lb._post(Lb.origin() + '/api/social/avatar', { deviceId: Lb.deviceId(), img: d })
+          .then(function (j) {
+            S.avBusy = false;
+            if (j && j.ok) {
+              P.av = d; saveP();
+              if (S.me && S.me.pid) {
+                S.av[S.me.pid] = { t: j.avt || Date.now(), d: d };
+                S.me.avt = j.avt || Date.now();
+              }
+              avCacheSave();
+              avClose();
+              try { toast(d ? '✅ 頭貼已更新，別人看得到' : '已移除頭貼', 2.4); } catch (e) {}
+              paint();
+              hb();
+            } else {
+              try {
+                toast(j && j.err === 'BAD_IMG' ? '圖片太大，換一張小一點的' : '上傳失敗，請稍後再試', 2.6);
+              } catch (e) {}
+            }
+          }, function () {
+            S.avBusy = false;
+            try { toast('網路不穩，頭貼沒傳上去', 2.4); } catch (e) {}
+          });
+      }
+      function avRemove() { avUpload(''); }
+
       function rowHTML(p) {
         const isF = S.friends.indexOf(p.pid) >= 0;
         const isB = S.blocks.indexOf(p.pid) >= 0;
         const kind = p.kind === 'member' ? '<em>會員</em>' : '<em class="g">遊客</em>';
         return '<div class="onrow' + (isB ? ' blk' : '') + '" data-pid="' + esc(p.pid) + '">' +
-          '<div class="onav">' + (p.ch != null ? ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠', '⚪', '⚫'][p.ch & 7] : '🙂') + '</div>' +
+          avBox(p, 'onav') +
           '<div class="onmeta"><div class="onname">' + esc(p.name || '無名玩家') + kind +
           (isF ? '<em>好友</em>' : '') + '</div>' +
           '<div class="onsub">' + esc(p.gender || '不公開') + ' · ' + esc(p.region || '未知') +
           ' · 玩 ' + fmtDur(p.sec) + (p.pts ? ' · 成就 ' + p.pts + ' 分' : '') + '</div></div>' +
           '<div class="onmode">' + esc(p.mode || '大廳') + '</div></div>';
+      }
+
+      /* 配戴的成就：別人的資料直接吃名單帶回來的 eq（只有圖示＋名字） */
+      function eqHTML(p, mine) {
+        const list = mine
+          ? ((typeof Ach !== 'undefined' && Ach.equipped) ? Ach.equipped() : [])
+          : (Array.isArray(p && p.eq) ? p.eq : []);
+        if (!list.length) {
+          return mine
+            ? '<div class="achgrp" style="margin-top:2px"><i>📛</i>配戴成就（0/' + ((typeof Ach !== 'undefined' && Ach.EQ_MAX) ? Ach.EQ_MAX : 3) + '）</div>' +
+              '<div class="odeq"><span class="eqe">到「成就」面板，按每個成就右邊的 📛 就能配戴，最多 3 個。</span></div>'
+            : '';
+        }
+        const max = (typeof Ach !== 'undefined' && Ach.EQ_MAX) ? Ach.EQ_MAX : 3;
+        return '<div class="achgrp" style="margin-top:2px"><i>📛</i>配戴成就' +
+          (mine ? '（' + list.length + '/' + max + '）' : '') + '</div>' +
+          '<div class="odeq">' + list.map(function (a) {
+            const ico = mine ? a.ico : (a.i || '🏆');
+            const nm = mine ? a.name : (a.n || '成就');
+            return '<span class="eqi" title="' + esc(nm) + '">' + esc(ico) + '</span>';
+          }).join('') + '</div>';
       }
 
       function renderList() {
@@ -12549,11 +12939,17 @@ const Social = (function () {
         const opt = GENDERS.map(function (g) {
           return '<option value="' + g + '"' + (P.gender === g ? ' selected' : '') + '>' + g + '</option>';
         }).join('');
-        return '<div class="ondetail"><div class="odtop"><div class="odav">🙂</div><div>' +
+        const myAv = avUrl(S.me) || P.av || '';
+        return '<div class="ondetail"><div class="odtop">' +
+          '<div class="odav pick' + (myAv ? ' has' : '') + '" id="socAvPick" title="點一下換頭貼">' +
+          (myAv ? '<img src="' + myAv + '" alt="">' : '📷') + '</div><div>' +
           '<div class="odname">' + esc(myName()) + '</div>' +
           '<div class="odid">玩家編號 ' + pcode(me.pid) + ' · ' + (myKind() === 'member' ? '會員' : '遊客') + '</div></div></div>' +
           '<div class="bhnote">這些資料會顯示給其他線上玩家看。' +
           (myKind() === 'member' ? '' : '（遊客身分也能用，但換裝置就換一個身分）') + '</div>' +
+          '<div class="odact" style="margin:8px 0 10px"><button class="bhbtn" id="socAvBtn" type="button">📷 換頭貼</button>' +
+          '<span class="bhnote" style="align-self:center">上傳後可以拖曳、縮放，決定要露哪一塊</span></div>' +
+          eqHTML(null, true) +
           '<div class="onprof">' +
             '<label class="odcell">性別 <select class="chatin" id="socGender" style="padding:4px 6px">' + opt + '</select></label>' +
             '<label class="odcell">來自 <input class="chatin" id="socRegion" maxlength="12" style="padding:4px 6px" placeholder="例：台灣・高雄" value="' + esc(P.region) + '"></label>' +
@@ -12573,8 +12969,7 @@ const Social = (function () {
         const isB = S.blocks.indexOf(p.pid) >= 0;
         const isMe = S.me && S.me.pid === p.pid;
         return '<button class="bhbtn" id="onBack" type="button" style="margin-bottom:9px">← 回名單</button>' +
-          '<div class="ondetail"><div class="odtop"><div class="odav">' +
-          (p.ch != null ? ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠', '⚪', '⚫'][p.ch & 7] : '🙂') + '</div><div>' +
+          '<div class="ondetail"><div class="odtop">' + avBox(p, 'odav') + '<div>' +
           '<div class="odname">' + esc(p.name || '無名玩家') + '</div>' +
           '<div class="odid">玩家編號 ' + pcode(p.pid) + ' · ' + (p.kind === 'member' ? '會員' : '遊客') +
           ' · ' + ago(p.seen) + '有動靜</div></div></div>' +
@@ -12588,6 +12983,7 @@ const Social = (function () {
             '<div class="odcell">目前狀態<b>' + esc(p.mode || '大廳') + '</b></div>' +
             '<div class="odcell">身分<b>' + (p.kind === 'member' ? '會員' : '遊客') + '</b></div>' +
           '</div>' +
+          eqHTML(p) +
           (p.bio ? '<div class="bhnote" style="margin-top:8px">💬 ' + esc(p.bio) + '</div>' : '') +
           '<div class="odact">' +
             (isMe ? '<span class="bhnote">這是你自己</span>' :
@@ -12627,10 +13023,11 @@ const Social = (function () {
         }
         const sub = $id('onSub');
         if (sub) sub.textContent = S.on ? ('線上 ' + S.total + ' 人') : (S.err ? '連線失敗（' + S.err + '）' : '連線中…');
-        if (S.tab === 'me') { box.innerHTML = renderMe(); return; }
-        if (S.view === 'detail') { box.innerHTML = renderDetail(); return; }
+        if (S.tab === 'me') { box.innerHTML = renderMe(); ensureAv(); return; }
+        if (S.view === 'detail') { box.innerHTML = renderDetail(); ensureAv(); return; }
         if (S.view === 'chat') { box.innerHTML = renderChat(); const lg = $id('onChatLog'); if (lg) lg.scrollTop = lg.scrollHeight; return; }
         box.innerHTML = renderList();
+        ensureAv();
         syncNotice();
       }
 
@@ -12661,6 +13058,7 @@ const Social = (function () {
           if (inp) { send(inp.value); inp.value = ''; }
           return;
         }
+        if (t.closest('#socAvPick') || t.closest('#socAvBtn')) { avOpen(); return; }
         if (t.closest('#socSave')) {
           const g = $id('socGender'), r = $id('socRegion'), b = $id('socBio');
           P.gender = g ? g.value : P.gender;
@@ -12705,6 +13103,7 @@ const Social = (function () {
 
       function init() {
         loadP();
+        avCacheLoad();
         const bodyEl = $id('onBody');
         if (bodyEl) bodyEl.addEventListener('click', onBodyClick);
         const tabsEl = $id('onTabs');
@@ -12732,8 +13131,33 @@ const Social = (function () {
         // 玩了一段時間才慢慢把心跳打開（首頁不動時不必一直打）
         setTimeout(function () { if (!document.hidden) hb(); }, 4000);
         setInterval(function () { if (!document.hidden && (opened || Math.random() < .5)) hb(); }, HB_MS);
-        // 換名字／換角色 → 下一次心跳就更新
-        try { Ach.on(function () { }); } catch (e) {}
+        /* 頭貼編輯器 */
+        const avp = $id('avPick'); if (avp) avp.addEventListener('click', avPickFile);
+        const avf = $id('avFile');
+        if (avf) avf.addEventListener('change', function () { avLoadFile(avf.files && avf.files[0]); });
+        const ava = $id('avApply'); if (ava) ava.addEventListener('click', avApply);
+        const avd = $id('avDel'); if (avd) avd.addEventListener('click', avRemove);
+        const avx = $id('avX'); if (avx) avx.addEventListener('click', avClose);
+        const avm = $id('avModal');
+        if (avm) avm.addEventListener('click', function (e) { if (e.target === avm) avClose(); });
+        const avz = $id('avZoom');
+        if (avz) avz.addEventListener('input', function () { edZoom((parseInt(avz.value, 10) || 100) / 100); });
+        const avs = $id('avStage');
+        if (avs) {
+          avs.addEventListener('pointerdown', edDown);
+          avs.addEventListener('pointermove', edMove);
+          avs.addEventListener('pointerup', edUp);
+          avs.addEventListener('pointercancel', edUp);
+          avs.addEventListener('wheel', edWheel, { passive: false });
+        }
+        // 換名字／換角色／配戴成就 → 面板開著時 4 秒後補一次心跳（不干擾遊戲）
+        let eqT = 0;
+        try {
+          Ach.on(function () {
+            if (eqT || !opened) return;
+            eqT = setTimeout(function () { eqT = 0; if (opened) hb(); }, 4000);
+          });
+        } catch (e) {}
       }
 
       window.Social = { open: open, close: close, hb: hb, list: fetchList, render: paint, init: init,
@@ -12797,6 +13221,8 @@ const AchUI = (function () {
               ' <span class="lvt">' + (i + 1) + ' 階</span></div>' +
               '<div class="achdesc">' + esc(se.name) + ' ' + fmtUnit(se, a.need) + ' · ' + a.pts + ' 分</div></div>' +
             '<div class="achrw">' +
+              (u ? '<button class="achpin' + (Ach.isEquipped(a.id) ? ' on' : '') + '" data-eq="' + a.id +
+                '" type="button" title="' + (Ach.isEquipped(a.id) ? '取消配戴' : '配戴到個人資料') + '">📛</button>' : '') +
               (u && !g
                 ? '<button class="achget" data-claim="' + a.id + '" type="button">領 ' + a.gold + '</button>'
                 : (g ? '<span class="achdone">已領 +' + a.gold + '</span>' : '<span class="achgold">💰 ' + a.gold + '</span>')) +
@@ -12820,7 +13246,17 @@ const AchUI = (function () {
           '<div class="txt" style="flex:1"><b>' + (cur ? cur.ico + ' ' + cur.name : '尚未取得稱號') + '</b><br>' +
           (nx ? '再 ' + (nx.need - pts) + ' 分 → ' + nx.ico + ' ' + nx.name : '已達最高稱號') + '</div></div>';
         h += '<div class="bhnote">稱號會顯示在你頭上（遊戲中／大逃殺都看得到）。成就分＝解鎖成就時拿到的分數，' +
-          '越難的階級分數越高。</div><div class="achtt">';
+          '越難的階級分數越高。</div>';
+        /* v5.16：配戴的成就（給別人看的），在這裡可以一鍵卸下 */
+        const eq = Ach.equipped();
+        h += '<div class="achgrp"><i>📛</i>個人資料上展示的成就（' + eq.length + '/' + Ach.EQ_MAX + '）</div>' +
+          '<div class="odeq">' + (eq.length
+            ? eq.map(function (a) {
+                return '<button class="eqi on" type="button" data-eq="' + a.id + '" title="' +
+                  esc(a.name) + '（點一下取消配戴）">' + a.ico + '</button>';
+              }).join('')
+            : '<span class="eqe">還沒挑 —— 到下面各分類的成就，按右邊的 📛 就能配戴</span>') + '</div>';
+        h += '<div class="achtt">';
         Ach.TITLES.forEach(function (t) {
           const on = cur && t.need === cur.need;
           const got = pts >= t.need;
@@ -12914,6 +13350,19 @@ const AchUI = (function () {
         const body = $id('achBody');
         if (body) body.addEventListener('click', function (e) {
           if (!e.target || !e.target.closest) return;
+          const eqb = e.target.closest('[data-eq]');          // v5.16：配戴／取消配戴成就
+          if (eqb) {
+            const r = Ach.equip(eqb.getAttribute('data-eq'));
+            if (r.ok) {
+              try { toast(r.on ? '📛 已配戴，會顯示在個人資料' : '已取消配戴', 2); } catch (err) {}
+            } else if (r.err === 'FULL') {
+              try { toast('最多只能配戴 ' + Ach.EQ_MAX + ' 個，先取消一個', 2.4); } catch (err) {}
+            } else if (r.err === 'NOT_UNLOCKED') {
+              try { toast('這個成就還沒解鎖', 2); } catch (err) {}
+            }
+            render();
+            return;
+          }
           const dv = e.target.closest('[data-achdev]');       // v5.14：開發者稱號開關
           if (dv) {
             Ach.setDev(dv.getAttribute('data-achdev') === '1');
@@ -31990,6 +32439,18 @@ const Tut = (function () {
         const sbe = $id('btnSaveExport'); if (sbe) sbe.textContent = t('save.export');
         const sbi = $id('btnSaveImport'); if (sbi) sbi.textContent = t('save.import');
         const sbc = $id('saveCode'); if (sbc) sbc.setAttribute('placeholder', t('save.ph'));
+        /* v5.16：首頁三顆入口是短標籤（<6 字），trPairs 收不到 → 這裡直接注入 */
+        [['btnAch', 'ui.labAch'], ['btnRank', 'ui.labRank'], ['btnPlayers', 'ui.labPlayers']].forEach(function (x) {
+          const el = $id(x[0]);
+          const b = (el && el.querySelector) ? el.querySelector('b') : null;
+          if (b) b.textContent = t(x[1]);
+        });
+        /* v5.16：頭貼彈窗的標籤（一樣是短字串，靠這裡注入） */
+        const avt = $id('avTitle'); if (avt) avt.textContent = t('ui.avTitle');
+        const avpk = $id('avPick'); if (avpk) avpk.textContent = t('ui.avPick');
+        const avap = $id('avApply'); if (avap) avap.textContent = t('ui.avApply');
+        const avdl = $id('avDel'); if (avdl) avdl.textContent = t('ui.avDel');
+        const avsb = $id('avSub'); if (avsb) avsb.textContent = t('ui.avDrag');
         try { homeFill(); } catch (e) {}
       }
 
@@ -32109,7 +32570,14 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.15', date: '2026-11-06', now: true, items: [
+  { v: '5.16', date: '2026-11-06', now: true, items: [
+    '📛 <b>配戴成就</b>：在成就面板按右邊的 📛，就能挑 <b>最多 3 個成就</b>掛在自己的個人資料上；線上其他玩家點你的名字就看得到（頭上仍然是稱號，兩者不衝突）',
+    '📷 <b>可以上傳頭貼了</b>：選一張照片後，<b>拖曳調整要露哪一塊、拉桿縮放</b>，框裡看到什麼就上傳什麼；系統會自動壓成 128×128 的小圖（約 5～10 KB），<b>不佔頻寬也不拖慢名單</b>',
+    '👀 上傳的頭貼<b>其他線上玩家都看得到</b>：名單、個人資料、聊天室都會顯示（沒有上傳的人維持原本的角色色球）',
+    '🔒 頭貼只存在遊戲的雲端名單裡，<b>不會出現在其他地方</b>；不想放照片隨時可以按「移除」換回來',
+    '🧪 新增 <b>verify-v516</b>（67 項）：配戴上限與存檔同步、壓圖流程、後端把圖片放在獨立分片（心跳不會重傳圖片）都跑過一遍'
+  ] },
+  { v: '5.15', date: '2026-11-06', now: false, items: [
     '📢 <b>作者公告更新了</b>：寫清楚這是<b>一個人從零開始做的</b>炸彈對戰遊戲、電腦與手機都能玩（跨端網頁），以及目前還在<b>開發測試階段</b>、非營利',
     '💬 公告最下面除了 FB 粉絲頁，多了 <b>LINE</b>（點一下就能加），有問題一樣可以點右上角 ✉️ 信箱告訴我',
     '🎨 公告排版重做：電腦／手機兩種玩法用底色區塊並排，一眼就看懂；手機上一樣可以滑動閱讀，<b>不會擠到下面的按鈕</b>',

@@ -406,7 +406,7 @@ function sanitizeSave(obj) {
      成就的計數器是「生涯統計」，只會往前 → 一律夾成 0~1e12 的非負整數；
      解鎖與領取用集合存（key 是成就 id），最多 400 筆（目前 ~190 個成就）。
      這裡刻意不做「合理上限」的業務判斷 —— 前端才是規則的主人，後端只擋爆量。 */
-  out.ach = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {} };
+  out.ach = { v: 1, c: {}, u: {}, g: {}, lastDay: '', star3: {}, eq: [] };
   const ac = (o.ach && typeof o.ach === 'object') ? o.ach : null;
   if (ac) {
     if (ac.c && typeof ac.c === 'object') {
@@ -424,6 +424,11 @@ function sanitizeSave(obj) {
     });
     if (/^\d{4}-\d{2}-\d{2}$/.test(String(ac.lastDay || ''))) out.ach.lastDay = String(ac.lastDay);
     out.ach.devT = (ac.devT === 0) ? 0 : 1;      // v5.14：開發者稱號要不要戴
+    if (Array.isArray(ac.eq)) {                  // v5.16：配戴的成就（最多 3 個 id）
+      ac.eq.slice(0, 3).forEach(function (k) {
+        if (typeof k === 'string' && /^[A-Za-z0-9_\-]{1,24}$/.test(k) && out.ach.eq.indexOf(k) < 0) out.ach.eq.push(k);
+      });
+    }
   }
   out.rank = { v: 1, week: '', base: {}, claimed: '' };
   const rk = (o.rank && typeof o.rank === 'object') ? o.rank : null;
@@ -574,7 +579,10 @@ function createStore(dir, persist, remote) {
     visits: { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() },
     // v5.13：排名（十項總榜＋週榜）與線上玩家（名單／好友／私訊）
     rank: { v: 1, week: '', all: {}, wk: {}, claims: {} },
-    social: { v: 1, players: {}, dm: {}, dmN: 0 } };
+    social: { v: 1, players: {}, dm: {}, dmN: 0 },
+    // v5.16：頭貼。刻意**不放進 social**：社交分片每次心跳都會重推，
+    //   把 base64 圖片塞進去，等於每 45 秒重傳一次幾百 KB。
+    avatars: { v: 1, m: {} } };
   let timer = null;
   let dirty = false;
   let retry = 0;
@@ -611,7 +619,8 @@ function createStore(dir, persist, remote) {
       lb: db.lb,
       visits: db.visits || { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() },  // v5.5：拜訪紀錄
       rank: db.rank || { v: 1, week: '', all: {}, wk: {}, claims: {} },              // v5.13：排名
-      social: db.social || { v: 1, players: {}, dm: {}, dmN: 0 }                     // v5.13：線上玩家
+      social: db.social || { v: 1, players: {}, dm: {}, dmN: 0 },                    // v5.13：線上玩家
+      avatars: db.avatars || { v: 1, m: {} }                                        // v5.16：頭貼（只有換頭貼才推）
     };
   }
   /* v5.11：舊資料修補 —— 早期版本的帳號物件「只用物件鍵當索引」，沒有把 id 寫進欄位。
@@ -650,6 +659,10 @@ function createStore(dir, persist, remote) {
       db.social = (val && typeof val === 'object') ? val : { v: 1, players: {}, dm: {}, dmN: 0 };
       if (!db.social.players) db.social.players = {};
       if (!db.social.dm) db.social.dm = {};
+      return true;
+    }
+    if (key === 'avatars') {
+      db.avatars = (val && typeof val === 'object' && val.m) ? val : { v: 1, m: {} };
       return true;
     }
     if (key === 'visits') {
@@ -1543,7 +1556,11 @@ function createCloud(options) {
   const SOC_TTL = 150000;              // 在線判定：150 秒
   const SOC_KEEP = 7 * 86400000;       // 七天沒來就清掉
   const SOC_MAX = 600;                 // 最多記 600 個玩家
-  const DM_MAX = 120, DM_KEEP = 3000;  // 每個對話留 120 則、最多 3000 個對話
+  const DM_MAX = 120, DM_KEEP = 3000;
+/* v5.16：頭貼。128×128 的 WebP/JPEG 大約 3～8 KB（base64 後 4～11 KB）。
+   上限刻意壓在 200 人 / 1.3 MB：這個分片只要有人換頭貼就會整份重推，
+   放太大會讓「換一張大頭貼」變成一次幾 MB 的上傳。 */
+const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;  // 每個對話留 120 則、最多 3000 個對話
 
   function p2(n) { return (n < 10 ? '0' : '') + n; }
   function wkNow() {
@@ -1618,6 +1635,66 @@ function createCloud(options) {
     return n;
   }
 
+  /* ---------------- v5.16：頭貼 ---------------- */
+  function avDb() {
+    if (!db.avatars || typeof db.avatars !== 'object' || !db.avatars.m) db.avatars = { v: 1, m: {} };
+    return db.avatars;
+  }
+  const AV_RE = /^data:image\/(jpeg|webp|png);base64,[A-Za-z0-9+/=]+$/;
+  function avOk(str) {
+    const d = String(str || '');
+    return d.length >= 200 && d.length <= AV_ONE && AV_RE.test(d);
+  }
+  function avOf(pid) {
+    const A = avDb();
+    const r = A.m[pid];
+    return (r && typeof r.d === 'string' && r.d) ? r : null;
+  }
+  function avPut(pid, dataUrl) {
+    const A = avDb();
+    if (!dataUrl) { delete A.m[pid]; return 0; }
+    A.m[pid] = { d: dataUrl, t: Date.now() };
+    avPrune(A);
+    return dataUrl.length;
+  }
+  /* 先刪「太久沒換又很少上線」的，再從最舊的砍到符合人數／總量 */
+  function avPrune(A) {
+    const now = Date.now();
+    const S = socDb();
+    const keys = Object.keys(A.m);
+    keys.forEach(function (k) {
+      const r = A.m[k];
+      if (!r) return;
+      const seen = (S.players[k] && S.players[k].seen) || 0;
+      if (now - (r.t || 0) > AV_KEEP && now - seen > AV_KEEP) delete A.m[k];
+    });
+    let left = Object.keys(A.m);
+    function bytes() { let n = 0; left.forEach(function (k) { n += (A.m[k].d || '').length; }); return n; }
+    if (left.length <= AV_MAX && bytes() <= AV_TOTAL) return;
+    left.sort(function (a, b) { return (A.m[a].t || 0) - (A.m[b].t || 0); });
+    let n = 0, drop = 0;
+    for (let i = 0; i < left.length; i++) n += (A.m[left[i]].d || '').length;
+    while (left.length - drop > 1 && (left.length - drop > AV_MAX || n > AV_TOTAL)) {
+      n -= (A.m[left[drop]].d || '').length;
+      delete A.m[left[drop]];
+      drop++;
+    }
+  }
+  /* 配戴成就：只存「要給別人看的」三格（圖示＋名稱），不存整份成就表 */
+  function cleanEq(arr) {
+    const out = [];
+    if (!Array.isArray(arr)) return out;
+    for (let i = 0; i < arr.length && out.length < 3; i++) {
+      const it = arr[i];
+      if (!it || typeof it !== 'object') continue;
+      const ico = String(it.i || '').replace(/[\u0000-\u001f<>]/g, '').slice(0, 8);
+      const name = String(it.n || '').replace(/[\u0000-\u001f<>]/g, '').slice(0, 16);
+      if (!ico && !name) continue;
+      out.push({ i: ico, n: name });
+    }
+    return out;
+  }
+
   function socDb() {
     if (!db.social || typeof db.social !== 'object') db.social = { v: 1, players: {}, dm: {}, dmN: 0 };
     const S = db.social;
@@ -1650,6 +1727,7 @@ function createCloud(options) {
     me.pts = clampInt(body.pts, 0, 1e6, 0);
     me.wins = clampInt(body.wins, 0, 1e6, 0);
     me.mode = String(body.mode || '大廳').slice(0, 8);
+    if (body.eq !== undefined) me.eq = cleanEq(body.eq);   // v5.16：配戴成就（最多 3 格）
     me.seen = Date.now();
     return me;
   }
@@ -1669,7 +1747,8 @@ function createCloud(options) {
   }
   function socPublic(pid, me) {
     return { pid: pid, name: me.n, ch: me.ch | 0, kind: me.k, gender: me.g, region: me.r, bio: me.b,
-      join: me.join || 0, seen: me.seen || 0, sec: me.sec | 0, pts: me.pts | 0, wins: me.wins | 0, mode: me.mode };
+      join: me.join || 0, seen: me.seen || 0, sec: me.sec | 0, pts: me.pts | 0, wins: me.wins | 0, mode: me.mode,
+      avt: me.avt || 0, eq: Array.isArray(me.eq) ? me.eq : [] };   // v5.16：頭貼版本／配戴成就
   }
   function socOnline(pid, limit) {
     const S = socDb();
@@ -1867,10 +1946,14 @@ function createCloud(options) {
       /* ================= v5.13：線上玩家 / 好友 / 私訊 ================= */
       if (isSoc) {
         if (!gate(req, res, 'social', 180, 3, CORS_X)) return true;
-        const body = (req.method === 'POST') ? await readJson(req, 8192) : null;
+        // v5.16：頭貼是這條分支裡唯一會超過 8 KB 的請求（base64 圖片最多約 24 KB）
+        const body = (req.method === 'POST')
+          ? await readJson(req, p === '/api/social/avatar' ? 40960 : 8192)
+          : null;
         const dev = String((body && body.deviceId) || url.searchParams.get('deviceId') || '').slice(0, 128);
-        if (dev.length < 6) return fail(res, 400, 'BAD_DEVICE', CORS_X), true;
-        const pid = pidOf('p', dev);
+        // v5.16：補頭貼那條是唯讀的公開資料（只有圖示大小的圖），不需要裝置編號
+        if (p !== '/api/social/av' && dev.length < 6) return fail(res, 400, 'BAD_DEVICE', CORS_X), true;
+        const pid = dev ? pidOf('p', dev) : '';
 
         if (p === '/api/social/hb' && req.method === 'POST') {
           if (!body) return fail(res, 400, 'BAD_BODY', CORS_X), true;
@@ -1899,6 +1982,32 @@ function createCloud(options) {
             friends: o.friends, blocks: o.blocks, reqs: o.reqs,
             unread: o.unread, unreadBy: o.unreadBy
           }, CORS_X), true;
+        }
+
+        /* v5.16：頭貼。圖片本身不跟著名單送（80 人 × 8 KB 會肥 10 倍），
+           名單只帶 avt（版本時間），前端看到版本變了才來這裡補圖。 */
+        if (p === '/api/social/av' && req.method === 'GET') {
+          const raw = String(url.searchParams.get('pids') || '');
+          const pids = raw.split(',').map(function (x) { return x.trim().slice(0, 24); })
+            .filter(function (x) { return x.length >= 4; }).slice(0, 40);
+          const out = {};
+          pids.forEach(function (k) {
+            const r = avOf(k);
+            if (r) out[k] = { d: r.d, t: r.t || 0 };
+          });
+          return send(res, 200, { ok: true, av: out }, CORS_X), true;
+        }
+
+        if (p === '/api/social/avatar' && req.method === 'POST') {
+          if (!body) return fail(res, 400, 'BAD_BODY', CORS_X), true;
+          const img = String(body.img || '');
+          if (img && !avOk(img)) return fail(res, 400, 'BAD_IMG', CORS_X), true;
+          const me = socGet(pid);
+          const n = avPut(pid, img);
+          me.avt = Date.now();          // 版本一定變（含「移除」），別人才知道要重抓
+          me.seen = Date.now();
+          store.touch();
+          return send(res, 200, { ok: true, avt: me.avt, bytes: n }, CORS_X), true;
         }
 
         if (p === '/api/social/act' && req.method === 'POST') {
