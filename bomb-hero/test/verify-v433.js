@@ -53,8 +53,10 @@ ok(src(/const rigH = R \* 3\.75 \* HERO_ART_SCALE \* heroSizeK\(c\.animal\);/),
   '零件骨架高度乘上 HERO_ART_SCALE（再乘角色體型係數）');
 ok(src(/const H = R \* 3\.75 \* HERO_ART_SCALE \* heroSizeK\(c\.animal\);/),
   '整張圖 fallback 也乘上 HERO_ART_SCALE（再乘角色體型係數）');
-ok(P.HERO_SIZE_K.pig === .95 && P.HERO_SIZE_K.frog === .95 && P.HERO_SIZE_K.chick === .95,
-  '豬／青蛙／小雞都是 0.95（縮 5%）');
+ok(P.HERO_SIZE_K.pig === .95 && P.HERO_SIZE_K.chick === .95,
+  '豬／小雞都是 0.95（縮 5%）');
+// v5.0b：青蛙再縮 5% → .90
+ok(P.HERO_SIZE_K.frog === .90, '青蛙 .90（v5.0b 再縮 5%）');
 ok(P.heroSizeK('pig') === .95 && P.heroSizeK('dragon') === 1, 'heroSizeK() 只縮那三隻，其他不動');
 // 只縮顯示：判定半徑與腳底位置沒被動到
 ok(src(/const R = T \* \.40 \* \(p\.dino \? \.82 : 1\)/), '站立時 R 仍是 T×.40（碰撞沒變小）');

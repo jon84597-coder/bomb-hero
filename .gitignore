@@ -71,3 +71,24 @@ bomb-hero/art/blocks/*/_raw/
 bomb-hero/art/*/_raw/
 bomb-hero/art/ground/ingame-*.png
 bomb-hero/art/ground/zoom-*.png
+
+# v5.1 章節 BOSS：生圖中間檢查圖（交付版 spr/boss-b*-*.webp）
+bomb-hero/art/bosses/_preview_b*.png
+bomb-hero/art/bosses/_dark_*.png
+bomb-hero/art/bosses/_probe*.png
+bomb-hero/art/bosses/_vis*.png
+bomb-hero/art/bosses/_zoom*.png
+bomb-hero/art/bosses/_chk_*.png
+bomb-hero/art/bosses/_dbg.png
+bomb-hero/art/bosses/_log.png
+bomb-hero/art/bosses/_sheet_all.png
+bomb-hero/art/bosses/_boss_report.txt
+# 本機驗證用臨時頁面與截圖
+bomb-hero/_vis_*.html
+bomb-hero/_shot_*.png
+bomb-hero/_shots_*.png
+bomb-hero/_crop_*.png
+bomb-hero/_probe_*.html
+bomb-hero/_log_*.html
+bomb-hero/_smoke.html
+bomb-hero/art/pets/_*.png

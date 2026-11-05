@@ -170,7 +170,14 @@ head('6. 版本與容量');
 ok(parseFloat(P.VERSION) >= 4.77, 'VERSION 是 4.77 以上（' + P.VERSION + '）');
 ok(P.VERSION_LOG[0].v === P.VERSION, '版本紀錄最上面是本版 ' + P.VERSION);
 ok(P.VERSION_LOG[0].items.filter(function (x) { return /ver\.4\.77\./.test(x.k || ''); }).length >= 0, '版本紀錄條目正常');
-ok(P.VERSION_LOG[1] && /^4\./.test(P.VERSION_LOG[1].v), '第二筆是上一版 ' + (P.VERSION_LOG[1] || {}).v);
+// v5.1：原本寫死 /^4\./，跳到 5.x 就假失敗 —— 改成「比第一筆舊」的通用判斷
+function vtuple(v) { return String(v).split('.').map(function (x) { return parseInt(x, 10) || 0; }); }
+function vlt(a, b) {
+  const x = vtuple(a), y = vtuple(b);
+  for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); }
+  return false;
+}
+ok(P.VERSION_LOG[1] && vlt(P.VERSION_LOG[1].v, P.VERSION_LOG[0].v), '第二筆比第一筆舊 ' + (P.VERSION_LOG[1] || {}).v);
 ok(P.VERSION_LOG[0].now === true && P.VERSION_LOG[1].now === false, '只有最新版標 now');
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (f) {
   const p2 = path.join(__dirname, f);

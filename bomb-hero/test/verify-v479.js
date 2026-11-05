@@ -1,6 +1,6 @@
 // test/verify-v479.js —— v4.79 美術外部化
 //   ① index.html 不再內嵌任何 base64 圖
-//   ② 191 個 spr/*.webp 全部存在、檔頭合法、位元組與原始 base64 解碼一致（由 _x_report.json 對照）
+//   ② 215 個 spr/*.webp 全部存在、檔頭合法、位元組與原始 base64 解碼一致（由 _x_report.json 對照）
 //   ③ 命名不重複、可追溯（spr/_list.json 與實際檔案一致）
 //   ④ 主檔大幅縮小、gzip 後 < 900KB
 //   ⑤ Service Worker：CORE 有首頁 logo、有背景預熱、版本跟著升
@@ -20,16 +20,16 @@ head('1. 主檔已無內嵌圖');
 const inline = src.match(/data:image\/[a-z+]+;base64,/g) || [];
 ok(inline.length === 0, 'index.html 內嵌 base64 圖 = ' + inline.length + '（應為 0）');
 const refs = src.match(/spr\/[A-Za-z0-9_\-]+\.webp/g) || [];
-ok(refs.length === 191, 'spr/ 引用 ' + refs.length + ' 處（應為 191）');
+ok(refs.length === 215, 'spr/ 引用 ' + refs.length + ' 處（應為 215）');
 const uniq = Array.from(new Set(refs));
 ok(uniq.length === uniq.length, '引用名稱可去重');
-ok(uniq.length === 191, '191 個不同的貼圖檔名');
+ok(uniq.length === 215, '215 個不同的貼圖檔名');
 
 // ---------- 2. 檔案都存在且合法 ----------
 head('2. 貼圖檔案');
 const SPR = path.join(ROOT, 'spr');
 const files = fs.readdirSync(SPR).filter(function (f) { return /\.webp$/.test(f); });
-ok(files.length === 191, 'spr/ 內有 ' + files.length + ' 個 .webp');
+ok(files.length === 215, 'spr/ 內有 ' + files.length + ' 個 .webp');
 const missing = uniq.filter(function (u) { return !fs.existsSync(path.join(ROOT, u)); });
 ok(missing.length === 0, '每個引用都找得到檔案' + (missing.length ? '（缺 ' + missing.slice(0, 3) + '）' : ''));
 let badMagic = 0, total = 0;
@@ -39,24 +39,27 @@ files.forEach(function (f) {
   if (b.slice(8, 12).toString() !== 'WEBP') badMagic++;
 });
 ok(badMagic === 0, '全部是合法 WEBP（壞檔 ' + badMagic + '）');
-ok(total > 1200000 && total < 2100000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 2.10 MB 是因為 v5.0 三位隨從各四幀）');
+ok(total > 1200000 && total < 2700000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 2.70 MB 是因為 v5.0b 八位 BOSS 各四幀）');
 
 // ---------- 3. 位元組與原始 base64 完全一致 ----------
 head('3. 抽出過程零損失');
 const rep = JSON.parse(fs.readFileSync(path.join(__dirname, '_x_report.json'), 'utf8'));
 const sha = b => crypto.createHash('sha256').update(b).digest('hex');
-let mismatch = 0;
+let mismatch = 0, checked = 0;
 rep.forEach(function (r) {
-  const b = fs.readFileSync(path.join(SPR, r.name + '.webp'));
+  const fp = path.join(SPR, r.name + '.webp');
+  if (!fs.existsSync(fp)) return;          // v5.0b：被換掉的舊 BOSS 單圖不再驗
+  checked++;
+  const b = fs.readFileSync(fp);
   if (b.length !== r.bytes || sha(b).slice(0, 12) !== r.sha) mismatch++;
 });
-ok(rep.length === 175, '對照表 175 筆（v4.87 兩張新圖不在抽取清單裡）');
+ok(checked >= 160, '對照表可驗 ' + checked + ' 筆（v4.87 兩張新圖不在清單、v5.0b 換掉的 BOSS 單圖跳過）');
 ok(mismatch === 0, '全部位元組／雜湊與抽取當下一致（不一致 ' + mismatch + '）');
 
 // ---------- 4. 清單與檔案一致 ----------
 head('4. 預熱清單');
 const list = JSON.parse(fs.readFileSync(path.join(SPR, '_list.json'), 'utf8'));
-ok(Array.isArray(list) && list.length === 191, '_list.json 有 191 筆（v5.0 三位隨從各四幀）');
+ok(Array.isArray(list) && list.length === 215, '_list.json 有 215 筆（v5.0b 八位 BOSS 各四幀）');
 const notInList = files.filter(function (f) { return list.indexOf(f) < 0; });
 ok(notInList.length === 0, '每個檔案都在清單裡' + (notInList.length ? '（漏 ' + notInList.slice(0, 3) + '）' : ''));
 const missingFile = list.filter(function (f) { return !fs.existsSync(path.join(SPR, f)); });

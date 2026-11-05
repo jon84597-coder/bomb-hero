@@ -3599,7 +3599,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.0</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.1</span></span>
     </button>
     <!-- v4.93：開發者後台入口（DEV_BUILD 或白名單帳號才顯示） -->
     <button class="verlogbtn devbtn" id="devBtn" type="button" title="開發者後台">🛠</button>
@@ -3642,7 +3642,7 @@ display:flex;align-items:center;justify-content:center;transition:filter .1s,tra
         </div>
       </div>
 
-      <div class="ver beta">正式版 v<span id="verTxt">5.0</span></div>
+      <div class="ver beta">正式版 v<span id="verTxt">5.1</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4333,7 +4333,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.0';
+const VERSION = '5.1';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4955,6 +4955,14 @@ mn.30|血池沼窟|血池沼窟|Blood Marsh|血の沼|핏빛 늪
 mn.31|詛咒迴廊|诅咒回廊|Curse Corridor|呪いの回廊|저주 회랑
 mn.32|魔王之間|魔王之间|Demon Lord's Chamber|魔王の間|마왕의 방
 stage.bossTag|👑 魔王關|👑 魔王关|👑 Boss stage|👑 ボス面|👑 보스 스테이지
+boss.1|咩霸 · 牧草巨獸|咩霸 · 牧草巨兽|MEEDA · Grass Titan|メエバ · 牧草の巨獣|메에바 · 목초의 거수
+boss.2|妮芙 · 沙蟲女王|妮芙 · 沙虫女王|NIF · Sandworm Queen|ニフ · 砂虫の女王|니프 · 모래벌레 여왕
+boss.3|咕嘰 · 冰霜雪人|咕叽 · 冰霜雪人|GUJI · Frost Yeti|グジ · 霜の雪男|구지 · 서리 설인
+boss.4|赫菲 · 熔核巨像|赫菲 · 熔核巨像|HEPHI · Magma Colossus|ヘフィ · 溶核の巨像|헤피 · 용암 거상
+boss.5|BPM-9 · 電音魔王|BPM-9 · 电音魔王|BPM-9 · Neon Overlord|BPM-9 · ネオン魔王|BPM-9 · 네온 마왕
+boss.6|露米 · 深海海妖|露米 · 深海海妖|LUMI · Abyss Siren|ルミ · 深海のセイレーン|루미 · 심해 세이렌
+boss.7|疾空 · 風暴鷹王|疾空 · 风暴鹰王|JIKU · Storm Eagle King|ジクウ · 嵐の鷹王|지쿠 · 폭풍 매왕
+boss.8|黯 · 魔王|黯 · 魔王|AN · Dark Lord|アン · 魔王|안 · 마왕
 learn.tag|新手教學|新手教学|Tutorial|チュートリアル|튜토리얼
 learn.title|🎓 新手教學|🎓 新手教学|🎓 Tutorial|🎓 チュートリアル|🎓 튜토리얼
 learn.desc|第一次玩？照著做一輪就會了。想直接查功能，往下打開「功能總覽」。|第一次玩？照着做一轮就会了。想直接查功能，往下打开「功能总览」。|First time? One guided run and you've got it. Need a specific feature? Open the Feature Guide below.|初めて？1 回なぞれば覚えられます。機能を調べたいときは下の「機能一覧」を開いてください。|처음인가요? 한 번 따라 하면 끝. 기능을 찾으려면 아래 '기능 안내'를 여세요.
@@ -6222,23 +6230,34 @@ const MOUNT_ART = {
 
 // v5.0：三位隨從的美術（同一塊畫布四幀：0 站立、1/2 跑動、3 攻擊）
 //   bodyRatio ＝ 角色本體高 / 畫布高（畫布有留邊，畫的時候要除回去才不會忽大忽小）
+//   k ＝ 相對主角的身高倍率（v5.0b：狼＝主角、猴＝主角、犀牛比主角高 20%）
 const PET_ART = {
   blade: {
-    asp: 1.0094, bodyRatio: 0.8785,
+    asp: 1.0094, bodyRatio: 0.8785, k: 1.00,
     u: "spr/pet-blade-idle.webp",
     frames: [null, "spr/pet-blade-run1.webp", "spr/pet-blade-run2.webp", "spr/pet-blade-atk.webp"]
   },
   bomber: {
-    asp: 0.8688, bodyRatio: 0.8859,
+    asp: 0.8688, bodyRatio: 0.8859, k: 1.00,
     u: "spr/pet-bomber-idle.webp",
     frames: [null, "spr/pet-bomber-run1.webp", "spr/pet-bomber-run2.webp", "spr/pet-bomber-atk.webp"]
   },
   guard: {
-    asp: 0.9750, bodyRatio: 0.8992,
+    asp: 0.9750, bodyRatio: 0.8992, k: 1.20,
     u: "spr/pet-guard-idle.webp",
     frames: [null, "spr/pet-guard-run1.webp", "spr/pet-guard-run2.webp", "spr/pet-guard-atk.webp"]
   }
 };
+// 隨從的可見身高＝主角的可見身高 × k（主角的畫法在 drawPlayer：R*3.75*HERO_ART_SCALE）
+function petBodyH(T, kind) {
+  const sp = (typeof PET_ART !== 'undefined') ? (PET_ART[kind] || null) : null;
+  const base = T * .40 * 3.75 * (typeof HERO_ART_SCALE === 'number' ? HERO_ART_SCALE : .81);
+  return base * ((sp && sp.k) || 1);
+}
+function petSizeK(kind) {
+  const sp = (typeof PET_ART !== 'undefined') ? (PET_ART[kind] || null) : null;
+  return (sp && sp.k) || 1;
+}
 
 const IMG_PARTS = {
 
@@ -11509,7 +11528,9 @@ function makeBoss(x, y, hp) {
     hp: H, maxHp: H, hitT: 0, bombT: 3, dirT: 0, dirName: 'up', dead: false, walkT: 0, boss: true,
     // v4.19：出生點＝牠的地盤中心，平常只在這附近走來走去
     homeCX: x, homeCY: y, homeTiles: 4, patrol: null, patrolRest: 0,
-    aggro: false, aggroPrev: false, angerT: 0, windT: 0, dashT: 0
+    aggro: false, aggroPrev: false, angerT: 0, windT: 0, dashT: 0,
+    // v5.0b：專屬招式的狀態（集氣／冷卻／出招序號）
+    castT: 0, castSkill: '', castMax: .9, castCol: '#fff', skillCd: 2.6, skillNo: 0, moving: false
   };
 }
 
@@ -11880,6 +11901,17 @@ function updatePets(dt) {
       const near = hero.alive && Math.hypot(hero.x - pt.x, hero.y - pt.y) < T * 1.15;
       if (near) pt.rescueT += dt;
       else pt.rescueT = Math.max(0, pt.rescueT - dt * 1.5);
+      // v5.0b：救援「進行中」就持續冒綠光點（不是只有救回來那一下）
+      if (pt.rescueT > 0) {
+        pt.healFx = (pt.healFx || 0) + dt;
+        if (pt.healFx > .10) {
+          pt.healFx = 0;
+          try {
+            burst(pt.x + (Math.random() - .5) * T * .55,
+                  pt.y + T * .18 + (Math.random() - .5) * T * .20, '#7ef0b4', 1, 46);
+          } catch (err) {}
+        }
+      } else pt.healFx = 0;
       if (pt.rescueT >= PET_HELP_SEC) {
         pt.down = false; pt.rescueT = 0; pt.hitT = 1.4;
         pt.healT = 1.1;                                    // v5.0：治療光環（畫在 drawPet）
@@ -12028,20 +12060,23 @@ function drawPetSprite(g, kind, x, footY, bodyH, side, a) {
   return true;
 }
 // v5.0：救回來時的治療光環（綠色上升圈＋十字光）
-function drawPetHeal(x, y, T, k) {
+//   v5.0b：加上 pulse=1 → 救援進行中持續呼吸，不會像「一瞬間閃過」
+function drawPetHeal(x, y, T, k, pulse) {
   if (!(k > 0)) return;
   const a = Math.min(1, k / 1.1);
+  const pl = pulse ? (.72 + .28 * Math.sin((Game.gameT || 0) * 6.5)) : 1;
+  const scale = pulse ? 1.06 : 1;
   ctx.save();
-  ctx.globalAlpha = .75 * a;
+  ctx.globalAlpha = .75 * a * pl;
   ctx.strokeStyle = '#7ef0b4';
   ctx.lineWidth = Math.max(2, T * .06);
   for (let i = 0; i < 2; i++) {
-    const r = T * (.26 + (1 - a) * .52) + i * T * .10;
+    const r = (T * (.26 + (1 - a) * .52) + i * T * .10) * scale;
     ctx.beginPath();
     ctx.arc(x, y + T * .10 - (1 - a) * T * .30, r, 0, 6.283);
     ctx.stroke();
   }
-  ctx.globalAlpha = .9 * a;
+  ctx.globalAlpha = .9 * a * (pulse ? (.6 + .4 * pl) : 1);
   ctx.fillStyle = '#eafff2';
   const g2 = T * .16 * (0.6 + a * .6);
   ctx.fillRect(x - g2 / 2, y - T * .40 - g2 * 1.5, g2, g2 * 3);
@@ -12051,13 +12086,13 @@ function drawPetHeal(x, y, T, k) {
 }
 function drawPet(pt, T) {
   const x = pt.x, y = pt.y;
-  const R = T * .30;
+  const R = T * .30 * petSizeK(pt.kind);          // v5.0b：影子／徽章跟著體型走
   const c = CHARACTERS[pt.chIdx] || CHARACTERS[0];
   const bob = pt.moving ? Math.abs(Math.sin(pt.walkT * 14)) * 1.2 : 0;
   softShadow(x, y + T * .30, R * .82, R * .26, .30);
   if (pt.down) {
     // 坐在地上一直哭
-    const drewDown = drawPetSprite(ctx, pt.kind, x, y + T * .30, T * .58, 1,
+    const drewDown = drawPetSprite(ctx, pt.kind, x, y + T * .30, petBodyH(T, pt.kind) * .94, 1,
       { frame: 0, idle: Game.gameT, tilt: .13 });
     if (!drewDown) {
       const args = { walk: 0, moving: false, facing: pt.facing, bob: 0, blink: false,
@@ -12071,7 +12106,10 @@ function drawPet(pt, T) {
     ctx.font = '900 ' + Math.round(T * .28) + 'px "Microsoft JhengHei", sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const tw = Math.max(T * .86, ctx.measureText('Help').width + T * .26);
-    const bx = x - tw / 2, by = y - T * .93, bh = T * .38;
+    // v5.0b：泡泡改「貼齊頭頂」算 —— 犀牛高 20%，固定 -0.93 格會壓在牠臉上
+    const headTop = y + T * .30 - petBodyH(T, pt.kind);
+    const bh = T * .38;
+    const bx = x - tw / 2, by = headTop - bh - T * .06;
     ctx.fillStyle = 'rgba(206,32,48,.95)';
     if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, tw, bh, bh / 2); ctx.fill(); }
     else ctx.fillRect(bx, by, tw, bh);
@@ -12082,16 +12120,18 @@ function drawPet(pt, T) {
     ctx.restore();
     // 救援進度圈
     const prog = Math.min(1, (pt.rescueT || 0) / PET_HELP_SEC);
+    const rr = T * .52 * petSizeK(pt.kind);
     ctx.strokeStyle = 'rgba(255,255,255,.28)';
     ctx.lineWidth = Math.max(2, T * .055);
-    ctx.beginPath(); ctx.arc(x, y + T * .05, T * .52, 0, 6.283); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y + T * .05, rr, 0, 6.283); ctx.stroke();
     if (prog > 0) {
       ctx.strokeStyle = '#7ef0b4';
-      ctx.beginPath(); ctx.arc(x, y + T * .05, T * .52, -1.5708, -1.5708 + 6.283 * prog); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y + T * .05, rr, -1.5708, -1.5708 + 6.283 * prog); ctx.stroke();
     }
     ctx.lineWidth = 1;
     ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
-    drawPetHeal(x, y, T, pt.healT || 0);
+    // v5.0b：救援「過程中」就開始冒治療光環（以前只有救回來那 1.1 秒才亮）
+    drawPetHeal(x, y, T, prog > 0 ? 1.1 : (pt.healT || 0), prog > 0 ? 1 : 0);
     return;
   }
   const args = { walk: pt.walkT * 14, moving: pt.moving, facing: pt.facing, bob: bob,
@@ -12101,7 +12141,7 @@ function drawPet(pt, T) {
   const facingX = (DIRS[pt.facing] || DIRS.down).x;
   const atkFrame = (pt.slashT > 0 || pt.throwT > 0 || (pt.blockT || 0) > 0);
   const fr = atkFrame ? 3 : (pt.moving ? (Math.floor(pt.walkT * 8) % 2 ? 2 : 1) : 0);
-  const drewArt = drawPetSprite(ctx, pt.kind, x, y + T * .30, T * .60, facingX < 0 ? -1 : 1,
+  const drewArt = drawPetSprite(ctx, pt.kind, x, y + T * .30, petBodyH(T, pt.kind), facingX < 0 ? -1 : 1,
     { frame: fr, walk: pt.walkT * 13, moving: pt.moving, idle: Game.gameT });
   if (!drewArt) drawSpriteChar(ctx, c, x, y - bob, R, args) || drawCharBody(ctx, c, x, y - bob, R, args);
   ctx.globalAlpha = 1;
@@ -12647,12 +12687,362 @@ function bossPatrolStep(e, cx, cy, T, dt) {
 }
 
 const BOSS_POWER = 2;                             // v2.2：BOSS 火焰 2 格（v1.9 是 3 格）
+// ══════════════════════════════════════════════════════════════════
+//   v5.0b：八位 BOSS 的專屬招式
+//   · 每位三招，靠距離／血量／出招序號挑 —— 不會每隻都只會「追＋放炸彈」
+//   · 一律「徵兆（地面圈／紅色警示格）→ 集氣（身體抖＋顏色光環）→ 出手」
+//   · 全部沿用 v5.0 小怪的共用底層（foeAoe／foeHaz／roller／orb／pull）
+// ══════════════════════════════════════════════════════════════════
+const BOSS_KIT = {
+  1: { col: '#9ad86a', wind: .85, cd: 3.3, pick: function (e, p, d) {
+    if (e.hp < e.maxHp && e.hp <= e.maxHp * .55) return 'graze';
+    return d <= 2.6 ? 'woolWave' : 'lambCall';
+  } },
+  2: { col: '#e6c68a', wind: .90, cd: 3.5, pick: function (e, p, d) {
+    if (d >= 4.5) return 'burrow';
+    return d <= 3 ? 'drag' : 'sandStorm';
+  } },
+  3: { col: '#8fe4ff', wind: .90, cd: 3.4, pick: function (e, p, d) {
+    if (e.hp < e.maxHp && e.hp <= e.maxHp * .40) return 'iceShell';
+    return d <= 3.2 ? 'iceFloor' : 'snowball';
+  } },
+  4: { col: '#ff8a3d', wind: .95, cd: 3.8, pick: function (e, p, d) {
+    if (d <= 3) return 'firePillar';
+    return d >= 5 ? 'meteor' : 'lavaTide';
+  } },
+  5: { col: '#ff6ad5', wind: .80, cd: 3, pick: function (e, p, d) {
+    e.skillNo = (e.skillNo || 0) + 1;
+    if (e.skillNo % 3 === 0) return 'drone';
+    return (e.skillNo % 3 === 1) ? 'beatBlast' : 'laserSweep';
+  } },
+  6: { col: '#7fd8ff', wind: .95, cd: 3.5, pick: function (e, p, d) {
+    if (e.hp < e.maxHp && e.hp <= e.maxHp * .50) return 'lureOrbs';
+    return d <= 2.6 ? 'tentacle' : 'current';
+  } },
+  7: { col: '#bcd6ff', wind: .78, cd: 3.1, pick: function (e, p, d) {
+    if (d <= 2.4) return 'gustBurst';
+    return d <= 5 ? 'dive' : 'tornado';
+  } },
+  8: { col: '#b46bff', wind: .90, cd: 3.2, pick: function (e, p, d) {
+    e.skillNo = (e.skillNo || 0) + 1;
+    if (e.hp <= e.maxHp * .5) return (e.skillNo % 2) ? 'shadowRing' : 'curseCard';
+    return (e.skillNo % 2) ? 'curseCard' : 'shadowClones';
+  } }
+};
+function bossKitOf(stage) {
+  const ch = (typeof blockOf === 'function') ? blockOf(stage || 1) : 1;
+  return BOSS_KIT[ch] || BOSS_KIT[1];
+}
+// 以 BOSS 為中心的環狀警示（曼哈頓距離）
+function bossRing(e, r, delay, kind, step) {
+  const T = Game.T;
+  const cx = Math.floor(e.x / T), cy = Math.floor(e.y / T);
+  const sd = step == null ? .08 : step;
+  for (let dx = -r; dx <= r; dx++) {
+    for (let dy = -r; dy <= r; dy++) {
+      const dd = Math.abs(dx) + Math.abs(dy);
+      if (dd === 0 || dd > r) continue;
+      foeAoeAdd(cx + dx, cy + dy, delay + dd * sd, kind);
+    }
+  }
+}
+// 穿過 BOSS 的整條橫排／直排（雷射橫掃、火柱）
+function bossLine(e, horiz, delay, kind, step) {
+  const T = Game.T;
+  const cx = Math.floor(e.x / T), cy = Math.floor(e.y / T);
+  const n = horiz ? Game.cols : Game.rows;
+  const sd = step == null ? .045 : step;
+  for (let i = 1; i < n - 1; i++) {
+    const d = Math.abs(i - (horiz ? cx : cy));
+    foeAoeAdd(horiz ? i : cx, horiz ? cy : i, delay + d * sd, kind);
+  }
+}
+function bossFreeCell(cx, cy) {
+  if (cx < 1 || cy < 1 || cx > Game.cols - 2 || cy > Game.rows - 2) return false;
+  return cellAt(cx, cy) === 0 && !bombAt(cx, cy);
+}
+function bossSummon(e, n) {
+  let made = 0;
+  const T = Game.T;
+  const cx = Math.floor(e.x / T), cy = Math.floor(e.y / T);
+  const opts = ['up', 'down', 'left', 'right'];
+  // 洗牌（不用 shuffle：專案裡沒有這個helper）
+  for (let i = opts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = opts[i]; opts[i] = opts[j]; opts[j] = tmp;
+  }
+  for (let i = 0; i < opts.length && made < n; i++) {
+    const d = DIRS[opts[i]];
+    if (!bossFreeCell(cx + d.x, cy + d.y)) continue;
+    if (Game.enemies.length >= (Game.foeCap || FOE_MAX_LIVE)) break;
+    const kid = makeEnemy(cx + d.x, cy + d.y, e.type, 1, 1);
+    kid.summoned = true; kid.hp = 1; kid.maxHp = 1; kid.aggro = true;
+    Game.enemies.push(kid);
+    burst(kid.x, kid.y, e.color || '#fff', 14, 150);
+    made++;
+  }
+  if (made) AudioSys.sfx('item');
+  return made;
+}
+// 把玩家往反方向推 n 格（暗流／陣風）
+function bossPushAway(e, p, n) {
+  if (!p || !p.alive) return;
+  const T = Game.T;
+  for (let k = 0; k < n; k++) {
+    const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
+    const dx = Math.abs(e.x - p.x) > Math.abs(e.y - p.y) ? Math.sign(p.x - e.x) : 0;
+    const dy = dx ? 0 : Math.sign(p.y - e.y);
+    if (!dx && !dy) break;
+    if (cellAt(cx + dx, cy + dy) !== 0 || bombAt(cx + dx, cy + dy)) break;
+    p.x = (cx + dx) * T + T / 2;
+    p.y = (cy + dy) * T + T / 2;
+    p.slide = null;
+  }
+  burst(p.x, p.y, '#bfe8ff', 10, 130);
+}
+function bossFire(e, name) {
+  const T = Game.T;
+  const p = Game.players[0];
+  const cx = Math.floor(e.x / T), cy = Math.floor(e.y / T);
+  const pcx = (p && p.alive) ? Math.floor(p.x / T) : cx;
+  const pcy = (p && p.alive) ? Math.floor(p.y / T) : cy;
+  switch (name) {
+    // ---- 1 咩霸 ----
+    case 'woolWave':
+      bossRing(e, 2, .45, 'grass', .09);
+      try { AudioSys.sfx('gust'); } catch (err) {}
+      Game.shake = Math.max(Game.shake || 0, .55);
+      burst(e.x, e.y, '#bff08a', 24, 210);
+      break;
+    case 'lambCall':
+      bossSummon(e, 2);
+      try { AudioSys.sfx('spawn'); } catch (err) {}
+      break;
+    case 'graze': {
+      const add = Math.min(2, e.maxHp - e.hp);
+      e.hp += add;
+      burst(e.x, e.y, '#7ef0b4', 26, 190);
+      burst(e.x, e.y, '#d9ffcf', 12, 120);
+      try { AudioSys.sfx('heal'); } catch (err) {}
+      break;
+    }
+    // ---- 2 妮芙 ----
+    case 'burrow': {
+      const spots = [];
+      for (let dx = -2; dx <= 2; dx++) {
+        for (let dy = -2; dy <= 2; dy++) {
+          if (!dx && !dy) continue;
+          if (bossFreeCell(pcx + dx, pcy + dy)) spots.push({ x: pcx + dx, y: pcy + dy });
+        }
+      }
+      burst(e.x, e.y, '#d8b98a', 26, 200);
+      if (spots.length) {
+        const s = pick(spots);
+        e.x = s.x * T + T / 2; e.y = s.y * T + T / 2;
+        burst(e.x, e.y, '#d8b98a', 26, 220);
+        Game.shake = Math.max(Game.shake || 0, .5);
+      }
+      bossRing(e, 1, .30, 'earth', .05);
+      try { AudioSys.sfx('roll'); } catch (err) {}
+      break;
+    }
+    case 'sandStorm':
+      for (let dx = -2; dx <= 2; dx++) {
+        for (let dy = -2; dy <= 2; dy++) {
+          if (Math.abs(dx) + Math.abs(dy) > 2) continue;
+          if (cellAt(pcx + dx, pcy + dy) !== 0) continue;
+          foeAoeAdd(pcx + dx, pcy + dy, .40 + (Math.abs(dx) + Math.abs(dy)) * .07, 'poison');
+          foeHazAdd(pcx + dx, pcy + dy, 3.2, 'poison');
+        }
+      }
+      try { AudioSys.sfx('gust'); } catch (err) {}
+      break;
+    case 'drag':
+      for (let i = 0; i < 2; i++) { if (!foePull(e, p)) break; }
+      if (p && p.alive && Math.abs(p.x - e.x) < T * 1.4 && Math.abs(p.y - e.y) < T * 1.4) p.dizzy = 1.0;
+      Game.shake = Math.max(Game.shake || 0, .45);
+      try { AudioSys.sfx('roll'); } catch (err) {}
+      break;
+    // ---- 3 咕嘰 ----
+    case 'iceFloor': {
+      const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      dirs.forEach(function (v, i) {
+        for (let k = 1; k <= 4; k++) {
+          const x = cx + v[0] * k, y = cy + v[1] * k;
+          if (cellAt(x, y) !== 0) break;
+          foeAoeAdd(x, y, .45 + k * .06 + i * .02, 'ice');
+          foeHazAdd(x, y, 4.5, 'ice');
+        }
+      });
+      try { AudioSys.sfx('cast'); } catch (err) {}
+      break;
+    }
+    case 'snowball': {
+      const dx = Math.abs(pcx - cx) >= Math.abs(pcy - cy);
+      foeRollerAdd(e, dx ? (pcx >= cx ? 'right' : 'left') : (pcy >= cy ? 'down' : 'up'), 'ice');
+      foeRollerAdd(e, dx ? (pcx >= cx ? 'left' : 'right') : (pcy >= cy ? 'up' : 'down'), 'ice');
+      try { AudioSys.sfx('roll'); } catch (err) {}
+      break;
+    }
+    case 'iceShell': {
+      e.hp = Math.min(e.maxHp, e.hp + 3);
+      bossRing(e, 1, .25, 'ice', .04);
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) foeHazAdd(cx + dx, cy + dy, 2.4, 'ice');
+      }
+      burst(e.x, e.y, '#8fe4ff', 30, 200);
+      try { AudioSys.sfx('heal'); } catch (err) {}
+      break;
+    }
+    // ---- 4 赫菲 ----
+    case 'lavaTide': {
+      const sx = Math.sign(pcx - cx) || 1;
+      for (let k = 1; k <= 4; k++) {
+        const x = cx + sx * k;
+        for (let dy = -2; dy <= 2; dy++) {
+          if (cellAt(x, cy + dy) !== 0) continue;
+          foeAoeAdd(x, cy + dy, .45 + k * .10, 'fire');
+          foeHazAdd(x, cy + dy, 3.6, 'fire');
+        }
+      }
+      Game.shake = Math.max(Game.shake || 0, .5);
+      try { AudioSys.sfx('land'); } catch (err) {}
+      break;
+    }
+    case 'firePillar':
+      bossLine(e, (Math.abs(pcx - cx) >= Math.abs(pcy - cy)), .45, 'fire', .055);
+      Game.shake = Math.max(Game.shake || 0, .6);
+      try { AudioSys.sfx('land'); } catch (err) {}
+      break;
+    case 'meteor': {
+      for (let i = 0; i < 7; i++) {
+        const rx = pcx + Math.floor(Math.random() * 5) - 2;
+        const ry = pcy + Math.floor(Math.random() * 5) - 2;
+        foeAoeAdd(rx, ry, .55 + i * .11, 'fire');
+      }
+      try { AudioSys.sfx('cast'); } catch (err) {}
+      break;
+    }
+    // ---- 5 BPM-9 ----
+    case 'beatBlast':
+      bossRing(e, 1, .35, 'neon', 0);
+      bossRing(e, 2, .68, 'neon', 0);
+      bossRing(e, 3, 1.00, 'neon', 0);
+      Game.shake = Math.max(Game.shake || 0, .5);
+      try { AudioSys.sfx('dash'); } catch (err) {}
+      break;
+    case 'laserSweep':
+      bossLine(e, (Math.abs(pcx - cx) >= Math.abs(pcy - cy)), .45, 'neon', .035);
+      try { AudioSys.sfx('beam'); } catch (err) {}
+      break;
+    case 'drone':
+      bossSummon(e, 2);
+      try { AudioSys.sfx('spawn'); } catch (err) {}
+      break;
+    // ---- 6 露米 ----
+    case 'lureOrbs':
+      if (foeOrbAdd(e, 'water')) foeOrbAdd(e, 'water');
+      e.hp = Math.min(e.maxHp, e.hp + 1);
+      burst(e.x, e.y, '#7fd8ff', 20, 160);
+      try { AudioSys.sfx('heal'); } catch (err) {}
+      break;
+    case 'tentacle':
+      for (let i = 0; i < 2; i++) { if (!foePull(e, p)) break; }
+      if (p && p.alive) p.dizzy = Math.max(p.dizzy || 0, .9);
+      try { AudioSys.sfx('roll'); } catch (err) {}
+      break;
+    case 'current':
+      bossPushAway(e, p, 2);
+      if (p && p.alive) {
+        const tx = Math.floor(p.x / T), ty = Math.floor(p.y / T);
+        for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) foeHazAdd(tx + dx, ty + dy, 2.2, 'water');
+      }
+      try { AudioSys.sfx('gust'); } catch (err) {}
+      break;
+    // ---- 7 疾空 ----
+    case 'tornado':
+      foeRollerAdd(e, 'left', 'wind');
+      foeRollerAdd(e, 'right', 'wind');
+      try { AudioSys.sfx('gust'); } catch (err) {}
+      break;
+    case 'dive': {
+      const offs = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+      offs.forEach(function (o, i) { foeAoeAdd(pcx + o[0], pcy + o[1], .70 + i * .05, 'wind'); });
+      try { AudioSys.sfx('dive'); } catch (err) {}
+      break;
+    }
+    case 'gustBurst':
+      bossRing(e, 1, .25, 'wind', .03);
+      bossPushAway(e, p, 1);
+      try { AudioSys.sfx('gust'); } catch (err) {}
+      break;
+    // ---- 8 黯 ----
+    case 'curseCard':
+      if (p && p.alive) {
+        applySkull(p);
+        burst(p.x, p.y, '#b46bff', 24, 180);
+      }
+      try { AudioSys.sfx('curse'); } catch (err) {}
+      break;
+    case 'shadowClones':
+      bossSummon(e, 2);
+      burst(e.x, e.y, '#b46bff', 26, 190);
+      try { AudioSys.sfx('curse'); } catch (err) {}
+      break;
+    case 'shadowRing':
+      bossRing(e, 3, .55, 'dark', .10);
+      Game.shake = Math.max(Game.shake || 0, .55);
+      try { AudioSys.sfx('curse'); } catch (err) {}
+      break;
+  }
+}
+// 回傳 true ＝ 這一幀在集氣／出招，呼叫端要停下移動與放彈
+function bossCastTick(e, dt) {
+  const T = Game.T;
+  const K = bossKitOf(Game.stage || 1);
+  if (e.castT > 0) {
+    e.castT -= dt;
+    // 集氣中被打到 → 這隻王有「可打斷」的招式（回血／召喚）會被斷
+    if (e.hitT > 0 && (e.castSkill === 'graze' || e.castSkill === 'iceShell')) {
+      e.castT = 0; e.skillCd = 2.2; e.dizzy = Math.max(e.dizzy || 0, .9);
+      burst(e.x, e.y, '#fff', 18, 200);
+      e.castSkill = '';
+      return false;
+    }
+    if (e.castT <= 0) {
+      e.castT = 0;
+      const nm = e.castSkill || '';
+      e.castSkill = '';
+      if (nm) bossFire(e, nm);
+      e.skillCd = K.cd + Math.random() * .8;
+    }
+    return true;
+  }
+  if (e.skillCd > 0) { e.skillCd -= dt; return false; }
+  if (!e.aggro) return false;
+  const p = Game.players[0];
+  if (!p || !p.alive) return false;
+  const d = Math.hypot(p.x - e.x, p.y - e.y) / T;
+  const sk = K.pick ? K.pick(e, p, d) : '';
+  if (!sk) return false;
+  e.castSkill = sk;
+  e.castT = K.wind;
+  e.castMax = K.wind;
+  e.castCol = K.col;
+  try { AudioSys.sfx('cast'); } catch (err) {}
+  burst(e.x, e.y - e.r * .3, K.col, 10, 120);
+  return true;
+}
+
 function updateBoss(e, dt) {
   const T = Game.T;
   e.hitT -= dt;
   e.bombT -= dt;
   // v1.9：BOSS 被自己的同伴／玩家丟過來的炸彈砸到也會暈一下
   if (e.dizzy > 0) { e.dizzy -= dt; return; }
+  // v5.0b：專屬招式 —— 集氣中站定不動（但仍會吃傷害，不是無敵）
+  const casting = bossCastTick(e, dt);
+  e.moving = false;
   // v4.20：BOSS 的仇恨是 3 格 —— 玩家沒進到 3 格內，牠只在自己家附近踱步，不追人也不放炸彈
   enemyAngerTick(e, dt, !!enemyAggro(e) || !!guardTaunt(e), false);
   const p = Game.players[0];
@@ -12691,6 +13081,7 @@ function updateBoss(e, dt) {
     target = best;
   }
   if (!target && !e.aggro) target = bossPatrolStep(e, cx, cy, T, dt);
+  if (casting) target = null;                     // v5.0b：集氣時站定
   if (target) {
     const sp = speed * dt;
     const tx = target.x * T + T / 2, ty = target.y * T + T / 2;
@@ -12698,6 +13089,7 @@ function updateBoss(e, dt) {
     e.x += clamp(dx, -sp, sp);
     e.y += clamp(dy, -sp, sp);
     e.walkT += dt;
+    e.moving = true;                              // v5.0b：給美術挑跑動幀
     if (Math.abs(dx) > Math.abs(dy)) e.dirName = dx > 0 ? 'right' : 'left';
     else e.dirName = dy > 0 ? 'down' : 'up';
   }
@@ -12705,7 +13097,7 @@ function updateBoss(e, dt) {
   // ---- 3. 放炸彈＋丟炸彈（彈量多、火力長） ----
   const bossBombs = Game.bombs.filter(function (b) { return !b.owner; }).length;
   const power = BOSS_POWER;                       // v2.2：BOSS 火焰統一 2 格
-  if (e.aggro && e.bombT <= 0 && bossBombs < (rage ? 6 : 4)) {
+  if (!casting && e.aggro && e.bombT <= 0 && bossBombs < (rage ? 6 : 4)) {
     e.bombT = rage ? .75 : 1.35;
     const pcx = p && p.alive ? Math.floor(p.x / T) : cx;
     const pcy = p && p.alive ? Math.floor(p.y / T) : cy;
@@ -14523,18 +14915,13 @@ function humanMoveDirs(p, dirs, dt) {
 //   v5.0：方向衝刺／翻滾
 //   · 瞬間移動 1.5 格（0.16 秒跑完，速度 = 9.4 格/秒），不穿牆、不穿軟磚
 //   · 冷卻 1.2 秒；期間 0.18 秒霸體（借用 slamGuard，不會像 invuln 那樣閃白）
-//   · 觸發：Shift／手把 RB／手機 💨／同方向連點兩下
+//   · 觸發：只認專用鍵 —— Shift／手把 RB／手機 💨（不再用「連點方向」判定）
 //   ══════════════════════════════════════════════════════════════════ */
 const DASH_CD = 1.2, DASH_T = .16, DASH_IFRAME = .18, DASH_TILES = 1.5;
 function dashWanted(p, dirs) {
+  // v5.0b：衝刺「只認專用鍵」—— 以前多做了「同方向連點兩下」，結果正常走路快一點
+  //   就會被判定成連點 → 玩家沒按衝刺鍵也在衝。拿掉之後走位完全可預期。
   try { if (p.scheme && p.scheme.dash && p.scheme.dash()) return true; } catch (e) {}
-  // 連點同方向（0.28 秒內）也當衝刺 —— 手機搖桿快速撥一下就出來
-  if (dirs && dirs.length) {
-    const d = dirs[0];
-    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now()) / 1000;
-    if (p.tapDir === d && (now - (p.tapAt || 0)) < .28) { p.tapDir = ''; p.tapAt = 0; return true; }
-    if (p.tapDir !== d) { p.tapDir = d; p.tapAt = now; }
-  }
   return false;
 }
 function startDash(p, dirs) {
@@ -20821,6 +21208,9 @@ function drawFoeCastGround(T) {
   for (let i = 0; i < list.length; i++) {
     const e = list[i];
     if (!(e.castT > 0) || e.skill === 'blink') continue;   // v4.61：鑽地的沒有落點準心
+    // v5.0b：BOSS 用 castT 當「集氣條」但沒有 castX/castY → tx/ty 會變 NaN，
+    //   畫出一支飄在身上的白十字＋暖色光暈。王有自己的地面光環，這裡整隻跳過。
+    if (e.boss || e.castX == null || e.castY == null) continue;
     const k = 1 - e.castT / FOE_CAST_WINDUP;          // 0 → 1
     const col = BOLT_COLOR[e.fx] || '#ffb347';
     const tx = e.castX * T + T / 2, ty = e.castY * T + T / 2 + T * .10;
@@ -20881,6 +21271,9 @@ function drawFoeCastFx(T) {
   for (let i = 0; i < list.length; i++) {
     const e = list[i];
     if (!(e.castT > 0)) continue;
+    // v5.0b：BOSS 也用 castT 集氣，但沒有 fx → 會退回橘色，在頭頂炸出一顆
+    //   白星芒＋大暖光暈，看起來像雜訊。王自己會畫「地面光環＋全身脈動」，這裡跳過。
+    if (e.boss) continue;
     const k = 1 - e.castT / FOE_CAST_WINDUP;
     const col = BOLT_COLOR[e.fx] || '#ffb347';
     const R = (e.r || T * .32) * (.95 + k * .42);        // 光球半徑（越來越大；不蓋住整隻怪）
@@ -20935,7 +21328,10 @@ function bossArtKey() {
 function drawBossSprite(e, x, footY, H, flash) {
   const key = bossArtKey();
   if (typeof BossArt === 'undefined' || !BossArt.has(key)) return false;
-  const M = BOSS_ART[key], im = BossArt.get(key);
+  const M = BOSS_ART[key];
+  // v5.0b：依狀態挑幀（出招 > 跑動 > 站立）
+  const fi = (e.castT > 0) ? 3 : (e.moving ? ((Math.floor((e.walkT || 0) * 7) % 2) ? 2 : 1) : 0);
+  const im = BossArt.get(key, fi);
   const img = flash ? (BossArt.whiteOf(key) || im) : im;
   if (!img) return false;
   const W = H * (M.asp || 1);
@@ -20981,6 +21377,26 @@ function drawEnemy(e, T) {
     const BH = e.r * 4.9 * BS * AK;
     const bFoot = y + e.r * 1.45 * (BS > 1 ? 1.08 : 1) * AK;
     const dir = DIRS[e.dirName] ? e.dirName : (e.vx < 0 ? 'left' : e.vx > 0 ? 'right' : 'down');
+    // v5.0b：集氣徵兆 —— 腳下一圈往內收的光環（顏色＝這隻王的屬性色）
+    if (e.castT > 0) {
+      const ck = 1 - e.castT / (e.castMax || .9);
+      const col = e.castCol || '#fff';
+      ctx.save();
+      ctx.globalAlpha = .30 + .50 * ck;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = Math.max(2, T * .075);
+      const rr = e.r * (2.0 - ck * .75) * AK;
+      ctx.beginPath();
+      ctx.ellipse(x, y + e.r * 1.05 * AK, rr, rr * .40, 0, 0, 6.283);
+      ctx.stroke();
+      ctx.globalAlpha = .18 + .22 * ck;
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.ellipse(x, y + e.r * 1.05 * AK, rr * .92, rr * .36, 0, 0, 6.283);
+      ctx.fill();
+      ctx.restore();
+      ctx.lineWidth = 1;
+    }
     const drewBoss = drawBossSprite(e, x, bFoot, BH, flash);
     const rig = drewBoss ? true : drawRigChar(ctx, 'boss', x, bFoot, BH, {
       walk: (e.walkT || 0) * 9, moving: true, facing: dir,
@@ -21014,7 +21430,7 @@ function drawEnemy(e, T) {
     }
     // 血條（跟著老虎的高度走）
     //   v4.76：大逃殺的 BOSS 美術上下留白比較多 → 血條用身體高度算會飄在半空中，另外給一組係數
-    const barY = e.brBoss ? (y - BH * .60 - 8) : (y - BH * .92 - 10);
+    const barY = e.brBoss ? (y - BH * .60 - 8) : (bFoot - BH - Game.T * .10);
     const bw = Math.max(52, Game.T * (e.brBoss ? 1.55 : 1.15));   // v1.8：BOSS 變大 → 血條也加寬
     ctx.fillStyle = 'rgba(0,0,0,.5)';
     ctx.fillRect(x - bw / 2, barY, bw, 7);
@@ -21030,7 +21446,27 @@ function drawEnemy(e, T) {
       ctx.fillStyle = '#ffd9f2';
       ctx.fillText(lab, x, barY - Game.T * .24);
       ctx.lineWidth = 1;
-    } else ctx.fillText('👑', x, barY - Game.T * .22);
+    } else {
+      // v5.0b：血條上方直接寫「這隻王叫什麼」—— 八隻各有名字與性格
+      const bi = (typeof blockOf === 'function') ? blockOf(Game.stage || 1) : 1;
+      const nk = 'boss.' + bi;
+      const nm = (typeof t === 'function') ? t(nk) : '';
+      if (nm && nm !== nk) {
+        ctx.font = '900 ' + Math.round(Game.T * .26) + 'px "Microsoft JhengHei", sans-serif';
+        ctx.lineWidth = Math.max(2, Game.T * .07); ctx.strokeStyle = 'rgba(16,10,24,.9)';
+        ctx.strokeText(nm, x, barY - Game.T * .26);
+        ctx.fillStyle = (bossKitOf(Game.stage) || {}).col || '#ffd9f2';
+        ctx.fillText(nm, x, barY - Game.T * .26);
+        ctx.lineWidth = 1;
+      }
+      // 集氣時頭上給一個圖示：💥＝要閃、⚡＝可以打斷
+      if (e.castT > 0) {
+        const interruptible = (e.castSkill === 'graze' || e.castSkill === 'iceShell');
+        ctx.font = '700 ' + Math.round(Game.T * .34) + 'px sans-serif';
+        const bob2 = Math.sin(Game.gameT * 12) * Game.T * .04;
+        ctx.fillText(interruptible ? '⚡' : '💥', x + bw * .78, barY - Game.T * .30 + bob2);
+      }
+    }
     ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
     if (e.dizzy > 0) drawDizzyMark(x, barY - Game.T * .46, T);   // v1.9：BOSS 也會暈
     // v4.19：BOSS 被惹到也會冒出生氣泡泡（在血條右上方，不會壓到血條）
@@ -21608,15 +22044,25 @@ function drawFoeArchetype(sp, x, y, R, col, dk, flash, kit) {
 //   · M.dir = 原圖朝哪邊；side = 想去的方向 × dir → 往左走就整隻左右翻。
 //   · 圖還沒載入（has 為 false）→ 呼叫端自動退回原本的手繪，不會開天窗。
 // ====
+// v5.0b：八位 BOSS 各自四幀（0 站立、1/2 跑動、3 出招）
+//   bodyRatio ＝ 角色本體高 / 畫布高（生圖有留邊，畫的時候要除回去）
 const BOSS_ART = {
-  b1: { asp: 0.8882, u: "spr/boss-art-b1.webp" },
-  b2: { asp: 0.8797, u: "spr/boss-art-b2.webp" },
-  b3: { asp: 0.9499, u: "spr/boss-art-b3.webp" },
-  b4: { asp: 0.8917, u: "spr/boss-art-b4.webp" },
-  b5: { asp: 0.8626, u: "spr/boss-art-b5.webp" },
-  b6: { asp: 0.9510, u: "spr/boss-art-b6.webp" },
-  b7: { asp: 1.0111, u: "spr/boss-art-b7.webp" },
-  b8: { asp: 0.9235, u: "spr/boss-art-b8.webp" },
+  b1: { asp: 0.9643, bodyRatio: 0.8955, u: "spr/boss-b1-idle.webp",
+        frames: [null, "spr/boss-b1-run1.webp", "spr/boss-b1-run2.webp", "spr/boss-b1-cast.webp"] },
+  b2: { asp: 0.9964, bodyRatio: 0.8961, u: "spr/boss-b2-idle.webp",
+        frames: [null, "spr/boss-b2-run1.webp", "spr/boss-b2-run2.webp", "spr/boss-b2-cast.webp"] },
+  b3: { asp: 0.9750, bodyRatio: 0.9181, u: "spr/boss-b3-idle.webp",
+        frames: [null, "spr/boss-b3-run1.webp", "spr/boss-b3-run2.webp", "spr/boss-b3-cast.webp"] },
+  b4: { asp: 1.1607, bodyRatio: 0.9140, u: "spr/boss-b4-idle.webp",
+        frames: [null, "spr/boss-b4-run1.webp", "spr/boss-b4-run2.webp", "spr/boss-b4-cast.webp"] },
+  b5: { asp: 0.9929, bodyRatio: 0.9118, u: "spr/boss-b5-idle.webp",
+        frames: [null, "spr/boss-b5-run1.webp", "spr/boss-b5-run2.webp", "spr/boss-b5-cast.webp"] },
+  b6: { asp: 0.9821, bodyRatio: 0.9015, u: "spr/boss-b6-idle.webp",
+        frames: [null, "spr/boss-b6-run1.webp", "spr/boss-b6-run2.webp", "spr/boss-b6-cast.webp"] },
+  b7: { asp: 1.1214, bodyRatio: 0.8680, u: "spr/boss-b7-idle.webp",
+        frames: [null, "spr/boss-b7-run1.webp", "spr/boss-b7-run2.webp", "spr/boss-b7-cast.webp"] },
+  b8: { asp: 0.9071, bodyRatio: 0.9354, u: "spr/boss-b8-idle.webp",
+        frames: [null, "spr/boss-b8-run1.webp", "spr/boss-b8-run2.webp", "spr/boss-b8-cast.webp"] }
 };
 
 const ITEM_ART = {
@@ -21907,16 +22353,38 @@ const BossArt = (function () {
       }
       function load() {
         if (typeof Image === 'undefined' || typeof BOSS_ART === 'undefined') return;
-        Object.keys(BOSS_ART).forEach(function (k) {
+        function one(key, src, isMain) {
           const im = new Image();
-          im.onload = function () { ready[k] = true; const w = makeWhite(im); if (w) whites[k] = w; };
-          im.onerror = function () { ready[k] = false; };
-          try { im.src = BOSS_ART[k].u; } catch (e) {}
-          imgs[k] = im;
+          im.onload = function () {
+            if (isMain) ready[key] = true;
+            else ready[key] = ready[key] || true;
+            const w = makeWhite(im);
+            if (w) whites[key] = w;
+          };
+          im.onerror = function () { if (isMain) ready[key] = false; };
+          try { im.src = src; } catch (e) {}
+          imgs[key] = im;
+        }
+        Object.keys(BOSS_ART).forEach(function (k) {
+          const M = BOSS_ART[k];
+          one(k, M.u, true);
+          // v5.0b：多幀（跑動／出招），key 用「b1#1」這種寫法
+          (M.frames || []).forEach(function (src, i) {
+            if (!src) return;
+            one(k + '#' + i, src, false);
+          });
         });
       }
       function has(k) { return !!(BOSS_ART && BOSS_ART[k] && ready[k] && imgs[k] && imgs[k].naturalWidth); }
-      function get(k) { return has(k) ? imgs[k] : null; }
+      function get(k, fi) {
+        // 有指定幀且載好就用那一幀，否則退回站立圖
+        if (fi) {
+          const fk = k + '#' + fi;
+          const im = imgs[fk];
+          if (im && im.naturalWidth) return im;
+        }
+        return has(k) ? imgs[k] : null;
+      }
       function whiteOf(k) { return has(k) ? whites[k] : null; }
       function readyCount() { return Object.keys(ready).filter(function (k) { return ready[k]; }).length; }
       return { load: load, has: has, get: get, whiteOf: whiteOf, readyCount: readyCount, imgs: imgs };
@@ -23421,7 +23889,8 @@ const Sprites = (function () {
 // 圖片還沒載入 → 回傳 null，呼叫端改用原本的程式繪圖（drawCharBody）
 //   所以躲炸彈的難度不變，只是畫面上人小一號、小怪看起來更有魄力。
 const HERO_ART_SCALE = .81;
-const HERO_SIZE_K = { pig: .95, frog: .95, chick: .95 };
+// v5.0b：青蛙再縮 5%（.95 → .90），玩家覺得牠原本偏大、擋視線
+const HERO_SIZE_K = { pig: .95, frog: .90, chick: .95 };
 function heroSizeK(animal) { return HERO_SIZE_K[animal] || 1; }
 function drawSpriteChar(g, c, x, y, R, a) {
   // 先用「部位骨架」畫（頭／手／腳各自動）；沒有部位圖才退回整張圖
@@ -27762,7 +28231,15 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.0', date: '2026-11-05', now: true, items: [
+  { v: '5.1', date: '2026-11-05', now: true, items: [
+    '👹 <b>八位關卡王全部換上專屬美術</b>：牧草巨獸・骸骨沙蟲・霜牙雪怪・熔核魔像・爆音機兵・深潮海妖・疾風鷹王・業火魔君，每隻都有<b>站立・跑動 2 幀・出招</b>共四幀，跟小怪同一套厚塗質感',
+    '⚔️ <b>每隻王三種專屬大招（共 24 招）</b>：羊毛震波／骸骨拖拽／冰封地板／火柱／節拍爆音／觸手／俯衝／影分身…，依距離與血量換招。出手前會先亮<b>屬性色光環</b>集氣，集氣時<b>站定不動、可以打斷</b>',
+    '🐺 <b>隨從體型校正</b>：武士狼、爆彈猴現在<b>和主角一樣高</b>，盾犀高 20% —— 以前隨從明顯小一號',
+    '💨 <b>衝刺只認衝刺鍵</b>：修掉「正常走路稍快就被判定成連點方向、自己往前衝」的誤觸，走位回到可預期',
+    '🐸 青蛙主角再縮 5%，和其他主角的頭身比更一致',
+    '💚 <b>治療隨從「過程中」就有特效</b>：上升的綠色粒子＋地面呼吸光環，救援進度越快越亮；救完之後光環還會留一小段'
+  ] },
+  { v: '5.0', date: '2026-11-05', now: false, items: [
     '🗺️ <b>首頁大改版</b>：單人闖關與 RPG 合成「冒險模式」一顆按鈕，點進去再選；<b>商店直接搬上首頁</b>，不用再點「更多」',
     '💨 <b>全新「方向衝刺／翻滾」</b>：瞬移 1.5 格、冷卻 1.2 秒、0.18 秒無敵但不穿牆。鍵盤 <b>Shift</b>、手把 <b>RB</b>、手機多一顆 <b>💨</b>，也能同方向連點兩下',
     '👾 <b>八大關卡小怪招式全面重做</b>：48 隻小怪現在有 <b>21 種互不重複</b>的行為。第 1 關招式單純、第 2 關開始有壓力、第 4 關起花樣變多，<b>第 5 關以後全部換成新招</b>',
@@ -32186,6 +32663,11 @@ window.__BH = {
   HERO_SIZE_K: HERO_SIZE_K, heroSizeK: heroSizeK, flameCovers: flameCovers, DINO_FIRE_RANGE: DINO_FIRE_RANGE,
   BOSS_ART: (typeof BOSS_ART !== 'undefined' ? BOSS_ART : null), BossArt: (typeof BossArt !== 'undefined' ? BossArt : null),
   drawBossSprite: drawBossSprite, bossArtKey: bossArtKey,
+  // v5.0b：八位 BOSS 的招式表（測試用）
+  BOSS_KIT: (typeof BOSS_KIT !== 'undefined' ? BOSS_KIT : null), bossKitOf: bossKitOf,
+  bossFire: bossFire, bossCastTick: bossCastTick,
+  PET_ART: (typeof PET_ART !== 'undefined' ? PET_ART : null), petBodyH: petBodyH, petSizeK: petSizeK,
+  DASH_CD: DASH_CD, DASH_T: DASH_T, DASH_IFRAME: DASH_IFRAME, DASH_TILES: DASH_TILES,
   phonePortrait: phonePortrait, hasRotateHint: function () { return !!rotHintEl; },
   ITEM_POOL: ITEM_POOL, ITEMS: ITEMS, DINO_FIRE_CD: DINO_FIRE_CD, DINO_FIRE_RANGE: DINO_FIRE_RANGE,
   // v4.87：鴕鳥神獸
