@@ -2667,8 +2667,10 @@ color: #d8e2f5; box-shadow: 0 20px 60px rgba(0,0,0,.65); overflow: hidden;
 .bhheadr { margin-left: auto; display: flex; gap: 6px; }
 .bhheadr button { width: 30px; height: 30px; border-radius: 9px; border: 1.5px solid #2f3b52; background: #18202e; color: #9db0d0; font-size: 13px; cursor: pointer; }
 .bhheadr button:hover { background: #1f2a3d; }
-.bhtabs { display: flex; gap: 3px; background: #141b27; border: 1px solid #202a3b; border-radius: 11px; padding: 3px; }
-.bhtabs button { border: 0; background: transparent; color: #8ea3c6; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.bhtabs { display: flex; gap: 3px; background: #141b27; border: 1px solid #202a3b; border-radius: 11px; padding: 3px;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.bhtabs::-webkit-scrollbar { display: none; }
+.bhtabs button { flex: 0 0 auto; border: 0; background: transparent; color: #8ea3c6; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
 .bhtabs button.on { background: #2b3a55; color: #eaf2ff; box-shadow: inset 0 0 0 1px #3d5273; }
 .bhpane { display: none; flex: 1 1 auto; min-height: 0; }
 .bhpane.on { display: flex; flex-direction: column; gap: 7px; overflow: auto; }
@@ -3964,7 +3966,8 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .onprof { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
 @media (max-width: 520px) {
   .bhmodal { padding: 0; }
-  .bhpanel { width: 100%; height: 100%; max-height: 100%; border-radius: 0; border-left: 0; border-right: 0; }
+  .bhpanel { width: 100%; height: 100%; max-height: 100%; border-radius: 0; border-left: 0; border-right: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px); }   /* 底部那排分頁不要被 iPhone 的手勢條蓋住 */
   .odgrid, .onprof { grid-template-columns: 1fr; }
 }
 
@@ -3979,6 +3982,11 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .qdot { position: absolute; top: 4px; right: 6px; width: 8px; height: 8px; border-radius: 50%;
   background: #f24d3d; box-shadow: 0 0 0 2px #fff6e0; }
 .qdot-g { background: #39c46a; }
+
+/* 手機：左下角固定著 🎁 簽到鈕，這一排往右讓開，不然會被壓住 */
+@media (max-width: 520px) {
+  .quickrow { padding-left: 58px; }
+}
 
 </style>
 </head>
