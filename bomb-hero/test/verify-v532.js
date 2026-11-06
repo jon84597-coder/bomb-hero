@@ -36,11 +36,11 @@ head('1. 舊的固定水條已經移除');
 // ================================================================
 head('2. 原始碼：兩側持續往外噴');
 {
-  ok(/for \(let i = 0; i < 8; i\+\+\)/.test(src), '每一側 8 顆水珠');
+  ok(/for \(let i = 0; i < 10; i\+\+\)/.test(src), '每一側 10 顆水珠（v5.33 加密）');
   ok(/const spd = \.70 \+ \(i % 3\) \* \.34/.test(src), '每顆速度不同（0.70 / 1.04 / 1.38）→ 有層次');
-  ok(/const dx = dir \* size \* \(\.10 \+ \.30 \* ph\) \* fan/.test(src), '橫向位移往外推（依相位）');
-  ok(/const dy = size \* \(\.05 \+ \.26 \* ph \* ph\)/.test(src), '縱向是拋物線往下（不是往上飄）');
-  ok(/heroDrop\(g, x0 \+ dx, y0 \+ dy, rr \* 1\.28\)/.test(src), '水滴用淚珠形（heroDrop）畫');
+  ok(/const dx = dir \* size \* \(\.13 \+ \.38 \* ph\) \* fan/.test(src), '橫向位移往外推（依相位，v5.33 範圍加大）');
+  ok(/const dy = size \* \(\.06 \+ \.33 \* ph \* ph\)/.test(src), '縱向是拋物線往下（不是往上飄）');
+  ok(/heroDrop\(g, x0 \+ dx, y0 \+ dy, rr \* 1\.45\)/.test(src), '水滴用淚珠形（heroDrop）畫，v5.33 再放大');
   ok(/hb\.y \+ hb\.h \* \.70/.test(src), '噴射點在頭部框 70% 高（≈ 眼睛）');
   ok(/hb\.w \* \.22/.test(src), '左右噴射點用頭寬換算（各角色不會錯位）');
 }
@@ -114,7 +114,7 @@ head('7. 版本與預算');
   const sv = swv.split('.').map(Number);
   ok(sv[0] > 5 || (sv[0] === 5 && sv[1] >= 32), 'sw.js 是 v5.32.x（目前 ' + swv + '）');
   const raw = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  ok(raw.length <= 1850000, '主檔 ' + raw.length + ' 字元（預算 1,850,000）');
+  ok(raw.length <= 1900000, '主檔 ' + raw.length + ' 字元（預算 1,900,000）');
 }
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v5.32：' + pass + ' 通過 / ' + fail + ' 失敗');

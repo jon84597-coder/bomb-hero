@@ -569,6 +569,9 @@ br.hudSolo|單人混戰|单人混战|Solo chaos|ソロ乱戦|솔로 난전
 br.hurt|受到傷害 · 剩 {n} 點血|受到伤害 · 剩 {n} 点血|Hit! {n} HP left|被弾 · 残り {n}|피격 · 남은 체력 {n}
 br.out|{n} 出局 · 剩 {a} 人|{n} 出局 · 剩 {a} 人|{n} is out · {a} left|{n} が脱落 · 残り {a} 人|{n} 탈락 · {a} 명 남음
 br.outMate|隊友 {n} 出局 · 剩 {a} 人|队友 {n} 出局 · 剩 {a} 人|Teammate {n} is out · {a} left|味方 {n} が脱落 · 残り {a} 人|팀원 {n} 탈락 · {a} 명 남음
+nuke.warn|☢️ 核彈來襲！{n} 秒後落在紅圈位置|☢️ 核弹来袭！{n} 秒后落在红圈位置|☢️ Nuke incoming! Impact in {n}s at the red circle|☢️ 核ミサイル接近！{n} 秒後に赤い円へ着弾|☢️ 핵탄두 접근! {n}초 뒤 붉은 원에 낙하
+nuke.hurt|☢️ 核彈命中 · 剩 {n} 點血|☢️ 核弹命中 · 剩 {n} 点血|☢️ Nuke hit! {n} HP left|☢️ 核ミサイル命中 · 残り {n}|☢️ 핵타격 명중 · 남은 체력 {n}
+nuke.burn|🔥 烈焰灼燒 · 剩 {n} 點血|🔥 烈焰灼烧 · 剩 {n} 点血|🔥 Burning! {n} HP left|🔥 炎上 · 残り {n}|🔥 화염 · 남은 체력 {n}
 br.zone|毒圈收縮 · 半徑 {n} 格|毒圈收缩 · 半径 {n} 格|The zone is closing · radius {n} tiles|ゾーン収縮 · 半径 {n} マス|자기장 축소 · 반경 {n} 칸
 br.hudTeams|{a} / {b} 隊|{a} / {b} 队|{a} / {b} teams|{a} / {b} チーム|{a} / {b} 팀
 br.final|終局|终局|Final zone|最終局面|종국

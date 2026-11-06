@@ -42,7 +42,7 @@ ok(P.VERSION_LOG[0].items.length >= 4, '5.23 至少 4 條更新（' + P.VERSION_
   const pk = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8'));
   ok(Number(pk.version.split('.')[1]) >= 23, 'package.json = ' + pk.version);
 }
-ok(html.length < 1840000, '主檔 ' + html.length + ' 字元（預算 1,840,000）');
+ok(html.length < 1900000, '主檔 ' + html.length + ' 字元（預算 1,900,000）');
 ok((html.match(/\r/g) || []).length === 0, '整檔 LF（0 個 \\r）');
 
 /* ================================================================ ① */

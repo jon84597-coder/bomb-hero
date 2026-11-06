@@ -56,7 +56,7 @@ ok(P.VERSION_LOG[0].items.length >= 4, '5.25 至少 4 條更新（' + P.VERSION_
   ok(n >= 25, rel + ' SW_VERSION = ' + v);
 });
 ok((html.match(/\r/g) || []).length === 0, '整檔 LF（0 個 \\r）');
-ok(html.length < 1840000, '主檔 ' + html.length + ' 字元（預算 1,840,000）');
+ok(html.length < 1900000, '主檔 ' + html.length + ' 字元（預算 1,900,000）');
 
 /* ================================================================ ① */
 head('① v5.24 那條路線整個拿掉（一段都不能留）');

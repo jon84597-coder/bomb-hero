@@ -4666,7 +4666,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.32</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.33</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4721,7 +4721,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.32</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.33</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5706,7 +5706,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.32';
+const VERSION = '5.33';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6646,6 +6646,54 @@ const AudioSys = (function () {
       case 'throw': tone(400, .14, 'square', .13, 780); break;
       case 'pick': tone(600, .08, 'square', .13, 900); break;
       case 'explode': boom(.5, .55); tone(90, .3, 'sawtooth', .25, 40); break;
+      // v5.33：核彈三連音 —— 警報（5 秒、最後 1 秒慢慢消音）／下墜／落地
+      case 'nukeAlarm': {
+        if (!ensure()) break;
+        const t0 = ctx.currentTime;
+        const o = ctx.createOscillator(), gn = ctx.createGain();
+        o.type = 'square';
+        for (let i = 0; i < 4; i++) {
+          const b0 = t0 + i * 1.25;
+          o.frequency.setValueAtTime(430, b0);
+          o.frequency.linearRampToValueAtTime(690, b0 + .58);
+          o.frequency.linearRampToValueAtTime(430, b0 + 1.20);
+        }
+        gn.gain.setValueAtTime(.0001, t0);
+        gn.gain.linearRampToValueAtTime(.16, t0 + .30);
+        gn.gain.setValueAtTime(.16, t0 + 3.70);
+        gn.gain.linearRampToValueAtTime(.0001, t0 + 5.00);   // 最後一秒慢慢消音
+        o.connect(gn); gn.connect(sfxGain);
+        o.start(t0); o.stop(t0 + 5.05);
+        break;
+      }
+      case 'nukeFall': {
+        if (!ensure()) break;
+        const t0 = ctx.currentTime, dur = 2.0;
+        const nn = Math.floor(ctx.sampleRate * dur);
+        const buf = ctx.createBuffer(1, nn, ctx.sampleRate);
+        const d0 = buf.getChannelData(0);
+        for (let i = 0; i < nn; i++) d0[i] = (Math.random() * 2 - 1) * (.25 + .75 * (i / nn));
+        const src = ctx.createBufferSource(); src.buffer = buf;
+        const f2 = ctx.createBiquadFilter(); f2.type = 'bandpass'; f2.Q.value = 1.1;
+        f2.frequency.setValueAtTime(2400, t0);
+        f2.frequency.exponentialRampToValueAtTime(260, t0 + dur);
+        const gn = ctx.createGain();
+        gn.gain.setValueAtTime(.05, t0);
+        gn.gain.linearRampToValueAtTime(.26, t0 + dur * .85);
+        gn.gain.linearRampToValueAtTime(.001, t0 + dur);
+        src.connect(f2); f2.connect(gn); gn.connect(sfxGain);
+        src.start(t0);
+        tone(1500, dur, 'sawtooth', .06, 170);
+        break;
+      }
+      case 'nukeBoom':
+        boom(1.9, .95);
+        boom(.7, .75, .10);
+        boom(.35, .55, .26);
+        tone(52, 1.5, 'sine', .55, 22);
+        tone(150, .8, 'sawtooth', .22, 34, .02);
+        tone(2200, .5, 'sawtooth', .08, 220);
+        break;
       case 'item': tone(660, .09, 'square', .16); tone(880, .12, 'square', .16, null, .07); break;
       case 'hurt': tone(200, .22, 'sawtooth', .2, 70); break;
       case 'die': // 死亡叫聲：拔高→長哀號下滑（音量加大，不被爆炸蓋過）
@@ -9068,6 +9116,9 @@ function resetMapCellState() {
   Game.artK = 1;               // 大逃殺（T≈30 大圖）會縮怪物比例，別帶到別的模式
   BR_AI.on = false;            // 大逃殺 AI 的節奏（交戰距離／放彈頻率）也不要帶進單人／RPG
   Game.flyZ = null;            // v5.4：飛行怪的可飛範圍（外牆以內）跟著地圖走，換圖一定要丟
+  Game.brNuke = null;        // v5.33：核彈／燒地也是「跟著地圖」的狀態
+  Game.brBurn = [];
+  Game.brNukeCd = 0;
   Game.mapSeq = (Game.mapSeq | 0) + 1;   // 地板烘焙快取／小地圖底圖一起換
   //   牆與落石都烘在地板分塊裡 → 分類一變，快取一定要丟（否則剛落的石頭不會畫出來）
   if (typeof floorChunkDirty === 'function') floorChunkDirty(null);
@@ -9845,12 +9896,13 @@ function explodeBomb(b) {
   Game.shake = Math.min(1, Game.shake + .55);
   AudioSys.sfx('explode');
   // BOSS 的彈（owner 為 null）噴紫色火花，跟玩家的橘色火花區別
-  burst(cx * T + T / 2, cy * T + T / 2, b.owner ? '#ffb347' : '#c471ff', 16, 200);
+  burst(cx * T + T / 2, cy * T + T / 2, bombIsAlly(b) ? '#8fd0ff' : (b.owner ? '#ffb347' : '#c471ff'), 16, 200);
 }
 // v1.9：src 用來區分火是「炸彈炸的」還是「坐騎吐的」
 //       自己的坐騎火焰（src==='dino'）不會傷到自己，只會燒到別人
 function addFlame(cx, cy, type, dir, owner, src) {
-  Game.flames.push({ cx: cx, cy: cy, type: type, dir: dir, t: .46, owner: owner || null, src: src || null });
+  Game.flames.push({ cx: cx, cy: cy, type: type, dir: dir, t: .46, owner: owner || null, src: src || null,
+    ally: isAllyOwner(owner || null) });      // v5.33：自己人的火是藍色的
   // v4.16：火焰會把樹叢／破屋燒掉（躲點是消耗品，炸過就沒了）
   const hzF = (Game.hazards && Game.hazards[cy]) ? Game.hazards[cy][cx] : null;
   if (hzF && hzF.type === 'hide') {
@@ -17165,6 +17217,8 @@ const BR = {
   // v4.76：兩隻「亂入 BOSS」——從 32 關裡隨機抽兩關的 BOSS 丟進場，沒有地盤、全場亂走
   BOSS_N: 2, BOSS_HP: 20, BOSS_AGGRO: 4, BOSS_HIT: 2,
   HP: 10,              // 每人 10 點血（HUD／隊友血條都吃這個）
+  // v5.33：核彈 —— 每 45 秒一顆、通報 5 秒、半徑 5 格、直擊 6 格血、燒地 10 秒
+  NUKE: 45, NUKE_WARN: 5,
   FREE: true,          // v4.74：正式測試結束前不扣門票
   ART_K: .84,          // v4.74：大圖（T≈30）怪物畫得偏大 → 美術半徑與判定一起縮一級
   // v4.75：開局選項（入口卡）—— 人數／組隊人數／場長
@@ -17946,6 +18000,7 @@ function startBR() {
   Game.enemies = [];
   Game.bombs = []; Game.flames = []; Game.items = []; Game.particles = [];
   Game.bolts = []; Game.pops = []; Game.edgeFx = 0; Game.pets = [];
+  Game.brNuke = null; Game.brBurn = []; Game.brNukeCd = BR.NUKE;   // v5.33：核彈計時
   Game.foeAoe = []; Game.foeHaz = []; Game.rollers = []; Game.orbs = [];   // v5.0
   Game.foeCap = BR.FOES + 8;
   Game.timer = Infinity;
@@ -18003,6 +18058,520 @@ function drawBRZone(T) {
   ctx.lineWidth = Math.max(2, T * .12);
   ctx.stroke();
   ctx.lineWidth = 1;
+  ctx.restore();
+}
+
+// ====
+//   v5.33：大逃殺「核彈」
+//   · 每 45 秒一顆：先通報 5 秒（警報音，最後 1 秒慢慢消音）
+//   · 大地圖（地面紅圈＋光柱＋倒數）與小地圖（紅圈）同時標出轟炸範圍
+//   · 通報結束 → 核彈從天而降（拖著火焰，速度 ≈ 走路），落地即爆：畫面震動＋烈焰噴發
+//   · 爆心半徑 5 格：軟牆全毀、範圍內玩家扣 6 格血、地面持續燃燒 10 秒（每秒 -1 格）
+//   · AI 只有一部分會察覺並往外逃（敏感度刻意不高，看起來才像真人）
+// ====
+const NUKE_R = 5;                 // 爆炸／燃燒半徑（格）
+const NUKE_DMG = 6;               // 直擊傷害（格血）
+const NUKE_BURN_SEC = 10;         // 燒地持續秒數
+const NUKE_FALL_SEC = 2.0;        // 落下時間（≈ 4.5 格/秒 ≈ 走路速度）
+const NUKE_AWARE = .55;           // AI 警覺率
+
+function brNukePickSpot() {
+  const z = Game.brZone;
+  const cx0 = z ? z.cx : (Game.cols - 1) / 2, cy0 = z ? z.cy : (Game.rows - 1) / 2;
+  const rr = Math.max(3, Math.min(14, z ? z.r - 1.5 : 12));
+  for (let i = 0; i < 90; i++) {
+    const a = Math.random() * 6.2832, d = Math.sqrt(Math.random()) * rr;
+    const x = Math.round(cx0 + Math.cos(a) * d), y = Math.round(cy0 + Math.sin(a) * d);
+    if (x < 2 || y < 2 || x > Game.cols - 3 || y > Game.rows - 3) continue;
+    if (Game.brIsl && Game.brIsl[y] && Game.brIsl[y][x] < 0) continue;    // 海裡不炸
+    if (cellAt(x, y) === 1) continue;                                     // 岩壁不炸
+    return { x: x, y: y };
+  }
+  return { x: Math.round(cx0), y: Math.round(cy0) };
+}
+
+// 這一格是不是還燒著（玩家／AI 都用它判斷）
+function brBurnAt(wx, wy, T) {
+  const list = Game.brBurn;
+  if (!list || !list.length) return false;
+  const gx = wx / T, gy = wy / T;
+  for (let i = 0; i < list.length; i++) {
+    const f = list[i];
+    if (f.t <= 0) continue;
+    const dx = gx - (f.cx + .5), dy = gy - (f.cy + .5);
+    if (dx * dx + dy * dy <= NUKE_R * NUKE_R) return true;
+  }
+  return false;
+}
+function brBurnCell(x, y) { return brBurnAt(x * Game.T + Game.T / 2, y * Game.T + Game.T / 2, Game.T); }
+
+// 核彈傷害：直擊一次扣 6 格、燃燒每秒扣 1 格
+function brNukeHurt(p, dmg, burn) {
+  if (!p || !p.alive || p.cart) return;
+  if (!burn) {
+    if (p.air > 0 || p.slamGuard > 0) return;
+    if (p.dino) { try { breakDino(p); } catch (e) {} }
+  }
+  const before = p.brHp == null ? BR.HP : (p.brHp | 0);
+  const d = Math.max(1, dmg | 0);
+  p.brHp = Math.max(0, before - d);
+  const T = Game.T;
+  try { dmgPop(p.x, p.y - T * .35, d, { crit: !burn, color: burn ? '#ff9a4a' : '#ff5a5a' }); } catch (e) {}
+  try { burst(p.x, p.y, burn ? '#ff9a4a' : '#ffd08a', burn ? 6 : 18, burn ? 110 : 220); } catch (e) {}
+  if (isMyPlayer(p)) {
+    Game.shake = Math.min(1.6, (Game.shake || 0) + (burn ? .12 : .55));
+    try { AudioSys.sfx(burn ? 'hurt' : 'explode'); } catch (e) {}
+    try { brTip(burn ? '🔥' : '☢️', t(burn ? 'nuke.burn' : 'nuke.hurt', { n: p.brHp }), 'bad', burn ? 1.1 : 2.2); } catch (e) {}
+  }
+  if (p.brHp <= 0) { p.invuln = 0; try { killBattlePlayer(p, null); } catch (e) {} }
+}
+
+// 爆心半徑 R 內的軟牆全部掀掉（含底下的門／恐龍蛋／道具，不會白白吞掉）
+function brNukeClearSoft(cx, cy, R) {
+  const r = Math.ceil(R);
+  let n = 0;
+  for (let y = cy - r; y <= cy + r; y++) {
+    for (let x = cx - r; x <= cx + r; x++) {
+      if (x < 1 || y < 1 || x > Game.cols - 2 || y > Game.rows - 2) continue;
+      const dx = x - cx, dy = y - cy;
+      if (dx * dx + dy * dy > R * R) continue;
+      if (cellAt(x, y) !== 2) continue;
+      Game.grid[y][x] = 0;
+      if (typeof floorChunkDirty === 'function') floorChunkDirty(x, y);
+      const h = Game.hidden ? Game.hidden[y + ',' + x] : null;
+      if (h) {
+        delete Game.hidden[y + ',' + x];
+        if (h === 'door') {
+          if (Game.door) { Game.door.revealed = true; Game.door.x = x; Game.door.y = y; }
+        } else if (typeof EGG_HIDDEN !== 'undefined' && h === EGG_HIDDEN) {
+          try { revealEgg(x, y); } catch (e) {}
+        } else {
+          try { spawnItem(x, y, h); } catch (e) {}
+        }
+      }
+      n++;
+    }
+  }
+  if (n && typeof markWallKinds === 'function') markWallKinds();
+  return n;
+}
+
+function brNukeLaunch() {
+  const s = brNukePickSpot();
+  Game.brNuke = { cx: s.x, cy: s.y, phase: 'warn', t: BR.NUKE_WARN, fall: 0, dur: 0 };
+  Game.brNukeCd = BR.NUKE;
+  // 只有一部分 AI 聽到警報（使用者要求：有的知道要跑、有的不知道）
+  Game.players.forEach(function (p) { if (p.ai) p.nukeAware = Math.random() < NUKE_AWARE; });
+  try { AudioSys.sfx('nukeAlarm'); } catch (e) {}
+  try { brTip('☢️', t('nuke.warn', { n: Math.round(BR.NUKE_WARN) }), 'bad', 3.0); } catch (e) {}
+}
+
+function brNukeImpact(n) {
+  const T = Game.T;
+  const cx = n.cx, cy = n.cy;
+  const px = (cx + .5) * T, py = (cy + .5) * T;
+  n.phase = 'done'; n.dur = 1.45; n.t = 1.45;
+  // ① 軟牆全毀
+  brNukeClearSoft(cx, cy, NUKE_R + .35);
+  // ② 地面開始燒（火焰舌在生成時就決定位置／相位 → 每幀不用重算亂數）
+  const tongues = [];
+  for (let i = 0; i < 58; i++) {
+    const a = Math.random() * 6.2832, d = Math.sqrt(Math.random()) * (NUKE_R - .35);
+    tongues.push({ ox: Math.cos(a) * d, oy: Math.sin(a) * d, ph: Math.random() * 6.283, sc: .55 + Math.random() * .85 });
+  }
+  Game.brBurn.push({ cx: cx, cy: cy, t: NUKE_BURN_SEC, tongues: tongues });
+  // ③ 直擊傷害
+  Game.players.forEach(function (p) {
+    if (!p.alive) return;
+    const dx = p.x / T - (cx + .5), dy = p.y / T - (cy + .5);
+    if (dx * dx + dy * dy <= (NUKE_R + .4) * (NUKE_R + .4)) brNukeHurt(p, NUKE_DMG, false);
+  });
+  // ④ 畫面：劇烈震動＋白閃＋三圈衝擊波＋碎石
+  Game.shake = Math.min(1.6, (Game.shake || 0) + 1.25);
+  Game.flash = Math.max(Game.flash || 0, .85);
+  if (!Game.rings) Game.rings = [];
+  for (let i = 0; i < 3; i++) Game.rings.push({ x: px, y: py, r: T * (5 + i * 4.5), dur: 1.0 + i * .35, born: (Game.gameT || 0) + i * .07, kind: 'core' });
+  for (let i = 0; i < 46; i++) {
+    const a = Math.random() * 6.2832, sp = 120 + Math.random() * 340;
+    Game.particles.push({
+      x: px, y: py, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * .6,
+      r: 1.6 + Math.random() * 3.2, t: .5 + Math.random() * .9,
+      color: ['#ffd27a', '#ff8a3d', '#fff2c8', '#8b5a2b'][i % 4]
+    });
+  }
+  try { burst(px, py, '#ffb347', 40, 340); } catch (e) {}
+  try { AudioSys.sfx('nukeBoom'); } catch (e) {}
+}
+
+function updateBRNuke(dt) {
+  // 燒地：每 1 秒扣 1 格（不分敵我、不看無敵）
+  if (Game.brBurn && Game.brBurn.length) {
+    for (let i = Game.brBurn.length - 1; i >= 0; i--) {
+      Game.brBurn[i].t -= dt;
+      if (Game.brBurn[i].t <= 0) Game.brBurn.splice(i, 1);
+    }
+    if (Game.brBurn.length) {
+      const T = Game.T;
+      for (let i = 0; i < Game.players.length; i++) {
+        const p = Game.players[i];
+        if (!p.alive) { p.burnAcc = 0; continue; }
+        if (!brBurnAt(p.x, p.y, T)) { p.burnAcc = 0; continue; }
+        p.burnAcc = (p.burnAcc || 0) + dt;
+        if (p.burnAcc >= 1) { p.burnAcc -= 1; brNukeHurt(p, 1, true); }
+      }
+    }
+  }
+  if (!Game.brNuke) {
+    Game.brNukeCd = (Game.brNukeCd == null ? BR.NUKE : Game.brNukeCd) - dt;
+    if (Game.brNukeCd <= 0) brNukeLaunch();
+    return;
+  }
+  const n = Game.brNuke;
+  if (n.phase === 'warn') {
+    n.t -= dt;
+    if (n.t <= 0) {
+      n.phase = 'fall'; n.t = NUKE_FALL_SEC; n.fall = 0;
+      try { AudioSys.sfx('nukeFall'); } catch (e) {}
+    }
+  } else if (n.phase === 'fall') {
+    n.t -= dt;
+    n.fall = clamp(1 - n.t / NUKE_FALL_SEC, 0, 1);
+    if (n.t <= 0) brNukeImpact(n);
+  } else if (n.phase === 'done') {
+    n.t -= dt;
+    if (n.t <= 0) Game.brNuke = null;
+  }
+}
+
+// AI 逃離核彈：只有「有察覺」的那批會跑，而且只會貪心地往外走一格
+function brNukeFlee(p, dt) {
+  const n = Game.brNuke;
+  if (!n || (n.phase !== 'warn' && n.phase !== 'fall')) return false;
+  if (p.nukeAware === false) return false;
+  const T = Game.T;
+  const nx = (n.cx + .5) * T, ny = (n.cy + .5) * T;
+  const R = (NUKE_R + 1.6) * T;
+  const dx = p.x - nx, dy = p.y - ny;
+  const dd = Math.sqrt(dx * dx + dy * dy);
+  if (dd > R && !brBurnAt(p.x, p.y, T)) return false;
+  const px = Math.floor(p.x / T), py = Math.floor(p.y / T);
+  const z = Game.brZone;
+  const DN = ['up', 'down', 'left', 'right'];
+  let best = null, bv = -1e9;
+  for (let i = 0; i < 4; i++) {
+    const d = DIRS[DN[i]];
+    const gx = px + d.x, gy = py + d.y;
+    if (cellAt(gx, gy) !== 0 || bombAt(gx, gy)) continue;
+    let sc = Math.sqrt(dist2((gx + .5) * T, (gy + .5) * T, nx, ny));
+    if (brBurnCell(gx, gy)) sc -= T * 8;                        // 別一頭走進火裡
+    if (z) {
+      const zx = (gx + .5) - (z.cx + .5), zy = (gy + .5) - (z.cy + .5);
+      if (Math.sqrt(zx * zx + zy * zy) > z.r - 2.5) sc -= T * 6;   // 也別跑進毒圈
+    }
+    if (sc > bv) { bv = sc; best = DN[i]; }
+  }
+  if (!best) return false;
+  humanMoveDirs(p, [best], dt);
+  return true;
+}
+
+// 落點預告：地面紅圈／旋轉虛線／光柱／倒數；爆完畫火球與衝擊波
+function drawBRNukeGround(T) {
+  const n = Game.brNuke;
+  if (!n) return;
+  const g0 = Game.gameT || 0;
+  const cx = (n.cx + .5) * T, cy = (n.cy + .5) * T, R = NUKE_R * T;
+  if (n.phase === 'warn' || n.phase === 'fall') {
+    const pulse = .5 + .5 * Math.sin(g0 * 8);
+    const urg = n.phase === 'fall' ? 1 : clamp(1 - n.t / BR.NUKE_WARN, 0, 1);
+    const gg = ctx.createRadialGradient(cx, cy, R * .04, cx, cy, R);
+    gg.addColorStop(0, 'rgba(255,70,40,' + (.30 + .34 * urg).toFixed(3) + ')');
+    gg.addColorStop(.70, 'rgba(255,50,30,' + (.22 + .26 * urg).toFixed(3) + ')');
+    gg.addColorStop(1, 'rgba(255,40,20,.05)');
+    ctx.fillStyle = gg;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,96,70,' + (.66 + .32 * pulse).toFixed(3) + ')';
+    ctx.lineWidth = Math.max(2.5, T * .14);
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.283); ctx.stroke();
+    // 內圈：看起來像「靶心」而不是一個圓
+    ctx.strokeStyle = 'rgba(255,150,110,' + (.32 + .22 * pulse).toFixed(3) + ')';
+    ctx.lineWidth = Math.max(1, T * .05);
+    ctx.beginPath(); ctx.arc(cx, cy, R * .52, 0, 6.283); ctx.stroke();
+    if (ctx.setLineDash) {
+      ctx.setLineDash([T * .5, T * .48]);
+      ctx.lineDashOffset = -g0 * T * 1.1;
+      ctx.strokeStyle = 'rgba(255,226,150,' + (.22 + .30 * pulse).toFixed(3) + ')';
+      ctx.lineWidth = Math.max(1, T * .05);
+      ctx.beginPath(); ctx.arc(cx, cy, R * .86, 0, 6.283); ctx.stroke();
+      ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    }
+    // 十字準星：四根往中心的短線
+    ctx.strokeStyle = 'rgba(255,120,90,' + (.35 + .30 * pulse).toFixed(3) + ')';
+    ctx.lineWidth = Math.max(1, T * .045);
+    for (let i = 0; i < 4; i++) {
+      const a = i * Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * R * .34, cy + Math.sin(a) * R * .34);
+      ctx.lineTo(cx + Math.cos(a) * R * .55, cy + Math.sin(a) * R * .55);
+      ctx.stroke();
+    }
+    // 光柱（往天空指，遠處也看得到）
+    const bh = T * 7;
+    const bg2 = ctx.createLinearGradient(0, cy - bh, 0, cy);
+    bg2.addColorStop(0, 'rgba(255,90,60,0)');
+    bg2.addColorStop(1, 'rgba(255,120,70,' + (.10 + .10 * pulse).toFixed(3) + ')');
+    ctx.fillStyle = bg2;
+    ctx.fillRect(cx - T * .55, cy - bh, T * 1.1, bh);
+    // 倒數
+    if (n.phase === 'warn') {
+      ctx.save();
+      ctx.fillStyle = 'rgba(24,5,4,.46)';
+      ctx.beginPath(); ctx.arc(cx, cy, T * .88, 0, 6.283); ctx.fill();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '900 ' + Math.round(T * 1.15) + 'px "Arial Black", sans-serif';
+      ctx.lineWidth = Math.max(2, T * .1);
+      ctx.strokeStyle = 'rgba(20,4,4,.55)';
+      ctx.strokeText(String(Math.max(0, Math.ceil(n.t))), cx, cy);
+      ctx.fillStyle = 'rgba(255,236,180,' + (.75 + .25 * pulse).toFixed(3) + ')';
+      ctx.fillText(String(Math.max(0, Math.ceil(n.t))), cx, cy);
+      ctx.restore();
+    }
+  }
+  if (n.phase === 'done') {
+    const k = clamp(1 - n.t / (n.dur || 1.45), 0, 1);
+    const a = Math.pow(1 - k, 1.7);
+    const rr = R * (.34 + 1.05 * Math.sqrt(k));
+    const g2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, rr);
+    g2.addColorStop(0, 'rgba(255,255,255,' + (.86 * a).toFixed(3) + ')');
+    g2.addColorStop(.16, 'rgba(255,244,196,' + (.80 * a).toFixed(3) + ')');
+    g2.addColorStop(.42, 'rgba(255,168,60,' + (.70 * a).toFixed(3) + ')');
+    g2.addColorStop(.74, 'rgba(222,72,22,' + (.46 * a).toFixed(3) + ')');
+    g2.addColorStop(1, 'rgba(120,20,10,0)');
+    const cols = ['rgba(255,255,255,A)', 'rgba(255,246,214,A)', 'rgba(255,206,120,A)', 'rgba(255,140,50,A)', 'rgba(200,50,10,0)'];
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = g2;
+    ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.283); ctx.fill();
+    for (let i = 0; i < 14; i++) {
+      const an = i * .4488 + .31 + k * 1.2;
+      const dd = rr * (.42 + .46 * Math.abs(Math.sin(k * 2.6 + i * 1.7)));
+      drawFlameBlob(cx + Math.cos(an) * dd * .86, cy + Math.sin(an) * dd * .58,
+        rr * (.24 + .12 * Math.abs(Math.cos(i * 2.1 + k * 4))) * (1 - k * .45), cols, a * .9);
+    }
+    // 白熱核心：前 35% 再加一顆實心白心，遠處也看得到「這裡剛炸過」
+    if (k < .35) {
+      ctx.fillStyle = 'rgba(255,255,250,' + (.85 * (1 - k / .35)).toFixed(3) + ')';
+      ctx.beginPath(); ctx.arc(cx, cy, rr * .34, 0, 6.283); ctx.fill();
+    }
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255,240,210,' + (.55 * a).toFixed(3) + ')';
+    ctx.lineWidth = Math.max(2, T * .16 * (1 - k));
+    ctx.beginPath(); ctx.arc(cx, cy, R * (.6 + 1.6 * k), 0, 6.283); ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+}
+
+// 核彈本體：金屬彈體＋紅色警戒環＋尾翼，外面再包一層火焰（同一個美術風格，不用外部圖）
+function drawNukeArt(r) {
+  const L = r * 3.55, W = r * 1.06;
+  const t = Game.gameT || 0;
+  // ① 尾焰（往上噴）
+  const cols = ['rgba(255,255,255,A)', 'rgba(255,244,206,A)', 'rgba(255,200,96,A)', 'rgba(255,120,40,A)', 'rgba(210,50,10,0)'];
+  for (let i = 0; i < 5; i++) {
+    const ph = (t * 2.6 + i * .21) % 1;
+    const yy = -L * .40 - ph * L * 1.0;
+    const rr = r * (.95 - ph * .55) * (1 + .10 * Math.sin(t * 22 + i));
+    drawFlameBlob(Math.sin(t * 8 + i * 2) * r * .28, yy, rr, cols, (1 - ph) * .9);
+  }
+  // ①b 包覆火焰（後層）：沿彈體兩側往外噴，畫在彈體之前 → 只有兩側火舌露出來
+  for (let i = 0; i < 14; i++) {
+    const ph = (t * 1.55 + i * .109) % 1;
+    const side = i % 2 ? 1 : -1;
+    const yy = L * .34 - ph * L * .92;
+    const near = Math.sin(ph * Math.PI);
+    const xx = side * W * (.52 + .44 * near);
+    drawFlameBlob(xx, yy, r * (.44 + .40 * near) * (1 + .12 * Math.sin(t * 15 + i * 2.1)),
+      cols, .30 + .44 * near);
+  }
+  // ② 尾翼
+  for (let s = 0; s < 2; s++) {
+    const sg = s ? 1 : -1;
+    ctx.beginPath();
+    ctx.moveTo(sg * W * .44, -L * .34);
+    ctx.lineTo(sg * W * 1.02, -L * .40);
+    ctx.lineTo(sg * W * .98, -L * .22);
+    ctx.lineTo(sg * W * .44, -L * .08);
+    ctx.closePath();
+    ctx.fillStyle = '#3b4252';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(10,14,22,.55)';
+    ctx.lineWidth = Math.max(1, r * .07);
+    ctx.stroke();
+  }
+  // ③ 彈體（上面圓柱、下面收成彈頭）
+  const g = ctx.createLinearGradient(-W * .5, 0, W * .5, 0);
+  g.addColorStop(0, '#3d4453'); g.addColorStop(.18, '#8c97ad');
+  g.addColorStop(.42, '#eef4ff'); g.addColorStop(.62, '#b7c2d6');
+  g.addColorStop(.82, '#6b7488'); g.addColorStop(1, '#2c3240');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-W * .5, -L * .36);
+  ctx.lineTo(-W * .5, L * .18);
+  ctx.quadraticCurveTo(-W * .48, L * .44, 0, L * .58);
+  ctx.quadraticCurveTo(W * .48, L * .44, W * .5, L * .18);
+  ctx.lineTo(W * .5, -L * .36);
+  ctx.closePath();
+  ctx.fill();
+  // ④ 紅色警戒環（兩道，金屬上色）
+  for (let b = 0; b < 2; b++) {
+    const y0 = -L * (.20 - b * .19), hh = L * (b ? .06 : .09);
+    const bg = ctx.createLinearGradient(-W * .5, 0, W * .5, 0);
+    bg.addColorStop(0, '#7d1414'); bg.addColorStop(.42, '#ff6a52');
+    bg.addColorStop(.60, '#ffd0b0'); bg.addColorStop(1, '#6d1010');
+    ctx.fillStyle = bg;
+    ctx.fillRect(-W * .49, y0, W * .98, hh);
+  }
+  // ⑤ 鉚釘＋彈頭高光
+  ctx.fillStyle = 'rgba(24,28,38,.55)';
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath(); ctx.arc(-W * .30, -L * .30 + i * L * .14, Math.max(.6, r * .05), 0, 6.283); ctx.fill();
+  }
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.beginPath(); ctx.ellipse(-W * .26, L * .04, Math.max(1, W * .07), L * .16, 0, 0, 6.283); ctx.fill();
+  // ⑥ 彈頭尖端的高熱光
+  const hg = ctx.createRadialGradient(0, L * .52, 0, 0, L * .52, W * .62);
+  hg.addColorStop(0, 'rgba(255,240,200,.85)');
+  hg.addColorStop(1, 'rgba(255,120,40,0)');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.arc(0, L * .52, W * .62, 0, 6.283); ctx.fill();
+  // ⑦ 輪廓
+  ctx.strokeStyle = 'rgba(8,12,20,.45)';
+  ctx.lineWidth = Math.max(1, r * .07);
+  ctx.beginPath();
+  ctx.moveTo(-W * .5, -L * .36);
+  ctx.lineTo(-W * .5, L * .18);
+  ctx.quadraticCurveTo(-W * .48, L * .44, 0, L * .58);
+  ctx.quadraticCurveTo(W * .48, L * .44, W * .5, L * .18);
+  ctx.lineTo(W * .5, -L * .36);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  // ⑧ 前景火星：很淡地貼在彈體表面，只是給「火在燒它」的貼合感，不能遮住輪廓
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const wl = ['rgba(255,255,255,A)', 'rgba(255,238,184,A)', 'rgba(255,176,70,A)', 'rgba(238,88,22,A)', 'rgba(170,28,6,0)'];
+  for (let i = 0; i < 7; i++) {
+    const ph = (t * 2.2 + i * .19) % 1;
+    const side = i % 2 ? 1 : -1;
+    drawFlameBlob(side * W * .34, L * .26 - ph * L * .70,
+      r * (.20 + .10 * Math.sin(t * 17 + i)), wl, .10 + .12 * Math.sin(ph * Math.PI));
+  }
+  // 彈頭下緣往外噴的烈焰（下墜的空氣壓縮感）
+  for (let i = 0; i < 4; i++) {
+    const ph = (t * 3.1 + i * .25) % 1;
+    drawFlameBlob(Math.sin(t * 9 + i * 1.7) * r * .30, L * .50 + ph * L * .30,
+      r * (.86 - ph * .56), wl, (1 - ph) * .70);
+  }
+  ctx.restore();
+}
+
+// 落下中的核彈（從天空慢慢壓下來，影子在地面同步變大）
+function drawBRNukeBomb(T) {
+  const n = Game.brNuke;
+  if (!n || n.phase !== 'fall') return;
+  const k = clamp(n.fall, 0, 1);
+  const tx = (n.cx + .5) * T, ty = (n.cy + .5) * T;
+  const y = ty - (1 - k) * T * 9;
+  const sc = .58 + .42 * k;
+  ctx.save();
+  const sr = T * (.40 + .90 * k);
+  ctx.fillStyle = 'rgba(0,0,0,' + (.10 + .28 * k).toFixed(3) + ')';
+  ctx.beginPath(); ctx.ellipse(tx, ty + T * .1, sr, sr * .40, 0, 0, 6.283); ctx.fill();
+  const tg = ctx.createLinearGradient(tx, y - T * 6, tx, y);
+  tg.addColorStop(0, 'rgba(255,255,255,0)');
+  tg.addColorStop(.55, 'rgba(255,180,90,.18)');
+  tg.addColorStop(1, 'rgba(255,240,200,.38)');
+  ctx.fillStyle = tg;
+  ctx.fillRect(tx - T * .62, y - T * 6, T * 1.24, T * 6);
+  // 火焰光暈：整顆核彈外面包一層橘紅光，遠處也看得見這顆在燒
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const halo = ctx.createRadialGradient(tx, y, 0, tx, y, T * 2.2);
+  halo.addColorStop(0, 'rgba(255,196,110,.40)');
+  halo.addColorStop(.42, 'rgba(255,116,42,.22)');
+  halo.addColorStop(1, 'rgba(180,40,10,0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(tx, y, T * 2.2, 0, 6.283); ctx.fill();
+  ctx.restore();
+  ctx.translate(tx, y);
+  ctx.scale(sc, sc);
+  drawNukeArt(T * 1.00);         // 核彈本體 ≈ 3.5 格長（要比玩家大一大截才像核彈）
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+// 燒地：焦黑地面＋一圈火界＋一堆會晃的火焰舌＋上升火星
+function drawBRBurn(T) {
+  const list = Game.brBurn;
+  if (!list || !list.length) return;
+  const g0 = Game.gameT || 0;
+  const qp = typeof qualPart === 'function' ? qualPart() : 1;
+  ctx.save();
+  for (let i = 0; i < list.length; i++) {
+    const f = list[i];
+    if (f.t <= 0) continue;
+    const cx = (f.cx + .5) * T, cy = (f.cy + .5) * T, R = NUKE_R * T;
+    const fade = clamp(f.t / 1.6, 0, 1);              // 最後 1.6 秒收火
+    const gg = ctx.createRadialGradient(cx, cy, R * .08, cx, cy, R);
+    gg.addColorStop(0, 'rgba(255,150,60,' + (.50 * fade).toFixed(3) + ')');
+    gg.addColorStop(.55, 'rgba(214,72,22,' + (.36 * fade).toFixed(3) + ')');
+    gg.addColorStop(1, 'rgba(90,14,8,0)');
+    ctx.fillStyle = gg;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,140,60,' + (.22 * fade).toFixed(3) + ')';
+    ctx.lineWidth = Math.max(1.5, T * .08);
+    ctx.beginPath(); ctx.arc(cx, cy, R * (.97 + .03 * Math.sin(g0 * 2.2 + i)), 0, 6.283); ctx.stroke();
+    ctx.lineWidth = 1;
+    // 焦黑的地面（核彈坑）
+    const cg = ctx.createRadialGradient(cx, cy, R * .1, cx, cy, R * 1.02);
+    cg.addColorStop(0, 'rgba(16,7,5,' + (.68 * fade).toFixed(3) + ')');
+    cg.addColorStop(.72, 'rgba(24,11,7,' + (.46 * fade).toFixed(3) + ')');
+    cg.addColorStop(1, 'rgba(30,14,10,0)');
+    ctx.fillStyle = cg;
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.02, 0, 6.283); ctx.fill();
+    // 不規則焦斑：純圓形看起來像貼紙，要幾塊深淺不一的燒痕
+    ctx.fillStyle = 'rgba(10,4,3,' + (.30 * fade).toFixed(3) + ')';
+    for (let k = 0; k < 7; k++) {
+      const an = k * 2.399 + i * 1.1, dd = R * (.18 + .44 * ((k * 37 % 13) / 12));
+      ctx.beginPath();
+      ctx.ellipse(cx + Math.cos(an) * dd, cy + Math.sin(an) * dd * .82,
+        R * (.30 + .16 * ((k * 29 % 7) / 6)), R * (.22 + .12 * ((k * 17 % 5) / 4)), an * 1.7, 0, 6.283);
+      ctx.fill();
+    }
+    const tg = f.tongues || [];
+    const n = Math.max(8, Math.round(tg.length * qp));
+    for (let k = 0; k < n && k < tg.length; k++) {
+      const tt = tg[k];
+      const fl = .58 + .42 * Math.sin(g0 * 9 + tt.ph);
+      const rw = T * (.42 + .20 * tt.sc) * (.78 + .22 * fl);
+      const rh = T * (.78 + .56 * tt.sc) * fl;
+      const sway = Math.sin(g0 * 4.4 + tt.ph) * T * .08;
+      const bx = cx + tt.ox * T + sway, by = cy + tt.oy * T;
+      ctx.globalAlpha = .92 * fade;
+      flameDrop(bx, by + rh * .1, rw, rh, 'rgba(255,120,40,.92)');
+      flameDrop(bx, by + rh * .18, rw * .62, rh * .70, 'rgba(255,206,110,.95)');
+      flameDrop(bx, by + rh * .22, rw * .30, rh * .42, 'rgba(255,250,228,.92)');
+    }
+    // 上升火星
+    for (let k = 0; k < 6; k++) {
+      const ph = (g0 * .55 + k * .37 + i * .21) % 1;
+      const ex = cx + Math.sin(g0 * 1.7 + k * 2.3 + i) * R * .62;
+      const ey = cy + R * .28 - ph * R * .95;
+      ctx.globalAlpha = (1 - ph) * .85 * fade;
+      ctx.fillStyle = 'rgba(255,196,110,1)';
+      ctx.beginPath(); ctx.arc(ex, ey, Math.max(.8, T * .05 * (1 - ph * .5)), 0, 6.283); ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
   ctx.restore();
 }
 
@@ -18236,6 +18805,7 @@ function brFinish(winner) {
 }
 
 function updateBR(dt) {
+  if (Game.state === 'play') updateBRNuke(dt);      // v5.33：核彈
   if (Game.state === 'play' || Game.state === 'roundover') {
     const T = Game.T, z = Game.brZone;
     if (z) {
@@ -18267,8 +18837,11 @@ function updateBR(dt) {
       if (p.cart) { updateCart(p, dt); return; }
       //   v4.74：以前只有「已經在圈外」才叫 brSteer，電腦常常是圈一縮才開始跑，
       //     一次縮 3 格以上就會有一批人同時被圈吃掉（實測第 3 分鐘一次死 17 個）。
-      if (p.ai) { if (!((outside || edge) && brSteer(p, dt))) controlAI(p, dt); }
-      else controlHuman(p, dt);
+      // v5.33：核彈警報中 → 有察覺的 AI 先往外逃（沒察覺的照原本的走位）
+      if (p.ai) {
+        if (brNukeFlee(p, dt)) { /* 正在逃離核彈 */ }
+        else if (!((outside || edge) && brSteer(p, dt))) controlAI(p, dt);
+      } else controlHuman(p, dt);
     });
     if (Game.state === 'play') {
       Game.enemies.forEach(function (e) { updateEnemy(e, dt); });
@@ -25350,6 +25923,9 @@ function render() {
   Game.bombs.forEach(function (b) { drawBomb(b, T); });
   // 火焰
   Game.flames.forEach(function (f) { drawFlame(f, T); });
+  if (Game.mode === 'br') drawBRBurn(T);              // v5.33：核彈燒地（畫在角色之下）
+  // v5.33：核彈的落點預告與爆心要畫在「燒地的焦黑地面」之上，否則火球會被壓暗
+  if (Game.mode === 'br') drawBRNukeGround(T);
   if (Game.bolts && Game.bolts.length) drawBolts(T);
   drawFoeAoe(T);
   drawFoeHaz(T);
@@ -25404,6 +25980,7 @@ function render() {
     }
   });
   ctx.globalAlpha = 1;
+  if (Game.mode === 'br') drawBRNukeBomb(T);          // v5.33：落下中的核彈（壓在最上層）
   drawAmbient(T, 1);
   drawAmbient2(T, 1);
   try { Tut.drawWorld(ctx); } catch (e) {}
@@ -25536,6 +26113,21 @@ function drawMiniMap() {
       const rr = e.brBoss ? 3.2 : ((e.boss || e.type === 'boss') ? 2.6 : 1.7);
       ctx.beginPath(); ctx.arc(mx(e.x / Game.T), my(e.y / Game.T), rr, 0, 6.283); ctx.fill();
     }
+  }
+  // v5.33：核彈落點 —— 小地圖只有幾十 px，畫「紅圈」比畫點清楚
+  if (Game.brNuke && Game.brNuke.phase !== 'done') {
+    const nn = Game.brNuke;
+    const nx = mx(nn.cx + .5), ny = my(nn.cy + .5);
+    const rr = Math.max(4, NUKE_R * cw);
+    const pl = .5 + .5 * Math.sin((Game.gameT || 0) * 9);
+    ctx.fillStyle = 'rgba(255,80,60,' + (.14 + .12 * pl).toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(nx, ny, rr, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,72,52,' + (.55 + .35 * pl).toFixed(2) + ')';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(nx, ny, rr, 0, 6.283); ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(255,220,140,.95)';
+    ctx.beginPath(); ctx.arc(nx, ny, 1.7, 0, 6.283); ctx.fill();
   }
   // 玩家（組隊 → 隊色；混戰／單人 → 白）
   Game.players.forEach(function (p, i) {
@@ -25808,13 +26400,20 @@ function drawRemoteChip(r) {
   ctx.lineWidth = 1;
 }
 // v3.8：黑亮圓球炸彈本體（畫在 translate 之後的原點，半徑 r）
-function drawBombArt(r, seed, hot, armed, remote, danger) {
-  // ---- 球體：黑曜質感（原色黑），準備爆炸時由內外透出紅光 ----
+function drawBombArt(r, seed, hot, armed, remote, danger, ally) {
+  // ---- 球體：黑曜質感（原色黑）；v5.33 自己人的彈是同一個模子、白色漸層 ----
   const g = ctx.createRadialGradient(-r * .40, -r * .44, r * .10, 0, 0, r * 1.18);
-  g.addColorStop(0, '#5b6172');
-  g.addColorStop(.22, '#34384a');
-  g.addColorStop(.60, '#15171f');
-  g.addColorStop(1, '#050609');
+  if (ally) {
+    g.addColorStop(0, '#ffffff');
+    g.addColorStop(.22, '#f4f8ff');
+    g.addColorStop(.60, '#d3dded');
+    g.addColorStop(1, '#8d99b0');
+  } else {
+    g.addColorStop(0, '#5b6172');
+    g.addColorStop(.22, '#34384a');
+    g.addColorStop(.60, '#15171f');
+    g.addColorStop(1, '#050609');
+  }
   ctx.fillStyle = g;
   ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.283); ctx.fill();
   // 準備爆炸 → 外圈紅光脈衝（越接近引爆越強、閃得越快）
@@ -25824,17 +26423,23 @@ function drawBombArt(r, seed, hot, armed, remote, danger) {
     const rr = r * (1.5 + dg * .85);
     const a = (0.30 + 0.55 * dg) * (0.45 + 0.55 * pulse);
     const aura = ctx.createRadialGradient(0, 0, r * .5, 0, 0, rr);
-    aura.addColorStop(0, 'rgba(255,70,50,' + a.toFixed(3) + ')');
-    aura.addColorStop(.55, 'rgba(255,40,30,' + (a * .5).toFixed(3) + ')');
-    aura.addColorStop(1, 'rgba(255,30,20,0)');
+    if (ally) {
+      aura.addColorStop(0, 'rgba(80,180,255,' + a.toFixed(3) + ')');
+      aura.addColorStop(.55, 'rgba(50,140,255,' + (a * .5).toFixed(3) + ')');
+      aura.addColorStop(1, 'rgba(30,110,240,0)');
+    } else {
+      aura.addColorStop(0, 'rgba(255,70,50,' + a.toFixed(3) + ')');
+      aura.addColorStop(.55, 'rgba(255,40,30,' + (a * .5).toFixed(3) + ')');
+      aura.addColorStop(1, 'rgba(255,30,20,0)');
+    }
     ctx.fillStyle = aura;
     ctx.beginPath(); ctx.arc(0, 0, rr, 0, 6.283); ctx.fill();
   }
   // 快引爆 → 球體由內透出紅光（保留原本的警示感）
   if (hot) {
     const hg = ctx.createRadialGradient(0, r * .25, 0, 0, 0, r);
-    hg.addColorStop(0, 'rgba(255,92,60,.58)');
-    hg.addColorStop(1, 'rgba(255,60,40,0)');
+    hg.addColorStop(0, ally ? 'rgba(110,190,255,.58)' : 'rgba(255,92,60,.58)');
+    hg.addColorStop(1, ally ? 'rgba(60,150,255,0)' : 'rgba(255,60,40,0)');
     ctx.fillStyle = hg;
     ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.283); ctx.fill();
   }
@@ -25886,6 +26491,19 @@ function drawBombArt(r, seed, hot, armed, remote, danger) {
   // ---- 引線頂端：點燃的火花 / 未點燃的餘燼 ----
   drawFuseSpark(tipX, tipY, Math.max(1.6, r * .22), seed, armed);
 }
+
+// v5.33：這顆炸彈是不是「自己人」的（組隊隊友／隨從）→ 白色彈體、藍色爆炸
+function isAllyOwner(o) {
+  if (!o) return false;
+  if (o.__pet) return true;                                   // 隨從丟的
+  const me = Game.players && Game.players[0];
+  if (!me || o === me) return false;
+  const teamOn = (Game.brTeam | 0) >= 2 || (Game.teamsOn | 0) >= 2;
+  return !!(teamOn && o.team >= 0 && o.team === me.team);
+}
+function bombIsAlly(b) {
+  return !!(b && (b.petOwner || isAllyOwner(b.owner)));
+}
 function drawBomb(b, T) {
   // v4.13：投彈繞回地圖外時用 vpx/vpy（視覺座標）→ 會真的飛出畫面再從另一端進來
   const x = (b.vpx != null) ? b.vpx : b.px, y = (b.vpy != null) ? b.vpy : b.py;
@@ -25916,7 +26534,7 @@ function drawBomb(b, T) {
   ctx.save();
   ctx.translate(x + sx, y + sy - lift);
   ctx.scale(scale, scale);
-  drawBombArt(r, b.seed, hot, armed, !!b.remoteArmed, danger);
+  drawBombArt(r, b.seed, hot, armed, !!b.remoteArmed, danger, bombIsAlly(b));
   ctx.restore();
 }
 // v3.8：水滴形火焰（下面圓、上面尖，比三顆圓更像真的火）
@@ -25950,6 +26568,7 @@ function drawFlame(f, T) {
   const d = f.dir ? DIRS[f.dir] : null;
   // BOSS 自己放的炸彈 → 紫色魔焰（owner 為 null 就是 BOSS）
   const bossFire = f.owner == null;
+  const allyFire = !bossFire && (f.ally != null ? !!f.ally : isAllyOwner(f.owner));   // v5.33
   // v4.11：type = 'center'（爆心）／'mid'（臂中段）／'end'（臂末端）
   //   mid 段往「內側」伸、end 段往「內側」伸 → 上下左右四臂會連成一條粗管
   const isMid = f.type === 'mid', isEnd = f.type === 'end';
@@ -25962,6 +26581,10 @@ function drawFlame(f, T) {
   if (bossFire) {
     gg.addColorStop(0, 'rgba(190,90,255,' + (.72 * k + .10).toFixed(3) + ')');
     gg.addColorStop(1, 'rgba(120,24,190,0)');
+  } else if (allyFire) {
+    gg.addColorStop(0, 'rgba(90,180,255,' + (.80 * k + .10).toFixed(3) + ')');
+    gg.addColorStop(.5, 'rgba(40,130,255,' + (.42 * k).toFixed(3) + ')');
+    gg.addColorStop(1, 'rgba(20,80,220,0)');
   } else {
     gg.addColorStop(0, 'rgba(255,168,80,' + (.80 * k + .10).toFixed(3) + ')');
     gg.addColorStop(.5, 'rgba(255,90,30,' + (.42 * k).toFixed(3) + ')');
@@ -25973,6 +26596,8 @@ function drawFlame(f, T) {
   //   （參考圖幾乎整團是白到奶油色，只有外緣一圈橘紅）
   const cols = bossFire
     ? [ 'rgba(255,255,255,A)', 'rgba(246,214,255,A)', 'rgba(210,120,255,A)', 'rgba(150,40,230,A)', 'rgba(110,20,170,0)' ]
+    : allyFire
+    ? [ 'rgba(248,252,255,A)', 'rgba(150,206,255,A)', 'rgba(64,146,255,A)', 'rgba(26,92,238,A)', 'rgba(8,36,150,0)' ]
     : [ 'rgba(255,255,255,A)', 'rgba(255,246,214,A)', 'rgba(255,214,130,A)', 'rgba(255,150,50,A)', 'rgba(214,60,16,0)' ];
   // 主體：一整團白熱火（不是小圓球，是塞滿整格）
   drawFlameBlob(cx, cy, s * .82, cols, k);
@@ -26008,7 +26633,7 @@ function drawFlame(f, T) {
     ctx.beginPath(); ctx.arc(cx, cy, s * .46, 0, 6.283); ctx.fill();
   }
   // --- 上升的小火星 ---
-  const pc = bossFire ? [236, 176, 255] : [255, 214, 140];
+  const pc = bossFire ? [236, 176, 255] : allyFire ? [186, 226, 255] : [255, 214, 140];
   for (let i = 0; i < 5; i++) {
     const ph = Game.gameT * 3.4 + i * 1.5 + f.cx * .7 + f.cy * 1.3;
     const up = ph % 1;
@@ -29124,10 +29749,10 @@ function heroMoodVfx(g, kind, px, py, size, t, hb) {
       g.lineCap = 'round';
       for (let s2 = 0; s2 < 2; s2++) {
         const ph2 = Math.sin(t * 3.4 + s2 * 2.3 + si * 1.1) * .5 + .5;
-        const reach = size * (.24 + s2 * .17) * (1 + .10 * ph2);
-        g.globalAlpha = .12 + .11 * ph2;
+        const reach = size * (.30 + s2 * .21) * (1 + .10 * ph2);      // v5.33：灑得更遠
+        g.globalAlpha = .13 + .12 * ph2;
         g.strokeStyle = 'rgba(160,215,255,.9)';
-        g.lineWidth = Math.max(1, size * (.017 - s2 * .004));
+        g.lineWidth = Math.max(1, size * (.021 - s2 * .005));
         g.beginPath();
         g.moveTo(x0, y0);
         g.quadraticCurveTo(x0 + dir * reach * .60, y0 + size * .015,
@@ -29135,17 +29760,17 @@ function heroMoodVfx(g, kind, px, py, size, t, hb) {
         g.stroke();
       }
       // ② 往外斜下灑的水珠（8 顆，速度／大小／張角／落下量都不同 → 像灑水器而不是串珠）
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 10; i++) {
         const spd = .70 + (i % 3) * .34;                        // 快慢差 1.7 倍 → 有前後層次
         const ph = (t * spd + i * .29 + (si ? .41 : 0)) % 1;
         const fan = .40 + ((i * 53) % 100) / 100 * .95;         // 水平張角
-        const dx = dir * size * (.10 + .30 * ph) * fan;
-        const dy = size * (.05 + .26 * ph * ph) * (.5 + ((i * 29) % 100) / 100)
+        const dx = dir * size * (.13 + .38 * ph) * fan;         // v5.33：範圍再往外
+        const dy = size * (.06 + .33 * ph * ph) * (.5 + ((i * 29) % 100) / 100)
                    + Math.sin(t * 5.2 + i * 1.7 + si) * size * .012;
-        const rr = size * (.038 - .018 * ph) * (1 + ((i * 11) % 3) * .22);
+        const rr = size * (.050 - .024 * ph) * (1 + ((i * 11) % 3) * .28);
         g.globalAlpha = (1 - ph * .5) * (ph < .12 ? ph / .12 : 1) * .95;
         if (i % 3 !== 1) {
-          heroDrop(g, x0 + dx, y0 + dy, rr * 1.28);
+          heroDrop(g, x0 + dx, y0 + dy, rr * 1.45);
         } else {
           g.fillStyle = 'rgba(180,228,255,.95)';
           g.beginPath(); g.ellipse(x0 + dx, y0 + dy, rr * .78, rr, 0, 0, 6.283); g.fill();
@@ -34279,7 +34904,15 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.32', date: '2026-11-06', now: true, items: [
+  { v: '5.33', date: '2026-11-06', now: true, items: [
+    '☢️ <b>大逃殺多了核彈轟炸</b>：每一分鐘縮毒圈之外，<b>每 45 秒還會來一顆核彈</b>。落下前 5 秒會廣播位置（警報聲會響，最後一秒慢慢消音），大地圖的地面與小地圖同時圈出轟炸範圍。',
+    '🚀 <b>核彈是慢慢掉下來的</b>：通報結束後從天空壓下來（速度跟走路差不多、全身包著火焰），落地直接炸開 —— 畫面劇烈震動、烈焰往外噴。',
+    '💥 <b>威力</b>：中心半徑 5 格的軟牆全部消失、範圍內的人扣 <b>6 格血</b>；炸完那塊地會<b>持續燃燒 10 秒</b>，站在火裡每秒再扣 1 格。AI 只有一部分會跑，有的會傻站在裡面。',
+    '🤍 <b>隊友與隨從的炸彈改成白色</b>（同一個模子、白色漸層），爆炸是<b>藍色火焰</b>，一眼分得出敵我。',
+    '💦 <b>哭臉的淚水再放大</b>：水珠多兩顆、體積約 1.4 倍，往外灑的範圍也更寬。',
+    '📐 主檔 1,866,580 字元（預算 1,900,000）；132 支測試全綠（新增 verify-v533 52 項）。'
+  ]},
+  { v: '5.32', date: '2026-11-06', now: false, items: [
     '💦 <b>哭臉的淚水真的「灑」出去了</b>：遊戲裡角色旁邊的水，改成從兩眼外側持續往左右兩邊噴 —— 每顆水珠的速度、大小、角度都不同，走拋物線往外斜下飛，越遠越小越淡；不再是兩條貼在臉上的水柱。',
     '🙂 <b>頭頂情緒頭像浮到頭頂上方</b>：放大之後圓框差不多有半個角色高，原本整個蓋在臉上（連眼淚都遮住），現在改成浮在頭上的對話泡泡，尾巴指著自己。',
     '🎯 <b>三種情緒共用同一套定位</b>：大哭、奸笑、受傷都用角色自己的頭部框換算，耳朵高矮不同的角色也不會錯位。',
@@ -40490,6 +41123,9 @@ window.__BH = {
   BR: BR, startBR: startBR, buildBRMap: buildBRMap, updateBR: updateBR, brFinish: brFinish,
   updateBRBoss: updateBRBoss, spawnBRBosses: spawnBRBosses, drawMateTag: drawMateTag,
   brOnDeath: brOnDeath, drawBRHud: drawBRHud, drawBRZone: drawBRZone, brSteer: brSteer, viewRange: viewRange,
+  // v5.33：核彈（測試要直接驗落點、燒地、AI 逃跑）與敵我炸彈分辨
+  updateBRNuke: updateBRNuke, brNukeLaunch: brNukeLaunch, brNukeFlee: brNukeFlee, brBurnAt: brBurnAt,
+  bombIsAlly: bombIsAlly, isAllyOwner: isAllyOwner, NUKE_R: NUKE_R, NUKE_DMG: NUKE_DMG, NUKE_BURN_SEC: NUKE_BURN_SEC,
   showBRDeath: showBRDeath, aiEscape: aiEscape, placeHideTiles: placeHideTiles,
   seedCode: seedCode, seedTag: seedTag,
   themeName: themeName, charName: charName, charTag: charTag,
