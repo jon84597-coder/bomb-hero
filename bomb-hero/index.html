@@ -9235,26 +9235,7 @@ function qualLevel() {
   return (touch && dpr >= 2.5) ? 1 : 2;
 }
 function qualDprCap() { return QUAL_CAP[qualLevel()]; }
-/* v5.37：依縮放自動切三級效能（使用者的提案）
-   · zoom 42%~100% → 低效能、100%~180% → 適中、180%~300% → 高效能
-   · settings.qual 不是 'auto' 時，一律照玩家手動指定（手動覆寫優先）
-   · auto 只影響「每幀的細節」（環境光、機關細節、角色／炸彈簡化、粒子量），
-     不動畫布解析度 → 縮放不會重排版面，也不會到處重烘地板分塊。
-   用 var：qualPart() 在 boot 期間就可能被呼叫，var 才不會踩 TDZ。 */
-var RQ = { lv: 2, auto: 2 };
-function rqAuto() { return settings.qual === 'auto'; }
-function rqUpdate() {
-  const z = Game.zoom || 1;
-  RQ.auto = z < 1 ? 0 : (z < 1.8 ? 1 : 2);
-  RQ.lv = rqAuto() ? RQ.auto : qualLevel();
-  return RQ.lv;
-}
-function rqLv() { return RQ ? (RQ.lv | 0) : 2; }
-function qualPart() {
-  const base = QUAL_PART[qualLevel()];
-  if (settings.qual !== 'auto' || !RQ) return base;
-  return base * (RQ.lv === 0 ? .55 : RQ.lv === 1 ? .82 : 1);
-}
+function qualPart() { return QUAL_PART[qualLevel()]; }
 // 粒子上限（環境粒子用）：至少留 1 顆，不然整個場景會「空掉」
 function ambN(n) { return Math.max(1, Math.round(n * qualPart() * (settings.calm ? .45 : 1))); }
 
@@ -26628,28 +26609,6 @@ function onScreen(x, y, pad) {
 }
 function paintHazardCell(x, y, hz, T) {
   const px = x * T, py = y * T;
-  /* v5.37：拉遠看全貌時（低效能）機關只畫「一眼認得出」的色塊＋方向箭頭 ——
-     這一層是整個畫面最貴的逐格繪製（縮到 42% 時整張圖幾百格同時在畫）。 */
-  if (rqLv() === 0) {
-    const col = hz.type === 'ice' ? 'rgba(120,214,240,.62)'
-      : hz.type === 'convey' ? 'rgba(150,158,188,.55)'
-      : hz.type === 'warp' ? 'rgba(194,150,255,.65)'
-      : hz.type === 'water' ? 'rgba(36,137,164,.80)'
-      : hz.type === 'sand' ? 'rgba(125,96,56,.80)'
-      : hz.type === 'hide' ? 'rgba(70,120,70,.55)' : 'rgba(160,160,170,.45)';
-    ctx.fillStyle = col;
-    ctx.fillRect(px, py, T, T);
-    if (hz.type === 'convey' && hz.dir) {
-      const d = DIRS[hz.dir] || { x: 1, y: 0 };
-      ctx.strokeStyle = 'rgba(255,255,255,.75)';
-      ctx.lineWidth = Math.max(1, T * .06);
-      ctx.beginPath();
-      ctx.moveTo(px + T * .30 - d.x * T * .08, py + T * .30 - d.y * T * .08);
-      ctx.lineTo(px + T * .70 + d.x * T * .08, py + T * .70 + d.y * T * .08);
-      ctx.stroke();
-    }
-    return;
-  }
         if (hz.type === 'water') {
           // v5.11：水流 —— 一格寬的河。深藍綠底 + 兩道會跑的波紋 + 邊緣反光，
           //   刻意比地板「暗一階」，一眼看得出是水不是地板。
@@ -26815,7 +26774,6 @@ function paintHazardCell(x, y, hz, T) {
 function render() {
   const T = Game.T;
   const th = Game.theme || THEMES[0];
-  rqUpdate();                                   // v5.37：每幀依縮放決定細節等級
   // v4.54：牆分類（每張圖算一次）；v4.64 加上尺寸校驗 —— 換了地圖卻忘記清，也不會把舊分類套上去
   if (!Game.wallKind || Game.wallSize !== (Game.cols + 'x' + Game.rows)) markWallKinds();
   ctx.setTransform(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0);
@@ -26853,7 +26811,7 @@ function render() {
       if (hz) {
         paintHazardCell(x, y, hz, T);
         // v5.22：機關是地板畫完才疊的圖層，會把牆的陰影整片蓋掉 → 補壓一次
-        if (rqLv() > 0) { try { drawAOCell(x, y, T); } catch (e) {} }
+        try { drawAOCell(x, y, T); } catch (e) {}
       }
     }
   }
@@ -26932,9 +26890,8 @@ function render() {
   const fw = Game.cols * T, fh = Game.rows * T;
   // v5.21：世界座標的暗角改到「螢幕座標」一次畫完（drawVignette），這裡不再每幀
   //   在整張地圖上填一次大漸層 —— 大逃殺 50×50 的地圖光這一步就要填 2500 格。
-  // v5.37：拉遠（低效能）時整層環境光全省；適中只留第一層
-  if (rqLv() >= 2) { drawAmbient(T, 0); drawAmbient2(T, 0); }
-  else if (rqLv() === 1) { drawAmbient(T, 0); }
+  drawAmbient(T, 0);
+  drawAmbient2(T, 0);
   // v4.89：鴕鳥落地震波 —— 核心白閃 + 三圈衝擊波 + 塵土 + （風暴）紫電
   //   全部貼地畫成橢圓（看得出是「震」不是「燒」），kind 決定畫法
   if (Game.rings && Game.rings.length) {
@@ -27753,13 +27710,6 @@ function bombIsAlly(b) {
 function drawBomb(b, T) {
   // v4.13：投彈繞回地圖外時用 vpx/vpy（視覺座標）→ 會真的飛出畫面再從另一端進來
   const x = (b.vpx != null) ? b.vpx : b.px, y = (b.vpy != null) ? b.vpy : b.py;
-  if (rqLv() === 0 && !b.mine) {
-    const rr = T * .30;
-    const hot0 = !b.remoteArmed && b.timer < .7 && Math.sin(Game.gameT * 14 + b.seed) > 0;
-    ctx.fillStyle = hot0 ? '#ff6b5a' : (bombIsAlly(b) ? '#f2f4ff' : '#2b3145');
-    ctx.beginPath(); ctx.arc(x, y, rr, 0, 6.283); ctx.fill();
-    return;
-  }
   if (b.mine) {
     ctx.fillStyle = '#39435c';
     ctx.beginPath(); ctx.arc(x, y + 6, T * .16, 0, 6.283); ctx.fill();
@@ -28562,19 +28512,6 @@ function drawBossElemFx(e, x, footY, H, T, layer) {
 }
 
 function drawEnemy(e, T) {
-  /* v5.37：低效能 → 怪物簡化成「有顏色的圓＋朝向」，王多畫一圈金邊（一眼看得出來） */
-  if (rqLv() === 0) {
-    const ar = enemyArtR(e);
-    softShadow(e.x, e.y + ar * .9, ar * .7, ar * .25, .30);
-    ctx.fillStyle = e.boss ? '#ff8a3d' : (e.kind === 'fly' ? '#c86bd6' : '#7fe08a');
-    ctx.beginPath(); ctx.ellipse(e.x, e.y, ar * .88, ar * .95, 0, 0, 6.283); ctx.fill();
-    if (e.boss) {
-      ctx.strokeStyle = 'rgba(255,214,120,.95)';
-      ctx.lineWidth = Math.max(2, T * .06);
-      ctx.beginPath(); ctx.ellipse(e.x, e.y, ar * 1.12, ar * 1.18, 0, 0, 6.283); ctx.stroke();
-    }
-    return;
-  }
   const castK = (e.castT > 0) ? (1 - e.castT / FOE_CAST_WINDUP) : 0;
   const shk = castK > 0
     ? Math.sin(Game.gameT * (54 + castK * 46) + e.x * .07) * T * (.020 + castK * .052)
@@ -31679,26 +31616,6 @@ function bombUnderFoot(p) {
   return bombAt(Math.floor(p.x / T), Math.floor(p.y / T));
 }
 function drawPlayer(p, T) {
-  /* v5.37：低效能（拉遠看全貌）→ 只畫影子＋角色色塊＋面向小點。
-     100 人同時在畫面裡時，這一條省下的比任何微調都多。 */
-  if (rqLv() === 0) {
-    const x = p.x, y = p.y - (p.jumpLift || 0);
-    const R = T * .38 * (p.dino ? .82 : 1);
-    softShadow(x, y + T * .30, R * .78, R * .26, .30);
-    ctx.fillStyle = (p.ch && p.ch.color) || '#7fd8ff';
-    ctx.beginPath(); ctx.ellipse(x, y, R * .82, R * .92, 0, 0, 6.283); ctx.fill();
-    const d = DIRS[p.facing] || { x: 1, y: 0 };
-    ctx.fillStyle = 'rgba(255,255,255,.92)';
-    ctx.beginPath(); ctx.arc(x + d.x * R * .42, y + d.y * R * .42, Math.max(1.4, R * .18), 0, 6.283); ctx.fill();
-    if (p.team >= 0 && Game.mode === 'battle') {
-      const tmD = teamMeta(p.team);
-      if (tmD) {
-        ctx.strokeStyle = tmD.hex; ctx.lineWidth = Math.max(1.6, T * .05);
-        ctx.beginPath(); ctx.ellipse(x, y + T * .30, R * .92, R * .34, 0, 0, 6.283); ctx.stroke();
-      }
-    }
-    return;
-  }
   if (p.dino) drawDino(p, T);
   // 騎乘時坐到坐騎背上的鞍座
   // 恐龍的鞍座在「頭的反方向」；鴕鳥的鞍布在身體中央偏頭那一側（頭在右前），而且高得多，
@@ -36686,11 +36603,11 @@ const VERSION_LOG = [
     '☢️ <b>大逃殺三種數量分流</b>：大地圖 3 隻 BOSS ＋ 20 隻小怪、一次兩顆核彈（時間過一半剩 1 顆）；原本尺寸 2 隻 BOSS ＋ 14 隻小怪、1 顆核彈。兩種尺寸<b>最後 1 分鐘都停火</b>。',
     '🎺 <b>BOSS 專屬熱血曲</b>：158 BPM、加一層低通 200Hz 的重低音與銅管齊奏，14 段樂句輪轉，打王時自動接手。',
     '🗺️ <b>兩種大逃殺地圖都留著</b>：原本 56×44 上限 50 人、加大 79×62 上限 100 人，入口可以直接切。',
-    '⚡ <b>縮放自動效能分級</b>：42%~100% 最低、100%~180% 適中、180%~300% 高（拉遠看全貌時只畫色塊，地板與環境光都省下來）；設定頁可手動覆寫。',
+    '↩️ <b>縮放效能分級這版先不做</b>：原本提議的「拉遠自動降畫質」先擱著，畫面完全照舊 —— 畫質仍然只由設定頁的「自動／低／中／高」決定，縮放不會再偷偷改變細節。',
     '💡 <b>線上配對加註提醒</b>：伺服器放在免費託管平台 Render，連線品質不會比較順暢，目前當作測試內容。',
     '📶 <b>區網連線兩種做法都給了</b>：同一個 WiFi 由電腦當主機（不經外網），或 WebRTC 直連（免伺服器，貼一串邀請碼就能連）。',
     '🎮 <b>線上配對補齊本機對戰的設定</b>：地圖尺寸／勝場／時間／地形機關／突死縮圈／復仇推車／AI 難度都由房主設定、其他人唯讀；選角只選自己。',
-    '📐 主檔 1,947,xxx 字元（預算 1,950,000）；135 支測試全綠（新增 verify-v537）。'
+    '📐 主檔 1,944,990 字元（預算 1,950,000）；136 支測試全綠（verify-v537 92 項）。'
   ]},
   { v: '5.36', date: '2026-11-07', now: false, items: [
     '👑 <b>BOSS 專屬第 5 關</b>：8 大主題改成「4 張地圖 ＋ 1 場 BOSS 決戰」＝ 40 關。決戰場是 17×15 的封閉競技場，王在中上、你從中下進場，開場沒有任何小兵；每 60 秒王會從左右各叫一隻護衛（場上最多 8 隻）。打倒王之後<b>上方大門</b>才會打開，走出去那一瞬間有冠軍級的彩帶、閃光與勝利音效。',
@@ -42725,7 +42642,6 @@ window.__BH = {
   buildSnap: function () { return Net.buildSnap(); }, applySnap: function (s) { return Net.applySnap(s); },
   // v5.27：畫質分級／FPS／模式提示／賽季 / 快捷語（測試與後台用）
   QUAL_CAP: QUAL_CAP, QUAL_PART: QUAL_PART, qualLevel: qualLevel, qualDprCap: qualDprCap,
-  RQ: RQ, rqLv: rqLv, rqUpdate: rqUpdate,
   qualPart: qualPart, ambN: ambN, applyQuality: applyQuality, updateFps: updateFps,
   ModeTip: ModeTip, Season: Season, QChat: QChat, NetInvite: NetInvite,
   DeathCard: DeathCard, Spec: Spec, FirstRun: FirstRun, applyA11y: applyA11y,

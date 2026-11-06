@@ -183,31 +183,15 @@ ok(P.stageBGM() === 'bossWar', 'BOSS 決戰場播 bossWar（實際 ' + P.stageBG
 P.startSolo(4, false);
 ok(P.stageBGM() === 'stage1', '第 4 關（第一章普通關）還是主題曲（實際 ' + P.stageBGM() + '）');
 
-/* ---------- ⑥ 縮放自動效能分級 ---------- */
-head('⑥ 縮放自動效能分級');
-ok(P.settings.qual === 'auto', '畫質預設 auto（實際 ' + P.settings.qual + '）');
-ok(!!P.RQ && typeof P.rqUpdate === 'function' && typeof P.rqLv === 'function', 'RQ／rqUpdate／rqLv 都在');
-G.zoom = 0.5; P.rqUpdate();
-ok(P.rqLv() === 0, '縮到 42%~100% → 最低效能（實際 lv ' + P.rqLv() + '）');
-G.zoom = 1.0; P.rqUpdate();
-ok(P.rqLv() === 1, '剛好 100% 進適中（鏡頭回到原始大小就不要色塊了；' + P.rqLv() + '）');
-G.zoom = 1.2; P.rqUpdate();
-ok(P.rqLv() === 1, '100%~180% → 適中（實際 lv ' + P.rqLv() + '）');
-G.zoom = 1.8; P.rqUpdate();
-ok(P.rqLv() === 2, '到 180% 轉高效能（' + P.rqLv() + '）');
-G.zoom = 3.0; P.rqUpdate();
-ok(P.rqLv() === 2, '180%~300% → 高效能（' + P.rqLv() + '）');
-P.settings.qual = 'high';
-G.zoom = 0.5; P.rqUpdate();
-ok(P.rqLv() === 2, '手動指定 high 時不看縮放（實際 lv ' + P.rqLv() + '）');
-P.settings.qual = 'auto';
-G.zoom = 0.5; P.rqUpdate();
-const p0 = P.qualPart(), q0 = P.QUAL_PART[P.qualLevel()];
-ok(Math.abs(p0 - q0 * .55) < 1e-6, '低效能時每幀粒子量降到 55%（' + p0.toFixed(1) + ' / ' + q0 + '）');
-G.zoom = 1.5; P.rqUpdate();
-ok(Math.abs(P.qualPart() - q0 * .82) < 1e-6, '適中效能降到 82%');
-ok(/>=\s*2\)\s*\{\s*drawAmbient\(T, 0\); drawAmbient2\(T, 0\);/.test(src.replace(/\n/g, '')) ||
-  /rqLv\(\) >= 2/.test(src), '環境光只在高效能才兩層全畫');
+/* ---------- ⑥ 縮放效能分級（v5.37 曾做、已依使用者要求移除） ---------- */
+head('⑥ 縮放效能分級已整組移除（照舊功能）');
+ok(typeof P.RQ === 'undefined' && typeof P.rqUpdate === 'undefined' && typeof P.rqLv === 'undefined',
+  'RQ／rqUpdate／rqLv 都不再匯出');
+ok(!/\brqLv\(/.test(src) && !/\brqUpdate\(/.test(src), '主檔裡沒有任何 rqLv／rqUpdate 呼叫');
+ok(/function qualPart\(\) \{ return QUAL_PART\[qualLevel\(\)\]; \}/.test(src), 'qualPart 回到「只看畫質設定」的原始寫法');
+ok(/^  drawAmbient\(T, 0\);\n  drawAmbient2\(T, 0\);$/m.test(src), '環境光無條件兩層都畫（不再看縮放）');
+G.zoom = 0.5; const q0 = P.QUAL_PART[P.qualLevel()];
+ok(Math.abs(P.qualPart() - q0) < 1e-6, '粒子量不受縮放影響（' + P.qualPart() + ' / ' + q0 + '）');
 
 /* ---------- ⑦ 線上配對／區網 ---------- */
 head('⑦ 線上配對補齊＋區網連線');
@@ -237,32 +221,23 @@ ok(/api\/lan/.test(fs.readFileSync(path.join(__dirname, '..', '..', 'server.js')
 ok(/if \(P2P && P2P\.on\) \{ P2P\.api\(path, body, cb\); return; \}/.test(src),
   'Net.api 被直連攔截（整組 relay 邏輯沿用）');
 
-/* ---------- ⑨ 三個效能分級都真的畫得出來 ---------- */
-head('⑨ 低／中／高效能各自渲染一次不報錯');
-(function () {
-  const cases = [
-    { z: 0.5, lv: 0, name: '最低（42%~100%）' },
-    { z: 1.5, lv: 1, name: '適中（100%~180%）' },
-    { z: 2.6, lv: 2, name: '高效能（180%~300%）' }
-  ];
+/* ---------- ⑨ 三種縮放都真的畫得出來 ---------- */
+head('⑨ 縮到 42%／原始／放大 300% 各自渲染一次不報錯');
+['0.42', '1', '3'].forEach(function (zs) {
   ['battle', 'br', 'boss'].forEach(function (mode) {
-    cases.forEach(function (c) {
-      const e2 = makeEnv(); const P2 = e2.BH, G2 = e2.G;
-      e2.getId('body').classList.add('touch');
-      const cv = e2.getId('cv'); cv.clientWidth = 390; cv.clientHeight = 775;
-      P2.settings.ctrl = 'touch';
-      P2.settings.qual = 'auto';
-      if (mode === 'battle') P2.startBattle(2);
-      else if (mode === 'br') { P2.BR.opt.map = 1; P2.startBR(); G2.state = 'play'; }
-      else P2.startSolo(5, false);
-      G2.zoom = c.z; G2.zoomTarget = c.z;
-      P2.rqUpdate();
-      let drew = false, err = '';
-      try { P2.render(); drew = true; } catch (e) { err = e.message; }
-      ok(drew && P2.rqLv() === c.lv, mode + ' × ' + c.name + ' 畫得出來（lv ' + P2.rqLv() + '）' + (err ? ' → ' + err : ''));
-    });
+    const e2 = makeEnv(); const P2 = e2.BH, G2 = e2.G;
+    e2.getId('body').classList.add('touch');
+    const cv = e2.getId('cv'); cv.clientWidth = 390; cv.clientHeight = 775;
+    P2.settings.ctrl = 'touch';
+    if (mode === 'battle') P2.startBattle(2);
+    else if (mode === 'br') { P2.BR.opt.map = 1; P2.startBR(); G2.state = 'play'; }
+    else P2.startSolo(5, false);
+    G2.zoom = parseFloat(zs); G2.zoomTarget = parseFloat(zs);
+    let drew = false, err = '';
+    try { P2.render(); drew = true; } catch (e) { err = e.message; }
+    ok(drew, mode + ' × zoom ' + zs + ' 畫得出來' + (err ? ' → ' + err : ''));
   });
-})();
+});
 
 /* ---------- ⑧ 版本 ---------- */
 head('⑧ 版本戳記');
