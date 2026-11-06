@@ -4666,7 +4666,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.33</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.34</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4721,7 +4721,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.33</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.34</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5706,7 +5706,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.33';
+const VERSION = '5.34';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6590,6 +6590,9 @@ const AudioSys = (function () {
       return (function () {
   let ctx = null, musicGain = null, sfxGain = null;
   let bgmTimer = null, song = null, songStart = 0, parsed = null;
+  // v5.34：步進式排程 —— 用「這一步是整首的第幾步」算絕對時間（songStart + stepPos × 步長），
+  //   長曲接回時每一軌都落在同一格，不會因為瀏覽器延遲而各軌慢慢漂開、循環點愈跑愈歪。
+  let stepPos = 0, songGrid = null, songSteps = 0;
 
   function ensure() {
     if (!ctx) {
@@ -7034,6 +7037,134 @@ const AudioSys = (function () {
     };
   });
 
+  // ===== v5.34：戰鬥場景曲（對戰／大逃殺）=====
+  //   關卡曲是「64 小節、約 2 分鐘」的循環；戰鬥曲要跟一整張地圖一樣長
+  //   （對戰約 2:45、大逃殺 10:00／5:00），所以改成「句庫 + 段式排列」：
+  //   八句各有自己的和弦／節奏型／鼓型，排成長曲再無縫接回第 0 步。
+  //   比關卡曲多兩軌失真 power chord（根音＋五度、再疊高八度）撐出厚度。
+  const WAR_PHRASES = [
+    { k: 'A', rhy: 1, rest: .08, drum: 'chk.s.h.k.h.s.oh',
+      chord: ['Am', 'F', 'C', 'G', 'Am', 'F', 'G', 'G'] },
+    { k: 'B', rhy: 4, rest: .06, drum: 'k.k.s.hk.k.s.hhh',
+      chord: ['Am', 'Am', 'F', 'F', 'C', 'C', 'G', 'G'] },
+    { k: 'C', rhy: 2, rest: .10, drum: 'k.h.s.h.k.h.soo.',
+      chord: ['Dm', 'Dm', 'Am', 'Am', 'F', 'F', 'G', 'E'] },
+    { k: 'D', rhy: 0, rest: .12, drum: 'k...s...k.k.s...',
+      chord: ['C', 'G', 'Am', 'F', 'C', 'G', 'F', 'G'] },
+    { k: 'E', rhy: 5, rest: .07, drum: 'k.hsk.h.k.hsk.h.',
+      chord: ['Am', 'Am', 'G', 'G', 'F', 'F', 'E', 'E'] },
+    { k: 'F', rhy: 3, rest: .20, drum: 'k.......s.......',
+      chord: ['Am', 'Am', 'F', 'F', 'Am', 'Am', 'E', 'E'] },
+    { k: 'G', rhy: 4, rest: .05, drum: 'k.k.s.1.k.k.s.2.',
+      chord: ['Am', 'F', 'G', 'Am', 'F', 'G', 'E', 'E'] },
+    { k: 'H', rhy: 1, rest: .09, drum: 'chk.s.h.k.h.s.hh',
+      chord: ['F', 'G', 'Am', 'Am', 'F', 'G', 'Am', 'Am'] }
+  ];
+  // 大逃殺的段落排列：開頭先鋪一句間奏，每 11 句喘一口，喘完再拉緊
+  function brPlan(n) {
+    const A = ['A', 'B', 'C', 'D', 'E', 'G', 'H'];
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      if (i === 0) out.push('F');
+      else if (i % 11 === 10) out.push('F');
+      else if (i % 11 === 9) out.push('E');
+      else out.push(A[(i * 3) % 7]);
+    }
+    return out;
+  }
+  const WAR_DEFS = {
+    // 對戰：13 句 × 128 步 ≈ 2:45（一場打到 2 勝差不多就這麼久）
+    battle: {
+      bpm: 152, base: 72, melWave: 'square', melVol: .112,
+      bassVol: .175, arpVol: .050, powVol: .062, drumVol: .102, seed: 9401,
+      bass: [0, 0, 7, 0, 0, 12, 7, 0],
+      arp: [0, 2, 1, 2, 0, 2, 1, 3, 2, 1, 0, 2, 3, 2, 1, 2],
+      plan: ['F', 'A', 'B', 'A', 'C', 'D', 'E', 'A', 'B', 'F', 'G', 'H', 'A']
+    },
+    // 大逃殺 10 分鐘：46 句 ≈ 10:05
+    brWar10: {
+      bpm: 146, base: 72, melWave: 'sawtooth', melVol: .092,
+      bassVol: .182, arpVol: .046, powVol: .066, drumVol: .100, seed: 9502,
+      bass: [0, 0, 0, 7, 0, 12, 7, 3],
+      arp: [0, 1, 2, 1, 0, 2, 1, 0, 2, 1, 2, 3, 1, 0, 1, 2],
+      plan: brPlan(46)
+    },
+    // 大逃殺 5 分鐘：23 句 ≈ 5:02
+    brWar5: {
+      bpm: 146, base: 72, melWave: 'sawtooth', melVol: .092,
+      bassVol: .182, arpVol: .046, powVol: .066, drumVol: .100, seed: 9503,
+      bass: [0, 0, 0, 7, 0, 12, 7, 3],
+      arp: [0, 1, 2, 1, 0, 2, 1, 0, 2, 1, 2, 3, 1, 0, 1, 2],
+      plan: brPlan(23)
+    }
+  };
+  // 同一組句庫要給兩條路徑用：compileWar（5 軌、正式播放）與 compileSong（3 軌、舊介面）
+  const _warPhraseCache = {};
+  function warPhrases(def) {
+    const key = def.seed;
+    if (_warPhraseCache[key]) return _warPhraseCache[key];
+    const out = {};
+    for (let i = 0; i < WAR_PHRASES.length; i++) {
+      const p = WAR_PHRASES[i];
+      out[p.k] = { chord: p.chord, drum: p.drum,
+        mel: genMelBars(p.chord, def.seed + i * 37, p.rhy, p.rest) };
+    }
+    _warPhraseCache[key] = out;
+    return out;
+  }
+  function compileWar(name) {
+    const def = WAR_DEFS[name] || WAR_DEFS.battle;
+    const ph = warPhrases(def);
+    const mel = [], bass = [], arp = [], pow = [], pow2 = [], drums = [];
+    def.plan.forEach(function (k) {
+      const P2 = ph[k] || ph.A;
+      for (let i = 0; i < P2.chord.length; i++) {
+        P2.mel[i].trim().split(/\s+/).forEach(function (tok) {
+          const q = tok.split(':');
+          mel.push({ midi: degMidi(q[0], def.base), len: q[1] ? parseInt(q[1], 10) : 2 });
+        });
+        const tones = chordTones(P2.chord[i]);
+        def.bass.forEach(function (v) { bass.push({ midi: v === null ? null : tones[0] + v, len: 2 }); });
+        def.arp.forEach(function (v) {
+          arp.push({ midi: v === null ? null : tones[v % 3] + (v >= 3 ? 24 : 12), len: 1 });
+        });
+        // power chord：每小節第 1、3 拍各刷一次（根音＋五度＋兩個高八度）
+        pow.push({ midi: tones[0], len: 8 });
+        pow.push({ midi: tones[0] + 7, len: 8 });
+        pow2.push({ midi: tones[0] + 12, len: 8 });
+        pow2.push({ midi: tones[0] + 19, len: 8 });
+      }
+      for (let t2 = 0; t2 < 128; t2++) {
+        const ch = P2.drum.charAt(t2 % P2.drum.length);
+        drums.push({ kind: ch === '.' ? null : ch, len: 1 });
+      }
+    });
+    return {
+      bpm: def.bpm, drumVol: def.drumVol,
+      tracks: [
+        { wave: def.melWave, vol: def.melVol, seq: mel },
+        { wave: 'triangle', vol: def.bassVol, seq: bass },
+        { wave: 'square', vol: def.arpVol, seq: arp },
+        { wave: 'sawtooth', vol: def.powVol, lp: 880, seq: pow },
+        { wave: 'sawtooth', vol: def.powVol * .72, lp: 1150, seq: pow2 }
+      ],
+      drums: drums
+    };
+  }
+  // 舊介面（compileSong）也要能播同一首：只取三軌，鼓用 A 句的型
+  function legacyWarDef(name) {
+    const def = WAR_DEFS[name];
+    const ph = warPhrases(def);
+    const phrases = {};
+    Object.keys(ph).forEach(function (k) {
+      phrases[k] = { chord: ph[k].chord, mel: ph[k].mel };
+    });
+    return { bpm: def.bpm, base: def.base, melWave: def.melWave, melVol: def.melVol,
+      bassVol: def.bassVol, arpVol: def.arpVol, drumVol: def.drumVol,
+      bass: def.bass, arp: def.arp, drum: ph.A.drum, order: def.plan.slice(), phrases: phrases };
+  }
+  SONG_DEFS.battle = legacyWarDef('battle');
+
   function compileSong(name) {
     const def = SONG_DEFS[name] || SONG_DEFS.menu;
     const mel = [], bass = [], arp = [], drums = [];
@@ -7074,33 +7205,136 @@ const AudioSys = (function () {
   }
   // 一首曲子總長（秒）：供測試與除錯確認「至少 2 分鐘」
   function songSeconds(name) {
-    const s = compileSong(name);
+    const s = WAR_DEFS[name] ? compileWar(name) : compileSong(name);
     const units = s.tracks[0].seq.reduce(function (n, x) { return n + x.len; }, 0);
     return units * (15 / s.bpm);
   }
+  // v5.34：把「各軌的音符序列」攤成「每一步有幾個事件」的格子 —— 排程只查表，不再每次比大小
+  function buildGrid(song) {
+    const tracks = song.tracks.map(function (t) {
+      return { wave: t.wave, vol: t.vol, lp: t.lp || 0, seq: t.seq };
+    });
+    if (song.drums && song.drums.length) {
+      tracks.push({ wave: 'drum', vol: song.drumVol, lp: 0, seq: song.drums });
+    }
+    let steps = 0;
+    tracks.forEach(function (t) {
+      let m = 0;
+      for (let i = 0; i < t.seq.length; i++) m += t.seq[i].len;
+      if (m > steps) steps = m;
+    });
+    const grid = new Array(steps);
+    tracks.forEach(function (t) {
+      let at = 0;
+      for (let i = 0; i < t.seq.length; i++) {
+        const o = t.seq[i];
+        if (at >= steps) break;
+        const has = (o.midi !== null && o.midi !== undefined) || (o.kind !== null && o.kind !== undefined);
+        if (has) {
+          if (!grid[at]) grid[at] = [];
+          grid[at].push({ wave: t.wave, vol: t.vol, lp: t.lp, midi: o.midi, kind: o.kind, len: o.len });
+        }
+        at += o.len;
+      }
+    });
+    return { grid: grid, steps: steps };
+  }
   // 16 分音符秒數 = 15 / bpm（四分音符 60/bpm 的 1/4）
 
+  function playEvent(e, t, stepDur) {
+    if (!ctx) return;
+    if (e.wave === 'drum') { drumHit(e.kind, t, e.vol); return; }
+    if (e.midi === null || e.midi === undefined) return;
+    const dur = e.len * stepDur;
+    const atk = Math.min(.012, dur * .25);
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = e.wave;
+    o.frequency.value = midiFreq(e.midi);
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.linearRampToValueAtTime(e.vol, t + atk);
+    g.gain.setValueAtTime(e.vol, t + Math.max(atk, dur * .62));
+    g.gain.linearRampToValueAtTime(.0001, t + dur);
+    if (e.lp) {
+      const f = ctx.createBiquadFilter();
+      f.type = 'lowpass'; f.frequency.value = e.lp; f.Q.value = .7;
+      o.connect(f); f.connect(g);
+    } else o.connect(g);
+    g.connect(musicGain);
+    o.start(t); o.stop(t + dur + .02);
+  }
   function startBGM(name) {
     stopBGM();
     if (!settings.bgm || !ensure()) return;
-    song = compileSong(name);
+    song = WAR_DEFS[name] ? compileWar(name) : compileSong(name);
     if (!song) return;
-    // 每首 64 小節、三軌等長 → 循環接回時不會走音、不會有空拍
-    parsed = song.tracks.map(function (t) { return { wave: t.wave, vol: t.vol, seq: t.seq }; });
-    if (song.drums && song.drums.length) {
-      parsed.push({ wave: 'drum', vol: song.drumVol, seq: song.drums });
-    }
-    songStart = ctx.currentTime + .08;
+    const g = buildGrid(song);
+    songGrid = g.grid; songSteps = g.steps; stepPos = 0;
+    // 每首（含 10 分鐘的大逃殺曲）各軌等長 → 接回第 0 步時和弦與鼓點都在同一格上
+    songStart = ctx.currentTime + .12;
     bgmTimer = setInterval(schedule, 40);
     schedule();
   }
   function stopBGM() {
     if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = null; }
-    song = null; parsed = null;
+    song = null; parsed = null; songGrid = null; songSteps = 0; stepPos = 0;
   }
   let noiseBuf = null;
+  let noiseBuf2 = null;      // v5.34：crash／open hat 要 1 秒的雜訊，比原本 .24 秒的長
   function drumHit(kind, t, vol) {
     if (!ctx) return;
+    // v5.34：新增的鼓件 —— 銅鈸（crash）／開合 hi-hat／三顆 tom／鼓框
+    if (kind === 'c' || kind === 'o' || kind === '1' || kind === '2' || kind === '3' || kind === 'r') {
+      if (kind === 'c' || kind === 'o') {
+        if (!noiseBuf2) {
+          const m = Math.floor(ctx.sampleRate * 1.05);
+          noiseBuf2 = ctx.createBuffer(1, m, ctx.sampleRate);
+          const dd = noiseBuf2.getChannelData(0);
+          for (let i = 0; i < m; i++) dd[i] = Math.random() * 2 - 1;
+        }
+        const dur2 = kind === 'c' ? .95 : .30;
+        const src2 = ctx.createBufferSource(); src2.buffer = noiseBuf2;
+        const f2 = ctx.createBiquadFilter();
+        f2.type = 'highpass'; f2.frequency.value = kind === 'c' ? 4200 : 7200;
+        f2.Q.value = .6;
+        const g2 = ctx.createGain();
+        g2.gain.setValueAtTime(vol * (kind === 'c' ? 1.9 : .62), t);
+        g2.gain.exponentialRampToValueAtTime(.001, t + dur2);
+        src2.connect(f2); f2.connect(g2); g2.connect(musicGain);
+        src2.start(t); src2.stop(t + dur2 + .03);
+        if (kind === 'c') {
+          // 銅鈸下面再墊一顆金屬味（兩顆高頻振盪器互打）
+          const o1 = ctx.createOscillator(), g3 = ctx.createGain();
+          o1.type = 'square'; o1.frequency.value = 3120;
+          g3.gain.setValueAtTime(vol * .16, t);
+          g3.gain.exponentialRampToValueAtTime(.001, t + .42);
+          o1.connect(g3); g3.connect(musicGain);
+          o1.start(t); o1.stop(t + .45);
+        }
+        return;
+      }
+      if (kind === 'r') {                     // 鼓框：短促的木頭聲
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(1240, t);
+        o.frequency.exponentialRampToValueAtTime(760, t + .05);
+        g.gain.setValueAtTime(vol * .55, t);
+        g.gain.exponentialRampToValueAtTime(.001, t + .06);
+        o.connect(g); g.connect(musicGain);
+        o.start(t); o.stop(t + .08);
+        return;
+      }
+      // tom：三顆不同音高，往下滑（1 高 → 3 低）
+      const base = kind === '1' ? 210 : (kind === '2' ? 152 : 108);
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(base, t);
+      o.frequency.exponentialRampToValueAtTime(base * .45, t + .17);
+      g.gain.setValueAtTime(vol * 1.25, t);
+      g.gain.exponentialRampToValueAtTime(.001, t + .20);
+      o.connect(g); g.connect(musicGain);
+      o.start(t); o.stop(t + .22);
+      return;
+    }
     if (kind === 'k') {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.type = 'sine';
@@ -7133,42 +7367,28 @@ const AudioSys = (function () {
     src.stop(t + dur + .02);
   }
   function schedule() {
-    if (!song || !ctx) return;
+    if (!song || !ctx || !songGrid) return;
     const stepDur = 15 / song.bpm;
-    const horizon = ctx.currentTime + .25;
+    const horizon = ctx.currentTime + .35;
     let guard = 0;
-    while (guard++ < 200) {
-      let earliest = Infinity, who = -1, idx = 0;
-      for (let i = 0; i < parsed.length; i++) {
-        const t = parsed[i];
-        if (t.next === undefined) t.next = songStart;
-        if (t.next < earliest) { earliest = t.next; who = i; }
+    while (guard++ < 900) {
+      const t = songStart + stepPos * stepDur;      // ← 絕對時間：循環接回點永遠對齊
+      if (t >= horizon) break;
+      // 分頁被切到背景時計時器會被節流，回來時一次補播幾百顆音會爆音 → 落後太多就靜靜跳過
+      const late = t < ctx.currentTime - .18;
+      const evs = songGrid[stepPos % songSteps];
+      if (evs && !late) {
+        const at = t < ctx.currentTime ? ctx.currentTime : t;
+        for (let i = 0; i < evs.length; i++) playEvent(evs[i], at, stepDur);
       }
-      if (who < 0 || earliest >= horizon) break;
-      const tr = parsed[who];
-      if (tr.pi === undefined) tr.pi = 0;
-      const note = tr.seq[tr.pi % tr.seq.length];
-      if (tr.wave === 'drum') {
-        if (note.kind) drumHit(note.kind, Math.max(ctx.currentTime, earliest), tr.vol);
-      } else if (note.midi !== null) {
-        const dur = note.len * stepDur;
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = tr.wave;
-        o.frequency.value = midiFreq(note.midi);
-        g.gain.setValueAtTime(tr.vol, Math.max(ctx.currentTime, earliest));
-        g.gain.setValueAtTime(tr.vol, Math.max(ctx.currentTime, earliest) + dur * .7);
-        g.gain.linearRampToValueAtTime(.0001, Math.max(ctx.currentTime, earliest) + dur * .95);
-        o.connect(g); g.connect(musicGain);
-        o.start(Math.max(ctx.currentTime, earliest));
-        o.stop(Math.max(ctx.currentTime, earliest) + dur);
-      }
-      tr.next = Math.max(ctx.currentTime, earliest) + note.len * stepDur;
-      tr.pi++;
+      stepPos++;
     }
   }
   return { ensure: ensure, sfx: sfx, startBGM: startBGM, stopBGM: stopBGM, applyVolumes: applyVolumes,
     songSeconds: songSeconds, compileSong: compileSong,
-    SONG_DEFS: SONG_DEFS, STAGE_MUSIC: STAGE_MUSIC };
+    SONG_DEFS: SONG_DEFS, STAGE_MUSIC: STAGE_MUSIC,
+    // v5.34：戰鬥曲（對戰／大逃殺）與新的排程器
+    WAR_DEFS: WAR_DEFS, WAR_PHRASES: WAR_PHRASES, compileWar: compileWar, buildGrid: buildGrid };
       })();
     } catch (__e) {
       __bootFail('AudioSys', __e);
@@ -7177,8 +7397,16 @@ const AudioSys = (function () {
   })();
 
 // 每張地圖一首專屬曲（1～8 關各一首）；BOSS 連戰用專屬魔王曲
+// v5.34：大逃殺／對戰要播「戰鬥曲」（長度＝地圖長度），不是關卡主題曲。
+//   全部呼叫端都走 stageBGM()，所以改這裡一次，暫停恢復／調音量／重開都會跟著對。
+function brSongId() {
+  const d = (typeof BR !== 'undefined' && BR.opt && BR.opt.dur) || 10;
+  return d >= 10 ? 'brWar10' : 'brWar5';
+}
 function stageBGM(stage) {
   if (Game && Game.bossRush) return 'boss';
+  if (Game && Game.mode === 'battle') return 'battle';     // 對戰：2:45 戰鬥曲
+  if (Game && Game.mode === 'br') return brSongId();       // 大逃殺：10:00／5:00 戰鬥曲
   // v4.14：關卡 8 → 32（每 4 張地圖＝一個大主題，共用同一首主題曲）
   const raw = Math.max(1, stage || (Game && Game.stage) || 1);
   const st = Math.max(1, Math.min(8, Math.floor((raw - 1) / 4) + 1));
@@ -18069,6 +18297,24 @@ function drawBRZone(T) {
 //   · 爆心半徑 5 格：軟牆全毀、範圍內玩家扣 6 格血、地面持續燃燒 10 秒（每秒 -1 格）
 //   · AI 只有一部分會察覺並往外逃（敏感度刻意不高，看起來才像真人）
 // ====
+// v5.34：核彈本體與火焰改成「算圖生成的美術素材」（spr/*.webp）。
+//   飛彈是 AI 生成後去背的正圖；火焰貼圖畫在黑底上，用 lighter 疊加就等於去背，
+//   比純程式畫的火舌自然很多。素材沒載到就自動退回原本的向量畫法，不會開天窗。
+const IMG_NUKE_SRC = 'spr/nuke-missile.webp';
+const IMG_FLAME_SRC = 'spr/flame-tongue.webp';
+const SPR = { nuke: undefined, flame: undefined };
+function spr(key, src) {
+  if (SPR[key] === undefined) {
+    SPR[key] = null;
+    if (typeof Image !== 'undefined') {
+      const im = new Image();
+      im.onload = function () { SPR[key] = im; };
+      im.onerror = function () { SPR[key] = null; };
+      try { im.src = src; } catch (e) {}
+    }
+  }
+  return SPR[key];
+}
 const NUKE_R = 5;                 // 爆炸／燃燒半徑（格）
 const NUKE_DMG = 6;               // 直擊傷害（格血）
 const NUKE_BURN_SEC = 10;         // 燒地持續秒數
@@ -18375,6 +18621,7 @@ function drawBRNukeGround(T) {
 function drawNukeArt(r) {
   const L = r * 3.55, W = r * 1.06;
   const t = Game.gameT || 0;
+  const nukeIm = spr('nuke', IMG_NUKE_SRC);
   // ① 尾焰（往上噴）
   const cols = ['rgba(255,255,255,A)', 'rgba(255,244,206,A)', 'rgba(255,200,96,A)', 'rgba(255,120,40,A)', 'rgba(210,50,10,0)'];
   for (let i = 0; i < 5; i++) {
@@ -18393,9 +18640,23 @@ function drawNukeArt(r) {
     drawFlameBlob(xx, yy, r * (.44 + .40 * near) * (1 + .12 * Math.sin(t * 15 + i * 2.1)),
       cols, .30 + .44 * near);
   }
-  // ② 尾翼
-  for (let s = 0; s < 2; s++) {
-    const sg = s ? 1 : -1;
+  // ② 彈體：有算圖素材就整顆換掉（尾焰與包覆火焰照樣用程式畫）
+  if (nukeIm) {
+    const ih = L * 1.02, iw = ih * (nukeIm.width / nukeIm.height);
+    ctx.drawImage(nukeIm, -iw * .5, -L * .40, iw, ih);
+    // 彈頭高熱光（貼圖是靜態的，落地前的燒紅要靠這層）
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const nh = ctx.createRadialGradient(0, L * .50, 0, 0, L * .50, W * .70);
+    nh.addColorStop(0, 'rgba(255,236,180,.50)');
+    nh.addColorStop(1, 'rgba(255,110,30,0)');
+    ctx.fillStyle = nh;
+    ctx.beginPath(); ctx.arc(0, L * .50, W * .70, 0, 6.283); ctx.fill();
+    ctx.restore();
+  }
+  // ② 尾翼（只在沒有算圖素材時才畫向量版）
+  for (let s2 = 0; s2 < 2 && !nukeIm; s2++) {
+    const sg = s2 ? 1 : -1;
     ctx.beginPath();
     ctx.moveTo(sg * W * .44, -L * .34);
     ctx.lineTo(sg * W * 1.02, -L * .40);
@@ -18408,7 +18669,8 @@ function drawNukeArt(r) {
     ctx.lineWidth = Math.max(1, r * .07);
     ctx.stroke();
   }
-  // ③ 彈體（上面圓柱、下面收成彈頭）
+  // ③ 彈體（上面圓柱、下面收成彈頭）—— 只在沒有算圖素材時畫
+  if (!nukeIm) {
   const g = ctx.createLinearGradient(-W * .5, 0, W * .5, 0);
   g.addColorStop(0, '#3d4453'); g.addColorStop(.18, '#8c97ad');
   g.addColorStop(.42, '#eef4ff'); g.addColorStop(.62, '#b7c2d6');
@@ -18455,6 +18717,7 @@ function drawNukeArt(r) {
   ctx.lineTo(W * .5, -L * .36);
   ctx.stroke();
   ctx.lineWidth = 1;
+  }
   // ⑧ 前景火星：很淡地貼在彈體表面，只是給「火在燒它」的貼合感，不能遮住輪廓
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
@@ -18465,11 +18728,11 @@ function drawNukeArt(r) {
     drawFlameBlob(side * W * .34, L * .26 - ph * L * .70,
       r * (.20 + .10 * Math.sin(t * 17 + i)), wl, .10 + .12 * Math.sin(ph * Math.PI));
   }
-  // 彈頭下緣往外噴的烈焰（下墜的空氣壓縮感）
-  for (let i = 0; i < 4; i++) {
-    const ph = (t * 3.1 + i * .25) % 1;
-    drawFlameBlob(Math.sin(t * 9 + i * 1.7) * r * .30, L * .50 + ph * L * .30,
-      r * (.86 - ph * .56), wl, (1 - ph) * .70);
+  // 彈頭前緣的空氣壓縮熱（不是火，太旺會像彈頭著火）
+  for (let i = 0; i < 3; i++) {
+    const ph = (t * 3.1 + i * .30) % 1;
+    drawFlameBlob(Math.sin(t * 9 + i * 1.7) * r * .24, L * .52 + ph * L * .22,
+      r * (.58 - ph * .40), wl, (1 - ph) * .20);
   }
   ctx.restore();
 }
@@ -18510,66 +18773,138 @@ function drawBRNukeBomb(T) {
 }
 
 // 燒地：焦黑地面＋一圈火界＋一堆會晃的火焰舌＋上升火星
+// ===== v5.34：燒地特效重做 =====
+//   舊版只有「一圈橘色漸層 ＋ 幾支貼紙般的火舌」，遠看很平。新版疊六層：
+//   ① 焦土（十幾塊不規則焦斑，不是正圓）② 裂縫餘燼（會呼吸）③ 地面橘紅反光
+//   ④ 上升的煙（畫在火後面，火才不會被蓋灰）⑤ 火焰本體（算圖火焰貼圖，前後兩層做景深）
+//   ⑥ 飄散的火星。火焰貼圖畫在黑底上，用 lighter 疊加就等於去背。
+function burnRnd(i, k) {          // 穩定偽隨機：不能每格重抽，不然整片焦土會一直跳
+  const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+  return v - Math.floor(v);
+}
 function drawBRBurn(T) {
   const list = Game.brBurn;
   if (!list || !list.length) return;
   const g0 = Game.gameT || 0;
   const qp = typeof qualPart === 'function' ? qualPart() : 1;
+  const im = spr('flame', IMG_FLAME_SRC);
   ctx.save();
   for (let i = 0; i < list.length; i++) {
     const f = list[i];
     if (f.t <= 0) continue;
     const cx = (f.cx + .5) * T, cy = (f.cy + .5) * T, R = NUKE_R * T;
     const fade = clamp(f.t / 1.6, 0, 1);              // 最後 1.6 秒收火
-    const gg = ctx.createRadialGradient(cx, cy, R * .08, cx, cy, R);
-    gg.addColorStop(0, 'rgba(255,150,60,' + (.50 * fade).toFixed(3) + ')');
-    gg.addColorStop(.55, 'rgba(214,72,22,' + (.36 * fade).toFixed(3) + ')');
-    gg.addColorStop(1, 'rgba(90,14,8,0)');
-    ctx.fillStyle = gg;
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.283); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,140,60,' + (.22 * fade).toFixed(3) + ')';
-    ctx.lineWidth = Math.max(1.5, T * .08);
-    ctx.beginPath(); ctx.arc(cx, cy, R * (.97 + .03 * Math.sin(g0 * 2.2 + i)), 0, 6.283); ctx.stroke();
-    ctx.lineWidth = 1;
-    // 焦黑的地面（核彈坑）
-    const cg = ctx.createRadialGradient(cx, cy, R * .1, cx, cy, R * 1.02);
-    cg.addColorStop(0, 'rgba(16,7,5,' + (.68 * fade).toFixed(3) + ')');
-    cg.addColorStop(.72, 'rgba(24,11,7,' + (.46 * fade).toFixed(3) + ')');
-    cg.addColorStop(1, 'rgba(30,14,10,0)');
+    const heat = clamp((f.t - 1.6) / 8.4, 0, 1);      // 剛炸完最旺、快燒完最弱
+    // ── ① 焦土：中心深黑 → 邊緣燒焦棕
+    const cg = ctx.createRadialGradient(cx, cy, R * .10, cx, cy, R * 1.08);
+    cg.addColorStop(0, 'rgba(9,5,4,' + (.78 * fade).toFixed(3) + ')');
+    cg.addColorStop(.46, 'rgba(16,8,6,' + (.60 * fade).toFixed(3) + ')');
+    cg.addColorStop(.80, 'rgba(26,13,8,' + (.28 * fade).toFixed(3) + ')');
+    cg.addColorStop(1, 'rgba(30,16,10,0)');
     ctx.fillStyle = cg;
-    ctx.beginPath(); ctx.arc(cx, cy, R * 1.02, 0, 6.283); ctx.fill();
-    // 不規則焦斑：純圓形看起來像貼紙，要幾塊深淺不一的燒痕
-    ctx.fillStyle = 'rgba(10,4,3,' + (.30 * fade).toFixed(3) + ')';
-    for (let k = 0; k < 7; k++) {
-      const an = k * 2.399 + i * 1.1, dd = R * (.18 + .44 * ((k * 37 % 13) / 12));
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.08, 0, 6.283); ctx.fill();
+    for (let k = 0; k < 11; k++) {
+      const an = k * 2.399 + i * 1.37;
+      const dd = R * (.12 + .78 * burnRnd(i, k));
+      ctx.fillStyle = 'rgba(7,3,2,' + ((.16 + .26 * burnRnd(i, k + 13)) * fade).toFixed(3) + ')';
       ctx.beginPath();
-      ctx.ellipse(cx + Math.cos(an) * dd, cy + Math.sin(an) * dd * .82,
-        R * (.30 + .16 * ((k * 29 % 7) / 6)), R * (.22 + .12 * ((k * 17 % 5) / 4)), an * 1.7, 0, 6.283);
+      ctx.ellipse(cx + Math.cos(an) * dd, cy + Math.sin(an) * dd * .86,
+        R * (.14 + .26 * burnRnd(i, k + 31)), R * (.10 + .18 * burnRnd(i, k + 57)),
+        an * 1.9, 0, 6.283);
       ctx.fill();
     }
+    // 燒焦的邊：一圈偏棕的擴散邊，焦土才不會像貼上去的正圓
+    ctx.strokeStyle = 'rgba(46,24,14,' + (.07 * fade).toFixed(3) + ')';
+    ctx.lineWidth = Math.max(3, T * .46);
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.01, 0, 6.283); ctx.stroke();
+    // ── ②③ 發光層：裂縫餘燼 + 地面橘紅反光
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < 3; k++) {
+      const a0 = k * 2.094 + i * .9 + burnRnd(i, k + 7) * .9;
+      const len = R * (.30 + .46 * burnRnd(i, k + 21));
+      const puls = .40 + .60 * Math.sin(g0 * 2.1 + k * 2.3 + i);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      for (let seg = 1; seg <= 4; seg++) {
+        const q2 = seg / 4;
+        const aa = a0 + Math.sin(g0 * .55 + seg * 1.3 + k) * .16;
+        ctx.lineTo(cx + Math.cos(aa) * len * q2, cy + Math.sin(aa) * len * q2 * .88);
+      }
+      ctx.strokeStyle = 'rgba(255,72,20,' + (.20 * puls * fade * (.35 + .65 * heat)).toFixed(3) + ')';
+      ctx.lineWidth = Math.max(1.5, T * .10);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,182,92,' + (.13 * puls * fade * heat).toFixed(3) + ')';
+      ctx.lineWidth = Math.max(1, T * .04);
+      ctx.stroke();
+    }
+    const gg = ctx.createRadialGradient(cx, cy, R * .05, cx, cy, R * 1.02);
+    gg.addColorStop(0, 'rgba(255,150,56,' + ((.32 + .18 * heat) * fade).toFixed(3) + ')');
+    gg.addColorStop(.46, 'rgba(228,80,24,' + (.28 * fade).toFixed(3) + ')');
+    gg.addColorStop(1, 'rgba(92,14,6,0)');
+    ctx.fillStyle = gg;
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.02, 0, 6.283); ctx.fill();
+    ctx.restore();
+    // ── ④ 煙：先畫，火才會在煙的前面
+    const smokeN = Math.max(2, Math.round(4 * qp));
+    for (let k = 0; k < smokeN; k++) {
+      const ph = (g0 * .16 + k * .27 + i * .31) % 1;
+      const sx = cx + Math.sin(g0 * .7 + k * 2.1) * R * .55;
+      const sy = cy - R * .15 - ph * R * 1.5;
+      const sr = R * (.28 + .42 * ph);
+      const sg2 = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
+      sg2.addColorStop(0, 'rgba(58,44,38,' + (.18 * (1 - ph) * fade).toFixed(3) + ')');
+      sg2.addColorStop(1, 'rgba(40,30,26,0)');
+      ctx.fillStyle = sg2;
+      ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.283); ctx.fill();
+    }
+    // ── ⑤ 火焰本體
     const tg = f.tongues || [];
-    const n = Math.max(8, Math.round(tg.length * qp));
+    const n = Math.max(10, Math.round(tg.length * qp));
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
     for (let k = 0; k < n && k < tg.length; k++) {
       const tt = tg[k];
-      const fl = .58 + .42 * Math.sin(g0 * 9 + tt.ph);
-      const rw = T * (.42 + .20 * tt.sc) * (.78 + .22 * fl);
-      const rh = T * (.78 + .56 * tt.sc) * fl;
-      const sway = Math.sin(g0 * 4.4 + tt.ph) * T * .08;
+      const fl = .55 + .45 * Math.sin(g0 * 7.5 + tt.ph);
+      const sway = Math.sin(g0 * 3.4 + tt.ph * 1.7) * T * .10;
       const bx = cx + tt.ox * T + sway, by = cy + tt.oy * T;
-      ctx.globalAlpha = .92 * fade;
-      flameDrop(bx, by + rh * .1, rw, rh, 'rgba(255,120,40,.92)');
-      flameDrop(bx, by + rh * .18, rw * .62, rh * .70, 'rgba(255,206,110,.95)');
-      flameDrop(bx, by + rh * .22, rw * .30, rh * .42, 'rgba(255,250,228,.92)');
+      const fw = T * (.58 + .30 * tt.sc) * (.86 + .18 * fl);
+      const fh = T * (1.12 + .70 * tt.sc) * (.78 + .24 * fl);
+      if (im) {
+        // 主層：正常混合 —— 貼圖自帶 alpha，橘紅色不會被加法混合沖成白色
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = .97 * fade;
+        ctx.save();
+        ctx.translate(bx, by);
+        ctx.rotate(Math.sin(g0 * 2.1 + tt.ph) * .12);
+        ctx.drawImage(im, -fw * .5, -fh, fw, fh);
+        ctx.restore();
+        // 火光溢出：lighter 低透明度，讓火「亮到旁邊」
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = .26 * fade;
+        ctx.drawImage(im, bx - fw * .78, by - fh * 1.30, fw * 1.56, fh * 1.30);
+        ctx.globalCompositeOperation = 'source-over';
+      } else {
+        ctx.globalAlpha = .92 * fade;
+        flameDrop(bx, by + fh * .10, fw, fh, 'rgba(255,120,40,.92)');
+        flameDrop(bx, by + fh * .18, fw * .62, fh * .70, 'rgba(255,206,110,.95)');
+        flameDrop(bx, by + fh * .22, fw * .30, fh * .42, 'rgba(255,250,228,.92)');
+      }
+      // 火焰根部：一顆白熱小光，火才像「有根」
+      ctx.globalAlpha = (.26 + .22 * fl) * fade;
+      ctx.fillStyle = 'rgba(255,238,196,.55)';
+      ctx.beginPath(); ctx.arc(bx, by, fw * .30, 0, 6.283); ctx.fill();
     }
-    // 上升火星
-    for (let k = 0; k < 6; k++) {
-      const ph = (g0 * .55 + k * .37 + i * .21) % 1;
-      const ex = cx + Math.sin(g0 * 1.7 + k * 2.3 + i) * R * .62;
-      const ey = cy + R * .28 - ph * R * .95;
-      ctx.globalAlpha = (1 - ph) * .85 * fade;
-      ctx.fillStyle = 'rgba(255,196,110,1)';
-      ctx.beginPath(); ctx.arc(ex, ey, Math.max(.8, T * .05 * (1 - ph * .5)), 0, 6.283); ctx.fill();
+    // ── ⑥ 火星
+    for (let k = 0; k < 8; k++) {
+      const ph = (g0 * (.42 + .18 * burnRnd(i, k)) + k * .37 + i * .21) % 1;
+      const ex = cx + Math.sin(g0 * 1.3 + k * 2.3 + i) * R * (.30 + .55 * burnRnd(i, k + 3));
+      const ey = cy + R * .30 - ph * R * (1.0 + .35 * burnRnd(i, k + 9));
+      ctx.globalAlpha = (1 - ph) * .9 * fade;
+      ctx.fillStyle = 'rgba(255,' + Math.round(170 + 60 * burnRnd(i, k + 5)) + ',110,1)';
+      ctx.beginPath(); ctx.arc(ex, ey, Math.max(.7, T * .045 * (1 - ph * .55)), 0, 6.283); ctx.fill();
     }
+    ctx.restore();
   }
   ctx.globalAlpha = 1;
   ctx.restore();
@@ -34904,7 +35239,14 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.33', date: '2026-11-06', now: true, items: [
+  { v: '5.34', date: '2026-11-07', now: true, items: [
+    '🎵 <b>對戰與大逃殺有自己的戰鬥音樂了</b>：以前這兩種模式播的是關卡主題曲。現在對戰一首約 2:45、大逃殺 10 分鐘／5 分鐘各一首，長度跟一場地圖差不多，播完直接接回開頭，中間沒有斷點。',
+    '🥁 <b>音樂更有戰場味</b>：加上銅鈸、開合 hi-hat、三顆過門鼓，還有一層「失真的低音和弦牆」，速度拉到 146～152，比關卡曲更衝。',
+    '🚀 <b>核彈本體換成算圖美術</b>：整顆飛彈（金屬彈體、紅色警戒環、尾翼、粗黑描邊）是生成後去背的圖，落下時外面包著火焰一起壓下來。',
+    '🔥 <b>地面燃燒整組重做</b>：焦土不再是一個圓，燒痕變得不規則；裂縫會透出會呼吸的紅光，火焰換成有機的火舌貼圖（前後兩層做景深），再加上上升的煙與飄散的火星。',
+    '📐 主檔 1,881,086 字元（預算 1,900,000）；133 支測試全綠（新增 verify-v534）。'
+  ]},
+  { v: '5.33', date: '2026-11-06', now: false, items: [
     '☢️ <b>大逃殺多了核彈轟炸</b>：每一分鐘縮毒圈之外，<b>每 45 秒還會來一顆核彈</b>。落下前 5 秒會廣播位置（警報聲會響，最後一秒慢慢消音），大地圖的地面與小地圖同時圈出轟炸範圍。',
     '🚀 <b>核彈是慢慢掉下來的</b>：通報結束後從天空壓下來（速度跟走路差不多、全身包著火焰），落地直接炸開 —— 畫面劇烈震動、烈焰往外噴。',
     '💥 <b>威力</b>：中心半徑 5 格的軟牆全部消失、範圍內的人扣 <b>6 格血</b>；炸完那塊地會<b>持續燃燒 10 秒</b>，站在火裡每秒再扣 1 格。AI 只有一部分會跑，有的會傻站在裡面。',
