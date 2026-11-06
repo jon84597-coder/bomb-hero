@@ -4540,7 +4540,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.23</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.24</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4595,7 +4595,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.23</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.24</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5539,7 +5539,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.23';
+const VERSION = '5.24';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -23199,6 +23199,10 @@ function aoSolid(gx, gy) {
 const AO_WIDE = .62, AO_WIDE_A = .30;      // 外圈柔光帶（長度／濃度，單位＝格）
 const AO_TIGHT = .18, AO_TIGHT_A = .28;    // 貼邊接觸帶 —— 有它才有「壓在地上」的重量
 const AO_CR = .36, AO_CR_A = .23;          // 轉角補丁（半徑／濃度）
+// v5.24：軟磚格「內側」的柔光帶刻意比空地那條短（0.34 格 vs 0.62 格）。
+//   四邊的帶都往格子裡面淡出 → 太長的話中心會疊成一團黑；縮短之後
+//   交界處的濃度仍然一樣（都從 AO_WIDE_A 起算），所以接縫照樣看不出來。
+const AO_SOFT_W = .34;
 
 /* 產生「某一格」的陰影指令（座標是格子內的相對像素）。
    拉成獨立函式，是因為測試要驗「每一關的每一格空地都被涵蓋」，不能只看畫面。 */
@@ -23274,6 +23278,49 @@ function drawFloorAO(gx0, gy0, w, h, T) {
     }
   }
 }
+/* ===================================================================
+ * v5.24：軟磚自己那一格的地板也要吃陰影（內側帶）
+ * ---------------------------------------------------------------
+ * 問題：floorAOBands 遇到實心格直接回空的陣列 —— 軟磚那格自己是實心，
+ *   所以它腳下的地板「一格陰影都沒有」。可是軟磚貼圖只佔格子 63~82%
+ *   （陶罐是圓的、木箱有 7% 邊距、冰塊是八邊形），露出來的那圈地板是亮的；
+ *   隔壁空地卻有 0.28 的貼邊陰影 → 兩者在格子交界處硬接，看起來像
+ *   「一塊亮補丁上放了一個箱子」。使用者回報的就是這個「斷層感」。
+ *
+ * 解法：軟磚格自己補「朝空地那一側」的內側帶，濃度／長度直接沿用空地那條
+ *   （AO_WIDE_A／AO_TIGHT_A、AO_WIDE／AO_TIGHT），只是方向往格子裡面淡出。
+ *   於是交界處兩邊的 alpha 完全一樣（都從 0.28 起算）→ 接縫消失。
+ *
+ * 兩個刻意的限制：
+ *   · 只有「外面是空地」的那一側才補 —— 兩塊軟磚相鄰的那一側沒有地板可露，
+ *     硬補會在整排木箱中間壓出一條黑縫；2×2 的箱堆中心也會糊成一團。
+ *   · 內側帶畫在「地板之後、貼圖之前」—— 畫在貼圖之後會把木箱本身的邊緣壓黑。
+ * ================================================================== */
+function floorAOSoftBands(gx, gy, T) {
+  const out = [];
+  const g = Game.grid;
+  if (!g || !g[gy] || (g[gy][gx] | 0) !== 2) return out;
+  const Lw = T * AO_SOFT_W, Lt = T * AO_TIGHT;
+  const add = function (d, x, y, w, h, a) { out.push({ k: 'b', d: d, x: x, y: y, w: w, h: h, a: a }); };
+  if (!aoSolid(gx, gy - 1)) { add('u', 0, 0, T, Lw, AO_WIDE_A); add('u', 0, 0, T, Lt, AO_TIGHT_A); }
+  if (!aoSolid(gx, gy + 1)) { add('d', 0, T - Lw, T, Lw, AO_WIDE_A); add('d', 0, T - Lt, T, Lt, AO_TIGHT_A); }
+  if (!aoSolid(gx - 1, gy)) { add('l', 0, 0, Lw, T, AO_WIDE_A); add('l', 0, 0, Lt, T, AO_TIGHT_A); }
+  if (!aoSolid(gx + 1, gy)) { add('r', T - Lw, 0, Lw, T, AO_WIDE_A); add('r', T - Lt, 0, Lt, T, AO_TIGHT_A); }
+  return out;
+}
+/* 分塊版：只掃軟磚格（一般空地不受影響），畫在地板之後、牆／軟磚之前 */
+function drawFloorAOSoft(gx0, gy0, w, h, T) {
+  const TS = T || Game.T;
+  for (let yy = 0; yy < h; yy++) {
+    for (let xx = 0; xx < w; xx++) {
+      const gx = gx0 + xx, gy = gy0 + yy;
+      if ((Game.grid[gy] && (Game.grid[gy][gx] | 0)) !== 2) continue;
+      const ops = floorAOSoftBands(gx, gy, TS);
+      for (let i = 0; i < ops.length; i++) drawAOOp(xx * TS, yy * TS, ops[i], TS);
+    }
+  }
+}
+
 /* 單格版：輸送帶／河流／滑冰／傳送門是「地板畫完才疊上去」的圖層，
    疊上去會把牆的陰影整片蓋掉 → 蓋完再補回來。 */
 function drawAOCell(gx, gy, T) {
@@ -23442,6 +23489,9 @@ function floorChunk(cx, cy) {
               paintFloorStyle(gx, gy, xx * T, yy * T, T, thc, (thc && thc.style) || 'forest');
             }
           }
+          /* ①-b v5.24：軟磚腳下那一圈地板要先壓陰影，而且一定在貼圖之前 ——
+                貼圖蓋上去之後才壓，會把木箱／陶罐自己的邊緣一起壓黑 */
+          try { drawFloorAOSoft(cx * FLR_N, cy * FLR_N, w, h, T); } catch (e) {}
           /* ② 牆面／軟磚（靜態：只有軟磚被炸掉才變 → floorChunkDirty 會丟掉那一塊） */
           for (let yy = 0; yy < h; yy++) {
             for (let xx = 0; xx < w; xx++) {
@@ -32586,7 +32636,15 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.23', date: '2026-11-06', now: true, items: [
+  { v: '5.24', date: '2026-11-06', now: true, items: [
+    '🧱 <b>軟牆（木箱／陶罐／冰塊…）腳下也有陰影了</b>：以前接縫陰影只壓在「牆或軟牆旁邊的空地」上，<b>軟牆自己那一格的地板完全沒有</b>。可是軟牆的圖只佔格子 6~8 成（陶罐是圓的、木箱留邊），露出來的那圈地板是亮的 → 跟隔壁的陰影硬接在一起，看起來就像「一塊亮補丁上放了一個箱子」',
+    '📏 <b>深度跟旁邊的陰影一模一樣</b>：內側陰影直接沿用空地那條的濃度與起點（交界處兩邊都是 0.28），所以兩條陰影接起來<b>看不出接縫</b>，不會有斷層感',
+    '🎯 <b>只補「朝空地」的那一側</b>：兩塊軟牆相鄰的那一側沒有地板可露，硬補會在整排木箱中間壓出一條黑縫、2×2 的箱堆中心也會糊成一團',
+    '🖼️ <b>八個大關卡全部檢查過</b>：草原木箱、沙地陶罐、冰原冰塊、熔岩岩塊、夜光玻璃方塊、深海珊瑚、天空雲朵、暗黑城紫箱 —— 每一種貼圖「露出地面」的比例都量過（63~82%），確認陰影真的看得到',
+    '🔧 內側柔光帶刻意比空地那條短（0.34 格 vs 0.62 格）：四邊都往格子裡淡出，太長會在格子中心疊成一團黑',
+    '🧪 新增 verify-v524：32 關＋RPG 8 關＋大逃殺＋對戰共 <b>1,609 格</b>「露出地面的軟牆」逐格掃過，全部 100%；另外驗交界濃度相同、軟磚炸掉後陰影會消失、烘焙順序在貼圖之前'
+  ] },
+  { v: '5.23', date: '2026-11-06', now: false, items: [
     '🧭 <b>成就、排名、線上玩家的分類列改版了</b>：以前是擠在面板最下面一條「只能左右拖」的細線，手機上只看得到 4 個分類，還要貼著螢幕邊緣拖才拖得動。現在<b>全部分類一次攤開在標題下面</b>，一格一個，手指直接點',
     '✨ <b>現在在哪一頁一眼看得出來</b>：選中的分類是<b>金色實心＋上緣高光</b>，其他是米白底。以前選中只是稍微亮一點，在大太陽下幾乎看不出來',
     '👆 <b>更好按</b>：每一格至少 <b>40px 高</b>（原本約 30px），按下去不會點到隔壁那格；窄螢幕（320px）會自動變成三欄，字不會被切掉',
@@ -38569,7 +38627,7 @@ window.__BH = {
   nearSpawn: nearSpawn, startSolo: startSolo, buildSoloStage: buildSoloStage,
   buildRpgStage: buildRpgStage, startRpg: startRpg, rpgHurt: rpgHurt,
   flameHitDamage: flameHitDamage, drawRpgHud: drawRpgHud, rngFrom: rngFrom, map32Name: map32Name,
-  hitStop: hitStop, dmgPop: dmgPop, foeHitFx: foeHitFx, drawFloorAO: drawFloorAO,
+  hitStop: hitStop, dmgPop: dmgPop, foeHitFx: foeHitFx, drawFloorAO: drawFloorAO, floorAOSoftBands: floorAOSoftBands, drawFloorAOSoft: drawFloorAOSoft,
   drawVignette: drawVignette, vignetteCanvas: vignetteCanvas,
   aoSolid: aoSolid, floorAOBands: floorAOBands, drawAOCell: drawAOCell, floorChunk: floorChunk, floorCellSkip: floorCellSkip, floorChunkDirty: floorChunkDirty,
   drawFloorLight: drawFloorLight, drawFloorDapple: drawFloorDapple, DAPPLE_A: DAPPLE_A,
