@@ -176,10 +176,14 @@ head('6. 寒冰地圖：四種元件分得出來');
     ok(ls > lh + .20, '材質表：軟牆明顯比硬牆亮（差 ' + (ls - lh).toFixed(2) + '）');
     ok(lf > ls + .20, '材質表：地板明顯比軟牆亮（差 ' + (lf - ls).toFixed(2) + '）');
   }
-  // 形狀：軟牆是八角冰晶（跟硬牆的方塊拉開差距）
+  // 形狀：v5.25 起軟牆改成「滿版立體塊」，跟硬牆同一套結構 —— 靠剪影（木箱的 X 補強板／
+  //   陶罐／冰晶面／岩漿囊…）分辨，不再靠八角切角。所以這裡改成驗「每個主題都有自己的剪影」。
   const softFn = /function paintSoftTile[\s\S]*?\n\}\n/.exec(noCmt);
   ok(!!softFn, '找得到 paintSoftTile');
-  ok(softFn && /const cut = w \* \.26/.test(softFn[0]), '軟牆用八角切角（形狀跟硬牆不同）');
+  ok(softFn && /const f = aBlock\(g, m, m, S - m \* 2/.test(softFn[0]),
+    '軟牆用滿版立體塊（跟硬牆同一套 aBlock 結構，腳下沒有地板）');
+  ok(softFn && /else if \(st === 'sand'\)/.test(softFn[0]) && /else if \(st === 'sea'\)/.test(softFn[0]),
+    '每個主題有自己的剪影（不是同一個形狀換顏色）');
 
   // 地板：不可以再有「整條白色亮帶」（會被誤認成牆的上緣）
   const fpos = noCmt.indexOf('function paintFloorTile');

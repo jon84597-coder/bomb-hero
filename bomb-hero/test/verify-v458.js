@@ -53,31 +53,35 @@ head('2. 實跑：飛行小怪始終留在可燃燒的格子上');
 }
 
 // ================================================================
-head('3. 三種剪影型軟牆：每關一組滿版參數');
+head('3. 三種剪影型軟牆（沙／天空／水）—— v5.25 起改用滿版立體塊');
 {
-  const K = (src.match(/const K = st === 'sand' \? (\[[^\]]+\]) : st === 'sky' \? (\[[^\]]+\]) : (\[[^\]]+\]);/) || []);
-  ok(K.length === 4, '沙／天空／水各自一組參數');
-  const num = function (s) { return (s.match(/[\d.]+/g) || []).map(Number); };
-  const sand = num(K[1] || ''), sky = num(K[2] || ''), sea = num(K[3] || '');
-  ok(sand[0] >= 1.4 && sky[0] >= 1.25 && sea[0] >= 1.25,
-    '橫向放大倍率都 ≥1.25（沙 ' + sand[0] + '／空 ' + sky[0] + '／水 ' + sea[0] + '）');
-  ok(sand[1] >= 1 && sky[1] >= 1 && sea[1] >= 1, '縱向額外拉伸都 ≥1（把上下留白吃掉）');
-  ok(/g\.scale\(K\[0\], K\[0\] \* K\[1\]\)/.test(src), '橫向與縱向分開縮放（不是等比硬拉變形）');
-  ok(/g\.translate\(-S \* \.5, -S \* K\[2\]\)/.test(src), '縮放錨點可調（內容偏下的珊瑚／雲才推得上去）');
+  // 舊版是把小物件（陶罐／雲朵／珊瑚）用 g.scale(K[0], K[0]*K[1]) 硬拉大到滿版：
+  //   1.25~1.6 倍的放大讓邊緣糊掉，而且四角一定還留著一圈地板 —— 那一圈就是
+  //   「軟牆腳下沒有陰影」的來源。v5.25 改成跟硬牆同一套 aBlock（接縫＋厚度面＋
+  //   頂面亮邊＋底部 AO），剪影畫在方塊裡面：形狀一樣認得出來，但腳下不再有地板。
+  ok(!/const K = st === 'sand'/.test(src), '舊的放大參數 K 已經移除（不再硬拉小物件）');
+  const i0 = src.indexOf('function paintSoftTile');
+  const softFn = i0 < 0 ? '' : src.slice(i0, src.indexOf('function paintFloorTile', i0));
+  ok(softFn.length > 4000, '找得到新版 paintSoftTile（' + softFn.length + ' 字元）');
+  ok(/g\.fillRect\(0, 0, S, S\)/.test(softFn), '三種都是滿版：先鋪滿整格底色（腳下沒有地板）');
+  ['sand', 'sky', 'sea'].forEach(function (st) {
+    ok(new RegExp("else if \\(st === '" + st + "'\\) \\{").test(softFn), st + ' 仍有專屬剪影（不是換顏色而已）');
+  });
+  ok(/aBlock\(g, m, m, S - m \* 2, S - m \* 2, r0, c, \.[\d]+\)/.test(softFn), '三種都走 aBlock（立體感與硬牆一致）');
 }
 
 // ================================================================
-head('4. 實跑：三種軟牆都真的走了縮放，而且 save/restore 對稱');
+head('4. 實跑：三種軟牆都是滿版，而且 save/restore 對稱');
 {
   ['sand', 'sky', 'sea'].forEach(function (st) {
     rec.calls.length = 0;
     const g = env.mkCtx2D();               // 沙盒的 canvas mock
     P.paintSoftTile(g, st, 128, 7, false, 0);
     const names = rec.calls.map(function (c) { return c[0]; });
-    const sc = rec.calls.filter(function (c) { return c[0] === 'scale'; });
-    ok(sc.length >= 1, st + '：有放大（scale 呼叫 ' + sc.length + ' 次）');
-    const kv = sc.length ? sc[0].slice(1) : [];
-    ok(kv[0] >= 1.25, st + '：橫向倍率 ' + (kv[0] || 0).toFixed(2) + ' ≥ 1.25');
+    const fr = rec.calls.filter(function (c) { return c[0] === 'fillRect'; })[0];
+    ok(!!fr && fr[1] === 0 && fr[2] === 0 && fr[3] === 128 && fr[4] === 128,
+      st + '：鋪滿整格（fillRect 0 0 128 128）—— 腳下沒有地板');
+    ok(names.indexOf('clearRect') >= 0, st + '：開頭有擦乾淨');
     const saves = names.filter(function (n) { return n === 'save'; }).length;
     const rests = names.filter(function (n) { return n === 'restore'; }).length;
     ok(saves === rests, st + '：save/restore 對稱（' + saves + '/' + rests + '，多一個就會污染後面的繪製）');
@@ -85,15 +89,16 @@ head('4. 實跑：三種軟牆都真的走了縮放，而且 save/restore 對稱
 }
 
 // ================================================================
-head('5. 沒有波及其他主題');
+head('5. 八個主題都是同一套結構（滿版 + 不再硬拉放大）');
 {
-  ok(/if \(st === 'sand' \|\| st === 'sky' \|\| st === 'sea'\)/.test(src), '縮放只包住這三種（其餘方箱型維持原尺寸）');
-  ['forest', 'ice', 'lava', 'neon', 'dark'].forEach(function (st) {
+  ['forest', 'sand', 'ice', 'lava', 'neon', 'sea', 'sky', 'dark'].forEach(function (st) {
     rec.calls.length = 0;
     const g = env.mkCtx2D();
     P.paintSoftTile(g, st, 128, 7, false, 0);
     const scs = rec.calls.filter(function (c) { return c[0] === 'scale'; }).length;
-    ok(scs === 0, st + ' 沒有被放大（scale 呼叫 ' + scs + ' 次）');
+    const fr = rec.calls.filter(function (c) { return c[0] === 'fillRect'; })[0];
+    ok(scs === 0, st + '：沒有用 scale 硬拉（放大會讓邊緣糊掉）');
+    ok(!!fr && fr[1] === 0 && fr[2] === 0, st + '：滿版（從 0,0 開始鋪）');
   });
 }
 

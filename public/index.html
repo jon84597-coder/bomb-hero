@@ -4540,7 +4540,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.24</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.25</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4595,7 +4595,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.24</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.25</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5539,7 +5539,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.24';
+const VERSION = '5.25';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -21717,223 +21717,276 @@ function paintSoftTile(g, st, S, seed, big, vi) {
   const c = matOf(st).soft;
   const u = S / 100;
   g.clearRect(0, 0, S, S);
-  const inset = big ? 3 * u : 7 * u;
-  const x = inset, y = inset, w = S - inset * 2, h = S - inset * 2, r = 10 * u;
-
-  // ---- 不是方箱的：陶罐 / 雲朵 / 珊瑚（用剪影辨識，跟硬牆拉開差距）----
-  if (st === 'sand' || st === 'sky' || st === 'sea') {
-    // v4.58：這三種是剪影型，原本只佔格子六成 → 等比放大到剛好滿版一格
-    g.save();
-    const K = st === 'sand' ? [1.54, 1.06, .56] : st === 'sky' ? [1.30, 1.23, .62] : [1.28, 1.35, .68];
-    g.translate(S * .5, S * K[2]); g.scale(K[0], K[0] * K[1]); g.translate(-S * .5, -S * K[2]);
-  }
-  if (st === 'sand') {
-    const cx = S * .5, cy = S * .55;
-    g.save();
-    g.shadowColor = 'rgba(60,30,10,.5)'; g.shadowBlur = S * .07; g.shadowOffsetY = S * .035;
-    // 罐身
-    const jg = g.createLinearGradient(cx - S * .30, cy, cx + S * .30, cy);
-    jg.addColorStop(0, '#f0b884'); jg.addColorStop(.38, '#cf8551'); jg.addColorStop(1, '#8f4a26');
-    g.fillStyle = jg;
-    g.beginPath();
-    g.moveTo(cx - S * .17, cy - S * .26);
-    g.bezierCurveTo(cx - S * .34, cy - S * .06, cx - S * .31, cy + S * .20, cx - S * .13, cy + S * .27);
-    g.lineTo(cx + S * .13, cy + S * .27);
-    g.bezierCurveTo(cx + S * .31, cy + S * .20, cx + S * .34, cy - S * .06, cx + S * .17, cy - S * .26);
-    g.closePath(); g.fill();
-    g.restore();
-    // 罐口
-    g.fillStyle = '#7d3f21';
-    g.beginPath(); g.ellipse(cx, cy - S * .255, S * .185, S * .062, 0, 0, 6.283); g.fill();
-    g.fillStyle = '#e8b288';
-    g.beginPath(); g.ellipse(cx, cy - S * .258, S * .130, S * .042, 0, 0, 6.283); g.fill();
-    g.fillStyle = 'rgba(60,28,12,.55)';
-    g.beginPath(); g.ellipse(cx, cy - S * .258, S * .085, S * .026, 0, 0, 6.283); g.fill();
-    // 裝飾帶（兩圈）
-    g.strokeStyle = 'rgba(120,58,28,.55)'; g.lineWidth = Math.max(1.4, S * .016);
-    g.beginPath(); g.moveTo(cx - S * .255, cy + S * .01);
-    g.quadraticCurveTo(cx, cy + S * .10, cx + S * .255, cy + S * .01); g.stroke();
-    g.strokeStyle = 'rgba(255,226,190,.35)'; g.lineWidth = Math.max(1, S * .010);
-    g.beginPath(); g.moveTo(cx - S * .262, cy + S * .055);
-    g.quadraticCurveTo(cx, cy + S * .145, cx + S * .262, cy + S * .055); g.stroke();
-    // 高光 + 裂痕
-    g.fillStyle = 'rgba(255,255,255,.30)';
-    g.beginPath(); g.ellipse(cx - S * .10, cy - S * .06, S * .045, S * .11, -.30, 0, 6.283); g.fill();
-    g.strokeStyle = 'rgba(84,38,16,.55)'; g.lineWidth = Math.max(1.2, S * .012);
-    g.beginPath(); g.moveTo(cx + S * .06, cy - S * .16); g.lineTo(cx + S * .13, cy + S * .02); g.lineTo(cx + S * .06, cy + S * .18); g.stroke();
-    g.restore(); return;
-  }
-  if (st === 'sky') {
-    // 雲朵（軟綿綿的積雲 + 底面陰影）
-    g.save();
-    g.shadowColor = 'rgba(90,116,158,.45)'; g.shadowBlur = S * .06; g.shadowOffsetY = S * .03;
-    g.fillStyle = '#ffffff';
-    [[.34, .48, .20], [.62, .42, .17], [.50, .62, .22], [.74, .60, .13], [.26, .62, .13]].forEach(function (o) {
-      g.beginPath(); g.arc(S * o[0], S * o[1], S * o[2], 0, 6.283); g.fill();
-    });
-    g.restore();
-    // 底面偏藍的陰影（雲的厚度）
-    g.fillStyle = 'rgba(170,196,232,.55)';
-    g.beginPath(); g.ellipse(S * .50, S * .70, S * .26, S * .075, 0, 0, 6.283); g.fill();
-    g.fillStyle = 'rgba(255,255,255,.95)';
-    g.beginPath(); g.ellipse(S * .46, S * .44, S * .15, S * .10, 0, 0, 6.283); g.fill();
-    g.restore(); return;
-  }
-  if (st === 'sea') {
-    // 珊瑚叢（底下有一小片礁石）
-    g.save();
-    g.shadowColor = 'rgba(6,40,44,.5)'; g.shadowBlur = S * .05; g.shadowOffsetY = S * .02;
-    g.fillStyle = 'rgba(36,86,90,.85)';
-    g.beginPath(); g.ellipse(S * .5, S * .74, S * .34, S * .13, 0, 0, 6.283); g.fill();
-    g.restore();
-    const cols = ['rgba(255,150,190,.95)', 'rgba(130,240,224,.95)', 'rgba(255,196,140,.95)'];
-    // 珊瑚頭（圓球狀的腦珊瑚 / 海葵）
-    for (let i = 0; i < 3; i++) {
-      const bx = S * (.24 + i * .26), by = S * (.60 + (i % 2) * .06);
-      const br = S * (.085 + dhash(seed, i, 191) * .030);
-      const bg = g.createRadialGradient(bx - br * .3, by - br * .35, 0, bx, by, br);
-      bg.addColorStop(0, cols[i % 3]); bg.addColorStop(1, i % 2 ? 'rgba(60,150,150,.85)' : 'rgba(180,90,130,.85)');
-      g.fillStyle = bg;
-      g.beginPath(); g.arc(bx, by, br, 0, 6.283); g.fill();
-      g.fillStyle = 'rgba(255,255,255,.30)';
-      g.beginPath(); g.arc(bx - br * .30, by - br * .34, br * .30, 0, 6.283); g.fill();
-    }
-    for (let i = 0; i < 3; i++) {
-      const cx = S * (.28 + i * .22), by = S * .74;
-      const hh = S * (.26 + dhash(seed, i, 173) * .22);
-      g.strokeStyle = cols[i % 3];
-      g.lineWidth = Math.max(3.4, S * .052); g.lineCap = 'round';
-      g.beginPath();
-      g.moveTo(cx, by);
-      g.quadraticCurveTo(cx - S * .05, by - hh * .55, cx + S * .03, by - hh);
-      g.stroke();
-      g.lineWidth = Math.max(2.2, S * .036);
-      g.beginPath(); g.moveTo(cx, by - hh * .45); g.lineTo(cx - S * .12, by - hh * .72); g.stroke();
-      g.beginPath(); g.moveTo(cx + S * .02, by - hh * .60); g.lineTo(cx + S * .13, by - hh * .84); g.stroke();
-      // 末端圓頭（珊瑚的肉感）
-      g.fillStyle = cols[i % 3];
-      g.beginPath(); g.arc(cx + S * .03, by - hh, S * .038, 0, 6.283); g.fill();
-      g.beginPath(); g.arc(cx - S * .12, by - hh * .72, S * .030, 0, 6.283); g.fill();
-      g.beginPath(); g.arc(cx + S * .13, by - hh * .84, S * .030, 0, 6.283); g.fill();
-    }
-    g.lineCap = 'butt';
-    g.restore(); return;
-  }
-
-  // ---- 方箱型：木箱 / 冰晶 / 熔岩 / 霓虹 / 骸骨 ----
-  if (st === 'ice') {
-    const cut = w * .26;
-    const oct = function (dx, dy, ww, hh, cc) {
-      g.beginPath();
-      g.moveTo(dx + cc, dy); g.lineTo(dx + ww - cc, dy);
-      g.lineTo(dx + ww, dy + cc); g.lineTo(dx + ww, dy + hh - cc);
-      g.lineTo(dx + ww - cc, dy + hh); g.lineTo(dx + cc, dy + hh);
-      g.lineTo(dx, dy + hh - cc); g.lineTo(dx, dy + cc);
-      g.closePath();
-    };
-    g.save();
-    g.shadowColor = 'rgba(4,32,52,.55)'; g.shadowBlur = w * .10; g.shadowOffsetY = w * .04;
-    g.fillStyle = 'rgba(6,40,62,.55)'; oct(x, y, w, h, cut); g.fill();
-    g.restore();
-    const lg = g.createLinearGradient(x, y, x + w * .5, y + h);
-    lg.addColorStop(0, '#e6fcff'); lg.addColorStop(.44, '#7bdcf5'); lg.addColorStop(1, '#33a2cc');
-    g.fillStyle = lg; oct(x, y, w, h, cut); g.fill();
-    g.save(); oct(x, y, w, h, cut); g.clip();
-    g.fillStyle = 'rgba(255,255,255,.46)';
-    g.beginPath();
-    g.moveTo(x + w * .50, y + h * .18); g.lineTo(x + w * .78, y + h * .50);
-    g.lineTo(x + w * .50, y + h * .82); g.lineTo(x + w * .22, y + h * .50);
-    g.closePath(); g.fill();
-    g.fillStyle = 'rgba(255,255,255,.26)';
-    g.beginPath(); g.moveTo(x, y + h * .42); g.lineTo(x + w * .50, y + h * .20); g.lineTo(x, y + h * .10); g.closePath(); g.fill();
-    g.restore();
-    oct(x, y, w, h, cut); g.strokeStyle = 'rgba(10,54,78,.66)';
-    g.lineWidth = Math.max(1.6, S * .020); g.stroke();
-    oct(x + 3 * u, y + 3 * u, w - 6 * u, h - 6 * u, cut * .9);
-    g.strokeStyle = 'rgba(236,255,255,.90)'; g.lineWidth = Math.max(1, S * .013); g.stroke();
-    return;
-  }
-
-  const f = aBlock(g, x, y, w, h, r, c, .11);
-  const fx = f.x, fy = f.y, fw = f.w, fh = f.h;
+  /* v5.25：軟磚＝「滿版實心塊」。
+     以前軟磚是「擺在地板上的小物件」（木箱 76%、陶罐 77%、珊瑚 63%…），
+     腳下留了一圈亮地板；靠 v5.24 的內側陰影去補永遠補不平 —— 石牆填滿整格、
+     軟磚留一圈，兩者在格子交界就是硬接的斷層。使用者看的是這個。
+     現在跟硬牆同一套 aBlock 結構：接縫（染色暗線）+ 立體塊，腳下沒有地板，
+     「軟磚沒有陰影」的問題整個消失，也不再需要軟磚專用陰影。 */
+  g.fillStyle = shadeHex(c.face3 || c.face2, .58); g.fillRect(0, 0, S, S);
+  const m = 1.6 * u, r0 = 8 * u;
+  const f = aBlock(g, m, m, S - m * 2, S - m * 2, r0, c, .12);
+  const fx = f.x, fy = f.y, fw = f.w, fh = f.h, r = r0;
 
   if (st === 'forest') {
-    aPlanks(g, fx, fy, fw, fh, seed, '#eab587', '#c0844c', 'rgba(104,62,26,.62)');
-    // 交叉補強板
-    g.strokeStyle = 'rgba(146,94,46,.80)'; g.lineWidth = Math.max(2.4, S * .036);
-    g.beginPath();
-    g.moveTo(fx + fw * .13, fy + fh * .14); g.lineTo(fx + fw * .87, fy + fh * .86);
-    g.moveTo(fx + fw * .87, fy + fh * .14); g.lineTo(fx + fw * .13, fy + fh * .86);
-    g.stroke();
-    g.strokeStyle = 'rgba(255,226,186,.35)'; g.lineWidth = Math.max(1, S * .014);
-    g.beginPath(); g.moveTo(fx + fw * .13, fy + fh * .14 + 2); g.lineTo(fx + fw * .87, fy + fh * .86 + 2); g.stroke();
-    // 四角釘
-    g.fillStyle = 'rgba(255,248,226,.90)';
-    [[.16, .16], [.84, .16], [.16, .84], [.84, .84]].forEach(function (o) {
-      g.beginPath(); g.arc(fx + fw * o[0], fy + fh * o[1], Math.max(1.6, S * .024), 0, 6.283); g.fill();
+    aPlanks(g, fx, fy, fw, fh, seed, '#f2c899', '#bd7f45', 'rgba(96,56,22,.72)');
+    // X 型補強板 —— 木箱的招牌特徵，縮到 27px 也認得出來
+    g.save(); aClipRR(g, fx, fy, fw, fh, r);
+    g.lineCap = 'round';
+    for (let i = 0; i < 2; i++) {
+      const x0 = fx + fw * (i ? .95 : .05), x1 = fx + fw * (i ? .05 : .95);
+      g.strokeStyle = 'rgba(118,70,30,.90)'; g.lineWidth = Math.max(3.4, S * .054);
+      g.beginPath(); g.moveTo(x0, fy + fh * .04); g.lineTo(x1, fy + fh * .96); g.stroke();
+      g.strokeStyle = 'rgba(255,232,196,.44)'; g.lineWidth = Math.max(1, S * .014);
+      g.beginPath(); g.moveTo(x0 - Math.max(1, S * .013), fy + fh * .05); g.lineTo(x1 - Math.max(1, S * .013), fy + fh * .95); g.stroke();
+    }
+    g.lineCap = 'butt';
+    g.restore();
+    // 四角釘（木箱被釘死在框上）
+    g.fillStyle = 'rgba(255,246,224,.92)';
+    [[.12, .12], [.88, .12], [.12, .88], [.88, .88]].forEach(function (o) {
+      g.beginPath(); g.arc(fx + fw * o[0], fy + fh * o[1], Math.max(1.6, S * .022), 0, 6.283); g.fill();
     });
-  } else if (st === 'lava') {
+  } else if (st === 'sand') {
+    // 兩只大陶罐並排（有頸、有肩、有圈足）—— 一張貼圖就是一格陶罐
+    aFill(g, fx, fy, fw, fh, r, '#48200f');
     g.save(); aClipRR(g, fx, fy, fw, fh, r);
-    g.fillStyle = 'rgba(52,22,10,.70)'; g.fillRect(fx, fy, fw, fh);
-    const molten = g.createRadialGradient(fx + fw * .5, fy + fh * .60, 0, fx + fw * .5, fy + fh * .60, fw * .48);
-    molten.addColorStop(0, 'rgba(255,206,120,.95)'); molten.addColorStop(.50, 'rgba(244,126,42,.62)');
-    molten.addColorStop(1, 'rgba(150,44,8,0)');
-    g.fillStyle = molten; g.fillRect(fx, fy, fw, fh);
+    for (let i = 0; i < 2; i++) {
+      const jx = fx + fw * (i ? .735 : .265);
+      const t0 = fy + fh * .11, bot = fy + fh * 1.00;
+      const hw = fw * .236, nw = fw * .098, cyB = t0 + fh * .43;
+      const jg = g.createLinearGradient(jx - hw, 0, jx + hw, 0);
+      jg.addColorStop(0, '#fbd2a4'); jg.addColorStop(.28, '#e29d65');
+      jg.addColorStop(.66, '#b4663c'); jg.addColorStop(1, '#78381a');
+      g.fillStyle = jg;
+      // 頸（微收）
+      g.beginPath();
+      g.moveTo(jx - nw, t0);
+      g.lineTo(jx + nw, t0);
+      g.quadraticCurveTo(jx + nw * 1.65, t0 + fh * .22, jx + hw * .80, cyB - fh * .12);
+      g.lineTo(jx - hw * .80, cyB - fh * .12);
+      g.quadraticCurveTo(jx - nw * 1.65, t0 + fh * .22, jx - nw, t0);
+      g.closePath(); g.fill();
+      // 腹
+      g.beginPath(); g.ellipse(jx, cyB, hw, fh * .34, 0, 0, 6.283); g.fill();
+      // 圈足
+      g.beginPath(); g.ellipse(jx, bot - fh * .02, hw * .60, fh * .050, 0, 0, 6.283); g.fill();
+      // 瓶口：暗內圈 + 亮唇 + 黑洞
+      g.fillStyle = '#602d13';
+      g.beginPath(); g.ellipse(jx, t0, nw * 1.18, nw * .58, 0, 0, 6.283); g.fill();
+      g.fillStyle = '#eeb98d';
+      g.beginPath(); g.ellipse(jx, t0 - fh * .008, nw * .92, nw * .40, 0, 0, 6.283); g.fill();
+      g.fillStyle = 'rgba(48,20,8,.82)';
+      g.beginPath(); g.ellipse(jx, t0 - fh * .008, nw * .56, nw * .22, 0, 0, 6.283); g.fill();
+      // 受光面 + 裝飾帶
+      g.fillStyle = 'rgba(255,244,222,.26)';
+      g.beginPath(); g.ellipse(jx - hw * .48, cyB - fh * .04, hw * .17, fh * .20, -.12, 0, 6.283); g.fill();
+      g.strokeStyle = 'rgba(110,48,18,.46)'; g.lineWidth = Math.max(1.1, S * .012);
+      g.beginPath(); g.moveTo(jx - hw * .88, cyB + fh * .10);
+      g.quadraticCurveTo(jx, cyB + fh * .24, jx + hw * .88, cyB + fh * .10); g.stroke();
+      g.strokeStyle = 'rgba(255,230,198,.28)';
+      g.beginPath(); g.moveTo(jx - hw * .86, cyB - fh * .02);
+      g.quadraticCurveTo(jx, cyB + fh * .12, jx + hw * .86, cyB - fh * .02); g.stroke();
+    }
     g.restore();
-    aGlowCracks(g, fx, fy + fh * .20, fw, fh * .78, seed, 'rgba(28,10,4,.80)', 'rgba(255,190,90,.95)', 'rgba(255,140,40,.9)', Math.max(1.6, S * .020), 2);
-    aCap(g, fx, fy, fw, fh, 'rgba(44,22,12,.94)', seed, .24);
-    aSpeckles(g, fx, fy, fw, fh * .32, seed, ['rgba(255,180,90,.55)', 'rgba(26,12,8,.55)'], 12, 1, 2);
-  } else if (st === 'neon') {
+  } else if (st === 'ice') {
+    const lg = g.createLinearGradient(fx, fy, fx + fw, fy + fh);
+    lg.addColorStop(0, '#f4feff'); lg.addColorStop(.42, '#8ae0f8'); lg.addColorStop(1, '#2f9bc8');
+    aFill(g, fx, fy, fw, fh, r, lg);
     g.save(); aClipRR(g, fx, fy, fw, fh, r);
-    const ig = g.createLinearGradient(fx, fy, fx + fw, fy + fh);
-    ig.addColorStop(0, 'rgba(226,250,255,.98)'); ig.addColorStop(.5, 'rgba(126,214,248,.92)');
-    ig.addColorStop(1, 'rgba(70,158,212,.92)');
-    g.fillStyle = ig; g.fillRect(fx, fy, fw, fh);
-    // 折射內框
-    g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = Math.max(1.6, S * .020);
-    g.strokeRect(fx + fw * .15, fy + fh * .15, fw * .70, fh * .70);
-    g.strokeStyle = 'rgba(255,110,230,.70)'; g.lineWidth = Math.max(1.2, S * .014);
-    g.strokeRect(fx + fw * .27, fy + fh * .27, fw * .46, fh * .46);
-    // 高光斜角
-    g.fillStyle = 'rgba(255,255,255,.55)';
+    // 三塊大晶面交於中心 —— 是一整塊冰晶，不是四邊貼齊的窗格
+    g.fillStyle = 'rgba(255,255,255,.48)';
     g.beginPath();
-    g.moveTo(fx, fy + fh * .30); g.lineTo(fx + fw * .30, fy); g.lineTo(fx + fw * .46, fy);
-    g.lineTo(fx, fy + fh * .46); g.closePath(); g.fill();
+    g.moveTo(fx + fw * .04, fy + fh * .40); g.lineTo(fx + fw * .48, fy + fh * .04);
+    g.lineTo(fx + fw * .57, fy + fh * .50); g.lineTo(fx + fw * .16, fy + fh * .90);
+    g.closePath(); g.fill();
+    g.fillStyle = 'rgba(214,246,255,.30)';
+    g.beginPath();
+    g.moveTo(fx + fw * .48, fy + fh * .04); g.lineTo(fx + fw * .97, fy + fh * .14);
+    g.lineTo(fx + fw * .95, fy + fh * .66); g.lineTo(fx + fw * .57, fy + fh * .50);
+    g.closePath(); g.fill();
+    g.fillStyle = 'rgba(22,104,144,.20)';
+    g.beginPath();
+    g.moveTo(fx + fw * .57, fy + fh * .50); g.lineTo(fx + fw * .95, fy + fh * .66);
+    g.lineTo(fx + fw * .82, fy + fh * .98); g.lineTo(fx + fw * .16, fy + fh * .90);
+    g.closePath(); g.fill();
+    // 稜線（左上受光、右下背光）
+    g.lineCap = 'round';
+    g.strokeStyle = 'rgba(255,255,255,.80)'; g.lineWidth = Math.max(1.2, S * .016);
+    g.beginPath(); g.moveTo(fx + fw * .48, fy + fh * .04); g.lineTo(fx + fw * .57, fy + fh * .50);
+    g.lineTo(fx + fw * .16, fy + fh * .90); g.stroke();
+    g.beginPath(); g.moveTo(fx + fw * .57, fy + fh * .50); g.lineTo(fx + fw * .97, fy + fh * .14); g.stroke();
+    g.strokeStyle = 'rgba(24,96,136,.34)'; g.lineWidth = Math.max(1, S * .012);
+    g.beginPath(); g.moveTo(fx + fw * .57, fy + fh * .50); g.lineTo(fx + fw * .95, fy + fh * .66); g.stroke();
+    g.lineCap = 'butt';
     g.restore();
-    // 外圈光暈
-    g.save();
-    g.shadowColor = 'rgba(120,232,255,.85)'; g.shadowBlur = S * .07;
-    aStroke(g, fx, fy, fw, fh, r, 'rgba(150,240,255,.95)', Math.max(1.8, S * .022));
-    g.restore();
-    return;
-  } else {
-    // dark：石板墓碑 + 骸骨
-    aBricks(g, fx, fy, fw, fh, 2, '#2a1020', '#8a4a6b', '#5a2740', seed, r);
+    aCracks(g, fx, fy, fw, fh, seed, 'rgba(8,44,66,.34)', 'rgba(224,252,255,.50)', Math.max(1, S * .011), 1);
+  } else if (st === 'lava') {
+    // 岩石 + 中央岩漿囊：整塊發亮會被讀成「地上一個洞」，全暗又變成一塊黑洞。
+    //   留一圈厚岩殼、中間開一個不規則的岩漿囊，兩者都讀得出來。
+    aFill(g, fx, fy, fw, fh, r, '#3a2014');
     g.save(); aClipRR(g, fx, fy, fw, fh, r);
-    // 綠色鬼火
-    aGlowDot(g, fx + fw * .5, fy + fh * .40, Math.max(2, S * .030), 'rgba(150,255,190,.85)', S * .12);
-    // 骨頭
+    aSpeckles(g, fx, fy, fw, fh, seed, ['rgba(98,60,36,.55)', 'rgba(16,7,3,.55)'], 16, 1, 2.4);
+    const cx0 = fx + fw * .50, cy0 = fy + fh * .54, baseR = fw * .285;
+    g.beginPath();
+    for (let i = 0; i <= 16; i++) {
+      const an = i / 16 * 6.283;
+      const rr = baseR * (1 + .15 * Math.sin(an * 3 + (seed % 7)) + .10 * Math.sin(an * 5 + 1.7));
+      const vx = cx0 + Math.cos(an) * rr, vy = cy0 + Math.sin(an) * rr * .92;
+      if (!i) g.moveTo(vx, vy); else g.lineTo(vx, vy);
+    }
+    g.closePath();
+    const core = g.createRadialGradient(cx0 - baseR * .26, cy0 - baseR * .30, baseR * .06, cx0, cy0, baseR * 1.16);
+    core.addColorStop(0, '#ffe9a8'); core.addColorStop(.36, '#ffb64a');
+    core.addColorStop(.74, '#e9660f'); core.addColorStop(1, '#8c2c04');
+    g.fillStyle = core; g.fill();
+    g.strokeStyle = 'rgba(255,214,120,.85)'; g.lineWidth = Math.max(1.4, S * .017); g.stroke();
+    // 從岩漿囊往外裂的細縫
+    g.lineCap = 'round';
+    for (let i = 0; i < 4; i++) {
+      const an2 = -2.4 + i * 1.52 + (seed % 5) * .12;
+      const r1 = baseR * 1.02, r2 = baseR * (1.44 + dhash(seed, i, 271) * .34);
+      g.strokeStyle = 'rgba(255,150,52,.72)'; g.lineWidth = Math.max(1.2, S * .014);
+      g.beginPath();
+      g.moveTo(cx0 + Math.cos(an2) * r1, cy0 + Math.sin(an2) * r1 * .92);
+      g.lineTo(cx0 + Math.cos(an2) * r2, cy0 + Math.sin(an2) * r2 * .92);
+      g.stroke();
+    }
+    g.lineCap = 'butt';
+    g.restore();
+    g.save(); g.shadowColor = 'rgba(255,120,24,.50)'; g.shadowBlur = S * .08;
+    aStroke(g, fx, fy, fw, fh, r, 'rgba(255,176,96,.52)', Math.max(1.2, S * .015)); g.restore();
+  } else if (st === 'neon') {
+    const ig = g.createLinearGradient(fx, fy, fx + fw, fy + fh);
+    ig.addColorStop(0, 'rgba(232,252,255,.99)'); ig.addColorStop(.5, 'rgba(124,214,248,.96)');
+    ig.addColorStop(1, 'rgba(62,150,206,.96)');
+    aFill(g, fx, fy, fw, fh, r, ig);
+    g.save(); aClipRR(g, fx, fy, fw, fh, r);
+    g.strokeStyle = 'rgba(255,255,255,.88)'; g.lineWidth = Math.max(1.6, S * .020);
+    g.strokeRect(fx + fw * .13, fy + fh * .13, fw * .74, fh * .74);
+    g.strokeStyle = 'rgba(255,110,230,.82)'; g.lineWidth = Math.max(1.2, S * .015);
+    g.strokeRect(fx + fw * .27, fy + fh * .27, fw * .46, fh * .46);
+    g.fillStyle = 'rgba(255,255,255,.50)';
+    g.beginPath();
+    g.moveTo(fx, fy + fh * .28); g.lineTo(fx + fw * .28, fy); g.lineTo(fx + fw * .46, fy);
+    g.lineTo(fx, fy + fh * .46); g.closePath(); g.fill();
+    g.fillStyle = 'rgba(202,242,255,.82)';
+    [[.12, .12], [.88, .12], [.12, .88], [.88, .88]].forEach(function (o) {
+      g.beginPath(); g.arc(fx + fw * o[0], fy + fh * o[1], Math.max(1.2, S * .017), 0, 6.283); g.fill();
+    });
+    g.restore();
+    g.save();
+    g.shadowColor = 'rgba(120,232,255,.90)'; g.shadowBlur = S * .08;
+    aStroke(g, fx, fy, fw, fh, r, 'rgba(150,240,255,.95)', Math.max(1.8, S * .024));
+    g.restore();
+  } else if (st === 'sea') {
+    // 礁岩塊：不規則的岩面 + 幾叢短珊瑚 + 藤壺。
+    //   （試過「珊瑚樹枝」→ 像彩色樹枝；「放射觸手」→ 像風車。岩面最穩，也跟砌石牆分得開。）
+    aFill(g, fx, fy, fw, fh, r, '#3c7c84');
+    g.save(); aClipRR(g, fx, fy, fw, fh, r);
+    // 岩面：三四塊帶稜角的板（左上受光、右下背光）
+    const rk = [[.02, .04, .46, .44, 'rgba(150,206,208,.55)'],
+                [.48, .02, .48, .34, 'rgba(126,182,186,.50)'],
+                [.02, .46, .40, .50, 'rgba(96,154,160,.55)'],
+                [.44, .38, .54, .58, 'rgba(70,124,132,.55)']];
+    for (let i = 0; i < rk.length; i++) {
+      const q = rk[i];
+      g.fillStyle = q[4];
+      g.beginPath();
+      g.moveTo(fx + fw * (q[0] + .05), fy + fh * q[1]);
+      g.lineTo(fx + fw * (q[0] + q[2]), fy + fh * (q[1] + .04));
+      g.lineTo(fx + fw * (q[0] + q[2] - .04), fy + fh * (q[1] + q[3]));
+      g.lineTo(fx + fw * q[0], fy + fh * (q[1] + q[3] - .04));
+      g.closePath(); g.fill();
+    }
+    // 苔綠斑
+    aMoss(g, fx, fy, fw, fh, 'rgba(96,168,116,.50)', seed, 5);
+    // 短珊瑚叢（三叢，斜斜的小枝）
+    const ccols = ['rgba(255,150,182,.97)', 'rgba(255,204,140,.97)', 'rgba(160,240,224,.97)'];
+    const tuft = function (bx, by, col, k) {
+      g.lineCap = 'round';
+      for (let i = 0; i < 5; i++) {
+        const an = -1.5708 + (i - 2) * .42 + (dhash(seed, i + k, 291) - .5) * .3;
+        const L = fh * (.14 + dhash(seed, i + k, 293) * .12);
+        g.strokeStyle = col; g.lineWidth = Math.max(2, S * .022);
+        g.beginPath(); g.moveTo(bx, by);
+        g.quadraticCurveTo(bx + Math.cos(an) * L * .5, by + Math.sin(an) * L * .7,
+                           bx + Math.cos(an) * L, by + Math.sin(an) * L);
+        g.stroke();
+        g.fillStyle = col;
+        g.beginPath(); g.arc(bx + Math.cos(an) * L, by + Math.sin(an) * L, Math.max(1, S * .012), 0, 6.283); g.fill();
+      }
+      g.lineCap = 'butt';
+    };
+    tuft(fx + fw * .20, fy + fh * .86, ccols[0], 1);
+    tuft(fx + fw * .54, fy + fh * .94, ccols[2], 7);
+    tuft(fx + fw * .84, fy + fh * .80, ccols[1], 13);
+    // 藤壺
+    for (let i = 0; i < 5; i++) {
+      const bx = fx + fw * (.14 + dhash(seed, i, 301) * .74);
+      const by = fy + fh * (.16 + dhash(seed, i, 303) * .56);
+      g.fillStyle = 'rgba(232,250,246,.62)';
+      g.beginPath(); g.arc(bx, by, Math.max(1.4, S * .019), 0, 6.283); g.fill();
+      g.fillStyle = 'rgba(30,80,84,.55)';
+      g.beginPath(); g.arc(bx, by, Math.max(.8, S * .009), 0, 6.283); g.fill();
+    }
+    g.restore();
+  } else if (st === 'sky') {
+    const sg = g.createLinearGradient(fx, fy, fx, fy + fh);
+    sg.addColorStop(0, '#cfe0f7'); sg.addColorStop(.5, '#b9cfea'); sg.addColorStop(1, '#93b0d6');
+    aFill(g, fx, fy, fw, fh, r, sg);
+    g.save(); aClipRR(g, fx, fy, fw, fh, r);
+    // 雲團：一次把所有圓弧併成同一條路徑填白 → 內部沒有接縫，不會變泡泡紙。
+    //   立體感只靠「每團淡淡的邊緣暗面 + 整塊下方一道藍影」，不要一團一圈硬邊。
+    const puff = [[.28, .40, .36], [.74, .30, .29], [.56, .68, .27], [.12, .72, .19], [.92, .78, .16], [.44, .14, .22]];
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    for (let i = 0; i < puff.length; i++) {
+      const o = puff[i];
+      g.moveTo(fx + fw * o[0] + fw * o[2], fy + fh * o[1]);
+      g.arc(fx + fw * o[0], fy + fh * o[1], fw * o[2], 0, 6.283);
+    }
+    g.fill();
+    for (let i = 0; i < puff.length; i++) {
+      const o = puff[i];
+      const rg = g.createRadialGradient(fx + fw * o[0] - fw * o[2] * .30, fy + fh * o[1] - fh * o[2] * .40, fw * o[2] * .10,
+                                        fx + fw * o[0], fy + fh * o[1], fw * o[2]);
+      rg.addColorStop(0, 'rgba(255,255,255,0)'); rg.addColorStop(.66, 'rgba(226,238,252,.10)');
+      rg.addColorStop(1, 'rgba(176,200,232,.42)');
+      g.fillStyle = rg;
+      g.beginPath(); g.arc(fx + fw * o[0], fy + fh * o[1], fw * o[2], 0, 6.283); g.fill();
+    }
+    // 整塊的底部藍影（雲的厚度）
+    const bs = g.createLinearGradient(fx, fy + fh * .48, fx, fy + fh);
+    bs.addColorStop(0, 'rgba(124,160,208,0)'); bs.addColorStop(1, 'rgba(110,148,200,.62)');
+    g.fillStyle = bs; g.fillRect(fx, fy + fh * .48, fw, fh * .52);
+    g.restore();
+    aStroke(g, fx + fw * .06, fy + fh * .06, fw * .88, fh * .88, r * .92,
+            'rgba(255,242,208,.90)', Math.max(1.2, S * .017));
+  } else {
+    // dark：紫黑石板 + 骸骨 + 鬼火
+    aBricks(g, fx, fy, fw, fh, 2, '#1d0a16', '#8a4a6b', '#552438', seed, r);
+    g.save(); aClipRR(g, fx, fy, fw, fh, r);
+    aGlowDot(g, fx + fw * .5, fy + fh * .34, Math.max(2, S * .034), 'rgba(150,255,190,.85)', S * .14);
     g.strokeStyle = 'rgba(240,232,218,.92)'; g.lineWidth = Math.max(2.4, S * .030); g.lineCap = 'round';
     for (let i = 0; i < 3; i++) {
-      const bx = fx + fw * (.22 + i * .28), by = fy + fh * .78;
+      const bx = fx + fw * (.24 + i * .26), by = fy + fh * .88;
       g.beginPath(); g.moveTo(bx - fw * .10, by + fh * .05); g.lineTo(bx + fw * .10, by - fh * .05); g.stroke();
     }
     g.lineCap = 'butt';
-    // 骷髏（只有一半的變體有，其他是散骨頭 → 不會整片一模一樣）
-    if (V % 2 === 0) {
-    g.fillStyle = 'rgba(248,242,230,.96)';
-    g.beginPath(); g.ellipse(fx + fw * .5, fy + fh * .70, fw * .155, fh * .125, 0, 0, 6.283); g.fill();
-    g.fillStyle = 'rgba(36,12,22,.92)';
-    g.beginPath(); g.arc(fx + fw * .44, fy + fh * .68, fw * .036, 0, 6.283); g.fill();
-    g.beginPath(); g.arc(fx + fw * .56, fy + fh * .68, fw * .036, 0, 6.283); g.fill();
-    g.fillStyle = 'rgba(60,20,34,.75)';
-    g.fillRect(fx + fw * .46, fy + fh * .755, fw * .08, fh * .022);
+    // 骷髏一定要每一格都有：一半的變體不畫的話，那幾格會跟「紫磚硬牆」長得一模一樣。
+    if (true) {
+      g.fillStyle = 'rgba(248,242,230,.97)';
+      g.beginPath(); g.ellipse(fx + fw * .5, fy + fh * .60, fw * .175, fh * .145, 0, 0, 6.283); g.fill();
+      g.fillStyle = 'rgba(36,12,22,.94)';
+      g.beginPath(); g.arc(fx + fw * .435, fy + fh * .575, fw * .042, 0, 6.283); g.fill();
+      g.beginPath(); g.arc(fx + fw * .565, fy + fh * .575, fw * .042, 0, 6.283); g.fill();
+      g.fillStyle = 'rgba(60,20,34,.80)';
+      g.fillRect(fx + fw * .46, fy + fh * .665, fw * .08, fh * .026);
     }
     g.restore();
-    aOutline(g, fx, fy, fw, fh, r, 'rgba(255,110,170,.50)', Math.max(1.5, S * .019));
-    return;
   }
-  aOutline(g, fx, fy, fw, fh, r, c.line, Math.max(1.6, S * .022));
+  aOutline(g, fx, fy, fw, fh, r, 'rgba(0,0,0,.30)', Math.max(1.2, S * .016));
 }
 
 // ====
@@ -22738,12 +22791,334 @@ function paintGroundDecor(x, y, px, py, T, st) {
   }
   ctx.restore();
 }
+/* ===================================================================
+ * v5.25：地板雜物（第二層）
+ * ---------------------------------------------------------------
+ * v4.45 的教訓是「小東西一多就變規律花紋壁紙」。所以這一層刻意跟第一層分開：
+ *   · 密度更稀（草原／沙地每 7 格、其他每 6 格），而且用的是不同的 hash 索引
+ *     → 兩層不會對齊成棋盤格。
+ *   · 每個主題只加「那個場景真的會有」的東西，不加通用裝飾。
+ *   · 貼著牆的格子改成「靠牆堆積」：落葉被風吹到牆腳、沙堆積在牆邊、
+ *     雪堆在牆根 —— 有牆腳的雜物，場景才會像有人住過。
+ * ================================================================== */
+function dgHash(x, y, k) {
+  // v5.25：一定要用 Math.imul。普通的 * 會超過 2^53，精度掉了之後低位全糊掉 ——
+  //   實測 r0<.30 會變成 59%（牆腳碎屑灑滿半張圖），而且同一種雜物會結成一塊一塊。
+  //   走 imul 之後：每 3 格一件 31.3%、r0<.26 剛好 26.2%、三種 367/390/370。
+  let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul(k | 0, 1274126177);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+// 牆腳堆積用的顏色（每個主題一種「會被風吹到牆邊的東西」）
+const DG_DRIFT = {
+  forest: 'rgba(104,140,62,.62)', sand: 'rgba(212,186,136,.70)', ice: 'rgba(255,255,255,.88)',
+  lava: 'rgba(74,60,54,.62)', neon: 'rgba(140,220,255,.34)', sea: 'rgba(92,146,146,.50)',
+  sky: 'rgba(255,255,255,.62)', dark: 'rgba(66,22,44,.55)'
+};
+function dgDrift(g, px, py, T, dir, col, seed) {
+  // dir: 0=上 1=右 2=下 3=左（牆在哪一邊）
+  //   一開始畫成「一片漸層橢圓」→ 在草地上看起來是被弄髒的汙漬。
+  //   改成「牆腳一道很薄的碎屑帶 + 一小堆大小不一的碎屑」才像被風吹過去的東西。
+  g.save();
+  g.translate(px + T * .5, py + T * .5);
+  g.rotate(dir * 1.5708);
+  const w = T * (.46 + (seed % 5) * .05);
+  const gd = g.createLinearGradient(0, T * .5 - T * .13, 0, T * .5);
+  gd.addColorStop(0, 'rgba(0,0,0,0)'); gd.addColorStop(1, col);
+  g.fillStyle = gd;
+  g.fillRect(-w * .5, T * .5 - T * .13, w, T * .13);
+  g.fillStyle = col;
+  for (let i = 0; i < 7; i++) {
+    const bx = (dgHash(seed * 97, i, 11) - .5) * w;
+    const by = T * .5 - T * (.02 + dgHash(seed * 89, i, 13) * .10);
+    g.beginPath();
+    g.ellipse(bx, by, Math.max(1, T * (.008 + dgHash(seed + i, i, 17) * .012)),
+              Math.max(.8, T * .008), 0, 0, 6.283);
+    g.fill();
+  }
+  g.restore();
+}
+function paintGroundExtra(x, y, px, py, T, st) {
+  const g = ctx;
+  if (!g || !g.beginPath) return;
+  g.save();
+  /* ① 牆腳堆積（有一邊是實心就畫，但只挑 1/4 的格子） */
+  const r0 = dgHash(x, y, 7);
+  if (r0 < .26 && Game.grid && Game.grid[y]) {
+    const nb = [
+      [0, -1], [1, 0], [0, 1], [-1, 0]
+    ];
+    for (let i = 0; i < 4; i++) {
+      const ax = x + nb[i][0], ay = y + nb[i][1];
+      if ((Game.grid[ay] && (Game.grid[ay][ax] | 0)) !== 1) continue;   // 只貼硬牆：軟磚會擋視線
+      dgDrift(g, px, py, T, i, DG_DRIFT[st] || DG_DRIFT.forest, x * 3 + y * 5 + i);
+      break;
+    }
+  }
+  /* ② 主題小雜物 */
+  const step = 3;   // 每 3 格一件（實測：5 格太稀，看起來像「地板沒東西」）
+  const hs = (dgHash(x, y, 23) * 1000000) | 0;
+  if (hs % step) { g.restore(); return; }
+  // 注意：hs 已經被 step 整除過，直接用 hs%3 會「永遠只出同一種」——
+  //   除以 step 之後再取餘數，三種才會輪替。
+  const k = ((hs / step) | 0) % 3;
+  const cx = px + T * (.22 + dgHash(x, y, 31) * .56);
+  const cy = py + T * (.24 + dgHash(x, y, 37) * .54);
+  const h2 = dgHash(x, y, 41);
+  /* 所有小物件的尺寸都以「格」為單位在 0.05~0.13 之間 —— 直接畫會只有 6px，
+     在手機上等於看不見（第一版就是這樣，量了半天才發現不是沒畫、是太小）。
+     這裡統一放大 2.1 倍，並補一塊接觸陰影，小東西才「站得住」。 */
+  g.save();
+  g.translate(cx, cy); g.scale(2.1, 2.1); g.translate(-cx, -cy);
+  g.fillStyle = 'rgba(0,0,0,.13)';
+  g.beginPath(); g.ellipse(cx, cy + T * .040, T * .082, T * .028, 0, 0, 6.283); g.fill();
+  if (st === 'forest') {
+    if (k === 0) {          // 落葉堆：三片斜躺的葉子
+      for (let i = 0; i < 3; i++) {
+        const an = h2 * 3 + i * 1.9;
+        const lx = cx + Math.cos(an) * T * .075, ly = cy + Math.sin(an) * T * .055;
+        g.fillStyle = i % 2 ? 'rgba(196,142,62,.95)' : 'rgba(150,118,54,.92)';
+        g.beginPath(); g.ellipse(lx, ly, T * .052, T * .022, an, 0, 6.283); g.fill();
+        g.strokeStyle = 'rgba(96,68,28,.55)'; g.lineWidth = Math.max(.7, T * .007);
+        g.beginPath(); g.moveTo(lx - Math.cos(an) * T * .05, ly - Math.sin(an) * T * .05);
+        g.lineTo(lx + Math.cos(an) * T * .05, ly + Math.sin(an) * T * .05); g.stroke();
+      }
+    } else if (k === 1) {   // 枯枝：一節一節折
+      g.strokeStyle = 'rgba(112,86,52,.90)'; g.lineWidth = Math.max(1, T * .016); g.lineCap = 'round';
+      let bx = cx - T * .11, by = cy + T * .06, an = -.5;
+      g.beginPath(); g.moveTo(bx, by);
+      for (let i = 0; i < 3; i++) {
+        an += (dgHash(x + i, y, 43) - .5) * 1.2;
+        bx += Math.cos(an) * T * .085; by += Math.sin(an) * T * .085;
+        g.lineTo(bx, by);
+      }
+      g.stroke();
+      g.lineWidth = Math.max(.8, T * .010);
+      g.beginPath(); g.moveTo(bx - T * .05, by); g.lineTo(bx - T * .09, by - T * .05); g.stroke();
+      g.lineCap = 'butt';
+    } else {                // 小蘑菇
+      g.fillStyle = 'rgba(40,60,30,.30)';
+      g.beginPath(); g.ellipse(cx + T * .012, cy + T * .05, T * .052, T * .020, 0, 0, 6.283); g.fill();
+      g.fillStyle = 'rgba(240,232,214,.96)';
+      g.fillRect(cx - T * .017, cy - T * .006, T * .034, T * .055);
+      g.fillStyle = '#e0684f';
+      g.beginPath(); g.ellipse(cx, cy - T * .014, T * .052, T * .034, 0, 3.1416, 6.2832); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.85)';
+      g.beginPath(); g.arc(cx - T * .018, cy - T * .026, T * .010, 0, 6.283); g.fill();
+      g.beginPath(); g.arc(cx + T * .020, cy - T * .020, T * .008, 0, 6.283); g.fill();
+    }
+  } else if (st === 'sand') {
+    if (k === 0) {          // 陶片
+      g.save(); g.translate(cx, cy); g.rotate(h2 * 6.283);
+      g.fillStyle = 'rgba(178,104,58,.96)';
+      g.beginPath(); g.moveTo(-T * .055, T * .030); g.lineTo(T * .020, -T * .038);
+      g.lineTo(T * .058, T * .010); g.closePath(); g.fill();
+      g.strokeStyle = 'rgba(255,226,190,.70)'; g.lineWidth = Math.max(.8, T * .009);
+      g.beginPath(); g.moveTo(-T * .048, T * .022); g.lineTo(T * .014, -T * .030); g.stroke();
+      g.fillStyle = 'rgba(60,34,18,.35)';
+      g.beginPath(); g.ellipse(0, T * .045, T * .060, T * .018, 0, 0, 6.283); g.fill();
+      g.restore();
+    } else if (k === 1) {   // 獸骨
+      g.save(); g.translate(cx, cy); g.rotate(h2 * 3.14);
+      g.fillStyle = 'rgba(238,230,210,.94)';
+      g.fillRect(-T * .070, -T * .012, T * .140, T * .024);
+      for (let i = 0; i < 4; i++) {
+        g.beginPath();
+        g.arc((i < 2 ? -1 : 1) * T * .070, (i % 2 ? 1 : -1) * T * .014, T * .019, 0, 6.283);
+        g.fill();
+      }
+      g.fillStyle = 'rgba(120,96,64,.35)';
+      g.beginPath(); g.ellipse(0, T * .030, T * .080, T * .014, 0, 0, 6.283); g.fill();
+      g.restore();
+    } else {                // 乾草叢
+      g.strokeStyle = 'rgba(190,164,104,.85)'; g.lineWidth = Math.max(1, T * .012); g.lineCap = 'round';
+      for (let i = 0; i < 4; i++) {
+        const an = -1.5708 + (i - 1.5) * .34;
+        g.beginPath(); g.moveTo(cx, cy + T * .04);
+        g.quadraticCurveTo(cx + Math.cos(an) * T * .05, cy - T * .04,
+                           cx + Math.cos(an) * T * .085, cy + T * .04 - T * .10 * (0.6 + dgHash(x + i, y, 47) * .5));
+        g.stroke();
+      }
+      g.lineCap = 'butt';
+    }
+  } else if (st === 'ice') {
+    if (k === 0) {          // 冰裂
+      g.strokeStyle = 'rgba(150,186,208,.55)'; g.lineWidth = Math.max(.8, T * .010);
+      for (let i = 0; i < 3; i++) {
+        const an = h2 * 6.283 + i * 2.09;
+        g.beginPath(); g.moveTo(cx, cy);
+        g.lineTo(cx + Math.cos(an) * T * .12, cy + Math.sin(an) * T * .09); g.stroke();
+      }
+      g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = Math.max(.6, T * .007);
+      g.beginPath(); g.moveTo(cx - T * .10, cy - T * .02); g.lineTo(cx + T * .09, cy + T * .01); g.stroke();
+    } else if (k === 1) {   // 碎冰塊
+      g.fillStyle = 'rgba(80,140,178,.30)';
+      g.beginPath(); g.ellipse(cx, cy + T * .035, T * .075, T * .022, 0, 0, 6.283); g.fill();
+      for (let i = 0; i < 3; i++) {
+        const bx = cx + (i - 1) * T * .055, by = cy + (i % 2) * T * .022;
+        g.fillStyle = 'rgba(222,246,255,.92)';
+        g.beginPath(); g.moveTo(bx, by - T * .036); g.lineTo(bx + T * .030, by + T * .010);
+        g.lineTo(bx - T * .026, by + T * .014); g.closePath(); g.fill();
+        g.strokeStyle = 'rgba(120,180,212,.55)'; g.lineWidth = Math.max(.6, T * .007); g.stroke();
+      }
+    } else {                // 結霜的小石堆
+      for (let i = 0; i < 3; i++) {
+        const bx = cx + (i - 1) * T * .048, by = cy + (i % 2 ? T * .012 : -T * .008);
+        g.fillStyle = 'rgba(170,200,222,.45)';
+        g.beginPath(); g.ellipse(bx, by + T * .020, T * .038, T * .014, 0, 0, 6.283); g.fill();
+        g.fillStyle = 'rgba(232,242,250,.96)';
+        g.beginPath(); g.ellipse(bx, by, T * .030, T * .020, .3, 0, 6.283); g.fill();
+      }
+    }
+  } else if (st === 'lava') {
+    if (k === 0) {          // 灰燼堆
+      g.fillStyle = 'rgba(96,86,80,.42)';
+      g.beginPath(); g.ellipse(cx, cy, T * .088, T * .036, 0, 0, 6.283); g.fill();
+      g.fillStyle = 'rgba(140,128,120,.55)';
+      g.beginPath(); g.ellipse(cx - T * .018, cy - T * .010, T * .046, T * .020, 0, 0, 6.283); g.fill();
+      g.fillStyle = 'rgba(255,150,60,.55)';
+      for (let i = 0; i < 3; i++)
+        g.fillRect(cx + (dgHash(x + i, y, 53) - .5) * T * .10,
+                   cy + (dgHash(x, y + i, 59) - .5) * T * .04, Math.max(1, T * .010), Math.max(1, T * .010));
+    } else if (k === 1) {   // 碎石塊
+      for (let i = 0; i < 3; i++) {
+        const bx = cx + (i - 1) * T * .050, by = cy + (i % 2 ? T * .014 : -T * .012);
+        g.fillStyle = 'rgba(20,10,6,.55)';
+        g.beginPath(); g.ellipse(bx + T * .008, by + T * .022, T * .036, T * .014, 0, 0, 6.283); g.fill();
+        g.fillStyle = i % 2 ? '#4a3730' : '#5b463c';
+        g.beginPath(); g.moveTo(bx - T * .030, by + T * .014); g.lineTo(bx - T * .012, by - T * .026);
+        g.lineTo(bx + T * .028, by - T * .016); g.lineTo(bx + T * .026, by + T * .016);
+        g.closePath(); g.fill();
+      }
+    } else {                // 焦木
+      g.strokeStyle = 'rgba(28,16,10,.90)'; g.lineWidth = Math.max(1.2, T * .018); g.lineCap = 'round';
+      g.beginPath(); g.moveTo(cx - T * .09, cy + T * .04);
+      g.quadraticCurveTo(cx, cy - T * .02, cx + T * .09, cy - T * .05); g.stroke();
+      g.strokeStyle = 'rgba(255,140,50,.60)'; g.lineWidth = Math.max(.8, T * .009);
+      g.beginPath(); g.moveTo(cx + T * .06, cy - T * .04); g.lineTo(cx + T * .09, cy - T * .05); g.stroke();
+      g.lineCap = 'butt';
+    }
+  } else if (st === 'neon') {
+    if (k === 0) {          // 電路線
+      g.strokeStyle = 'rgba(120,232,255,.45)'; g.lineWidth = Math.max(.8, T * .010);
+      g.beginPath();
+      g.moveTo(cx - T * .11, cy + T * .05); g.lineTo(cx + T * .02, cy + T * .05);
+      g.lineTo(cx + T * .02, cy - T * .05); g.lineTo(cx + T * .11, cy - T * .05);
+      g.stroke();
+      g.fillStyle = 'rgba(255,120,230,.70)';
+      g.beginPath(); g.arc(cx + T * .02, cy + T * .05, Math.max(1, T * .013), 0, 6.283); g.fill();
+    } else if (k === 1) {   // 碎玻璃
+      for (let i = 0; i < 3; i++) {
+        const bx = cx + (i - 1) * T * .052, by = cy + (i % 2 ? T * .018 : -T * .014);
+        g.fillStyle = 'rgba(190,242,255,.75)';
+        g.beginPath(); g.moveTo(bx, by - T * .026); g.lineTo(bx + T * .026, by + T * .016);
+        g.lineTo(bx - T * .020, by + T * .012); g.closePath(); g.fill();
+      }
+    } else {                // 資料碎片
+      for (let i = 0; i < 3; i++) {
+        const bx = cx + (dgHash(x + i, y, 61) - .5) * T * .14;
+        const by = cy + (dgHash(x, y + i, 67) - .5) * T * .12;
+        g.fillStyle = i % 2 ? 'rgba(150,240,255,.65)' : 'rgba(255,130,230,.55)';
+        g.fillRect(bx, by, T * .022, T * .022);
+      }
+    }
+  } else if (st === 'sea') {
+    if (k === 0) {          // 海星
+      g.save(); g.translate(cx, cy); g.rotate(h2 * 6.283);
+      g.fillStyle = 'rgba(240,132,96,.95)';
+      g.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const an = i / 10 * 6.283, rr = (i % 2 ? T * .026 : T * .062);
+        const vx = Math.cos(an) * rr, vy = Math.sin(an) * rr;
+        if (!i) g.moveTo(vx, vy); else g.lineTo(vx, vy);
+      }
+      g.closePath(); g.fill();
+      g.fillStyle = 'rgba(255,214,190,.75)';
+      g.beginPath(); g.arc(0, 0, T * .014, 0, 6.283); g.fill();
+      g.restore();
+    } else if (k === 1) {   // 氣泡
+      g.strokeStyle = 'rgba(226,252,255,.62)'; g.lineWidth = Math.max(.8, T * .009);
+      for (let i = 0; i < 3; i++) {
+        const bx = cx + (dgHash(x + i, y, 71) - .5) * T * .16;
+        const by = cy + (dgHash(x, y + i, 73) - .5) * T * .14;
+        g.beginPath(); g.arc(bx, by, T * (.014 + i * .006), 0, 6.283); g.stroke();
+      }
+    } else {                // 貝殼群
+      for (let i = 0; i < 2; i++) {
+        const bx = cx + (i - .5) * T * .070, by = cy + (i % 2 ? T * .014 : -T * .006);
+        g.fillStyle = 'rgba(240,238,224,.95)';
+        g.beginPath(); g.arc(bx, by, T * .030, 3.1416, 6.2832); g.fill();
+        g.strokeStyle = 'rgba(172,164,146,.70)'; g.lineWidth = Math.max(.6, T * .007);
+        for (let j = 0; j < 3; j++) {
+          g.beginPath(); g.moveTo(bx, by); g.lineTo(bx + (j - 1) * T * .017, by - T * .027); g.stroke();
+        }
+      }
+    }
+  } else if (st === 'sky') {
+    if (k === 0) {          // 羽毛
+      g.save(); g.translate(cx, cy); g.rotate(h2 * 6.283);
+      g.fillStyle = 'rgba(255,255,255,.90)';
+      g.beginPath(); g.ellipse(0, 0, T * .070, T * .024, 0, 0, 6.283); g.fill();
+      g.strokeStyle = 'rgba(150,178,214,.60)'; g.lineWidth = Math.max(.7, T * .008);
+      g.beginPath(); g.moveTo(-T * .070, 0); g.lineTo(T * .070, 0); g.stroke();
+      g.restore();
+    } else if (k === 1) {   // 金色碎屑
+      for (let i = 0; i < 4; i++) {
+        const bx = cx + (dgHash(x + i, y, 79) - .5) * T * .16;
+        const by = cy + (dgHash(x, y + i, 83) - .5) * T * .14;
+        g.fillStyle = 'rgba(255,226,150,.85)';
+        g.beginPath(); g.arc(bx, by, Math.max(.8, T * .010), 0, 6.283); g.fill();
+      }
+    } else {                // 雲絮
+      g.fillStyle = 'rgba(255,255,255,.46)';
+      g.beginPath(); g.ellipse(cx, cy, T * .085, T * .026, h2 * 3, 0, 6.283); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.30)';
+      g.beginPath(); g.ellipse(cx - T * .050, cy + T * .022, T * .050, T * .018, h2 * 2, 0, 6.283); g.fill();
+    }
+  } else {
+    if (k === 0) {          // 蠟燭（含蠟淚）
+      g.fillStyle = 'rgba(226,214,196,.95)';
+      g.fillRect(cx - T * .020, cy - T * .030, T * .040, T * .070);
+      g.fillStyle = 'rgba(255,214,140,.95)';
+      g.beginPath(); g.ellipse(cx, cy - T * .042, T * .012, T * .020, 0, 0, 6.283); g.fill();
+      g.fillStyle = 'rgba(255,170,60,.35)';
+      g.beginPath(); g.arc(cx, cy - T * .042, T * .034, 0, 6.283); g.fill();
+      g.fillStyle = 'rgba(200,60,50,.70)';
+      g.beginPath(); g.ellipse(cx, cy + T * .040, T * .030, T * .010, 0, 0, 6.283); g.fill();
+    } else if (k === 1) {   // 爪痕
+      g.strokeStyle = 'rgba(120,30,50,.55)'; g.lineWidth = Math.max(.8, T * .010); g.lineCap = 'round';
+      for (let i = 0; i < 3; i++) {
+        const ox = (i - 1) * T * .030;
+        g.beginPath(); g.moveTo(cx + ox - T * .030, cy - T * .055);
+        g.lineTo(cx + ox + T * .020, cy + T * .055); g.stroke();
+      }
+      g.lineCap = 'butt';
+    } else {                // 骨堆
+      g.strokeStyle = 'rgba(238,230,214,.92)'; g.lineWidth = Math.max(1.2, T * .014); g.lineCap = 'round';
+      for (let i = 0; i < 3; i++) {
+        const an = h2 * 3 + i * 1.1;
+        const bx = cx + (dgHash(x + i, y, 89) - .5) * T * .10;
+        const by = cy + (dgHash(x, y + i, 97) - .5) * T * .08;
+        g.beginPath();
+        g.moveTo(bx - Math.cos(an) * T * .035, by - Math.sin(an) * T * .035);
+        g.lineTo(bx + Math.cos(an) * T * .035, by + Math.sin(an) * T * .035);
+        g.stroke();
+        g.fillStyle = 'rgba(238,230,214,.92)';
+        g.beginPath(); g.arc(bx + Math.cos(an) * T * .035, by + Math.sin(an) * T * .035, Math.max(.9, T * .010), 0, 6.283); g.fill();
+      }
+      g.lineCap = 'butt';
+    }
+  }
+  g.restore();
+  g.restore();
+}
 function paintFloorStyle(x, y, px, py, T, th, st) {
   // v4.59：天空關的地板是內嵌貼圖（畫死的），改色表不會生效 → 事後蓋一層藍灰把它壓深
   const tint = st === 'sky' ? 'rgba(58,84,138,.30)' : '';
   if (TileArt.draw('floor', x * 31 + y * 17, px, py, T, st)) {
     if (tint) { ctx.fillStyle = tint; ctx.fillRect(px, py, T, T); }
     paintGroundDecor(x, y, px, py, T, (th && th.style) || 'forest');
+    paintGroundExtra(x, y, px, py, T, (th && th.style) || 'forest');
     return;
   }
   if (artBlit(artSet(st || 'forest').floor, x * 31 + y * 17, px, py, T)) {
@@ -23199,11 +23574,6 @@ function aoSolid(gx, gy) {
 const AO_WIDE = .62, AO_WIDE_A = .30;      // 外圈柔光帶（長度／濃度，單位＝格）
 const AO_TIGHT = .18, AO_TIGHT_A = .28;    // 貼邊接觸帶 —— 有它才有「壓在地上」的重量
 const AO_CR = .36, AO_CR_A = .23;          // 轉角補丁（半徑／濃度）
-// v5.24：軟磚格「內側」的柔光帶刻意比空地那條短（0.34 格 vs 0.62 格）。
-//   四邊的帶都往格子裡面淡出 → 太長的話中心會疊成一團黑；縮短之後
-//   交界處的濃度仍然一樣（都從 AO_WIDE_A 起算），所以接縫照樣看不出來。
-const AO_SOFT_W = .34;
-
 /* 產生「某一格」的陰影指令（座標是格子內的相對像素）。
    拉成獨立函式，是因為測試要驗「每一關的每一格空地都被涵蓋」，不能只看畫面。 */
 function floorAOBands(gx, gy, T) {
@@ -23274,48 +23644,6 @@ function drawFloorAO(gx0, gy0, w, h, T) {
     for (let xx = 0; xx < w; xx++) {
       const ops = floorAOBands(gx0 + xx, gy0 + yy, TS);
       if (!ops.length) continue;
-      for (let i = 0; i < ops.length; i++) drawAOOp(xx * TS, yy * TS, ops[i], TS);
-    }
-  }
-}
-/* ===================================================================
- * v5.24：軟磚自己那一格的地板也要吃陰影（內側帶）
- * ---------------------------------------------------------------
- * 問題：floorAOBands 遇到實心格直接回空的陣列 —— 軟磚那格自己是實心，
- *   所以它腳下的地板「一格陰影都沒有」。可是軟磚貼圖只佔格子 63~82%
- *   （陶罐是圓的、木箱有 7% 邊距、冰塊是八邊形），露出來的那圈地板是亮的；
- *   隔壁空地卻有 0.28 的貼邊陰影 → 兩者在格子交界處硬接，看起來像
- *   「一塊亮補丁上放了一個箱子」。使用者回報的就是這個「斷層感」。
- *
- * 解法：軟磚格自己補「朝空地那一側」的內側帶，濃度／長度直接沿用空地那條
- *   （AO_WIDE_A／AO_TIGHT_A、AO_WIDE／AO_TIGHT），只是方向往格子裡面淡出。
- *   於是交界處兩邊的 alpha 完全一樣（都從 0.28 起算）→ 接縫消失。
- *
- * 兩個刻意的限制：
- *   · 只有「外面是空地」的那一側才補 —— 兩塊軟磚相鄰的那一側沒有地板可露，
- *     硬補會在整排木箱中間壓出一條黑縫；2×2 的箱堆中心也會糊成一團。
- *   · 內側帶畫在「地板之後、貼圖之前」—— 畫在貼圖之後會把木箱本身的邊緣壓黑。
- * ================================================================== */
-function floorAOSoftBands(gx, gy, T) {
-  const out = [];
-  const g = Game.grid;
-  if (!g || !g[gy] || (g[gy][gx] | 0) !== 2) return out;
-  const Lw = T * AO_SOFT_W, Lt = T * AO_TIGHT;
-  const add = function (d, x, y, w, h, a) { out.push({ k: 'b', d: d, x: x, y: y, w: w, h: h, a: a }); };
-  if (!aoSolid(gx, gy - 1)) { add('u', 0, 0, T, Lw, AO_WIDE_A); add('u', 0, 0, T, Lt, AO_TIGHT_A); }
-  if (!aoSolid(gx, gy + 1)) { add('d', 0, T - Lw, T, Lw, AO_WIDE_A); add('d', 0, T - Lt, T, Lt, AO_TIGHT_A); }
-  if (!aoSolid(gx - 1, gy)) { add('l', 0, 0, Lw, T, AO_WIDE_A); add('l', 0, 0, Lt, T, AO_TIGHT_A); }
-  if (!aoSolid(gx + 1, gy)) { add('r', T - Lw, 0, Lw, T, AO_WIDE_A); add('r', T - Lt, 0, Lt, T, AO_TIGHT_A); }
-  return out;
-}
-/* 分塊版：只掃軟磚格（一般空地不受影響），畫在地板之後、牆／軟磚之前 */
-function drawFloorAOSoft(gx0, gy0, w, h, T) {
-  const TS = T || Game.T;
-  for (let yy = 0; yy < h; yy++) {
-    for (let xx = 0; xx < w; xx++) {
-      const gx = gx0 + xx, gy = gy0 + yy;
-      if ((Game.grid[gy] && (Game.grid[gy][gx] | 0)) !== 2) continue;
-      const ops = floorAOSoftBands(gx, gy, TS);
       for (let i = 0; i < ops.length; i++) drawAOOp(xx * TS, yy * TS, ops[i], TS);
     }
   }
@@ -23489,9 +23817,6 @@ function floorChunk(cx, cy) {
               paintFloorStyle(gx, gy, xx * T, yy * T, T, thc, (thc && thc.style) || 'forest');
             }
           }
-          /* ①-b v5.24：軟磚腳下那一圈地板要先壓陰影，而且一定在貼圖之前 ——
-                貼圖蓋上去之後才壓，會把木箱／陶罐自己的邊緣一起壓黑 */
-          try { drawFloorAOSoft(cx * FLR_N, cy * FLR_N, w, h, T); } catch (e) {}
           /* ② 牆面／軟磚（靜態：只有軟磚被炸掉才變 → floorChunkDirty 會丟掉那一塊） */
           for (let yy = 0; yy < h; yy++) {
             for (let xx = 0; xx < w; xx++) {
@@ -32636,7 +32961,16 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.24', date: '2026-11-06', now: true, items: [
+  { v: '5.25', date: '2026-11-06', now: true, items: [
+    '🧱 <b>軟牆全部重新畫過，變成「滿版」的方塊</b>：上一版想用陰影去補軟牆腳下露出來的那圈地板，結果補不平 —— 因為石牆是滿格的、軟牆只佔格子 6~8 成，兩者在格子交界就是硬接的斷層。現在軟牆跟石牆用同一套立體結構（<b>接縫＋厚度面＋頂面亮邊＋底部接觸陰影</b>），<b>腳下不再有地板</b>，「軟牆沒有陰影」這個問題直接消失，也不再需要軟牆專用的補丁陰影',
+    '✨ <b>八個場景的軟牆各自重設計</b>，全部改成一眼認得出的剪影：草原是帶 X 補強板與四角釘的<b>木箱</b>、沙地是兩只<b>大陶罐</b>、冰原是交於中心的三塊<b>冰晶面</b>、熔岩是厚岩殼包著<b>會發光的岩漿囊</b>、夜光是<b>青色玻璃磚</b>（折射內框＋洋紅角標）、深海是帶苔蘚與短珊瑚的<b>礁岩塊</b>、天空是<b>雲團石磚</b>、暗黑城是<b>紫磚＋鬼火＋骷髏</b>。縮到手機上的 27px 也分得出軟牆和石牆',
+    '🍂 <b>地板上開始有零碎小雜物了</b>：草地是落葉堆／枯枝／小蘑菇，沙地是陶片／獸骨／乾草叢，冰原是冰裂／碎冰塊／結霜小石，熔岩是灰燼堆／碎石塊／焦木，夜光是電路線／碎玻璃／資料碎片，深海是海星／氣泡／貝殼群，天空是羽毛／金色碎屑／雲絮，暗黑城是蠟燭／爪痕／骨堆',
+    '🌿 <b>牆腳會堆積碎屑</b>：貼著石牆的地板會灑一道很薄的碎屑帶（砂粒、落葉、灰塵，每個場景顏色不同），軟牆旁邊不灑 —— 不然看起來像從箱子裡漏出來。約 1/4 的格子才會有，不會變成「地板很髒」',
+    '🎲 <b>雜物是「平均散開」而不是「排成花紋」</b>：每 3 格放一件、三種輪替，而且跟舊版的花草裝飾用<b>不同的亂數</b>，兩層不會對齊成棋盤格；每一件都有接觸陰影與大小變化，看起來是「掉在地上」而不是「貼在地板上」',
+    '🧹 順手拿掉了上一版的軟牆內側陰影（含常數與烘焙呼叫），一段不留 —— 那個做法在新軟牆上已經是死碼',
+    '✅ 新增 verify-v525：用指令流檢查八個主題的軟牆都是「擦乾淨 → 鋪滿整格 → 立體塊」，並且實際跑一遍雜物分佈（確認三種都會出現、密度正確、貼牆才灑碎屑、同一格每次畫得都一樣）'
+  ] },
+  { v: '5.24', date: '2026-11-06', now: false, items: [
     '🧱 <b>軟牆（木箱／陶罐／冰塊…）腳下也有陰影了</b>：以前接縫陰影只壓在「牆或軟牆旁邊的空地」上，<b>軟牆自己那一格的地板完全沒有</b>。可是軟牆的圖只佔格子 6~8 成（陶罐是圓的、木箱留邊），露出來的那圈地板是亮的 → 跟隔壁的陰影硬接在一起，看起來就像「一塊亮補丁上放了一個箱子」',
     '📊 <b>深度跟旁邊的陰影一模一樣</b>：內側陰影直接沿用空地那條的濃度與起點（交界處兩邊都是 0.28），所以兩條陰影接起來<b>看不出接縫</b>，不會有斷層感',
     '📌 <b>只補「朝空地」的那一側</b>：兩塊軟牆相鄰的那一側沒有地板可露，硬補會在整排木箱中間壓出一條黑縫、2×2 的箱堆中心也會糊成一團',
@@ -38627,7 +38961,7 @@ window.__BH = {
   nearSpawn: nearSpawn, startSolo: startSolo, buildSoloStage: buildSoloStage,
   buildRpgStage: buildRpgStage, startRpg: startRpg, rpgHurt: rpgHurt,
   flameHitDamage: flameHitDamage, drawRpgHud: drawRpgHud, rngFrom: rngFrom, map32Name: map32Name,
-  hitStop: hitStop, dmgPop: dmgPop, foeHitFx: foeHitFx, drawFloorAO: drawFloorAO, floorAOSoftBands: floorAOSoftBands, drawFloorAOSoft: drawFloorAOSoft,
+  hitStop: hitStop, dmgPop: dmgPop, foeHitFx: foeHitFx, drawFloorAO: drawFloorAO,
   drawVignette: drawVignette, vignetteCanvas: vignetteCanvas,
   aoSolid: aoSolid, floorAOBands: floorAOBands, drawAOCell: drawAOCell, floorChunk: floorChunk, floorCellSkip: floorCellSkip, floorChunkDirty: floorChunkDirty,
   drawFloorLight: drawFloorLight, drawFloorDapple: drawFloorDapple, DAPPLE_A: DAPPLE_A,
@@ -38645,7 +38979,7 @@ window.__BH = {
   drawDizzyMark: drawDizzyMark, BOSS_POWER: BOSS_POWER, addFlame: addFlame, THEMES: THEMES,
   DEAD_LINES: DEAD_LINES, KILL_LINES: KILL_LINES, bubbleSay: bubbleSay, bubbleDead: bubbleDead,
   bubbleKill: bubbleKill, bubbleDeathPair: bubbleDeathPair, updateBubbles: updateBubbles,
-  drawBubbles: drawBubbles, softShadow: softShadow, render: render, AMB: AMB, drawAmbient: drawAmbient, paintSoftTile: paintSoftTile, matOf: matOf,
+  drawBubbles: drawBubbles, softShadow: softShadow, render: render, AMB: AMB, drawAmbient: drawAmbient, paintSoftTile: paintSoftTile, paintFloorTile: paintFloorTile, paintHardTile: paintHardTile, paintGroundExtra: paintGroundExtra, artSet: artSet, matOf: matOf,
   WARP_COLORS: WARP_COLORS, hazardAt: hazardAt, hazardTick: hazardTick, beltMulFor: beltMulFor,
   BELT_SPEED: BELT_SPEED, BELT_FAST: BELT_FAST, BELT_SLOW: BELT_SLOW, moveSpeed: moveSpeed,
   confetti: confetti, battleEndFx: battleEndFx,
