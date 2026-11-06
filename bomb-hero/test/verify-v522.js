@@ -114,18 +114,20 @@ function auditMap(tag) {
 }
 
 let soloCells = 0, soloStages = 0;
-for (let st = 1; st <= 32; st++) {
+for (let st = 1; st <= P.SOLO_STAGES; st++) {
+  // v5.36：每章第 5 關是 BOSS 決戰場（純空場，沒有軟磚）→ 跳過
+  if (P.isBossStage(st)) continue;
   try { P.startSolo(st, false); } catch (e) { ok(false, '第 ' + st + ' 關建不起來：' + e.message); continue; }
   soloStages++;
   soloCells += auditMap('第 ' + st + ' 關（' + (G.theme && G.theme.style) + '）');
 }
-ok(soloStages === 32, '32 關全部跑過（' + soloStages + ' 關）');
-ok(soloCells > 300, '32 關合計有 ' + soloCells + ' 格「貼著障礙的空地」全部檢查過');
+ok(soloStages === P.SOLO_STAGES - 8, P.SOLO_STAGES + ' 關扣掉 8 個決戰場全部跑過（' + soloStages + ' 關）');
+ok(soloCells > 300, '合計有 ' + soloCells + ' 格「貼著障礙的空地」全部檢查過');
 
 /* ================================================================ ③ */
 head('③ RPG 關卡');
 let rpgOk = 0;
-for (let st = 1; st <= 32; st += 4) {
+for (let st = 1; st <= 36; st += 5) {   // v5.36：每章第 1 關（1、6、11…36）
   try { P.startRpg(st, {}); } catch (e) { ok(false, 'RPG 第 ' + st + ' 關建不起來：' + e.message); continue; }
   rpgOk++;
   auditMap('RPG 第 ' + st + ' 關');
@@ -194,7 +196,7 @@ head('⑥ 八個主題的一致性');
     '亮地板（冰原／天空）的樹影比草地淡，不會像髒污');
   // 每個主題都要跑得出陰影（不是只有草地才有）
   const seen = [];
-  for (let st = 1; st <= 32; st += 4) {
+  for (let st = 1; st <= 36; st += 5) {
     P.startSolo(st, false);
     const stl = G.theme && G.theme.style;
     if (seen.indexOf(stl) >= 0) continue;

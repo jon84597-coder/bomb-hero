@@ -27,7 +27,7 @@ const ATTRS = ['hp', 'def', 'spd', 'atk'];
 const BASE_POINTS = 9;          // 創角配點
 const CAP = 10;                 // 單項上限
 const MAX_POINTS = ATTRS.length * CAP;   // 40（全部點滿）
-const MAX_STAGE = 32;
+const MAX_STAGE = 40;   // v5.36：單人/RPG 改成 40 關（8 大主題 × 5）
 const SESSION_TTL = 30 * 24 * 3600 * 1000;
 // v4.13：「維持登入」勾選後，這次登入的有效期改成 1 年（不勾則 30 天）
 const KEEP_TTL = 365 * 24 * 3600 * 1000;

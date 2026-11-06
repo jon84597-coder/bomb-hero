@@ -74,7 +74,14 @@ function cellsOfFlames() {
 console.log('=== 1. BOSS 從「下方」出生（不再從玩家頭上冒出來） ===');
 let bossRows = [], bossUnder = 0, rowsSeen = 0;
 for (let run = 0; run < 6; run++) {
-  const p = freshSolo(32);          // v4.16：只有第 32 關有 BOSS
+  // v5.36：最終魔王關（第 40 關）改走「BOSS 決戰場」arena；這裡驗的是舊的一般地圖＋底部登場，
+  //   那條路現在由「挑戰 BOSS」(Game.bossRush) 走。
+  freshSolo(1);
+  G.bossRush = true;
+  P.buildSoloStage(40);
+  G.state = 'play';
+  if (G.players[0]) G.players[0].invuln = 0;
+  const p = G.players[0];
   const boss = G.enemies.filter(function (e) { return e.boss; })[0];
   if (!boss) continue;
   const T = G.T;

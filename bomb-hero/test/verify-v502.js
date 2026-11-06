@@ -42,7 +42,7 @@ ok(thin === 0, '每筆都有 rgb／rgb2／dot 且粒子數 >= 8');
 const k1 = B.bossElemOf({ brBlock: 4 }).k, k2 = B.bossElemOf({ brBlock: 8 }).k;
 ok(k1 === 'ember', '第 4 區（熔岩）是火星（' + k1 + '）');
 ok(k2 === 'flame', '第 8 區（魔界）是紫焰（' + k2 + '）');
-G.stage = 13;                                   // 第 4 區的關卡
+G.stage = 18;   // 第 4 區的關卡（v5.36 起每區 5 關 → 16~20）
 ok(B.bossElemOf({}).k === 'ember', '沒有 brBlock 時看當前關卡（大逃殺以外的王）');
 ok(typeof B.drawBossElemFx === 'function', 'drawBossElemFx 存在');
 // 八隻都要真的畫出東西，而且不能丟錯

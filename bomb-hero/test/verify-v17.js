@@ -249,9 +249,9 @@ BH.startSolo(1);
 ok(G.enemies.length > 0, '第 1 關有敵人');
 ok(G.enemies.every(function (e) { return ['wander', 'chase'].indexOf(e.kind) >= 0; }), '第 1 關只有地面基本款');
 BH.settings.soloDiff = 'normal';   // v5.29：預設改成簡單後，這支測試要固定普通才有原本的怪量
-BH.buildSoloStage(5);
+BH.buildSoloStage(4);   // v5.36：第 5 關改成 BOSS 決戰場（只有王），改驗第 4 關
 const kinds5 = new Set(G.enemies.map(function (e) { return e.kind; }));
-ok(kinds5.has('wander') && kinds5.has('chase'), '第 5 關有亂走＋追人怪（' + [...kinds5].join('/') + '）');
+ok(kinds5.has('wander') && kinds5.has('chase'), '第 4 關有亂走＋追人怪（' + [...kinds5].join('/') + '）');
 BH.buildSoloStage(7);
 const kinds7 = new Set(G.enemies.map(function (e) { return e.kind; }));
 ok(kinds7.has('fly'), '第 7 關有飛行穿牆怪（' + [...kinds7].join('/') + '）');

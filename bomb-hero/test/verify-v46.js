@@ -37,6 +37,7 @@ ok(buildOk, '第 1~32 關都能生成（機關地圖不再爆錯）' + (buildErr
 // 每一關都要有出口門、起點可走、門走得到
 let doorOk = true, reachOk = true, foeOk = true, detail = '';
 for (let s = 1; s <= 32; s++) {
+  if (P.isBossStage(s)) continue;      // v5.36：第 5、10、15… 關是 BOSS 決戰場（17×15 arena），另行驗
   P.buildRpgStage(s, false);
   const cols = G.cols, rows = G.rows;
   if (!G.door) { doorOk = false; detail = '第 ' + s + ' 關沒門'; }
@@ -62,7 +63,8 @@ const seenColors = {};
 for (let t = 0; t < 8; t++) {
   const sig = [];
   for (let k = 0; k < 4; k++) {
-    const stage = t * 4 + k + 1;
+    // v5.36：每大主題 5 關（第 5 關是 BOSS）→ 4 張小地圖落在該章的第 1~4 關
+    const stage = t * 5 + k + 1;
     P.buildRpgStage(stage, false);
     const th = G.theme;
     sig.push(th.name + '|' + th.floor + '|' + th.floor2 + '|' + th.hard + '|' + th.soft + '|' + th.style + '|' + (th.hazards || []).join(','));
@@ -86,7 +88,7 @@ const LIMIT = { S: [15, 13], M: [15, 13], L: [15, 13], XL: [15, 13] };
 let sizeOk = true, sizeDetail = '';
 Object.keys(LIMIT).forEach(function (k) {
   P.settings.size = k;
-  for (let s = 1; s <= 8; s++) {
+  for (const s of [1, 2, 3, 4, 6, 7, 8, 9]) {   // v5.36：跳過第 5 關（BOSS arena 17×15）
     P.buildRpgStage(s, false);
     if (G.cols !== LIMIT[k][0] || G.rows !== LIMIT[k][1]) {
       sizeOk = false; sizeDetail = k + '/第 ' + s + ' 關 = ' + G.cols + '×' + G.rows;
@@ -120,9 +122,9 @@ ok(g1 !== g2, '同主題的相鄰兩張小地圖地形不同');
 console.log('\n=== 5. BOSS：血量 40% 以下進入狂暴 ===');
 G.rpg = true;
 P.settings.size = 'M';
-P.startRpg(32);
+P.startRpg(40);   // v5.36：最終魔王搬到第 40 關（第 8 章決戰場）
 let boss = G.enemies.filter(function (e) { return e.type === 'boss'; })[0];
-ok(!!boss, '第 32 關有 BOSS（暗暗魔王）');
+ok(!!boss, '第 40 關有 BOSS（暗暗魔王）');
 ok(boss.maxHp >= 10 && boss.def >= 1, 'BOSS 血量 ' + boss.maxHp + ' 格、防禦 ' + boss.def);
 
 function measure(dtSteps) {
@@ -185,7 +187,7 @@ console.log('\n=== 7. 關卡推進與難度曲線 ===');
 P.startRpg(1);
 ok(G.stage === 1, '從第 1 關開始');
 const foes1 = G.enemies.length;
-P.buildRpgStage(20, false);
+P.buildRpgStage(19, false);   // v5.36：第 20 關是 BOSS 決戰場，改取同章第 4 關（19）比怪物量
 const foes20 = G.enemies.length;
 ok(foes20 > foes1, '第 20 關怪物 ' + foes20 + ' 隻 > 第 1 關 ' + foes1 + ' 隻（越後面越硬）');
 const pool1 = P.rpgFoePool ? P.rpgFoePool(1) : null;

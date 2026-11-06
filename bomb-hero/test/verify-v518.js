@@ -131,7 +131,8 @@ head('③ RPG 等級與經驗（數學）');
 head('④ 原始碼：等級系統真的接進遊戲');
 ok(SRC.indexOf('e.lv = foeLv; e.exp = rpgFoeXp(stage);') > 0, '每隻怪有自己的等級與經驗');
 ok(SRC.indexOf('e.hp = Math.max(1, Math.round(F.hp * foeHpMul));') > 0, '後面大關的怪血比較厚');
-ok(SRC.indexOf('boss.lv = foeLv; boss.exp = rpgFoeXp(stage) * 5;') > 0, '魔王經驗 5 倍');
+// v5.36：章節王改到 BOSS 決戰場（buildBossArenaStage），等級用 rpgFoeLv(stage)
+ok(/boss\.lv = [^;]+; boss\.exp = rpgFoeXp\(stage\) \* 5;/.test(SRC), '魔王經驗 5 倍');
 ok(SRC.indexOf('rpgGainFoeExp(e);') > 0, '打死怪就累積經驗');
 ok(SRC.indexOf('RPG.xpGain = 0;') > 0, '陣亡／換關要把這一關的暫存經驗清掉');
 ok(SRC.indexOf("rpgAddXp(gain);") > 0 && SRC.indexOf("{ exp: gain }") > 0, '過關才入帳（本機＋後端一起）');

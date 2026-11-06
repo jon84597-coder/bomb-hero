@@ -69,14 +69,15 @@ const mobsOf = function () {
 };
 ok(P.FOE_MAX_LIVE === 12, '每場最多 12 隻小怪（FOE_MAX_LIVE=' + P.FOE_MAX_LIVE + '）');
 const c34 = [];
-for (let st = 1; st <= 32; st++) { freshSolo(st); c34.push(mobsOf()); }
+// v5.36：單人／RPG 改成 40 關（8 大主題 × 5，第 5 關是 BOSS 決戰場＝沒有小怪）
+for (let st = 1; st <= 40; st++) { freshSolo(st); c34.push(mobsOf()); }
 ok(c34.every(function (n) { return n <= P.FOE_MAX_LIVE; }),
-  '32 關全部不超過 12 隻（最大 ' + Math.max.apply(null, c34) + '）');
+  '40 關全部不超過 12 隻（最大 ' + Math.max.apply(null, c34) + '）');
 ok(c34[0] >= 2 && c34[0] <= 6, '普通・第 1 關 2～6 隻小怪（實測 ' + c34[0] + '）');
 ok(Math.max.apply(null, c34) >= 9, '後段關卡仍有 9 隻以上（最大 ' + Math.max.apply(null, c34) + '）');
-const bossLow = [4, 8, 12, 16, 20, 24, 28].filter(function (st) { return !(c34[st - 1] < c34[st - 2]); });
+const bossLow = [5, 10, 15, 20, 25, 30, 35, 40].filter(function (st) { return !(c34[st - 1] < c34[st - 2]); });
 ok(bossLow.length === 0,
-  '章節魔王關的小怪比前一關少（留力氣打王）' + (bossLow.length ? '：' + bossLow.join(',') : ''));
+  '章節 BOSS 關的小怪比前一關少（留力氣打王）' + (bossLow.length ? '：' + bossLow.join(',') : ''));
 let eEasy = 0, eHard = 0;
 P.settings.soloDiff = 'easy'; for (let k = 0; k < 5; k++) { freshSolo(4); eEasy += G.enemies.length; }
 P.settings.soloDiff = 'hard'; for (let k = 0; k < 5; k++) { freshSolo(4); eHard += G.enemies.length; }

@@ -64,9 +64,11 @@ head('2. 縮圈會換位置（不是原地縮小）');
   for (let i = 0; i < 60 * 8; i++) { G.brNukeCd = 1e9; P.updateBR(1 / 60); }
   const z2 = G.brZone;
   ok(z2.phase >= 1, '收完進下一階段（phase=' + z2.phase + '）');
-  ok(Math.abs(z2.r - 27) < .6, '第一圈收到 27 格（' + z2.r.toFixed(1) + '）');
+  // v5.36：地圖 56×44 → 79×62，開場圈 40、第一圈目標 34
+  ok(Math.abs(z2.r - 34) < .6, '第一圈收到 34 格（' + z2.r.toFixed(1) + '）');
   ok(z2.tr < z2.r, '下一圈目標更小（' + z2.tr + '）');
-  ok(Math.hypot(cx0 - 27.5, cy0 - 21.5) < .01, '開局圈心在正中間（' + cx0 + ',' + cy0 + '）');
+  ok(Math.hypot(cx0 - (G.cols - 1) / 2, cy0 - (G.rows - 1) / 2) < .01,
+    '開局圈心在正中間（' + cx0 + ',' + cy0 + '／地圖 ' + G.cols + '×' + G.rows + '）');
 }
 
 // ================================================================
@@ -74,13 +76,15 @@ head('3. 圈會漂到地圖邊角（跑滿 10 段）');
 {
   let maxDrift = 0, inside = true, moved = 0;
   for (let k = 0; k < 5; k++) {
-    bootBR();
+    // 只驗縮圈 → 人數壓到 20（v5.36 的 100 人跑 180k 幀會超過測試逾時）
+    bootBR(20);
     const c0x = G.brZone.cx, c0y = G.brZone.cy;
+    const ccx = (G.cols - 1) / 2, ccy = (G.rows - 1) / 2;   // 圈心基準跟著地圖大小
     for (let i = 0; i < 60 * 600; i++) {
       G.brNukeCd = 1e9;
       P.updateBR(1 / 60);
       const z = G.brZone;
-      maxDrift = Math.max(maxDrift, Math.hypot(z.cx - 27.5, z.cy - 21.5));
+      maxDrift = Math.max(maxDrift, Math.hypot(z.cx - ccx, z.cy - ccy));
       // 新圈一定要整個包在舊圈裡（PUBG 規則）
       if (Math.hypot(z.nx - z.cx, z.ny - z.cy) + z.nr > z.r + .05) inside = false;
     }
@@ -116,9 +120,11 @@ head('5. 核彈打怪與 BOSS');
   const boss = { boss: true, brBoss: true, maxHp: 20, hp: 20, color: '#fff',
     x: 21.5 * T, y: 20.5 * T, dead: false, spec: null };
   G.enemies.push(boss);
-  G.brNuke = { cx: 20, cy: 20, phase: 'fall', t: .001, fall: 1, dur: 0 };
+  // v5.36：核彈改成陣列（一波兩顆）→ 測試也要塞進 Game.brNukes
+  const nk0 = { cx: 20, cy: 20, phase: 'fall', t: .001, fall: 1, dur: 0 };
+  G.brNukes = [nk0]; G.brNuke = nk0;
   P.updateBRNuke(.01);
-  ok(G.brNuke && G.brNuke.phase === 'done', '核彈落地');
+  ok(G.brNukes[0] && G.brNukes[0].phase === 'done', '核彈落地');
   ok(foe.dead, '半徑內的雜兵當場蒸發');
   ok(boss.hp === 20 - Math.round(20 * .35), 'BOSS 吃 35% 血量（20 → ' + boss.hp + '）');
   ok(!boss.dead, 'BOSS 不會被一顆核彈帶走');
@@ -219,17 +225,22 @@ head('8. 硬牆不准聚成一坨');
     minHard = Math.min(minHard, hard); maxHard = Math.max(maxHard, hard);
   }
   ok(worst === 0, '8 張圖完全沒有 2×2 實心硬牆（最多 ' + worst + ' 個）');
-  ok(minHard >= 60 && maxHard <= 220, '硬牆量還在合理範圍（' + minHard + '~' + maxHard + ' 格）');
+  // v5.36：地圖面積 ×2（79×62）→ 硬牆量上限也放寬約 2 倍
+  ok(minHard >= 100 && maxHard <= 460, '硬牆量還在合理範圍（' + minHard + '~' + maxHard + ' 格／' +
+    G.cols + '×' + G.rows + '）');
 }
 
 // ================================================================
 head('9. 版本與預算');
 {
-  ok(P.VERSION === '5.35', 'VERSION = 5.35');
-  ok(new RegExp('<span id="verTxt">5\\.35</span>').test(src), '#verTxt 同步');
-  ok(new RegExp('<span id="verLogVer">5\\.35</span>').test(src), '#verLogVer 同步');
-  ok(P.VERSION_LOG[0].v === '5.35' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 首位＝5.35 且 now:true');
-  ok(P.VERSION_LOG[1].v === '5.34' && P.VERSION_LOG[1].now === false, '5.34 改成 now:false');
+  // 不寫死版號（後續版本沿用這支）：只驗「至少是 5.35」與四處戳記同步
+  const VN = P.VERSION.split('.').map(Number);
+  const vEsc = P.VERSION.replace(/\./g, '\\.');
+  ok(VN[0] === 5 && VN[1] >= 35, 'VERSION 是 5.35 以上（' + P.VERSION + '）');
+  ok(new RegExp('<span id="verTxt">' + vEsc + '</span>').test(src), '#verTxt 同步');
+  ok(new RegExp('<span id="verLogVer">' + vEsc + '</span>').test(src), '#verLogVer 同步');
+  ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 首位＝' + P.VERSION + ' 且 now:true');
+  ok(P.VERSION_LOG[1].now === false, '上一版 ' + P.VERSION_LOG[1].v + ' 已是 now:false');
   ok(P.VERSION_LOG[0].items.length >= 5, '本版至少 5 條（實際 ' + P.VERSION_LOG[0].items.length + '）');
   ok(!/後台|開發者/.test(P.VERSION_LOG[0].items.join('')), '更新內容不出現「後台／開發者」');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');

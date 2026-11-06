@@ -24,46 +24,48 @@ function click(id) {
 }
 
 // ================================================================
-head('1. 只有第 32 關有 BOSS');
+head('1. 每章第 5 關是 BOSS 決戰場（8 隻，最後一關是總魔王）');
 ok(typeof P.soloIsBoss === 'function', '__BH 有匯出 soloIsBoss');
+ok(typeof P.isBossStage === 'function', '__BH 有匯出 isBossStage');
 {
   const bad = [];
-  for (let st = 1; st <= 31; st++) if (P.soloIsBoss(st)) bad.push(st);
-  ok(bad.length === 0, '第 1～31 關都不是魔王關' + (bad.length ? '（出錯：' + bad.join(',') + '）' : ''));
-  ok(P.soloIsBoss(32) === true, '第 32 關是魔王關');
-  ok(P.soloIsBoss(2) === false && P.soloIsBoss(4) === false && P.soloIsBoss(28) === false,
+  for (let st = 1; st <= P.SOLO_STAGES; st++) if (P.isBossStage(st) !== (st % 5 === 0)) bad.push(st);
+  ok(bad.length === 0, '第 5、10、…、40 關才是 BOSS 關' + (bad.length ? '（出錯：' + bad.join(',') + '）' : ''));
+  ok(P.soloIsBoss(40) === true, '第 40 關是總魔王關');
+  ok(P.soloIsBoss(39) === false, '第 39 關不是魔王關');
+  ok(P.isBossStage(5) && P.isBossStage(20) && !P.isBossStage(4) && !P.isBossStage(24),
     '舊的每區第 4 張（4／8…28）都不再是魔王關');
 }
 {
   const bad = [];
-  let hp32 = 0, mobs32 = 0, mobs31 = 0;
-  for (let st = 1; st <= 32; st++) {
+  let hp40 = 0, mobs40 = 0, mobs39 = 0;
+  for (let st = 1; st <= P.SOLO_STAGES; st++) {
     P.startSolo(st, false);
     const bosses = G.enemies.filter(function (e) { return e.type === 'boss'; });
-    // v4.36：章節魔王（4／8…28）也出王，第 32 關是最終魔王
-    const want = (st === 32 || (st % 4 === 0)) ? 1 : 0;
+    // v5.36：BOSS 決戰場（每章第 5 關）只有王、沒有小怪；第 40 關是總魔王
+    const want = P.isBossStage(st) ? 1 : 0;
     if (bosses.length !== want) bad.push(st + ':boss' + bosses.length + '/' + want);
-    if (st === 32) { hp32 = bosses[0] ? bosses[0].maxHp : 0; mobs32 = G.enemies.length; }
-    if (st === 31) mobs31 = G.enemies.length;
+    if (st === 40) { hp40 = bosses[0] ? bosses[0].maxHp : 0; mobs40 = G.enemies.length; }
+    if (st === 39) mobs39 = G.enemies.length;
   }
-  ok(bad.length === 0, '32 關實際生成：章節魔王（4／8…28）＋最終魔王（32）都有 BOSS' +
+  ok(bad.length === 0, '40 關實際生成：每章第 5 關都有 BOSS' +
     (bad.length ? '（' + bad.join(',') + '）' : ''));
-  ok(hp32 === 12, '最終魔王血量 12 下（' + hp32 + '）');
-  ok(mobs31 > mobs32, '第 31 關的小怪比第 32 關多（魔王關小怪減量：' + mobs31 + ' vs ' + mobs32 + '）');
+  ok(hp40 === 18, '總魔王血量 18 下（10 + 章節 8；' + hp40 + '）');
+  ok(mobs39 > mobs40, '第 39 關的小怪比第 40 關多（魔王關沒小怪：' + mobs39 + ' vs ' + mobs40 + '）');
 }
 ok(css.indexOf('function soloIsBoss(stage)') > 0 && css.indexOf('soloIsBoss(stage) ? t(') > 0,
   '開場字幕也改用 soloIsBoss()');
 ok(!/const boss = m\.sub === 3;/.test(css), '選關格線不再用「每區第 4 張」判斷魔王');
 ok(/魔王關標 👑/.test(fs.readFileSync(__dirname + '/verify-v59.js', 'utf8')) ||
-   /soloIsBoss\(n\)/.test(css), '選關畫面仍會標 👑（只有第 32 格）');
+   /isBossStage\(n\)/.test(css), '選關畫面仍會標 👑（每章第 5 關）');
 { // 選關格：只有第 32 格帶 boss class
   P.Solo.sel = 1;
   P.Solo.renderGrid();
   const kids = els.stageGrid.children || [];
   const withBoss = kids.filter(function (b) { return String(b.className || '').indexOf('boss') >= 0; }).length;
   const done = kids.filter(function (b) { return String(b.className || '').indexOf('done') >= 0; }).length;
-  ok(kids.length === 32, '選關畫面產生 32 格（' + kids.length + '）');
-  ok(withBoss === 1, '32 格裡只有 1 格是魔王關（' + withBoss + '）');
+  ok(kids.length === P.SOLO_STAGES, '選關畫面產生 ' + P.SOLO_STAGES + ' 格（' + kids.length + '）');
+  ok(withBoss === 8, P.SOLO_STAGES + ' 格裡有 8 格是魔王關（每章第 5 關：' + withBoss + '）');
   ok(done >= 0, '通關標記正常（done ' + done + '）');
 }
 
@@ -192,9 +194,10 @@ ok(/const HIDE_THEME_POOL = \[/.test(css) && /function hidePool\(\)/.test(css),
     '火焰燒到躲點 → 躲點消失（用完就沒了）');
 }
 {
-  // 每一張圖都會放（32 關 + 對戰圖）
+  // 每一張圖都會放（40 關 + 對戰圖；v5.36：BOSS 決戰場是專門場地，沒有躲點）
   let none = [];
-  for (let st = 1; st <= 32; st++) {
+  for (let st = 1; st <= P.SOLO_STAGES; st++) {
+    if (P.isBossStage(st)) continue;
     P.startSolo(st, false);
     let n = 0;
     for (let y = 1; y < G.rows - 1; y++) for (let x = 1; x < G.cols - 1; x++) {
@@ -203,7 +206,7 @@ ok(/const HIDE_THEME_POOL = \[/.test(css) && /function hidePool\(\)/.test(css),
     }
     if (n < 3) none.push(st + ':' + n);
   }
-  ok(none.length === 0, '32 關每一關都有至少 3 個躲點' + (none.length ? '（' + none.join(',') + '）' : ''));
+  ok(none.length === 0, '每一關都有至少 3 個躲點' + (none.length ? '（' + none.join(',') + '）' : ''));
 }
 {
   // 對戰圖也有（buildMap）

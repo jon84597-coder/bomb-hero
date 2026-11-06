@@ -51,7 +51,9 @@ head('2. 45 秒後開始通報');
   ok(!!n && Math.abs(n.t - 5) <= 5, '通報時間 5 秒（剩 ' + (n && n.t.toFixed(1)) + '）');
   ok(!!n && G.brIsl && G.brIsl[n.cy] && G.brIsl[n.cy][n.cx] >= 0, '落點在陸地上（不會丟到海裡）');
   ok(!!n && G.brNukeCd === P.BR.NUKE, '下一顆的計時重新歸 45 秒');
-  ok(/drawBRNukeGround\(T\)/.test(src) && /drawMiniMap\(\)/.test(src) && /Game\.brNuke\.phase !== 'done'/.test(src),
+  // v5.36：一波多顆 → 繪製改成走 nkList，兩種寫法都算過
+  ok(/drawBRNukeGround\(T\)/.test(src) && /drawMiniMap\(\)/.test(src) &&
+     (/Game\.brNuke\.phase !== 'done'/.test(src) || /nkList\[ni\]/.test(src)),
      '大地圖與小地圖都會畫出轟炸範圍');
 }
 

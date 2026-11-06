@@ -48,7 +48,7 @@ ok(P.BELT_SLOW < 1, '逆行還是比平地慢一點（' + P.BELT_SLOW + ' < 1）
 ok(P.BELT_SLOW / P.BELT_FAST >= .55, '逆行／順行比值從 0.37 拉到 ' +
   (P.BELT_SLOW / P.BELT_FAST).toFixed(2) + '（不再像黏住）');
 
-freshSolo(13);                                 // v4.26：熔岩洞窟換到第 4 區 → 第 13 關才有輸送帶
+freshSolo(18);                                 // v5.36：每區 5 關 → 熔岩（第 4 區）是 16~19 才有輸送帶
 let beltCell = null;
 for (let y = 1; y < G.rows - 1 && !beltCell; y++) {
   for (let x = 1; x < G.cols - 1; x++) {
@@ -207,15 +207,19 @@ ok(pj.cheerT === 0, '歡呼計時會歸零（不會跳一輩子）');
 
 // ================================================================
 console.log('=== 6. 輸送帶上的炸彈會跟著傳輸 ===');
-freshSolo(13);                                  // v4.26：熔岩洞窟換到第 4 區 → 第 13 關才有輸送帶
-G.bombs.length = 0;
 let bc = null;
-for (let y = 1; y < G.rows - 1 && !bc; y++) {
-  for (let x = 1; x < G.cols - 1; x++) {
-    const h = G.hazards[y][x];
-    if (!h || h.type !== 'convey') continue;
-    const d = DV[h.dir];
-    if (P.cellAt(x + d[0], y + d[1]) === 0) { bc = { x: x, y: y, dir: h.dir, d: d }; break; }
+// v5.36：每區 5 關 → 熔岩（第 4 區）是 16~19；隨機地圖偶爾某關的輸送帶前方全是牆，多試幾關
+for (const cst of [18, 17, 16, 19]) {
+  if (bc) break;
+  freshSolo(cst);
+  G.bombs.length = 0;
+  for (let y = 1; y < G.rows - 1 && !bc; y++) {
+    for (let x = 1; x < G.cols - 1; x++) {
+      const h = G.hazards[y][x];
+      if (!h || h.type !== 'convey') continue;
+      const d = DV[h.dir];
+      if (P.cellAt(x + d[0], y + d[1]) === 0) { bc = { x: x, y: y, dir: h.dir, d: d }; break; }
+    }
   }
 }
 ok(!!bc, '找得到可以往前送的輸送帶格（' + (bc && bc.dir) + '）');

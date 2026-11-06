@@ -176,7 +176,7 @@ ok(BH.beltMulFor(p0, 1, 0) === 1, '不在輸送帶上 → 速度倍率 1（無�
 // ================================================================
 console.log('=== 3. 傳送門：同色成對、離開再回來才再觸發 ===');
 BH.settings.hazards = 'on';
-BH.startSolo(5);                     // v4.26：沙漠遺跡換到第 2 區 → 第 5 關「流沙沙丘」才帶傳送門
+BH.startSolo(7);                     // v5.36：第 5 關改成 BOSS 決戰場；沙漠區（6~9）第 7 關帶多組傳送門
 const warpTiles = [];
 for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
   const h = G.hazards[y] && G.hazards[y][x];

@@ -4666,7 +4666,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.35</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.36</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4721,7 +4721,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.35</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.36</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5706,7 +5706,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.35';
+const VERSION = '5.36';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -9354,7 +9354,7 @@ function resetMapCellState() {
   Game.artK = 1;               // 大逃殺（T≈30 大圖）會縮怪物比例，別帶到別的模式
   BR_AI.on = false;            // 大逃殺 AI 的節奏（交戰距離／放彈頻率）也不要帶進單人／RPG
   Game.flyZ = null;            // v5.4：飛行怪的可飛範圍（外牆以內）跟著地圖走，換圖一定要丟
-  Game.brNuke = null;        // v5.33：核彈／燒地也是「跟著地圖」的狀態
+  Game.brNuke = null; Game.brNukes = [];   // v5.33：核彈／燒地也是「跟著地圖」的狀態（v5.36 一波多顆）
   Game.brBurn = [];
   Game.brNukeCd = 0;
   Game.mapSeq = (Game.mapSeq | 0) + 1;   // 地板烘焙快取／小地圖底圖一起換
@@ -9716,10 +9716,21 @@ function canDizzy(who) {
 // v2.0：誰丟的炸彈砸到誰都不算 —— 只有「被丟到的那個人」才會頭暈
 // v4.31：隨從丟的炸彈是「支援火力」→ 飛過主人頭上也不會把主人砸暈
 //   （原本只讓「丟的人 = 隨從」免疫，玩家不是 owner 所以照樣暈）
+// v5.36：隊友也算友軍。舊版只免疫「自己」與「隨從」→ 大逃殺組隊／對戰分隊時，
+//   隊友的炸彈飛過頭上一樣暈 1 秒（玩家會覺得被自己人陰），現在一併豁免。
+function sameSquad(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.team == null || b.team == null) return false;
+  const teamOn = (Game.brTeam | 0) >= 2 || (Game.teamsOn | 0) >= 2;
+  return !!(teamOn && a.team >= 0 && a.team === b.team);
+}
 function dizzyImmune(who, b) {
   if (!b) return false;
-  if (b.petOwner && typeof Game !== 'undefined' && Game.players && Game.players.indexOf(who) >= 0) return true;
-  return !!(b.owner && who === b.owner);
+  if (b.petOwner || (b.owner && b.owner.__pet)) return true;   // 隨從的支援火力
+  if (!b.owner) return false;                                  // 怪物／場外推車丟的 → 照樣暈
+  if (who === b.owner) return true;                            // 自己丟的不暈
+  return sameSquad(who, b.owner);                              // v5.36：隊友也不暈
 }
 function setDizzy(who, T) {
   if (!canDizzy(who) || (who.dizzy || 0) > 0) return false;
@@ -10869,24 +10880,50 @@ function map32Name(i) {
   const m = MAP32[((i % 32) + 32) % 32];
   return m.theme + 1 + '-' + (m.sub + 1) + '　' + mapName(m);
 }
+// v5.36：關卡名稱（BOSS 關也有名字），給雲端紀錄與所有 UI 用
+function stageName(stage) {
+  const m = soloInfo(stage);
+  if (m && m.boss) return chapterOf(stage) + '-' + BOSS_SLOT + '　' + t('stage.bossName');
+  return m.theme + 1 + '-' + (m.sub + 1) + '　' + mapName(m);
+}
 // v4.77：32 張地圖的名字依語言（mn.1～mn.32）；查不到就用原本的中文
 function mapName(m) {
   if (!m) return '';
+  if (m.boss) return t('stage.bossName');
   const i = MAP32.indexOf(m) + 1;
   const k = 'mn.' + i;
   const v = t(k);
   return (v && v !== k) ? v : m.n;
 }
 // v4.14：單人闖關 8 關 → 32 關（8 大主題 × 4 張地區小地圖），與 RPG 模式共用同一份 MAP32。
-//   每一區的第 4 張（sub === 3）＝ 該區的魔王關；第 32 張「魔王之間」＝ 最終魔王。
-const SOLO_STAGES = 32;
-function soloInfo(stage) { return MAP32[((((stage | 0) - 1) % 32) + 32) % 32]; }
-// v4.16：只有第 32 關（魔王之間）有 BOSS —— 其餘關卡原本每區第 4 張都出魔王，全部拿掉
+// v5.36：改成 8 大主題 ×（4 張地圖 ＋ 1 張 BOSS 決戰場）= 40 關。
+//   · 第 5／10／…／40 關（每章最後一關）＝ 獨立 BOSS 場地（17×15 競技場），不套 MAP32
+//   · 其餘 4 關照舊對應 MAP32 的 32 張地圖（章節 c、位置 p → 索引 (c-1)*4 + p-1）
+const SOLO_STAGES = 40;
+const BOSS_SLOT = 5;
+function chapterOf(stage) {
+  return Math.max(1, Math.min(8, Math.ceil(((stage | 0) || 1) / BOSS_SLOT)));
+}
+function stageSlot(stage) {
+  return ((((stage | 0) - 1) % BOSS_SLOT) + BOSS_SLOT) % BOSS_SLOT + 1;    // 1~5
+}
+function isBossStage(stage) { return stageSlot(stage) === BOSS_SLOT; }
+function mapIdxOfStage(stage) {
+  return (chapterOf(stage) - 1) * 4 + Math.min(4, stageSlot(stage)) - 1;
+}
+function soloInfo(stage) {
+  if (isBossStage(stage)) {
+    const ch = chapterOf(stage);
+    return { idx: -1, theme: ch - 1, sub: 4, n: '決戰', shape: 'arena', boss: true, chapter: ch };
+  }
+  return MAP32[mapIdxOfStage(stage)];
+}
+// v4.16：只有最後一關（魔王之間）有 BOSS 亂入
 function soloIsBoss(stage) { return (stage | 0) >= SOLO_STAGES; }
-//   第 32 關仍然是「最終魔王」，血量與體型最大；章節魔王小一號、血量 5~12 遞增。
+// v5.36：每章最後一關＝BOSS 決戰場（一般關卡不再出王）
 function isChapterFinal(stage) {
   const v = stage | 0;
-  return v > 0 && v < SOLO_STAGES && (v % 4) === 0;
+  return v > 0 && v <= SOLO_STAGES && isBossStage(v);
 }
 
 const Solo = {
@@ -10976,15 +11013,16 @@ const Solo = {
     if (!g) return;
     g.innerHTML = '';
     // v4.16：32 張地圖（8 大主題 × 4 張）；只有第 32 關是最終魔王關，標上 👑
-    MAP32.forEach(function (m, i) {
-      const n = i + 1;
-      const boss = soloIsBoss(n);
+    // v5.36：40 關（8 章 × 5）—— 每章第 5 關是 BOSS 決戰場
+    for (let n = 1; n <= SOLO_STAGES; n++) {
+      const m = soloInfo(n);
+      const boss = isBossStage(n);
       const b = document.createElement('button');
       b.className = 'stg' + (n < Solo.maxUnlocked() ? ' done' : '') + (n === Solo.sel ? ' sel' : '') + (boss ? ' boss' : '');
       b.disabled = n > Solo.maxUnlocked();
       if (typeof b.setAttribute === 'function') {
         b.setAttribute('data-stage', String(n));
-        b.setAttribute('title', (m.theme + 1) + '-' + (m.sub + 1) + '　' + mapName(m) + (boss ? '　' + t('stage.bossTag') : ''));
+        b.setAttribute('title', stageName(n) + (boss ? '　' + t('stage.bossTag') : ''));
       }
       let ss = 0;
       try { ss = Gift.stars(n) | 0; } catch (e) { ss = 0; }   // v4.87：這一關拿到幾顆星
@@ -10996,7 +11034,7 @@ const Solo = {
         Solo.pick(n);
       });
       g.appendChild(b);
-    });
+    }
     Solo.renderGo();
   }
 };
@@ -14573,7 +14611,7 @@ function startSolo(stage, bossRush, daily) {
   try {
     if (typeof Cloud !== 'undefined' && Cloud.track) {
       Cloud.track(bossRush ? 'boss' : 'solo', stage,
-        (daily ? '每日挑戰 ' : '') + '第 ' + stage + ' 關・' + map32Name(stage - 1));
+        (daily ? '每日挑戰 ' : '') + '第 ' + stage + ' 關・' + stageName(stage));
     }
   } catch (e) {}
   Game.players = [];
@@ -14726,9 +14764,129 @@ function buildSoloStage(stage, fresh) {
   Math.random = rngFrom((Game.daily.seed ^ 0x9E3779B9) >>> 0);
   try { return buildSoloStageInner(stage, fresh); } finally { Math.random = orig; }
 }
+/* v5.36：章節 BOSS 決戰場（17×15，比照對戰「大 17×15」）
+   場地固定：外框硬牆、內部一個大空間、四根柱子當掩體。
+   BOSS 在中上 (8,2)、玩家在中下 (8,13)、大門在王正上方 (8,1)。
+   開場沒有任何小兵；每 60 秒從王的左右各生一隻（場上最多 8 隻）。
+   王死 → 門打開（玩家要自己走過去）→ 進門才算過關。 */
+function buildBossArenaStage(stage, fresh, rpg) {
+  const ch = chapterOf(stage);
+  const info = soloInfo(stage);
+  const theme = THEMES[ch - 1] || THEMES[0];
+  const cols = 17, rows = 15;
+  const p = Game.players[0];
+  Game.theme = theme; Game.mapInfo = info; Game.bigMap = false;
+  Game.cols = cols; Game.rows = rows;
+  resetMapCellState();
+  Game.T = tileSize();
+  recalcSpdK();
+  Game.ox = Math.floor((VIEW_W - Game.T * cols) / 2);
+  Game.oy = Math.floor((VIEW_H - Game.T * rows) / 2);
+  Game.camSnap = true;
+  Game.hazards = []; Game.warps = []; Game.bubbles = []; Game.eggs = [];
+  Game.pops = []; Game.edgeFx = 0; Game.hidden = {}; Game.roomSeal = [];
+  for (let y = 0; y < rows; y++) Game.hazards.push(new Array(cols).fill(null));
+  const g = [];
+  for (let y = 0; y < rows; y++) {
+    const row = [];
+    for (let x = 0; x < cols; x++) row.push((x === 0 || y === 0 || x === cols - 1 || y === rows - 1) ? 1 : 0);
+    g.push(row);
+  }
+  [[4, 4], [12, 4], [4, 10], [12, 10]].forEach(function (c) { g[c[1]][c[0]] = 1; });   // 四根柱子
+  Game.grid = g;
+  Game.spawnCell = { x: 8, y: 13 };
+  markWallKinds();
+  Game.door = { x: 8, y: 1, revealed: true, open: false };
+  Game.doorHinted = true;
+  p.x = 8.5 * Game.T; p.y = 13.5 * Game.T;
+  p.alive = true; p.invuln = 2.5; p.carry = null; p.slide = null; p.warpLock = '';
+  if (rpg) { p.hpCur = p.hpMax; p.armorCur = p.armorMax; }
+  else { p.sHpMax = soloHpMax(); p.sHp = p.sHpMax; }
+  if (fresh) resetPlayerStats(p);
+  Game.enemies = [];
+  // v5.36：RPG 最終章（第 8 章）保留舊版「總魔王」規格（48 血、def 2），其餘章節照章數遞增
+  const bossFin = rpg && ch >= 8;
+  const boss = makeBoss(8, 2, bossFin ? 48 : (rpg ? (12 + ch * 2) : (10 + ch)));
+  boss.dirName = 'down'; boss.chapterBoss = true; boss.sizeMul = 1.28;
+  if (bossFin) boss.def = 2;
+  if (rpg) { boss.lv = rpgFoeLv(stage); boss.exp = rpgFoeXp(stage) * 5; }   // 魔王經驗 5 倍（沿用舊版）
+  Game.enemies.push(boss);
+  Game.bossArena = { chapter: ch, t: 0, minionT: 60, boss: boss, bossDead: false, rpg: !!rpg };
+  if (!rpg) spawnEggs(0);
+  const tSec = rpg ? 0 : soloTimeVal();
+  Game.timer = tSec > 0 ? tSec : Infinity;
+  Game.timerMax = Game.timer;
+  Game.hurtCount = 0;
+  Game.bombs = []; Game.flames = []; Game.items = []; Game.particles = [];
+  Game.bolts = []; Game.foeAoe = []; Game.foeHaz = []; Game.rollers = []; Game.orbs = [];
+  Game.pops = []; Game.edgeFx = 0; Game.rings = []; Game.flash = 0;
+  Game.sdIndex = 0; Game.sdList = [];
+  hideOverlay();
+  buildSdList();
+  spawnPets();
+}
+
+// 找離 (x,y) 最近的可站格（生小兵用；抽不到就不生，不會硬塞在牆裡）
+//   v5.36：名字不能叫 bossFreeCell —— 那是「這格是不是 BOSS 的可站立格」的舊判定（回傳 boolean）
+function arenaFreeCell(x, y) {
+  for (let r = 0; r <= 4; r++) {
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const nx = x + dx, ny = y + dy;
+      if (nx < 1 || ny < 1 || nx > Game.cols - 2 || ny > Game.rows - 2) continue;
+      if (cellAt(nx, ny) !== 0 || bombAt(nx, ny)) continue;
+      if (Game.door && Game.door.x === nx && Game.door.y === ny) continue;
+      return { x: nx, y: ny };
+    }
+  }
+  return null;
+}
+
+// v5.36：BOSS 場地的節奏 —— 每 60 秒 +2 小兵（上限 8）、王死開門
+function updateBossArena(dt) {
+  const A = Game.bossArena;
+  if (!A) return;
+  if (!A.bossDead && A.boss && (A.boss.dead || A.boss.hp <= 0)) {
+    A.bossDead = true;
+    if (Game.door && !Game.door.open) {
+      Game.door.open = true;
+      try { doorOpenFx(Game.door); } catch (e) {}
+    }
+    try { brTip('🚪', t('boss.gateOpen'), 'good', 3.0); } catch (e) {}
+    try { AudioSys.sfx('door'); } catch (e) {}
+  }
+  if (A.bossDead) return;
+  A.t += dt;
+  A.minionT -= dt;
+  if (A.minionT > 0) return;
+  A.minionT = 60;
+  let live = 0;
+  for (let i = 0; i < Game.enemies.length; i++) {
+    const e = Game.enemies[i];
+    if (e && !e.dead && !e.boss) live++;
+  }
+  if (live >= 8) return;
+  const types = stageTypes(Game.stage);
+  const lv = Math.min(8, A.chapter + 1);
+  for (let i = 0; i < 2; i++) {
+    const spot = arenaFreeCell(8 + (i ? 3 : -3), 5);
+    if (!spot) continue;
+    const e = makeEnemy(spot.x, spot.y, types.length ? types[(A.chapter + i) % types.length] : null, lv, 1);
+    if (A.rpg) { e.lv = rpgFoeLv(Game.stage); e.exp = rpgFoeXp(Game.stage); }
+    e.emergeT = .5;                                  // 冒出來的小動畫，不會瞬間貼臉
+    Game.enemies.push(e);
+    try { burst(e.x, e.y, '#ffd27a', 10, 150); } catch (x) {}
+  }
+  try { brTip('👾', t('boss.minions'), 'warn', 1.8); } catch (e) {}
+  try { AudioSys.sfx('anger'); } catch (e) {}
+}
+
 function buildSoloStageInner(stage, fresh) {
   const mt = Game.mapTest;
+  // v5.36：每章最後一關＝BOSS 決戰場（獨立 17×15 場地，不吃有機地圖）
+  if (!mt && !Game.bossRush && isBossStage(stage)) { buildBossArenaStage(stage, fresh, false); return; }
   const lay = mt || mapLayerFor(stage);      // v4.69：maptest 關 / 隨機生成模式的 T 圖
+  Game.bossArena = null;                     // v5.36：普通關卡不帶 BOSS 場地狀態
   const size = SIZES.M;
   const cols = lay ? lay.cols : size[0], rows = lay ? lay.rows : size[1];
   const diff = soloDiffCfg();
@@ -15033,7 +15191,7 @@ STAGE_ROSTER.forEach(function (list, bi) {
   list.forEach(function (id) { const sp = speciesOf(id); if (sp) sp.stage = bi + 1; });
 });
 // 這張地圖屬於第幾大關（1~8）
-function blockOf(stage) { return Math.max(1, Math.min(8, Math.ceil(((stage | 0) || 1) / 4))); }
+function blockOf(stage) { return chapterOf(stage); }
 // 這一關會出現的小怪名單（6 隻）
 function stageRoster(stage) { return STAGE_ROSTER[blockOf(stage) - 1] || []; }
 // 這一關實際會登場的種類（前 4 隻 → 全 6 隻）
@@ -15918,6 +16076,8 @@ function updateSolo(dt) {
     Game.enemies.forEach(function (e) { updateEnemy(e, dt); });
     // v4.17：隨從（跟隨／攻擊／擋怪／撿道具／倒地救援）
     updatePets(dt);
+    // v5.36：BOSS 決戰場（每 60 秒生小兵、王死開門）
+    if (Game.bossArena) updateBossArena(dt);
     // 玩家 vs 敵人
     if (p.alive && p.invuln <= 0) {
       for (let i = 0; i < Game.enemies.length; i++) {
@@ -15928,7 +16088,8 @@ function updateSolo(dt) {
       }
     }
     // v2.0：門只能「炸開軟磚」才會出現 —— 不再自動掀開
-    if (Game.enemies.length === 0 && p.alive) {
+    // v5.36：BOSS 決戰場不套這套規則（門一開始就在，打完王才開）
+    if (!Game.bossArena && Game.enemies.length === 0 && p.alive) {
       const dr = Game.door;
       if (dr && !dr.revealed) {
         // 只剩硬牆、沒有軟磚可炸了（不然玩家會卡死）→ 才自動露門
@@ -15949,6 +16110,18 @@ function updateSolo(dt) {
       if (cx === Game.door.x && cy === Game.door.y && !(typeof Tut !== 'undefined' && Tut.onDoor())) {
         AudioSys.sfx('door');
         Game.state = 'roundover';
+        // v5.36：BOSS 關卡打贏 → 比照大逃殺冠軍（勝利好幾聲＋金色彩帶＋閃光＋震屏）
+        if (Game.bossArena) {
+          try {
+            brTip('🏆', t('boss.clear'), 'good', 3.6);
+            AudioSys.sfx('victory');
+            for (let k = 0; k < 6; k++) {
+              confetti(p.x + (Math.random() - .5) * Game.T * 4, p.y - Game.T * (.8 + k * .55), 16);
+            }
+            Game.flash = Math.max(Game.flash || 0, .55);
+            Game.shake = Math.max(Game.shake || 0, .5);
+          } catch (e) {}
+        }
         if (Game.bossRush) AudioSys.stopBGM();
         const cleared = Game.stage;
         // v4.17：過關發金幣（單人與 RPG 都給；商店買隨從用）
@@ -15985,7 +16158,7 @@ function updateSolo(dt) {
         } catch (e) {}
         try {
           if (typeof Cloud !== 'undefined' && Cloud.track) {
-            Cloud.track('clear', cleared, '通過第 ' + cleared + ' 關・' + map32Name(cleared - 1));
+            Cloud.track('clear', cleared, '通過第 ' + cleared + ' 關・' + stageName(cleared));
           }
         } catch (e) {}
         // v4.87：過關結算 —— 三星、每日任務、每週榜（每日挑戰不列入，避免污染正式進度）
@@ -16041,13 +16214,13 @@ function updateSolo(dt) {
             const _lvn = rpgLvOf(RPG.xp);
             showOverlay({
               title: t('solo.clearTitle'),
-              sub: t('solo.clearSub', { s: p.score, n: (Game.stage + 1), name: (Game.mode === 'rpg' ? (MAP32[(Game.stage - 1) % 32].n) : soloInfo(Game.stage + 1).n) }) +
+              sub: t('solo.clearSub', { s: p.score, n: (Game.stage + 1), name: stageName(Game.stage + 1) }) +
                 (Game.mode === 'rpg' ? '\n⭐ Lv.' + _lvn.lv + '　EXP ' + _lvn.cur + '/' + (_lvn.need || 'MAX') : ''),
               btn: t('solo.clearBtn'),
               action: function () {
                 Game.stage += 1;
                 if (Game.mode === 'rpg') {
-                  const info = MAP32[(Game.stage - 1) % 32];
+                  const info = soloInfo(Game.stage);
                   Game.theme = THEMES[info.theme];
                   buildRpgStage(Game.stage, false);
                   AudioSys.startBGM(stageBGM(Math.min(8, info.theme + 1)));
@@ -17518,23 +17691,27 @@ function killBattlePlayer(p, killer) {
 //   · 正式測試結束前免費入場（BR.FREE）
 // ====
 const BR = {
-  W: 56, H: 44, N: 30, FOES: 14,
+  // v5.36：地圖面積 ×2（56×44 → 79×62，2,464 → 4,898 格）、人數 30 → 100
+  W: 79, H: 62, N: 100, FOES: 14,
   // v4.76：兩隻「亂入 BOSS」——從 32 關裡隨機抽兩關的 BOSS 丟進場，沒有地盤、全場亂走
   BOSS_N: 2, BOSS_HP: 20, BOSS_AGGRO: 4, BOSS_HIT: 2,
   HP: 10,              // 每人 10 點血（HUD／隊友血條都吃這個）
-  // v5.33：核彈 —— 每 45 秒一顆、通報 5 秒、半徑 5 格、直擊 6 格血、燒地 10 秒
-  NUKE: 45, NUKE_WARN: 5,
+  // v5.33：核彈 —— 每 45 秒一波、通報 5 秒、半徑 5 格、直擊 6 格血、燒地 10 秒
+  // v5.36：一波兩顆、最後 2 分鐘不再落彈、落點只取毒圈內
+  NUKE: 45, NUKE_WARN: 5, NUKE_N: 2, NUKE_GAP: 12, NUKE_STOP: 120,
   // v5.35：縮圈動畫 8 秒（算在每段 60 秒裡面 → 一場 10 段剛好 10 分鐘）
   SHRINK: 8,
+  Z0: 40,              // v5.36：開場圈半徑（79×62 的地圖要 40 格才包得住整張）
   FREE: true,          // v4.74：正式測試結束前不扣門票
   ART_K: .84,          // v4.74：大圖（T≈30）怪物畫得偏大 → 美術半徑與判定一起縮一級
   // v4.75：開局選項（入口卡）—— 人數／組隊人數／場長
-  opt: { n: 30, team: 1, dur: 10 },
+  opt: { n: 100, team: 1, dur: 10 },
   TEAM: 1,             // 1 = 單人混戰；2／3／4 = 組隊（隊員之間不會互炸）
   // [等待秒數, 目標半徑（格）]：10 段 × 60 秒 = 10 分鐘
-  PH10: [[60, 27], [60, 23.5], [60, 20], [60, 17], [60, 14.5], [60, 12], [60, 9.5], [60, 7], [60, 4.6], [60, 2.8]],
+  // v5.36：地圖放大 → 半徑整套重算（首圈 34 格，末圈 3.4 格，每段約 ×0.84）
+  PH10: [[60, 34], [60, 29], [60, 25], [60, 21], [60, 17.5], [60, 14], [60, 11], [60, 8], [60, 5.5], [60, 3.4]],
   // 5 段 × 60 秒 = 5 分鐘（半徑跨得大一點，5 分鐘也收得完）
-  PH5: [[60, 24], [60, 19], [60, 14], [60, 8.5], [60, 3]],
+  PH5: [[60, 32], [60, 25], [60, 18], [60, 10.5], [60, 3.6]],
   PH: [],
   // 名次獎勵（第 9 名以後一律拿最後一級 80）
   GOLD: [1200, 700, 450, 300, 200, 150, 100, 80],
@@ -17923,18 +18100,21 @@ function buildBRMap() {
   // ---- 6) 出生點：30 人，只落在「連通」且「初始圈內（半徑 19 格）」的格子 ----
   //   圈外的話 60 秒後第一次縮圈就開始掉血，整場會在 2 分鐘內被毒圈清空
   const cells = [];
+  // v5.36：出生點範圍跟著地圖放大（舊版固定 19 格，100 人擠不進去）
+  const spawnR = Math.max(19, Math.round(Math.min(cols, rows) * .48));
   for (let y = 1; y < rows - 1; y++) for (let x = 1; x < cols - 1; x++) {
     if (Game.grid[y][x] !== 0) continue;
     const dx = x - cx0, dy = y - cy0;
-    if (dx * dx + dy * dy > 19 * 19) continue;
+    if (dx * dx + dy * dy > spawnR * spawnR) continue;
     cells.push({ x: x, y: y });
   }
   for (let i = cells.length - 1; i > 0; i--) {
     const k = rand(i + 1), t = cells[i]; cells[i] = cells[k]; cells[k] = t;
   }
   const sp = [];
-  let minD = 6;
-  for (let pass = 0; pass < 8 && sp.length < BR.N; pass++) {
+  // v5.36：人多時把「彼此最短距離」放寬（曼哈頓 4 格），否則 100 個點排不進一張圖
+  let minD = BR.N >= 80 ? 4 : 6;
+  for (let pass = 0; pass < 16 && sp.length < BR.N; pass++) {
     for (let i = 0; i < cells.length && sp.length < BR.N; i++) {
       const c = cells[i];
       let ok = true;
@@ -17945,7 +18125,13 @@ function buildBRMap() {
       sp.push({ x: c.x, y: c.y });
       cells.splice(i, 1); i--;
     }
-    minD = Math.max(1, minD - 1);
+    minD = Math.max(2, minD - 1);
+  }
+  // v5.36：真的湊不滿 → 從剩下的空地補（舊版直接讓後面的玩家全部擠在 (1,1) 開場互炸）
+  for (let i = 0; i < cells.length && sp.length < BR.N; i++) sp.push({ x: cells[i].x, y: cells[i].y });
+  // 打散順序，玩家（第 0 位）才不會永遠落在同一個角落
+  for (let i = sp.length - 1; i > 0; i--) {
+    const k = rand(i + 1), t = sp[i]; sp[i] = sp[k]; sp[k] = t;
   }
   // 出生格周圍 1 格淨空（跟單人隨機圖同一個規則）
   const near = {};
@@ -18314,7 +18500,7 @@ function startBR() {
   // v5.7：後台要看「幾點開始大逃殺」
   try {
     if (typeof Cloud !== 'undefined' && Cloud.track) {
-      const n = clamp(BR.opt.n | 0, 20, 50), tm = clamp(BR.opt.team | 0, 1, 4);
+      const n = clamp(BR.opt.n | 0, 20, 100), tm = clamp(BR.opt.team | 0, 1, 4);
       Cloud.track('br', 0, '大逃殺 ' + n + ' 人・' + (tm >= 2 ? tm + ' 人一隊' : '單人') +
         '・' + (BR.opt.dur | 0) + ' 分');
     }
@@ -18325,8 +18511,8 @@ function startBR() {
   Game.winsNeeded = 1; Game.teamWins = [0, 0, 0, 0];
   Game.state = 'idle'; paused = false;
   Game.brOut = 0;
-  // v4.75：把入口卡的選項套進這一場（人數上限 50，地圖 2,464 格放得下）
-  BR.N = clamp(BR.opt.n | 0, 20, 50);
+  // v4.75：把入口卡的選項套進這一場（v5.36：地圖 4,898 格，人數上限開到 100）
+  BR.N = clamp(BR.opt.n | 0, 20, 100);
   BR.TEAM = clamp(BR.opt.team | 0, 1, 4);
   BR.PH = (BR.opt.dur | 0) === 5 ? BR.PH5 : BR.PH10;
   Game.brTeam = BR.TEAM;
@@ -18368,15 +18554,16 @@ function startBR() {
      · wait：目前圈不動，地面（淡虛線）＋小地圖（亮虛線）預告下一圈在哪
      · shrink：時間到 → 藍圈在 BR.SHRINK 秒內收到虛線上 → 馬上再算下一圈
      圈心一律取在「目前圈內、且整個新圈包得進去」的隨機位置（偏外側取點 → 會一路漂到地圖邊角）。 */
-  Game.brZone = { cx: (Game.cols - 1) / 2, cy: (Game.rows - 1) / 2, r: 30, tr: 27, phase: 0,
+  Game.brZone = { cx: (Game.cols - 1) / 2, cy: (Game.rows - 1) / 2, r: BR.Z0, tr: BR.PH[0][1], phase: 0,
     t: Math.max(2, BR.PH[0][0] - BR.SHRINK), mode: 'wait', done: false,
-    nx: (Game.cols - 1) / 2, ny: (Game.rows - 1) / 2, nr: 27 };
+    nx: (Game.cols - 1) / 2, ny: (Game.rows - 1) / 2, nr: BR.PH[0][1] };
   Game.brFlowKey = '';
   brZoneNext();
   Game.enemies = [];
   Game.bombs = []; Game.flames = []; Game.items = []; Game.particles = [];
   Game.bolts = []; Game.pops = []; Game.edgeFx = 0; Game.pets = [];
-  Game.brNuke = null; Game.brBurn = []; Game.brNukeCd = BR.NUKE;   // v5.33：核彈計時
+  Game.brNuke = null; Game.brNukes = []; Game.brBurn = []; Game.brNukeCd = BR.NUKE;   // v5.33／v5.36：核彈計時
+  Game.bossArena = null;                                          // v5.36：大逃殺不是 BOSS 關
   Game.brLootGold = 0;                                            // v5.35：戰場掉落的金幣
   Game.foeAoe = []; Game.foeHaz = []; Game.rollers = []; Game.orbs = [];   // v5.0
   Game.foeCap = BR.FOES + 8;
@@ -18522,19 +18709,42 @@ const NUKE_BURN_SEC = 10;         // 燒地持續秒數
 const NUKE_FALL_SEC = 2.0;        // 落下時間（≈ 4.5 格/秒 ≈ 走路速度）
 const NUKE_AWARE = .55;           // AI 警覺率
 
-function brNukePickSpot() {
+function brNukePickSpot(avoid) {
   const z = Game.brZone;
   const cx0 = z ? z.cx : (Game.cols - 1) / 2, cy0 = z ? z.cy : (Game.rows - 1) / 2;
-  const rr = Math.max(3, Math.min(14, z ? z.r - 1.5 : 12));
-  for (let i = 0; i < 90; i++) {
+  // v5.36：落點一律取在毒圈內（留 1 格邊界）；抽不到就回 null → 這一波直接放棄
+  const rr = Math.max(2, Math.min(26, z ? z.r - 1 : 12));
+  for (let i = 0; i < 120; i++) {
     const a = Math.random() * 6.2832, d = Math.sqrt(Math.random()) * rr;
     const x = Math.round(cx0 + Math.cos(a) * d), y = Math.round(cy0 + Math.sin(a) * d);
     if (x < 2 || y < 2 || x > Game.cols - 3 || y > Game.rows - 3) continue;
     if (Game.brIsl && Game.brIsl[y] && Game.brIsl[y][x] < 0) continue;    // 海裡不炸
     if (cellAt(x, y) === 1) continue;                                     // 岩壁不炸
+    if (z) {                                                              // 嚴格：一定要落在圈內
+      const dx = (x + .5) - (z.cx + .5), dy = (y + .5) - (z.cy + .5);
+      if (Math.sqrt(dx * dx + dy * dy) > Math.max(1.5, z.r - 1)) continue;
+    }
+    if (avoid) {                                                          // 同波兩顆不要疊在一起
+      const ax = x - avoid.x, ay = y - avoid.y;
+      if (Math.sqrt(ax * ax + ay * ay) < BR.NUKE_GAP) continue;
+    }
     return { x: x, y: y };
   }
-  return { x: Math.round(cx0), y: Math.round(cy0) };
+  return null;
+}
+
+// v5.36：這一波還剩幾秒（總長＝各段等待秒數相加；縮圈時間已含在每段 60 秒裡）
+function brTimeLeft() {
+  const z = Game.brZone;
+  if (!z || !BR.PH.length) return Infinity;
+  let total = 0, used = 0;
+  for (let i = 0; i < BR.PH.length; i++) total += BR.PH[i][0];
+  for (let i = 0; i < z.phase && i < BR.PH.length; i++) used += BR.PH[i][0];
+  const seg = (BR.PH[Math.min(z.phase, BR.PH.length - 1)] || [60])[0];
+  used += (z.mode === 'shrink')
+    ? (seg - (z.st || 0))
+    : (seg - BR.SHRINK - (z.t > 1e6 ? 0 : z.t));
+  return total - used;
 }
 
 // 這一格是不是還燒著（玩家／AI 都用它判斷）
@@ -18627,9 +18837,19 @@ function brNukeClearSoft(cx, cy, R) {
 }
 
 function brNukeLaunch() {
-  const s = brNukePickSpot();
-  Game.brNuke = { cx: s.x, cy: s.y, phase: 'warn', t: BR.NUKE_WARN, fall: 0, dur: 0 };
+  // v5.36：一波兩顆（落點互距 ≥ BR.NUKE_GAP），而且只炸毒圈內
+  const list = [];
+  let first = null;
+  for (let i = 0; i < (BR.NUKE_N || 1); i++) {
+    const s = brNukePickSpot(first);
+    if (!s) break;
+    if (!first) first = s;
+    list.push({ cx: s.x, cy: s.y, phase: 'warn', t: BR.NUKE_WARN + i * .45, fall: 0, dur: 0 });
+  }
   Game.brNukeCd = BR.NUKE;
+  if (!list.length) return;          // 圈太小／抽不到合法落點 → 這一波跳過，等下一波
+  Game.brNukes = list;
+  Game.brNuke = list[0];             // 相容指標（舊的繪製／測試讀這一個）
   // 只有一部分 AI 聽到警報（使用者要求：有的知道要跑、有的不知道）
   Game.players.forEach(function (p) { if (p.ai) p.nukeAware = Math.random() < NUKE_AWARE; });
   try { AudioSys.sfx('nukeAlarm'); } catch (e) {}
@@ -18706,32 +18926,46 @@ function updateBRNuke(dt) {
       }
     }
   }
-  if (!Game.brNuke) {
+  // v5.36：最後 2 分鐘不再落彈（其他時間照 45 秒一波、一波兩顆）
+  if (!Game.brNukes) Game.brNukes = Game.brNuke ? [Game.brNuke] : [];
+  if (!Game.brNukes.length) {
+    if (brTimeLeft() <= BR.NUKE_STOP) return;
     Game.brNukeCd = (Game.brNukeCd == null ? BR.NUKE : Game.brNukeCd) - dt;
     if (Game.brNukeCd <= 0) brNukeLaunch();
     return;
   }
-  const n = Game.brNuke;
-  if (n.phase === 'warn') {
-    n.t -= dt;
-    if (n.t <= 0) {
-      n.phase = 'fall'; n.t = NUKE_FALL_SEC; n.fall = 0;
-      try { AudioSys.sfx('nukeFall'); } catch (e) {}
+  for (let i = Game.brNukes.length - 1; i >= 0; i--) {
+    const n = Game.brNukes[i];
+    if (n.phase === 'warn') {
+      n.t -= dt;
+      if (n.t <= 0) {
+        n.phase = 'fall'; n.t = NUKE_FALL_SEC; n.fall = 0;
+        try { AudioSys.sfx('nukeFall'); } catch (e) {}
+      }
+    } else if (n.phase === 'fall') {
+      n.t -= dt;
+      n.fall = clamp(1 - n.t / NUKE_FALL_SEC, 0, 1);
+      if (n.t <= 0) brNukeImpact(n);
+    } else if (n.phase === 'done') {
+      n.t -= dt;
+      if (n.t <= 0) Game.brNukes.splice(i, 1);
     }
-  } else if (n.phase === 'fall') {
-    n.t -= dt;
-    n.fall = clamp(1 - n.t / NUKE_FALL_SEC, 0, 1);
-    if (n.t <= 0) brNukeImpact(n);
-  } else if (n.phase === 'done') {
-    n.t -= dt;
-    if (n.t <= 0) Game.brNuke = null;
   }
+  Game.brNuke = Game.brNukes[0] || null;
 }
 
 // AI 逃離核彈：只有「有察覺」的那批會跑，而且只會貪心地往外走一格
 function brNukeFlee(p, dt) {
-  const n = Game.brNuke;
-  if (!n || (n.phase !== 'warn' && n.phase !== 'fall')) return false;
+  // v5.36：一波兩顆 → 挑「最急的那顆」來逃（t 最小的就是最快落地）
+  const list = (Game.brNukes && Game.brNukes.length) ? Game.brNukes
+    : (Game.brNuke ? [Game.brNuke] : []);
+  let n = null;
+  for (let i = 0; i < list.length; i++) {
+    const c = list[i];
+    if (!c || (c.phase !== 'warn' && c.phase !== 'fall')) continue;
+    if (!n || (c.t || 0) < (n.t || 0)) n = c;
+  }
+  if (!n) return false;
   if (p.nukeAware === false) return false;
   const T = Game.T;
   const nx = (n.cx + .5) * T, ny = (n.cy + .5) * T;
@@ -18977,10 +19211,14 @@ function drawNukeArt(r) {
 }
 
 // 落下中的核彈（從天空慢慢壓下來，影子在地面同步變大）
+// v5.36：一波可能有兩顆 → 這支只畫一顆，外層輪流呼叫
 function drawBRNukeBomb(T) {
-  const n = Game.brNuke;
-  if (!n || n.phase !== 'fall') return;
-  const k = clamp(n.fall, 0, 1);
+  const list = Game.brNukes && Game.brNukes.length ? Game.brNukes
+    : (Game.brNuke ? [Game.brNuke] : []);
+  for (let i = 0; i < list.length; i++) {
+    const n = list[i];
+    if (!n || n.phase !== 'fall') continue;
+    const k = clamp(n.fall, 0, 1);
   const tx = (n.cx + .5) * T, ty = (n.cy + .5) * T;
   const y = ty - (1 - k) * T * 9;
   const sc = .58 + .42 * k;
@@ -19009,6 +19247,7 @@ function drawBRNukeBomb(T) {
   drawNukeArt(T * 1.00);         // 核彈本體 ≈ 3.5 格長（要比玩家大一大截才像核彈）
   ctx.restore();
   ctx.globalAlpha = 1;
+  }
 }
 
 // 燒地：焦黑地面＋一圈火界＋一堆會晃的火焰舌＋上升火星
@@ -19436,8 +19675,19 @@ function updateBR(dt) {
       //     一次縮 3 格以上就會有一批人同時被圈吃掉（實測第 3 分鐘一次死 17 個）。
       // v5.33：核彈警報中 → 有察覺的 AI 先往外逃（沒察覺的照原本的走位）
       if (p.ai) {
-        if (brNukeFlee(p, dt)) { /* 正在逃離核彈 */ }
-        else if (!((outside || edge) && brSteer(p, dt))) controlAI(p, dt);
+        /* v5.36：100 人的效能剝離 —— 離玩家 18 格外的 AI 降到 6Hz 更新，
+           一次補上累積的 dt。遠到看不清楚的地方不需要每幀尋路，CPU 直接省一半以上。 */
+        let adt = dt;
+        const meP = Game.players[0];
+        if (meP && p !== meP) {
+          p.lodAcc = (p.lodAcc || 0) + dt;
+          const lx = (p.x - meP.x) / T, ly = (p.y - meP.y) / T;
+          const far = lx * lx + ly * ly > 18 * 18;
+          if (far && p.lodAcc < 1 / 6) return;      // 這一幀跳過（毒圈判定上面已經算過）
+          adt = Math.min(.35, p.lodAcc); p.lodAcc = 0;
+        }
+        if (brNukeFlee(p, adt)) { /* 正在逃離核彈 */ }
+        else if (!((outside || edge) && brSteer(p, adt))) controlAI(p, adt);
       } else controlHuman(p, dt);
     });
     if (Game.state === 'play') {
@@ -24335,7 +24585,147 @@ function mixHex(a, b, t) {
   return 'rgb(' + r + ',' + g2 + ',' + b2 + ')';
 }
 //   尺寸同硬牆 T×T；只壓外側暗邊。
+/* v5.36：大逃殺專用外牆 —— 鈦合金機械牆
+   為什麼要另外一套：大逃殺是「競技場」，用主題岩壁會跟冒險關卡撞在一起，
+   也看不出「這是被人造出來的封閉場地」。這支全部程序繪製（不吃貼圖）：
+   ① 鈦合金底板（垂直漸層＋橫向髮絲紋）
+   ② 2×2 格的機械面板（接縫、內凹倒角、四角鉚釘）
+   ③ 磨損：刮痕／鏽流／油汙，用 dhash 固定種子 → 每格都不一樣但不會閃
+   ④ 面向空地的一側加亮邊＋警示黃條，看得出厚度與方向
+   因為牆面烘在 floorChunk 裡，這些細節只在換圖／炸牆時算一次。 */
+function drawBRTitanWall(px, py, T, seed, gx, gy) {
+  const wk = Game.wallKind;
+  const solid = function (ax, ay) {
+    if (ax < 0 || ay < 0 || ax >= Game.cols || ay >= Game.rows) return true;
+    if (wk && wk[ay] && wk[ay][ax] === 0) return true;          // 牆的內部（不畫）
+    return !!(Game.grid[ay] && Game.grid[ay][ax] === 1);
+  };
+  const h = function (k) { return dhash(gx, gy, k); };
+  // ① 底板：鈦合金是「亮冷灰」—— 場地光線會再壓暗一層，所以底色要刻意偏亮
+  const g = ctx.createLinearGradient(px, py, px, py + T);
+  g.addColorStop(0, '#a5b7c8'); g.addColorStop(.30, '#7d8b99');
+  g.addColorStop(.68, '#5d6874'); g.addColorStop(1, '#414a55');
+  ctx.fillStyle = g;
+  ctx.fillRect(px, py, T, T);
+  // ①-a 冷色調：鈦是偏藍的冷灰，不加這一層會被場地的暖光染成水泥
+  ctx.fillStyle = 'rgba(96,146,196,.14)';
+  ctx.fillRect(px, py, T, T);
+  // ①-b 斜向高光帶（機械面板的鏡面反射，讓平塗看起來有金屬弧度）
+  const sg = ctx.createLinearGradient(px, py + T, px + T, py);
+  sg.addColorStop(0, 'rgba(255,255,255,0)');
+  sg.addColorStop(.42 + h(2) * .12, 'rgba(226,242,255,' + (.10 + h(4) * .10).toFixed(3) + ')');
+  sg.addColorStop(.60 + h(2) * .12, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sg;
+  ctx.fillRect(px, py, T, T);
+  // ② 髮絲紋（橫向，長短粗細都抖一點 → 才像磨過的鈦板，不是塑膠）
+  for (let i = 0; i < 7; i++) {
+    const yy = py + T * (.08 + i * .135 + (h(i + 3) - .5) * .035);
+    const x0 = px + T * (.02 + h(i + 11) * .10), x1 = px + T * (.98 - h(i + 19) * .10);
+    ctx.strokeStyle = (i % 2) ? 'rgba(236,248,255,.20)' : 'rgba(28,36,46,.20)';
+    ctx.lineWidth = Math.max(.7, T * (.010 + h(i + 27) * .012));
+    ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x1, yy + (h(i + 31) - .5) * T * .02); ctx.stroke();
+  }
+  // ③ 面板接縫：每 2 格一條，連續牆面才像一整片鋼板拼起來的
+  const seamW = Math.max(1.4, T * .05);
+  if (gx % 2 === 0) {
+    ctx.fillStyle = 'rgba(6,9,13,.78)'; ctx.fillRect(px, py, seamW, T);
+    ctx.fillStyle = 'rgba(226,242,255,.42)'; ctx.fillRect(px + seamW, py, Math.max(1, seamW * .55), T);
+  }
+  if (gy % 2 === 0) {
+    ctx.fillStyle = 'rgba(6,9,13,.72)'; ctx.fillRect(px, py, T, seamW * .85);
+    ctx.fillStyle = 'rgba(226,242,255,.34)'; ctx.fillRect(px, py + seamW * .85, T, Math.max(1, seamW * .5));
+  }
+  // ③-b 面板內縮倒角：左上受光、右下投影 → 一格看起來是「凸起來的金屬板」
+  const ins = T * .10;
+  ctx.strokeStyle = 'rgba(240,250,255,.26)';
+  ctx.lineWidth = Math.max(.8, T * .018);
+  ctx.beginPath();
+  ctx.moveTo(px + ins, py + T - ins); ctx.lineTo(px + ins, py + ins); ctx.lineTo(px + T - ins, py + ins);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(10,14,20,.30)';
+  ctx.beginPath();
+  ctx.moveTo(px + ins, py + T - ins); ctx.lineTo(px + T - ins, py + T - ins); ctx.lineTo(px + T - ins, py + ins);
+  ctx.stroke();
+  // ③-c 通風口／螺栓槽：偶爾出現，機械感主要靠這個（不能每格都有）
+  if (h(131) > .74) {
+    const vw = T * .46, vh = Math.max(1.2, T * .045), vx = px + T * .27;
+    const vy = py + T * (.52 + h(133) * .18);
+    ctx.fillStyle = 'rgba(12,17,22,.55)';
+    for (let i = 0; i < 3; i++) ctx.fillRect(vx, vy + i * vh * 2.1, vw, vh);
+    ctx.fillStyle = 'rgba(226,242,255,.18)';
+    for (let i = 0; i < 3; i++) ctx.fillRect(vx, vy + i * vh * 2.1 + vh, vw, Math.max(.7, vh * .5));
+  }
+  // ④ 鉚釘：面板四角（貼齊接縫位置）
+  const rv = Math.max(1.5, T * .048);
+  const rivets = [[px + T * .13, py + T * .13], [px + T * .87, py + T * .13],
+                  [px + T * .13, py + T * .87], [px + T * .87, py + T * .87]];
+  for (let i = 0; i < 4; i++) {
+    const rx = rivets[i][0], ry = rivets[i][1];
+    ctx.fillStyle = 'rgba(10,14,20,.55)';
+    ctx.beginPath(); ctx.arc(rx + rv * .28, ry + rv * .28, rv * 1.12, 0, 6.283); ctx.fill();
+    ctx.fillStyle = 'rgba(150,166,182,.95)';
+    ctx.beginPath(); ctx.arc(rx, ry, rv, 0, 6.283); ctx.fill();
+    ctx.fillStyle = 'rgba(244,252,255,.85)';
+    ctx.beginPath(); ctx.arc(rx - rv * .30, ry - rv * .32, rv * .45, 0, 6.283); ctx.fill();
+  }
+  // ⑤ 磨損：刮痕（斜的細亮線）／鏽流（上緣往下拖的褐斑）／油汙（暗塊）
+  const scN = 2 + Math.floor(h(41) * 3);
+  for (let i = 0; i < scN; i++) {
+    const ax = px + T * (.10 + h(i + 51) * .78), ay = py + T * (.12 + h(i + 61) * .74);
+    const len = T * (.10 + h(i + 71) * .24), ang = -0.9 + h(i + 81) * 1.5;
+    ctx.strokeStyle = i % 2 ? 'rgba(226,240,252,.24)' : 'rgba(14,18,24,.30)';
+    ctx.lineWidth = Math.max(.7, T * .014);
+    ctx.beginPath(); ctx.moveTo(ax, ay);
+    ctx.lineTo(ax + Math.cos(ang) * len, ay + Math.sin(ang) * len);
+    ctx.stroke();
+  }
+  if (h(91) > .52) {
+    const rx2 = px + T * (.18 + h(93) * .62), rw = T * (.10 + h(95) * .13);
+    const rg = ctx.createLinearGradient(px, py, px, py + T);
+    rg.addColorStop(0, 'rgba(122,66,26,.36)');
+    rg.addColorStop(.55, 'rgba(96,52,22,.20)');
+    rg.addColorStop(1, 'rgba(70,40,18,0)');
+    ctx.fillStyle = rg;
+    ctx.fillRect(rx2 - rw * .5, py + T * .06, rw, T * (.55 + h(97) * .4));
+  }
+  if (h(101) > .74) {
+    ctx.fillStyle = 'rgba(12,16,20,.22)';
+    ctx.beginPath();
+    ctx.ellipse(px + T * (.30 + h(103) * .40), py + T * (.34 + h(105) * .34),
+      T * (.13 + h(107) * .10), T * (.09 + h(109) * .08), h(111) * 3, 0, 6.283);
+    ctx.fill();
+  }
+  // ⑥ 邊：面向空地的一側加亮邊（厚度感）＋ 黃黑警示條
+  const b = Math.max(2, T * .06);
+  if (!solid(gx, gy - 1)) {
+    ctx.fillStyle = 'rgba(226,240,252,.55)'; ctx.fillRect(px, py, T, Math.max(1.6, b * .55));
+    ctx.fillStyle = 'rgba(10,14,18,.30)'; ctx.fillRect(px, py + b * .55, T, Math.max(1, b * .4));
+  }
+  if (!solid(gx, gy + 1)) {
+    ctx.fillStyle = 'rgba(8,11,15,.46)'; ctx.fillRect(px, py + T - b, T, b);
+    // 黃黑警示條（斜紋）：貼在牆腳，遠處也看得出這是「場地邊界」
+    if (h(121) > .45) {
+      const hh = Math.max(2, T * .085), yy = py + T - b - hh;
+      ctx.save();
+      ctx.beginPath(); ctx.rect(px, yy, T, hh); ctx.clip();
+      ctx.fillStyle = 'rgba(232,182,36,.78)'; ctx.fillRect(px, yy, T, hh);
+      ctx.fillStyle = 'rgba(24,20,10,.80)';
+      for (let i = -2; i < 6; i++) {
+        const xx = px + i * T * .26;
+        ctx.beginPath(); ctx.moveTo(xx, yy + hh); ctx.lineTo(xx + hh * .8, yy);
+        ctx.lineTo(xx + hh * .8 + T * .12, yy); ctx.lineTo(xx + T * .12, yy + hh);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+  if (!solid(gx - 1, gy)) { ctx.fillStyle = 'rgba(214,230,244,.22)'; ctx.fillRect(px, py, Math.max(1, b * .5), T); }
+  if (!solid(gx + 1, gy)) { ctx.fillStyle = 'rgba(8,11,15,.38)'; ctx.fillRect(px + T - b, py, b, T); }
+}
+
 function drawOuterWall(px, py, T, th, seed, gx, gy) {
+  // v5.36：大逃殺的場地外牆走專用鈦合金材質
+  if (Game.mode === 'br' && gx != null) { drawBRTitanWall(px, py, T, seed, gx, gy); return; }
   const base = (th && (th.out || th.hard)) || '#8a8a8a';
   if (!artBlit(artSet(artStyle()).outer, seed, px, py, T)) {
     ctx.fillStyle = base; ctx.fillRect(px, py, T, T);
@@ -26746,8 +27136,12 @@ function drawMiniMap() {
     }
   }
   // v5.33：核彈落點 —— 小地圖只有幾十 px，畫「紅圈」比畫點清楚
-  if (Game.brNuke && Game.brNuke.phase !== 'done') {
-    const nn = Game.brNuke;
+  // v5.36：一波兩顆 → 全部標出來
+  const nkList = (Game.brNukes && Game.brNukes.length) ? Game.brNukes
+    : (Game.brNuke ? [Game.brNuke] : []);
+  for (let ni = 0; ni < nkList.length; ni++) {
+    const nn = nkList[ni];
+    if (!nn || nn.phase === 'done') continue;
     const nx = mx(nn.cx + .5), ny = my(nn.cy + .5);
     const rr = Math.max(4, NUKE_R * cw);
     const pl = .5 + .5 * Math.sin((Game.gameT || 0) * 9);
@@ -33271,7 +33665,7 @@ function brCardHTML() {
   return '<div class="brc">' +
     '<div class="brc-h"><b>🏝️ ' + t('br.title') + '</b><span>' + t('br.sub', { w: BR.W, h: BR.H }) + '</span>' +
     '<button class="brc-x" id="brOk" type="button">✕</button></div>' +
-    '<div class="brrow"><label class="brlab">' + t('br.people') + '</label>' + seg('n', [[30, t('br.p30')], [50, t('br.p50')]]) + '</div>' +
+    '<div class="brrow"><label class="brlab">' + t('br.people') + '</label>' + seg('n', [[30, t('br.p30')], [50, t('br.p50')], [100, t('br.p100')]]) + '</div>' +
     '<div class="brrow"><label class="brlab">' + t('br.team') + '</label>' +
       seg('team', [[1, t('br.solo')], [2, t('br.teamN', { n: 2 })], [3, t('br.teamN', { n: 3 })], [4, t('br.teamN', { n: 4 })]]) + '</div>' +
     '<div class="brrow"><label class="brlab">' + t('br.time') + '</label>' +
@@ -35587,7 +35981,15 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.35', date: '2026-11-07', now: true, items: [
+  { v: '5.36', date: '2026-11-07', now: true, items: [
+    '👑 <b>BOSS 專屬第 5 關</b>：8 大主題改成「4 張地圖 ＋ 1 場 BOSS 決戰」＝ 40 關。決戰場是 17×15 的封閉競技場，王在中上、你從中下進場，開場沒有任何小兵；每 60 秒王會從左右各叫一隻護衛（場上最多 8 隻）。打倒王之後<b>上方大門</b>才會打開，走出去那一瞬間有冠軍級的彩帶、閃光與勝利音效。',
+    '🏝️ <b>大逃殺地圖面積加倍、100 人同場</b>：56×44 → 79×62（4,898 格），縮圈半徑整套重算（首圈 34 格、末圈 3.4 格）。遠方 AI 降到 6Hz 更新，100 人也不會卡。',
+    '☢️ <b>核彈改成一次兩顆</b>：每 45 秒一波、兩顆同時通報（落點至少相隔 12 格），而且<b>只會落在毒圈內</b>；最後 2 分鐘不再落彈，留時間給決賽圈。',
+    '🧱 <b>大逃殺專用鈦合金外牆</b>：不再是主題岩壁，改成冷灰色金屬面板 —— 2×2 格一塊的接縫、內凹倒角、四角鉚釘、散熱柵欄，加上刮痕／鏽流／油汙三種磨損，牆腳還有黃黑警示條。',
+    '💫 <b>友軍炸彈不再讓你頭暈</b>：以前只免疫「自己丟的」與「隨從丟的」，隊友（組隊／對戰同隊）丟的照樣暈 1 秒。現在自己人一律不暈，只有敵人投擲的炸彈才會。',
+    '📐 主檔字元數與測試見下方；40 關制讓舊存檔的關卡號沿用（已解鎖到第 N 關就從第 N 關繼續）。'
+  ]},
+  { v: '5.35', date: '2026-11-07', now: false, items: [
     '🌀 <b>毒圈改成 PUBG 式隨機縮圈</b>：不再永遠縮在正中間 —— 每一圈都會<b>換位置</b>，可能縮在任何一個角落（前一秒還在東邊、下一圈跑到西南）。',
     '┈ <b>虛線預告下一圈</b>：時間還沒到之前，地面會先畫出下一圈的<b>彈跳虛線</b>（大地圖刻意壓淡），時間一到藍圈就在 8 秒內收到虛線上，收完立刻再預告下一圈。小地圖同樣看得到目前範圍與下一圈。',
     '☢️ <b>核彈會打死怪與 BOSS</b>：以前只炸玩家。現在落點半徑 5 格內的雜兵當場蒸發、BOSS 一次掉 35% 血，燒地每秒也會烤 1 點。',
@@ -38341,10 +38743,13 @@ function rpgHurt(p, silent, killer) {
 
 // ---------- RPG 關卡 ----------
 function buildRpgStage(stage, fresh) {
+  // v5.36：每章最後一關＝BOSS 決戰場（17×15，跟單人闖關共用同一個場地）
+  if (!Game.mapTest && isBossStage(stage)) { Game.bossArena = null; buildBossArenaStage(stage, fresh, true); return; }
+  Game.bossArena = null;
   const lay = mapLayerFor(stage);            // v4.69：RPG 也能用隨機生成地圖
   const size = SIZES.M;
   const cols = lay ? lay.cols : size[0], rows = lay ? lay.rows : size[1];
-  const info = MAP32[((stage - 1) % 32 + 32) % 32];
+  const info = soloInfo(stage);
   const theme = THEMES[info.theme];
   const p = Game.players[0];
   Game.theme = theme;
@@ -38403,22 +38808,9 @@ function buildRpgStage(stage, fresh) {
     e.speed = e.speed * F.spd;
     Game.enemies.push(e);
   }
-  // v4.70：每一章最後一關都出魔王（跟單人闖關同一套規則）——
-  //   章節魔王小一號、血量 4+blockOf 遞增；第 32 關仍是最終魔王（血量最大、def 1）
-  if ((stage % 4) === 0) {
-    const fin = stage >= 32;
-    const bc = pickBossCell(clamp(Math.floor(cols / 2), 1, cols - 2), Math.max(1, rows - 2), cols, rows);
-    const boss = makeBoss(bc.x, bc.y, fin ? 48 : 4 + blockOf(stage));   // v5.19：滿攻擊約 4~5 發
-    boss.lv = foeLv; boss.exp = rpgFoeXp(stage) * 5;
-    boss.dirName = 'up';
-    if (fin) {
-      boss.def = 2;
-    } else {
-      boss.sizeMul = 1.12;          // 跟單人的章節魔王一樣，比最終魔王小一號
-      boss.chapterBoss = true;
-    }
-    Game.enemies.push(boss);
-  }
+  // v5.36：章節魔王改到每章第 5 關的「BOSS 決戰場」（buildBossArenaStage），
+  //   普通關卡不再插王 —— 舊版這裡用 (stage % 4) === 0 出王，40 關制下會變成
+  //   第 4 關一隻 + 第 5 關決戰場再一隻（王連兩關出）而且第 32 關還會冒出總魔王。
   spawnEggs(1);
   Game.timer = Infinity;
   Game.bombs = []; Game.flames = []; Game.items = []; Game.particles = [];
@@ -38642,7 +39034,7 @@ function startRpg(stage, opt) {
   // v5.7：後台要看「幾點玩了 RPG 哪一關」
   try {
     if (typeof Cloud !== 'undefined' && Cloud.track) {
-      Cloud.track('rpg', st, 'RPG 第 ' + st + ' 關・' + map32Name(st - 1));
+      Cloud.track('rpg', st, 'RPG 第 ' + st + ' 關・' + stageName(st));
     }
   } catch (e) {}
   Game.endShown = false;
@@ -38681,7 +39073,7 @@ function startRpg(stage, opt) {
   buildRpgStage(Game.stage, true);
   showOverlay({
     title: t('rpg.ovTitle', { n: Game.stage }),
-    sub: map32Name(Game.stage - 1) + '\n' +
+    sub: stageName(Game.stage) + '\n' +
       t('rpg.ovSub', { hp: p.hpMax, ar: p.armorMax, sp: Math.round((d.spdMul - 1) * 100), rg: d.range, dm: d.dmg }) +
       '\n⭐ Lv.' + rpgLvOf(RPG.xp).lv + '　EXP ' + rpgLvOf(RPG.xp).cur + '/' + (rpgLvOf(RPG.xp).need || 'MAX') +
       '　👾 怪物 Lv.' + rpgFoeLv(Game.stage),
@@ -38823,14 +39215,15 @@ const Rpg = (function () {
     th.innerHTML = THEMES.map(function (x, i) {
       return '<button type="button" data-v="' + i + '" class="' + (i === RPG.theme ? 'sel' : '') + '">' + themeName(i) + '</button>';
     }).join('');
-    const gate = Cloud.online() ? RPG.unlocked : 32;
-    sb.innerHTML = [0, 1, 2, 3].map(function (i) {
-      const m = MAP32[RPG.theme * 4 + i];
-      const st = RPG.theme * 4 + i + 1;
+    const gate = Cloud.online() ? RPG.unlocked : SOLO_STAGES;
+    sb.innerHTML = [0, 1, 2, 3, 4].map(function (i) {
+      const st = RPG.theme * BOSS_SLOT + i + 1;
+      const boss = i === BOSS_SLOT - 1;
+      const m = soloInfo(st);
       const lock = st > gate;
       return '<button type="button" data-v="' + i + '" class="' +
-        (i === RPG.sub ? 'sel' : '') + (lock ? ' lock' : '') + '"' + (lock ? ' disabled' : '') + '>' +
-        (RPG.theme + 1) + '-' + (i + 1) + '　' + mapName(m) + (lock ? ' 🔒' : '') + '</button>';
+        (i === RPG.sub ? 'sel' : '') + (lock ? ' lock' : '') + (boss ? ' boss' : '') + '"' + (lock ? ' disabled' : '') + '>' +
+        (RPG.theme + 1) + '-' + (i + 1) + '　' + (boss ? '👑 ' + t('stage.bossName') : mapName(m)) + (lock ? ' 🔒' : '') + '</button>';
     }).join('');
   }
   function wire() {
@@ -39167,7 +39560,7 @@ const RpgUI = (function () {
     try { Rpg.renderMaps(); } catch (e) {}
     const st = RPG.theme * 4 + RPG.sub + 1;
     if ($id('campStageNow')) {
-      $id('campStageNow').textContent = t('camp.stageNow', { n: st }) + '・' + map32Name(st - 1);
+      $id('campStageNow').textContent = t('camp.stageNow', { n: st }) + '・' + stageName(st);
     }
     const bag = RPG.bag || {};
     let h = '';
@@ -41663,6 +42056,10 @@ window.__BH = {
   rpgLvOf: rpgLvOf, rpgXpTotalOf: rpgXpTotalOf, rpgPointsOf: rpgPointsOf, rpgAddXp: rpgAddXp,
   rpgGainFoeExp: rpgGainFoeExp,
   MAP32: MAP32, SOLO_STAGES: SOLO_STAGES, soloInfo: soloInfo, tryGlovePickup: tryGlovePickup,
+  // v5.36：40 關制／BOSS 決戰場（測試用）
+  chapterOf: chapterOf, stageSlot: stageSlot, isBossStage: isBossStage, isChapterFinal: isChapterFinal,
+  stageName: stageName, mapIdxOfStage: mapIdxOfStage, buildBossArenaStage: buildBossArenaStage,
+  arenaFreeCell: arenaFreeCell, updateBossArena: updateBossArena, BOSS_SLOT: BOSS_SLOT,
   // v4.16：只有第 32 關有 BOSS ＋ 可躲人的樹叢／破屋
   soloIsBoss: soloIsBoss, isChapterFinal: isChapterFinal, hideTileAt: hideTileAt, playerHiding: playerHiding,
   buildSdList: buildSdList, sdSoon: sdSoon, SD_STEP_T: SD_STEP_T,
@@ -41691,6 +42088,7 @@ window.__BH = {
   HELP_FOES: (typeof HELP_FOES !== 'undefined' ? HELP_FOES : null),
   tryMoveDiag: tryMoveDiag, tryMove: tryMove, playerSpeed: playerSpeed,
   DIZZY_TIME: DIZZY_TIME, setDizzy: setDizzy, flyingDizzyCheck: flyingDizzyCheck,
+  dizzyImmune: dizzyImmune, sameSquad: sameSquad,   // v5.36：友軍炸彈免疫（測試用）
   FLY_SPEED_CAP: FLY_SPEED_CAP, MAIL_ADDR: MAIL_ADDR, randomChar: randomChar, destroySoft: destroySoft,
   updateFullBtn: updateFullBtn, copyMail: copyMail,
   drawDizzyMark: drawDizzyMark, BOSS_POWER: BOSS_POWER, addFlame: addFlame, THEMES: THEMES,
@@ -41824,9 +42222,11 @@ window.__BH = {
   brOnDeath: brOnDeath, drawBRHud: drawBRHud, drawBRZone: drawBRZone, brSteer: brSteer, viewRange: viewRange,
   // v5.33：核彈（測試要直接驗落點、燒地、AI 逃跑）與敵我炸彈分辨
   updateBRNuke: updateBRNuke, brNukeLaunch: brNukeLaunch, brNukeFlee: brNukeFlee, brBurnAt: brBurnAt,
+  brNukePickSpot: brNukePickSpot, brTimeLeft: brTimeLeft,   // v5.36：落點只在圈內／剩餘時間
   bombIsAlly: bombIsAlly, isAllyOwner: isAllyOwner, NUKE_R: NUKE_R, NUKE_DMG: NUKE_DMG, NUKE_BURN_SEC: NUKE_BURN_SEC,
   // v5.35：隨機縮圈、核彈打怪、掉落物
   brZoneNext: brZoneNext, brNukeHurtFoe: brNukeHurtFoe, foeDrop: foeDrop, foeOnDeath: foeOnDeath, coinTo: coinTo,
+  drawBRTitanWall: drawBRTitanWall, drawOuterWall: drawOuterWall,   // v5.36：鈦合金外牆（測試用）
   showBRDeath: showBRDeath, aiEscape: aiEscape, placeHideTiles: placeHideTiles,
   seedCode: seedCode, seedTag: seedTag,
   themeName: themeName, charName: charName, charTag: charTag,

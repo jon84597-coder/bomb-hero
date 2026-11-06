@@ -6,12 +6,19 @@ const path = require('path');
 const fs = require('fs');
 const { makeEnv, html } = require('./_sandbox');
 
-const C = require(fs.existsSync(path.join(__dirname, '..', 'cloud.js'))
-  ? path.join(__dirname, '..', 'cloud.js')
-  : path.join(__dirname, '..', '..', 'bomberman-online', 'cloud.js'));
-const CLOUD_PATH = fs.existsSync(path.join(__dirname, '..', 'cloud.js'))
-  ? path.join(__dirname, '..', 'cloud.js')
-  : path.join(__dirname, '..', '..', 'bomberman-online', 'cloud.js');
+// v5.36：權威後端在專案根目錄（server.js 就是 require 它）；bomb-hero/cloud.js 不存在時，
+//   舊版會退回 bomberman-online/cloud.js（淘汰的舊副本，MAX_STAGE 還停在 32）→ 改找根目錄那份。
+function pickCloud() {
+  const cands = [
+    path.join(__dirname, '..', 'cloud.js'),
+    path.join(__dirname, '..', '..', 'cloud.js'),
+    path.join(__dirname, '..', '..', 'bomberman-online', 'cloud.js')
+  ];
+  for (const c of cands) if (fs.existsSync(c)) return c;
+  return cands[cands.length - 1];
+}
+const CLOUD_PATH = pickCloud();
+const C = require(CLOUD_PATH);
 const cloudSrc = fs.readFileSync(CLOUD_PATH, 'utf8');
 
 const env = makeEnv();
@@ -150,17 +157,17 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   console.log('\n=== 10. 開發者全關卡解鎖 ===');
   P.setDevBuild(false);   // v4.75：這份 index.html 預設是開發者版，這段要模擬一般玩家
   ok(src(/maxUnlocked\(\) \{ return \(Solo\.dev \|\| DEV_BUILD\) \? SOLO_STAGES : Solo\.unlocked; \}/),
-    '單人闖關：開發者 → 全 32 關（v4.14 起 8 大關 × 4 張地圖）');
+    '單人闖關：開發者 → 全 40 關（v5.36 起 8 大關 × 5，第 5 關是 BOSS）');
   P.Solo.dev = false;
   P.Solo.unlocked = 2;
   ok(P.Solo.maxUnlocked() === 2, '一般玩家只開到自己的進度（2）');
   P.Solo.applyDev(true);
-  ok(P.Solo.maxUnlocked() === P.SOLO_STAGES && P.SOLO_STAGES === 32,
+  ok(P.Solo.maxUnlocked() === P.SOLO_STAGES && P.SOLO_STAGES === 40,
     '開發者 → ' + P.SOLO_STAGES + ' 關全開');
   P.Solo.applyDev(false);
   ok(P.Solo.maxUnlocked() === 2, '登出後回到原本進度（2）');
-  ok(/unlocked: dev \? MAX_STAGE :/.test(cloudSrc), '後端對開發者回 MAX_STAGE（32 關）');
-  ok(C.MAX_STAGE === 32, 'MAX_STAGE = 32');
+  ok(/unlocked: dev \? MAX_STAGE :/.test(cloudSrc), '後端對開發者回 MAX_STAGE（40 關）');
+  ok(C.MAX_STAGE === 40, 'MAX_STAGE = 40');
   ok(/const dev = isDev\(acc\)|isDev\(acc\)/.test(cloudSrc), 'publicAccount 會參考 isDev(acc)');
 
   console.log('\n=== 11. 版本紀錄豁免（開發者內部版本不外流） ===');

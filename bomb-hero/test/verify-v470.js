@@ -128,7 +128,7 @@ head('3. 組隊隊色 HUD');
 }
 
 // ================================================================
-head('4. RPG 每一章最後一關出魔王');
+head('4. RPG 每章第 5 關是 BOSS 決戰場');
 {
   function bosses(st) {
     P.settings.mapMode = 'classic';
@@ -138,19 +138,20 @@ head('4. RPG 每一章最後一關出魔王');
   const b3 = bosses(3);
   ok(b3.length === 0, '第 3 關（章節中段）沒有魔王');
   const b4 = bosses(4);
-  ok(b4.length === 1, '第 4 關（第 1 章最後）有魔王');
-  ok(b4[0] && b4[0].hp === 5 && b4[0].chapterBoss === true && Math.abs(b4[0].sizeMul - 1.12) < 1e-6,
-    '章節魔王：血量 4+1=5、體型 1.12、標記 chapterBoss', b4[0] && { hp: b4[0].hp, sm: b4[0].sizeMul });
-  const b8 = bosses(8);
-  ok(b8.length === 1 && b8[0].hp === 6, '第 8 關魔王血量 4+2=6', b8[0] && b8[0].hp);
-  const b12 = bosses(12);
-  ok(b12.length === 1 && b12[0].hp === 7, '第 12 關魔王血量 4+3=7', b12[0] && b12[0].hp);
-  const b32 = bosses(32);
-  // v5.19：最終魔王血量 23 → 48、def 1 → 2（玩家傷害上限從 4 → 14，魔王也要跟著厚）
-  ok(b32.length === 1 && b32[0].hp === 48 && b32[0].def === 2 && b32[0].sizeMul === 1.34 && !b32[0].chapterBoss,
-    '第 32 關仍是最終魔王（血量 48、def 2、體型 1.34）', b32[0] && { hp: b32[0].hp, def: b32[0].def });
-  // 魔王站的一定是空地（不能硬挖出死格）
-  ok(b4[0] && G.grid[Math.floor(b4[0].y / G.T)][Math.floor(b4[0].x / G.T)] === 0, '魔王站在現成空地上');
+  ok(b4.length === 0, 'v5.36：第 4 關不再出王（章節王搬到第 5 關決戰場）');
+  const b5 = bosses(5);
+  ok(b5.length === 1, '第 5 關（第 1 章決戰場）有魔王');
+  ok(b5[0] && b5[0].hp === 14 && b5[0].chapterBoss === true && Math.abs(b5[0].sizeMul - 1.28) < 1e-6,
+    '章節魔王：血量 12+1×2=14、體型 1.28、標記 chapterBoss', b5[0] && { hp: b5[0].hp, sm: b5[0].sizeMul });
+  const b10 = bosses(10);
+  ok(b10.length === 1 && b10[0].hp === 16, '第 10 關魔王血量 12+2×2=16', b10[0] && b10[0].hp);
+  const b15 = bosses(15);
+  ok(b15.length === 1 && b15[0].hp === 18, '第 15 關魔王血量 12+3×2=18', b15[0] && b15[0].hp);
+  const b40 = bosses(40);
+  // v5.36：第 8 章決戰場＝總魔王，沿用舊版第 32 關的規格（48 血、def 2）
+  ok(b40.length === 1 && b40[0].hp === 48 && b40[0].def === 2 && b40[0].chapterBoss === true,
+    '第 40 關是總魔王（血量 48、def 2）', b40[0] && { hp: b40[0].hp, def: b40[0].def });
+  ok(b5[0] && G.grid[Math.floor(b5[0].y / G.T)][Math.floor(b5[0].x / G.T)] === 0, '魔王站在現成空地上');
 }
 
 // ================================================================

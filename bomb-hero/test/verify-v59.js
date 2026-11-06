@@ -147,46 +147,47 @@ head('4. 遙控引爆：不會炸到手上拿著的那一顆');
 }
 
 // ================================================================
-head('5. 單人闖關 32 張地圖');
-ok(P.SOLO_STAGES === 32, 'SOLO_STAGES = 32');
-ok(P.MAP32.length === 32, 'MAP32 有 32 張地圖');
-ok(typeof P.soloInfo === 'function' && P.soloInfo(1).n === '微風草原' && P.soloInfo(32).n === '魔王之間',
-  'soloInfo(1) = 微風草原、soloInfo(32) = 魔王之間');
+head('5. 單人闖關 40 關（8 章 × 4 張地圖 ＋ 1 場 BOSS）');
+ok(P.SOLO_STAGES === 40, 'SOLO_STAGES = 40');
+ok(P.MAP32.length === 32, 'MAP32 仍有 32 張手工地圖');
+ok(typeof P.soloInfo === 'function' && P.soloInfo(1).n === '微風草原' && P.soloInfo(40).boss === true,
+  'soloInfo(1) = 微風草原、soloInfo(40) = 決戰場');
 ok(/SOLO_STAGES/.test(html), '原始碼有 SOLO_STAGES 常數');
-ok(/const maxStage = SOLO_STAGES;/.test(html), '過關上限 = SOLO_STAGES（32 關）');
+ok(/const maxStage = SOLO_STAGES;/.test(html), '過關上限 = SOLO_STAGES（40 關）');
 ok(/buildOrganicMap\(cols, rows, theme, info, rngFrom\(seed\)/.test(html),
-  '單人關卡改用有機地形（與 RPG 同一套）');
+  '普通關卡走有機地形（與 RPG 同一套）');
 
 {
   let bad = [];
   const seen = [];
-  for (let st = 1; st <= 32; st++) {
+  for (let st = 1; st <= 40; st++) {
     try {
       P.startSolo(st, false);
       const boss = G.enemies.filter(function (e) { return e.type === 'boss'; }).length;
-      // v4.36：每大關第 4 張（4／8…28）是章節魔王，第 32 關是最終魔王
-      const wantBoss = (st >= 32 || (st % 4 === 0)) ? 1 : 0;
+      const wantBoss = P.isBossStage(st) ? 1 : 0;      // v5.36：每章第 5 關
       if (boss !== wantBoss) bad.push(st + ':boss' + boss + '/' + wantBoss);
-      if (G.grid[1][1] !== 0) bad.push(st + ':spawn');
-      if (!G.door) bad.push(st + ':door');
+      if (wantBoss) {
+        if (G.cols !== 17 || G.rows !== 15) bad.push(st + ':arena' + G.cols + 'x' + G.rows);
+        if (!G.door || G.door.x !== 8 || G.door.y !== 1) bad.push(st + ':gate');
+        const b = G.enemies.filter(function (e) { return e.type === 'boss'; })[0];
+        const want = 10 + Math.ceil(st / 5);
+        if (b.maxHp !== want) bad.push(st + ':hp' + b.maxHp + '/' + want);
+      } else {
+        if (G.grid[1][1] !== 0) bad.push(st + ':spawn');
+        if (!G.door) bad.push(st + ':door');
+        seen.push(G.mapInfo.n);
+      }
       if (G.stage !== st) bad.push(st + ':stage');
       if (!G.theme) bad.push(st + ':theme');
-      // 魔王血量：最終魔王固定 12 下
-      if (wantBoss) {
-        const b = G.enemies.filter(function (e) { return e.type === 'boss'; })[0];
-        const want = st >= 32 ? 12 : (4 + Math.ceil(st / 4));   // 章節魔王 5～11、最終 12
-        if (b.maxHp !== want) bad.push(st + ':hp' + b.maxHp + '/' + want);
-      }
-      seen.push(G.mapInfo.n);
     } catch (e) { bad.push(st + ':ERR ' + e.message); }
   }
-  ok(bad.length === 0, '32 關全部生成正常（出生點空地／有門／魔王關位置與血量都對）' + (bad.length ? '：' + bad.join(',') : ''));
-  ok(new Set(seen).size === 32, '32 關的地圖名都不重複（' + new Set(seen).size + ' 種）');
+  ok(bad.length === 0, '40 關全部生成正常（普通關 15×13／BOSS 關 17×15 且 8,1 有門）' + (bad.length ? '：' + bad.join(',') : ''));
+  ok(new Set(seen).size === 32, '32 張普通地圖名稱都不重複（' + new Set(seen).size + ' 種）');
 }
 
 // ================================================================
 head('6. 選關畫面');
-ok(/MAP32\.forEach\(function \(m, i\) \{/.test(html), '選關格由 MAP32 產生（32 格）');
+ok(/for \(let n = 1; n <= SOLO_STAGES; n\+\+\)/.test(html), '選關格由 1~40 產生（v5.36）');
 ok(/\(boss \? '👑' : ''\) \+ mapName\(m\)/.test(html), '魔王關標 👑（v4.77 名稱改走 mapName）');
 ok(/body\.touch #scr-solo \.stagegrid \{[^}]*repeat\(8, (?:minmax\(0, )?1fr\)/.test(html.replace(/\r/g, '')),
   '手機：32 格排成 8 欄');
@@ -219,7 +220,7 @@ head('7. 整體回歸：跑 frames 不報錯');
   let threw = null;
   try {
     P.startBossRush();
-    ok(G.stage === 32 && G.bossRush === true, '「挑戰 BOSS」直接打第 32 關最終魔王');
+    ok(G.stage === 40 && G.bossRush === true, '「挑戰 BOSS」直接打第 40 關最終魔王');
     for (let i = 0; i < 120; i++) { P.updateWorld(1 / 60); P.updateSolo(1 / 60); }
   } catch (e) { threw = e; }
   ok(threw === null, 'BOSS 連戰跑 120 幀不報錯' + (threw ? '（' + threw.message + '）' : ''));

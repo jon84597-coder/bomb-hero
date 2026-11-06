@@ -198,8 +198,8 @@ ok(!/title-en/.test(html) && !/title-zh/.test(html), 'v2.1：舊文字標題的 
 // ================================================================
 console.log('\n=== 5. 丟炸彈的人自己不會頭暈 ===');
 
-ok(/function dizzyImmune\(who, b\) \{\s*\n\s*return !!\(!b && b\.owner/.test(html) ||
-  /function dizzyImmune\(who, b\) \{[\s\S]{0,320}b\.owner && who === b\.owner/.test(html),
+// v5.36：dizzyImmune 改成逐條早退（who === b.owner／sameSquad），放寬成找「自己丟的不暈」那一行
+ok(/function dizzyImmune\(who, b\) \{[\s\S]{0,420}who === b\.owner/.test(html),
   '有 dizzyImmune()：炸彈主人免疫自己丟的那顆');
 // v4.31：隨從丟的炸彈不砸暈玩家（支援火力，飛過主人頭上也不會暈）
 ok(/function dizzyImmune\(who, b\) \{[\s\S]{0,220}b\.petOwner/.test(html), 'v4.31：隨從的炸彈不會砸暈玩家');

@@ -564,7 +564,8 @@ ok(stageInfo.length === 8, '8 關全部通過（' + stageInfo.map(i => i.name).j
 //   所以「風格各不相同」改成驗「8 大主題各不相同」
 {
   const styles = [];
-  for (let k = 1; k <= 32; k += 4) { freshSolo(k); styles.push(G.theme.style); }
+  // v5.36：每大主題 5 關（第 5 關是 BOSS 決戰場，主題跟著章節）→ 取每章第 1 關
+  for (let c = 0; c < 8; c++) { freshSolo(c * P.BOSS_SLOT + 1); styles.push(G.theme.style); }
   ok(new Set(styles).size === 8, '8 大主題風格各不相同（' + styles.join('、') + '）');
 }
 ok(stageInfo.every(i => i.T > 0), '每關都有可用的磚塊尺寸（相機與繪圖正常）');

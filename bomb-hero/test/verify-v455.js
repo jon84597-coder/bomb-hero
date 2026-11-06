@@ -113,6 +113,7 @@ head('3. 軟磚變多：可走格裡 42% 以上是軟磚');
 {
   let soft = 0, walk = 0;
   for (let st = 1; st <= 6; st++) {
+    if (P.isBossStage(st)) continue;   // v5.36：第 5 關是 BOSS 決戰場（幾乎沒有軟磚），不列入比例
     soloStage(st);
     for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
       if (G.grid[y][x] === 1) continue;

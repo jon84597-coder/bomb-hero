@@ -303,14 +303,16 @@ head('⑥ 回歸：v5.22 的接縫 AO 與五段烘焙不能被動到');
 head('⑦ 全 32 關：每個主題都要有軟磚貼圖（不能有一關整片空白）');
 {
   const seen = {};
-  for (let st = 1; st <= 32; st++) {
+  // v5.36：40 關制（每章 5 關）；BOSS 決戰場不鋪軟磚 → 跳過
+  for (let st = 1; st <= P.SOLO_STAGES; st++) {
+    if (P.isBossStage(st)) continue;
     let okBuild = true;
     try { P.startSolo(st, false); } catch (e) { okBuild = false; ok(false, '第 ' + st + ' 關建不起來：' + e.message); }
     if (!okBuild) continue;
     const style = (G.theme && G.theme.style) || '?';
     seen[style] = (seen[style] || 0) + 1;
   }
-  ok(Object.keys(seen).length === 8, '32 關一共用到 ' + Object.keys(seen).length + ' 種主題');
+  ok(Object.keys(seen).length === 8, P.SOLO_STAGES + ' 關一共用到 ' + Object.keys(seen).length + ' 種主題');
   STYLES.forEach(function (st) {
     ok((seen[st] || 0) >= 2, st + ' 有 ' + (seen[st] || 0) + ' 關');
     let set = null;

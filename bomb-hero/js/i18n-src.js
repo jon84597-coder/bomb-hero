@@ -91,7 +91,7 @@ title.k.enter|Enter|Enter|Enter|Enter|Enter
 title.k.f|F|F|F|F|F
 title.k.slash|／|／| / |／| / 
 menu.solo|單人闖關|单人闯关|Solo Quest|一人で挑戦|싱글 모험
-menu.solo.sub|32 關 · 可調難度|32 张地图 · 难度／无限时间 · 第 32 关魔王|32 maps · difficulty / endless time · boss on stage 32|全 32 ステージ · 難易度／無制限時間 · ボスは 32 面のみ|32개 스테이지 · 난이도／무한 시간 · 32 스테이지 보스
+menu.solo.sub|40 關（含 8 場 BOSS 決戰）· 可調難度|40 关 · 难度／无限时间 · 每章第 5 关是 BOSS|40 stages · difficulty / endless time · every 5th stage is a boss arena|全 40 ステージ · 難易度／無制限時間 · 5 面ごとにボス|40개 스테이지 · 난이도／무한 시간 · 5스테이지마다 보스
 hide.in|🌿 躲起來了 · 對手和小怪看不到你|🌿 躲起来了 · 对手和小怪看不到你|🌿 Hidden — rivals and monsters cannot see you|🌿 隠れた —— 相手もモンスターも見えない|🌿 숨었다 · 상대와 몬스터가 보지 못한다
 menu.boss|挑戰 BOSS|挑战 BOSS 👹|Boss Raid 👹|ボス討伐 👹|보스 토벌 👹
 menu.boss.sub|單挑暗黑魔王|直接单挑暗黑魔王 · 没有小怪干扰|Face the Dark Demon Lord — no minions|暗黒魔王と一対一 · ザコなし|암흑 마왕과 1:1 · 잡몹 없음
@@ -410,10 +410,10 @@ verlog.title|📜 版本更新內容|📜 版本更新内容|📜 Version Log|�
 rpg.mode|RPG 模式|🎲 RPG 模式|🎲 RPG Mode|🎲 RPGモード|🎲 RPG 모드
 rpg.beta|測試版 Beta|测试版 Beta|Beta|ベータ版|베타 버전
 rpg.sub|配點養成 · 血量防禦|四维属性 · 血量防御 · 32 张地图|4 attributes · HP & armor · 32 maps|4つの能力値 · HPと防御 · 32枚のマップ|4대 능력치 · HP와 방어 · 32개 맵
-rpg.desc|跟一般闖關完全不同的養成規則：怪物有血量與防禦，炸一次不會死；你自己也有生命與護甲。先配點、再出發，一路打過 32 張地圖。|跟一般闯关完全不同的养成规则：怪物有血量与防御，炸一次不会死；你自己也有生命与护甲。先配点、再出发，一路打过 32 张地图。|A completely different growth system: monsters have HP and armor, so one blast will not kill them; you also have HP and armor yourself. Spend points, then set off and clear all 32 maps.|通常ステージとは全く違う成長ルール：モンスターにはHPと防御があり、1回の爆発では倒せません。あなた自身にもHPと防御があります。まずポイントを振ってから出発し、32枚のマップをクリアしましょう。|일반 스테이지와 완전히 다른 성장 규칙: 몬스터에게 HP와 방어가 있어 한 번의 폭발로 죽지 않습니다. 당신에게도 HP와 방어가 있습니다. 먼저 포인트를 분배하고 32개 맵을 모두 클리어하세요.
+rpg.desc|跟一般闖關完全不同的養成規則：怪物有血量與防禦，炸一次不會死；你自己也有生命與護甲。先配點、再出發，一路打過 40 個關卡（含 8 場 BOSS 決戰）。|跟一般闯关完全不同的养成规则：怪物有血量与防御，炸一次不会死；你自己也有生命与护甲。先配点、再出发，一路打过 40 个关卡（含 8 场 BOSS 决战）。|A completely different growth system: monsters have HP and armor, so one blast will not kill them; you also have HP and armor yourself. Spend points, then set off and clear all 40 stages (8 of them boss arenas).|通常ステージとは全く違う成長ルール：モンスターにはHPと防御があり、1回の爆発では倒せません。あなた自身にもHPと防御があります。まずポイントを振ってから出発し、40ステージ（うち8つはボス決戦）をクリアしましょう。|일반 스테이지와 완전히 다른 성장 규칙: 몬스터에게 HP와 방어가 있어 한 번의 폭발로 죽지 않습니다. 당신에게도 HP와 방어가 있습니다. 먼저 포인트를 분배하고 40개 스테이지(보스 결전 8개 포함)를 모두 클리어하세요.
 rpg.step1|① 選角色|① 选角色|① Pick a hero|① キャラを選ぶ|① 캐릭터 선택
 rpg.step2|② 能力配點|② 能力配点|② Allocate points|② 能力値に振り分け|② 능력치 분배
-rpg.step3|③ 出發地圖（32 張 · 8 大主題 × 4 張地區）|③ 出发地图（32 张 · 8 大主题 × 4 张地区）|③ Choose a map (32 maps · 8 themes × 4 areas)|③ マップを選ぶ（32枚 · 8テーマ × 4エリア）|③ 맵 선택 (32개 · 8테마 × 4지역)
+rpg.step3|③ 出發地圖（40 關 · 8 大主題 ×（4 張地圖 + 1 場 BOSS））|③ 出发地图（40 关 · 8 大主题 ×（4 张地图 + 1 场 BOSS））|③ Choose a map (40 stages · 8 themes × (4 maps + 1 boss))|③ マップを選ぶ（40面 · 8テーマ ×（4マップ + 1ボス））|③ 맵 선택 (40개 · 8테마 × (4맵 + 1보스))
 rpg.random|🎲 電腦隨機分配|🎲 电脑随机分配|🎲 Random allocate|🎲 ランダム振り分け|🎲 무작위 분배
 rpg.start|開始冒險 →|开始冒险 →|Start adventure →|冒険スタート →|모험 시작 →
 store.btn|商店|🛒 商店|🛒 Store|🛒 ショップ|🛒 상점
@@ -485,7 +485,7 @@ acct.google|使用 Google 登入|使用 Google 登录|Continue with Google|Googl
 acct.facebook|使用 Facebook 登入|使用 Facebook 登录|Continue with Facebook|Facebook でログイン|Facebook으로 로그인
 acct.line|使用 LINE 登入|使用 LINE 登录|Continue with LINE|LINE でログイン|LINE으로 로그인
 acct.off|伺服器尚未開啟這個登入方式|服务器尚未开启这个登录方式|This sign-in method is not enabled on the server|このログイン方法はサーバーで有効になっていません|서버에서 이 로그인 방식을 켜지 않았습니다
-acct.cleared|已通過 {n} / 32 關|已通过 {n} / 32 关|Cleared {n} / 32|クリア {n} / 32|클리어 {n} / 32
+acct.cleared|已通過 {n} / 40 關|已通过 {n} / 40 关|Cleared {n} / 40|クリア {n} / 40|클리어 {n} / 40
 acct.clearedLabel|冒險進度|冒险进度|Progress|冒険の進み具合|모험 진행
 acct.gold|金幣|金币|Gold|ゴールド|골드
 acct.points|可用配點|可用配点|Points left|残りポイント|남은 포인트
@@ -588,6 +588,7 @@ br.team|組隊|组队|Teams|チーム|팀
 br.time|時間|时间|Time|時間|시간
 br.p30|30 人|30 人|30 players|30 人|30명
 br.p50|50 人|50 人|50 players|50 人|50명
+br.p100|100 人|100 人|100 players|100 人|100명
 br.solo|單人|单人|Solo|ソロ|솔로
 br.teamN|{n} 人|{n} 人|{n} players|{n} 人|{n}명
 br.d5|5 分鐘 · 5 圈|5 分钟 · 5 圈|5 min · 5 rings|5 分 · 5 周|5분 · 5회
@@ -640,6 +641,10 @@ mn.30|血池沼窟|血池沼窟|Blood Marsh|血の沼|핏빛 늪
 mn.31|詛咒迴廊|诅咒回廊|Curse Corridor|呪いの回廊|저주 회랑
 mn.32|魔王之間|魔王之间|Demon Lord's Chamber|魔王の間|마왕의 방
 stage.bossTag|👑 魔王關|👑 魔王关|👑 Boss stage|👑 ボス面|👑 보스 스테이지
+stage.bossName|決戰場|决战场|Boss Arena|決戦場|결전장
+boss.gateOpen|👑 BOSS 倒下！上方大門開啟|👑 BOSS 倒下！上方大门开启|👑 Boss down! The gate is open|👑 ボス撃破！上の大門が開いた|👑 보스 격파! 위쪽 대문이 열렸다
+boss.minions|👾 BOSS 召喚了兩隻護衛|👾 BOSS 召唤了两只护卫|👾 The boss summoned two guards|👾 ボスが護衛を2体呼んだ|👾 보스가 호위 2마리를 불렀다
+boss.clear|🏆 章節 BOSS 擊破！|🏆 章节 BOSS 击破！|🏆 Chapter boss defeated!|🏆 チャプターBOSS撃破！|🏆 챕터 BOSS 격파!
 boss.1|咩霸 · 牧草巨獸|咩霸 · 牧草巨兽|MEEDA · Grass Titan|メエバ · 牧草の巨獣|메에바 · 목초의 거수
 boss.2|妮芙 · 沙蟲女王|妮芙 · 沙虫女王|NIF · Sandworm Queen|ニフ · 砂虫の女王|니프 · 모래벌레 여왕
 boss.3|咕嘰 · 冰霜雪人|咕叽 · 冰霜雪人|GUJI · Frost Yeti|グジ · 霜の雪男|구지 · 서리 설인
@@ -930,7 +935,7 @@ spd.slow|慢|慢|slow|遅い|느림
 spd.verySlow|很慢|很慢|very slow|とても遅い|매우 느림
 help.br.lead|🏝️ 大逃殺：最多 50 人的亂鬥，活到最後一個就贏。可以單打，也可以組隊。下面幾點先記住，就不會一開場就出局。|🏝️ 大逃杀：最多 50 人的乱斗，活到最后一个就赢。可以单打，也可以组队。下面几点先记住，就不会一开场就出局。|🏝️ Battle Royale: up to 50 players brawl it out — last one standing wins. Play solo or in teams. Remember the points below and you won't be out in the first seconds.|🏝️ バトロワ：最大50人の乱戦、最後まで生き残れば勝ち。ソロでもチームでもOK。下のポイントを押さえれば開幕即脱落は防げます。|🏝️ 배틀로얄: 최대 50인 난전, 마지막까지 살아남으면 승리. 솔로도 팀도 가능합니다. 아래 요점만 기억하면 시작하자마자 탈락하지 않습니다.
 help.br.goal|🎯 <b>目標</b>：開場有 10 點血，被炸到一次扣 1～2 點；血量歸零就出局。<b>最後活著的人（或隊伍）獲勝</b>，名次越前面獎勵越好。|🎯 <b>目标</b>：开场有 10 点血，被炸到一次扣 1～2 点；血量归零就出局。<b>最后活着的人（或队伍）获胜</b>，名次越前面奖励越好。|🎯 <b>Goal</b>: you start with 10 HP and lose 1–2 per hit; at zero you're out. <b>The last player (or team) standing wins</b> — the higher your place, the bigger the reward.|🎯 <b>目標</b>：開始時10ポイント、被弾ごとに1～2減り、0で脱落。<b>最後に生き残った人（チーム）の勝ち</b>。順位が上ほど報酬が良い。|🎯 <b>목표</b>: 시작 시 10 HP, 피격당 1~2 감소, 0이면 탈락. <b>마지막까지 살아남은 사람(팀)이 승리</b>하며 순위가 높을수록 보상이 좋습니다.
-help.br.team|👥 <b>人數與組隊</b>：可選 30 人或 50 人；組隊可開 2／3／4 隊 —— <b>同隊的炸彈與火焰不會傷到自己人</b>，但毒圈和小怪照樣會咬人。|👥 <b>人数与组队</b>：可选 30 人或 50 人；组队可开 2／3／4 队 —— <b>同队的炸弹与火焰不会伤到自己人</b>，但毒圈和小怪照样会咬人。|👥 <b>Players & teams</b>: pick 30 or 50 players; teams can be 2/3/4 — <b>your team's bombs and flames never hurt teammates</b>, but the zone and monsters still do.|👥 <b>人数とチーム</b>：30人か50人。チームは2／3／4から選択 —— <b>同じチームの爆弾と炎では味方を傷つけません</b>。ただし毒エリアと雑魚は容赦なし。|👥 <b>인원과 팀</b>: 30명 또는 50명, 팀은 2／3／4 —— <b>같은 팀의 폭탄과 불꽃은 아군을 해치지 않습니다</b>. 다만 자기장과 몬스터는 예외.
+help.br.team|👥 <b>人數與組隊</b>：可選 30／50／100 人；組隊可開 2／3／4 隊 —— <b>同隊的炸彈與火焰不會傷到自己人</b>，但毒圈和小怪照樣會咬人。|👥 <b>人数与组队</b>：可选 30／50／100 人；组队可开 2／3／4 队 —— <b>同队的炸弹与火焰不会伤到自己人</b>，但毒圈和小怪照样会咬人。|👥 <b>Players & teams</b>: pick 30/50/100 players; teams can be 2/3/4 — <b>your team's bombs and flames never hurt teammates</b>, but the zone and monsters still do.|👥 <b>人数とチーム</b>：30／50／100人。チームは2／3／4から選択 —— <b>同じチームの爆弾と炎では味方を傷つけません</b>。ただし毒エリアと雑魚は容赦なし。|👥 <b>인원과 팀</b>: 30／50／100명, 팀은 2／3／4 —— <b>같은 팀의 폭탄과 불꽃은 아군을 해치지 않습니다</b>. 다만 자기장과 몬스터는 예외.
 help.br.zone|☠️ <b>毒圈</b>：一場 5 分鐘（5 圈）或 10 分鐘（10 圈）。時間到毒圈就往內縮，<b>站在圈外每 1.6 秒掉 1 點血</b> —— 看到圈靠過來就快往中間移動。|☠️ <b>毒圈</b>：一场 5 分钟（5 圈）或 10 分钟（10 圈）。时间到毒圈就往内缩，<b>站在圈外每 1.6 秒掉 1 点血</b> —— 看到圈靠过来就快往中间移动。|☠️ <b>The zone</b>: a match lasts 5 min (5 rings) or 10 min (10 rings). Each phase the ring closes in and <b>outside it you lose 1 HP every 1.6s</b> — when the ring moves, head for the middle.|☠️ <b>毒エリア</b>：1試合5分（5周）or 10分（10周）。時間ごとに円が縮み、<b>外にいると1.6秒ごとに1ポイント減</b> —— 円が来たら中央へ。|☠️ <b>자기장</b>: 한 판 5분(5회) 또는 10분(10회). 시간마다 원이 줄어들고 <b>바깥에 있으면 1.6초마다 1 HP 감소</b> — 원이 다가오면 중앙으로.
 help.br.boss|🦖 <b>亂入 BOSS（v4.77 新）</b>：場上會有 2 隻從 32 關隨機抽來的 BOSS 到處亂走。<b>打死牠最後一下的人直接騎上恐龍</b>（不用撿蛋）—— 多一層護盾，還能吐火，火力立刻翻一倍。|🦖 <b>乱入 BOSS（v4.77 新）</b>：场上会有 2 只从 32 关随机抽来的 BOSS 到处乱走。<b>打死它最后一下的人直接骑上恐龙</b>（不用捡蛋）—— 多一层护盾，还能吐火，火力立刻翻一倍。|🦖 <b>Roaming boss (new in v4.77)</b>: 2 bosses picked at random from the 32 stages wander the map. <b>Whoever lands the last hit mounts the dino right away</b> (no egg needed) — a free shield plus flame breath, so your firepower doubles instantly.|🦖 <b>乱入ボス（v4.77 新）</b>：32面からランダムに選ばれたボスが2体うろつきます。<b>最後の一撃を入れた人がそのまま恐竜に騎乗</b>（卵不要）—— シールド1枚＋火吹きで火力が倍に。|🦖 <b>난입 BOSS (v4.77 신규)</b>: 32개 스테이지에서 무작위로 뽑힌 BOSS 2마리가 돌아다닙니다. <b>마지막 일격을 넣은 사람이 바로 공룡에 탑승</b>(알 필요 없음) — 보호막 하나에 불뿜기까지, 화력이 두 배.
 help.br.reward|🏆 <b>獎勵</b>：依最後名次發金幣（冠軍最多），前三名再加送票券；現在還在免費測試，入場不扣票。|🏆 <b>奖励</b>：依最后名次发金币（冠军最多），前三名再加送票券；现在还在免费测试，入场不扣票。|🏆 <b>Rewards</b>: coins by final placement (champion gets the most), and the top three also earn tickets. It's still a free test — entering costs no ticket.|🏆 <b>報酬</b>：最終順位に応じてコイン（優勝が最高）、上位3位にはチケットも進呈。現在は無料テスト中で入場にチケットは不要。|🏆 <b>보상</b>: 최종 순위에 따라 코인(우승이 최대), 3위까지는 티켓도 지급. 지금은 무료 테스트라 입장에 티켓이 들지 않습니다.

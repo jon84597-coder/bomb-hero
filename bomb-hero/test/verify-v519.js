@@ -265,7 +265,8 @@ head('⑧ 怪物血量與魔王（配合新傷害）');
   const all = Object.keys(F).map(function (k) { return F[k].hp; });
   ok(all.every(function (v) { return v >= 4 && v <= 6; }), '小怪血量 4~6（' + all.join('/') + '）');
   ok(P.FOE_HP.slime === 4, '史萊姆 4 血（攻擊 0 也要打 2 下）');
-  ok(/makeBoss\([^)]*fin \? 48 :/.test(SRC), '最終魔王 48 血（其他關卡 4 + 章節）');
+  // v5.36：最終魔王搬到第 8 章決戰場（bossFin）→ 一樣 48 血；其他章節依章數遞增
+  ok(/makeBoss\([^)]*bossFin \? 48 :/.test(SRC), '最終魔王 48 血（其餘章節 12 + 章節 × 2）');
   ok(/boss\.def\s*=\s*2/.test(SRC), '最終魔王防禦 2');
 }
 

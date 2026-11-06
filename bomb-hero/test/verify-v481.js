@@ -110,7 +110,7 @@ ok(els.btnSoloBoss._on.click && els.btnSoloBoss._on.click.length > 0, '按鈕有
   ok(P.Game.bossRush === true, '按下去真的進 BOSS 挑戰（bossRush = true）');
   // 沙盒沒有真的 rAF，state 機器不一定會推到 play；改驗「地圖真的蓋出來了」
   ok(!!(P.Game.grid && P.Game.grid.length), '地圖有蓋出來（' + (P.Game.grid ? P.Game.grid.length : 0) + ' 列）');
-  ok(P.Game.stage === 32, '直接跳最終關（第 ' + P.Game.stage + ' 關）');
+  ok(P.Game.stage === P.SOLO_STAGES, '直接跳最終關（第 ' + P.Game.stage + ' 關）');
 }
 
 // ---------- 5. 版面 ----------

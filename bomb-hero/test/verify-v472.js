@@ -7,8 +7,8 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++;
 const src = html;
 
 console.log('\n=== 1. 源碼骨架 ===');
-ok(/const BR = \{[\s\S]{0,260}?W: 56, H: 44/.test(src), 'BR 常數：56×44 超大地圖');
-ok(/N: 30, FOES: 14/.test(src), '30 人同場 / 14 隻小怪');
+ok(/const BR = \{[\s\S]{0,260}?W: 79, H: 62/.test(src), 'BR 常數：79×62 超大地圖（v5.36 面積加倍）');
+ok(/N: 100, FOES: 14/.test(src), '100 人同場 / 14 隻小怪');
 ok(/FREE: true/.test(src), '正式測試期間免費（FREE）');
 ok(/ART_K: \.\d+/.test(src), '大圖怪物比例係數（ART_K）');
 ok(/if \(!BR\.FREE && !dev\) \{/.test(src), '免費時不扣門票');
@@ -49,7 +49,7 @@ console.log('\n=== 2. 隨機不規則大陸 ＋ 八區地形 ===');
   Math.random = function () { __seed = (__seed * 1664525 + 1013904223) >>> 0; return __seed / 4294967296; };
   ok(BH.startBR() === true, 'startBR() 開得起來');
   ok(G.mode === 'br' && G.bigMap === true, '模式 = br、bigMap = true');
-  ok(G.cols === 56 && G.rows === 44, '地圖 56×44（實際 ' + G.cols + '×' + G.rows + '）');
+  ok(G.cols === 79 && G.rows === 62, '地圖 79×62（實際 ' + G.cols + '×' + G.rows + '）');
   let land = 0, water = 0, hard = 0, soft = 0;
   const regs = {};
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
@@ -92,15 +92,16 @@ console.log('\n=== 2. 隨機不規則大陸 ＋ 八區地形 ===');
   ok(G.artK < 1, '大圖怪物比例有縮（artK=' + G.artK + '）');
 })();
 
-console.log('\n=== 3. 30 人同場 ＋ 小怪 ===');
+console.log('\n=== 3. 100 人同場 ＋ 小怪 ===');
 (function () {
   const env = makeEnv(); const BH = env.BH, G = env.G;
   env.getId('body').classList.add('touch');
   const c = env.getId('cv'); c.clientWidth = 390; c.clientHeight = 775;
   BH.settings.ctrl = 'touch';
   BH.startBR();
-  ok(G.players.length === 30, '30 名玩家（' + G.players.length + '）');
-  ok(G.players.filter(function (p) { return p.ai; }).length === 29, '29 個 AI + 自己');
+  // v5.36：人數 30 → 100（地圖同時放大到 79×62）
+  ok(G.players.length === 100, '100 名玩家（' + G.players.length + '）');
+  ok(G.players.filter(function (p) { return p.ai; }).length === 99, '99 個 AI + 自己');
   ok(G.players[0].ai !== true, 'P1 是自己操作');
   const cells = G.players.map(function (p) { return [Math.floor(p.x / G.T), Math.floor(p.y / G.T)]; });
   ok(cells.every(function (c2) { return isFinite(c2[0]) && isFinite(c2[1]); }), '30 個人的座標都有效');
@@ -138,10 +139,11 @@ console.log('\n=== 4. 毒圈節奏與淘汰 ===');
   ok(G.brZone.phase === 0, '59 秒時還沒縮圈（phase=' + G.brZone.phase + '）');
   for (let i = 0; i < 60 * 3; i++) BH.updateBR(1 / 60);
   ok(G.brZone.phase >= 1, '60 秒後進入第一階段（phase=' + G.brZone.phase + '）');
-  // v5.35：縮圈改成 PUBG 式（8 秒收在虛線上，收完馬上算下一圈）→ 這裡驗「第一圈收到 27 格」
+  // v5.35：縮圈改成 PUBG 式（8 秒收在虛線上，收完馬上算下一圈）
+  // v5.36：地圖放大到 79×62 → 開場圈 40 格、第一圈收到 34 格
   ok(G.brZone.r < r0, '半徑縮小（' + r0 + ' → ' + G.brZone.r.toFixed(1) + '）');
-  ok(Math.abs(G.brZone.r - 27) < .6, '第一圈收到 27 格（' + G.brZone.r.toFixed(1) + '）');
-  ok(G.brZone.tr <= G.brZone.r && G.brZone.tr < 27, '下一圈目標更小（' + G.brZone.tr + '）');
+  ok(Math.abs(G.brZone.r - 34) < .6, '第一圈收到 34 格（' + G.brZone.r.toFixed(1) + '）');
+  ok(G.brZone.tr <= G.brZone.r && G.brZone.tr < 34, '下一圈目標更小（' + G.brZone.tr + '）');
   const p = G.players[0];
   p.alive = true; p.brHp = 1; p.brOut = 0; p.invuln = 0;
   p.x = 1 * G.T; p.y = 1 * G.T;

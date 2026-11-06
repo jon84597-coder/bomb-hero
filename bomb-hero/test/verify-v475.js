@@ -45,7 +45,7 @@ ok(/globalCompositeOperation = 'overlay'/.test(src), '氛圍照片會用 overlay
 ok(/^bg\/title\.webp$/.test(P.IMG_TITLEBG), '首頁底圖獨立成 bg/title.webp（順便空出 100KB）');
 
 head('3. 大逃殺開局選項');
-ok(P.BR.opt && P.BR.opt.n === 30 && P.BR.opt.team === 1 && P.BR.opt.dur === 10, '預設 30 人／單人／10 分鐘');
+ok(P.BR.opt && P.BR.opt.n === 100 && P.BR.opt.team === 1 && P.BR.opt.dur === 10, '預設 100 人／單人／10 分鐘');
 ok(P.BR.PH10.length === 10 && P.BR.PH5.length === 5, '兩套毒圈表（10 段／5 段）');
 P.BR.opt = { n: 50, team: 3, dur: 5 };
 ok(P.startBR() === true, '50 人 / 3 人組隊 / 5 分鐘 開得起來');

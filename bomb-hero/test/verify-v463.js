@@ -178,7 +178,7 @@ head('4. 章節最終關：王站在走得到的空地');
   ok(/return \{ x: xx, y: yy \};/.test(src), 'pickBossCell 會回傳現成空地');
 
   let bad = 0, checked = 0;
-  [4, 8, 12, 16, 20, 24, 28, 32].forEach(function (st) {
+  [5, 10, 15, 20, 25, 30, 35, 40].forEach(function (st) {   // v5.36：每章第 5 關是 BOSS 決戰場
     soloStage(st);
     const reach = reachMap();
     (G.enemies || []).forEach(function (e) {
