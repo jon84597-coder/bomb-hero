@@ -146,7 +146,8 @@ ok(P.BOSS_HITS === 5, 'BOSS_HITS = 5');
 ok(P.SOLO_DIFF.easy.bossHp === 5 && P.SOLO_DIFF.normal.bossHp === 5 && P.SOLO_DIFF.hard.bossHp === 5,
    '三種難度的 BOSS 血量都改成 5（簡單 5／普通 5／困難 5）');
 ok(/bossHp: BOSS_HITS/.test(html), '難度表直接引用 BOSS_HITS（單一來源，不會漏改）');
-ok(P.SOLO_DIFF.easy.eggs === 3 && P.SOLO_DIFF.hard.eggs === 1, '難度差異保留在敵人數／恐龍蛋（不是靠血量）');
+ok(P.SOLO_DIFF.easy.eggs === 2 && P.SOLO_DIFF.normal.eggs === 2 && P.SOLO_DIFF.hard.eggs === 2, '三檔恐龍蛋統一 2 顆（v5.31）');
+ok(P.SOLO_DIFF.easy.hp === 3 && P.SOLO_DIFF.normal.hp === 2 && P.SOLO_DIFF.hard.hp === 1, '難度差異改看「每條命幾格血」＋敵人倍率（不是靠 BOSS 血量）');
 
 (function () {
   const b = P.makeBoss(5, 5, P.BOSS_HITS);

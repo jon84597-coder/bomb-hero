@@ -783,6 +783,11 @@ display: flex; align-items: center; gap: 7px; min-height: 38px;
 /* v5.29：生命格（一格一顆心）—— 縮字距，5 格也不會把頂部擠爆 */
 .chip .hpicks { font-size: 12px; letter-spacing: -1.6px; line-height: 1; white-space: nowrap; }
 body.touch.in-game .chip .hpicks { font-size: 11px; letter-spacing: -2px; }
+/* v5.31：簡單模式 3 顆心會把頂欄擠成三行（ESC 掉到第三行）—— 頂欄專屬收窄，不動其他面板的 .chip */
+#gameTop { gap: 6px; }
+#gameTop .chip { padding: 6px 9px; gap: 6px; }
+#gameTop .chip[data-k="hp"] { padding: 6px 7px; }
+#gameTop .chip .hpicks { font-size: 11px; letter-spacing: -2.2px; }
 /* ===== v4.4：頂部狀態列高亮 —— 吃到道具／坐騎的瞬間，對應圖示彈一下＋亮一圈 ===== */
 #gameTop .chip { position: relative; }
 #gameTop .chip.fx { animation: hudPop .74s cubic-bezier(.2,.9,.3,1); }
@@ -4661,7 +4666,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.30</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.31</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4716,7 +4721,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.30</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.31</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5701,7 +5706,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.30';
+const VERSION = '5.31';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6411,7 +6416,8 @@ let settings = {
   font: 'n',        // v5.28：文字大小（n 標準／l 大）
   calm: 0,          // v5.28：減少動態（暈動症友善）
   brChar: 0, brName: '',                             // v5.11：大逃殺自己的選角與暱稱
-  soloDiff: 'easy',                                // v5.29：單人難易度預設「簡單」（新玩家一進來就有 5 格生命）
+  soloDiff: 'normal',                              // v5.31：單人難易度預設「普通」（3 條命 × 2 格血）
+  diffV: 0,                                        // v5.31：難度設定的版本戳記（0→2 一次性把舊預設 easy 搬回 normal）
   soloTime: 300,                                  // 單人關卡時間（0 = 無限）
   mapMode: 'classic',                             // v4.69：地圖模式 classic = 原本 32 張 / random = 隨機生成
   miniMap: 1,                                     // v4.70：小地圖（雷達），1 = 開 / 0 = 關
@@ -6494,7 +6500,13 @@ try {
   settings.count = clampCount(settings.count);
   settings.teams = [0, 2, 3, 4].indexOf(parseInt(settings.teams, 10)) >= 0 ? parseInt(settings.teams, 10) : 0;
   if (['weak', 'normal', 'strong'].indexOf(settings.aiLevel) < 0) settings.aiLevel = 'normal';
-  if (['easy', 'normal', 'hard'].indexOf(settings.soloDiff) < 0) settings.soloDiff = 'easy';   // v5.29：壞值也退回簡單
+  if (['easy', 'normal', 'hard'].indexOf(settings.soloDiff) < 0) settings.soloDiff = 'normal';   // v5.31：壞值退回普通
+  // v5.31：預設從「簡單」改成「普通」。v5.29 那版會把 easy 自動寫進存檔（那不是玩家的選擇），
+  //   這裡一次性搬回 normal；搬完蓋上 diffV=2，之後玩家自己選 easy 就不會再被改。
+  if ((settings.diffV | 0) < 2) {
+    if (settings.soloDiff === 'easy') settings.soloDiff = 'normal';
+    settings.diffV = 2;
+  }
   settings.soloTime = [0, 180, 300, 600].indexOf(parseInt(settings.soloTime, 10)) >= 0
     ? parseInt(settings.soloTime, 10) : 300;
   if (['classic', 'random'].indexOf(settings.mapMode) < 0) settings.mapMode = 'classic';
@@ -10828,17 +10840,16 @@ const PetPreview = (function () {
 // v2.4：三種難度的 BOSS 統一 5 下（血條滿格 = 5，打五下就贏）
 const BOSS_HITS = 5;
 const SOLO_DIFF = {
-  // v5.30：lives＝這一關有幾條命；hp＝每條命有幾格血（扣完才倒下）。
-  //   簡單模式是「2 格血」：被打到只掉一格、短暫無敵後繼續打，第二下才倒下 —— 這是 HP，不是多給幾條命。
-  //   普通／困難維持原樣（一擊倒、3 條命），完全沒動。
-  easy:   { enemy: .62, speed: .80, bossHp: BOSS_HITS, eggs: 3, lives: 1, hp: 2, invuln: 3.4, hpInvuln: 1.8, label: '😇 簡單' },
-  normal: { enemy: 1,   speed: 1,   bossHp: BOSS_HITS, eggs: 2, lives: 3, hp: 1, invuln: 2.2, hpInvuln: 2.2, label: '🙂 普通' },
-  hard:   { enemy: 1.45, speed: 1.22, bossHp: BOSS_HITS, eggs: 1, lives: 3, hp: 1, invuln: 2.2, hpInvuln: 2.2, label: '😈 困難' }
+  // v5.31：三檔都是 <b>3 條命</b>，差別在「每條命幾格血」與敵人強度；恐龍蛋一律 2 顆。
+  //   lives＝命數、hp＝每條命幾格血（扣完才倒下）、hpInvuln＝掉一格之後的無敵秒數。
+  easy:   { enemy: .62, speed: .80, bossHp: BOSS_HITS, eggs: 2, lives: 3, hp: 3, invuln: 3.4, hpInvuln: 1.8, label: '😇 簡單' },
+  normal: { enemy: 1,   speed: 1,   bossHp: BOSS_HITS, eggs: 2, lives: 3, hp: 2, invuln: 2.2, hpInvuln: 1.8, label: '🙂 普通' },
+  hard:   { enemy: 1.45, speed: 1.22, bossHp: BOSS_HITS, eggs: 2, lives: 3, hp: 1, invuln: 2.2, hpInvuln: 1.8, label: '😈 困難' }
 };
 function soloDiffCfg() {
   // v4.80：每日挑戰固定難度（不然排行榜就變成比誰調得簡單）
   if (Game.daily) return SOLO_DIFF[DAILY_DIFF] || SOLO_DIFF.normal;
-  return SOLO_DIFF[settings.soloDiff] || SOLO_DIFF.easy;
+  return SOLO_DIFF[settings.soloDiff] || SOLO_DIFF.normal;
 }
 /* v5.29：這一關要給幾格生命。
    每日挑戰（比秒數）與首頁「挑戰 BOSS」連戰固定 3 格 —— 排行榜要公平，
@@ -10873,7 +10884,7 @@ function soloGuardInvuln() {
 // v4.77：難易度名稱跟著語言走（原本只有中文）
 function diffLabel(id) {
   if (Game.daily) return t('daily.fixedDiff');
-  const k = settings.soloDiff || 'easy';
+  const k = settings.soloDiff || 'normal';
   const v = t('diff.' + k);
   return (v && v !== 'diff.' + k) ? v : soloDiffCfg().label;
 }
@@ -15755,7 +15766,7 @@ function soloHurt(p, silent, killer) {
   p.sHp = before - 1;
   if (p.sHp <= 0) return false;                         // 最後一格用完 → 走原本的死亡流程
   p.invuln = Math.max(p.invuln || 0, soloHpInvuln());   // 短無敵：同一團火不會連扣兩格
-  p.cry = 1.3;
+  p.cry = 1.8;
   if (p === Game.players[0]) {
     Game.hurtCount = (Game.hurtCount | 0) + 1;          // 三星判定：被打到就沒有三星
     try { DeathCard.note(killer); } catch (e) {}
@@ -15793,7 +15804,7 @@ function killPlayer(p, silent, killer) {
   try { if (p === Game.players[0]) Ach.count('death', 1); } catch (e) {}
   p.lives -= 1;
   p.respawnT = 1.6;
-  p.cry = 2.8;                    // v1.7：被炸到要亮相大哭臉
+  p.cry = 3.8;                    // v5.31：被炸到要亮相大哭臉（2.8 → 3.8 秒，看得清楚）
   AudioSys.sfx('die');
   burst(p.x, p.y, p.ch.color, 22, 220);
   startGloat(killer, p);
@@ -15803,7 +15814,7 @@ function killPlayer(p, silent, killer) {
 // 炸死人的凶手露出奸笑＋竊笑聲（在死亡叫聲之後）
 function startGloat(killer, victim) {
   if (!killer || killer === victim || !killer.alive) return;
-  killer.gloat = 2.2;
+  killer.gloat = 3.0;   // v5.31：奸笑久一點
   AudioSys.sfx('gloat');
 }
 
@@ -17046,7 +17057,7 @@ function updateBattle(dt) {
           Game.teamWins[winTeam] = (Game.teamWins[winTeam] | 0) + 1;
           Game.players.forEach(function (p) {
             if (p.team !== winTeam) return;
-            p.wins += 1; p.score += 500; p.cheerT = 1.8; rep = p;
+            p.wins += 1; p.score += 500; p.cheerT = 2.6; rep = p;   // v5.31：歡呼久一點
             confetti(p.x, p.y - Game.T * .6, 12);
           });
         }
@@ -17059,7 +17070,7 @@ function updateBattle(dt) {
     } else if (alive.length <= 1 && Game.state === 'play') {
       Game.state = 'roundover';
       const winner = alive[0] || null;
-      if (winner) { winner.wins += 1; winner.score += 500; winner.cheerT = 1.8; }
+      if (winner) { winner.wins += 1; winner.score += 500; winner.cheerT = 2.6; }   // v5.31
       // v3.8：過場拉長到 4.2 秒（原本 1.8 秒根本來不及看），橫幅跟著停 3.4 秒
       banner(winner ? t('bt.win', { n: pname(winner) }) : t('bt.draw'), 3.4);
       // 每場戰鬥結束的專屬特效音 + 彩帶；分出勝負再加一段完整的獲勝小旋律
@@ -17112,7 +17123,7 @@ function killBattlePlayer(p, killer) {
   }
   p.alive = false; p.dead = true; p.respawnT = 1;
   try { AchPvp(p, killer); } catch (e) {}
-  p.cry = 2.8;                    // v1.7：被炸到要亮相大哭臉
+  p.cry = 3.8;                    // v5.31：被炸到要亮相大哭臉（2.8 → 3.8 秒，看得清楚）
   if (Game.mode === 'br') brOnDeath(p);      // v4.72：大逃殺記名次（不會復活、不坐推車）
   AudioSys.sfx('die');
   burst(p.x, p.y, p.ch.color, 22, 220);
@@ -28871,24 +28882,45 @@ function drawFaceExpr(g, expr, hx, hy, hw, hh, t, base) {
     g.moveTo(RX + er, ey - er * .9); g.lineTo(RX - er * .95, ey);
     g.moveTo(RX + er, ey + er * .9); g.lineTo(RX - er * .95, ey);
     g.stroke();
-    // 兩行眼淚（會抖）＋掉落的水珠
+    // v5.31：灑水式淚水 —— 從兩眼外側<strong>持續往兩邊噴</strong>，水珠呈扇形散開、越遠越小越淡。
+    //   舊版是「兩條固定水柱＋一顆往下掉的水珠」，看起來像眼淚掛在臉上，不像在哭。
     const wob = Math.sin(t * 7) * .5 + .5;
-    [[LX, 1], [RX, -1]].forEach(function (q) {
-      const tx = q[0], dir = q[1];
-      const drop = (t * 1.5 + (dir > 0 ? 0 : .5)) % 1;
-      const top = ey + er * 1.15;
-      const len = hh * (.15 + .10 * wob);
-      g.fillStyle = 'rgba(120,190,255,.70)';
-      g.beginPath();
-      g.moveTo(tx - er * .55, top);
-      g.quadraticCurveTo(tx - er * .8, top + len * .75, tx, top + len);
-      g.quadraticCurveTo(tx + er * .8, top + len * .75, tx + er * .55, top);
-      g.closePath(); g.fill();
-      g.fillStyle = 'rgba(155,215,255,.92)';
-      g.beginPath();
-      g.ellipse(tx + dir * er * .25, top + len + drop * hh * .34, er * .40, er * .58, 0, 0, 6.283);
-      g.fill();
+    [[LX, -1], [RX, 1]].forEach(function (q) {
+      const sx = q[0], dir = q[1];                       // dir＝往外噴的方向（左／右）
+      const x0 = sx + dir * er * .65, y0 = ey + er * .55;
+      // ① 三道細細的飛濺弧線（往外拋的水痕 —— 用實心扇形會變成兩片翅膀，不像灑水）
+      g.save();
+      g.strokeStyle = 'rgba(160,215,255,.75)';
+      g.lineCap = 'round';
+      for (let s2 = 0; s2 < 3; s2++) {
+        const reach = hw * (.58 + s2 * .19) * (1 + .07 * Math.sin(t * 5 + s2 * 1.3));
+        g.globalAlpha = .18 + .10 * wob;
+        g.lineWidth = Math.max(1, er * (.42 - s2 * .11));
+        g.beginPath();
+        g.moveTo(x0, y0 - er * .35);
+        g.quadraticCurveTo(x0 + dir * reach * .52, y0 - hh * (.08 + s2 * .09),
+                           x0 + dir * reach, y0 + hh * (.14 + s2 * .10));
+        g.stroke();
+      }
+      g.restore();
+      // ② 一串往外灑的水珠（固定相位 → 每幀不會亂跳，但一直在往外流）
+      for (let q2 = 0; q2 < 8; q2++) {
+        const ph = (t * .95 + q2 / 8 + (dir > 0 ? .13 : 0)) % 1;      // 0→1：從眼角飛到最外側
+        const spread = .52 + (q2 % 3) * .21;                          // 每顆張角不同 → 扇形而不是一條線
+        const dx = dir * hw * (.14 + .78 * ph) * spread;
+        const dy = -hh * .12 * ph + hh * .40 * ph * ph + Math.sin(t * 6 + q2 * 1.7) * hw * .055 * ph;
+        const rr2 = er * (1.10 - .55 * ph) * (1 + (q2 % 2) * .18);
+        g.globalAlpha = (.95 - .55 * ph) * (ph < .12 ? ph / .12 : 1);
+        g.fillStyle = ph < .35 ? 'rgba(178,226,255,.96)' : 'rgba(140,200,250,.86)';
+        g.beginPath(); g.ellipse(x0 + dx, y0 + dy, rr2 * .84, rr2, 0, 0, 6.283); g.fill();
+        if (q2 % 2 === 0) {                                          // 水珠高光：遠看會閃
+          g.globalAlpha *= .85;
+          g.fillStyle = 'rgba(242,251,255,.95)';
+          g.beginPath(); g.arc(x0 + dx - rr2 * .26, y0 + dy - rr2 * .34, rr2 * .30, 0, 6.283); g.fill();
+        }
+      }
     });
+    g.globalAlpha = 1;
     // 哇—大哭的大嘴
     const mw = hw * .19, mh = hh * .15, my = hy + hh * .70;
     g.fillStyle = '#6d2130';
@@ -29026,8 +29058,8 @@ function heroEmoteIcon(g, kind, x, y, r, t, alpha) {
     g.fill();
     g.strokeStyle = 'rgba(120,80,190,.95)'; g.lineWidth = rr * .13;
     for (let i2 = 0; i2 < 3; i2++) {
-      const lx = -rr * (1.62 + i2 * .34);
-      g.beginPath(); g.moveTo(lx, -rr * 1.05); g.lineTo(lx, -rr * .52); g.stroke();
+      const lx = -rr * (1.20 + i2 * .20);   // v5.31：頭像放大後，這三條線原本跑到圓框外，往內收
+      g.beginPath(); g.moveTo(lx, -rr * .95); g.lineTo(lx, -rr * .42); g.stroke();
     }
   } else {
     g.lineWidth = rr * .17;
@@ -29180,7 +29212,8 @@ function drawRigChar(g, key, x, footY, H, a) {
     const hbh = hd ? hd.h * H : H * .3;
     heroMoodVfx(g, mood, x, footY - jump, H, a.idle || 0,
                 { x: hbx, y: hby, w: hbw, h: hbh });
-    heroEmoteIcon(g, mood, hbx + hbw * .5, hby - H * .10, H * .16, a.idle || 0, 1);
+    // v5.31：情緒頭像放大 34%（H*.16 → H*.215）並往上挪一點，才不會壓到額頭
+    heroEmoteIcon(g, mood, hbx + hbw * .5, hby - H * .135, H * .215, a.idle || 0, 1);
   }
   return { topY: oy + H * .08, ex: fx.x * W * .06, ey: 0, H: H, W: W };
 }
@@ -31274,7 +31307,7 @@ const HELP_BASIC = {
     { i: '🔥', tw: '<b>火焰</b>：十字噴發，碰到就扣一條命（連鎖會引爆其他炸彈）。', cn: '<b>火焰</b>：十字喷发，碰到就扣一条命（连锁会引爆其他炸弹）。', en: '<b>Flame</b>: cross-shaped; touching it costs a life (and chains other bombs).' },
     { i: '🚪', tw: '<b>過關傳送門</b>：殲滅所有敵人後才會開啟，走進去就過關。', cn: '<b>过关传送门</b>：歼灭所有敌人后才会开启，走进去就过关。', en: '<b>Exit portal</b>: opens once every enemy is gone — step in to clear the stage.' }
   ],
-  lives: { tw: '生命 <b>簡單 2 格血、普通／困難 3 條命</b>；簡單模式被打到只掉 1 格（扣完才倒下），其他難度碰到就倒。❤️ 愛心補 1 格（或是 1 條命）。', cn: '生命 <b>简单 2 格血、普通／困难 3 条命</b>；简单模式被打到只掉 1 格（扣完才倒下），其他难度碰到就倒。❤️ 爱心补 1 格（或是 1 条命）。', en: '<b>2 HP on Easy, 3 lives on Normal/Hard.</b> On Easy a hit costs 1 HP and you keep fighting; other difficulties are one-hit. ❤️ restores 1 HP (or 1 life).' },
+  lives: { tw: '生命 <b>三檔都是 3 條命</b>：簡單每條命 3 格血、普通 2 格、困難 1 格（碰到就倒）。被打到扣 1 格，扣完才倒下；❤️ 愛心補 1 格（補滿的那條命也會回來）。', cn: '生命 <b>三档都是 3 条命</b>：简单每条命 3 格血、普通 2 格、困难 1 格（碰到就倒）。被打到扣 1 格，扣完才倒下；❤️ 爱心补 1 格（补满的那条命也会回来）。', en: '<b>3 lives in every difficulty</b> — 3 HP per life on Easy, 2 on Normal, 1 on Hard (one-hit). A hit costs 1 HP and you go down when it reaches 0; ❤️ restores 1 HP.' },
   time: { tw: '單人可選 3／5／10 分或 <b>♾️ 無限時間</b>；時間到會陣亡，無限時間則慢慢玩也沒關係。', cn: '单人可选 3／5／10 分或 <b>♾️ 无限时间</b>；时间到会阵亡，无限时间则慢慢玩也没关系。', en: 'Solo offers 3 / 5 / 10 min or <b>♾️ Endless</b>. With Endless the timer never kills you.' }
 };
 
@@ -34228,7 +34261,14 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.30', date: '2026-11-06', now: true, items: [
+  { v: '5.31', date: '2026-11-06', now: true, items: [
+    '🎚️ <b>三檔難度重新配：都是 3 條命，差在每條命幾格血</b> —— 簡單 <b>3 格</b>、普通（新的預設）<b>2 格</b>、困難 <b>1 格</b>（碰到就倒）。恐龍蛋統一 2 顆。',
+    '🙂 <b>預設難度改成「普通」</b>：新玩家一進來就是 3 條命 × 2 格血；舊存檔裡被自動填成「簡單」的也會一次性搬回來（之後自己選的就照自己的）。',
+    '💦 <b>哭臉的眼淚會「灑」了</b>：從兩眼外側持續往左右噴，水珠呈扇形散開、越遠越小越淡，還有一層薄薄的水霧；不再是臉上掛著兩條水柱。',
+    '🙂 <b>頭頂的情緒頭像放大 34%</b>（大笑／大哭／受傷三種），位置也往上挪一點，不會壓到額頭。',
+    '⏱️ <b>表情停留更久</b>：大哭 2.8 → 3.8 秒、奸笑 2.2 → 3.0 秒、獲勝歡呼 1.8 → 2.6 秒，一眼看得出角色現在的心情。'
+  ] },
+  { v: '5.30', date: '2026-11-06', now: false, items: [
     '❤️ <b>簡單模式改成真正的「2 格血」</b>：被打到只掉一格、人還站著繼續打（附 1.8 秒無敵，不會站在同一團火裡被連扣兩格），<b>第二下才會倒下</b>。以前是「多給幾條命」，死一次就原地重生，手感完全是兩回事。',
     '🙂 <b>普通與困難完全沒動</b>：一樣 3 條命、碰到就倒。',
     '🩸 <b>左上角兩顆心就是你的血</b>：實心＝還有幾格、空心＝已經掉了；滑過去會寫「生命 1／2 格」。',
@@ -36916,7 +36956,7 @@ function rpgHurt(p, silent, killer) {
   const dh = hp0 - p.hpCur, da = ar0 - p.armorCur;
   if (!silent && (dh > 0 || da > 0)) hurtFeedback(p, dh, da);   // v4.5：頭上飄字＋邊緣紅光＋HUD 高亮
   p.invuln = 1.15;
-  p.cry = 1.3;
+  p.cry = 1.8;
   Game.shake = Math.max(Game.shake || 0, .32);
   burst(p.x, p.y, p.ch.color, 12, 180);
   AudioSys.sfx('hurt');
@@ -36932,7 +36972,7 @@ function rpgHurt(p, silent, killer) {
     return;
   }
   if (p.hpCur <= 0) {                                // 生命歸零 → 冒險失敗
-    p.alive = false; p.dead = true; p.lives = 0; p.respawnT = 1.2; p.cry = 2.8;
+    p.alive = false; p.dead = true; p.lives = 0; p.respawnT = 1.2; p.cry = 3.8;   // v5.31：哭臉久一點
     try { if (p === Game.players[0]) Ach.count('death', 1); } catch (e) {}
     AudioSys.sfx('die');
     burst(p.x, p.y, p.ch.color, 22, 220);

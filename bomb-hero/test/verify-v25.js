@@ -116,6 +116,7 @@ ok(/AudioSys\.startBGM\(stageBGM\(/.test(html), '進關卡時用 stageBGM() 挑�
 console.log('=== 3. 每隻角色被炸到都要大哭的臉 ===');
 let pc = freshSolo(1);
 G.enemies.length = 0;
+pc.sHpMax = 1; pc.sHp = 1;   // v5.31：這段只驗哭臉，指定一擊倒（預設普通是 2 格血）
 P.killPlayer(pc, false, null);
 ok(pc.cry > 0, '被炸到會啟動大哭計時（cry=' + pc.cry + '）');
 ok(pc.cry >= 2, '哭臉會亮相 2 秒以上（' + pc.cry + 's）');
@@ -123,8 +124,8 @@ ok(!pc.alive, '被炸到就是倒下（才需要哭臉）');
 clearRec();
 P.render();
 ok(rec.calls.length > 0 && callsNamed('ellipse').length > 0, '倒下大哭時角色仍會被畫出來（看得到哭臉）');
-ok(styleUsed('rgba(120,190,255'), '畫面上有淚水（淚痕色）');
-ok(styleUsed('rgba(155,215,255'), '有掉落的水珠');
+ok(styleUsed('rgba(160,215,255'), '畫面上有淚水（往外拋的水痕）');
+ok(styleUsed('rgba(178,226,255'), '有一顆顆往外灑的水珠');
 ok(styleUsed('#6d2130'), '有哇哇大哭的大嘴');
 let cryAll = 0;
 for (let i = 0; i < P.CHARACTERS.length; i++) {
@@ -132,7 +133,7 @@ for (let i = 0; i < P.CHARACTERS.length; i++) {
   const g2 = mk();
   clearRec();
   P.drawFaceExpr(g2, 'cry', 100, 100, 40, 40, 1.2, c2.color);
-  if (styleUsed('rgba(120,190,255')) cryAll++;
+  if (styleUsed('rgba(178,226,255')) cryAll++;
 }
 ok(cryAll === P.CHARACTERS.length, '八隻角色都畫得出哭臉（' + cryAll + '/' + P.CHARACTERS.length + '）');
 pc.cry = .2;
@@ -144,7 +145,7 @@ console.log('=== 4. 炸到人要開心大笑 ===');
 const pc2 = freshSolo(1);
 G.enemies.length = 0;
 const killer = { alive: true, chIdx: 1, gloat: 0, x: 5 * G.T, y: 5 * G.T, r: 14 };
-pc2.invuln = 0; pc2.alive = true;
+pc2.invuln = 0; pc2.alive = true; pc2.sHpMax = 1; pc2.sHp = 1;   // v5.31：一擊倒才驗得到「炸到人大笑」
 P.killPlayer(pc2, false, killer);
 ok(killer.gloat > 0, '炸到人的人會進入大笑狀態（gloat=' + killer.gloat.toFixed(1) + '）');
 clearRec();

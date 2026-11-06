@@ -378,6 +378,7 @@ head('12. 迴歸：玩過 RPG 再回單人，不會卡在 RPG 扣血邏輯');
   ok(G.rpg === false, '回到單人 Game.rpg = false（修掉舊 bug）');
   const p = G.players[0];
   p.invuln = 0;
+  p.sHpMax = 1; p.sHp = 1;   // v5.31：指定一擊倒（預設普通是 2 格血）
   P.killPlayer(p, false, null);
   ok(p.alive === false && p.lives === 2, '單人被炸到正常扣命（原本會永遠不死）');
 }

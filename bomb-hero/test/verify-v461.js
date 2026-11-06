@@ -106,7 +106,7 @@ head('3. 消失中碰不到人（以前站在隱形怪身上就直接死）');
 
   const p2 = soloStage(1); openField();
   const e2 = onlyFoe('imp', 5, 5);
-  p2.invuln = 0; p2.alive = true;
+  p2.invuln = 0; p2.alive = true; p2.sHpMax = 1; p2.sHp = 1;   // v5.31：一擊倒
   e2.x = p2.x; e2.y = p2.y;
   P.updateSolo(1 / 60);
   ok(p2.alive === false, '沒消失的時候照樣會撞死人（規則沒被拿掉）');
