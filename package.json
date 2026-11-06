@@ -1,6 +1,6 @@
 {
   "name": "bomberman-online",
-  "version": "5.31.0",
+  "version": "5.32.0",
   "private": true,
   "description": "爆爆英雄 BOMB HERO：單人闖關 + 多人即時對戰 + RPG（帳號 / 雲端存檔）",
   "main": "server.js",

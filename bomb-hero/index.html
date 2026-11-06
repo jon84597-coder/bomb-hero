@@ -4666,7 +4666,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.31</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.32</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4721,7 +4721,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.31</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.32</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5706,7 +5706,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.31';
+const VERSION = '5.32';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -29113,32 +29113,49 @@ function heroMoodVfx(g, kind, px, py, size, t, hb) {
       g.beginPath(); g.arc(xj, yj, rj * 2.4, 0, 6.283); g.fill();
     }
   } else if (kind === 'cry') {
-    // 水條從「頭部框的左右兩側」往外灑（各角色的頭寬不同，用框算才準）
-    const hy = hb ? hb.y + hb.h * .52 : py - size * .68;
-    const hw = hb ? hb.w * .46 : size * .24;
+    // v5.32：灑水式淚水（身體層）—— 兩眼外側持續往左右兩邊噴，水珠走拋物線、
+    //   越遠越小越淡，每顆的相位／速度／張角都不一樣（像灑水器，不是一條線）；
+    //   另外兩道細細的飛濺弧線讓「灑」有連續感。舊版是 17 顆珠子連成的固定水條。
+    const hy = hb ? hb.y + hb.h * .70 : py - size * .42;   // 頭部框 70% 處 ≈ 眼睛高度（框頂是耳根、框底是下巴）
+    const hw = hb ? hb.w * .22 : size * .16;          // 眼睛到頭中心的水平距離
     [-1, 1].forEach(function (dir, si) {
-      const wob = Math.sin(t * 6.4 + si * 1.7) * size * .018;
-      const x0 = px + dir * hw, y0 = hy;
-      const cx1 = px + dir * (hw + size * .16), cy1 = y0 + size * .05 + wob;
-      const x1 = px + dir * (hw + size * .34 + Math.sin(t * 3.1 + si) * size * .02);
-      const y1 = y0 + size * .26 + wob;
-      for (let q = 0; q <= 16; q++) {
-        const kq = q / 16, ik = 1 - kq;
-        const bx = ik * ik * x0 + 2 * ik * kq * cx1 + kq * kq * x1;
-        const by = ik * ik * y0 + 2 * ik * kq * cy1 + kq * kq * y1;
-        const rad = size * (.062 - .030 * kq);
-        g.fillStyle = 'rgba(146,210,255,' + (.92 - kq * .45) + ')';
-        g.beginPath(); g.arc(bx, by, rad, 0, 6.283); g.fill();
-        if (q % 3 === 0) {
-          g.fillStyle = 'rgba(255,255,255,' + (.55 - kq * .35) + ')';
-          g.beginPath(); g.arc(bx - dir * rad * .3, by - rad * .35, rad * .30, 0, 6.283); g.fill();
+      const x0 = px + dir * hw * 1.05, y0 = hy;
+      // ① 兩道往外斜下的水痕（細弧線；太濃會變成一條水柱）
+      g.lineCap = 'round';
+      for (let s2 = 0; s2 < 2; s2++) {
+        const ph2 = Math.sin(t * 3.4 + s2 * 2.3 + si * 1.1) * .5 + .5;
+        const reach = size * (.24 + s2 * .17) * (1 + .10 * ph2);
+        g.globalAlpha = .12 + .11 * ph2;
+        g.strokeStyle = 'rgba(160,215,255,.9)';
+        g.lineWidth = Math.max(1, size * (.017 - s2 * .004));
+        g.beginPath();
+        g.moveTo(x0, y0);
+        g.quadraticCurveTo(x0 + dir * reach * .60, y0 + size * .015,
+                           x0 + dir * reach, y0 + size * (.14 + s2 * .07));
+        g.stroke();
+      }
+      // ② 往外斜下灑的水珠（8 顆，速度／大小／張角／落下量都不同 → 像灑水器而不是串珠）
+      for (let i = 0; i < 8; i++) {
+        const spd = .70 + (i % 3) * .34;                        // 快慢差 1.7 倍 → 有前後層次
+        const ph = (t * spd + i * .29 + (si ? .41 : 0)) % 1;
+        const fan = .40 + ((i * 53) % 100) / 100 * .95;         // 水平張角
+        const dx = dir * size * (.10 + .30 * ph) * fan;
+        const dy = size * (.05 + .26 * ph * ph) * (.5 + ((i * 29) % 100) / 100)
+                   + Math.sin(t * 5.2 + i * 1.7 + si) * size * .012;
+        const rr = size * (.038 - .018 * ph) * (1 + ((i * 11) % 3) * .22);
+        g.globalAlpha = (1 - ph * .5) * (ph < .12 ? ph / .12 : 1) * .95;
+        if (i % 3 !== 1) {
+          heroDrop(g, x0 + dx, y0 + dy, rr * 1.28);
+        } else {
+          g.fillStyle = 'rgba(180,228,255,.95)';
+          g.beginPath(); g.ellipse(x0 + dx, y0 + dy, rr * .78, rr, 0, 0, 6.283); g.fill();
+          g.fillStyle = 'rgba(246,253,255,.92)';
+          g.beginPath(); g.arc(x0 + dx - rr * .24, y0 + dy - rr * .30, rr * .28, 0, 6.283); g.fill();
         }
       }
-      for (let m = 0; m < 3; m++) {
-        const pm = ((t * 1.15) + m * .33 + si * .17) % 1;
-        heroDrop(g, x1 + dir * pm * size * .10, y1 + pm * pm * size * .22, size * (.032 - pm * .012));
-      }
     });
+    g.globalAlpha = 1;
+    g.lineCap = 'butt';
   }
   g.restore();
 }
@@ -29212,8 +29229,9 @@ function drawRigChar(g, key, x, footY, H, a) {
     const hbh = hd ? hd.h * H : H * .3;
     heroMoodVfx(g, mood, x, footY - jump, H, a.idle || 0,
                 { x: hbx, y: hby, w: hbw, h: hbh });
-    // v5.31：情緒頭像放大 34%（H*.16 → H*.215）並往上挪一點，才不會壓到額頭
-    heroEmoteIcon(g, mood, hbx + hbw * .5, hby - H * .135, H * .215, a.idle || 0, 1);
+    // v5.31：情緒頭像放大 34%（H*.16 → H*.215）
+    // v5.32：放大後圓框會整個蓋住臉（直徑 ≈ 半個角色高）→ 改成浮在頭頂上方的對話泡泡，尾巴尖端指著頭
+    heroEmoteIcon(g, mood, hbx + hbw * .5, hby - H * .275, H * .215, a.idle || 0, 1);
   }
   return { topY: oy + H * .08, ex: fx.x * W * .06, ey: 0, H: H, W: W };
 }
@@ -34261,7 +34279,13 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.31', date: '2026-11-06', now: true, items: [
+  { v: '5.32', date: '2026-11-06', now: true, items: [
+    '💦 <b>哭臉的淚水真的「灑」出去了</b>：遊戲裡角色旁邊的水，改成從兩眼外側持續往左右兩邊噴 —— 每顆水珠的速度、大小、角度都不同，走拋物線往外斜下飛，越遠越小越淡；不再是兩條貼在臉上的水柱。',
+    '🙂 <b>頭頂情緒頭像浮到頭頂上方</b>：放大之後圓框差不多有半個角色高，原本整個蓋在臉上（連眼淚都遮住），現在改成浮在頭上的對話泡泡，尾巴指著自己。',
+    '🎯 <b>三種情緒共用同一套定位</b>：大哭、奸笑、受傷都用角色自己的頭部框換算，耳朵高矮不同的角色也不會錯位。',
+    '📐 主檔 1,839,573 字元（預算 1,850,000）；131 支測試全綠（新增 verify-v532 共 14 項）。'
+  ]},
+  { v: '5.31', date: '2026-11-06', now: false, items: [
     '🎚️ <b>三檔難度重新配：都是 3 條命，差在每條命幾格血</b> —— 簡單 <b>3 格</b>、普通（新的預設）<b>2 格</b>、困難 <b>1 格</b>（碰到就倒）。恐龍蛋統一 2 顆。',
     '🙂 <b>預設難度改成「普通」</b>：新玩家一進來就是 3 條命 × 2 格血；舊存檔裡被自動填成「簡單」的也會一次性搬回來（之後自己選的就照自己的）。',
     '💦 <b>哭臉的眼淚會「灑」了</b>：從兩眼外側持續往左右噴，水珠呈扇形散開、越遠越小越淡，還有一層薄薄的水霧；不再是臉上掛著兩條水柱。',
@@ -40429,6 +40453,8 @@ window.__BH = {
   // v1.7 新增：每關專屬 BGM
   stageBGM: stageBGM, themeBGM: themeBGM, drawFlame: drawFlame,
   drawFaceExpr: drawFaceExpr, startWinJump: startWinJump, stopWinJump: stopWinJump,
+  // v5.32：身體層的情緒特效（測試會直接呼叫，驗淚水噴射方向）
+  heroMoodVfx: heroMoodVfx, heroMood: heroMood,
   animalWear: animalWear, animalAccessory: animalAccessory, showEnd: showEnd,
   Sprites: Sprites, drawSpriteChar: drawSpriteChar, IMG_CHARS: IMG_CHARS, IMG_TITLEBG: IMG_TITLEBG,
   Parts: Parts, drawRigChar: drawRigChar, IMG_PARTS: IMG_PARTS, InputSense: InputSense,

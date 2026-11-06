@@ -57,8 +57,9 @@ head('2. 實際畫一次：水珠分佈往兩側散開');
 // ================================================================
 head('3. 情緒頭像放大並往上挪');
 {
-  ok(/heroEmoteIcon\(g, mood, hbx \+ hbw \* \.5, hby - H \* \.135, H \* \.215, a\.idle \|\| 0, 1\)/.test(src),
-     '頭像半徑 H*.215（原 H*.16，放大 34%）');
+  // v5.32：放大 34% 之後圓框會蓋住整張臉 → 抬到頭頂上方（.275），半徑維持 .215
+  ok(/heroEmoteIcon\(g, mood, hbx \+ hbw \* \.5, hby - H \* \.275, H \* \.215, a\.idle \|\| 0, 1\)/.test(src),
+     '頭像半徑 H*.215（原 H*.16，放大 34%）＋浮在頭頂上方');
   ok(/v5\.31：情緒頭像放大 34%/.test(src), '有標註放大原因');
   ok(!/hby - H \* \.10, H \* \.16,/.test(src), '舊的小尺寸已移除');
 }
@@ -97,7 +98,9 @@ head('5. 版本');
   ok(v[0] > 5 || (v[0] === 5 && v[1] >= 31), '主檔版號 ≥ 5.31（目前 ' + (vm && vm[1]) + '）');
   ok(/v: '5\.31'/.test(src), 'VERSION_LOG 有 5.31 條目');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
-  ok(/var SW_VERSION = 'v5\.31\.\d+'/.test(sw), 'sw.js 是 v5.31.x');
+  const swv = (sw.match(/var SW_VERSION = 'v([\d.]+)'/) || [])[1] || '0';
+  const sv = swv.split('.').map(Number);
+  ok(sv[0] > 5 || (sv[0] === 5 && sv[1] >= 31), 'sw.js 是 v5.31 以上（目前 ' + swv + '）');
 }
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v5.31：' + pass + ' 通過 / ' + fail + ' 失敗');
