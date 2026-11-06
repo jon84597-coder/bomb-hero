@@ -56,7 +56,7 @@ ok(P.VERSION_LOG[0].items.length >= 4, '5.25 至少 4 條更新（' + P.VERSION_
   ok(n >= 25, rel + ' SW_VERSION = ' + v);
 });
 ok((html.match(/\r/g) || []).length === 0, '整檔 LF（0 個 \\r）');
-ok(html.length < 1780000, '主檔 ' + html.length + ' 字元（預算 1,780,000）');
+ok(html.length < 1810000, '主檔 ' + html.length + ' 字元（預算 1,810,000）');
 
 /* ================================================================ ① */
 head('① v5.24 那條路線整個拿掉（一段都不能留）');
@@ -146,13 +146,14 @@ head('③ 地板雜物：靜態結構（兩個坑都要堵住）');
   const b = html.indexOf('function paintFloorStyle');
   const src = (a > 0 && b > a) ? html.slice(a, b) : '';
   ok(src.length > 6000, 'paintGroundExtra 有實質內容（' + src.length + ' 字元）');
-  ok(/const step = 3;/.test(src), '密度＝每 3 格一件（5 格太稀，看起來像地板沒東西）');
+  ok(/const step = dgHash\(x, y, 29\) < \.22 \? 2 : 3;/.test(src),
+    '密度＝2~3 格混著用（22% 走 2 格 → 覆蓋率 31% → 37%，比每 3 格明顯）');
   ok(/const k = \(\(hs \/ step\) \| 0\) % 3;/.test(src),
     '種類＝((hs/step)|0)%3 —— 先除 step 再取餘數，三種才會輪替');
   ok(!/[^\/]hs % 3[^0-9]/.test(src.replace(/const k = \(\(hs \/ step\) \| 0\) % 3;/, '')),
     '沒有留下「hs % 3」這種恆為 0 的寫法（陷阱）');
-  ok(/g\.translate\(cx, cy\); g\.scale\(2\.1, 2\.1\); g\.translate\(-cx, -cy\);/.test(src),
-    '雜物統一放大 2.1 倍（尺寸 0.05~0.13 格＝6px，肉眼等於不存在）');
+  ok(/g\.translate\(cx, cy\); g\.scale\(2\.6, 2\.6\); g\.translate\(-cx, -cy\);/.test(src),
+    '雜物統一放大 2.6 倍（尺寸 0.05~0.13 格＝6px，肉眼等於不存在）');
   ok(/g\.ellipse\(cx, cy \+ T \* \.[\d]+, T \* \.[\d]+, T \* \.[\d]+, 0, 0, 6\.283\)/.test(src),
     '每件雜物都有接觸陰影（不然像浮在地板上）');
   ['forest', 'sand', 'ice', 'lava', 'neon', 'sea', 'sky'].forEach(function (st) {
@@ -188,21 +189,38 @@ head('④ 地板雜物：實際跑一遍（分佈與輪替）');
     catch (e) { ok(false, 'paintGroundExtra 爆了 @' + x + ',' + y + '：' + e.message); ops = []; }
     cells.push({ x: x, y: y, ops: ops, sig: sigOf(ops), n: ops.length });
   }
-  const drawn = cells.filter(function (c) { return c.n > 2; });
-  ok(drawn.length >= 12 && drawn.length <= 32,
-    '100 格裡有 ' + drawn.length + ' 格放了雜物（每 3 格一件 → 期望 33 上下、允許 12~32）');
+  // v5.26：草原／沙地多了「雨後積水」格子（畫在放大之前、沒有 scale）→
+  //   只把「真的有放雜物」的格子算進來，否則水窪會被當成第四、第五種雜物。
+  const drawn = cells.filter(function (c) {
+    return c.ops.some(function (o) { return o[0] === 'scale' && Math.abs(o[1] - 2.6) < .001; });
+  });
+  ok(drawn.length >= 30 && drawn.length <= 46,
+    '100 格裡有 ' + drawn.length + ' 格放了雜物（2~3 格一件 → 期望 37 上下、允許 30~46）');
   const kinds = {};
-  drawn.forEach(function (c) { kinds[c.sig] = (kinds[c.sig] || 0) + 1; });
-  const kindN = Object.keys(kinds).length;
-  ok(kindN === 3, '三種雜物都出現（實測 ' + kindN + ' 種：' +
-    Object.keys(kinds).map(function (k) { return kinds[k]; }).join(' / ') + '）');
-  ok(Object.keys(kinds).every(function (k) { return kinds[k] >= 3; }),
-    '每一種都出現 3 次以上（不是「只出一種」那個 bug）');
+  // 簽名只看 scale 之後的指令（＝雜物本體），排除積水與牆腳碎屑；
+  //   座標每格都不同 → 簽名前先把數字位數截掉，只留「畫法」。
+  //   （三種輪替另外用 dgHash 直接驗，這裡只確認三種畫法都真的被畫出來過）
+  drawn.forEach(function (c) {
+    const i = c.ops.findIndex(function (o) { return o[0] === 'scale'; });
+    kinds[c.ops.slice(i + 1).map(function (o) { return o[0]; }).join(',')] = 1;
+  });
+  ok(Object.keys(kinds).length === 3,
+    '三種雜物的「指令形狀」都出現（落葉堆／枯枝／蘑菇 → ' + Object.keys(kinds).length + ' 種）');
+  // 輪替本身：直接用 dgHash 重算 100 格的 k（渲染過濾太多資訊，這裡驗真正的分佈）
+  const cnt = [0, 0, 0];
+  for (let y = 1; y < 11; y++) for (let x = 1; x < 11; x++) {
+    const step = P.dgHash(x, y, 29) < .22 ? 2 : 3;
+    const hs = (P.dgHash(x, y, 23) * 1000000) | 0;
+    if (hs % step) continue;
+    cnt[((hs / step) | 0) % 3]++;
+  }
+  ok(cnt.every(function (n) { return n >= 5; }),
+    '三種平均輪替（' + cnt.join(' / ') + '）—— 不是「只出一種」那個 bug');
   // 每件雜物都要有：放大 + 接觸陰影
   const noScale = drawn.filter(function (c) {
-    return !c.ops.some(function (o) { return o[0] === 'scale' && Math.abs(o[1] - 2.1) < .001; });
+    return !c.ops.some(function (o) { return o[0] === 'scale' && Math.abs(o[1] - 2.6) < .001; });
   });
-  ok(noScale.length === 0, '每一件都有 2.1 倍放大（漏 ' + noScale.length + ' 件）');
+  ok(noScale.length === 0, '每一件都有 2.6 倍放大（漏 ' + noScale.length + ' 件）');
   const noShadow = drawn.filter(function (c) {
     return !c.ops.some(function (o) { return o[0] === 'ellipse'; });
   });

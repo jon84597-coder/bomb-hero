@@ -4540,7 +4540,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.25</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.26</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4595,7 +4595,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.25</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.26</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5539,7 +5539,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.25';
+const VERSION = '5.26';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6946,6 +6946,14 @@ function stageBGM(stage) {
   return 'stage' + st;
 }
 // 依主題挑曲（對戰隨機地圖時用）
+// v5.26：目前畫面該播哪一首 —— 「切回音樂」與「調音量」共用同一個判斷。
+//   以前這兩處各自寫死：一處寫死 'battle'（單人關卡切回音樂就變成對戰曲），
+//   一處只認 stageBGM（對戰切回音樂變成第一關的主題曲）。
+function curBGM() {
+  if (Screen.current !== 'game') return 'menu';
+  if (Game.mode === 'battle') return 'battle';
+  return stageBGM(Game.stage);
+}
 function themeBGM(theme) {
   const i = THEMES.indexOf(theme);
   return 'stage' + (i >= 0 ? i + 1 : 1);
@@ -7667,7 +7675,7 @@ function toggleMusic() {
   else { settings.bgm = settings.bgmLast || .6; }
   try { AudioSys.ensure(); AudioSys.applyVolumes(); } catch (e) {}
   if (settings.bgm > 0) {
-    try { AudioSys.startBGM(Screen.current === 'game' ? (Game.bossRush ? 'boss' : 'battle') : 'menu'); } catch (e) {}
+    try { AudioSys.startBGM(curBGM()); } catch (e) {}
   }
   saveSettings(); updateNavUI();
   try { toast(settings.bgm > 0 ? t('sfx.bgmOn') : t('sfx.bgmOff'), 1.2); } catch (e) {}
@@ -22855,8 +22863,30 @@ function paintGroundExtra(x, y, px, py, T, st) {
       break;
     }
   }
+  /* ①-b 雨後積水（草原／沙地）：約 5% 的格子，一小灘不規則的水 + 一道反光。
+     積水是最便宜的「自然感」—— 不會擋視線、不會被誤認成機關，卻讓地板有濕度。 */
+  if ((st === 'forest' || st === 'sand') && dgHash(x, y, 67) < .055) {
+    const wx = px + T * (.30 + dgHash(x, y, 73) * .40), wy = py + T * (.32 + dgHash(x, y, 79) * .36);
+    const wr = T * (.13 + dgHash(x, y, 83) * .07);
+    g.save();
+    g.fillStyle = st === 'forest' ? 'rgba(86,148,170,.44)' : 'rgba(108,168,182,.36)';
+    g.beginPath();
+    for (let i = 0; i < 9; i++) {
+      const an = i / 9 * 6.283, rr = wr * (.72 + dgHash(x + i, y, 89) * .5);
+      const qx = wx + Math.cos(an) * rr, qy = wy + Math.sin(an) * rr * .58;
+      i ? g.lineTo(qx, qy) : g.moveTo(qx, qy);
+    }
+    g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(236,252,255,.52)'; g.lineWidth = Math.max(1.4, T * .014);
+    g.beginPath();
+    g.ellipse(wx - wr * .14, wy - wr * .10, wr * .58, wr * .26, -.3, Math.PI * 1.05, Math.PI * 1.85);
+    g.stroke();
+    g.restore();
+  }
   /* ② 主題小雜物 */
-  const step = 3;   // 每 3 格一件（實測：5 格太稀，看起來像「地板沒東西」）
+  // v5.26：密度從「每 3 格一件」改成「2~3 格混著用」（約 22% 的格子改走 2 格），
+  //   整張圖的雜物覆蓋率 31% → 37%，但因為不是全部變密，不會變成「地板很亂」。
+  const step = dgHash(x, y, 29) < .22 ? 2 : 3;
   const hs = (dgHash(x, y, 23) * 1000000) | 0;
   if (hs % step) { g.restore(); return; }
   // 注意：hs 已經被 step 整除過，直接用 hs%3 會「永遠只出同一種」——
@@ -22867,11 +22897,11 @@ function paintGroundExtra(x, y, px, py, T, st) {
   const h2 = dgHash(x, y, 41);
   /* 所有小物件的尺寸都以「格」為單位在 0.05~0.13 之間 —— 直接畫會只有 6px，
      在手機上等於看不見（第一版就是這樣，量了半天才發現不是沒畫、是太小）。
-     這裡統一放大 2.1 倍，並補一塊接觸陰影，小東西才「站得住」。 */
+     這裡統一放大 2.6 倍，並補一塊接觸陰影，小東西才「站得住」。 */
   g.save();
-  g.translate(cx, cy); g.scale(2.1, 2.1); g.translate(-cx, -cy);
-  g.fillStyle = 'rgba(0,0,0,.13)';
-  g.beginPath(); g.ellipse(cx, cy + T * .040, T * .082, T * .028, 0, 0, 6.283); g.fill();
+  g.translate(cx, cy); g.scale(2.6, 2.6); g.translate(-cx, -cy);
+  g.fillStyle = 'rgba(0,0,0,.15)';
+  g.beginPath(); g.ellipse(cx, cy + T * .048, T * .100, T * .034, 0, 0, 6.283); g.fill();
   if (st === 'forest') {
     if (k === 0) {          // 落葉堆：三片斜躺的葉子
       for (let i = 0; i < 3; i++) {
@@ -22943,13 +22973,13 @@ function paintGroundExtra(x, y, px, py, T, st) {
     }
   } else if (st === 'ice') {
     if (k === 0) {          // 冰裂
-      g.strokeStyle = 'rgba(150,186,208,.55)'; g.lineWidth = Math.max(.8, T * .010);
+      g.strokeStyle = 'rgba(42,100,146,.74)'; g.lineWidth = Math.max(1.4, T * .016);
       for (let i = 0; i < 3; i++) {
         const an = h2 * 6.283 + i * 2.09;
         g.beginPath(); g.moveTo(cx, cy);
         g.lineTo(cx + Math.cos(an) * T * .12, cy + Math.sin(an) * T * .09); g.stroke();
       }
-      g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = Math.max(.6, T * .007);
+      g.strokeStyle = 'rgba(255,255,255,.90)'; g.lineWidth = Math.max(1, T * .011);
       g.beginPath(); g.moveTo(cx - T * .10, cy - T * .02); g.lineTo(cx + T * .09, cy + T * .01); g.stroke();
     } else if (k === 1) {   // 碎冰塊
       g.fillStyle = 'rgba(80,140,178,.30)';
@@ -22959,27 +22989,38 @@ function paintGroundExtra(x, y, px, py, T, st) {
         g.fillStyle = 'rgba(222,246,255,.92)';
         g.beginPath(); g.moveTo(bx, by - T * .036); g.lineTo(bx + T * .030, by + T * .010);
         g.lineTo(bx - T * .026, by + T * .014); g.closePath(); g.fill();
-        g.strokeStyle = 'rgba(120,180,212,.55)'; g.lineWidth = Math.max(.6, T * .007); g.stroke();
+        g.strokeStyle = 'rgba(40,96,140,.78)'; g.lineWidth = Math.max(1, T * .011); g.stroke();
       }
     } else {                // 結霜的小石堆
       for (let i = 0; i < 3; i++) {
         const bx = cx + (i - 1) * T * .048, by = cy + (i % 2 ? T * .012 : -T * .008);
-        g.fillStyle = 'rgba(170,200,222,.45)';
+        g.fillStyle = 'rgba(96,132,160,.55)';
         g.beginPath(); g.ellipse(bx, by + T * .020, T * .038, T * .014, 0, 0, 6.283); g.fill();
-        g.fillStyle = 'rgba(232,242,250,.96)';
-        g.beginPath(); g.ellipse(bx, by, T * .030, T * .020, .3, 0, 6.283); g.fill();
+        g.fillStyle = 'rgba(108,146,176,.95)';
+        g.beginPath(); g.ellipse(bx, by, T * .032, T * .022, .3, 0, 6.283); g.fill();
+        g.fillStyle = 'rgba(246,252,255,.92)';
+        g.beginPath(); g.ellipse(bx - T * .006, by - T * .009, T * .022, T * .012, .3, 0, 6.283); g.fill();
       }
     }
   } else if (st === 'lava') {
-    if (k === 0) {          // 灰燼堆
-      g.fillStyle = 'rgba(96,86,80,.42)';
-      g.beginPath(); g.ellipse(cx, cy, T * .088, T * .036, 0, 0, 6.283); g.fill();
-      g.fillStyle = 'rgba(140,128,120,.55)';
-      g.beginPath(); g.ellipse(cx - T * .018, cy - T * .010, T * .046, T * .020, 0, 0, 6.283); g.fill();
-      g.fillStyle = 'rgba(255,150,60,.55)';
-      for (let i = 0; i < 3; i++)
-        g.fillRect(cx + (dgHash(x + i, y, 53) - .5) * T * .10,
-                   cy + (dgHash(x, y + i, 59) - .5) * T * .04, Math.max(1, T * .010), Math.max(1, T * .010));
+    if (k === 0) {          // 灰燼堆：暗灰的不規則土堆，中間還有一點餘燼在亮
+      g.fillStyle = 'rgba(58,50,46,.74)';
+      g.beginPath();
+      for (let i = 0; i < 7; i++) {
+        const an = i / 7 * 6.283;
+        const rr = T * .062 * (.78 + dgHash(x + i, y, 61) * .44);
+        const pxx = cx + Math.cos(an) * rr, pyy = cy + Math.sin(an) * rr * .52;
+        i ? g.lineTo(pxx, pyy) : g.moveTo(pxx, pyy);
+      }
+      g.closePath(); g.fill();
+      g.fillStyle = 'rgba(126,114,104,.55)';
+      g.beginPath(); g.ellipse(cx - T * .014, cy - T * .012, T * .030, T * .014, 0, 0, 6.283); g.fill();
+      // 餘燼：一小顆橘色光暈（純橢圓放大後會變「一坨灰圓」，要有一點亮才看得出是灰燼）
+      const eg = g.createRadialGradient(cx + T * .010, cy, 0, cx + T * .010, cy, T * .042);
+      eg.addColorStop(0, 'rgba(255,164,64,.78)');
+      eg.addColorStop(1, 'rgba(255,110,20,0)');
+      g.fillStyle = eg;
+      g.beginPath(); g.ellipse(cx + T * .010, cy, T * .042, T * .023, 0, 0, 6.283); g.fill();
     } else if (k === 1) {   // 碎石塊
       for (let i = 0; i < 3; i++) {
         const bx = cx + (i - 1) * T * .050, by = cy + (i % 2 ? T * .014 : -T * .012);
@@ -23000,17 +23041,17 @@ function paintGroundExtra(x, y, px, py, T, st) {
     }
   } else if (st === 'neon') {
     if (k === 0) {          // 電路線
-      g.strokeStyle = 'rgba(120,232,255,.45)'; g.lineWidth = Math.max(.8, T * .010);
+      g.strokeStyle = 'rgba(130,238,255,.80)'; g.lineWidth = Math.max(1.4, T * .015);
       g.beginPath();
       g.moveTo(cx - T * .11, cy + T * .05); g.lineTo(cx + T * .02, cy + T * .05);
       g.lineTo(cx + T * .02, cy - T * .05); g.lineTo(cx + T * .11, cy - T * .05);
       g.stroke();
-      g.fillStyle = 'rgba(255,120,230,.70)';
+      g.fillStyle = 'rgba(255,124,232,.92)';
       g.beginPath(); g.arc(cx + T * .02, cy + T * .05, Math.max(1, T * .013), 0, 6.283); g.fill();
     } else if (k === 1) {   // 碎玻璃
       for (let i = 0; i < 3; i++) {
         const bx = cx + (i - 1) * T * .052, by = cy + (i % 2 ? T * .018 : -T * .014);
-        g.fillStyle = 'rgba(190,242,255,.75)';
+        g.fillStyle = 'rgba(198,246,255,.92)';
         g.beginPath(); g.moveTo(bx, by - T * .026); g.lineTo(bx + T * .026, by + T * .016);
         g.lineTo(bx - T * .020, by + T * .012); g.closePath(); g.fill();
       }
@@ -23018,7 +23059,7 @@ function paintGroundExtra(x, y, px, py, T, st) {
       for (let i = 0; i < 3; i++) {
         const bx = cx + (dgHash(x + i, y, 61) - .5) * T * .14;
         const by = cy + (dgHash(x, y + i, 67) - .5) * T * .12;
-        g.fillStyle = i % 2 ? 'rgba(150,240,255,.65)' : 'rgba(255,130,230,.55)';
+        g.fillStyle = i % 2 ? 'rgba(160,246,255,.88)' : 'rgba(255,136,236,.80)';
         g.fillRect(bx, by, T * .022, T * .022);
       }
     }
@@ -23086,7 +23127,7 @@ function paintGroundExtra(x, y, px, py, T, st) {
       g.fillStyle = 'rgba(200,60,50,.70)';
       g.beginPath(); g.ellipse(cx, cy + T * .040, T * .030, T * .010, 0, 0, 6.283); g.fill();
     } else if (k === 1) {   // 爪痕
-      g.strokeStyle = 'rgba(120,30,50,.55)'; g.lineWidth = Math.max(.8, T * .010); g.lineCap = 'round';
+      g.strokeStyle = 'rgba(104,28,48,.35)'; g.lineWidth = Math.max(.9, T * .011); g.lineCap = 'round';
       for (let i = 0; i < 3; i++) {
         const ox = (i - 1) * T * .030;
         g.beginPath(); g.moveTo(cx + ox - T * .030, cy - T * .055);
@@ -23431,6 +23472,135 @@ const AMB = {
 };
 // 貼在角色底下的（地面層）：燈光／雲影／沙霧
 const AMB_LOW = { glow: 1, cloud: 1, dust: 1 };
+// ---------- v5.26：第二層環境特效 ----------
+// 第一層（AMB）是「快粒子」：葉子、雪、火花、氣泡、蝙蝠，小又快。
+// 這裡補「慢的大氣」：光斑、熱氣、星芒、煙、光束、水光、鬼火。
+// 兩層的速度差 3~5 倍、尺寸差 2~4 倍，畫面才有前後景，不會像貼紙全貼在同一片玻璃上。
+//   ly 0 = 地面層（角色之前）、1 = 飄浮層（角色之後）
+const AMB2 = {
+  forest: { n: 4,  ly: 0, k: 'dapple', c: ['255,246,196'],                 s: [12, 22],  vx: 6,  vy: 3,   a: .52 },
+  sand:   { n: 4,  ly: 0, k: 'heat',   c: ['255,248,220'],                 s: [12, 20],  vx: 15, vy: -5,  a: .24 },
+  ice:    { n: 4,  ly: 1, k: 'ray',    c: ['214,246,255'],                 s: [3, 5.5],  vx: 0,  vy: 0,   a: .55 },
+  lava:   { n: 5,  ly: 1, k: 'smoke',  c: ['84,58,48'],                    s: [9, 16],   vx: 5,  vy: -13, a: .26 },
+  neon:   { n: 10, ly: 1, k: 'streak', c: ['120,232,255', '255,120,226'],  s: [2.2, 4],  vx: 0,  vy: 54,  a: .5 },
+  sea:    { n: 6,  ly: 0, k: 'caustic',c: ['196,246,255'],                 s: [7, 13],   vx: 12, vy: 6,   a: .30 },
+  sky:    { n: 5,  ly: 1, k: 'beam',   c: ['255,250,214'],                 s: [5, 8],    vx: 4,  vy: 2,   a: .34 },
+  dark:   { n: 7,  ly: 1, k: 'wisp',   c: ['140,240,190', '186,140,240'],  s: [2.4, 4],  vx: 9,  vy: -11, a: .55 }
+};
+function drawAmbient2(T, layer) {
+  const d = AMB2[artStyle()];
+  if (!d || d.ly !== layer) return;
+  const z = Game.zoom || 1, W = VIEW_W / z, H = VIEW_H / z;
+  const ox = VIEW_W / 2 * (1 - 1 / z) - Game.camX, oy = VIEW_H / 2 * (1 - 1 / z) - Game.camY;
+  const t = Game.gameT, TAU = 6.283;
+  ctx.save();
+  for (let i = 0; i < d.n; i++) {
+    const sd = i * 211 + 53;
+    const ph = (t / (7 + dhash(sd, 1, 131) * 7) + dhash(sd, 2, 133)) % 1;
+    const al = Math.sin(ph * Math.PI) * d.a;
+    if (al < .02) continue;
+    const sp = .7 + dhash(sd, 4, 137) * .6;
+    const px = ox + (((dhash(sd, 5, 139) * W + t * d.vx * sp) % W) + W) % W;
+    const py = oy + (((dhash(sd, 6, 141) * H + t * d.vy * sp) % H) + H) % H;
+    const sz = (d.s[0] + dhash(sd, 3, 143) * (d.s[1] - d.s[0])) * T * .055;
+    if (!isFinite(px) || !isFinite(py) || !isFinite(sz)) continue;
+    const col = d.c[Math.floor(dhash(sd, 7, 147) * d.c.length) % d.c.length];
+    ctx.globalAlpha = al;
+    if (d.k === 'dapple') {
+      // 林間光斑：陽光穿過樹葉落在地上的軟橢圓，慢速漂移＋呼吸
+      ctx.globalCompositeOperation = 'lighter';
+      const rg = ctx.createRadialGradient(px, py, 0, px, py, sz);
+      rg.addColorStop(0, 'rgba(' + col + ',.30)');
+      rg.addColorStop(.55, 'rgba(' + col + ',.10)');
+      rg.addColorStop(1, 'rgba(' + col + ',0)');
+      ctx.fillStyle = rg;
+      ctx.beginPath(); ctx.ellipse(px, py, sz, sz * .6, .5, 0, TAU); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (d.k === 'heat') {
+      // 沙地熱氣：貼地的橫向亮帶，會左右扭（熱對流）
+      ctx.globalCompositeOperation = 'lighter';
+      const hg = ctx.createRadialGradient(px, py, 0, px, py, sz * 2);
+      hg.addColorStop(0, 'rgba(' + col + ',.24)');
+      hg.addColorStop(1, 'rgba(' + col + ',0)');
+      ctx.fillStyle = hg;
+      ctx.beginPath();
+      ctx.ellipse(px + Math.sin(t * 1.7 + sd) * sz * .3, py, sz * 2.1, sz * .32, 0, 0, TAU);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (d.k === 'ray') {
+      // 冰面反光：四角星芒 + 光暈，閃一下又不見（冰的閃光是「點」不是「片」）
+      ctx.globalAlpha = al * (.3 + .7 * Math.abs(Math.sin(t * 2.3 + sd * .7)));
+      ctx.globalCompositeOperation = 'lighter';
+      const rg = ctx.createRadialGradient(px, py, 0, px, py, sz * 4);
+      rg.addColorStop(0, 'rgba(' + col + ',.5)');
+      rg.addColorStop(1, 'rgba(' + col + ',0)');
+      ctx.fillStyle = rg;
+      ctx.beginPath(); ctx.arc(px, py, sz * 4, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.8)';
+      const k1 = sz * .24, k2 = sz * 1.7;
+      ctx.beginPath();
+      ctx.moveTo(px, py - k2); ctx.lineTo(px + k1, py - k1);
+      ctx.lineTo(px + k2, py); ctx.lineTo(px + k1, py + k1);
+      ctx.lineTo(px, py + k2); ctx.lineTo(px - k1, py + k1);
+      ctx.lineTo(px - k2, py); ctx.lineTo(px - k1, py - k1);
+      ctx.closePath(); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (d.k === 'smoke') {
+      // 熔岩煙：往上飄的細煙柱（越上面越小、越淡）。
+      //   第一版是三團大橢圓疊在一起 → 在深色岩地上看起來像「一坨灰石頭」。
+      ctx.fillStyle = 'rgb(' + col + ')';
+      for (let j = 0; j < 4; j++) {
+        const q = dhash(sd, j + 41, 151);
+        ctx.globalAlpha = al * (.22 - j * .04);
+        ctx.beginPath();
+        ctx.ellipse(px + Math.sin(t * .7 + j * 1.3 + sd) * sz * .35, py - j * sz * .8,
+                    sz * (.5 + q * .3) * (1 + j * .2), sz * (.42 + q * .22), 0, 0, TAU);
+        ctx.fill();
+      }
+    } else if (d.k === 'streak') {
+      // 霓虹資料流：細豎線往下掉，頭端亮一點（像終端機的數據雨）
+      ctx.globalAlpha = al * .45;
+      ctx.fillStyle = 'rgb(' + col + ')';
+      const len = sz * (3 + dhash(sd, 9, 153) * 4);
+      ctx.fillRect(px, py, Math.max(1.4, sz * .28), len);
+      ctx.globalAlpha = al;
+      ctx.fillRect(px, py + len, Math.max(2, sz * .7), Math.max(2, sz * .7));
+    } else if (d.k === 'caustic') {
+      // 水下光網：兩圈拉扁的亮環交疊（水波打在海底的焦散）
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = 'rgba(' + col + ',.34)';
+      ctx.lineWidth = Math.max(1.4, sz * .15);
+      ctx.beginPath(); ctx.ellipse(px, py, sz, sz * .52, .4, 0, TAU); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(px + sz * 1.1, py + sz * .34, sz * .66, sz * .34, .4, 0, TAU); ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (d.k === 'beam') {
+      // 天空斜射光：上寬下窄的一道極淡光柱（只加亮，不遮住東西）
+      ctx.globalCompositeOperation = 'lighter';
+      const bw = sz * 1.8, bl = sz * 9;
+      const bg2 = ctx.createLinearGradient(px, py - bl, px, py);
+      bg2.addColorStop(0, 'rgba(' + col + ',0)');
+      bg2.addColorStop(.45, 'rgba(' + col + ',.22)');
+      bg2.addColorStop(1, 'rgba(' + col + ',0)');
+      ctx.fillStyle = bg2;
+      ctx.beginPath();
+      ctx.moveTo(px - bw * .34, py - bl); ctx.lineTo(px + bw * .34, py - bl);
+      ctx.lineTo(px + bw, py); ctx.lineTo(px - bw, py);
+      ctx.closePath(); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (d.k === 'wisp') {
+      // 魔城鬼火：青綠／紫的小光球，飄忽（半透明核心＋擴散暈）
+      ctx.globalCompositeOperation = 'lighter';
+      const wg = ctx.createRadialGradient(px, py, 0, px, py, sz * 3.4);
+      wg.addColorStop(0, 'rgba(' + col + ',.55)');
+      wg.addColorStop(.4, 'rgba(' + col + ',.16)');
+      wg.addColorStop(1, 'rgba(' + col + ',0)');
+      ctx.fillStyle = wg;
+      ctx.beginPath(); ctx.arc(px, py, sz * 3.4, 0, TAU); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  }
+  ctx.restore();
+}
 function drawAmbient(T, layer) {
   const d = AMB[artStyle()];
   if (!d || !!AMB_LOW[d.k] !== !layer) return;
@@ -24166,6 +24336,7 @@ function render() {
   // v5.21：世界座標的暗角改到「螢幕座標」一次畫完（drawVignette），這裡不再每幀
   //   在整張地圖上填一次大漸層 —— 大逃殺 50×50 的地圖光這一步就要填 2500 格。
   drawAmbient(T, 0);
+  drawAmbient2(T, 0);
   // v4.89：鴕鳥落地震波 —— 核心白閃 + 三圈衝擊波 + 塵土 + （風暴）紫電
   //   全部貼地畫成橢圓（看得出是「震」不是「燒」），kind 決定畫法
   if (Game.rings && Game.rings.length) {
@@ -24419,6 +24590,7 @@ function render() {
   });
   ctx.globalAlpha = 1;
   drawAmbient(T, 1);
+  drawAmbient2(T, 1);
   try { Tut.drawWorld(ctx); } catch (e) {}
   // v4.5：邊緣紅光貼在畫布四周，中央完全透明（不受 shake 位移影響，所以先還原座標）
   ctx.setTransform(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0);
@@ -29213,7 +29385,7 @@ updateAiHint();
     if (settings.bgm > 0) settings.bgmLast = settings.bgm;
     try { AudioSys.applyVolumes(); } catch (e) {}
     if (settings.bgm > 0 && !was) {
-      try { AudioSys.startBGM(Screen.current === 'game' ? stageBGM(Game.stage) : 'menu'); } catch (e) {}
+      try { AudioSys.startBGM(curBGM()); } catch (e) {}
     }
     if (settings.bgm === 0) { try { AudioSys.stopBGM(); } catch (e) {} }
     paint(); saveSettings();
@@ -32961,7 +33133,16 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.25', date: '2026-11-06', now: true, items: [
+  { v: '5.26', date: '2026-11-06', now: true, items: [
+    '🌫️ <b>每個場景都多了「第二層」環境特效</b>：本來只有一層小又快粒子（落葉、雪、火花），現在補上慢的大氣 —— 草原是陽光穿過樹葉落在地上的<b>光斑</b>、沙地是貼地扭動的<b>熱氣</b>、冰原是冰面閃爍的<b>星芒</b>、熔岩是往上散開的<b>暖灰煙</b>、夜光是往下掉的<b>資料流</b>、深海是水波打在海底的<b>光網</b>、天空是斜射的<b>光柱</b>、暗黑城是飄忽的<b>鬼火</b>',
+    '🎞️ <b>兩層的速度差 3~5 倍、大小差 2~4 倍</b>：快粒子在前面、慢大氣在後面，畫面才有前後景；而且慢的那層全部用「加亮」混合，只會讓畫面更透，不會糊掉角色與道具',
+    '🔀 <b>光與煙各自貼對圖層</b>：林間光斑／沙地熱氣／水下光網貼在地面（角色會被照亮），星芒／煙／資料流／光柱／鬼火在角色之後（不會擋住人）',
+    '🍂 <b>地板雜物再放大一級</b>：2.1 倍 → <b>2.6 倍</b>（60px 的格子上約 16~20px），接觸陰影同步加大；密度改成「2~3 格混著用」，覆蓋率 31% → 37%，比原本更容易注意到，但沒有整張變密',
+    '💧 <b>草原與沙地多了雨後的小積水</b>：約 5% 的格子會有一小灘不規則的水（水面帶一道反光）。積水是最便宜的自然感 —— 不擋視線、不會被誤認成機關，卻讓地板有「濕度」；熔岩的灰燼堆也改成「不規則土堆＋中間一點餘燼」，原本兩顆橢圓放大後只是一坨灰圓',
+    '✅ 新增 verify-v526（75 項）：驗兩層型別不重複、圖層分配、純函式（不 push／不用 random）、八組指令簽名兩兩不同、加亮混合用完都切回，以及接線順序（慢的大氣疊在快粒子之後、教學卡之前）',
+    '🎵 順手修掉一個每天都在犯的小錯：把音樂切回來的兩條路徑（關掉再開、拖音量滑桿）各自寫死了曲目 —— 一處固定播<b>對戰曲</b>（單人關卡切回音樂就變調）、一處固定播<b>第一關主題曲</b>（對戰切回音樂也變調）。現在兩邊共用同一個判斷，該是哪一首就哪一首'
+  ] },
+  { v: '5.25', date: '2026-11-06', now: false, items: [
     '🧱 <b>軟牆全部重新畫過，變成「滿版」的方塊</b>：上一版想用陰影去補軟牆腳下露出來的那圈地板，結果補不平 —— 因為石牆是滿格的、軟牆只佔格子 6~8 成，兩者在格子交界就是硬接的斷層。現在軟牆跟石牆用同一套立體結構（<b>接縫＋厚度面＋頂面亮邊＋底部接觸陰影</b>），<b>腳下不再有地板</b>，「軟牆沒有陰影」這個問題直接消失，也不再需要軟牆專用的補丁陰影',
     '✨ <b>八個場景的軟牆各自重設計</b>，全部改成一眼認得出的剪影：草原是帶 X 補強板與四角釘的<b>木箱</b>、沙地是兩只<b>大陶罐</b>、冰原是交於中心的三塊<b>冰晶面</b>、熔岩是厚岩殼包著<b>會發光的岩漿囊</b>、夜光是<b>青色玻璃磚</b>（折射內框＋洋紅角標）、深海是帶苔蘚與短珊瑚的<b>礁岩塊</b>、天空是<b>雲團石磚</b>、暗黑城是<b>紫磚＋鬼火＋骷髏</b>。縮到手機上的 27px 也分得出軟牆和石牆',
     '🍂 <b>地板上開始有零碎小雜物了</b>：草地是落葉堆／枯枝／小蘑菇，沙地是陶片／獸骨／乾草叢，冰原是冰裂／碎冰塊／結霜小石，熔岩是灰燼堆／碎石塊／焦木，夜光是電路線／碎玻璃／資料碎片，深海是海星／氣泡／貝殼群，天空是羽毛／金色碎屑／雲絮，暗黑城是蠟燭／爪痕／骨堆',
@@ -38979,7 +39160,7 @@ window.__BH = {
   drawDizzyMark: drawDizzyMark, BOSS_POWER: BOSS_POWER, addFlame: addFlame, THEMES: THEMES,
   DEAD_LINES: DEAD_LINES, KILL_LINES: KILL_LINES, bubbleSay: bubbleSay, bubbleDead: bubbleDead,
   bubbleKill: bubbleKill, bubbleDeathPair: bubbleDeathPair, updateBubbles: updateBubbles,
-  drawBubbles: drawBubbles, softShadow: softShadow, render: render, AMB: AMB, drawAmbient: drawAmbient, paintSoftTile: paintSoftTile, paintFloorTile: paintFloorTile, paintHardTile: paintHardTile, paintGroundExtra: paintGroundExtra, artSet: artSet, matOf: matOf,
+  drawBubbles: drawBubbles, softShadow: softShadow, render: render, AMB: AMB, drawAmbient: drawAmbient, AMB2: AMB2, drawAmbient2: drawAmbient2, dgHash: dgHash, paintSoftTile: paintSoftTile, paintFloorTile: paintFloorTile, paintHardTile: paintHardTile, paintGroundExtra: paintGroundExtra, artSet: artSet, matOf: matOf,
   WARP_COLORS: WARP_COLORS, hazardAt: hazardAt, hazardTick: hazardTick, beltMulFor: beltMulFor,
   BELT_SPEED: BELT_SPEED, BELT_FAST: BELT_FAST, BELT_SLOW: BELT_SLOW, moveSpeed: moveSpeed,
   confetti: confetti, battleEndFx: battleEndFx,
