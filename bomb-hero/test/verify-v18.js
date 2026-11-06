@@ -353,7 +353,9 @@ console.log('=== 5. 畫面細節：陰影與角色美術 ===');
 ok(typeof BH.softShadow === 'function', '有柔和陰影工具函式');
 ok(/function drawPlayer[\s\S]{0,900}softShadow\(/.test(html), '角色有落地陰影（依跳動高度縮放）');
 ok(/function drawEnemy[\s\S]{0,600}softShadow\(/.test(html), '怪物有落地陰影');
-ok(/function drawBomb[\s\S]{0,700}softShadow\(/.test(html), '炸彈有落地陰影（飛行時變小）');
+// v5.37：drawBomb 開頭多了「低效能單圓」的提前 return（縮到 42%~100% 時只畫一顆圓點），
+//   影子被往後推 → 掃描窗加寬（正常畫質那條路徑仍然有影子）。
+ok(/function drawBomb[\s\S]{0,1400}softShadow\(/.test(html), '炸彈有落地陰影（飛行時變小）');
 ok(/function drawCart[\s\S]{0,400}softShadow\(/.test(html), '推車有落地陰影');
 ok(html.indexOf('softShadow(px, it.cy * T + T / 2 + T * .30') >= 0, '道具也有落地陰影');
 // v5.21：暗角從「世界座標（整張地圖）」改成「螢幕座標」的離屏快取 ——

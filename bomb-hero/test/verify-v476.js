@@ -167,7 +167,8 @@ ok(!/未開放<\/span>/.test(src), '畫面上沒有「未開放」標籤');
 ok(/t\('br\.btnTop'\) \+ '<span class="hotTag">HOT<\/span><small>'/.test(src), '按鈕文字：大逃殺＋HOT（走字典 br.btnTop）');
 ok(/推薦測試遊玩/.test(src), '副標寫「推薦測試遊玩」');
 ok(/\.hotTag \{/.test(src) && /@keyframes hotPulse/.test(src), 'HOT 標籤有自己的樣式與呼吸光');
-ok(/t\('br\.foot', \{ b: BR\.BOSS_N \}\)/.test(src), '入口卡寫清楚有亂入 BOSS（br.foot 帶 BOSS_N）');
+// v5.37：入口卡改成「{f} 隻小怪 ＋ {b} 隻亂入 BOSS」，數量跟著地圖尺寸走（brFoeN／brBossN）
+ok(/t\('br\.foot', \{ b: brBossN\(\), f: brFoeN\(\) \}\)/.test(src), '入口卡寫清楚小怪／亂入 BOSS 的數量');
 
 // ---------- 7. 草原底圖 ----------
 head('7. 草原底圖（調亮＋加飽和）');

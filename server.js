@@ -9,6 +9,7 @@ const http = require('http');
 const fs = require('fs');
 const zlib = require('zlib');   // v5.28：主機沒開壓縮時自己壓（Render 邊緣會壓，但不保證每台都有）
 const path = require('path');
+const os = require('os');        // v5.37：區網連線要列出這台機器的 LAN IP
 // v4.85i：容器啟動時刻 —— /api/health 會回報，用來確認「這次真的換了一個新容器」
 const BOOT_AT = Date.now();
 
@@ -723,6 +724,21 @@ function clampCount(v) {
   return Math.max(2, Math.min(RELAY_MAX, n));
 }
 
+// v5.37：對戰設定只留白名單欄位（不讓客人塞奇怪的東西）
+function optsOf(body) {
+  const o = (body && body.opts) || {};
+  const str = function (v, allow, dflt) { return allow.indexOf(String(v)) >= 0 ? String(v) : dflt; };
+  return {
+    size: str(o.size, ['S', 'M', 'L', 'XL'], 'M'),
+    wins: Math.max(1, Math.min(3, parseInt(o.wins, 10) || 2)),
+    time: [60, 120, 180, 300].indexOf(parseInt(o.time, 10)) >= 0 ? parseInt(o.time, 10) : 120,
+    hazards: str(o.hazards, ['on', 'off'], 'on'),
+    sd: str(o.sd, ['on', 'off'], 'on'),
+    revenge: str(o.revenge, ['off', 'on', 'super'], 'on'),
+    ai: str(o.ai, ['weak', 'normal', 'strong'], 'normal')
+  };
+}
+
 function relayHost(room) {
   return room.roster.find(function (p) { return p.pid === room.host; });
 }
@@ -734,6 +750,7 @@ function relayPub(room) {
     host: room.host,
     count: room.count,
     teams: room.teams | 0,
+    opts: room.opts || null,               // v5.37：房主的對戰設定（客人唯讀顯示）
     roster: room.roster.map(function (p) {
       return { pid: p.pid, name: p.name, ch: p.ch, slot: p.slot, entry: p.entry, host: p.pid === room.host };
     })
@@ -762,7 +779,7 @@ function handleRelayCreate(body, res) {
   // v4.15：房主可以設 2～8 人（原本只收 4／8）
   const count = clampCount(body.count);
   const room = {
-    id: code, created: Date.now(), host: pid, phase: 'wait', count: count, teams: 0,
+    id: code, created: Date.now(), host: pid, phase: 'wait', count: count, teams: 0, opts: optsOf(body),
     roster: [{ pid: pid, name: name, ch: 0, slot: 0, entry: 1, lastSeen: Date.now() }],
     snap: null, v: 1, inputs: {},
     chat: [], chatId: 0            // v5.27：房間快捷語（只存索引，前端各自翻譯）
@@ -840,6 +857,7 @@ function handleRelayPush(body, res) {
   }
   if (typeof body.count === 'number') room.count = clampCount(body.count);
   if (typeof body.teams === 'number') room.teams = [0, 2, 3, 4].indexOf(body.teams | 0) >= 0 ? (body.teams | 0) : 0;
+  if (body.opts) room.opts = optsOf(body);   // v5.37：房主推上來的對戰設定
   if (body.snap) { room.snap = body.snap; }
   room.v++;
   sendJSON(res, 200, { ok: true, v: room.v });
@@ -851,6 +869,8 @@ function handleRelayInput(body, res) {
   const p = room.roster.find(function (x) { return x.pid === body.pid; });
   if (!p) return sendJSON(res, 404, { ok: false, err: 'not in room' });
   p.lastSeen = Date.now();
+  // v5.37：每人可以自己換角色（只改自己那一筆；房主下次推狀態時會沿用）
+  if (typeof body.ch === 'number') p.ch = Math.max(0, Math.min(7, body.ch | 0));
   // v5.27：快捷語（0~11 索引；不開放自由輸入 → 不會有髒話與長度問題）
   if (typeof body.chat === 'number' && body.chat >= 0 && body.chat < 12) {
     if (!room.chat) { room.chat = []; room.chatId = 0; }
@@ -1033,6 +1053,21 @@ const server = http.createServer(function (req, res) {
   }
   if (url.pathname === '/api/relay/poll' && req.method === 'GET') {
     return handleRelayPoll(url.searchParams, res);
+  }
+  // v5.37：區網連線 —— 回報這台伺服器的 LAN 位址（手機連同一個 WiFi 就能一起玩）
+  if (url.pathname === '/api/lan' && req.method === 'GET') {
+    const addrs = [];
+    try {
+      const ifs = os.networkInterfaces();
+      Object.keys(ifs).forEach(function (k) {
+        (ifs[k] || []).forEach(function (a) {
+          if (!a || a.internal) return;
+          if (a.family !== 'IPv4' && a.family !== 4) return;
+          addrs.push({ name: k, ip: a.address, url: 'http://' + a.address + ':' + PORT });
+        });
+      });
+    } catch (e) {}
+    return sendJSON(res, 200, { ok: true, port: PORT, addrs: addrs });
   }
   if (url.pathname === '/api/relay/list' && req.method === 'GET') {
     return handleRelayList(res);

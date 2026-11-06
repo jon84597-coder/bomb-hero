@@ -107,7 +107,8 @@ P.THEMES.forEach(function (th, i) {
   if (i < 8) ok(P.themeBGM(th) === 'stage' + (i + 1), th.name + ' → ' + P.themeBGM(th));
 });
 G.bossRush = true;
-ok(P.stageBGM(3) === 'boss', 'BOSS 連戰保留專屬魔王曲');
+// v5.37：'boss' 這個 id 本來就沒有對應曲（播成主選單音樂），BOSS 連戰改用新的 bossWar
+ok(P.stageBGM(3) === 'bossWar', 'BOSS 連戰播專屬魔王曲 bossWar（實際 ' + P.stageBGM(3) + '）');
 G.bossRush = false;
 ok(html.indexOf('STAGE_MUSIC') > 0 && html.indexOf('genMelBars') > 0, '有自動譜曲引擎產生關卡音樂');
 ok(/AudioSys\.startBGM\(stageBGM\(/.test(html), '進關卡時用 stageBGM() 挑曲');

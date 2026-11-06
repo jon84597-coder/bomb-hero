@@ -134,9 +134,12 @@ head('3. 畫質分級與降級');
 // ================================================================
 head('4. 無障礙（震動／色盲）');
 {
-  ok(/if \(settings\.shake && Game\.shake > 0\)/.test(src), '震動的唯一套用點吃 settings.shake');
+  // v5.37：震動預設關，核彈獨立一個開關 → 判定改成 shakeOn
+  ok(/const shakeOn = settings\.shake \|\| \(settings\.nukeShake && \(Game\.nukeShakeT \|\| 0\) > 0\);/.test(src), '震動的唯一套用點吃 shakeOn（畫面震動 or 核彈震動）');
+  ok(/if \(shakeOn && Game\.shake > 0\)/.test(src), 'shakeOn 才是真的位移條件');
   ok((src.match(/ctx\.translate\(\(Math\.random\(\) - \.5\) \* Game\.shake \* 9/g) || []).length === 1, '只有一處真的位移畫面');
-  ok(/settings\.shake = \(settings\.shake === 0 \|\| settings\.shake === '0'\) \? 0 : 1;/.test(src), '舊存檔（沒有這個欄位）預設＝開');
+  // v5.37：預設改成「關」（暈動症友善），舊存檔用 shakeV 戳記一次性歸零
+  ok(/if \(\(settings\.shakeV \| 0\) < 2\) \{ settings\.shake = 0; settings\.shakeV = 2; \}/.test(src), '舊存檔靠 shakeV 戳記一次性歸零（只做一次）');
   ok(/id="segShake"/.test(src) && /id="segCB"/.test(src), '設定頁有震動與色盲開關');
 
   const teams = P.TEAMS, cb = P.TEAMS_CB;

@@ -207,10 +207,13 @@ head('7. 大逃殺音樂音量平衡');
 // ================================================================
 head('8. 硬牆不准聚成一坨');
 {
-  ok(/function hardPut\(x, y\)/.test(src), '有 hardPut 統一放牆入口');
-  ok(/會湊出 2×2 實心塊 → 撤銷這一格/.test(src), '任何位置只要湊出 2×2 就撤銷');
-  ok(/① 岩脊（直線 \/ L 形）/.test(src), '形狀 ①：1 格厚的岩脊');
-  ok(/② 空心圍籬（一定留缺口/.test(src), '形狀 ②：留缺口的空心圍籬');
+  // v5.37：整組重寫（一座一座檢查）。舊的「單格 2×2 撤銷」擋不住兩座各 1 格厚貼在一起，
+  //   改成「整座碰到別座就放棄」＋密度上限，形狀仍然只准直線與空心圍籬。
+  ok(/function hardCanPlace\(cells\)/.test(src), '有 hardCanPlace 統一判斷整座能不能放');
+  ok(/function hardTouchOther\(x, y\)/.test(src), '新的一座碰到別座（含斜角）就整座放棄');
+  ok(/if \(hardDensity\(c.x, c.y, 2\) > 7\) return false;/.test(src), '再加方圓 2 格的密度上限');
+  ok(/① 空心圍籬先放/.test(src), '形狀 ①：留缺口的空心圍籬');
+  ok(/② 直線岩脊（長 2~4 格，只准連成一排）/.test(src), '形狀 ②：1 格厚的直線岩脊');
   ok(!/const rr = 1 \+ Math\.random\(\) \* 1\.9;/.test(src), '舊的「半徑 1~2.9 圓團」已經移除');
 
   let worst = 0, minHard = 999, maxHard = 0;

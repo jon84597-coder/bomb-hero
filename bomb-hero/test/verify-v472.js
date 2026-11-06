@@ -117,8 +117,9 @@ console.log('\n=== 3. 100 人同場 ＋ 小怪 ===');
   }).length;
   ok(out === 0, '所有人都在初始毒圈內（圈外 ' + out + ' 人）');
   const bosses = G.enemies.filter(function (e) { return e.brBoss; });
-  ok(G.enemies.length - bosses.length === 14, '14 隻小怪（照舊）');
-  ok(bosses.length === 2, 'v4.76：另有 2 隻亂入 BOSS（' + bosses.length + '）');
+  // v5.37：大地圖（預設 map=1）20 隻小怪、3 隻亂入 BOSS（原圖 56×44 才是 14／2）
+  ok(G.enemies.length - bosses.length === 20, '大地圖 20 隻小怪（' + (G.enemies.length - bosses.length) + '）');
+  ok(bosses.length === 3, '大地圖 3 隻亂入 BOSS（' + bosses.length + '）');
   const kinds = {};
   G.enemies.forEach(function (e) { kinds[e.type] = 1; });
   ok(Object.keys(kinds).length >= 4, '小怪種類有跟著地形走（' + Object.keys(kinds).length + ' 種）');

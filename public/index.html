@@ -2410,6 +2410,19 @@ box-shadow: 0 22px 46px -18px rgba(120,80,40,.45), inset 0 2px 0 #fff;
 .hint b { color: #7b4a1f; }
 kbd { background: #fff2da; border: 1px solid #e2c39c; color: #8a5a2a; font-size: 12px; }
 .seg { gap: 7px; }
+/* v5.37：區網／直連 */
+.lanbox { border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 10px 12px; margin: 0 0 12px; background: rgba(255,255,255,.05); }
+.lanh { font-weight: 800; font-size: 13.5px; margin-bottom: 6px; }
+.lanrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 5px 0; }
+.lanurl { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; background: rgba(0,0,0,.28); border-radius: 8px; padding: 3px 8px; }
+.lanbox textarea.tinput { width: 100%; font-size: 11.5px; font-family: ui-monospace, Consolas, monospace; }
+/* v5.37：線上配對房的「我的角色」與完整對戰設定 */
+.netcharrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.netcharrow .netchpv { width: 84px; height: 76px; }
+.netchname { font-size: 13px; opacity: .9; }
+.netopt { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0; }
+.netopt .netoptl { min-width: 86px; font-size: 12.5px; opacity: .88; }
+.netopt .seg { flex: 1; }
 .seg button {
 background: #fffaf0; border: 2px solid var(--woodline); color: #8a5f35;
 border-radius: 12px; font-size: 14px; font-weight: 800; padding: 9px 14px;
@@ -4666,7 +4679,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.36</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.37</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4721,7 +4734,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.36</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.37</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5160,6 +5173,10 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         <div class="seg" id="segShake"><button data-v="1">開</button><button data-v="0">關</button></div>
         <div class="hint" id="shakeHint"></div>
       </div>
+      <div class="field"><label id="labNukeShake">☢️ 核彈震動</label>
+        <div class="seg" id="segNukeShake"><button data-v="1">開</button><button data-v="0">關</button></div>
+        <div class="hint" id="nukeShakeHint"></div>
+      </div>
       <div class="field"><label id="labCB">🌈 色盲友善隊色</label>
         <div class="seg" id="segCB"><button data-v="0">關</button><button data-v="1">開</button></div>
         <div class="hint" id="cbHint"></div>
@@ -5209,6 +5226,28 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="card">
       <h2>線上配對</h2>
       <div class="desc">⚡ 快速配對會自動加入「人最多、最快開打」的房間（沒有房間就自動幫你建立）。也可以從房間列表點加入，或建立房間拿到 <b>4 位數房號</b>給朋友。沒入場的位子由 🤖 AI 補滿。</div>
+      <div class="hint" id="netRenderNote" style="margin:2px 0 10px;line-height:1.7">💡 小提醒：伺服器放在免費託管平台 Render，所以連線品質不會比較順暢　目前當作測試內容而已</div>
+      <div class="lanbox" id="lanBox">
+        <div class="lanh">📶 區網連線（同一個 WiFi 就能玩，不經外網）</div>
+        <div class="lanrow" id="lanUrls">檢查中…</div>
+        <div class="hint" id="lanTip"></div>
+        <div class="lanrow">
+          <button class="mbtn" id="btnP2PHost" type="button" style="width:auto;padding:10px 16px;">🔗 建立直連（免伺服器）</button>
+          <button class="mbtn" id="btnP2PJoin" type="button" style="width:auto;padding:10px 16px;">📥 加入直連</button>
+        </div>
+        <div id="p2pPanel" style="display:none">
+          <label>① 邀請碼／回應碼（複製整串給對方）</label>
+          <textarea class="tinput" id="p2pOut" rows="3" spellcheck="false" autocomplete="off" placeholder="按上面的按鈕後，這裡會出現一串碼"></textarea>
+          <button class="minibtn" id="p2pCopy" type="button">📋 複製</button>
+          <label class="mt12">② 貼上對方給你的那一串</label>
+          <textarea class="tinput" id="p2pIn" rows="3" spellcheck="false" autocomplete="off" placeholder="貼在這裡"></textarea>
+          <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px">
+            <button class="mbtn warm" id="btnP2PGo" type="button" style="width:auto;padding:9px 18px;">✅ 連線</button>
+            <button class="ghostbtn" id="p2pCancel" type="button">取消直連</button>
+          </div>
+          <div class="hint" id="p2pMsg"></div>
+        </div>
+      </div>
       <div class="field" id="netEntry">
         <div class="netcol">
           <label>你的暱稱</label>
@@ -5234,6 +5273,15 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         <div class="hint" id="netLagNote" style="grid-column:1/-1;margin-top:10px;line-height:1.7"></div>
       </div>
       <div id="netRoom" style="display:none">
+        <div class="netcol" style="grid-column:1/-1">
+          <label>我的角色（只選自己，別人的角色由他們自己選）</label>
+          <div class="netcharrow">
+            <button class="brarr" id="netChPrev" type="button">◀</button>
+            <canvas class="chpv netchpv" id="netChPv" width="220" height="200"></canvas>
+            <button class="brarr" id="netChNext" type="button">▶</button>
+            <span class="netchname" id="netChName"></span>
+          </div>
+        </div>
         <div class="netcol">
           <label>房號（給朋友輸入）</label>
           <div class="netcode" id="netCodeShow">----</div>
@@ -5251,6 +5299,30 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
           <div class="row" style="justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px">
             <button class="mbtn warm" id="btnNetStart" style="width:auto;padding:12px 30px;">開始遊戲</button>
             <button class="ghostbtn" id="btnNetLeave">離開房間</button>
+          </div>
+        </div>
+        <div class="netcol" id="netOpts" style="grid-column:1/-1">
+          <label>對戰設定（房主設定，其他人唯讀）</label>
+          <div class="netopt"><span class="netoptl">地圖尺寸</span>
+            <div class="seg" id="netSize"><button data-v="S">小 13×11</button><button data-v="M">中 15×13</button><button data-v="L">大 17×15</button><button data-v="XL">超大 21×15</button></div>
+          </div>
+          <div class="netopt"><span class="netoptl">勝場數</span>
+            <div class="seg" id="netWins"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
+          </div>
+          <div class="netopt"><span class="netoptl">比賽時間</span>
+            <div class="seg" id="netTime"><button data-v="60">1 分</button><button data-v="120">2 分</button><button data-v="180">3 分</button><button data-v="300">5 分</button></div>
+          </div>
+          <div class="netopt"><span class="netoptl">地形機關</span>
+            <div class="seg" id="netHaz"><button data-v="on">開</button><button data-v="off">關</button></div>
+          </div>
+          <div class="netopt"><span class="netoptl">突死縮圈</span>
+            <div class="seg" id="netSd"><button data-v="on">開</button><button data-v="off">關</button></div>
+          </div>
+          <div class="netopt"><span class="netoptl">復仇推車</span>
+            <div class="seg" id="netRev"><button data-v="off">關閉</button><button data-v="on">開啟</button><button data-v="super">超級復活</button></div>
+          </div>
+          <div class="netopt"><span class="netoptl">🤖 AI 難度</span>
+            <div class="seg" id="netAi"><button data-v="weak">😴 弱</button><button data-v="normal">🙂 中</button><button data-v="strong">😈 強</button></div>
           </div>
         </div>
       </div>
@@ -5706,7 +5778,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.36';
+const VERSION = '5.37';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6433,7 +6505,9 @@ let settings = {
   keysVer: 2,                                     // v5.11：電腦操作配置版本（2＝滑鼠左右鍵放彈／引爆）
   qual: 'auto',                                   // v5.27：畫質 auto / low / mid / high（手機卡就調低）
   fps: 0,                                         // v5.27：右下角 FPS 錶（0 = 關）
-  shake: 1,                                       // v5.27：畫面震動（0 = 關，暈動症玩家用）
+  shake: 0,                                       // v5.37：畫面震動（預設關；暈動症玩家友善）
+  nukeShake: 1,                                   // v5.37：核彈震動獨立開關（預設開 —— 核彈要有份量）
+  shakeV: 2,                                      // v5.37：震動預設值戳記（<2 的舊存檔會被歸零一次）
   cb: 0,                                          // v5.27：色盲友善隊色（加圖形與虛線，不只用顏色）
   tpad: Object.assign({}, DEF_TPAD)               // 手機觸控版面
 };
@@ -6522,7 +6596,12 @@ try {
   // v5.27：畫質／FPS／震動／色盲 —— 壞值一律回到安全預設（震動預設「開」，舊存檔沒這個欄位）
   if (['auto', 'low', 'mid', 'high'].indexOf(settings.qual) < 0) settings.qual = 'auto';
   settings.fps = settings.fps ? 1 : 0;
-  settings.shake = (settings.shake === 0 || settings.shake === '0') ? 0 : 1;
+  /* v5.37：畫面震動預設改成「關」。舊存檔裡的值是當時的預設 1（不是玩家自己選的）
+     → 用 shakeV 戳記一次性歸零；之後玩家自己開回來就會保留。
+     核彈震動是獨立開關（預設開）：核彈落地照樣震，除非玩家另外關掉。 */
+  if ((settings.shakeV | 0) < 2) { settings.shake = 0; settings.shakeV = 2; }
+  settings.shake = (settings.shake === 0 || settings.shake === '0' || settings.shake === false) ? 0 : 1;
+  settings.nukeShake = (settings.nukeShake === 0 || settings.nukeShake === '0' || settings.nukeShake === false) ? 0 : 1;
   settings.cb = settings.cb ? 1 : 0;
 })();
   } catch (__e) { __bootFail('wire', __e); }
@@ -7097,6 +7176,21 @@ const AudioSys = (function () {
       arp: [0, 1, 2, 1, 0, 2, 1, 0, 2, 1, 2, 3, 1, 0, 1, 2],
       plan: brPlan(46)
     },
+    /* v5.37：BOSS 決戰場專用曲 —— 使用者要「熱血激昂＋重低音＋其他樂器補助」。
+       · BPM 158（比對戰 152 更急）
+       · 多一軌「重低音」sub（比低音再低八度、低通 200Hz）→ 手機喇叭也聽得到鼓動
+       · 低音改成 sawtooth + 低通 380，power chord 兩軌加厚，鼓組更密
+       · base 60（比一般曲低一個八度）→ 整首更有壓迫感 */
+    bossWar: {
+      bpm: 158, base: 60, melWave: 'square', melVol: .104,
+      bassVol: .292, arpVol: .058, powVol: .094, drumVol: .142, seed: 9701,
+      bassWave: 'sawtooth', bassLp: 380,
+      bass: [0, 0, 0, 7, 0, 12, 7, 3],
+      subVol: .200,
+      sub: [-12, -12, -12, -12, -5, -5, -12, -12],
+      arp: [0, 2, 1, 2, 0, 2, 3, 2, 1, 2, 0, 2, 3, 2, 1, 0],
+      plan: ['A', 'B', 'C', 'A', 'D', 'E', 'B', 'F', 'C', 'D', 'E', 'G', 'H', 'A']
+    },
     // 大逃殺 5 分鐘：23 句 ≈ 5:02
     brWar5: {
       bpm: 146, base: 72, melWave: 'sawtooth', melVol: .100,
@@ -7125,6 +7219,7 @@ const AudioSys = (function () {
     const def = WAR_DEFS[name] || WAR_DEFS.battle;
     const ph = warPhrases(def);
     const mel = [], bass = [], arp = [], pow = [], pow2 = [], drums = [];
+    const sub = def.sub ? [] : null;      // v5.37：重低音軌（BOSS 曲用）
     def.plan.forEach(function (k) {
       const P2 = ph[k] || ph.A;
       for (let i = 0; i < P2.chord.length; i++) {
@@ -7134,6 +7229,7 @@ const AudioSys = (function () {
         });
         const tones = chordTones(P2.chord[i]);
         def.bass.forEach(function (v) { bass.push({ midi: v === null ? null : tones[0] + v, len: 2 }); });
+        if (sub) def.sub.forEach(function (v) { sub.push({ midi: v === null ? null : tones[0] + v, len: 2 }); });
         def.arp.forEach(function (v) {
           arp.push({ midi: v === null ? null : tones[v % 3] + (v >= 3 ? 24 : 12), len: 1 });
         });
@@ -7148,15 +7244,17 @@ const AudioSys = (function () {
         drums.push({ kind: ch === '.' ? null : ch, len: 1 });
       }
     });
+    const tracks = [];
+    // 重低音墊在最底層（sawtooth 低通 200Hz：手機小喇叭也吃得到泛音）
+    if (sub) tracks.push({ wave: 'sawtooth', vol: def.subVol || .18, lp: 200, seq: sub });
+    tracks.push({ wave: def.melWave, vol: def.melVol, seq: mel });
+    tracks.push({ wave: def.bassWave || 'triangle', vol: def.bassVol, lp: def.bassLp || 0, seq: bass });
+    tracks.push({ wave: 'square', vol: def.arpVol, seq: arp });
+    tracks.push({ wave: 'sawtooth', vol: def.powVol, lp: 880, seq: pow });
+    tracks.push({ wave: 'sawtooth', vol: def.powVol * .72, lp: 1150, seq: pow2 });
     return {
       bpm: def.bpm, drumVol: def.drumVol,
-      tracks: [
-        { wave: def.melWave, vol: def.melVol, seq: mel },
-        { wave: def.bassWave || 'triangle', vol: def.bassVol, lp: def.bassLp || 0, seq: bass },
-        { wave: 'square', vol: def.arpVol, seq: arp },
-        { wave: 'sawtooth', vol: def.powVol, lp: 880, seq: pow },
-        { wave: 'sawtooth', vol: def.powVol * .72, lp: 1150, seq: pow2 }
-      ],
+      tracks: tracks,
       drums: drums
     };
   }
@@ -7413,7 +7511,8 @@ function brSongId() {
   return d >= 10 ? 'brWar10' : 'brWar5';
 }
 function stageBGM(stage) {
-  if (Game && Game.bossRush) return 'boss';
+  // v5.37：BOSS 決戰場與 BOSS 連戰都播新的熱血曲（舊版 'boss' 根本沒有對應曲 → 播成主選單音樂）
+  if (Game && (Game.bossArena || Game.bossRush)) return 'bossWar';
   if (Game && Game.mode === 'battle') return 'battle';     // 對戰：2:45 戰鬥曲
   if (Game && Game.mode === 'br') return brSongId();       // 大逃殺：10:00／5:00 戰鬥曲
   // v4.14：關卡 8 → 32（每 4 張地圖＝一個大主題，共用同一首主題曲）
@@ -9136,7 +9235,26 @@ function qualLevel() {
   return (touch && dpr >= 2.5) ? 1 : 2;
 }
 function qualDprCap() { return QUAL_CAP[qualLevel()]; }
-function qualPart() { return QUAL_PART[qualLevel()]; }
+/* v5.37：依縮放自動切三級效能（使用者的提案）
+   · zoom 42%~100% → 低效能、100%~180% → 適中、180%~300% → 高效能
+   · settings.qual 不是 'auto' 時，一律照玩家手動指定（手動覆寫優先）
+   · auto 只影響「每幀的細節」（環境光、機關細節、角色／炸彈簡化、粒子量），
+     不動畫布解析度 → 縮放不會重排版面，也不會到處重烘地板分塊。
+   用 var：qualPart() 在 boot 期間就可能被呼叫，var 才不會踩 TDZ。 */
+var RQ = { lv: 2, auto: 2 };
+function rqAuto() { return settings.qual === 'auto'; }
+function rqUpdate() {
+  const z = Game.zoom || 1;
+  RQ.auto = z < 1 ? 0 : (z < 1.8 ? 1 : 2);
+  RQ.lv = rqAuto() ? RQ.auto : qualLevel();
+  return RQ.lv;
+}
+function rqLv() { return RQ ? (RQ.lv | 0) : 2; }
+function qualPart() {
+  const base = QUAL_PART[qualLevel()];
+  if (settings.qual !== 'auto' || !RQ) return base;
+  return base * (RQ.lv === 0 ? .55 : RQ.lv === 1 ? .82 : 1);
+}
 // 粒子上限（環境粒子用）：至少留 1 顆，不然整個場景會「空掉」
 function ambN(n) { return Math.max(1, Math.round(n * qualPart() * (settings.calm ? .45 : 1))); }
 
@@ -9439,7 +9557,7 @@ function buildMap(cols, rows, theme, opts) {
   Game.eggs = [];
   Game.eggsHidden = [];
   // ---------- 地形機關：繞地圖一整圈的跑道，或一條一條的直線跑道 ----------
-  const hz = settings.hazards === 'on' ? theme.hazards : [];
+  const hz = opts.hazardKinds || (settings.hazards === 'on' ? theme.hazards : []);
   if (hz.length && !opts.noHazards) {
     const hasConvey = hz.indexOf('convey') >= 0;
     const hasIce = hz.indexOf('ice') >= 0;
@@ -14777,27 +14895,51 @@ function buildBossArenaStage(stage, fresh, rpg) {
   const p = Game.players[0];
   Game.theme = theme; Game.mapInfo = info; Game.bigMap = false;
   Game.cols = cols; Game.rows = rows;
-  resetMapCellState();
+  Game.stage = stage;                      // 機關形狀／BGM 都要吃這一關的編號
   Game.T = tileSize();
   recalcSpdK();
-  Game.ox = Math.floor((VIEW_W - Game.T * cols) / 2);
-  Game.oy = Math.floor((VIEW_H - Game.T * rows) / 2);
   Game.camSnap = true;
-  Game.hazards = []; Game.warps = []; Game.bubbles = []; Game.eggs = [];
-  Game.pops = []; Game.edgeFx = 0; Game.hidden = {}; Game.roomSeal = [];
-  for (let y = 0; y < rows; y++) Game.hazards.push(new Array(cols).fill(null));
-  const g = [];
-  for (let y = 0; y < rows; y++) {
-    const row = [];
-    for (let x = 0; x < cols; x++) row.push((x === 0 || y === 0 || x === cols - 1 || y === rows - 1) ? 1 : 0);
-    g.push(row);
+  /* v5.37：BOSS 決戰場改成「對戰模式 大 17×15」的棋盤地圖 ——
+     沿用 buildMap 的整套（棋盤柱、軟磚、藏在軟磚裡的道具、輸送帶／滑冰），
+     只保留兩個「絕對乾淨」的圓形空地：
+       · BOSS 出場位置 (8,2) 半徑 1 格
+       · 玩家出場位置 (8,13) 半徑 1 格
+     大門固定在 BOSS 正上方 (8,1)，一開始就是看得到的（打贏才開）。
+     這樣才有軟磚可以打道具、有輸送帶／冰面可以繞，不像之前只有四根柱子。 */
+  const hzWas = settings.hazards;
+  settings.hazards = 'on';                 // 決戰場一定帶機關（跟對戰一樣，不吃玩家的「機關關閉」）
+  try {
+    buildMap(cols, rows, theme, {
+      spawns: [{ x: 8, y: 13, fx: 1, fy: 1 }, { x: 8, y: 2, fx: 1, fy: 1 }],
+      items: 16, emptyRate: .34,
+      // v5.37：傳送門會把王傳走，不適合決戰場 → 只鋪輸送帶／滑冰。
+      //   跟對戰一樣「一張圖只給一種」（輪流），兩種一起鋪會變成整片溜冰場。
+      hazardKinds: [ch % 2 === 1 ? 'convey' : 'ice'],
+      hazardShape: 'ring'
+    });
+  } finally { settings.hazards = hzWas; }
+  // 清出兩個半徑 1 格的乾淨空地（硬牆／軟磚／機關全清；軟磚裡的道具一起收回）
+  function clearR1(cx, cy) {
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const x = cx + dx, y = cy + dy;
+      if (x <= 0 || y <= 0 || x >= cols - 1 || y >= rows - 1) continue;
+      Game.grid[y][x] = 0;
+      if (Game.hidden) delete Game.hidden[y + ',' + x];
+      if (Game.hazards && Game.hazards[y]) Game.hazards[y][x] = null;
+    }
   }
-  [[4, 4], [12, 4], [4, 10], [12, 10]].forEach(function (c) { g[c[1]][c[0]] = 1; });   // 四根柱子
-  Game.grid = g;
-  Game.spawnCell = { x: 8, y: 13 };
-  markWallKinds();
+  clearR1(8, 2); clearR1(8, 13);
+  // 大門：BOSS 正上方 (8,1)。buildMap 隨機藏的那扇門要拆掉（不然會多一扇）
+  if (Game.hidden) {
+    Object.keys(Game.hidden).forEach(function (k) { if (Game.hidden[k] === 'door') delete Game.hidden[k]; });
+  }
+  Game.grid[1][8] = 0;
+  if (Game.hazards && Game.hazards[1]) Game.hazards[1][8] = null;
   Game.door = { x: 8, y: 1, revealed: true, open: false };
   Game.doorHinted = true;
+  Game.spawnCell = { x: 8, y: 13 };
+  markWallKinds();
+  if (typeof floorChunkDirty === 'function') floorChunkDirty(null);
   p.x = 8.5 * Game.T; p.y = 13.5 * Game.T;
   p.alive = true; p.invuln = 2.5; p.carry = null; p.slide = null; p.warpLock = '';
   if (rpg) { p.hpCur = p.hpMax; p.armorCur = p.armorMax; }
@@ -17691,33 +17833,54 @@ function killBattlePlayer(p, killer) {
 //   · 正式測試結束前免費入場（BR.FREE）
 // ====
 const BR = {
-  // v5.36：地圖面積 ×2（56×44 → 79×62，2,464 → 4,898 格）、人數 30 → 100
+  /* v5.37：兩種尺寸都留著 ——
+     大圖 79×62：最多 100 人、3 隻亂入 BOSS、20 隻小怪、一波 2 顆核彈（過一半時間剩 1 顆）
+     原圖 56×44：最多 50 人、2 隻 BOSS、14 隻小怪、一波 1 顆核彈
+     入口卡可以選（BR.opt.map：1＝大圖、0＝原圖）。 */
   W: 79, H: 62, N: 100, FOES: 14,
-  // v4.76：兩隻「亂入 BOSS」——從 32 關裡隨機抽兩關的 BOSS 丟進場，沒有地盤、全場亂走
+  W0: 56, H0: 44, N0: 50,          // 原本尺寸（v5.35 以前）
+  // v4.76：亂入 BOSS —— 沒有地盤、全場亂走；v5.37 大圖 3 隻／原圖 2 隻
   BOSS_N: 2, BOSS_HP: 20, BOSS_AGGRO: 4, BOSS_HIT: 2,
   HP: 10,              // 每人 10 點血（HUD／隊友血條都吃這個）
   // v5.33：核彈 —— 每 45 秒一波、通報 5 秒、半徑 5 格、直擊 6 格血、燒地 10 秒
-  // v5.36：一波兩顆、最後 2 分鐘不再落彈、落點只取毒圈內
-  NUKE: 45, NUKE_WARN: 5, NUKE_N: 2, NUKE_GAP: 12, NUKE_STOP: 120,
+  // v5.36：一波兩顆、落點只取毒圈內
+  // v5.37：最後 1 分鐘不再落彈（120 → 60）；大圖過一半時間一波剩 1 顆、原圖固定 1 顆
+  NUKE: 45, NUKE_WARN: 5, NUKE_N: 2, NUKE_GAP: 12, NUKE_STOP: 60,
   // v5.35：縮圈動畫 8 秒（算在每段 60 秒裡面 → 一場 10 段剛好 10 分鐘）
   SHRINK: 8,
-  Z0: 40,              // v5.36：開場圈半徑（79×62 的地圖要 40 格才包得住整張）
+  Z0: 40,              // 開場圈半徑（大圖 40 格；原圖 27 格，startBR 會依尺寸覆寫）
+  Z0S: 27,
   FREE: true,          // v4.74：正式測試結束前不扣門票
   ART_K: .84,          // v4.74：大圖（T≈30）怪物畫得偏大 → 美術半徑與判定一起縮一級
   // v4.75：開局選項（入口卡）—— 人數／組隊人數／場長
-  opt: { n: 100, team: 1, dur: 10 },
+  opt: { n: 100, team: 1, dur: 10, map: 1 },   // v5.37：map 1＝大圖 79×62、0＝原圖 56×44
   TEAM: 1,             // 1 = 單人混戰；2／3／4 = 組隊（隊員之間不會互炸）
   // [等待秒數, 目標半徑（格）]：10 段 × 60 秒 = 10 分鐘
   // v5.36：地圖放大 → 半徑整套重算（首圈 34 格，末圈 3.4 格，每段約 ×0.84）
   PH10: [[60, 34], [60, 29], [60, 25], [60, 21], [60, 17.5], [60, 14], [60, 11], [60, 8], [60, 5.5], [60, 3.4]],
   // 5 段 × 60 秒 = 5 分鐘（半徑跨得大一點，5 分鐘也收得完）
   PH5: [[60, 32], [60, 25], [60, 18], [60, 10.5], [60, 3.6]],
+  // v5.37：原圖（56×44）的縮圈曲線 —— 開場 27 格、一樣收得到 3 格左右
+  PH10S: [[60, 27], [60, 23], [60, 19.5], [60, 16], [60, 13], [60, 10.5], [60, 8], [60, 6], [60, 4.2], [60, 3]],
+  PH5S: [[60, 27], [60, 20], [60, 14], [60, 8.5], [60, 3.2]],
   PH: [],
   // 名次獎勵（第 9 名以後一律拿最後一級 80）
   GOLD: [1200, 700, 450, 300, 200, 150, 100, 80],
   HIDE: 46,            // 可以躲人的物件（草叢／破屋／陶甕…）
   on: function () { return Game.mode === 'br'; }
 };
+
+// v5.37：尺寸相關的數量一律走這裡（入口卡、HUD、生成、核彈波都吃同一套）
+function brBig() { return (BR.opt.map | 0) !== 0; }
+function brBossN() { return brBig() ? 3 : 2; }
+function brFoeN() { return brBig() ? 20 : 14; }
+// 大圖：前一半時間一波 2 顆，過半剩 1 顆；原圖固定 1 顆
+function brNukeWaveN() {
+  if (!brBig()) return 1;
+  let total = 0;
+  for (let i = 0; i < BR.PH.length; i++) total += BR.PH[i][0];
+  return brTimeLeft() > total * .5 ? 2 : 1;
+}
 
 function brIslAt(x, y) {
   const a = Game.brIsl;
@@ -17933,71 +18096,94 @@ function buildBRMap() {
     if (Game.themeAt[y][x]) continue;
     Game.themeAt[y][x] = THEMES[seeds[regionAt(x, y)].ti];
   }
-  /* ---- 3) 硬牆：v5.35 改成「岩脊」與「空心圍籬」----
-     舊版用半徑 1~2.9 的圓團亂撒 → 常常黏成 2~3 格厚的實心塊，整片空間白白浪費又不能繞。
-     現在只允許兩種形狀，而且一律 1 格厚：
-       ① 岩脊：一條線（直線或 L 形，長 2~5 格）→ 只能「連成一排」
-       ② 圍籬：空心矩形（3~5 格寬），一定留 1~2 個缺口 → 圍出一個走得到的空間
-     再加一道硬規則：任何位置只要會湊出 2×2 的實心塊就撤銷 → 保證不會再有一整坨。 */
-  const hardTarget = Math.round(landN * .08);
+  /* ---- 3) 硬牆：v5.37 徹底解決「聚成一坨」----
+     使用者反映：明明已經只放 1 格厚的岩脊，畫面上還是常常好幾座黏在一起變成半徑 3~4 格的石堆。
+     原因不是厚度，是「兩座獨立的岩脊貼在一起」→ 舊的 2×2 檢查擋不住（兩座各自 1 格厚，合起來是 2×3）。
+     現在加三道規則：
+       ① 結構編號：每一座岩脊／圍籬都是獨立的一座；新的一座只要「碰到別座」（含斜角）就整座放棄，
+          座與座之間一定留 1 格空地 → 不會合體。
+       ② 只准兩種形狀：直線（長 2~4 格）與空心圍籬（5×4／5×5，留 1~2 個缺口，裡面走得出來）。
+          L 形拿掉（轉角自然就是 2 格厚）。
+       ③ 密度上限：方圓 2 格內已經有 7 格石頭就不再放 → 就算合法也不會擠成一團。
+     大圖（79×62）面積兩倍，零碎掩體要多一點才夠躲彈火 → 目標 12%（原圖 9%）。 */
+  const hardTarget = Math.round(landN * (brBig() ? .12 : .09));
   let hardN = 0;
+  let hardSeq = 0;
+  // 測試／除錯用：只記錄「這一階段擺上去的掩體」（海岸岩層不算），驗證聚成一坨時才量得準
+  const hardMark = [];
+  for (let y = 0; y < rows; y++) hardMark.push(new Array(cols).fill(0));
   function hardAt(x, y) {
     return x >= 0 && y >= 0 && x < cols && y < rows && Game.grid[y][x] === 1;
   }
-  function hardPut(x, y) {
-    if (x < 1 || y < 1 || x >= cols - 1 || y >= rows - 1) return false;
-    if (Game.grid[y][x] !== 0 || Game.brIsl[y][x] < 0) return false;
-    Game.grid[y][x] = 1;
-    for (let oy = -1; oy <= 0; oy++) for (let ox = -1; ox <= 0; ox++) {
-      if (hardAt(x + ox, y + oy) && hardAt(x + ox + 1, y + oy) &&
-          hardAt(x + ox, y + oy + 1) && hardAt(x + ox + 1, y + oy + 1)) {
-        Game.grid[y][x] = 0;                 // 會湊出 2×2 實心塊 → 撤銷這一格
-        return false;
-      }
+  // 方圓 r 內有幾格石頭（密度上限用；不含自己要放的那幾格）
+  function hardDensity(x, y, r) {
+    let n = 0;
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && ny >= 0 && nx < cols && ny < rows && Game.grid[ny][nx] === 1) n++;
     }
-    hardN++;
-    return true;
+    return n;
   }
-  function hardLineOk(cells) {
+  // 這一格旁邊（含斜角）有沒有既有的石頭
+  function hardTouchOther(x, y) {
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x + dx, ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+      if (Game.grid[ny][nx] === 1) return true;
+    }
+    return false;
+  }
+  // 整座一起檢查：任何一格碰到既有石頭、或太擠 → 整座不放
+  function hardCanPlace(cells) {
     for (let i = 0; i < cells.length; i++) {
       const c = cells[i];
       if (c.x < 1 || c.y < 1 || c.x >= cols - 1 || c.y >= rows - 1) return false;
       if (Game.grid[c.y][c.x] !== 0 || Game.brIsl[c.y][c.x] < 0) return false;
+      if (hardTouchOther(c.x, c.y)) return false;
+      if (hardDensity(c.x, c.y, 2) > 7) return false;
     }
     return true;
   }
-  // ① 岩脊（直線 / L 形）
-  for (let ridge = 0, guard = 0; ridge < 300 && guard < 2600 && hardN < hardTarget; guard++) {
-    const horiz = Math.random() < .5;
-    const len = 2 + rand(4);
-    const bend = Math.random() < .35 ? (Math.random() < .5 ? 1 : -1) : 0;
-    let ddx = horiz ? 1 : 0, ddy = horiz ? 0 : 1;
-    let px = 1 + rand(cols - 2), py = 1 + rand(rows - 2);
-    const cells = [{ x: px, y: py }];
-    for (let i = 1; i < len; i++) {
-      if (bend && i === (len >> 1)) { ddx = horiz ? 0 : bend; ddy = horiz ? bend : 0; }
-      px += ddx; py += ddy;
-      cells.push({ x: px, y: py });
+  function hardPlace(cells) {
+    if (!hardCanPlace(cells)) return 0;
+    const id = ++hardSeq;
+    for (let i = 0; i < cells.length; i++) {
+      Game.grid[cells[i].y][cells[i].x] = 1;
+      hardMark[cells[i].y][cells[i].x] = 1;
+      hardN++;
     }
-    if (!hardLineOk(cells)) continue;
-    let put = 0;
-    for (let i = 0; i < cells.length; i++) if (hardPut(cells[i].x, cells[i].y)) put++;
-    if (put) ridge++;
+    return cells.length;
   }
-  // ② 空心圍籬（一定留缺口，走得到裡面）
-  for (let ring = 0, guard = 0; ring < 24 && guard < 700 && hardN < hardTarget; guard++) {
-    const w = 3 + rand(3), h = 3 + rand(2);
+  // 連通修正的單格回填（找不到位置就改填軟磚 —— 炸得開，不會變成一坨岩）
+  function hardPut(x, y) {
+    if (!hardCanPlace([{ x: x, y: y }])) return false;
+    Game.grid[y][x] = 1; hardMark[y][x] = 1; hardN++;
+    return true;
+  }
+  // ① 空心圍籬先放（空地最多時最容易成功；留缺口 → 圍出一個走得出去的空間）
+  for (let ring = 0, guard = 0; ring < (brBig() ? 6 : 3) && guard < 1600 && hardN < hardTarget * .38; guard++) {
+    const w = 5, h = 4 + rand(2);
     const x0 = 1 + rand(cols - 2), y0 = 1 + rand(rows - 2);
     const cells = [];
     for (let i = 0; i < w; i++) { cells.push({ x: x0 + i, y: y0 }); cells.push({ x: x0 + i, y: y0 + h - 1 }); }
     for (let j = 1; j < h - 1; j++) { cells.push({ x: x0, y: y0 + j }); cells.push({ x: x0 + w - 1, y: y0 + j }); }
     const gaps = 1 + rand(2);
-    for (let g = 0; g < gaps && cells.length > 4; g++) cells.splice(rand(cells.length), 1);
-    if (!hardLineOk(cells)) continue;
-    let put = 0;
-    for (let i = 0; i < cells.length; i++) if (hardPut(cells[i].x, cells[i].y)) put++;
-    if (put >= 5) ring++;
+    for (let g = 0; g < gaps && cells.length > 6; g++) cells.splice(1 + rand(cells.length - 2), 1);
+    if (hardPlace(cells) >= 8) ring++;
   }
+  // ② 直線岩脊（長 2~4 格，只准連成一排）
+  for (let ridge = 0, guard = 0; ridge < 1500 && guard < 16000 && hardN < hardTarget; guard++) {
+    const horiz = Math.random() < .5;
+    const len = 2 + rand(3);
+    const px = 1 + rand(cols - 2), py = 1 + rand(rows - 2);
+    const cells = [];
+    for (let i = 0; i < len; i++) cells.push({ x: px + (horiz ? i : 0), y: py + (horiz ? 0 : i) });
+    if (hardPlace(cells)) ridge++;
+  }
+  Game.brHardMark = hardMark;
+  Game.brHardN = hardN;
   // ---- 4) 出生點：30 人平均散在大陸上 ----
   // ---- 4) 可炸軟磚：以「團塊」放（2×2／1×2／2×1）----
   //   v4.74：一開始是逐格 45% 亂放，結果滿地都是單格孤島，連通修正得挖掉幾百格軟磚，
@@ -18272,7 +18458,7 @@ function brSteer(p, dt) {
 // ====
 function spawnBRBosses() {
   const T = Game.T, born = [];
-  for (let i = 0; i < BR.BOSS_N; i++) {
+  for (let i = 0; i < brBossN(); i++) {   // v5.37：大圖 3 隻／原圖 2 隻
     /* v5.1b：亂入 BOSS 換成八隻新王 —— 每場開局把 1~8 洗牌，依序抽出場的王。
        以前是 `1 + rand(32)` 抽「關卡」，但美術是看 Game.stage（大逃殺固定 = 1）
        → 不管抽到第幾關，畫面上永遠是同一隻。 */
@@ -18511,10 +18697,16 @@ function startBR() {
   Game.winsNeeded = 1; Game.teamWins = [0, 0, 0, 0];
   Game.state = 'idle'; paused = false;
   Game.brOut = 0;
-  // v4.75：把入口卡的選項套進這一場（v5.36：地圖 4,898 格，人數上限開到 100）
-  BR.N = clamp(BR.opt.n | 0, 20, 100);
+  // v4.75：把入口卡的選項套進這一場
+  //   v5.37：地圖尺寸先決定（大 79×62／原 56×44），人數上限、圈半徑、縮圈曲線都跟著換
+  const bigMapBR = (BR.opt.map | 0) !== 0;
+  BR.W = bigMapBR ? 79 : 56; BR.H = bigMapBR ? 62 : 44;
+  BR.Z0 = bigMapBR ? 40 : BR.Z0S;
+  BR.N = clamp(BR.opt.n | 0, 20, bigMapBR ? 100 : BR.N0);
   BR.TEAM = clamp(BR.opt.team | 0, 1, 4);
-  BR.PH = (BR.opt.dur | 0) === 5 ? BR.PH5 : BR.PH10;
+  BR.PH = (BR.opt.dur | 0) === 5
+    ? (bigMapBR ? BR.PH5 : BR.PH5S)
+    : (bigMapBR ? BR.PH10 : BR.PH10S);
   Game.brTeam = BR.TEAM;
   Game.teamsOn = BR.TEAM >= 2 ? BR.TEAM : 0;      // 隊友之間不互炸（火焰判定會看這個）
   const me = 0;
@@ -18566,12 +18758,12 @@ function startBR() {
   Game.bossArena = null;                                          // v5.36：大逃殺不是 BOSS 關
   Game.brLootGold = 0;                                            // v5.35：戰場掉落的金幣
   Game.foeAoe = []; Game.foeHaz = []; Game.rollers = []; Game.orbs = [];   // v5.0
-  Game.foeCap = BR.FOES + 8;
+  Game.foeCap = brFoeN() + 8;
   Game.timer = Infinity;
   // ---- 小怪：散在整張大陸上（數量照舊 14 隻），離任何人 3 格內不生 ----
   const used = {};
   let made = 0, guard = 0;
-  while (made < BR.FOES && guard++ < 3000) {
+  while (made < brFoeN() && guard++ < 3000) {
     const x = rand(Game.cols), y = rand(Game.rows);
     if (Game.brIsl[y][x] < 0 || Game.grid[y][x] !== 0) continue;
     const key = y * Game.cols + x;
@@ -18840,7 +19032,8 @@ function brNukeLaunch() {
   // v5.36：一波兩顆（落點互距 ≥ BR.NUKE_GAP），而且只炸毒圈內
   const list = [];
   let first = null;
-  for (let i = 0; i < (BR.NUKE_N || 1); i++) {
+  const waveN = brNukeWaveN();                 // v5.37：大圖過半剩 1 顆、原圖固定 1 顆
+  for (let i = 0; i < waveN; i++) {
     const s = brNukePickSpot(first);
     if (!s) break;
     if (!first) first = s;
@@ -18884,6 +19077,7 @@ function brNukeImpact(n) {
   });
   // ④ 畫面：劇烈震動＋白閃＋三圈衝擊波＋碎石
   Game.shake = Math.min(1.6, (Game.shake || 0) + 1.25);
+  Game.nukeShakeT = 1.8;                         // v5.37：這一震是核彈造成的（震動關掉時仍允許，除非關核彈震動）
   Game.flash = Math.max(Game.flash || 0, .85);
   if (!Game.rings) Game.rings = [];
   for (let i = 0; i < 3; i++) Game.rings.push({ x: px, y: py, r: T * (5 + i * 4.5), dur: 1.0 + i * .35, born: (Game.gameT || 0) + i * .07, kind: 'core' });
@@ -21854,6 +22048,7 @@ function updateWorld(dt) {
     if (pt.t <= 0) Game.particles.splice(i, 1);
   }
   if (Game.shake > 0) Game.shake = Math.max(0, Game.shake - dt * 2.2);
+  if (Game.nukeShakeT > 0) Game.nukeShakeT = Math.max(0, Game.nukeShakeT - dt);
   if (Game.flash > 0) Game.flash = Math.max(0, Game.flash - dt * 4.2);   // v4.89 落地白閃
   Game.gameT += dt;
 }
@@ -26433,6 +26628,28 @@ function onScreen(x, y, pad) {
 }
 function paintHazardCell(x, y, hz, T) {
   const px = x * T, py = y * T;
+  /* v5.37：拉遠看全貌時（低效能）機關只畫「一眼認得出」的色塊＋方向箭頭 ——
+     這一層是整個畫面最貴的逐格繪製（縮到 42% 時整張圖幾百格同時在畫）。 */
+  if (rqLv() === 0) {
+    const col = hz.type === 'ice' ? 'rgba(120,214,240,.62)'
+      : hz.type === 'convey' ? 'rgba(150,158,188,.55)'
+      : hz.type === 'warp' ? 'rgba(194,150,255,.65)'
+      : hz.type === 'water' ? 'rgba(36,137,164,.80)'
+      : hz.type === 'sand' ? 'rgba(125,96,56,.80)'
+      : hz.type === 'hide' ? 'rgba(70,120,70,.55)' : 'rgba(160,160,170,.45)';
+    ctx.fillStyle = col;
+    ctx.fillRect(px, py, T, T);
+    if (hz.type === 'convey' && hz.dir) {
+      const d = DIRS[hz.dir] || { x: 1, y: 0 };
+      ctx.strokeStyle = 'rgba(255,255,255,.75)';
+      ctx.lineWidth = Math.max(1, T * .06);
+      ctx.beginPath();
+      ctx.moveTo(px + T * .30 - d.x * T * .08, py + T * .30 - d.y * T * .08);
+      ctx.lineTo(px + T * .70 + d.x * T * .08, py + T * .70 + d.y * T * .08);
+      ctx.stroke();
+    }
+    return;
+  }
         if (hz.type === 'water') {
           // v5.11：水流 —— 一格寬的河。深藍綠底 + 兩道會跑的波紋 + 邊緣反光，
           //   刻意比地板「暗一階」，一眼看得出是水不是地板。
@@ -26598,13 +26815,16 @@ function paintHazardCell(x, y, hz, T) {
 function render() {
   const T = Game.T;
   const th = Game.theme || THEMES[0];
+  rqUpdate();                                   // v5.37：每幀依縮放決定細節等級
   // v4.54：牆分類（每張圖算一次）；v4.64 加上尺寸校驗 —— 換了地圖卻忘記清，也不會把舊分類套上去
   if (!Game.wallKind || Game.wallSize !== (Game.cols + 'x' + Game.rows)) markWallKinds();
   ctx.setTransform(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0);
   paintBackdrop(th);
   // v5.27：暈動症玩家可以把震動關掉（設定 → 一般 → 畫面震動）。
   //   只關「畫面位移」，鏡頭回彈與傷害回饋都還在，不會變成沒打擊感。
-  if (settings.shake && Game.shake > 0) {
+  // v5.37：震動預設關；核彈另外一個開關（核彈落地照樣震，除非玩家自己關掉核彈震動）
+  const shakeOn = settings.shake || (settings.nukeShake && (Game.nukeShakeT || 0) > 0);
+  if (shakeOn && Game.shake > 0) {
     ctx.translate((Math.random() - .5) * Game.shake * 9, (Math.random() - .5) * Game.shake * 9);
   }
   // v4.27：縮放 —— 以「畫面中心」為基準縮放，相機的邊界計算才對得上（clampCam 已同步）
@@ -26633,7 +26853,7 @@ function render() {
       if (hz) {
         paintHazardCell(x, y, hz, T);
         // v5.22：機關是地板畫完才疊的圖層，會把牆的陰影整片蓋掉 → 補壓一次
-        try { drawAOCell(x, y, T); } catch (e) {}
+        if (rqLv() > 0) { try { drawAOCell(x, y, T); } catch (e) {} }
       }
     }
   }
@@ -26712,8 +26932,9 @@ function render() {
   const fw = Game.cols * T, fh = Game.rows * T;
   // v5.21：世界座標的暗角改到「螢幕座標」一次畫完（drawVignette），這裡不再每幀
   //   在整張地圖上填一次大漸層 —— 大逃殺 50×50 的地圖光這一步就要填 2500 格。
-  drawAmbient(T, 0);
-  drawAmbient2(T, 0);
+  // v5.37：拉遠（低效能）時整層環境光全省；適中只留第一層
+  if (rqLv() >= 2) { drawAmbient(T, 0); drawAmbient2(T, 0); }
+  else if (rqLv() === 1) { drawAmbient(T, 0); }
   // v4.89：鴕鳥落地震波 —— 核心白閃 + 三圈衝擊波 + 塵土 + （風暴）紫電
   //   全部貼地畫成橢圓（看得出是「震」不是「燒」），kind 決定畫法
   if (Game.rings && Game.rings.length) {
@@ -27532,6 +27753,13 @@ function bombIsAlly(b) {
 function drawBomb(b, T) {
   // v4.13：投彈繞回地圖外時用 vpx/vpy（視覺座標）→ 會真的飛出畫面再從另一端進來
   const x = (b.vpx != null) ? b.vpx : b.px, y = (b.vpy != null) ? b.vpy : b.py;
+  if (rqLv() === 0 && !b.mine) {
+    const rr = T * .30;
+    const hot0 = !b.remoteArmed && b.timer < .7 && Math.sin(Game.gameT * 14 + b.seed) > 0;
+    ctx.fillStyle = hot0 ? '#ff6b5a' : (bombIsAlly(b) ? '#f2f4ff' : '#2b3145');
+    ctx.beginPath(); ctx.arc(x, y, rr, 0, 6.283); ctx.fill();
+    return;
+  }
   if (b.mine) {
     ctx.fillStyle = '#39435c';
     ctx.beginPath(); ctx.arc(x, y + 6, T * .16, 0, 6.283); ctx.fill();
@@ -28334,6 +28562,19 @@ function drawBossElemFx(e, x, footY, H, T, layer) {
 }
 
 function drawEnemy(e, T) {
+  /* v5.37：低效能 → 怪物簡化成「有顏色的圓＋朝向」，王多畫一圈金邊（一眼看得出來） */
+  if (rqLv() === 0) {
+    const ar = enemyArtR(e);
+    softShadow(e.x, e.y + ar * .9, ar * .7, ar * .25, .30);
+    ctx.fillStyle = e.boss ? '#ff8a3d' : (e.kind === 'fly' ? '#c86bd6' : '#7fe08a');
+    ctx.beginPath(); ctx.ellipse(e.x, e.y, ar * .88, ar * .95, 0, 0, 6.283); ctx.fill();
+    if (e.boss) {
+      ctx.strokeStyle = 'rgba(255,214,120,.95)';
+      ctx.lineWidth = Math.max(2, T * .06);
+      ctx.beginPath(); ctx.ellipse(e.x, e.y, ar * 1.12, ar * 1.18, 0, 0, 6.283); ctx.stroke();
+    }
+    return;
+  }
   const castK = (e.castT > 0) ? (1 - e.castT / FOE_CAST_WINDUP) : 0;
   const shk = castK > 0
     ? Math.sin(Game.gameT * (54 + castK * 46) + e.x * .07) * T * (.020 + castK * .052)
@@ -31438,6 +31679,26 @@ function bombUnderFoot(p) {
   return bombAt(Math.floor(p.x / T), Math.floor(p.y / T));
 }
 function drawPlayer(p, T) {
+  /* v5.37：低效能（拉遠看全貌）→ 只畫影子＋角色色塊＋面向小點。
+     100 人同時在畫面裡時，這一條省下的比任何微調都多。 */
+  if (rqLv() === 0) {
+    const x = p.x, y = p.y - (p.jumpLift || 0);
+    const R = T * .38 * (p.dino ? .82 : 1);
+    softShadow(x, y + T * .30, R * .78, R * .26, .30);
+    ctx.fillStyle = (p.ch && p.ch.color) || '#7fd8ff';
+    ctx.beginPath(); ctx.ellipse(x, y, R * .82, R * .92, 0, 0, 6.283); ctx.fill();
+    const d = DIRS[p.facing] || { x: 1, y: 0 };
+    ctx.fillStyle = 'rgba(255,255,255,.92)';
+    ctx.beginPath(); ctx.arc(x + d.x * R * .42, y + d.y * R * .42, Math.max(1.4, R * .18), 0, 6.283); ctx.fill();
+    if (p.team >= 0 && Game.mode === 'battle') {
+      const tmD = teamMeta(p.team);
+      if (tmD) {
+        ctx.strokeStyle = tmD.hex; ctx.lineWidth = Math.max(1.6, T * .05);
+        ctx.beginPath(); ctx.ellipse(x, y + T * .30, R * .92, R * .34, 0, 0, 6.283); ctx.stroke();
+      }
+    }
+    return;
+  }
   if (p.dino) drawDino(p, T);
   // 騎乘時坐到坐騎背上的鞍座
   // 恐龍的鞍座在「頭的反方向」；鴕鳥的鞍布在身體中央偏頭那一側（頭在右前），而且高得多，
@@ -31962,6 +32223,8 @@ refreshers.push(segWire('segQual', function () { return settings.qual; }, functi
 }));
 refreshers.push(segWire('segFps', function () { return settings.fps ? '1' : '0'; }, function (v) { settings.fps = parseInt(v, 10) ? 1 : 0; }));
 refreshers.push(segWire('segShake', function () { return settings.shake ? '1' : '0'; }, function (v) { settings.shake = parseInt(v, 10) ? 1 : 0; }));
+// v5.37：核彈震動獨立開關
+refreshers.push(segWire('segNukeShake', function () { return settings.nukeShake ? '1' : '0'; }, function (v) { settings.nukeShake = parseInt(v, 10) ? 1 : 0; }));
 refreshers.push(segWire('segCB', function () { return settings.cb ? '1' : '0'; }, function (v) { settings.cb = parseInt(v, 10) ? 1 : 0; }));
 // v5.28：文字大小／減少動態
 refreshers.push(segWire('segFont', function () { return settings.font === 'l' ? 'l' : 'n'; }, function (v) {
@@ -33661,11 +33924,19 @@ function brCardHTML() {
   }
   let tkN = 0;
   try { tkN = Shop.tickets ? Shop.tickets() : 0; } catch (e) {}
+  // v5.37：地圖尺寸先選 —— 大圖最多 100 人、原圖最多 50 人（人數選項跟著換）
+  const bigSel = (o.map | 0) !== 0;
+  const mw = bigSel ? 79 : 56, mh = bigSel ? 62 : 44;
+  const ppl = bigSel
+    ? [[30, t('br.p30')], [50, t('br.p50')], [100, t('br.p100')]]
+    : [[20, t('br.p20')], [30, t('br.p30')], [50, t('br.p50')]];
+  if (bigSel ? ((o.n | 0) > 100) : ((o.n | 0) > 50)) o.n = bigSel ? 100 : 50;
   const n = o.n | 0, tm = o.team | 0, du = o.dur | 0;
   return '<div class="brc">' +
-    '<div class="brc-h"><b>🏝️ ' + t('br.title') + '</b><span>' + t('br.sub', { w: BR.W, h: BR.H }) + '</span>' +
+    '<div class="brc-h"><b>🏝️ ' + t('br.title') + '</b><span>' + t('br.sub', { w: mw, h: mh }) + '</span>' +
     '<button class="brc-x" id="brOk" type="button">✕</button></div>' +
-    '<div class="brrow"><label class="brlab">' + t('br.people') + '</label>' + seg('n', [[30, t('br.p30')], [50, t('br.p50')], [100, t('br.p100')]]) + '</div>' +
+    '<div class="brrow"><label class="brlab">' + t('br.map') + '</label>' + seg('map', [[0, t('br.mapS')], [1, t('br.mapL')]]) + '</div>' +
+    '<div class="brrow"><label class="brlab">' + t('br.people') + '</label>' + seg('n', ppl) + '</div>' +
     '<div class="brrow"><label class="brlab">' + t('br.team') + '</label>' +
       seg('team', [[1, t('br.solo')], [2, t('br.teamN', { n: 2 })], [3, t('br.teamN', { n: 3 })], [4, t('br.teamN', { n: 4 })]]) + '</div>' +
     '<div class="brrow"><label class="brlab">' + t('br.time') + '</label>' +
@@ -33683,14 +33954,14 @@ function brCardHTML() {
     '<div class="brgo-box"><button class="mbtn warm" id="brGo" type="button">' +
       (tm >= 2 ? t('br.goTeams', { a: Math.ceil(n / tm), b: tm }) : t('br.goSolo', { n: n })) +
     '</button><div class="brfoot">🎟️ ' + (BR.FREE ? t('br.free') : t('br.ticket', { n: tkN })) +
-      t('br.foot', { b: BR.BOSS_N }) + '</div></div>' +
+      t('br.foot', { b: brBossN(), f: brFoeN() }) + '</div></div>' +
   '</div>';
 }
 function brSumText() {
   const o = BR.opt, n = o.n | 0, tm = o.team | 0, du = o.dur | 0;
   return tm >= 2
     ? t('brsum.teams', { a: Math.ceil(n / tm), b: tm, d: du, r: du === 5 ? 5 : 10 })
-    : t('brsum.solo', { n: n, d: du, r: du === 5 ? 5 : 10, b: BR.BOSS_N });
+    : t('brsum.solo', { n: n, d: du, r: du === 5 ? 5 : 10, b: brBossN() });
 }
 
 $id('btnBR').addEventListener('click', function () {
@@ -33738,8 +34009,19 @@ $id('btnBR').addEventListener('click', function () {
     const b = ev.target;
     if (b && b.tagName === 'B' && b.dataset && b.dataset.v) {
       const k = b.parentNode.getAttribute('data-k');
-      BR.opt[k] = parseInt(b.dataset.v, 10) || 1;
+      const keepZero = (k === 'map');           // v5.37：map 的 0 是「原圖」，不能被 || 1 吃掉
+      BR.opt[k] = keepZero ? (parseInt(b.dataset.v, 10) || 0) : (parseInt(b.dataset.v, 10) || 1);
       AudioSys.sfx('click');
+      if (k === 'map') {                        // 換尺寸 → 人數選項與上限一起換，整張卡重畫
+        const bigNow = (BR.opt.map | 0) !== 0;
+        BR.opt.n = Math.min(BR.opt.n | 0, bigNow ? 100 : 50);
+        saveSettings();
+        ov.innerHTML = brCardHTML();
+        try { CharPreview.mount(ov); } catch (e) {}
+        const nm3 = $id('brName');
+        if (nm3) nm3.addEventListener('keydown', function (ev) { ev.stopPropagation(); });
+        return;
+      }
       const on = b.parentNode.querySelectorAll('b');
       for (let i = 0; i < on.length; i++) on[i].classList.toggle('on', on[i] === b);
       const sum = $id('brSum');
@@ -33829,7 +34111,45 @@ function openOnline() {
   if (nm && !nm.value) nm.value = settings.netName || '';
   Net.msg('');
   Screen.show('online');
+  try { P2P.wire(); } catch (e) {}
+  try { lanRefresh(); } catch (e) {}
   Net.lobbyStart();
+}
+
+/* v5.37：把這台伺服器的區網網址列出來（手機連同一個 WiFi 就能玩）。
+   線上版（Render）拿到的會是容器內網 IP，對玩家沒用 → 改成文字說明。 */
+function lanRefresh() {
+  const box = $id('lanUrls'), tip = $id('lanTip');
+  if (!box) return;
+  let host = '';
+  try { host = String(location.hostname || ''); } catch (e) {}
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1'
+    || /^192\.168\./.test(host) || /^10\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+  if (location.protocol === 'file:') {
+    box.innerHTML = '<span class="lanurl">file:// 開啟（沒有後端）</span>';
+    if (tip) tip.textContent = '直接雙擊 index.html 沒有連線功能：請在電腦執行 node server.js，手機開 http://<電腦IP>:3000。';
+    return;
+  }
+  if (!isLocal) {
+    box.innerHTML = '<span class="lanurl">線上版（Render）</span>';
+    if (tip) tip.textContent = '線上版是公開伺服器，沒有區網位址。想玩區網：在電腦執行 node server.js，手機連同一個 WiFi 後開 http://<電腦IP>:3000（本頁下方會自動列出網址）。';
+    return;
+  }
+  box.innerHTML = '<span class="lanurl">讀取區網位址…</span>';
+  fetch('/api/lan', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+    const addrs = (j && j.addrs) || [];
+    if (!addrs.length) {
+      box.innerHTML = '<span class="lanurl">' + (location.origin || '') + '</span>';
+    } else {
+      box.innerHTML = addrs.map(function (a) {
+        return '<span class="lanurl" title="' + a.name + '">' + a.url + '</span>';
+      }).join('');
+    }
+    if (tip) tip.textContent = '手機／平板連同一個 WiFi，打開上面任一網址就能進同一個房間系統（這台電腦就是主機）。';
+  }).catch(function () {
+    box.innerHTML = '<span class="lanurl">' + (location.origin || '') + '</span>';
+    if (tip) tip.textContent = '抓不到區網位址：確認伺服器正在執行，並允許防火牆的 3000 埠。';
+  });
 }
 $id('btnNetCreate').addEventListener('click', function () { AudioSys.ensure(); AudioSys.sfx('click'); Net.create(); });
 $id('btnNetQuick').addEventListener('click', function () { AudioSys.ensure(); AudioSys.sfx('click'); Net.quick(); });
@@ -33854,6 +34174,19 @@ setInterval(function () {
       Net.pushState(false);
     });
   });
+})();
+// v5.37：房間設定（委派點擊）＋ 角色左右切換
+(function () {
+  const box = $id('netOpts');
+  if (box) box.addEventListener('click', function (ev) {
+    const b = ev.target;
+    if (!b || b.tagName !== 'BUTTON' || !b.dataset || !b.dataset.v) return;
+    const seg = b.parentNode;
+    if (!seg || !seg.id) return;
+    Net.setOpt(seg.id, b.dataset.v);
+  });
+  const pv = $id('netChPrev'); if (pv) pv.addEventListener('click', function () { Net.cycleCh(-1); });
+  const nx = $id('netChNext'); if (nx) nx.addEventListener('click', function () { Net.cycleCh(1); });
 })();
 (function () {
   const seg = $id('segNetCount');
@@ -34263,12 +34596,293 @@ const QChat = (function () {
   return { N: N, label: label, decode: decode, toggle: toggle, close: close,
            send: send, incoming: incoming, sync: sync, init: init, rebuild: rebuild, log: LOG };
 })();
+/* ===== v5.37：區域連線（兩種）
+   ① 電腦當主機：在電腦跑 node server.js，手機連 http://<電腦IP>:3000 —— 走原本的房間系統，
+      完全不用改任何連線程式，只是把「區網網址」直接列出來給你看（/api/lan）。
+   ② WebRTC 直連：不需要任何伺服器。一台「建立直連」拿到邀請碼，另一台貼上後產生回應碼，
+      再貼回主機 → 兩台在同一個 WiFi 上點對點連線。
+      主機那台同時扮演房間伺服器（把 /api/relay/* 在本機做一次），所以遊戲本體的同步邏輯不用改。 */
+var P2P = (function () {
+  let pc = null, dc = null, role = '', open = false, seqId = 0, waits = {}, room = null, guestDone = false;
+  const ICE = [{ urls: 'stun:stun.l.google.com:19302' }];
+
+  function newPid() { return 'p' + Math.random().toString(36).slice(2, 10); }
+  function ui(t) { const el = $id('p2pMsg'); if (el) el.textContent = t || ''; }
+  function b64(o) {
+    const bytes = new TextEncoder().encode(JSON.stringify(o));
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function unb64(t) {
+    const bin = atob(String(t || '').replace(/\s+/g, ''));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+  function qs(path, k) {
+    const m = new RegExp('[?&]' + k + '=([^&]+)').exec(String(path || ''));
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  // ---------- 主機端：把 server.js 的 relay 行為在本機重做一次 ----------
+  function pubRoster() {
+    return room.roster.map(function (p) {
+      return { pid: p.pid, name: p.name, ch: p.ch, slot: p.slot, entry: p.entry, host: p.pid === room.hostPid };
+    });
+  }
+  function handle(path, body) {
+    body = body || {};
+    if (path === '/api/relay/create') {
+      const pid = newPid();
+      room = {
+        hostPid: pid, roster: [{ pid: pid, name: body.name || '房主', ch: 0, slot: 0, entry: 1, host: true }],
+        phase: 'wait', count: body.count || 4, teams: 0, opts: body.opts || null,
+        snap: null, v: 0, inputs: {}, chat: [], chatId: 0
+      };
+      return { ok: true, code: 'LINK', pid: pid, host: pid, roster: pubRoster(), count: room.count, v: room.v };
+    }
+    if (!room) return { ok: false, err: 'room gone' };
+    if (path === '/api/relay/join') {
+      if (room.roster.length >= (room.count || 4)) return { ok: false, err: '房間已滿' };
+      let slot = 0;
+      while (room.roster.some(function (p) { return p.slot === slot; })) slot++;
+      const pid = newPid();
+      room.roster.push({ pid: pid, name: String(body.name || ('玩家' + slot)).slice(0, 8), ch: slot % 8, slot: slot, entry: 1, host: false });
+      room.v++;
+      return { ok: true, code: 'LINK', pid: pid, host: room.hostPid, roster: pubRoster(), count: room.count, phase: room.phase, v: room.v };
+    }
+    if (path === '/api/relay/push') {
+      if (body.phase) room.phase = body.phase;
+      if (Array.isArray(body.roster)) body.roster.forEach(function (m) {
+        const p = room.roster.filter(function (x) { return x.pid === m.pid; })[0];
+        if (!p) return;
+        if (typeof m.entry === 'number') p.entry = m.entry ? 1 : 0;
+        if (typeof m.ch === 'number') p.ch = m.ch;
+        if (typeof m.slot === 'number') p.slot = m.slot;
+      });
+      if (typeof body.count === 'number') room.count = Math.max(2, Math.min(8, body.count | 0));
+      if (typeof body.teams === 'number') room.teams = body.teams | 0;
+      if (body.opts) room.opts = body.opts;
+      if (body.snap) room.snap = body.snap;
+      room.v++;
+      return { ok: true, v: room.v };
+    }
+    if (path === '/api/relay/input') {
+      const p = room.roster.filter(function (x) { return x.pid === body.pid; })[0];
+      if (!p) return { ok: false, err: 'not in room' };
+      if (typeof body.ch === 'number') p.ch = Math.max(0, Math.min(7, body.ch | 0));
+      if (typeof body.chat === 'number' && body.chat >= 0 && body.chat < 12) {
+        room.chatId++;
+        room.chat.push({ id: room.chatId, pid: p.pid, n: p.name, m: '#' + (body.chat | 0) });
+        if (room.chat.length > 20) room.chat.shift();
+      }
+      if (body.dx != null || body.dy != null || body.act != null) {
+        const q = room.inputs[p.pid] || (room.inputs[p.pid] = []);
+        q.push({ pid: p.pid, seq: body.seq | 0, dx: body.dx | 0, dy: body.dy | 0, act: body.act ? 1 : 0 });
+        if (q.length > 8) q.shift();
+      }
+      return { ok: true };
+    }
+    if (path === '/api/relay/leave') {
+      room.roster = room.roster.filter(function (p) { return p.pid !== body.pid; });
+      room.v++;
+      return { ok: true };
+    }
+    if (path.indexOf('/api/relay/poll') === 0) {
+      const who = body.pid || qs(path, 'pid');
+      const out = { ok: true, roster: pubRoster(), host: room.hostPid, count: room.count, teams: room.teams,
+        phase: room.phase, v: room.v, snap: room.snap, opts: room.opts, chatId: room.chatId };
+      if (room.chat.length) out.chat = room.chat.slice(-6);
+      if (who === room.hostPid) {
+        out.inputs = [];
+        Object.keys(room.inputs).forEach(function (k) { out.inputs = out.inputs.concat(room.inputs[k]); });
+        room.inputs = {};
+      }
+      return out;
+    }
+    if (path.indexOf('/api/relay/list') === 0) return { ok: true, rooms: [] };
+    return { ok: false, err: 'unknown api' };
+  }
+
+  // ---------- 傳輸 ----------
+  function send(m) {
+    if (!dc || dc.readyState !== 'open') return false;
+    try { dc.send(JSON.stringify(m)); return true; } catch (e) { return false; }
+  }
+  function api(path, body, cb) {
+    if (role === 'host') { setTimeout(function () { cb(null, handle(path, body)); }, 0); return; }
+    const id = ++seqId;
+    waits[id] = cb;
+    if (!send({ t: 'api', i: id, p: path, b: body })) {
+      delete waits[id];
+      cb(new Error('直連還沒建立（請先完成邀請碼／回應碼交換）'));
+    }
+  }
+  function onMsg(ev) {
+    let m = null;
+    try { m = JSON.parse(ev.data); } catch (e) { return; }
+    if (!m) return;
+    if (m.t === 'api') { send({ t: 'res', i: m.i, r: handle(m.p, m.b) }); return; }
+    if (m.t === 'res') {
+      const cb = waits[m.i];
+      delete waits[m.i];
+      if (!cb) return;
+      if (m.r && m.r.ok === false) cb(new Error(m.r.err || '直連錯誤'), m.r);
+      else cb(null, m.r || {});
+    }
+  }
+  function bindDC(ch) {
+    dc = ch;
+    dc.onopen = function () { open = true; onOpen(); };
+    dc.onclose = function () {
+      open = false;
+      if (Net && Net.on && Net.code === 'LINK') Net.leave('直連已中斷');
+    };
+    dc.onmessage = onMsg;
+  }
+  function onOpen() {
+    if (!open) return;
+    ui('✅ 直連建立成功');
+    try { AudioSys.sfx('victory'); } catch (e) {}
+    if (role === 'host') {
+      const j = handle('/api/relay/create', { name: Net.myName(), count: settings.count, opts: Net.curOpts() });
+      Net.on = true; Net.role = 'host'; Net.code = 'LINK'; Net.pid = j.pid; Net.hostPid = j.pid;
+      Net.roster = j.roster; Net.count = j.count; Net.phase = 'wait'; Net.snapV = 0; Net.err = '';
+      Net.enterRoom(); Net.startPoll();
+    } else {
+      Net.api('/api/relay/join', { code: 'LINK', name: Net.myName() }, function (err, j) {
+        if (err) { ui('⚠️ ' + err.message); return; }
+        Net.on = true; Net.role = 'guest'; Net.code = 'LINK'; Net.pid = j.pid; Net.hostPid = j.host;
+        Net.roster = j.roster; Net.count = j.count || 4; Net.phase = 'wait'; Net.snapV = 0; Net.err = '';
+        Net.enterRoom(); Net.startPoll();
+      });
+    }
+  }
+
+  // ---------- 連線建立 ----------
+  function mkPC() {
+    if (typeof RTCPeerConnection === 'undefined') throw new Error('這個瀏覽器不支援直連（請改用電腦當主機，或用手機 Chrome／Safari 新版本）');
+    pc = new RTCPeerConnection({ iceServers: ICE });
+    pc.oniceconnectionstatechange = function () {
+      if (pc.iceConnectionState === 'failed') ui('⚠️ 直連失敗：可能被 NAT／防火牆擋住 → 改用同一個 WiFi，或改成「電腦當主機」');
+    };
+    return pc;
+  }
+  function waitIce() {
+    return new Promise(function (res) {
+      if (pc.iceGatheringState === 'complete') return res();
+      const t0 = setTimeout(res, 6000);           // 有些網路收不完，最多等 6 秒就交出去
+      pc.onicegatheringstatechange = function () {
+        if (pc.iceGatheringState === 'complete') { clearTimeout(t0); res(); }
+      };
+    });
+  }
+  function startHost(cb) {
+    role = 'host'; guestDone = false;
+    try { mkPC(); } catch (e) { cb(e); return; }
+    bindDC(pc.createDataChannel('bh', { ordered: true }));
+    pc.createOffer().then(function (off) { return pc.setLocalDescription(off); })
+      .then(waitIce)
+      .then(function () { cb(null, b64(pc.localDescription)); })
+      .catch(function (e) { cb(e); });
+  }
+  function acceptAnswer(code, cb) {
+    let desc = null;
+    try { desc = unb64(code); } catch (e) { cb(new Error('回應碼格式不對（要整串複製）')); return; }
+    pc.setRemoteDescription(new RTCSessionDescription(desc))
+      .then(function () { cb(null, true); })
+      .catch(function (e) { cb(e); });
+  }
+  function startGuest(code, cb) {
+    role = 'guest'; guestDone = false;
+    let desc = null;
+    try { desc = unb64(code); } catch (e) { cb(new Error('邀請碼格式不對（要整串複製）')); return; }
+    try { mkPC(); } catch (e) { cb(e); return; }
+    pc.ondatachannel = function (ev) { bindDC(ev.channel); };
+    pc.setRemoteDescription(new RTCSessionDescription(desc))
+      .then(function () { return pc.createAnswer(); })
+      .then(function (ans) { return pc.setLocalDescription(ans); })
+      .then(waitIce)
+      .then(function () { guestDone = true; cb(null, b64(pc.localDescription)); })
+      .catch(function (e) { cb(e); });
+  }
+  function stop(silent) {
+    open = false;
+    try { if (dc) dc.close(); } catch (e) {}
+    try { if (pc) pc.close(); } catch (e) {}
+    pc = null; dc = null; room = null; waits = {}; role = ''; guestDone = false;
+    const panel = $id('p2pPanel'); if (panel) panel.style.display = 'none';
+    if (!silent) ui('');
+  }
+
+  // ---------- UI ----------
+  function showPanel() { const p = $id('p2pPanel'); if (p) p.style.display = ''; }
+  function out(v) { const el = $id('p2pOut'); if (el) el.value = v || ''; }
+  function inp() { const el = $id('p2pIn'); return el ? String(el.value || '') : ''; }
+  let wired = false;
+  function wire() {
+    if (wired) return;
+    wired = true;
+    const h = $id('btnP2PHost');
+    if (h) h.addEventListener('click', function () {
+      AudioSys.sfx('click'); showPanel(); out(''); ui('建立中…');
+      startHost(function (err, code) {
+        if (err) { ui('⚠️ ' + err.message); return; }
+        out(code);
+        ui('① 把上面這串「邀請碼」用訊息傳給對方（同一個 WiFi 也可以）　② 他把回應碼傳回來後，貼到下面按「連線」');
+      });
+    });
+    const j = $id('btnP2PJoin');
+    if (j) j.addEventListener('click', function () {
+      AudioSys.sfx('click'); showPanel(); out(''); ui('把房主的「邀請碼」貼到下面，按「連線」');
+    });
+    const go = $id('btnP2PGo');
+    if (go) go.addEventListener('click', function () {
+      AudioSys.sfx('click');
+      const text = inp();
+      if (!text) { ui('請先貼上對方給的邀請碼／回應碼'); return; }
+      if (role === 'host') {
+        ui('連線中…');
+        acceptAnswer(text, function (err) { if (err) ui('⚠️ ' + err.message); });
+      } else if (guestDone) {
+        ui('已送出回應碼，等房主按「連線」');
+      } else {
+        ui('產生回應碼…');
+        startGuest(text, function (err, code) {
+          if (err) { ui('⚠️ ' + err.message); return; }
+          out(code);
+          ui('把上面這串「回應碼」傳回給房主，請他貼上後按「連線」');
+        });
+      }
+    });
+    const cp = $id('p2pCopy');
+    if (cp) cp.addEventListener('click', function () {
+      const el = $id('p2pOut');
+      if (!el) return;
+      try {
+        el.removeAttribute('readonly'); el.select(); el.setSelectionRange(0, el.value.length);
+        document.execCommand('copy');
+        ui('✅ 已複製，貼給對方就行');
+      } catch (e) { ui('長按上面的框自己複製（瀏覽器不給自動複製）'); }
+    });
+    const cn = $id('p2pCancel');
+    if (cn) cn.addEventListener('click', function () { AudioSys.sfx('click'); stop(); });
+  }
+
+  return {
+    get on() { return open; }, get role() { return role; },
+    api: api, stop: stop, wire: wire, startHost: startHost, startGuest: startGuest,
+    acceptAnswer: acceptAnswer, handle: handle, b64: b64, unb64: unb64
+  };
+})();
 const Net = {
   on: false, role: '', code: '', pid: '', hostPid: '', phase: 'wait',
   roster: [], count: 4, snap: null, snapV: 0, mySlot: -1, slotOf: {},
   inputs: {}, seq: 0, pendingAct: false, err: '', _polling: false, _timer: null,
   chatId: 0,                                   // v5.27：我收到第幾句快捷語（輪詢只拿更新的）
   pt: 0, it: 0, placeSnap: false, lastFlames: 0, _guestPaused: false, _ovHtml: '',
+  remoteOpts: null, myCh: 0,                       // v5.37：房主的對戰設定＋自己的角色
 
   // ---------- 基礎 ----------
   // v3.3：把「Failed to fetch」翻成人話 —— 線上配對一定要有 Node 後端（server.js）
@@ -34280,6 +34894,8 @@ const Net = {
     return (e && e.message) ? e.message : '網路連線失敗';
   },
   api: function (path, body, cb) {
+    // v5.37：直連模式（WebRTC）→ 走 DataChannel，完全不用 fetch／伺服器
+    if (P2P && P2P.on) { P2P.api(path, body, cb); return; }
     if (!hasFetch()) { cb(new Error('這個環境不支援網路連線')); return; }
     path = apiPath(path);
     const opt = body == null ? { method: 'GET', cache: 'no-store' } : {
@@ -34313,7 +34929,7 @@ const Net = {
   create: function () {
     if (!hasFetch()) { Net.msg('⚠️ 這個環境不能連線（請用伺服器網址開啟，例如 tunnel 網址）'); return; }
     Net.msg('建立房間中…');
-    Net.api('/api/relay/create', { name: Net.myName(), count: settings.count }, function (err, j) {
+    Net.api('/api/relay/create', { name: Net.myName(), count: settings.count, opts: Net.curOpts() }, function (err, j) {
       if (err) { Net.msg('⚠️ 建立失敗：' + err.message); return; }
       Net.on = true; Net.role = 'host'; Net.code = j.code; Net.pid = j.pid;
       Net.hostPid = j.host; Net.roster = j.roster || []; Net.count = j.count || settings.count;
@@ -34411,6 +35027,8 @@ const Net = {
     Net.renderRoster();
     Net.renderCountSeg();
     Net.renderNetTeamSeg();
+    Net.renderOpts();
+    Net.renderMyChar();
     const lag = $id('netLagNote');
     if (lag) lag.textContent = t('net.lag');
     try { updateCta(); } catch (e) {}
@@ -34429,6 +35047,7 @@ const Net = {
     const room = $id('netRoom'); if (room) room.style.display = 'none';
     try { updateCta(); } catch (e) {}
     if (!silent) Net.msg('');
+    if (typeof P2P !== 'undefined' && P2P && P2P.on) P2P.stop(true);   // v5.37：離開房間順便把直連收掉
     AudioSys.startBGM('menu');
     if (Screen.current === 'game') Screen.show('online');
     if (silent && typeof silent === 'string') Net.msg('ℹ️ ' + silent);
@@ -34497,6 +35116,78 @@ const Net = {
     if (wrap) wrap.style.display = '';
   },
 
+  /* ---------- v5.37：房間設定（把本機對戰的全部選項搬過來；房主設定、其他人唯讀） ---------- */
+  optDefs: [
+    { id: 'netSize', k: 'size', t: 'str' },
+    { id: 'netWins', k: 'wins', t: 'int' },
+    { id: 'netTime', k: 'time', t: 'int' },
+    { id: 'netHaz', k: 'hazards', t: 'str' },
+    { id: 'netSd', k: 'sd', t: 'str' },
+    { id: 'netRev', k: 'revenge', t: 'str' },
+    { id: 'netAi', k: 'ai', t: 'str' }
+  ],
+  curOpts: function () {
+    return {
+      size: settings.size, wins: parseInt(settings.wins, 10) || 2,
+      time: parseInt(settings.time, 10) || 120,
+      hazards: settings.hazards, sd: settings.sd, revenge: settings.revenge,
+      ai: settings.aiLevel
+    };
+  },
+  renderOpts: function () {
+    const host = Net.role === 'host';
+    const src = host ? Net.curOpts() : (Net.remoteOpts || Net.curOpts());
+    Net.optDefs.forEach(function (d) {
+      const seg = $id(d.id); if (!seg) return;
+      const cur = String(src[d.k] == null ? '' : src[d.k]);
+      seg.querySelectorAll('button').forEach(function (b) {
+        b.classList.toggle('sel', b.getAttribute('data-v') === cur);
+        b.disabled = !host;
+        b.style.opacity = host ? '1' : '.5';
+      });
+    });
+  },
+  setOpt: function (id, v) {
+    if (Net.role !== 'host') return;
+    const d = Net.optDefs.filter(function (x) { return x.id === id; })[0];
+    if (!d) return;
+    if (d.t === 'int') settings[d.k] = parseInt(v, 10) || 1;
+    else settings[d.k] = v;
+    saveSettings();
+    Net.renderOpts();
+    Net.pushState(false);
+  },
+  // 自己的角色（只選自己）
+  myEntry: function () {
+    const list = Net.roster || [];
+    for (let i = 0; i < list.length; i++) if (list[i].pid === Net.pid) return list[i];
+    return null;
+  },
+  renderMyChar: function () {
+    const me = Net.myEntry();
+    const n = CHARACTERS.length;
+    const ch = ((((me ? (me.ch | 0) : (settings.brChar | 0)) % n) + n) % n);
+    Net.myCh = ch;
+    const cv = $id('netChPv');
+    if (cv) cv.setAttribute('data-ch', String(ch));
+    const nm = $id('netChName');
+    if (nm) nm.textContent = charName(CHARACTERS[ch]);
+    try { CharPreview.mount($id('netRoom')); } catch (e) {}
+  },
+  cycleCh: function (d) {
+    const n = CHARACTERS.length;
+    Net.myCh = ((((Net.myCh | 0) + d) % n) + n) % n;
+    const me = Net.myEntry();
+    if (me) me.ch = Net.myCh;
+    settings.brChar = Net.myCh;
+    saveSettings();
+    Net.renderMyChar();
+    try { CharPreview.hop(Net.myCh); } catch (e) {}
+    AudioSys.sfx('click');
+    // 送給伺服器（伺服器只更新自己的那一筆；房主下次推狀態時就會帶著新角色）
+    Net.api('/api/relay/input', { code: Net.code, pid: Net.pid, ch: Net.myCh, seq: Net.seq++ }, function () {});
+  },
+
   // ---------- 輪詢 ----------
   startPoll: function () {
     Net.stopPoll();
@@ -34528,6 +35219,10 @@ const Net = {
       if (j.roster) Net.roster = j.roster;
       Net.hostPid = j.host || Net.hostPid;
       if (typeof j.count === 'number') Net.count = j.count;
+      if (j.opts && typeof j.opts === 'object') {   // v5.37：房主推下來的對戰設定
+        Net.remoteOpts = j.opts;
+        if (Net.role !== 'host' && Screen.current === 'online') { try { Net.renderOpts(); } catch (e) {} }
+      }
       if (typeof j.teams === 'number') {
         const was = Net.remoteTeams | 0;
         Net.remoteTeams = j.teams | 0;
@@ -34563,6 +35258,7 @@ const Net = {
     if (!Net.on || Net.role !== 'host') return;
     const body = {
       code: Net.code, pid: Net.pid, phase: Net.phase, count: Net.count, teams: teamCount(),
+      opts: Net.curOpts(),                       // v5.37：整份對戰設定（客人唯讀顯示）
       roster: Net.roster.map(function (r) {
         return { pid: r.pid, entry: r.entry === 0 ? 0 : 1, ch: r.ch | 0, slot: r.slot | 0 };
       })
@@ -35841,6 +36537,8 @@ const Tut = (function () {
         const ls = $id('labShake'); if (ls) ls.textContent = t('ui.shake');
         const lc = $id('labCB'); if (lc) lc.textContent = t('ui.cb');
         const shk = $id('shakeHint'); if (shk) shk.textContent = t('ui.shakeHint');
+        const lns = $id('labNukeShake'); if (lns) lns.textContent = t('ui.nukeShake');
+        const nsh = $id('nukeShakeHint'); if (nsh) nsh.textContent = t('ui.nukeShakeHint');
         const cbh = $id('cbHint'); if (cbh) cbh.textContent = t('ui.cbHint');
         /* v5.28：文字大小／減少動態（一樣是短標籤） */
         const lfz = $id('labFont'); if (lfz) lfz.textContent = t('ui.font');
@@ -35981,7 +36679,20 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.36', date: '2026-11-07', now: true, items: [
+  { v: '5.37', date: '2026-11-07', now: true, items: [
+    '🎬 <b>畫面震動預設關閉</b>（暈動症友善），核彈震動獨立成另一顆開關、預設開 —— 以後只有核彈落地的瞬間會震，其他爆炸都不震。',
+    '🧱 <b>大逃殺硬牆終於不再聚成一坨</b>：改成一座一座檢查，<b>碰到別座就整座放棄</b>再加密度上限。實測 2×2 實心塊 <b>0 個</b>、最大連通塊只剩一座圍籬，最多連成 2 格。',
+    '👑 <b>BOSS 決戰場換成對戰式棋盤 17×15</b>：有軟磚可以打道具、有輸送帶或滑冰可以繞場（傳送門會把王傳走，刻意不放）。只有王 (8,2) 與你 (8,13) <b>半徑 1 格絕對乾淨</b>，大門固定在王正上方。',
+    '☢️ <b>大逃殺三種數量分流</b>：大地圖 3 隻 BOSS ＋ 20 隻小怪、一次兩顆核彈（時間過一半剩 1 顆）；原本尺寸 2 隻 BOSS ＋ 14 隻小怪、1 顆核彈。兩種尺寸<b>最後 1 分鐘都停火</b>。',
+    '🎺 <b>BOSS 專屬熱血曲</b>：158 BPM、加一層低通 200Hz 的重低音與銅管齊奏，14 段樂句輪轉，打王時自動接手。',
+    '🗺️ <b>兩種大逃殺地圖都留著</b>：原本 56×44 上限 50 人、加大 79×62 上限 100 人，入口可以直接切。',
+    '⚡ <b>縮放自動效能分級</b>：42%~100% 最低、100%~180% 適中、180%~300% 高（拉遠看全貌時只畫色塊，地板與環境光都省下來）；設定頁可手動覆寫。',
+    '💡 <b>線上配對加註提醒</b>：伺服器放在免費託管平台 Render，連線品質不會比較順暢，目前當作測試內容。',
+    '📶 <b>區網連線兩種做法都給了</b>：同一個 WiFi 由電腦當主機（不經外網），或 WebRTC 直連（免伺服器，貼一串邀請碼就能連）。',
+    '🎮 <b>線上配對補齊本機對戰的設定</b>：地圖尺寸／勝場／時間／地形機關／突死縮圈／復仇推車／AI 難度都由房主設定、其他人唯讀；選角只選自己。',
+    '📐 主檔 1,947,xxx 字元（預算 1,950,000）；135 支測試全綠（新增 verify-v537）。'
+  ]},
+  { v: '5.36', date: '2026-11-07', now: false, items: [
     '👑 <b>BOSS 專屬第 5 關</b>：8 大主題改成「4 張地圖 ＋ 1 場 BOSS 決戰」＝ 40 關。決戰場是 17×15 的封閉競技場，王在中上、你從中下進場，開場沒有任何小兵；每 60 秒王會從左右各叫一隻護衛（場上最多 8 隻）。打倒王之後<b>上方大門</b>才會打開，走出去那一瞬間有冠軍級的彩帶、閃光與勝利音效。',
     '🏝️ <b>大逃殺地圖面積加倍、100 人同場</b>：56×44 → 79×62（4,898 格），縮圈半徑整套重算（首圈 34 格、末圈 3.4 格）。遠方 AI 降到 6Hz 更新，100 人也不會卡。',
     '☢️ <b>核彈改成一次兩顆</b>：每 45 秒一波、兩顆同時通報（落點至少相隔 12 格），而且<b>只會落在毒圈內</b>；最後 2 分鐘不再落彈，留時間給決賽圈。',
@@ -42014,6 +42725,7 @@ window.__BH = {
   buildSnap: function () { return Net.buildSnap(); }, applySnap: function (s) { return Net.applySnap(s); },
   // v5.27：畫質分級／FPS／模式提示／賽季 / 快捷語（測試與後台用）
   QUAL_CAP: QUAL_CAP, QUAL_PART: QUAL_PART, qualLevel: qualLevel, qualDprCap: qualDprCap,
+  RQ: RQ, rqLv: rqLv, rqUpdate: rqUpdate,
   qualPart: qualPart, ambN: ambN, applyQuality: applyQuality, updateFps: updateFps,
   ModeTip: ModeTip, Season: Season, QChat: QChat, NetInvite: NetInvite,
   DeathCard: DeathCard, Spec: Spec, FirstRun: FirstRun, applyA11y: applyA11y,
@@ -42240,7 +42952,8 @@ window.__BH = {
   // v4.6：PWA 安裝（測試／除錯用）；pwaCore() 每次都去拿 live 的 window.BHPWA
   pwaCore: pwaCore, pwaSync: pwaSync, pwaInstall: pwaInstall,
   pwaHint: pwaHint, pwaHintClose: pwaHintClose, pwaRefreshHint: pwaRefreshHint,
-  AudioSys: AudioSys, songSeconds: function (n) { return AudioSys.songSeconds(n); }
+  AudioSys: AudioSys, songSeconds: function (n) { return AudioSys.songSeconds(n); },
+  P2P: (typeof P2P !== 'undefined' ? P2P : null),   // v5.37：WebRTC 直連（測試用）
 };
 
 // v5.5：累計遊玩時間 ＋ 拜訪紀錄 的計時器（一定要等 __BH 建好，Cloud 才查得到）

@@ -504,7 +504,9 @@ ok(nameInputs === 1, '暱稱輸入框只有 1 個（現在 ' + nameInputs + ' �
 ok(!/id="netName2"/.test(html) && !/id="p2Name"/.test(html), '沒有第二個暱稱欄位');
 ok(/placeholder="輸入暱稱（最多 8 字）"/.test(html), '暱稱欄提示文字正確');
 const netScr = html.slice(html.indexOf('id="scr-online"'), html.indexOf('id="scr-game"'));
-ok((netScr.match(/class="tinput"/g) || []).length === 2, '線上配對頁只有 2 個輸入框：暱稱 1 個 + 房號 1 個');
+// v5.37：多了「WebRTC 直連」的兩個 textarea（p2pOut／p2pIn），一樣沒有第二個暱稱欄位。
+//   真正要守的規則還是「暱稱只有一個、沒有冒出來的第二個暱稱框」。
+ok((netScr.match(/class="tinput"/g) || []).length === 4, '線上配對頁 4 個輸入框：暱稱 + 房號 + 直連兩串碼（沒有第二個暱稱）');
 ok((netScr.match(/id="netName"/g) || []).length === 1, '其中「暱稱」只有 1 個（沒有重複的暱稱欄）');
 ok(/id="netCode"/.test(netScr) && /placeholder="房號"/.test(netScr), '另一個是「房號」，不是第二個暱稱');
 ok(/setPname/.test(html), '暱稱仍會寫進 setPname（配對與戰鬥顯示都會用）');

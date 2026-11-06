@@ -284,6 +284,26 @@ ol.start|開始遊戲|开始游戏|Start Game|ゲーム開始|게임 시작
 ol.leave|離開房間|离开房间|Leave Room|部屋を出る|방 나가기
 ol.netStart|🌐 線上對戰開始（{h} 位玩家 + {a} 位 AI）|🌐 在线对战开始（{h} 位玩家 + {a} 位 AI）|🌐 Online match started ({h} players + {a} AI)|🌐 オンライン対戦開始（プレイヤー {h} 人 + AI {a} 人）|🌐 온라인 대전 시작 (플레이어 {h}명 + AI {a}명)
 ol.watching|👁 觀戰中（本局你沒有入場）|👁 观战中（本局你没有入场）|👁 Spectating (you are not in this match)|👁 観戦中（この試合には不参加）|👁 관전 중 (이번 판 미참가)
+ol.renderNote|💡 小提醒：伺服器放在免費託管平台 Render，所以連線品質不會比較順暢　目前當作測試內容而已|💡 小提醒：服务器放在免费托管平台 Render，所以连线品质不会比较顺畅　目前当作测试内容而已|💡 Heads-up: the server runs on Render's free tier, so the connection will not be smoother — treat this as a test build for now.|💡 ご注意：サーバーは無料ホスティングの Render なので通信品質は良くなりません。現状はテスト用です。|💡 참고: 서버가 무료 호스팅 Render라서 연결 품질이 더 좋아지지는 않습니다. 현재는 테스트용입니다.
+lan.title|📶 區網連線（同一個 WiFi 就能玩，不經外網）|📶 局域网连线（同一个 WiFi 就能玩，不经外网）|📶 LAN play (same Wi-Fi, no internet)|📶 LAN 対戦（同じ Wi-Fi なら外に出ません）|📶 LAN 대전 (같은 WiFi면 외부망 불필요)
+lan.checking|檢查中…|检查中…|Checking…|確認中…|확인 중…
+lan.host|🔗 建立直連（免伺服器）|🔗 建立直连（免服务器）|🔗 Host direct link (no server)|🔗 直結を作成（サーバー不要）|🔗 직접 연결 만들기 (서버 불필요)
+lan.join|📥 加入直連|📥 加入直连|📥 Join a direct link|📥 直結に参加|📥 직접 연결 참가
+lan.code1|① 邀請碼／回應碼（複製整串給對方）|① 邀请码／回应码（复制整串给对方）|① Invite / answer code (copy the whole string)|① 招待コード／応答コード（丸ごとコピーして相手へ）|① 초대 코드／응답 코드 (통째로 복사해서 전달)
+lan.code1ph|按上面的按鈕後，這裡會出現一串碼|按上面的按钮后，这里会出现一串码|Press the button above — a code appears here|上のボタンを押すと、ここにコードが出ます|위 버튼을 누르면 여기에 코드가 나옵니다
+lan.copy|📋 複製|📋 复制|📋 Copy|📋 コピー|📋 복사
+lan.code2|② 貼上對方給你的那一串|② 贴上对方给你的那一串|② Paste the string your friend sent|② 相手から届いた文字列を貼り付け|② 상대가 보낸 문자열을 붙여넣기
+lan.code2ph|貼在這裡|贴在这里|Paste here|ここに貼り付け|여기에 붙여넣기
+lan.go|✅ 連線|✅ 连线|✅ Connect|✅ 接続|✅ 연결
+lan.cancel|取消直連|取消直连|Cancel direct link|直結を解除|직접 연결 취소
+neto.mychar|我的角色（只選自己，別人的角色由他們自己選）|我的角色（只选自己，别人的角色由他们自己选）|My character (pick only yours)|自分のキャラ（他人は本人が選びます）|내 캐릭터 (본인 것만 선택)
+neto.title|對戰設定（房主設定，其他人唯讀）|对战设置（房主设置，其他人只读）|Match settings (host only, others read-only)|対戦設定（ホストが設定、他は閲覧のみ）|대전 설정 (방장만 수정, 나머지는 읽기 전용)
+neto.wins|勝場數|胜场数|Rounds to win|勝利数|승리 횟수
+neto.time|比賽時間|比赛时间|Match time|試合時間|경기 시간
+neto.haz|地形機關|地形机关|Terrain hazards|地形ギミック|지형 장치
+neto.sd|突死縮圈|突死缩圈|Sudden shrink|突然縮小|갑작 수축
+neto.rev|復仇推車|复仇推车|Revenge cart|復讐カート|복수 카트
+neto.ai|🤖 AI 難度|🤖 AI 难度|🤖 AI difficulty|🤖 AI 難易度|🤖 AI 난이도
 hud.esc|⏸ ESC|⏸ ESC|⏸ ESC|⏸ ESC|⏸ ESC
 badge.me|我|我|ME|自分|나
 pause.title|⏸ 遊戲暫停|⏸ 游戏暂停|⏸ Paused|⏸ 一時停止|⏸ 일시정지
@@ -584,6 +604,10 @@ br.chPrev|上一個角色|上一个角色|Previous fighter|前のキャラ|이�
 br.chNext|下一個角色|下一个角色|Next fighter|次のキャラ|다음 캐릭터
 br.sub|{w}×{h} 隨機大陸|{w}×{h} 随机大陆|{w}×{h} random continent|{w}×{h} ランダム大陸|{w}×{h} 랜덤 대륙
 br.people|人數|人数|Players|人数|인원
+br.map|地圖尺寸|地图尺寸|Map size|マップサイズ|맵 크기
+br.mapS|原本 56×44（50 人）|原本 56×44（50 人）|Original 56×44 (50P)|従来 56×44（50人）|기존 56×44 (50명)
+br.mapL|加大 79×62（100 人）|加大 79×62（100 人）|Large 79×62 (100P)|拡大 79×62（100人）|확대 79×62 (100명)
+br.p20|20 人|20 人|20 players|20 人|20명
 br.team|組隊|组队|Teams|チーム|팀
 br.time|時間|时间|Time|時間|시간
 br.p30|30 人|30 人|30 players|30 人|30명
@@ -597,7 +621,7 @@ br.goTeams|出發（{a} 隊 × {b} 人）|出发（{a} 队 × {b} 人）|Deploy 
 br.goSolo|出發（{n} 人混戰）|出发（{n} 人混战）|Deploy ({n}-player chaos)|出発（{n} 人乱戦）|출발 ({n}명 난전)
 br.free|正式測試期間免費入場|正式测试期间免费入场|Free during the open test|公開テスト中は無料|공개 테스트 기간 무료
 br.ticket|每場消耗 1 張門票（現有 {n} 張）|每场消耗 1 张门票（现有 {n} 张）|Costs 1 ticket per match ({n} left)|1 試合につきチケット 1 枚（残り {n} 枚）|한 판당 티켓 1장 (보유 {n}장)
-br.foot|　·　14 隻小怪＋{b} 隻亂入 BOSS（打倒可騎恐龍）|　·　14 只小怪＋{b} 只乱入 BOSS（打倒可骑恐龙）|  ·  14 minions + {b} roaming bosses (mount the dino!)|　·　雑魚 14 体＋乱入ボス {b} 体（倒すと恐竜に騎乗）|　·　잡몹 14마리 + 난입 보스 {b}마리 (잡으면 공룡 탑승)
+br.foot|　·　{f} 隻小怪＋{b} 隻亂入 BOSS（打倒可騎恐龍）|　·　{f} 只小怪＋{b} 只乱入 BOSS（打倒可骑恐龙）|  ·  {f} minions + {b} roaming bosses (mount the dino!)|　·　雑魚 {f} 体＋乱入ボス {b} 体（倒すと恐竜に騎乗）|　·　잡몹 {f}마리 + 난입 보스 {b}마리 (잡으면 공룡 탑승)
 brsum.teams|<b>{a} 隊 × {b} 人</b> · 隊友不互炸 · {d} 分鐘 {r} 圈|<b>{a} 队 × {b} 人</b> · 队友不互炸 · {d} 分钟 {r} 圈|<b>{a} squads × {b}</b> · no friendly fire · {d} min, {r} rings|<b>{a} チーム × {b} 人</b> · 同士討ちなし · {d} 分 {r} 周|<b>{a}팀 × {b}명</b> · 팀원 오사 없음 · {d}분 {r}회
 brsum.solo|<b>{n} 人</b>同場 · 最後活著的奪冠 · {d} 分鐘 {r} 圈 · 🦖 {b} 隻 BOSS|<b>{n} 人</b>同场 · 最后活着的夺冠 · {d} 分钟 {r} 圈 · 🦖 {b} 只 BOSS|<b>{n} players</b> free-for-all · last one standing · {d} min, {r} rings · 🦖 {b} bosses|<b>{n} 人</b>乱戦 · 最後の 1 人が優勝 · {d} 分 {r} 周 · 🦖 ボス {b} 体|<b>{n}명</b> 난전 · 최후의 1인 승리 · {d}분 {r}회 · 🦖 보스 {b}마리
 rpg.ovTitle|🎲 RPG 模式　第 {n} / 32 關|🎲 RPG 模式　第 {n} / 32 关|🎲 RPG Mode  ·  Stage {n} / 32|🎲 RPG モード　第 {n} / 32 面|🎲 RPG 모드　{n} / 32 스테이지
@@ -1561,6 +1585,8 @@ ui.qualTip|自動＝高解析度手機給「中」、其他給「高」。大逃
 ui.fps|📊 顯示 FPS|📊 显示 FPS|📊 Show FPS|📊 FPS 表示|📊 FPS 표시
 ui.shake|📳 畫面震動|📳 画面震动|📳 Screen shake|📳 画面の揺れ|📳 화면 흔들림
 ui.shakeHint|關掉就不會晃（暈動症、暈車體質建議關）。傷害回饋與打擊感都還在。|关掉就不会晃（晕动症、晕车体质建议关）。伤害反馈与打击感都还在。|Turn off to stop the camera shaking (recommended for motion sickness). Hit feedback stays.|オフにすると画面が揺れません（乗り物酔いしやすい人に推奨）。手応えは残ります。|끄면 화면이 흔들리지 않습니다(멀미하는 분께 권장). 타격감은 유지됩니다.
+ui.nukeShake|☢️ 核彈震動|☢️ 核弹震动|☢️ Nuke shake|☢️ 核の揺れ|☢️ 핵 폭발 흔들림
+ui.nukeShakeHint|核彈落地的震動是獨立的：畫面震動關掉時，只有核彈還會震。不想被震就把這裡也關掉。|核弹落地的震动是独立的：画面震动关掉时，只有核弹还会震。不想被震就把这里也关掉。|Nuke impact shake is separate: with screen shake off, only nukes still shake. Turn this off too if you want none.|核の着弾の揺れは独立しています。画面の揺れをオフにしても核だけは揺れます。不要ならここもオフに。|핵 폭발 흔들림은 별도입니다. 화면 흔들림을 꺼도 핵만은 흔들립니다. 원치 않으면 이것도 끄세요.
 ui.cb|🌈 色盲友善隊色|🌈 色盲友善队色|🌈 Colorblind-friendly teams|🌈 色覚多様性チームカラー|🌈 색약 친화 팀 색상
 ui.cbHint|打開後每隊除了換成安全色，還會加上圖形（●■▲★）與不同線型，不看顏色也分得出來。|打开后每队除了换成安全色，还会加上图形（●■▲★）与不同线型，不看颜色也分得出来。|Turns on safe colors plus a shape (●■▲★) and a distinct outline style per team, so color is never the only cue.|安全な色に加えて図形（●■▲★）と線の種類で区別します。色だけに頼りません。|안전한 색과 함께 도형(●■▲★)과 선 스타일로 구분합니다. 색만으로 판별하지 않아도 됩니다.
 se.title|🎖️ 本季賽程|🎖️ 本季赛程|🎖️ Season|🎖️ シーズン|🎖️ 시즌
