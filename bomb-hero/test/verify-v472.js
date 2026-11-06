@@ -138,8 +138,10 @@ console.log('\n=== 4. 毒圈節奏與淘汰 ===');
   ok(G.brZone.phase === 0, '59 秒時還沒縮圈（phase=' + G.brZone.phase + '）');
   for (let i = 0; i < 60 * 3; i++) BH.updateBR(1 / 60);
   ok(G.brZone.phase >= 1, '60 秒後進入第一階段（phase=' + G.brZone.phase + '）');
-  ok(G.brZone.tr < r0, '目標半徑縮小（' + r0 + ' → ' + G.brZone.tr + '）');
-  ok(Math.abs(G.brZone.r - G.brZone.tr) < 1, '半徑會收到目標值（' + G.brZone.r.toFixed(1) + '）');
+  // v5.35：縮圈改成 PUBG 式（8 秒收在虛線上，收完馬上算下一圈）→ 這裡驗「第一圈收到 27 格」
+  ok(G.brZone.r < r0, '半徑縮小（' + r0 + ' → ' + G.brZone.r.toFixed(1) + '）');
+  ok(Math.abs(G.brZone.r - 27) < .6, '第一圈收到 27 格（' + G.brZone.r.toFixed(1) + '）');
+  ok(G.brZone.tr <= G.brZone.r && G.brZone.tr < 27, '下一圈目標更小（' + G.brZone.tr + '）');
   const p = G.players[0];
   p.alive = true; p.brHp = 1; p.brOut = 0; p.invuln = 0;
   p.x = 1 * G.T; p.y = 1 * G.T;

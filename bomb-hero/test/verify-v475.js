@@ -55,7 +55,8 @@ ok(G.players[0].team === 0 && G.players[1].team === 0 && G.players[2].team === 0
   '每 3 人一隊（我 / 2 / 3 同隊，第 4 人換隊）');
 ok(new Set(G.players.map(function (p) { return p.team; })).size === 17, '共 17 隊（' + new Set(G.players.map(function (p) { return p.team; })).size + '）');
 ok(G.teamsOn === 3, 'Game.teamsOn = 3（火焰判定會跳過同隊）');
-ok(P.BR.PH.length === 5 && G.brZone.t === 60, '5 分鐘模式：5 段、第一段 60 秒');
+ok(P.BR.PH.length === 5 && Math.abs(G.brZone.t - (60 - P.BR.SHRINK)) < .5,
+  '5 分鐘模式：5 段、第一段等待 60 秒（扣掉 8 秒收圈 = ' + G.brZone.t + '）');
 ok(G.players[0].brHp === 10, '10 點血');
 ok(/Game\.teamsOn >= 2 && b\.owner && b\.owner !== p && b\.owner\.team >= 0 && b\.owner\.team === p\.team/.test(src), '投射物也不會打到自己人');
 ok(/function sameTeam\(a, b\)/.test(src) && (src.match(/sameTeam\(p, q\)/g) || []).length >= 2, 'AI 選目標時跳過隊友（兩處）');

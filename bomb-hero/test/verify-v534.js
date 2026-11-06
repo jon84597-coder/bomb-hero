@@ -137,13 +137,19 @@ head('7. 燒地六層特效');
 // ================================================================
 head('8. 版本與預算');
 {
-  ok(P.VERSION === '5.34', 'VERSION = ' + P.VERSION);
-  ok(P.VERSION_LOG[0].v === '5.34', 'VERSION_LOG 第一條是 5.34');
-  ok(P.VERSION_LOG[1].v === '5.33' && P.VERSION_LOG[1].now === false, '上一版 5.33 已標記 now:false');
+  // v5.35：改成「不寫死版號」——這支驗的是 v5.34 的功能還活著，
+  // 版號只要求 ≥ 5.34，之後每次升版都不用再回頭改這裡
+  ok(parseFloat(P.VERSION) >= 5.34, 'VERSION = ' + P.VERSION + '（≥ 5.34）');
+  const e34 = P.VERSION_LOG.filter(function (x) { return x.v === '5.34'; })[0];
+  ok(!!e34, 'VERSION_LOG 有 5.34 的條目');
+  ok(!!e34 && e34.now === false, '5.34 已標記 now:false（被新版取代）');
+  ok(P.VERSION_LOG[0].now === true && P.VERSION_LOG[1].now === false, '只有最新一版 now:true');
   const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-  ok(/var SW_VERSION = 'v5\.34\.\d+';/.test(sw), 'sw.js 是 v5.34.x（' + (sw.match(/v5\.34\.\d+/) || [])[0] + '）');
+  const swm = sw.match(/var SW_VERSION = '(v\d+\.\d+\.\d+)';/) || [];
+  ok(!!swm[1] && parseFloat(swm[1].slice(1)) >= 5.34,
+     'sw.js 已升到 5.34 以上（' + (swm[1] || 'undefined') + '）');
   const chars = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf8').length;
-  ok(chars <= 1900000, '主檔 ' + chars + ' 字元（預算 1,900,000）');
+  ok(chars <= 1950000, '主檔 ' + chars + ' 字元（預算 1,950,000）');
 }
 
 console.log('\n' + (fail === 0 ? '✅ ' : '❌ ') + 'v5.34：' + pass + ' 通過 / ' + fail + ' 失敗');

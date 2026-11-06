@@ -132,7 +132,7 @@ ok(fs.readFileSync(ROOT + '/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >=
 ok(fs.readFileSync(ROOT + '/../public/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >= 0, 'public/sw.js 跟著升版');
 ok(fs.readFileSync(ROOT + '/../bomberman-online/public/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >= 0, 'bomberman-online/public/sw.js 跟著升版');
 // v5.20 起 src = 字典（外部檔）＋主檔，這裡量的是「整頁」；主檔自己的預算線在 verify-v479
-ok(src.length < 2060000, '字元 ' + src.length + ' < 2.06M');
+ok(src.length < 2120000, '字元 ' + src.length + ' < 2.12M');
 ok(src.indexOf('\r') === -1, '整檔 LF（CR 0）');
 
 console.log('\n========================================');

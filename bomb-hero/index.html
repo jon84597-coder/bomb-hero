@@ -4666,7 +4666,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.34</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.35</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4721,7 +4721,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.34</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.35</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5706,7 +5706,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.34';
+const VERSION = '5.35';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6698,6 +6698,8 @@ const AudioSys = (function () {
         tone(2200, .5, 'sawtooth', .08, 220);
         break;
       case 'item': tone(660, .09, 'square', .16); tone(880, .12, 'square', .16, null, .07); break;
+      // v5.35：金幣叮（兩聲往上，跟撿道具的 square 音分得開）
+      case 'coin': tone(1180, .08, 'triangle', .15); tone(1560, .10, 'triangle', .13, null, .055); break;
       case 'hurt': tone(200, .22, 'sawtooth', .2, 70); break;
       case 'die': // 死亡叫聲：拔高→長哀號下滑（音量加大，不被爆炸蓋過）
         tone(520, .14, 'square', .34, 980);
@@ -7076,23 +7078,30 @@ const AudioSys = (function () {
     // 對戰：13 句 × 128 步 ≈ 2:45（一場打到 2 勝差不多就這麼久）
     battle: {
       bpm: 152, base: 72, melWave: 'square', melVol: .112,
-      bassVol: .175, arpVol: .050, powVol: .062, drumVol: .102, seed: 9401,
+      bassVol: .222, arpVol: .056, powVol: .078, drumVol: .124, seed: 9401,
+      bassWave: 'sawtooth', bassLp: 460,
       bass: [0, 0, 7, 0, 0, 12, 7, 0],
       arp: [0, 2, 1, 2, 0, 2, 1, 3, 2, 1, 0, 2, 3, 2, 1, 2],
       plan: ['F', 'A', 'B', 'A', 'C', 'D', 'E', 'A', 'B', 'F', 'G', 'H', 'A']
     },
     // 大逃殺 10 分鐘：46 句 ≈ 10:05
     brWar10: {
-      bpm: 146, base: 72, melWave: 'sawtooth', melVol: .092,
-      bassVol: .182, arpVol: .046, powVol: .066, drumVol: .100, seed: 9502,
+      /* v5.35：使用者反映「旋律很棒，但其他樂器／低音不明顯」。
+         ① 低音軌從 triangle 換成 sawtooth＋低通 420Hz —— triangle 在手機喇叭上幾乎沒有泛音，
+            聽起來等於消失；sawtooth 的低頻泛音才咬得住。
+         ② 低音／鼓／和弦牆一起往上提，旋律略收回來，音量比例才平衡。 */
+      bpm: 146, base: 72, melWave: 'sawtooth', melVol: .100,
+      bassVol: .250, arpVol: .062, powVol: .086, drumVol: .130, seed: 9502,
+      bassWave: 'sawtooth', bassLp: 420,
       bass: [0, 0, 0, 7, 0, 12, 7, 3],
       arp: [0, 1, 2, 1, 0, 2, 1, 0, 2, 1, 2, 3, 1, 0, 1, 2],
       plan: brPlan(46)
     },
     // 大逃殺 5 分鐘：23 句 ≈ 5:02
     brWar5: {
-      bpm: 146, base: 72, melWave: 'sawtooth', melVol: .092,
-      bassVol: .182, arpVol: .046, powVol: .066, drumVol: .100, seed: 9503,
+      bpm: 146, base: 72, melWave: 'sawtooth', melVol: .100,
+      bassVol: .250, arpVol: .062, powVol: .086, drumVol: .130, seed: 9503,
+      bassWave: 'sawtooth', bassLp: 420,
       bass: [0, 0, 0, 7, 0, 12, 7, 3],
       arp: [0, 1, 2, 1, 0, 2, 1, 0, 2, 1, 2, 3, 1, 0, 1, 2],
       plan: brPlan(23)
@@ -7143,7 +7152,7 @@ const AudioSys = (function () {
       bpm: def.bpm, drumVol: def.drumVol,
       tracks: [
         { wave: def.melWave, vol: def.melVol, seq: mel },
-        { wave: 'triangle', vol: def.bassVol, seq: bass },
+        { wave: def.bassWave || 'triangle', vol: def.bassVol, lp: def.bassLp || 0, seq: bass },
         { wave: 'square', vol: def.arpVol, seq: arp },
         { wave: 'sawtooth', vol: def.powVol, lp: 880, seq: pow },
         { wave: 'sawtooth', vol: def.powVol * .72, lp: 1150, seq: pow2 }
@@ -9030,6 +9039,7 @@ const ITEMS = {
   pierce: { icon: '🧨', name: '穿透彈', hint: '火焰可以穿透軟磚' },
   heart:  { icon: '❤️', name: '愛心', hint: '生命 +1' },
   line:   { icon: '🧲', name: '線圈炸彈', hint: '按動作鍵一次排一排炸彈' },
+  coin:   { icon: '🪙', name: '金幣', hint: '打倒怪物掉的錢，直接進錢包' },   // v5.35
   skull:  { icon: '💀', name: '骷髏頭', hint: '詛咒！快去撞別人傳染出去' }
 };
 // 地雷（mine）已取消：不再出現在道具池，也不會再出現在任何關卡
@@ -10172,6 +10182,64 @@ function destroySoft(x, y) {
 function spawnItem(x, y, type) {
   Game.items.push({ cx: x, cy: y, type: type, bob: Math.random() * 6.28 });
 }
+
+/* ====
+   v5.35：掉落物
+   · 打倒任何小怪／BOSS（單人／RPG／大逃殺）都會掉東西：金幣、道具、或恐龍蛋
+   · 金幣在單人／RPG 記進分數（結算時 1 分 = 1 商店金幣，跟原本的經濟同一條路）；
+     大逃殺另外累計在 Game.brLootGold，結算時加進名次獎金
+   ==== */
+const DROP_ITEMS = ['fire', 'fire', 'bomb', 'bomb', 'speed', 'speed',
+  'kick', 'glove', 'punch', 'remote', 'pierce', 'line', 'heart'];
+function coinTo(p, n) {
+  if (!p) return;
+  n = Math.max(1, Math.round(n || 1));
+  p.score = (p.score | 0) + n;
+  if (Game.mode === 'br') Game.brLootGold = (Game.brLootGold | 0) + n;
+  try { pushPop(p.x, p.y - (Game.T || 20) * .55, '🪙 +' + n, { color: '#ffd766', size: .95, life: 1.0 }); } catch (e) {}
+  try { AudioSys.sfx('coin'); } catch (e) {}
+}
+// 掉在怪物死掉那一格；那一格變成牆／水就往外找一格空地
+function dropSpotNear(x, y) {
+  const cands = [[x, y], [x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1],
+    [x + 1, y + 1], [x - 1, y + 1], [x + 1, y - 1], [x - 1, y - 1]];
+  for (let i = 0; i < cands.length; i++) {
+    const cx = cands[i][0], cy = cands[i][1];
+    if (cx < 1 || cy < 1 || cx > Game.cols - 2 || cy > Game.rows - 2) continue;
+    if (cellAt(cx, cy) !== 0) continue;
+    if (Game.brIsl && Game.brIsl[cy] && Game.brIsl[cy][cx] < 0) continue;
+    if (bombAt(cx, cy)) continue;
+    return { x: cx, y: cy };
+  }
+  return null;
+}
+function foeDrop(e) {
+  if (!e || e.isSplit) return;                      // 分裂出來的小碎片不掉（不然一隻可以刷一堆）
+  if (Game.mode !== 'solo' && Game.mode !== 'rpg' && Game.mode !== 'br') return;
+  if (!Game.T) return;
+  const T = Game.T;
+  const spot = dropSpotNear(Math.floor(e.x / T), Math.floor(e.y / T));
+  if (!spot) return;
+  const big = !!(e.boss || e.brBoss);
+  function coin(n) { Game.items.push({ cx: spot.x, cy: spot.y, type: 'coin', bob: Math.random() * 6.28, amount: n }); }
+  function gear() { Game.items.push({ cx: spot.x, cy: spot.y, type: pick(DROP_ITEMS), bob: Math.random() * 6.28 }); }
+  function egg() {
+    if (!Game.eggs) Game.eggs = [];
+    if (eggAt(spot.x, spot.y)) return;
+    Game.eggs.push({ x: spot.x, y: spot.y, bob: Math.random() * 6.28, wob: 0, born: .5, safeT: .8, kind: rollEggKind() });
+  }
+  if (big) {                                        // BOSS：一次掉 2~3 樣
+    coin(26 + rand(20));
+    if (Math.random() < .85) gear();
+    if (Math.random() < .55) egg();
+  } else {
+    const r = Math.random();
+    if (r < .07) egg();
+    else if (r < .40) gear();
+    else coin(5 + rand(10));
+  }
+  try { burst(spot.x * T + T / 2, spot.y * T + T / 2, '#ffe9a8', 8, 120); } catch (x) {}
+}
 // v4.4：道具 → 頂部狀態列哪個圖示要高亮
 // 'pow' 火力、'bomb' 炸彈數、'spd' 速度、'hp' 生命；'g:xxx' 指背包裡那一格
 const HUD_OF_ITEM = {
@@ -10179,7 +10247,9 @@ const HUD_OF_ITEM = {
   kick: 'g:kick', glove: 'g:glove', punch: 'g:punch',
   remote: ['g:remote', 'bomb'], pierce: 'g:pierce', line: 'g:line'
 };
-function applyItem(p, type) {
+function applyItem(p, type, item) {
+  // v5.35：金幣＝打倒怪物掉的錢（單人／RPG 記在分數，結算換成商店金幣；大逃殺另外累計）
+  if (type === 'coin') { coinTo(p, (item && (item.amount | 0)) || 6); return; }
   try { if (!p.ai && isMyPlayer(p)) Gift.add('item', 1); } catch (e) {}   // v4.87：每日任務「吃道具」
   // v5.20：圖鑑 —— 撿過就點亮（type 就是道具的鍵：fire／bomb／speed…）
   try { if (!p.ai && isMyPlayer(p)) Codex.mark('i', type); } catch (e) {}
@@ -10195,6 +10265,13 @@ function applyItem(p, type) {
     case 'pierce': p.pierce = true; break;
     case 'line': p.line = true; break;
     case 'heart': {
+      // v5.35：大逃殺沒有「命」，愛心改成補 2 格血（不然撿到完全沒用）
+      if (Game.mode === 'br') {
+        p.brHp = Math.min(BR.HP, (p.brHp == null ? BR.HP : (p.brHp | 0)) + 2);
+        try { burst(p.x, p.y - (Game.T || 20) * .3, '#ff6b8a', 14, 150); } catch (e) {}
+        try { AudioSys.sfx('heal'); } catch (e) {}
+        break;
+      }
       // v5.30：格血模式（單人簡單）先補一格血；其他模式維持「補一條命」，兩邊都封頂不多給
       const hmx = Math.max(1, p.sHpMax | 0);
       if (hmx > 1) {
@@ -15440,7 +15517,7 @@ function petFollowWork(pt, hero, dt) {
     if (Math.abs(pt.x - ix) < T * .45 && Math.abs(pt.y - iy) < T * .45) {
       const idx = Game.items.indexOf(best);
       if (idx >= 0) Game.items.splice(idx, 1);
-      applyItem(hero, best.type);          // 撿到直接交給主角用
+      applyItem(hero, best.type, best);    // 撿到直接交給主角用
       toast('🐾 ' + petKind(pt.kind).name + ' 幫你撿到 ' +
         (ITEMS[best.type] ? ITEMS[best.type].icon : '') + ' ' + itemName(best.type), 2.2);
       return;
@@ -17447,6 +17524,8 @@ const BR = {
   HP: 10,              // 每人 10 點血（HUD／隊友血條都吃這個）
   // v5.33：核彈 —— 每 45 秒一顆、通報 5 秒、半徑 5 格、直擊 6 格血、燒地 10 秒
   NUKE: 45, NUKE_WARN: 5,
+  // v5.35：縮圈動畫 8 秒（算在每段 60 秒裡面 → 一場 10 段剛好 10 分鐘）
+  SHRINK: 8,
   FREE: true,          // v4.74：正式測試結束前不扣門票
   ART_K: .84,          // v4.74：大圖（T≈30）怪物畫得偏大 → 美術半徑與判定一起縮一級
   // v4.75：開局選項（入口卡）—— 人數／組隊人數／場長
@@ -17677,21 +17756,70 @@ function buildBRMap() {
     if (Game.themeAt[y][x]) continue;
     Game.themeAt[y][x] = THEMES[seeds[regionAt(x, y)].ti];
   }
-  // ---- 3) 硬牆：零星岩層團塊，只佔約 8%（v4.74：以前太多，繞不過去）----
+  /* ---- 3) 硬牆：v5.35 改成「岩脊」與「空心圍籬」----
+     舊版用半徑 1~2.9 的圓團亂撒 → 常常黏成 2~3 格厚的實心塊，整片空間白白浪費又不能繞。
+     現在只允許兩種形狀，而且一律 1 格厚：
+       ① 岩脊：一條線（直線或 L 形，長 2~5 格）→ 只能「連成一排」
+       ② 圍籬：空心矩形（3~5 格寬），一定留 1~2 個缺口 → 圍出一個走得到的空間
+     再加一道硬規則：任何位置只要會湊出 2×2 的實心塊就撤銷 → 保證不會再有一整坨。 */
   const hardTarget = Math.round(landN * .08);
-  let hardN = 0, guard = 0;
-  while (hardN < hardTarget && guard++ < 6000) {
-    const x = 1 + rand(cols - 2), y = 1 + rand(rows - 2);
-    if (Game.grid[y][x] !== 0) continue;
-    const rr = 1 + Math.random() * 1.9;
-    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
-      const px = x + dx, py = y + dy;
-      if (px < 1 || py < 1 || px >= cols - 1 || py >= rows - 1) continue;
-      if (Game.grid[py][px] !== 0) continue;
-      if (hardN >= hardTarget) break;
-      if (Math.sqrt(dx * dx + dy * dy) > rr || Math.random() < .3) continue;
-      Game.grid[py][px] = 1; hardN++;
+  let hardN = 0;
+  function hardAt(x, y) {
+    return x >= 0 && y >= 0 && x < cols && y < rows && Game.grid[y][x] === 1;
+  }
+  function hardPut(x, y) {
+    if (x < 1 || y < 1 || x >= cols - 1 || y >= rows - 1) return false;
+    if (Game.grid[y][x] !== 0 || Game.brIsl[y][x] < 0) return false;
+    Game.grid[y][x] = 1;
+    for (let oy = -1; oy <= 0; oy++) for (let ox = -1; ox <= 0; ox++) {
+      if (hardAt(x + ox, y + oy) && hardAt(x + ox + 1, y + oy) &&
+          hardAt(x + ox, y + oy + 1) && hardAt(x + ox + 1, y + oy + 1)) {
+        Game.grid[y][x] = 0;                 // 會湊出 2×2 實心塊 → 撤銷這一格
+        return false;
+      }
     }
+    hardN++;
+    return true;
+  }
+  function hardLineOk(cells) {
+    for (let i = 0; i < cells.length; i++) {
+      const c = cells[i];
+      if (c.x < 1 || c.y < 1 || c.x >= cols - 1 || c.y >= rows - 1) return false;
+      if (Game.grid[c.y][c.x] !== 0 || Game.brIsl[c.y][c.x] < 0) return false;
+    }
+    return true;
+  }
+  // ① 岩脊（直線 / L 形）
+  for (let ridge = 0, guard = 0; ridge < 300 && guard < 2600 && hardN < hardTarget; guard++) {
+    const horiz = Math.random() < .5;
+    const len = 2 + rand(4);
+    const bend = Math.random() < .35 ? (Math.random() < .5 ? 1 : -1) : 0;
+    let ddx = horiz ? 1 : 0, ddy = horiz ? 0 : 1;
+    let px = 1 + rand(cols - 2), py = 1 + rand(rows - 2);
+    const cells = [{ x: px, y: py }];
+    for (let i = 1; i < len; i++) {
+      if (bend && i === (len >> 1)) { ddx = horiz ? 0 : bend; ddy = horiz ? bend : 0; }
+      px += ddx; py += ddy;
+      cells.push({ x: px, y: py });
+    }
+    if (!hardLineOk(cells)) continue;
+    let put = 0;
+    for (let i = 0; i < cells.length; i++) if (hardPut(cells[i].x, cells[i].y)) put++;
+    if (put) ridge++;
+  }
+  // ② 空心圍籬（一定留缺口，走得到裡面）
+  for (let ring = 0, guard = 0; ring < 24 && guard < 700 && hardN < hardTarget; guard++) {
+    const w = 3 + rand(3), h = 3 + rand(2);
+    const x0 = 1 + rand(cols - 2), y0 = 1 + rand(rows - 2);
+    const cells = [];
+    for (let i = 0; i < w; i++) { cells.push({ x: x0 + i, y: y0 }); cells.push({ x: x0 + i, y: y0 + h - 1 }); }
+    for (let j = 1; j < h - 1; j++) { cells.push({ x: x0, y: y0 + j }); cells.push({ x: x0 + w - 1, y: y0 + j }); }
+    const gaps = 1 + rand(2);
+    for (let g = 0; g < gaps && cells.length > 4; g++) cells.splice(rand(cells.length), 1);
+    if (!hardLineOk(cells)) continue;
+    let put = 0;
+    for (let i = 0; i < cells.length; i++) if (hardPut(cells[i].x, cells[i].y)) put++;
+    if (put >= 5) ring++;
   }
   // ---- 4) 出生點：30 人平均散在大陸上 ----
   // ---- 4) 可炸軟磚：以「團塊」放（2×2／1×2／2×1）----
@@ -17786,7 +17914,11 @@ function buildBRMap() {
     }
     if (tx < 0) break;                                   // 全部連通了
     if (carveTo(tx, ty, seenW)) { seenW = bfsWalk(); }
-    else { Game.grid[ty][tx] = 1; cut++; seenW = bfsWalk(); }   // 被岩層圍死 → 回填岩層
+    else {
+      // v5.35：回填時也要遵守「不准 2×2 實心塊」；真的湊不出來就改填軟磚（炸得開、不會變成一坨岩)
+      if (!hardPut(tx, ty)) Game.grid[ty][tx] = 2;
+      cut++; seenW = bfsWalk();
+    }
   }
   // ---- 6) 出生點：30 人，只落在「連通」且「初始圈內（半徑 19 格）」的格子 ----
   //   圈外的話 60 秒後第一次縮圈就開始掉血，整場會在 2 分鐘內被毒圈清空
@@ -17865,12 +17997,12 @@ function buildBRMap() {
 // 圈外：AI 往圓心走（回傳 true 表示這幀由我接管移動）
 //   v4.74：改成「BFS 距離場」，舊版是直線貪心 —— 撞到軟磚就原地卡住，
 //   然後在圈外被毒圈慢慢咬死（實測 30 人有一半是這樣死的，不是被打死的）。
-function brFlowBuild() {
+function brFlowBuild(tx, ty) {
   const W = Game.cols, H = Game.rows, z = Game.brZone;
   if (!z) return;
   const f = new Int16Array(W * H);
   for (let i = 0; i < f.length; i++) f[i] = -1;
-  let sx = Math.round(z.cx), sy = Math.round(z.cy);
+  let sx = Math.round(tx == null ? z.cx : tx), sy = Math.round(ty == null ? z.cy : ty);
   sx = Math.max(0, Math.min(W - 1, sx)); sy = Math.max(0, Math.min(H - 1, sy));
   // 圓心剛好落在硬牆上就往外找一格可走的
   if (cellAt(sx, sy) !== 0) {
@@ -17905,12 +18037,20 @@ function brFlowBuild() {
 function brSteer(p, dt) {
   const z = Game.brZone; if (!z) return false;
   const T = Game.T;
-  const cx = (z.cx + .5) * T, cy = (z.cy + .5) * T;
-  const safe = Math.max(0, (z.r - 2.5) * T);
+  /* v5.35：圈會換位置 → 導航目標改成「下一圈」。
+     但一開場就往下一圈跑會讓 30 個 AI 擠成一團，所以只在
+     ① 已經在目前圈外／邊緣　② 剩下不到 20 秒　③ 正在收圈　三種情況才提早出發。 */
+  const soon = z.mode === 'shrink' || z.t < 20 || z.done;
+  const tcx = (soon && z.nx != null) ? z.nx : z.cx;
+  const tcy = (soon && z.ny != null) ? z.ny : z.cy;
+  const trr = (soon && z.nr != null) ? z.nr : z.r;
+  const cx = (tcx + .5) * T, cy = (tcy + .5) * T;
+  const safe = Math.max(0, (trr - 2.5) * T);
   const dx = cx - p.x, dy = cy - p.y;
   if (Math.sqrt(dx * dx + dy * dy) <= safe) return false;
-  if (!Game.brFlow || Game.brFlowSeq !== Game.mapSeq) {
-    try { brFlowBuild(); } catch (e) { Game.brFlow = null; }
+  const fkey = Math.round(tcx) + ',' + Math.round(tcy);
+  if (!Game.brFlow || Game.brFlowSeq !== Game.mapSeq || Game.brFlowKey !== fkey) {
+    try { brFlowBuild(tcx, tcy); Game.brFlowKey = fkey; } catch (e) { Game.brFlow = null; }
   }
   const W = Game.cols;
   const px = Math.floor(p.x / T), py = Math.floor(p.y / T);
@@ -18224,11 +18364,20 @@ function startBR() {
   brTip('🏝️', BR.TEAM >= 2
     ? t('br.startTeams', { a: Math.ceil(BR.N / BR.TEAM), d: BR.opt.dur })
     : t('br.startSolo', { n: BR.N, d: BR.opt.dur }), 'good', 3.2);
-  Game.brZone = { cx: (Game.cols - 1) / 2, cy: (Game.rows - 1) / 2, r: 30, tr: 30, phase: 0, t: BR.PH[0][0] };
+  /* v5.35：毒圈改成 PUBG 式 —— 每一圈都會「換位置」，不再固定縮在正中間。
+     · wait：目前圈不動，地面（淡虛線）＋小地圖（亮虛線）預告下一圈在哪
+     · shrink：時間到 → 藍圈在 BR.SHRINK 秒內收到虛線上 → 馬上再算下一圈
+     圈心一律取在「目前圈內、且整個新圈包得進去」的隨機位置（偏外側取點 → 會一路漂到地圖邊角）。 */
+  Game.brZone = { cx: (Game.cols - 1) / 2, cy: (Game.rows - 1) / 2, r: 30, tr: 27, phase: 0,
+    t: Math.max(2, BR.PH[0][0] - BR.SHRINK), mode: 'wait', done: false,
+    nx: (Game.cols - 1) / 2, ny: (Game.rows - 1) / 2, nr: 27 };
+  Game.brFlowKey = '';
+  brZoneNext();
   Game.enemies = [];
   Game.bombs = []; Game.flames = []; Game.items = []; Game.particles = [];
   Game.bolts = []; Game.pops = []; Game.edgeFx = 0; Game.pets = [];
   Game.brNuke = null; Game.brBurn = []; Game.brNukeCd = BR.NUKE;   // v5.33：核彈計時
+  Game.brLootGold = 0;                                            // v5.35：戰場掉落的金幣
   Game.foeAoe = []; Game.foeHaz = []; Game.rollers = []; Game.orbs = [];   // v5.0
   Game.foeCap = BR.FOES + 8;
   Game.timer = Infinity;
@@ -18271,6 +18420,38 @@ function startBR() {
   return true;
 }
 
+// v5.35：算出「下一圈」—— 隨機落點，但必須整個包在目前圈裡（PUBG 規則）
+function brZoneNext() {
+  const z = Game.brZone;
+  if (!z) return;
+  if (z.phase >= BR.PH.length) {          // 已經收到最後一圈 → 不再預告
+    z.done = true; z.nx = z.cx; z.ny = z.cy; z.nr = z.r; z.tr = z.r;
+    return;
+  }
+  z.done = false;
+  const nr = BR.PH[z.phase][1];
+  z.nr = nr; z.tr = nr;
+  const room = Math.max(0, z.r - nr);
+  let pick = null;
+  for (let i = 0; i < 48; i++) {
+    // 方向有慣性：七成沿用上一次的漂移方向（±jitter）→ 圈才會一路往同一側跑到地圖邊角，
+    //   完全亂數的話每一圈都往回折，最後還是黏在中間（實測只漂 3.6 格）。
+    const a = (z.dir != null && Math.random() < .72)
+      ? z.dir + (Math.random() - .5) * 1.15 : Math.random() * 6.2832;
+    // 偏外側取點（sqrt 拉平 → 外圈多）→ 圈才會一路漂到地圖邊角，而不是一直在中間打轉
+    const d = (.30 + .70 * Math.sqrt(Math.random())) * room * .98;
+    const cx = z.cx + Math.cos(a) * d, cy = z.cy + Math.sin(a) * d;
+    const gx = clamp(Math.round(cx), 0, Game.cols - 1), gy = clamp(Math.round(cy), 0, Game.rows - 1);
+    const isl = (Game.brIsl && Game.brIsl[gy]) ? Game.brIsl[gy][gx] : 0;
+    if (!pick) pick = { cx: cx, cy: cy };
+    // 圈心要在陸地上（縮到海裡＝全員只能泡水，沒有意義）
+    if (isl >= 0 && cellAt(gx, gy) !== 1) { pick = { cx: cx, cy: cy, a: a }; break; }
+  }
+  z.nx = pick ? pick.cx : z.cx;
+  z.ny = pick ? pick.cy : z.cy;
+  if (pick && pick.a != null) z.dir = pick.a;
+}
+
 // 圓外毒圈：畫在牆之上、角色之下，圈外地面染成紫紅
 function drawBRZone(T) {
   const z = Game.brZone;
@@ -18286,6 +18467,26 @@ function drawBRZone(T) {
   ctx.lineWidth = Math.max(2, T * .12);
   ctx.stroke();
   ctx.lineWidth = 1;
+  // v5.35：下一圈預告（會在跑的虛線）—— 大地圖刻意壓淡，主要資訊交給小地圖
+  if (!z.done && z.nx != null) {
+    try {
+      const nx0 = (z.nx + .5) * T, ny0 = (z.ny + .5) * T, nr0 = Math.max(6, z.nr * T);
+      const gt = Game.gameT || 0;
+      ctx.save();
+      ctx.setLineDash([T * .55, T * .40]);
+      ctx.lineDashOffset = -gt * T * .55;            // 虛線沿著圈跑，「彈彈的」
+      // 先墊一層暗線：亮色地形（雪地／沙地）上純白虛線會整個消失
+      ctx.strokeStyle = 'rgba(24,10,32,.40)';
+      ctx.lineWidth = Math.max(3, T * .20);
+      ctx.beginPath(); ctx.arc(nx0, ny0, nr0, 0, 6.2832); ctx.stroke();
+      // 再畫白虛線（大地圖刻意壓淡，但一定要看得見）
+      ctx.strokeStyle = 'rgba(255,255,255,.62)';
+      ctx.lineWidth = Math.max(2, T * .115);
+      ctx.beginPath(); ctx.arc(nx0, ny0, nr0, 0, 6.2832); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    } catch (e) {}
+  }
   ctx.restore();
 }
 
@@ -18372,6 +18573,29 @@ function brNukeHurt(p, dmg, burn) {
   if (p.brHp <= 0) { p.invuln = 0; try { killBattlePlayer(p, null); } catch (e) {} }
 }
 
+// v5.35：核彈不分敵我 —— 小怪／BOSS 一樣吃傷害（直擊重、燒地每秒 1 點）
+//   · 雜兵：6 點直擊 = 當場蒸發
+//   · 有血條的大怪：至少 60% 血量
+//   · BOSS：吃 35% 血量（跟其他 AoE 的規則一致），不會一顆秒掉
+function brNukeHurtFoe(e, dmg, burn) {
+  if (!e || e.dead) return;
+  const big = !!(e.boss || e.brBoss);
+  let deal = Math.max(1, dmg | 0);
+  if (burn) deal = 1;
+  else if (big) deal = Math.max(deal, Math.round((e.maxHp || 20) * .35));
+  else if ((e.maxHp | 0) > 6) deal = Math.max(deal, Math.ceil((e.maxHp || 6) * .6));
+  e.hp = (e.hp || 1) - deal;
+  e.hitT = Math.max(e.hitT || 0, burn ? .2 : .55);
+  try { foeHitFx(e, deal); } catch (x) {}
+  try { dmgPop(e.x, e.y - (enemyArtR(e) || 20) * 1.1, deal, { crit: !burn, color: burn ? '#ff9a4a' : '#ff5a5a' }); } catch (x) {}
+  if (e.hp > 0) return;
+  if (big && e.brBoss && typeof brBossDown === 'function') { brBossDown(e, null); return; }
+  e.dead = true;
+  try { AchFoe(e); } catch (x) {}
+  burst(e.x, e.y, e.color || '#ffd27a', 18, 210);
+  try { AudioSys.sfx('hurt'); } catch (x) {}
+}
+
 // 爆心半徑 R 內的軟牆全部掀掉（含底下的門／恐龍蛋／道具，不會白白吞掉）
 function brNukeClearSoft(cx, cy, R) {
   const r = Math.ceil(R);
@@ -18432,6 +18656,12 @@ function brNukeImpact(n) {
     const dx = p.x / T - (cx + .5), dy = p.y / T - (cy + .5);
     if (dx * dx + dy * dy <= (NUKE_R + .4) * (NUKE_R + .4)) brNukeHurt(p, NUKE_DMG, false);
   });
+  // v5.35：怪物／BOSS 一樣吃直擊（雜兵直接蒸發，BOSS 掉 35% 血）
+  (Game.enemies || []).forEach(function (e) {
+    if (!e || e.dead) return;
+    const dx = e.x / T - (cx + .5), dy = e.y / T - (cy + .5);
+    if (dx * dx + dy * dy <= (NUKE_R + .4) * (NUKE_R + .4)) brNukeHurtFoe(e, NUKE_DMG, false);
+  });
   // ④ 畫面：劇烈震動＋白閃＋三圈衝擊波＋碎石
   Game.shake = Math.min(1.6, (Game.shake || 0) + 1.25);
   Game.flash = Math.max(Game.flash || 0, .85);
@@ -18464,6 +18694,15 @@ function updateBRNuke(dt) {
         if (!brBurnAt(p.x, p.y, T)) { p.burnAcc = 0; continue; }
         p.burnAcc = (p.burnAcc || 0) + dt;
         if (p.burnAcc >= 1) { p.burnAcc -= 1; brNukeHurt(p, 1, true); }
+      }
+      // v5.35：火焰裡的小怪／BOSS 也會被烤（每秒 1 點，雜兵一兩秒就沒了）
+      const foes = Game.enemies || [];
+      for (let i = 0; i < foes.length; i++) {
+        const e = foes[i];
+        if (!e || e.dead) { if (e) e.burnAccF = 0; continue; }
+        if (!brBurnAt(e.x, e.y, T)) { e.burnAccF = 0; continue; }
+        e.burnAccF = (e.burnAccF || 0) + dt;
+        if (e.burnAccF >= 1) { e.burnAccF -= 1; brNukeHurtFoe(e, 1, true); }
       }
     }
   }
@@ -19106,7 +19345,8 @@ function brFinish(winner) {
   const me = Game.players[0];
   const win = !!(winner && winner === me);
   const place = win ? 1 : Math.min(BR.N, me.brPlace || (Game.brAlive + 1));
-  const gold = BR.GOLD[Math.max(1, Math.min(BR.GOLD.length, place)) - 1] || 80;
+  const loot = Math.max(0, Game.brLootGold | 0);        // v5.35：戰場上撿到的金幣
+  const gold = (BR.GOLD[Math.max(1, Math.min(BR.GOLD.length, place)) - 1] || 80) + loot;
   let tk = 0;
   try { Shop.addGold(gold); } catch (e) {}
   if (place <= 3) {
@@ -19126,7 +19366,8 @@ function brFinish(winner) {
   } catch (e) {}
   const title = win ? ((BR.TEAM | 0) >= 2 ? '🏆 你們這隊奪冠！' : '🏆 大逃殺冠軍！') : ('🏝️ 第 ' + place + ' 名 / ' + BR.N);
   const sub = (win ? '整座群島只剩你一個。' : '再撐一下就更前面了。') +
-    '\n金幣 +' + gold + (place <= 3 ? '　🎟️ 門票 +1（現有 ' + tk + ' 張）' : '');
+    '\n金幣 +' + gold + (loot ? '（戰場掉落 ' + loot + '）' : '') +
+    (place <= 3 ? '　🎟️ 門票 +1（現有 ' + tk + ' 張）' : '');
   Game.state = 'over';
   Game.endShown = true;
   if (win) {
@@ -19144,15 +19385,36 @@ function updateBR(dt) {
   if (Game.state === 'play' || Game.state === 'roundover') {
     const T = Game.T, z = Game.brZone;
     if (z) {
-      if (z.r > z.tr) z.r = Math.max(z.tr, z.r - dt * 1.6);     // 收縮動畫
+      /* v5.35：PUBG 式縮圈狀態機（圈會換位置，不是原地縮小）
+         wait   → 秒數到就進 shrink
+         shrink → 用 smoothstep 在 BR.SHRINK 秒內把圈心／半徑推到虛線上
+         收完   → phase+1、立刻算下一個虛線位置、回到 wait */
       if (Game.state === 'play') {
-        z.t -= dt;
-        if (z.t <= 0 && z.phase < BR.PH.length) {
-          z.tr = BR.PH[z.phase][1];
-          z.phase++;
-          z.t = z.phase < BR.PH.length ? BR.PH[z.phase][0] : 1e9;
-          brTip('🌀', t('br.zone', { n: Math.round(z.tr) }), 'warn', 1.9);
-          AudioSys.sfx('sd');
+        if (z.mode === 'shrink') {
+          z.st -= dt;
+          const k = clamp(1 - z.st / z.sdur, 0, 1);
+          const e = k * k * (3 - 2 * k);
+          z.cx = z.fx + (z.nx - z.fx) * e;
+          z.cy = z.fy + (z.ny - z.fy) * e;
+          z.r = z.fr + (z.nr - z.fr) * e;
+          if (z.st <= 0) {
+            z.cx = z.nx; z.cy = z.ny; z.r = z.nr;
+            z.mode = 'wait';
+            z.phase++;
+            brZoneNext();
+            z.t = z.phase < BR.PH.length ? Math.max(2, BR.PH[z.phase][0] - BR.SHRINK) : 1e9;
+            try { AudioSys.sfx('sd'); } catch (e2) {}
+          }
+        } else {
+          z.t -= dt;
+          if (z.t <= 0 && z.phase < BR.PH.length) {
+            z.tr = BR.PH[z.phase][1];
+            z.nr = z.tr;
+            z.mode = 'shrink'; z.st = BR.SHRINK; z.sdur = BR.SHRINK;
+            z.fx = z.cx; z.fy = z.cy; z.fr = z.r;
+            brTip('🌀', t('br.zone', { n: Math.round(z.tr) }), 'warn', 1.9);
+            AudioSys.sfx('sd');
+          }
         }
       }
     }
@@ -19652,7 +19914,7 @@ function controlHuman(p, dt) {
   for (let i = Game.items.length - 1; i >= 0; i--) {
     const it = Game.items[i];
     if (it.cx === Math.floor(p.x / T) && it.cy === Math.floor(p.y / T)) {
-      applyItem(p, it.type);
+      applyItem(p, it.type, it);
       Game.items.splice(i, 1);
     }
   }
@@ -19822,6 +20084,8 @@ function foeNearPlayer(x, y, rad) {
 }
 // 死亡時的特殊行為（目前只有分裂）
 function foeOnDeath(e) {
+  // v5.35：所有死亡路徑（火焰／隨從／鴕鳥踩／核彈／BOSS）最後都會走到這裡
+  if (e && !e.dropDone) { e.dropDone = true; try { foeDrop(e); } catch (x) {} }
   if (!e || !e.spec) return;
   const kit = foeKit(e.spec);
   if (kit.skill !== 'split' || e.isSplit) return;
@@ -21071,7 +21335,7 @@ function controlAI(p, dt) {
   for (let i = Game.items.length - 1; i >= 0; i--) {
     const it = Game.items[i];
     if (it.cx === Math.floor(p.x / T) && it.cy === Math.floor(p.y / T)) {
-      if (it.type !== 'skull') applyItem(p, it.type);
+      if (it.type !== 'skull') applyItem(p, it.type, it);
       Game.items.splice(i, 1);
     }
   }
@@ -26224,6 +26488,7 @@ function render() {
     const pulse = .5 + .5 * Math.sin(it.bob * 1.3);
     softShadow(px, it.cy * T + T / 2 + T * .30, T * .20, T * .07, .28);
     // 道具光暈（會呼吸）
+    if (it.type === 'coin') { drawCoinDrop(px, py, T, pulse, it.bob); return; }     // v5.35 金幣
     const itemImg = (typeof ItemArt !== 'undefined') ? ItemArt.get(it.type) : null;
     if (itemImg) {
       drawItemBadge(px, py, T, it.type, itemImg, pulse);
@@ -26423,16 +26688,47 @@ function drawMiniMap() {
     ctx.strokeRect(Math.max(r.x + 1, vx), Math.max(r.y + 1, vy),
       Math.min(r.w - 2, vw), Math.min(r.h - 2, vh));
   } catch (e) {}
+  // v5.35：毒圈範圍（小地圖半徑直接吃 cw，因為 56×44 換算後 cw≈ch，圓不會變形）
+  if (Game.mode === 'br' && Game.brZone) {
+    const z = Game.brZone;
+    const zx = mx(z.cx + .5), zy = my(z.cy + .5);
+    const zr = Math.max(2, z.r * cw);
+    ctx.save();
+    try {
+      ctx.beginPath();
+      ctx.rect(r.x, r.y, r.w, r.h);
+      ctx.arc(zx, zy, zr, 0, 6.2832, true);
+      ctx.fillStyle = 'rgba(112,22,142,.34)';
+      ctx.fill();
+    } catch (e) {}
+    ctx.beginPath(); ctx.arc(zx, zy, zr, 0, 6.2832);
+    ctx.strokeStyle = 'rgba(255,116,190,.92)';
+    ctx.lineWidth = 1.5; ctx.stroke();
+    if (!z.done && z.nx != null) {
+      try {
+        ctx.setLineDash([3, 2.4]);
+        ctx.strokeStyle = 'rgba(255,255,255,.82)';
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.arc(mx(z.nx + .5), my(z.ny + .5), Math.max(1.5, z.nr * cw), 0, 6.2832);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } catch (e) { ctx.setLineDash && ctx.setLineDash([]); }
+    }
+    ctx.lineWidth = 1;
+    ctx.restore();
+  }
   const me = Game.players && Game.players[0];
   const cxp = me ? me.x / Game.T : 0, cyp = me ? me.y / Game.T : 0;
   // 道具（只畫附近）
   if (Game.items && Game.items.length) {
     for (let i = 0; i < Game.items.length; i++) {
       const it = Game.items[i];
-      const dx = it.x / Game.T - cxp, dy = it.y / Game.T - cyp;
+      const ixg = it.cx + .5, iyg = it.cy + .5;        // v5.35：道具是 cx/cy，不是 x/y
+      const dx = ixg - cxp, dy = iyg - cyp;
       if (dx * dx + dy * dy > MM_ITEM_R * MM_ITEM_R) continue;
-      ctx.fillStyle = 'rgba(255,224,120,.95)';
-      ctx.fillRect(mx(it.x / Game.T) - 1, my(it.y / Game.T) - 1, 2, 2);
+      ctx.fillStyle = it.type === 'coin' ? 'rgba(255,214,80,.98)' : 'rgba(255,224,120,.95)';
+      ctx.fillRect(mx(ixg) - 1, my(iyg) - 1, it.type === 'coin' ? 2.4 : 2, it.type === 'coin' ? 2.4 : 2);
     }
   }
   // 敵人（只畫附近）
@@ -28488,7 +28784,7 @@ const EggArt = (function () {
 const ITEM_TINT = {
   fire: '#ff8a3d', bomb: '#6ee7ff', speed: '#7fd8ff', kick: '#e0ad72',
   glove: '#ffd166', punch: '#ff5e7e', remote: '#a08cff', pierce: '#ffb347',
-  heart: '#ff6b8a', line: '#7ee0ff', skull: '#9fd97a'
+  heart: '#ff6b8a', line: '#7ee0ff', skull: '#9fd97a', coin: '#ffd766'
 };
 // 圓角矩形路徑（老瀏覽器沒有 ctx.roundRect）
 function rrPath(g, x, y, w, h, r) {
@@ -28518,6 +28814,53 @@ function spark4(g, x, y, r) {
   g.quadraticCurveTo(x - r * .16, y - r * .16, x, y - r);
   g.closePath();
 }
+// v5.35：場上的金幣 —— 會旋轉（橫向壓縮）的金色硬幣，一眼看得出是錢
+function drawCoinDrop(px, py, T, pulse, ph) {
+  const gt = Game.gameT || 0;
+  // v5.35：每枚硬幣自己一個旋轉相位（沿用掉落時給的 bob）——
+  //   全部用同一個 gameT 的話，場上金幣會同時轉成側面、看起來像一堆金膠囊。
+  const fl = Math.abs(Math.cos(gt * 2.2 + (ph || 0) * 1.7));
+  const r = T * .30;
+  const w = Math.max(r * .40, r * (.52 + .48 * fl));
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.globalAlpha = .22 + pulse * .18;
+  let g = null;
+  try {
+    g = ctx.createRadialGradient(0, 0, r * .4, 0, 0, r * 2.1);
+    g.addColorStop(0, 'rgba(255,214,90,.95)');
+    g.addColorStop(1, 'rgba(255,180,30,0)');
+  } catch (e) {}
+  ctx.fillStyle = g || 'rgba(255,214,90,.30)';
+  ctx.beginPath(); ctx.arc(0, 0, r * 2.1, 0, 6.283); ctx.fill();
+  ctx.globalAlpha = 1;
+  let cg = null;
+  try {
+    cg = ctx.createLinearGradient(0, -r, 0, r);
+    cg.addColorStop(0, '#fff6cc'); cg.addColorStop(.34, '#ffd75e');
+    cg.addColorStop(.72, '#e8a41b'); cg.addColorStop(1, '#a5700a');
+  } catch (e) {}
+  ctx.fillStyle = cg || '#ffd75e';
+  ctx.beginPath(); ctx.ellipse(0, 0, w, r, 0, 0, 6.283); ctx.fill();
+  // 深色描邊：暖色／土色地圖上沒有這圈，金幣會整個糊在地面裡
+  ctx.strokeStyle = 'rgba(88,52,4,.82)';
+  ctx.lineWidth = Math.max(1.3, T * .030);
+  ctx.beginPath(); ctx.ellipse(0, 0, w, r, 0, 0, 6.283); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,248,206,.86)';
+  ctx.lineWidth = Math.max(1, T * .024);
+  ctx.beginPath(); ctx.ellipse(0, 0, w * .62, r * .66, 0, 0, 6.283); ctx.stroke();
+  if (w > r * .42) {                    // 轉到側面時不畫字，免得糊成一團
+    ctx.fillStyle = 'rgba(126,78,6,.72)';
+    ctx.font = '900 ' + (r * 1.05).toFixed(1) + 'px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('$', 0, r * .04);
+    ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  }
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.beginPath(); ctx.ellipse(-w * .30, -r * .42, w * .26, r * .20, -.5, 0, 6.283); ctx.fill();
+  ctx.restore();
+}
+
 function drawItemBadge(px, py, T, type, img, pulse) {
   const R0 = T * .487;                       // 金環外緣半徑（直徑 ≈ 0.97 格）
   const lw = Math.max(2.2, T * .060);        // 金環粗細
@@ -32150,7 +32493,12 @@ const HELP_ITEMS = [
   { id: 'skull', en: 'Skull', badge: 'bad',
     d: { tw: '詛咒！隨機中一種：<b>移動超慢</b>／<b>狂放炸彈</b>／<b>火焰變小</b>／<b>操作相反</b>，持續 <b>8 秒</b>。', cn: '诅咒！随机中一种：<b>移动超慢</b>／<b>狂放炸弹</b>／<b>火焰变小</b>／<b>操作相反</b>，持续 <b>8 秒</b>。', en: 'A curse! Random effect for <b>8s</b>: <b>crawling slow</b> / <b>bomb spam</b> / <b>tiny flames</b> / <b>reversed controls</b>.' },
     u: { tw: '踩到就中獎；去撞其他玩家或怪物可以把詛咒<b>傳給他</b>。', cn: '踩到就中奖；去撞其他玩家或怪物可以把诅咒<b>传给他</b>。', en: 'Step on it and you are cursed — touch someone else to <b>pass it on</b>.' },
-    k: { tw: '單人模式盡量別踩；對戰時故意撞對手害人。', cn: '单人模式尽量别踩；对战时故意撞对手害人。', en: 'Avoid it in solo; in battle, body-check rivals to infect them.' } }
+    k: { tw: '單人模式盡量別踩；對戰時故意撞對手害人。', cn: '单人模式尽量别踩；对战时故意撞对手害人。', en: 'Avoid it in solo; in battle, body-check rivals to infect them.' } },
+  /* v5.35：打倒怪物掉的金幣（不是強化道具，是錢） */
+  { id: 'coin', en: 'Coin',
+    d: { tw: '打倒小怪或 BOSS 掉落的<b>金幣</b>，走過去自動收進錢包。', cn: '打倒小怪或 BOSS 掉落的<b>金币</b>，走过去自动收进钱包。', en: '<b>Coins</b> dropped by monsters and bosses — walk over to collect.' },
+    u: { tw: '不用按鍵：踩到就自動撿起。大逃殺的錢會在結算時連同名次獎金一起發。', cn: '不用按键：踩到就自动捡起。大逃杀的钱会在结算时连同名次奖金一起发。', en: 'No button — just step on it. In Battle Royale it is paid out with your placement reward.' },
+    k: { tw: '單人／RPG 的<b>分數就是金幣</b>，所以撿錢＝賺錢；BOSS 一次掉 26~45 枚，比小怪肥很多。', cn: '单人／RPG 的<b>分数就是金币</b>，所以捡钱＝赚钱；BOSS 一次掉 26~45 枚，比小怪肥很多。', en: 'In Solo/RPG your <b>score IS gold</b>, so coins are cash. Bosses drop 26~45 — far richer than minions.' } }
 ];
 
 /* ---------- 坐騎 ---------- */
@@ -32180,7 +32528,7 @@ const HELP_RIDES = [
     n: { tw: '鴕鳥神獸（跳躍型坐騎）', cn: '鸵鸟神兽（跳跃型坐骑）', en: 'Wind Ostrich (leaper)' },
     d: { tw: '按 <b>空白鍵</b>／🔥（手機是<b>爪子鍵</b>）<b>往前跳 2 格</b>：中間那格是牆也跳得過去，但<b>連續兩層牆跳不過</b>，落點必須是空地。', cn: '按 <b>空白鍵</b>／🔥（手机是<b>爪子键</b>）<b>往前跳 2 格</b>：中间那格是墙也跳得过去，但<b>连续两层墙跳不过</b>，落点必须是空地。', en: 'Press <b>Space</b> / 🔥 (a <b>claw</b> on mobile) to <b>leap 2 tiles</b>: a wall in between is fine, <b>two walls in a row are not</b>, and the landing tile must be clear.' },
     u: { tw: '整段滯空<b>完全免疫</b>炸彈與怪物；落地<b>半徑 1 格震波</b>造成 2 點傷害（大逃殺／對戰也會打傷敵人，隊友除外）。', cn: '整段滞空<b>完全免疫</b>炸弹与怪物；落地<b>半径 1 格震波</b>造成 2 点伤害（大逃杀／对战也会打伤敌人，队友除外）。', en: '<b>Fully immune</b> while airborne; on landing a <b>1-tile shockwave</b> deals 2 damage (also hits enemy players in Battle Royale / versus, never teammates).' },
-    k: { tw: '冷卻 <b>1.1 秒</b>；跳躍距離固定，被炸彈或牆卡住時按了沒反應（會有提示音）。', cn: '冷却 <b>1.1 秒</b>；跳跃距离固定，被炸弹或墙卡住时按了没反应（会有提示音）。', en: 'Cooldown <b>1.1s</b>; the distance is fixed — blocked by a bomb or wall it simply won\'t fire (you\'ll hear a nope sound).' } }
+    k: { tw: '冷卻 <b>1.1 秒</b>；跳躍距離固定，被炸彈或牆卡住時按了沒反應（會有提示音）。', cn: '冷却 <b>1.1 秒</b>；跳跃距离固定，被炸弹或墙卡住时按了没反应（会有提示音）。', en: 'Cooldown <b>1.1s</b>; the distance is fixed — blocked by a bomb or wall it simply won\'t fire (you\'ll hear a nope sound).' } },
 ];
 const HELP_RIDE_TABLE = {
   head: { tw: '項目', cn: '项目', en: '' },
@@ -35239,7 +35587,16 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.34', date: '2026-11-07', now: true, items: [
+  { v: '5.35', date: '2026-11-07', now: true, items: [
+    '🌀 <b>毒圈改成 PUBG 式隨機縮圈</b>：不再永遠縮在正中間 —— 每一圈都會<b>換位置</b>，可能縮在任何一個角落（前一秒還在東邊、下一圈跑到西南）。',
+    '┈ <b>虛線預告下一圈</b>：時間還沒到之前，地面會先畫出下一圈的<b>彈跳虛線</b>（大地圖刻意壓淡），時間一到藍圈就在 8 秒內收到虛線上，收完立刻再預告下一圈。小地圖同樣看得到目前範圍與下一圈。',
+    '☢️ <b>核彈會打死怪與 BOSS</b>：以前只炸玩家。現在落點半徑 5 格內的雜兵當場蒸發、BOSS 一次掉 35% 血，燒地每秒也會烤 1 點。',
+    '🪙 <b>打倒怪／BOSS 會掉東西</b>（單人／RPG／大逃殺）：金幣、道具或恐龍蛋，看機率。BOSS 一次掉 2~3 樣。金幣在單人／RPG 直接算進分數（＝商店金幣），大逃殺則累計到結算獎金。',
+    '🔊 <b>大逃殺音樂音量重新平衡</b>：低音從 triangle 換成有泛音的 sawtooth（低通 420Hz），鼓與和弦牆一起拉起來、旋律略收 —— 手機喇叭上終於聽得到低音。',
+    '🧱 <b>硬牆不再聚成一坨</b>：改成只允許「1 格厚的岩脊（直線／L 形）」與「留缺口的空心圍籬」，並且任何位置都禁止形成 2×2 實心塊。',
+    '📐 主檔 1,897,207 字元（預算 1,950,000）；134 支測試全綠（新增 verify-v535）。'
+  ]},
+  { v: '5.34', date: '2026-11-07', now: false, items: [
     '🎵 <b>對戰與大逃殺有自己的戰鬥音樂了</b>：以前這兩種模式播的是關卡主題曲。現在對戰一首約 2:45、大逃殺 10 分鐘／5 分鐘各一首，長度跟一場地圖差不多，播完直接接回開頭，中間沒有斷點。',
     '🥁 <b>音樂更有戰場味</b>：加上銅鈸、開合 hi-hat、三顆過門鼓，還有一層「失真的低音和弦牆」，速度拉到 146～152，比關卡曲更衝。',
     '🚀 <b>核彈本體換成算圖美術</b>：整顆飛彈（金屬彈體、紅色警戒環、尾翼、粗黑描邊）是生成後去背的圖，落下時外面包著火焰一起壓下來。',
@@ -41468,6 +41825,8 @@ window.__BH = {
   // v5.33：核彈（測試要直接驗落點、燒地、AI 逃跑）與敵我炸彈分辨
   updateBRNuke: updateBRNuke, brNukeLaunch: brNukeLaunch, brNukeFlee: brNukeFlee, brBurnAt: brBurnAt,
   bombIsAlly: bombIsAlly, isAllyOwner: isAllyOwner, NUKE_R: NUKE_R, NUKE_DMG: NUKE_DMG, NUKE_BURN_SEC: NUKE_BURN_SEC,
+  // v5.35：隨機縮圈、核彈打怪、掉落物
+  brZoneNext: brZoneNext, brNukeHurtFoe: brNukeHurtFoe, foeDrop: foeDrop, foeOnDeath: foeOnDeath, coinTo: coinTo,
   showBRDeath: showBRDeath, aiEscape: aiEscape, placeHideTiles: placeHideTiles,
   seedCode: seedCode, seedTag: seedTag,
   themeName: themeName, charName: charName, charTag: charTag,
