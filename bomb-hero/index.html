@@ -4506,7 +4506,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.21</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.22</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4561,7 +4561,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.21</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.22</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5505,7 +5505,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.21';
+const VERSION = '5.22';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -23133,40 +23133,197 @@ function viewRange(T) {
 const FLR_N = 8;
 const FLR_MAX = 56;                       // 快取上限（超過就整批丟掉，記憶體不會無限長）
 
-/* v5.21：接縫 AO —— 地板貼著牆的那一側壓一條漸層陰影。
-   以前地板是一整片純色，牆像是「畫上去的貼紙」；有了 AO，牆才有「立起來」的重量。
-   畫在烘焙裡（floorChunk 第二次迴圈），執行期一次 drawImage 就打完了。 */
+/* ===================================================================
+ * v5.22：地板陰影三層（全部烘進分塊 → 執行期零成本）
+ *   ① 接縫 AO   牆／軟磚壓在地板上的接觸陰影（柔光帶＋貼邊帶＋轉角補丁）
+ *   ② 場地光線  整張地圖一道「左上亮 → 右下暗」的柔光，地板不再是純色平面
+ *   ③ 樹影斑駁  低頻雜訊的柔和暗斑：空曠地板也有明暗，跨分塊完全無接縫
+ *   三層都只作用在「看得到地板」的格子；牆與軟磚保持原色，
+ *   才不會出現「牆比地板還亮」或「牆上糊一塊黑影」的破格。
+ *   規則：只要畫面上看得到地板，那塊地板就一定有陰影（三層至少中一層）。
+ * ================================================================== */
+
+/* 這格是實心嗎：0 = 空、1 = 石牆、2 = 軟磚。
+   地圖外一律回 0 —— 邊界不長假陰影（大逃殺海島外圈曾因此多出一整圈黑邊）。 */
+function aoSolid(gx, gy) {
+  const g = Game.grid;
+  if (!g || !g[gy]) return 0;
+  const row = g[gy];
+  if (gx < 0 || gx >= row.length) return 0;
+  const v = row[gx] | 0;
+  if (v === 0) return 0;
+  return v === 2 ? 2 : 1;                  // 軟磚一樣擋光 → 一樣要投影
+}
+
+const AO_WIDE = .62, AO_WIDE_A = .30;      // 外圈柔光帶（長度／濃度，單位＝格）
+const AO_TIGHT = .18, AO_TIGHT_A = .28;    // 貼邊接觸帶 —— 有它才有「壓在地上」的重量
+const AO_CR = .36, AO_CR_A = .23;          // 轉角補丁（半徑／濃度）
+
+/* 產生「某一格」的陰影指令（座標是格子內的相對像素）。
+   拉成獨立函式，是因為測試要驗「每一關的每一格空地都被涵蓋」，不能只看畫面。 */
+function floorAOBands(gx, gy, T) {
+  const out = [];
+  if (aoSolid(gx, gy)) return out;         // 實心格自己不壓陰影
+  const Lw = T * AO_WIDE, Lt = T * AO_TIGHT;
+  const add = function (d, x, y, w, h, a) { out.push({ k: 'b', d: d, x: x, y: y, w: w, h: h, a: a }); };
+  const up = aoSolid(gx, gy - 1), dn = aoSolid(gx, gy + 1);
+  const lf = aoSolid(gx - 1, gy), rt = aoSolid(gx + 1, gy);
+  if (up) { add('u', 0, 0, T, Lw, AO_WIDE_A); add('u', 0, 0, T, Lt, AO_TIGHT_A); }
+  if (dn) { add('d', 0, T - Lw, T, Lw, AO_WIDE_A); add('d', 0, T - Lt, T, Lt, AO_TIGHT_A); }
+  if (lf) { add('l', 0, 0, Lw, T, AO_WIDE_A); add('l', 0, 0, Lt, T, AO_TIGHT_A); }
+  if (rt) { add('r', T - Lw, 0, Lw, T, AO_WIDE_A); add('r', T - Lt, 0, Lt, T, AO_TIGHT_A); }
+  // 轉角：對角是實心、但兩條正交邊都是空的 → 補一塊四分之一圓。
+  //   少了它，兩條帶的交角會凹出一條「亮的十字縫」，牆看起來像四塊貼紙拼的。
+  const D = [[-1, -1, 0], [1, -1, Math.PI / 2], [-1, 1, -Math.PI / 2], [1, 1, Math.PI]];
+  for (let i = 0; i < 4; i++) {
+    const dx = D[i][0], dy = D[i][1];
+    if (!aoSolid(gx + dx, gy + dy)) continue;
+    if (aoSolid(gx + dx, gy) || aoSolid(gx, gy + dy)) continue;
+    out.push({ k: 'c', cx: dx < 0 ? 0 : T, cy: dy < 0 ? 0 : T, r: T * AO_CR, a: AO_CR_A, a0: D[i][2] });
+  }
+  return out;
+}
+
+/* 一條帶：深的一側永遠貼著牆／軟磚，往地板方向淡出 */
+function drawAOBand(px, py, op, T) {
+  let x0 = px + op.x, y0 = py + op.y, x1 = x0, y1 = y0;
+  if (op.d === 'u') { y1 = y0 + op.h; }
+  else if (op.d === 'd') { y0 = py + T; y1 = y0 - op.h; }
+  else if (op.d === 'l') { x1 = x0 + op.w; }
+  else { x0 = px + T; x1 = x0 - op.w; y0 = py + op.y; y1 = y0; }
+  let g = null;
+  try { g = ctx.createLinearGradient(x0, y0, x1, y1); } catch (e) { return; }
+  if (!g || !g.addColorStop) return;
+  // 三段：貼牆那一小段保持濃，之後才快速淡出。
+  //   兩段（線性）的話整條帶幾乎都是 3% 濃度 —— 量得出來、眼睛看不到。
+  g.addColorStop(0, 'rgba(6,8,16,' + op.a + ')');
+  g.addColorStop(.40, 'rgba(6,8,16,' + (op.a * .57).toFixed(3) + ')');
+  g.addColorStop(1, 'rgba(6,8,16,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(px + op.x, py + op.y, op.w, op.h);
+}
+/* 轉角補丁：只畫「進到地板那一象限」的四分之一圓，不會染到牆上 */
+function drawAOCorner(px, py, op) {
+  const cx = px + op.cx, cy = py + op.cy;
+  let g = null;
+  try { g = ctx.createRadialGradient(cx, cy, 0, cx, cy, op.r); } catch (e) { return; }
+  if (!g || !g.addColorStop) return;
+  g.addColorStop(0, 'rgba(6,8,16,' + op.a + ')');
+  g.addColorStop(.42, 'rgba(6,8,16,' + (op.a * .34).toFixed(3) + ')');
+  g.addColorStop(1, 'rgba(6,8,16,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, op.r, op.a0, op.a0 + Math.PI / 2);
+  ctx.closePath();
+  ctx.fill();
+}
+function drawAOOp(px, py, op, T) {
+  if (op.k === 'c') drawAOCorner(px, py, op);
+  else drawAOBand(px, py, op, T);
+}
+/* 分塊版：烘地板時一次畫完 */
 function drawFloorAO(gx0, gy0, w, h, T) {
-  // 地圖外的格子不算牆（回 0）：地圖邊緣本來就沒有「牆面」，硬壓陰影會在
-  //   大逃殺的海島外圈留下一圈假的暗邊；真的牆（grid≠0）自然會讓鄰格長出陰影。
-  const solidAt = function (X, Y) {
-    if (!Game.grid || !Game.grid[Y]) return 0;
-    const row = Game.grid[Y];
-    if (X < 0 || X >= row.length) return 0;
-    return row[X] ? 1 : 0;
-  };
-  const L = T * .40;                       // 陰影長度（約 0.4 格）
-  const A0 = .34;                          // 貼牆那一側的濃度
-  const band = function (x0, y0, x1, y1) {
-    let g = null;
-    try { g = ctx.createLinearGradient(x0, y0, x1, y1); } catch (e) { return null; }
-    if (!g || !g.addColorStop) return null;
-    g.addColorStop(0, 'rgba(6,8,16,' + A0 + ')');
-    g.addColorStop(1, 'rgba(6,8,16,0)');
-    return g;
-  };
+  const TS = T || Game.T;
   for (let yy = 0; yy < h; yy++) {
     for (let xx = 0; xx < w; xx++) {
-      const gx = gx0 + xx, gy = gy0 + yy;
-      if (solidAt(gx, gy)) continue;        // 牆／軟磚本身不壓陰影
-      const px = xx * T, py = yy * T;
-      if (solidAt(gx, gy - 1)) { const g = band(px, py, px, py + L); if (g) { ctx.fillStyle = g; ctx.fillRect(px, py, T, L); } }
-      if (solidAt(gx, gy + 1)) { const g = band(px, py + T, px, py + T - L); if (g) { ctx.fillStyle = g; ctx.fillRect(px, py + T - L, T, L); } }
-      if (solidAt(gx - 1, gy)) { const g = band(px, py, px + L, py); if (g) { ctx.fillStyle = g; ctx.fillRect(px, py, L, T); } }
-      if (solidAt(gx + 1, gy)) { const g = band(px + T, py, px + T - L, py); if (g) { ctx.fillStyle = g; ctx.fillRect(px + T - L, py, L, T); } }
+      const ops = floorAOBands(gx0 + xx, gy0 + yy, TS);
+      if (!ops.length) continue;
+      for (let i = 0; i < ops.length; i++) drawAOOp(xx * TS, yy * TS, ops[i], TS);
     }
   }
 }
+/* 單格版：輸送帶／河流／滑冰／傳送門是「地板畫完才疊上去」的圖層，
+   疊上去會把牆的陰影整片蓋掉 → 蓋完再補回來。 */
+function drawAOCell(gx, gy, T) {
+  const TS = T || Game.T;
+  const ops = floorAOBands(gx, gy, TS);
+  if (!ops.length) return;
+  for (let i = 0; i < ops.length; i++) drawAOOp(gx * TS, gy * TS, ops[i], TS);
+}
+
+/* ---------- ② 場地光線：整張地圖一道柔光 ---------- */
+const AO_LIT = 'rgba(255,248,226,.095)', AO_DIM = 'rgba(8,10,22,.215)';
+function drawFloorLight(gx0, gy0, w, h, T) {
+  const CW = Math.max(1, Game.cols * T), CH = Math.max(1, Game.rows * T);
+  // 分塊左上角在整張地圖的座標（負值）→ 每塊各自取「同一道漸層」的那一小段，
+  //   拼起來完全連續，不會出現 8×8 的方格明暗。
+  const ox = -gx0 * T, oy = -gy0 * T;
+  let g = null;
+  try { g = ctx.createLinearGradient(ox + CW * .04, oy + CH * .02, ox + CW * .94, oy + CH * .98); } catch (e) { return; }
+  if (!g || !g.addColorStop) return;
+  g.addColorStop(0, AO_LIT);
+  g.addColorStop(.46, 'rgba(24,20,36,.012)');
+  g.addColorStop(1, AO_DIM);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w * T, h * T);
+}
+
+/* ---------- ③ 樹影斑駁：低頻雜訊暗斑 ---------- */
+// 每個主題一點點不同的濃度：亮地板（冰／天空）要更淡，否則會像髒污
+const DAPPLE_A = { forest: .115, sand: .085, ice: .052, lava: .100, neon: .092, sea: .100, sky: .044, dark: .110 };
+function drawFloorDapple(gx0, gy0, w, h, T) {
+  const th = Game.theme || THEMES[0];
+  const st = (th && th.style) || 'forest';
+  const A = (DAPPLE_A[st] != null) ? DAPPLE_A[st] : .07;
+  if (!(A > 0)) return;
+  const S = 3;                                   // 低頻格：3 格一個種子點
+  const i0 = Math.floor(gx0 / S) - 1, i1 = Math.floor((gx0 + w) / S) + 1;
+  const j0 = Math.floor(gy0 / S) - 1, j1 = Math.floor((gy0 + h) / S) + 1;
+  const ox = gx0 * T, oy = gy0 * T;
+  for (let j = j0; j <= j1; j++) {
+    for (let i = i0; i <= i1; i++) {
+      let hsh = (i * 374761393 + j * 668265263) ^ 0x5bf03635;
+      hsh = (hsh ^ (hsh >>> 13)) * 1274126177;
+      hsh = (hsh ^ (hsh >>> 16)) >>> 0;
+      const r1 = ((hsh >>> 3) & 1023) / 1023;
+      const r2 = ((hsh >>> 13) & 1023) / 1023;
+      const r3 = ((hsh >>> 23) & 511) / 511;
+      if (r3 > .66) continue;                    // 只留約 2/3 的點，避免整片均勻
+      const cx = (i + .15 + r1 * .70) * S * T - ox;
+      const cy = (j + .15 + r2 * .70) * S * T - oy;
+      const R = S * T * (.52 + r3 * .42);
+      const aa = A * (.68 + r3 * .55);
+      let g = null;
+      try { g = ctx.createRadialGradient(0, 0, R * .10, 0, 0, R); } catch (e) { continue; }
+      if (!g || !g.addColorStop) continue;
+      g.addColorStop(0, 'rgba(10,12,26,' + aa.toFixed(3) + ')');
+      g.addColorStop(.52, 'rgba(10,12,26,' + (aa * .52).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(10,12,26,0)');
+      // 壓扁成橢圓（y 向 ×.62）——正圓看起來像「污漬」，橢圓才像樹冠／雲影
+      ctx.save();
+      ctx.translate(cx, cy);
+      if (ctx.scale) ctx.scale(1, .62 + r3 * .18);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0, 0, R, 0, 6.283);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+/* ---------- 上色範圍：只塗「真的畫得到」的格子 ---------- */
+// 內層岩體（floorCellSkip）是刻意留空、露出背景的，一旦被光線或樹影染到，
+//   就會在岩層中間浮出一個規規矩矩的 8×8 方塊。所以一定要先裁切。
+function floorClipBegin(gx0, gy0, w, h, T, floorOnly) {
+  try {
+    if (!ctx.save || !ctx.beginPath || !ctx.rect || !ctx.clip) return false;
+    ctx.save();
+    ctx.beginPath();
+    for (let yy = 0; yy < h; yy++) {
+      for (let xx = 0; xx < w; xx++) {
+        const gx = gx0 + xx, gy = gy0 + yy;
+        if (floorCellSkip(gx, gy)) continue;
+        if (floorOnly && aoSolid(gx, gy)) continue;      // 樹影只落在空地
+        ctx.rect(xx * T, yy * T, T, T);
+      }
+    }
+    ctx.clip();
+    return true;
+  } catch (e) { return false; }
+}
+function floorClipEnd(on) { if (on) { try { ctx.restore(); } catch (e) {} } }
 
 /* v5.21：螢幕空間暗角 —— 以前每幀在「整張地圖」上畫一次大漸層（50×50 的大逃殺地图
    每幀要填 2500 格大小的矩形）。改成離屏快取一張畫面大小的暗角，每幀一次 drawImage。
@@ -23209,7 +23366,9 @@ function drawVignette() {
   try { ctx.drawImage(cv, 0, 0, VIEW_W, VIEW_H); } catch (e) {}
 }
 let _flrSig = '', _flrMap = {}, _flrN = 0;
+// 這一格是「連到外框岩體的內層」→ 刻意不畫（露出背景，輪廓才有凹凸）
 function floorCellSkip(gx, gy) {
+  if (!Game.grid || !Game.grid[gy]) return false;
   return !!(Game.wallKind && Game.wallKind[gy] && Game.wallKind[gy][gx] === 0 && Game.grid[gy][gx] === 1);
 }
 function floorChunk(cx, cy) {
@@ -23232,15 +23391,24 @@ function floorChunk(cx, cy) {
         if (g.setTransform) g.setTransform(pr, 0, 0, pr, 0, 0);
         const old = ctx; ctx = g;
         try {
+          /* ① 地板先全部鋪好 —— 以前地板與牆在同一輪交錯畫，
+                相鄰格的地板會蓋掉牆的邊緣；拆開之後牆才是「站在地板上」 */
           for (let yy = 0; yy < h; yy++) {
             for (let xx = 0; xx < w; xx++) {
               const gx = cx * FLR_N + xx, gy = cy * FLR_N + yy;
               if (floorCellSkip(gx, gy)) continue;
               const thc = themeAtCell(gx, gy, th0);
+              paintFloorStyle(gx, gy, xx * T, yy * T, T, thc, (thc && thc.style) || 'forest');
+            }
+          }
+          /* ② 牆面／軟磚（靜態：只有軟磚被炸掉才變 → floorChunkDirty 會丟掉那一塊） */
+          for (let yy = 0; yy < h; yy++) {
+            for (let xx = 0; xx < w; xx++) {
+              const gx = cx * FLR_N + xx, gy = cy * FLR_N + yy;
+              const v = (Game.grid[gy] && Game.grid[gy][gx]) | 0;
+              if (!v) continue;
+              const thc = themeAtCell(gx, gy, th0);
               const cxp = xx * T, cyp = yy * T;
-              paintFloorStyle(gx, gy, cxp, cyp, T, thc, (thc && thc.style) || 'forest');
-              // 牆面一起烘（牆是靜態的：只有軟磚被炸掉才變 → floorChunkDirty 會丟掉那一塊）
-              const v = Game.grid[gy][gx];
               if (v === 1) {
                 const wk = (Game.wallKind && Game.wallKind[gy]) ? Game.wallKind[gy][gx] : 2;
                 if (wk === 1) drawOuterWall(cxp, cyp, T, thc, gx * 37 + gy * 7, gx, gy);
@@ -23250,7 +23418,15 @@ function floorChunk(cx, cy) {
               }
             }
           }
-          // v5.21：接縫 AO 最後畫（要蓋在地板之上、牆之下 —— 牆已經在同一輪畫好了）
+          /* ③ 場地光線（連牆一起壓，否則牆會比地板還亮） */
+          let cl1 = floorClipBegin(cx * FLR_N, cy * FLR_N, w, h, T, false);
+          try { drawFloorLight(cx * FLR_N, cy * FLR_N, w, h, T); } catch (e) {}
+          floorClipEnd(cl1);
+          /* ④ 樹影斑駁（只壓地板） */
+          let cl2 = floorClipBegin(cx * FLR_N, cy * FLR_N, w, h, T, true);
+          try { drawFloorDapple(cx * FLR_N, cy * FLR_N, w, h, T); } catch (e) {}
+          floorClipEnd(cl2);
+          /* ⑤ 接縫 AO 最後 —— 壓在地板與光線之上，接觸感才不會被洗淡 */
           try { drawFloorAO(cx * FLR_N, cy * FLR_N, w, h, T); } catch (e) {}
         } finally { ctx = old; }
       }
@@ -23263,7 +23439,12 @@ function floorChunk(cx, cy) {
 // 某一格的地板變了（軟磚被炸開）→ 只丟那一塊，其餘照用
 function floorChunkDirty(x, y) {
   if (x == null) { _flrMap = {}; _flrN = 0; return; }
-  delete _flrMap[((x / FLR_N) | 0) + ',' + ((y / FLR_N) | 0)];
+  // v5.22：陰影會壓到隔壁格、甚至是隔壁分塊 —— 一格變了要丟「3×3 的分塊範圍」。
+  //   以前只丟自己那一塊：軟磚剛好在分塊邊界（x%8===7）被炸掉時，右邊那塊還留著它的影子，
+  //   畫面上就會有一條沒有牆卻存在的暗邊（幽靈陰影）。
+  const c0 = ((x - 1) / FLR_N) | 0, c1 = ((x + 1) / FLR_N) | 0;
+  const r0 = ((y - 1) / FLR_N) | 0, r1 = ((y + 1) / FLR_N) | 0;
+  for (let cy = r0; cy <= r1; cy++) for (let cx = c0; cx <= c1; cx++) delete _flrMap[cx + ',' + cy];
 }
 function drawFloorLayer(vr, T) {
   if (typeof document === 'undefined' || !document.createElement) return false;
@@ -23486,7 +23667,11 @@ function render() {
       //   就會看到「石頭上還有一條輸送帶」。這裡先確認格子是空的才畫。
       const gv = (Game.grid && Game.grid[y]) ? Game.grid[y][x] : 1;
       const hz = (gv === 0) ? (Game.hazards[y] && Game.hazards[y][x]) : null;
-      if (hz) paintHazardCell(x, y, hz, T);
+      if (hz) {
+        paintHazardCell(x, y, hz, T);
+        // v5.22：機關是地板畫完才疊的圖層，會把牆的陰影整片蓋掉 → 補壓一次
+        try { drawAOCell(x, y, T); } catch (e) {}
+      }
     }
   }
   // v4.75：把大關卡的氛圍照片「混」到地板上（overlay）—— 材質與光線透上來，
@@ -32360,7 +32545,16 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.21', date: '2026-11-06', now: true, items: [
+  { v: '5.22', date: '2026-11-06', now: true, items: [
+    '🧱 <b>每一關的地板都有陰影了</b>：所有 32 關、RPG、大逃殺、對戰，只要畫面上看得到地板，就一定看得到陰影 —— 牆邊、軟磚邊是<b>接觸陰影</b>，空曠處是<b>柔和的樹影</b>，整張圖還有一道<b>左上亮、右下暗</b>的光線',
+    '📦 <b>軟牆（木箱）以前像貼紙</b>：陰影只壓在旁邊那格、又薄又短，跟石牆一比就很平。現在陰影加寬到<b>約半格</b>並分兩層（柔光帶＋貼邊帶），木箱終於是「放在地上」而不是「畫在地上」',
+    '🔲 <b>牆角不再漏光</b>：兩條陰影相交的轉角補了一小塊四分之一圓，以前那裡會凹出一條亮縫，遠看像牆被切成好幾塊',
+    '🌤️ <b>空曠地板不再是純色一片</b>：加了低頻的樹影／雲影（每個主題濃度不同，冰原與天空最淡），並用整張地圖的連續光線壓出方向感',
+    '🌊 <b>機關地板也吃得到陰影</b>：輸送帶、河流、滑冰、傳送門是「地板畫完才疊上去」的圖層，以前一疊上去就把牆的陰影整片蓋掉，現在疊完會補壓一次',
+    '⚡ 三層陰影全部<b>烘進地板分塊</b>（每 8×8 格一張離屏畫布），執行期仍然只有一次 drawImage，不增加每幀成本',
+    '🧪 新增 verify-v522：逐格比對 32 關＋RPG＋大逃殺＋對戰的每一格空地，確認「貼著牆或軟磚的空地 100% 有陰影」'
+  ] },
+  { v: '5.21', date: '2026-11-06', now: false, items: [
     '💥 <b>打下去有感覺了</b>：怪物頭上會跳出<b>傷害數字</b>（擊殺是金色、大傷害會加大），受擊瞬間<b>白閃</b>變短變準，命中那 2~5 幀會<b>頓一下</b> —— 這是動作遊戲「打得痛」的關鍵',
     '🧱 <b>牆終於立起來了</b>：地板貼著牆的地方加了<b>接縫陰影</b>，牆不再是「畫在地上的貼紙」，整張地圖有厚度了',
     '🌑 <b>暗角改成跟著畫面走</b>：以前暗角是畫在整張地圖上（地圖越大越糊、也越吃效能），現在貼著你的視窗邊緣 —— 大場地明顯更順、畫面也更聚焦',
@@ -38328,6 +38522,8 @@ window.__BH = {
   flameHitDamage: flameHitDamage, drawRpgHud: drawRpgHud, rngFrom: rngFrom, map32Name: map32Name,
   hitStop: hitStop, dmgPop: dmgPop, foeHitFx: foeHitFx, drawFloorAO: drawFloorAO,
   drawVignette: drawVignette, vignetteCanvas: vignetteCanvas,
+  aoSolid: aoSolid, floorAOBands: floorAOBands, drawAOCell: drawAOCell, floorChunk: floorChunk, floorCellSkip: floorCellSkip, floorChunkDirty: floorChunkDirty,
+  drawFloorLight: drawFloorLight, drawFloorDapple: drawFloorDapple, DAPPLE_A: DAPPLE_A,
   // v4.1 帳號 / 雲端存檔
   Cloud: Cloud, rpgAdjust: rpgAdjust, Admin: Admin,
   Save: Save,   // v4.87：測試要驗「gift 有沒有真的進存檔」
