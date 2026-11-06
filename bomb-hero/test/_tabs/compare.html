@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  body { margin: 0; background: #10141c; font-family: "Microsoft JhengHei", system-ui, sans-serif; padding: 22px 24px 26px; }
+  h1 { margin: 0 0 4px; font-size: 19px; color: #f2e6d2; letter-spacing: .02em; }
+  .sub { font-size: 12px; color: #8f9bb3; margin-bottom: 16px; }
+  .row { display: flex; gap: 22px; align-items: flex-start; }
+  .col { flex: 0 0 auto; }
+  .lab { font-size: 12.5px; font-weight: 900; margin-bottom: 7px; padding: 5px 10px; border-radius: 8px; display: inline-block; }
+  .bad .lab { background: #55202a; color: #ffb3b3; }
+  .good .lab { background: #17402c; color: #8ff0b6; }
+  img { display: block; width: 300px; border-radius: 12px; border: 2px solid #2a3247; }
+  .bad img { border-color: #6a2a34; }
+  .good img { border-color: #2c6a48; }
+  .note { margin-top: 7px; width: 300px; font-size: 11px; line-height: 1.55; color: #93a0b8; }
+  .arrow { font-size: 26px; color: #4a5570; padding-top: 150px; }
+</style></head>
+<body>
+  <h1>成就面板 · 分類頁籤（手機 430×932）</h1>
+  <div class="sub">v5.22 之前：分類列被排到面板最底部、貼著螢幕邊，只看得到 4 個，還要左右拖　→　v5.23：全部攤開在標題下方</div>
+  <div class="row">
+    <div class="col bad">
+      <div class="lab">BEFORE · v5.22</div>
+      <img src="before-ach.png">
+      <div class="note">頁籤在「一鍵領取」下面，被切掉一半；9 個分類只露出 4.5 個，橫向拖曳區只有 ~30px 高</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="col good">
+      <div class="lab">AFTER · v5.23</div>
+      <img src="after-ach.png">
+      <div class="note">9 個分類 3 列全部可見，每格 92×40px，不用橫向滑動就能點到任何一頁</div>
+    </div>
+  </div>
+</body></html>
