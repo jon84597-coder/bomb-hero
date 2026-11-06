@@ -87,6 +87,7 @@ ok(/function hideOverlay\(\) \{ Game\.ovInfo = null; stopWinJump\(\); ovHide\(\)
   G.state = 'play';
   const p0 = G.players[0];
   p0.lives = 1; p0.invuln = 0;
+  p0.sHpMax = 1; p0.sHp = 1;   // v5.30：這段只驗「命死完」的流程，指定一擊倒（簡單模式現在是 2 格血）
   P.killPlayer(p0, false, null);
   for (let i = 0; i < 400 && !G.endShown; i++) P.updateSolo(0.02);
   ok(G.endShown === true && G.state === 'over', '命死完 → 結束畫面出現（state=over）');

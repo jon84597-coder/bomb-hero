@@ -4661,7 +4661,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.29</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.30</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4716,7 +4716,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.29</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.30</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5701,7 +5701,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.29';
+const VERSION = '5.30';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -9310,6 +9310,7 @@ function makePlayer(slot, charIdx, scheme, spawn) {
     dino: false, fireCd: 0, dinoT: 0,               // 騎乘恐龍（多擋一次傷害＋吐火）
     redDragon: false,                               // v1.8：吃到第二顆蛋 → 紅龍（四方向吐火）
     lives: 1, wins: 0, alive: true, invuln: 2,
+    sHp: 1, sHpMax: 1,                              // v5.30：單人「格血」——這條命還有幾格血（簡單 2 格，其他 1 格＝一擊倒）
     dashCd: 0, dashT: 0, dashDx: 0, dashDy: 0, tapDir: '', tapAt: 0,   // v5.0：衝刺／翻滾
     aiDashGap: 0, aiTgtD: 99,                                           // v5.11：AI 衝刺節流／目標距離
     facing: 'up',
@@ -9902,9 +9903,14 @@ function applyItem(p, type) {
     case 'pierce': p.pierce = true; break;
     case 'line': p.line = true; break;
     case 'heart': {
-      // v5.0：一次補「一格」血條，封頂不多給；大逃殺同樣有效
-      const cap = Math.max(3, (Game.startLives || 3));
-      if (p.lives < cap) p.lives += 1;
+      // v5.30：格血模式（單人簡單）先補一格血；其他模式維持「補一條命」，兩邊都封頂不多給
+      const hmx = Math.max(1, p.sHpMax | 0);
+      if (hmx > 1) {
+        if ((p.sHp | 0) < hmx) p.sHp = Math.min(hmx, (p.sHp | 0) + 1);
+      } else {
+        const cap = Math.max(3, (Game.startLives || 3));
+        if (p.lives < cap) p.lives += 1;
+      }
       try { burst(p.x, p.y - T * .3, '#ff6b8a', 14, 150); } catch (e) {}
       try { AudioSys.sfx('heal'); } catch (e) {}
       try { bubbleSay(p, '❤️', 'good', T * 1.6); } catch (e) {}
@@ -10822,11 +10828,12 @@ const PetPreview = (function () {
 // v2.4：三種難度的 BOSS 統一 5 下（血條滿格 = 5，打五下就贏）
 const BOSS_HITS = 5;
 const SOLO_DIFF = {
-  // v5.29：lives = 這一關的初始生命（格），invuln = 被炸掉一條命之後的無敵秒數。
-  //   簡單模式刻意做得寬容（5 格＋3.4 秒無敵），普通／困難完全維持原樣。
-  easy:   { enemy: .62, speed: .80, bossHp: BOSS_HITS, eggs: 3, lives: 5, invuln: 3.4, label: '😇 簡單' },
-  normal: { enemy: 1,   speed: 1,   bossHp: BOSS_HITS, eggs: 2, lives: 3, invuln: 2.2, label: '🙂 普通' },
-  hard:   { enemy: 1.45, speed: 1.22, bossHp: BOSS_HITS, eggs: 1, lives: 3, invuln: 2.2, label: '😈 困難' }
+  // v5.30：lives＝這一關有幾條命；hp＝每條命有幾格血（扣完才倒下）。
+  //   簡單模式是「2 格血」：被打到只掉一格、短暫無敵後繼續打，第二下才倒下 —— 這是 HP，不是多給幾條命。
+  //   普通／困難維持原樣（一擊倒、3 條命），完全沒動。
+  easy:   { enemy: .62, speed: .80, bossHp: BOSS_HITS, eggs: 3, lives: 1, hp: 2, invuln: 3.4, hpInvuln: 1.8, label: '😇 簡單' },
+  normal: { enemy: 1,   speed: 1,   bossHp: BOSS_HITS, eggs: 2, lives: 3, hp: 1, invuln: 2.2, hpInvuln: 2.2, label: '🙂 普通' },
+  hard:   { enemy: 1.45, speed: 1.22, bossHp: BOSS_HITS, eggs: 1, lives: 3, hp: 1, invuln: 2.2, hpInvuln: 2.2, label: '😈 困難' }
 };
 function soloDiffCfg() {
   // v4.80：每日挑戰固定難度（不然排行榜就變成比誰調得簡單）
@@ -10841,6 +10848,21 @@ function soloLives() {
   const c = soloDiffCfg();
   const n = (c && c.lives) | 0;
   return n > 0 ? n : 3;
+}
+/* v5.30：這一關每一條命有幾格血。
+   簡單＝2 格（被打到掉一格、第二下才倒下）；普通／困難＝1 格（維持原本的一擊倒）。
+   每日挑戰與首頁 BOSS 連戰固定 1 格 —— 那兩個要比秒數／比分數，排行榜不能因為難度而不同。 */
+function soloHpMax() {
+  if (Game.rpg || Game.daily || Game.bossRush) return 1;
+  const c = soloDiffCfg();
+  const n = (c && c.hp) | 0;
+  return n > 0 ? n : 1;
+}
+/* v5.30：掉一格血之後的無敵秒數 —— 要夠長，才不會站在同一團火裡被連扣兩格 */
+function soloHpInvuln() {
+  if (Game.rpg) return 1.15;
+  const c = soloDiffCfg();
+  return (c && c.hpInvuln) || 1.8;
 }
 /* v5.29：重生無敵秒數（簡單模式給比較久，暈一下也還有機會跑） */
 function soloGuardInvuln() {
@@ -14194,8 +14216,10 @@ function startSolo(stage, bossRush, daily) {
     : ctrlMode() === 'touch' ? Input.schemes.touch
     : ctrlMode() === 'pad' ? Input.schemes.pad(0) : Input.schemes.kb1;
   const p = makePlayer(0, settings.soloChar || 0, soloScheme, { px: 0, py: 0 });
-  p.lives = soloLives();                 // v5.29：簡單 5 格、普通／困難 3 格（每日／BOSS 連戰固定 3）
-  Game.startLives = p.lives;             // v5.29：❤️ 的上限跟著這一關的初始生命走（以前寫死 3）
+  p.lives = soloLives();                 // v5.30：簡單 1 條命（配 2 格血）、普通／困難 3 條命（每日／BOSS 固定 3）
+  p.sHpMax = soloHpMax();                // v5.30：每條命的血格 —— 簡單 2 格、其他 1 格
+  p.sHp = p.sHpMax;
+  Game.startLives = p.lives;             // ❤️ 的補命上限跟著這一關的初始生命走
   p.score = 0;
   Game.players.push(p);
   p.name = settings.playerName || '';   // v4.8：固定暱稱
@@ -14362,6 +14386,7 @@ function buildSoloStageInner(stage, fresh) {
   p.x = (sc.x + .5) * Game.T;
   p.y = (sc.y + .5) * Game.T;
   p.alive = true; p.invuln = 2; p.carry = null; p.slide = null; p.warpLock = '';
+  p.sHpMax = soloHpMax(); p.sHp = p.sHpMax;   // v5.30：每關開頭血格補滿（過關不會帶著殘血進下一關）
   if (fresh) resetPlayerStats(p);
   // 敵人（多樣化：亂走／快速亂走／追人／飛行穿牆＋技能怪）
   Game.enemies = [];
@@ -15701,6 +15726,7 @@ function updateSolo(dt) {
         battleEndFx(false);
       } else {
         resetPlayerStats(p);
+        p.sHp = Math.max(1, p.sHpMax | 0);   // v5.30：重生一條命 → 血格補滿
         const rs = safeRespawnCell(p);
         p.x = (rs.x + .5) * Game.T; p.y = (rs.y + .5) * Game.T;
         p.alive = true; p.invuln = soloGuardInvuln(); p.dead = false; p.slide = null; p.warpLock = '';   // v5.29：簡單模式無敵更久
@@ -15713,6 +15739,38 @@ function updateSolo(dt) {
 
 function dist2(ax, ay, bx, by) { const dx = ax - bx, dy = ay - by; return dx * dx + dy * dy; }
 
+/* ===================================================================
+ * v5.30：單人闖關的「格血」（HP）
+ *   以前簡單模式的容錯是「多給幾條命」：被打到 → 死一次 → 1.6 秒後原地重生，
+ *   手感跟 RPG 的血條完全是兩回事。現在改成：還有血格就只扣一格、給短無敵，
+ *   人站著繼續打；格數歸零才交給原本的死亡／結算流程。
+ *   普通／困難的 hp 是 1 → 這裡永遠 return false，行為與舊版一字不差。
+ * ================================================================== */
+function soloHurt(p, silent, killer) {
+  if (Game.rpg || Game.mode !== 'solo') return false;
+  if (!p || !p.alive || p.invuln > 0) return false;
+  if ((p.sHpMax | 0) < 2) return false;                 // 1 格＝原本的一擊倒
+  if (p.air > 0 || p.slamGuard > 0) return false;       // 跳躍中／落地震攝仍然完全免疫
+  const before = Math.max(1, p.sHp | 0);
+  p.sHp = before - 1;
+  if (p.sHp <= 0) return false;                         // 最後一格用完 → 走原本的死亡流程
+  p.invuln = Math.max(p.invuln || 0, soloHpInvuln());   // 短無敵：同一團火不會連扣兩格
+  p.cry = 1.3;
+  if (p === Game.players[0]) {
+    Game.hurtCount = (Game.hurtCount | 0) + 1;          // 三星判定：被打到就沒有三星
+    try { DeathCard.note(killer); } catch (e) {}
+  }
+  if (!silent) {
+    try { hurtFeedback(p, 1, 0); } catch (e) {}         // 頭上 -1、螢幕邊緣紅光、HUD 心格閃紅
+    try { AudioSys.sfx('hurt'); } catch (e) {}
+    try { burst(p.x, p.y, '#ff6b8a', 14, 190); } catch (e) {}
+    try { hitStop(.05); } catch (e) {}
+    try { bubbleSay(p, '💥', 'dead', Game.T * 1.7); } catch (e) {}
+  }
+  Game.shake = Math.max(Game.shake || 0, .28);
+  return true;
+}
+
 function killPlayer(p, silent, killer) {
   if (typeof Tut !== 'undefined' && Tut.guard(p)) return;
   // v4.0：RPG 模式不是「炸一下就死」，改成扣生命／護甲
@@ -15721,6 +15779,7 @@ function killPlayer(p, silent, killer) {
   if (p.air > 0) return;                    // v4.87：鴕鳥跳躍中完全免疫
   if (p.slamGuard > 0) return;              // v4.89：落地震攝保護（跳進去再跳出來不會被咬掉坐騎）
   if (p.dino) { breakDino(p); return; }     // 騎著恐龍 → 恐龍先擋一次
+  if (soloHurt(p, silent, killer)) return;  // v5.30：還有血格 → 只扣一格，人還站著繼續打（不重生）
   if (p === Game.players[0]) { Game.hurtCount = (Game.hurtCount | 0) + 1; try { DeathCard.note(killer); } catch (e) {} }   // v4.87：三星判定（沒被打到才有 3 星）
   if (p.carry) {   // 手上炸彈掉在原地
     const b = p.carry;
@@ -21139,9 +21198,18 @@ function updateHud() {
         (p.armorMax > 0 ? '<div class="chip" data-k="armor"><span class="ic">🛡️</span><b>' +
           Math.max(0, p.armorCur | 0) + '/' + p.armorMax + '</b></div>' : '')
       : (function () {
-          // v5.29：生命改成一格一顆心 —— 簡單模式 5 格、普通／困難 3 格，一眼看得出還剩幾次機會。
-          //   5 格以內畫實心／空心愛心；超過 5 格（自訂或舊存檔）退回「圖示＋數字」，避免把頂部擠爆。
           const n = Math.max(0, p.lives | 0);
+          // v5.30：格血模式（單人簡單＝2 格）—— 一顆心＝一格血，被打到只掉一格，扣完才倒下
+          const hmx = Math.max(1, p.sHpMax | 0);
+          const sh = Math.max(0, Math.min(hmx, (p.sHp == null ? hmx : p.sHp) | 0));
+          if (hmx > 1) {
+            let hearts = '';
+            for (let i = 0; i < hmx; i++) hearts += (i < sh && p.alive ? '❤️' : '🤍');
+            return '<div class="chip" data-k="hp" title="生命 ' + sh + '／' + hmx + ' 格' +
+              (n > 1 ? '　·　還有 ' + n + ' 次機會' : '') +
+              '"><span class="ic hpicks">' + hearts + '</span></div>';
+          }
+          // 其他難度／模式：一條命一顆心（普通・困難 3 格）
           const cap = Math.max(n, Game.startLives || n || 3);
           if (!p.alive) return '<div class="chip" data-k="hp"><span class="ic">💀</span><b>' + n + '</b></div>';
           if (cap <= 5) {
@@ -31206,7 +31274,7 @@ const HELP_BASIC = {
     { i: '🔥', tw: '<b>火焰</b>：十字噴發，碰到就扣一條命（連鎖會引爆其他炸彈）。', cn: '<b>火焰</b>：十字喷发，碰到就扣一条命（连锁会引爆其他炸弹）。', en: '<b>Flame</b>: cross-shaped; touching it costs a life (and chains other bombs).' },
     { i: '🚪', tw: '<b>過關傳送門</b>：殲滅所有敵人後才會開啟，走進去就過關。', cn: '<b>过关传送门</b>：歼灭所有敌人后才会开启，走进去就过关。', en: '<b>Exit portal</b>: opens once every enemy is gone — step in to clear the stage.' }
   ],
-  lives: { tw: '生命 <b>簡單 5 格、普通／困難 3 格</b>；碰到怪物、火焰或被別人炸到就扣 1 格，❤️ 愛心可以 +1（最多回到開場的格數）。', cn: '生命 <b>简单 5 格、普通／困难 3 格</b>；碰到怪物、火焰或被别人炸到就扣 1 格，❤️ 爱心可以 +1（最多回到开场的格数）。', en: '<b>5 lives on Easy, 3 on Normal/Hard</b>. Enemies, flames and rival blasts each cost one; ❤️ restores one (up to the starting count).' },
+  lives: { tw: '生命 <b>簡單 2 格血、普通／困難 3 條命</b>；簡單模式被打到只掉 1 格（扣完才倒下），其他難度碰到就倒。❤️ 愛心補 1 格（或是 1 條命）。', cn: '生命 <b>简单 2 格血、普通／困难 3 条命</b>；简单模式被打到只掉 1 格（扣完才倒下），其他难度碰到就倒。❤️ 爱心补 1 格（或是 1 条命）。', en: '<b>2 HP on Easy, 3 lives on Normal/Hard.</b> On Easy a hit costs 1 HP and you keep fighting; other difficulties are one-hit. ❤️ restores 1 HP (or 1 life).' },
   time: { tw: '單人可選 3／5／10 分或 <b>♾️ 無限時間</b>；時間到會陣亡，無限時間則慢慢玩也沒關係。', cn: '单人可选 3／5／10 分或 <b>♾️ 无限时间</b>；时间到会阵亡，无限时间则慢慢玩也没关系。', en: 'Solo offers 3 / 5 / 10 min or <b>♾️ Endless</b>. With Endless the timer never kills you.' }
 };
 
@@ -33762,7 +33830,8 @@ const Tut = (function () {
         const p = Game.players[0];
         p.x = 1 * Game.T + Game.T / 2; p.y = 1 * Game.T + Game.T / 2;
         p.alive = true; p.dead = false; p.invuln = 0; p.lives = 3; p.score = 0;
-        Game.startLives = 3;                    // v5.29：教學固定 3 格，別被單人簡單模式的 5 格拉高
+        p.sHpMax = 1; p.sHp = 1;                // v5.30：教學維持一擊倒（3 條命），不要套用簡單模式的 2 格血
+        Game.startLives = 3;                    // 教學固定 3 格
         p.carry = null; p.slide = null; p.warpLock = ''; p.dino = false; p.redDragon = false;
         resetPlayerStats(p);
         paused = false;
@@ -34159,7 +34228,14 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.29', date: '2026-11-06', now: true, items: [
+  { v: '5.30', date: '2026-11-06', now: true, items: [
+    '❤️ <b>簡單模式改成真正的「2 格血」</b>：被打到只掉一格、人還站著繼續打（附 1.8 秒無敵，不會站在同一團火裡被連扣兩格），<b>第二下才會倒下</b>。以前是「多給幾條命」，死一次就原地重生，手感完全是兩回事。',
+    '🙂 <b>普通與困難完全沒動</b>：一樣 3 條命、碰到就倒。',
+    '🩸 <b>左上角兩顆心就是你的血</b>：實心＝還有幾格、空心＝已經掉了；滑過去會寫「生命 1／2 格」。',
+    '💊 <b>❤️ 愛心改成補一格血</b>：簡單模式吃到就補回一格（最多 2 格），其他難度照舊補一條命。',
+    '📅 每日挑戰與首頁「挑戰 BOSS」仍是 3 條命、一擊倒 —— 那兩個要比秒數／比分數，不能靠難度多一格。'
+  ] },
+  { v: '5.29', date: '2026-11-06', now: false, items: [
     '😇 <b>簡單模式更寬容</b>：生命從 3 格提高到 <b>5 格</b>，被炸掉一次後的無敵時間也從 2.2 秒延長到 3.4 秒；普通與困難完全沒動。',
     '❤️ <b>生命用「格」看得見</b>：畫面左上角改成一格一顆心（實心＝還剩幾格、空心＝已失去），不用再心算數字。',
     '⭐ <b>單人預設就是簡單</b>：新玩家第一次進單人闖關不用先挑難度，直接 5 格生命開始；想挑戰再自己去設定改成普通或困難。',
@@ -40229,7 +40305,8 @@ window.__BH = {
   BELT_SPEED: BELT_SPEED, BELT_FAST: BELT_FAST, BELT_SLOW: BELT_SLOW, moveSpeed: moveSpeed,
   confetti: confetti, battleEndFx: battleEndFx,
   Pad: Pad, PadUI: PadUI, PAD_MAP: PAD_MAP, SOLO_DIFF: SOLO_DIFF, soloDiffCfg: soloDiffCfg, soloTimeVal: soloTimeVal,
-  soloLives: soloLives, soloGuardInvuln: soloGuardInvuln,   // v5.29：難度 → 生命格數／重生無敵
+  soloLives: soloLives, soloGuardInvuln: soloGuardInvuln,   // v5.29：難度 → 命數／重生無敵
+  soloHpMax: soloHpMax, soloHpInvuln: soloHpInvuln, soloHurt: soloHurt,   // v5.30：格血（簡單 2 格）
   startBossRush: startBossRush, detonateRemote: detonateRemote, aiRemoteTick: aiRemoteTick, pickBossCell: pickBossCell,
   spawnEggs: spawnEggs, eggAt: eggAt, rideDino: rideDino, breakDino: breakDino, fireBreath: fireBreath,
   takeEgg: takeEgg, CART_LV: CART_LV, CART_CHARGE_MAX: CART_CHARGE_MAX, cartChargeLevel: cartChargeLevel, mixHex: mixHex, CART_STEP1: CART_STEP1, CART_STEP2: CART_STEP2,

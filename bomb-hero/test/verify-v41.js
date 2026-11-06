@@ -73,7 +73,7 @@ ok(/移動/.test(hBasic) && /(放炸彈|放彈)/.test(hBasic), '基本操作：�
 ok(/遙控引爆/.test(hBasic) && /恐龍吐火/.test(hBasic), '基本操作：遙控引爆／恐龍吐火');
 ok(/搖桿/.test(hBasic), '基本操作：手機搖桿');
 ok(/軟磚/.test(hBasic) && /硬牆/.test(hBasic) && /過關傳送門/.test(hBasic), '基本操作：地圖元素說明');
-ok(/5 格/.test(hBasic) && /3 格/.test(hBasic), '基本操作：生命說明（簡單 5 格、普通／困難 3 格）');
+ok(/2 格血/.test(hBasic) && /3 條命/.test(hBasic), '基本操作：生命說明（簡單 2 格血、普通／困難 3 條命）');
 
 const hItem = tabHtml('item');
 ok(cnt(hItem, /data-sp="item:/g) === ITEM_IDS.length, '道具頁 ' + ITEM_IDS.length + ' 張小圖');
