@@ -248,6 +248,7 @@ ok(html.indexOf("id: 'slime'") >= 0 && html.indexOf("id: 'bat'") >= 0 && html.in
 BH.startSolo(1);
 ok(G.enemies.length > 0, '第 1 關有敵人');
 ok(G.enemies.every(function (e) { return ['wander', 'chase'].indexOf(e.kind) >= 0; }), '第 1 關只有地面基本款');
+BH.settings.soloDiff = 'normal';   // v5.29：預設改成簡單後，這支測試要固定普通才有原本的怪量
 BH.buildSoloStage(5);
 const kinds5 = new Set(G.enemies.map(function (e) { return e.kind; }));
 ok(kinds5.has('wander') && kinds5.has('chase'), '第 5 關有亂走＋追人怪（' + [...kinds5].join('/') + '）');

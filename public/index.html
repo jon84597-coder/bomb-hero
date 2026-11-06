@@ -780,6 +780,9 @@ display: flex; align-items: center; gap: 7px; min-height: 38px;
 }
 .chip b { font-size: 15px; }
 .chip .ic { font-size: 15px; }
+/* v5.29：生命格（一格一顆心）—— 縮字距，5 格也不會把頂部擠爆 */
+.chip .hpicks { font-size: 12px; letter-spacing: -1.6px; line-height: 1; white-space: nowrap; }
+body.touch.in-game .chip .hpicks { font-size: 11px; letter-spacing: -2px; }
 /* ===== v4.4：頂部狀態列高亮 —— 吃到道具／坐騎的瞬間，對應圖示彈一下＋亮一圈 ===== */
 #gameTop .chip { position: relative; }
 #gameTop .chip.fx { animation: hudPop .74s cubic-bezier(.2,.9,.3,1); }
@@ -4658,7 +4661,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.28</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.29</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4713,7 +4716,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.28</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.29</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5698,7 +5701,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.28';
+const VERSION = '5.29';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6408,7 +6411,7 @@ let settings = {
   font: 'n',        // v5.28：文字大小（n 標準／l 大）
   calm: 0,          // v5.28：減少動態（暈動症友善）
   brChar: 0, brName: '',                             // v5.11：大逃殺自己的選角與暱稱
-  soloDiff: 'normal',                              // 單人難易度：easy / normal / hard
+  soloDiff: 'easy',                                // v5.29：單人難易度預設「簡單」（新玩家一進來就有 5 格生命）
   soloTime: 300,                                  // 單人關卡時間（0 = 無限）
   mapMode: 'classic',                             // v4.69：地圖模式 classic = 原本 32 張 / random = 隨機生成
   miniMap: 1,                                     // v4.70：小地圖（雷達），1 = 開 / 0 = 關
@@ -6491,7 +6494,7 @@ try {
   settings.count = clampCount(settings.count);
   settings.teams = [0, 2, 3, 4].indexOf(parseInt(settings.teams, 10)) >= 0 ? parseInt(settings.teams, 10) : 0;
   if (['weak', 'normal', 'strong'].indexOf(settings.aiLevel) < 0) settings.aiLevel = 'normal';
-  if (['easy', 'normal', 'hard'].indexOf(settings.soloDiff) < 0) settings.soloDiff = 'normal';
+  if (['easy', 'normal', 'hard'].indexOf(settings.soloDiff) < 0) settings.soloDiff = 'easy';   // v5.29：壞值也退回簡單
   settings.soloTime = [0, 180, 300, 600].indexOf(parseInt(settings.soloTime, 10)) >= 0
     ? parseInt(settings.soloTime, 10) : 300;
   if (['classic', 'random'].indexOf(settings.mapMode) < 0) settings.mapMode = 'classic';
@@ -10819,19 +10822,36 @@ const PetPreview = (function () {
 // v2.4：三種難度的 BOSS 統一 5 下（血條滿格 = 5，打五下就贏）
 const BOSS_HITS = 5;
 const SOLO_DIFF = {
-  easy:   { enemy: .62, speed: .80, bossHp: BOSS_HITS, eggs: 3, label: '😇 簡單' },
-  normal: { enemy: 1,   speed: 1,   bossHp: BOSS_HITS, eggs: 2, label: '🙂 普通' },
-  hard:   { enemy: 1.45, speed: 1.22, bossHp: BOSS_HITS, eggs: 1, label: '😈 困難' }
+  // v5.29：lives = 這一關的初始生命（格），invuln = 被炸掉一條命之後的無敵秒數。
+  //   簡單模式刻意做得寬容（5 格＋3.4 秒無敵），普通／困難完全維持原樣。
+  easy:   { enemy: .62, speed: .80, bossHp: BOSS_HITS, eggs: 3, lives: 5, invuln: 3.4, label: '😇 簡單' },
+  normal: { enemy: 1,   speed: 1,   bossHp: BOSS_HITS, eggs: 2, lives: 3, invuln: 2.2, label: '🙂 普通' },
+  hard:   { enemy: 1.45, speed: 1.22, bossHp: BOSS_HITS, eggs: 1, lives: 3, invuln: 2.2, label: '😈 困難' }
 };
 function soloDiffCfg() {
   // v4.80：每日挑戰固定難度（不然排行榜就變成比誰調得簡單）
   if (Game.daily) return SOLO_DIFF[DAILY_DIFF] || SOLO_DIFF.normal;
-  return SOLO_DIFF[settings.soloDiff] || SOLO_DIFF.normal;
+  return SOLO_DIFF[settings.soloDiff] || SOLO_DIFF.easy;
+}
+/* v5.29：這一關要給幾格生命。
+   每日挑戰（比秒數）與首頁「挑戰 BOSS」連戰固定 3 格 —— 排行榜要公平，
+   不能因為玩家把難度調成簡單就多兩格；其餘照難度表走。 */
+function soloLives() {
+  if (Game.daily || Game.bossRush) return 3;
+  const c = soloDiffCfg();
+  const n = (c && c.lives) | 0;
+  return n > 0 ? n : 3;
+}
+/* v5.29：重生無敵秒數（簡單模式給比較久，暈一下也還有機會跑） */
+function soloGuardInvuln() {
+  if (Game.rpg || Game.daily || Game.bossRush) return 2.2;
+  const c = soloDiffCfg();
+  return (c && c.invuln) || 2.2;
 }
 // v4.77：難易度名稱跟著語言走（原本只有中文）
 function diffLabel(id) {
   if (Game.daily) return t('daily.fixedDiff');
-  const k = settings.soloDiff || 'normal';
+  const k = settings.soloDiff || 'easy';
   const v = t('diff.' + k);
   return (v && v !== 'diff.' + k) ? v : soloDiffCfg().label;
 }
@@ -14174,7 +14194,8 @@ function startSolo(stage, bossRush, daily) {
     : ctrlMode() === 'touch' ? Input.schemes.touch
     : ctrlMode() === 'pad' ? Input.schemes.pad(0) : Input.schemes.kb1;
   const p = makePlayer(0, settings.soloChar || 0, soloScheme, { px: 0, py: 0 });
-  p.lives = Game.bossRush ? 3 : 3;
+  p.lives = soloLives();                 // v5.29：簡單 5 格、普通／困難 3 格（每日／BOSS 連戰固定 3）
+  Game.startLives = p.lives;             // v5.29：❤️ 的上限跟著這一關的初始生命走（以前寫死 3）
   p.score = 0;
   Game.players.push(p);
   p.name = settings.playerName || '';   // v4.8：固定暱稱
@@ -15682,7 +15703,7 @@ function updateSolo(dt) {
         resetPlayerStats(p);
         const rs = safeRespawnCell(p);
         p.x = (rs.x + .5) * Game.T; p.y = (rs.y + .5) * Game.T;
-        p.alive = true; p.invuln = 2.2; p.dead = false; p.slide = null; p.warpLock = '';
+        p.alive = true; p.invuln = soloGuardInvuln(); p.dead = false; p.slide = null; p.warpLock = '';   // v5.29：簡單模式無敵更久
         p.camSnap = true;                       // 鏡頭直接跳過去，不要慢慢捲
       }
     }
@@ -16716,6 +16737,7 @@ const Battle = {
 };
 
 function startBattle() {
+  Game.startLives = 1;                   // v5.29：回到對戰的 1 條命，別讓單人簡單模式的 5 格殘留
   try { Spec.hide(); Game.specIdx = null; } catch (e) {}
   try { DeathCard.reset(); } catch (e) {}
   Game.mode = 'battle';
@@ -17771,6 +17793,7 @@ function brBossDown(e, killer) {
 }
 
 function startBR() {
+  Game.startLives = 1;                   // v5.29：同上（大逃殺也是 1 條命）
   try { Spec.hide(); Game.specIdx = null; } catch (e) {}
   try { DeathCard.reset(); } catch (e) {}
   Game.daily = null;                 // v4.80：大逃殺不吃每日挑戰的固定規則
@@ -21115,7 +21138,20 @@ function updateHud() {
         Math.max(0, p.hpCur | 0) + '/' + Math.max(1, p.hpMax | 0) + '</b></div>' +
         (p.armorMax > 0 ? '<div class="chip" data-k="armor"><span class="ic">🛡️</span><b>' +
           Math.max(0, p.armorCur | 0) + '/' + p.armorMax + '</b></div>' : '')
-      : '<div class="chip" data-k="hp"><span class="ic">' + (p.alive ? '❤️' : '💀') + '</span><b>' + Math.max(0, p.lives) + '</b></div>';
+      : (function () {
+          // v5.29：生命改成一格一顆心 —— 簡單模式 5 格、普通／困難 3 格，一眼看得出還剩幾次機會。
+          //   5 格以內畫實心／空心愛心；超過 5 格（自訂或舊存檔）退回「圖示＋數字」，避免把頂部擠爆。
+          const n = Math.max(0, p.lives | 0);
+          const cap = Math.max(n, Game.startLives || n || 3);
+          if (!p.alive) return '<div class="chip" data-k="hp"><span class="ic">💀</span><b>' + n + '</b></div>';
+          if (cap <= 5) {
+            let hearts = '';
+            for (let i = 0; i < cap; i++) hearts += (i < n ? '❤️' : '🤍');
+            return '<div class="chip" data-k="hp" title="生命 ' + n + '／' + cap +
+              ' 格"><span class="ic hpicks">' + hearts + '</span></div>';
+          }
+          return '<div class="chip" data-k="hp"><span class="ic">❤️</span><b>' + n + '</b></div>';
+        })();
     const lvChip = rpgMode ? (function () {
       const L = rpgLvOf(RPG.xp);
       return '<div class="chip" data-k="lv" title="等級 ' + L.lv + '／' + RPG_LV_MAX +
@@ -31170,7 +31206,7 @@ const HELP_BASIC = {
     { i: '🔥', tw: '<b>火焰</b>：十字噴發，碰到就扣一條命（連鎖會引爆其他炸彈）。', cn: '<b>火焰</b>：十字喷发，碰到就扣一条命（连锁会引爆其他炸弹）。', en: '<b>Flame</b>: cross-shaped; touching it costs a life (and chains other bombs).' },
     { i: '🚪', tw: '<b>過關傳送門</b>：殲滅所有敵人後才會開啟，走進去就過關。', cn: '<b>过关传送门</b>：歼灭所有敌人后才会开启，走进去就过关。', en: '<b>Exit portal</b>: opens once every enemy is gone — step in to clear the stage.' }
   ],
-  lives: { tw: '初始 <b>3 條命</b>；碰到怪物、火焰或被別人炸到就扣 1 條，❤️ 愛心可以 +1。', cn: '初始 <b>3 条命</b>；碰到怪物、火焰或被别人炸到就扣 1 条，❤️ 爱心可以 +1。', en: 'You start with <b>3 lives</b>; enemies, flames and rival blasts each cost one. ❤️ adds one.' },
+  lives: { tw: '生命 <b>簡單 5 格、普通／困難 3 格</b>；碰到怪物、火焰或被別人炸到就扣 1 格，❤️ 愛心可以 +1（最多回到開場的格數）。', cn: '生命 <b>简单 5 格、普通／困难 3 格</b>；碰到怪物、火焰或被别人炸到就扣 1 格，❤️ 爱心可以 +1（最多回到开场的格数）。', en: '<b>5 lives on Easy, 3 on Normal/Hard</b>. Enemies, flames and rival blasts each cost one; ❤️ restores one (up to the starting count).' },
   time: { tw: '單人可選 3／5／10 分或 <b>♾️ 無限時間</b>；時間到會陣亡，無限時間則慢慢玩也沒關係。', cn: '单人可选 3／5／10 分或 <b>♾️ 无限时间</b>；时间到会阵亡，无限时间则慢慢玩也没关系。', en: 'Solo offers 3 / 5 / 10 min or <b>♾️ Endless</b>. With Endless the timer never kills you.' }
 };
 
@@ -33726,6 +33762,7 @@ const Tut = (function () {
         const p = Game.players[0];
         p.x = 1 * Game.T + Game.T / 2; p.y = 1 * Game.T + Game.T / 2;
         p.alive = true; p.dead = false; p.invuln = 0; p.lives = 3; p.score = 0;
+        Game.startLives = 3;                    // v5.29：教學固定 3 格，別被單人簡單模式的 5 格拉高
         p.carry = null; p.slide = null; p.warpLock = ''; p.dino = false; p.redDragon = false;
         resetPlayerStats(p);
         paused = false;
@@ -34122,7 +34159,14 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.28', date: '2026-11-06', now: true, items: [
+  { v: '5.29', date: '2026-11-06', now: true, items: [
+    '😇 <b>簡單模式更寬容</b>：生命從 3 格提高到 <b>5 格</b>，被炸掉一次後的無敵時間也從 2.2 秒延長到 3.4 秒；普通與困難完全沒動。',
+    '❤️ <b>生命用「格」看得見</b>：畫面左上角改成一格一顆心（實心＝還剩幾格、空心＝已失去），不用再心算數字。',
+    '⭐ <b>單人預設就是簡單</b>：新玩家第一次進單人闖關不用先挑難度，直接 5 格生命開始；想挑戰再自己去設定改成普通或困難。',
+    '💊 <b>❤️ 補血上限修好了</b>：以前吃到愛心最多只補到 3 格（不管這關給幾格），現在會補回開場的格數。',
+    '📅 每日挑戰與首頁「挑戰 BOSS」維持 <b>3 格</b> —— 那兩個要比秒數／比分數，不能靠調難度多拿兩格。'
+  ] },
+  { v: '5.28', date: '2026-11-06', now: false, items: [
     '⚡ <b>開場更快</b>：伺服器補上 gzip（主機沒壓時自己壓 2,058KB → 648KB）、ETag 與 304，沒改版就不重傳；美術圖改成七天長快取。',
     '💀 <b>死因卡</b>：輸了不再是乾乾一句「挑戰失敗」—— 會寫是誰用什麼打倒你、王剩幾格血，還畫出你最後 5 秒的走位與爆點。',
     '👁 <b>觀戰可以點名</b>：大逃殺／對戰出局後，畫面下方有一排名字，點誰就跟拍誰，不用再被鏡頭拖著跑。',
@@ -40185,6 +40229,7 @@ window.__BH = {
   BELT_SPEED: BELT_SPEED, BELT_FAST: BELT_FAST, BELT_SLOW: BELT_SLOW, moveSpeed: moveSpeed,
   confetti: confetti, battleEndFx: battleEndFx,
   Pad: Pad, PadUI: PadUI, PAD_MAP: PAD_MAP, SOLO_DIFF: SOLO_DIFF, soloDiffCfg: soloDiffCfg, soloTimeVal: soloTimeVal,
+  soloLives: soloLives, soloGuardInvuln: soloGuardInvuln,   // v5.29：難度 → 生命格數／重生無敵
   startBossRush: startBossRush, detonateRemote: detonateRemote, aiRemoteTick: aiRemoteTick, pickBossCell: pickBossCell,
   spawnEggs: spawnEggs, eggAt: eggAt, rideDino: rideDino, breakDino: breakDino, fireBreath: fireBreath,
   takeEgg: takeEgg, CART_LV: CART_LV, CART_CHARGE_MAX: CART_CHARGE_MAX, cartChargeLevel: cartChargeLevel, mixHex: mixHex, CART_STEP1: CART_STEP1, CART_STEP2: CART_STEP2,

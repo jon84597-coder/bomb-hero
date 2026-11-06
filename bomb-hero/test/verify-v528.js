@@ -142,19 +142,21 @@ head('7. i18n 與版本');
   const rows = i18.split('\n').filter(function (x) { return /^[a-z]/.test(x) && x.indexOf('|') > 0; });
   ok(rows.every(function (r) { return r.split('|').length === 6; }), '整份字典每列都是 6 欄（' + rows.length + ' 列）');
 
-  ok(P.VERSION === '5.28', 'VERSION = 5.28');
-  ok(/id="verTxt">5\.28</.test(src), '首頁徽章同步 5.28');
-  ok(/\{ v: '5\.28'[^\n]*now: true/.test(src), 'VERSION_LOG 最新是 5.28 且 now:true');
+  const vv = P.VERSION.split('.').map(Number);
+  ok(vv[0] > 5 || (vv[0] === 5 && vv[1] >= 28), 'VERSION ≥ 5.28（目前 ' + P.VERSION + '）');
+  ok(/id="verTxt">5\.(2[8-9]|[3-9]\d)</.test(src), '首頁徽章同步 ≥ 5.28');
+  const logHead = src.slice(src.indexOf('const VERSION_LOG = ['), src.indexOf('const VERSION_LOG = [') + 120);
+  ok(/now: true/.test(logHead), 'VERSION_LOG 第一筆 now:true');
   ok(/\{ v: '5\.27'[^\n]*now: false/.test(src), '5.27 已標 now:false');
   const entry = (src.match(/\{ v: '5\.28'[\s\S]*?\n  \] \},/) || [''])[0];
   ok((entry.match(/'\s{0,2}[⚡💀👁🎓🔠🛡🌏]/g) || []).length >= 4, 'VERSION_LOG 5.28 至少 4 條');
   ['bomb-hero/sw.js', 'public/sw.js', 'bomberman-online/public/sw.js'].forEach(function (rel) {
     const f = path.join(root, rel);
     const w = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
-    ok(w.indexOf("var SW_VERSION = 'v5.28.0';") >= 0, rel + ' SW_VERSION = v5.28.0');
+    ok(/var SW_VERSION = 'v5\.(2[89]|[3-9]\d)\.\d+';/.test(w), rel + ' SW_VERSION ≥ 5.28');
   });
   const pw = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-  ok(pw.version === '5.28.0', 'package.json 5.28.0');
+  ok(/^5\.(2[89]|[3-9]\d)\./.test(pw.version), 'package.json ≥ 5.28（目前 ' + pw.version + '）');
   const rawLen = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8').length;
   ok(rawLen < 1900000, '主檔 ' + rawLen + ' 字元（預算 1,900,000）');
 }

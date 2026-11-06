@@ -98,7 +98,7 @@ ok(/function hideOverlay\(\) \{ Game\.ovInfo = null; stopWinJump\(\); ovHide\(\)
   ok(els.ovBox._sets === before, '結束畫面只建立一次（按鈕不會在點擊中途被換掉）');
   ok(click('btnAgain'), '「再來一場」按得下去');
   ok(G.state === 'idle' && G.endShown === false, '點了真的重開（state=idle、endShown 歸零）');
-  ok(G.players[0].alive === true && G.players[0].lives === 3, '新的一場：活著、3 條命');
+  ok(G.players[0].alive === true && G.players[0].lives === P.soloLives(), '新的一場：活著、生命＝這一關的格數（' + P.soloLives() + '）');
   ok(env.els.body._cls.has('ovopen'), '出發前的確認視窗重新打開（ovopen 掛回）');
   click('ovBox|button');
   ok(G.state === 'countdown', '按「出發！」進入倒數');
