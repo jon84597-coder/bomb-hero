@@ -264,12 +264,13 @@ head('7. 快捷語（跨語言）');
 // ================================================================
 head('8. 版號與整合');
 {
-  ok(P.VERSION === '5.27', '主檔版號 5.27');
+  // 版號用元組比較：之後每版都會往前走，這裡只保證「至少是 5.27」
+  ok(P.VERSION.split('.').map(Number)[1] >= 27, '主檔版號 ≥ 5.27（目前 ' + P.VERSION + '）');
   const log0 = src.slice(src.indexOf('const VERSION_LOG = ['), src.indexOf('const VERSION_LOG = [') + 400);
-  ok(/v: '5\.27'/.test(log0) && /now: true/.test(log0), 'VERSION_LOG 第一筆是 5.27 且 now:true');
+  ok(/now: true/.test(log0), 'VERSION_LOG 第一筆是 now:true');
   ok(/v: '5\.26', date: '2026-11-06', now: false/.test(src), '上一版已改成 now:false');
-  ok(/v5\.27\.0/.test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 版本同步');
-  ok(/id="verLogVer">5\.27</.test(src), '版本號顯示同步');
+  ok(new RegExp('var SW_VERSION = .v5\\.(2[7-9]|[3-9]\\d)').test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 版本 ≥ 5.27');
+  ok(/id="verLogVer">5\.(2[7-9]|[3-9]\d)</.test(src), '版本號顯示同步');
   // 新功能的 i18n 都在
   const keys = ['ui.qual', 'ui.fps', 'ui.shake', 'ui.cb', 'se.title', 'se.pts', 'qc.0', 'net.inviteMsg'];
   const missing = keys.filter(function (k) { return i18.indexOf('\n' + k + '|') < 0; });

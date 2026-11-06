@@ -1583,4 +1583,43 @@ net.inviteFail|失敗|失败|Failed|失敗|실패
 net.inviteLoading|讀取中…|读取中…|Loading…|読み込み中…|불러오는 중…
 net.inviteOff|拿不到線上名單（離線或伺服器沒開）|拿不到在线名单（离线或服务器没开）|Can't reach the online list (offline or server down)|オンライン名簿を取得できません|온라인 목록을 가져올 수 없습니다
 net.inviteNeed|先建立或加入房間才能邀請|先建立或加入房间才能邀请|Create or join a room first|先に部屋を作るか参加してください|먼저 방을 만들거나 참가하세요
+death.unknown|原因不明|原因不明|Cause unknown|原因不明|원인 불명
+death.selfBomb|你自己放的炸彈|你自己放的炸弹|Your own bomb|自分の爆弾|내가 놓은 폭탄
+death.rivalBomb|對手的炸彈|对手的炸弹|An opponent's bomb|相手の爆弾|상대의 폭탄
+death.byFoe|被「{n}」打倒|被「{n}」打倒|Killed by {n}|「{n}」にやられた|'{n}'에게 당했다
+death.left|王只剩 {n} 格血 —— 差 {n} 下就打贏|王只剩 {n} 格血 —— 差 {n} 下就打赢|The boss was down to {n} HP|ボスは残り {n} でした|보스 체력 {n} 남음
+death.stage|你在第 {n} 關倒下|你在第 {n} 关倒下|You fell on stage {n}|ステージ {n} で力尽きた|스테이지 {n}에서 쓰러졌다
+death.trailTip|紅線是你最後 5 秒的走位，橘點是爆點|红线是你最后 5 秒的走位，橘点是爆点|Red line = your last 5 seconds, orange dots = blasts|赤線＝最後 5 秒の移動、橙点＝爆発|빨간 선=마지막 5초 이동, 주황 점=폭발
+spec.title|觀戰|观战|Spectating|観戦|관전
+spec.auto|自動|自动|Auto|自動|자동
+spec.hint|（觀戰中，點下方名字可以跟拍）|（观战中，点下方名字可以跟拍）|(Spectating — tap a name below to follow)|（観戦中：下の名前をタップで追従）|(관전 중: 아래 이름을 눌러 따라가기)
+first.b|放好了！炸彈 2.4 秒後爆炸，火焰是十字型|放好了！炸弹 2.4 秒后爆炸，火焰是十字型|Nice! Bombs blow after 2.4s in a cross|置けた！爆弾は 2.4 秒後に十字に爆発|좋아요! 폭탄은 2.4초 뒤 십자로 터집니다
+first.w|軟磚底下藏著道具，走過去自動撿|软砖底下藏着道具，走过去自动捡|Items hide under soft blocks — walk over to pick up|柔らかいブロックの下にアイテムがあります|부서진 블록 아래 아이템은 걸어가면 자동 획득
+first.i|吃到道具了！火力＝火焰長度、彈量＝能同時放幾顆|吃到道具了！火力＝火焰长度、弹量＝能同时放几颗|Power = flame length, Bombs = how many at once|取得！火力＝炎の長さ、弾数＝同時に置ける数|획득! 화력=불꽃 길이, 탄수=동시에 놓는 수
+first.noBomb|小提醒：按「滑鼠左鍵」（手機右下 💣）放炸彈，先炸開一條路再走|小提醒：按「鼠标左键」（手机右下 💣）放炸弹，先炸开一条路再走|Tip: press Left Mouse (💣 on mobile) to drop a bomb and open a path first|ヒント：左クリック（スマホは右下💣）で爆弾を置き、道を開けましょう|팁: 마우스 왼쪽(모바일 💣)으로 폭탄을 놓아 길을 여세요
+first.stuck|你幾乎沒離開原地 —— 站著不動最容易被自己的火燒到，繞著炸彈走|你几乎没离开原地 —— 站着不动最容易被自己的火烧到，绕着炸弹走|You barely moved — standing still is the easiest way to get burned; keep circling|ほとんど動いていません。止まると自分の火に巻き込まれます。爆弾の周りを回りましょう|거의 움직이지 않았습니다. 가만히 있으면 자기 불꽃에 당합니다. 폭탄 주변을 도세요
+ui.font|🔠 文字大小|🔠 文字大小|🔠 Text size|🔠 文字サイズ|🔠 글자 크기
+ui.fontHint|「大」會把說明頁、對話框與結算卡的字放大約一成。|「大」会把说明页、对话框与结算卡的字放大约一成。|"Large" scales help pages, dialogs and result cards up by about 10%.|「大」は説明・ダイアログ・結果画面の文字を約 1 割大きくします。|'크게'는 설명·대화상자·결과 카드 글자를 약 10% 키웁니다.
+ui.calm|🎬 減少動態|🎬 减少动态|🎬 Reduce motion|🎬 動きを減らす|🎬 움직임 줄이기
+ui.calmHint|關掉場景粒子、白閃與轉場動畫，只留必要回饋。容易頭暈或舊手機建議開。|关掉场景粒子、白闪与转场动画，只留必要反馈。容易头晕或旧手机建议开。|Cuts ambient particles, white flashes and transitions, keeping only essential feedback. Good for motion sickness or older phones.|環境パーティクル・白フラッシュ・画面遷移を抑えます。酔いやすい人や旧端末に。|환경 파티클·흰 섬광·전환 효과를 줄입니다. 멀미가 있거나 오래된 기기에 권장.
+ui.nodeCodex|📚 圖鑑|📚 图鉴|📚 Codex|📚 図鑑|📚 도감
+ui.nodeSameMap|全球同一張圖|全球同一张图|Same map for everyone|世界中が同じマップ|전 세계 동일 맵
+ui.nodeLocalBattle|🖥️ 本機混戰（2～8 人）|🖥️ 本机混战（2～8 人）|🖥️ Local free-for-all (2–8 players)|🖥️ ローカル混戦（2〜8人）|🖥️ 로컬 난전(2~8인)
+ui.nodeOnlineRoom|🌐 線上房號（跟朋友連線）|🌐 线上房号（跟朋友连线）|🌐 Online room code (play with friends)|🌐 オンライン部屋番号（友達と遊ぶ）|🌐 온라인 방 번호(친구와 함께)
+ui.nodeAvatarNote|照片會壓成 128×128 的小圖（約 5～10 KB），存在雲端名單裡，其他線上玩家看得到。|照片会压成 128×128 的小图（约 5～10 KB），存在云端名单里，其他线上玩家看得到。|Your photo is compressed to 128×128 (about 5–10 KB), stored in the online list and visible to other players.|写真は 128×128（約5〜10KB）に圧縮され、オンライン名簿に保存されて他のプレイヤーに見えます。|사진은 128×128(약 5~10KB)로 압축되어 온라인 목록에 저장되고 다른 플레이어에게 보입니다.
+ui.nodeStart|開始挑戰 →|开始挑战 →|Start →|挑戦する →|도전 시작 →
+ui.nodeRevert|♻️ 全部退回|♻️ 全部退回|♻️ Revert all|♻️ すべて戻す|♻️ 모두 되돌리기
+ui.nodeSkipStage|👹 跳過關卡，直接單挑最終魔王|👹 跳过关卡，直接单挑最终魔王|👹 Skip ahead and face the final boss|👹 ステージを飛ばしてラスボスと直接対決|👹 스테이지를 건너뛰고 최종 보스와 대결
+ui.nodePadAssign|手把指派（1P～4P）|手柄指派（1P～4P）|Controller assignment (P1–P4)|コントローラー割り当て（1P〜4P）|컨트롤러 지정(1P~4P)
+ui.nodePadAfter|接上手把後|接上手柄后|After you plug in a controller, |コントローラーを接続したら|컨트롤러를 연결한 뒤
+ui.nodePadPress|按一下任意鍵|按一下任意键|press any button|いずれかのボタンを押す|아무 버튼이나 누르면
+ui.nodePadClear|清除全部指派|清除全部指派|Clear all assignments|割り当てを全部消す|모든 지정 해제
+ui.nodeRefresh|🔄 重新整理|🔄 重新整理|🔄 Refresh|🔄 再読み込み|🔄 새로고침
+ui.nodeSupply|補給在出發時自動消耗|补给在出发时自动消耗|Supplies are consumed automatically when you set off|補給は出発時に自動で消費されます|보급은 출발할 때 자동으로 소모됩니다
+ui.nodeCheckin|每日簽到|每日签到|Daily check-in|デイリーログイン|일일 출석
+ui.nodeClaimToday|領取今天的獎勵|领取今天的奖励|Claim today's reward|今日の報酬を受け取る|오늘의 보상 받기
+ui.nodeGoWeekly|去打本週關卡|去打本周关卡|Go play this week's stages|今週のステージへ|이번 주 스테이지 하러 가기
+ui.std|標準|标准|Standard|標準|보통
+foe.bossName|首領|首领|Boss|ボス|보스
+foe.someName|怪物|怪物|Monster|モンスター|몬스터
 `;

@@ -7,6 +7,7 @@
 
 const http = require('http');
 const fs = require('fs');
+const zlib = require('zlib');   // v5.28：主機沒開壓縮時自己壓（Render 邊緣會壓，但不保證每台都有）
 const path = require('path');
 // v4.85i：容器啟動時刻 —— /api/health 會回報，用來確認「這次真的換了一個新容器」
 const BOOT_AT = Date.now();
@@ -889,7 +890,28 @@ const MIME = {
   '.json': 'application/json; charset=utf-8'
 };
 
-function serveStatic(pathname, res) {
+/* ===== v5.28：靜態檔的壓縮、ETag 與快取 =====
+   ① 以前完全沒有 ETag／Last-Modified → 瀏覽器每次都把整份 index.html 重抓（即使沒改）。
+      現在帶 ETag，沒改就回 304（0 bytes）。
+   ② 圖片網址都帶 ?v=NN（改圖一定換網址）→ 可以給長快取；
+      以前只給 5 分鐘，冷啟動時 200 多張圖要重新問一輪。
+   ③ 主機邊緣沒壓縮時自己 gzip（壓好的結果放記憶體，同一版只壓一次）。
+   快取鍵含 mtime，改檔立刻失效，不會拿到舊內容。 */
+const GZ_CACHE = new Map();
+const GZ_TYPES = /\.(?:html|js|css|json|svg|txt|webmanifest)$/i;
+const GZ_MIN = 1024;
+
+function gzipBuf(file, buf, st) {
+  const key = st.size + ':' + Math.floor(st.mtimeMs);
+  const hit = GZ_CACHE.get(file);
+  if (hit && hit.key === key) return hit.gz;
+  const gz = zlib.gzipSync(buf, { level: 6 });
+  GZ_CACHE.set(file, { key: key, gz: gz });
+  if (GZ_CACHE.size > 80) { GZ_CACHE.delete(GZ_CACHE.keys().next().value); }
+  return gz;
+}
+
+function serveStatic(pathname, req, res) {
   let rel = pathname === '/' ? '/index.html' : pathname;
   rel = rel.replace(/\.\./g, '');
   const file = path.join(PUB, rel);
@@ -898,8 +920,8 @@ function serveStatic(pathname, res) {
     res.writeHead(403); return res.end('forbidden');
   }
 
-  fs.readFile(file, function (err, buf) {
-    if (err) {
+  fs.stat(file, function (e0, st) {
+    if (e0 || !st.isFile()) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       return res.end('not found');
     }
@@ -907,11 +929,43 @@ function serveStatic(pathname, res) {
     // v4.6：Service Worker 與 manifest 一定要 no-cache，
     // 否則玩家瀏覽器會抱著舊的 sw.js／manifest.json，改版也吃不到
     const noCache = ext === '.html' || /(?:^|[\\/])sw\.js$/.test(file) || /manifest\.json$/.test(file);
-    res.writeHead(200, {
-      'Content-Type': MIME[ext] || 'application/octet-stream',
-      'Cache-Control': noCache ? 'no-cache' : 'public, max-age=300'
+    const img = /\.(?:webp|png|jpe?g|gif|ico|woff2?)$/i.test(ext);
+    const cacheCtl = noCache ? 'no-cache'
+      : img ? 'public, max-age=604800, stale-while-revalidate=86400'
+      : 'public, max-age=3600';
+    const etag = 'W/"' + st.size.toString(16) + '-' + Math.floor(st.mtimeMs).toString(16) + '"';
+    const base = { 'ETag': etag, 'Cache-Control': cacheCtl };
+
+    // 沒改就回 304：內容一樣，用瀏覽器手上那份就是最新的（ETag 含 mtime，改檔一定變）
+    if (req && req.headers['if-none-match'] === etag) {
+      res.writeHead(304, base);
+      return res.end();
+    }
+
+    fs.readFile(file, function (err, buf) {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end('not found');
+      }
+      const head = {
+        'Content-Type': MIME[ext] || 'application/octet-stream',
+        'Cache-Control': cacheCtl,
+        'ETag': etag,
+        'Last-Modified': st.mtime.toUTCString()
+      };
+      let body = buf;
+      const ae = String((req && req.headers['accept-encoding']) || '');
+      if (GZ_TYPES.test(ext) && buf.length >= GZ_MIN && /\bgzip\b/.test(ae)) {
+        try { body = gzipBuf(file, buf, st); } catch (e) { body = buf; }
+        if (body !== buf) {
+          head['Content-Encoding'] = 'gzip';
+          head['Vary'] = 'Accept-Encoding';
+        }
+      }
+      head['Content-Length'] = body.length;
+      res.writeHead(200, head);
+      res.end(body);
     });
-    res.end(buf);
   });
 }
 
@@ -998,6 +1052,7 @@ const server = http.createServer(function (req, res) {
       storageError: cs.storageError || '',   // 連不上時的原因（給人看的）
       storageWrites: cs.storageWrites,
       storageFails: cs.storageFails,
+      rankClamped: cs.rankClamped,   // v5.28：排行榜被合理性檢查夾住的次數
       storageDiag: cs.storageDiag,     // v4.85f：遮罩過的 URL/金鑰指紋（不含金鑰本體）
       bootAt: BOOT_AT,                 // v4.85i：這次啟動的時間戳（判斷容器有沒有真的換過）
       uptimeSec: Math.round((Date.now() - BOOT_AT) / 1000)
@@ -1028,7 +1083,7 @@ const server = http.createServer(function (req, res) {
     return sendJSON(res, 404, { ok: false, err: 'no such api' });
   }
 
-  serveStatic(url.pathname, res);
+  serveStatic(url.pathname, req, res);
 });
 
 // ============ 主循環 ============

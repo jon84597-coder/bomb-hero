@@ -1814,22 +1814,47 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
     const drop = keys.length - RANK_MAX;
     for (let i = 0; i < drop; i++) { delete R.all[keys[i]]; delete R.wk[keys[i]]; }
   }
+  /* v5.28：排行榜的合理性檢查。
+     以前 /api/rank/submit 完全相信前端 —— 改一個 fetch 就能把「擊殺 999999」送上榜。
+     這不是防外掛（那要伺服器權威模擬），而是擋掉「一看就不可能」的數字：
+       · 每個分類有每秒成長上限（寬鬆到正常玩家絕不會碰到）
+       · 距離上次提交多久，就只准長多少（+5 的起步寬限）
+       · 舊紀錄沒有基準（a.v !== 2）→ 第一次只建立基準，不砍任何東西
+     被夾住時 rankClamped++，/api/health 看得到。 */
+  const RANK_RATE = { soloKill: 3, soloBoss: .05, rpgKill: 3, rpgBoss: .05, brKill: 1,
+                      brWin: .02, btKill: 1.5, btWin: .03, onKill: 1.5, onWin: .03 };
+  let rankClamped = 0;
+  function rankAllow(prev, rate, secs) {
+    return prev + Math.max(5, Math.ceil(Math.max(0, secs) * rate));
+  }
+
   function rankPut(pid, name, ch, cats, week) {
     const R = rankDb();
     const a = R.all[pid] || (R.all[pid] = { n: '', ch: 0, c: {}, t: 0 });
+    const now = Date.now();
+    const secs = (a.t > 0) ? (now - a.t) / 1000 : 0;
+    const trusted = (a.v === 2);            // 有基準才驗；舊資料先放行一次
     a.n = cleanName(name, 12);
     a.ch = clampInt(ch, 0, 7, 0);
-    a.t = Date.now();
-    for (const k in RANK_CATS) {
-      const v = clampInt(cats && cats[k], 0, 1e9, 0);
-      if (v > (a.c[k] | 0)) a.c[k] = v;
-    }
+    a.t = now;
     const b = R.wk[pid] || (R.wk[pid] = { n: a.n, ch: a.ch, c: {}, t: 0 });
-    b.n = a.n; b.ch = a.ch; b.t = a.t;
     for (const k in RANK_CATS) {
-      const v = clampInt(week && week[k], 0, 1e9, 0);
-      if (v > (b.c[k] | 0)) b.c[k] = v;
+      const rate = RANK_RATE[k] || 1;
+      let v = clampInt(cats && cats[k], 0, 1e7, 0);
+      if (trusted) {
+        const allow = rankAllow(a.c[k] | 0, rate, secs);
+        if (v > allow) { v = allow; rankClamped++; }
+      }
+      if (v > (a.c[k] | 0)) a.c[k] = v;
+      let wv = clampInt(week && week[k], 0, 1e7, 0);
+      if (trusted) {
+        const wAllow = rankAllow(b.c[k] | 0, rate, secs);
+        if (wv > wAllow) { wv = wAllow; rankClamped++; }
+      }
+      if (wv > (b.c[k] | 0)) b.c[k] = wv;
     }
+    a.v = 2;
+    b.n = a.n; b.ch = a.ch; b.t = a.t;
     rankTrim(R);
     store.touch();
     return R;
@@ -3273,6 +3298,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
       storageSkipped: store.state.skipped,
       // v4.85f：遮罩過的設定指紋 —— 用來判斷「Render 上那把 key 跟正確的是不是同一把」
       //   只露前綴（sb_secret_ / sb_publishable_）、長度與 sha256 前 8 碼，不外洩金鑰本身。
+      rankClamped: rankClamped,   // v5.28：排行榜被合理性檢查夾住的次數
       storageDiag: (function () {
         const k = String(remote.key || '');
         const pfx = k.slice(0, 10);

@@ -892,6 +892,32 @@ border-radius: 0; background: transparent;
      · 標題用金色漸層熔進字裡（background-clip:text），外圈金色光暈
      · 進場 0.6 秒彈跳放大 + 七顆閃光依序亮起
    純 CSS，沒有新圖檔（不影響載入與上限）。 */
+/* ===== v5.28：死因卡（誰殺的＋最後 5 秒走位） ===== */
+.dcard { margin: 2px auto 8px; padding: 8px 10px 6px; max-width: 344px; border-radius: 14px;
+  background: linear-gradient(180deg, rgba(48,17,27,.78), rgba(22,9,15,.78));
+  border: 1px solid rgba(255,120,140,.34); box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 6px 18px rgba(0,0,0,.28); }
+.dcard .dwho { font-size: 13.5px; font-weight: 800; color: #ffd9e1; letter-spacing: .02em; }
+.dcard .dhint { margin-top: 2px; font-size: 11.5px; font-weight: 700; color: #ffb3c4; opacity: .95; }
+.dcard canvas { display: block; width: 100%; height: auto; margin: 7px auto 3px; border-radius: 9px;
+  background: radial-gradient(circle at 50% 42%, rgba(72,30,45,.55), rgba(14,7,11,.88)); }
+.dcard .dtip { font-size: 10.5px; color: #c9a8b4; letter-spacing: .02em; }
+/* v5.28：無障礙 —— 大字模式、減少動態、鍵盤焦點 */
+body.bigtext .card, body.bigtext #ovBox, body.bigtext #bhModal .mbox { zoom: 1.1; }
+body.calm *, body.calm *::before, body.calm *::after {
+  animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important; }
+:focus-visible { outline: 3px solid rgba(122,200,255,.95); outline-offset: 2px; border-radius: 10px; }
+.dcard .dtip2 { margin-top: 5px; font-size: 11.5px; line-height: 1.5; color: #ffe6bd;
+  background: rgba(255,200,120,.10); border-radius: 8px; padding: 5px 8px; }
+/* v5.28：觀戰列 —— 出局之後可以點名字跟拍某個人 */
+#specBar { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 26;
+  display: flex; align-items: center; gap: 6px; max-width: min(94vw, 460px); padding: 6px 8px;
+  border-radius: 999px; background: rgba(10,16,26,.82); border: 1px solid rgba(150,200,255,.28);
+  box-shadow: 0 8px 22px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.10); overflow-x: auto; }
+#specBar b { font-size: 11px; font-weight: 800; color: #cfe2ff; white-space: nowrap; }
+#specBar .spchip { flex: 0 0 auto; padding: 5px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800;
+  color: #cfe0ff; background: rgba(255,255,255,.07); border: 1px solid rgba(150,200,255,.22); cursor: pointer; }
+#specBar .spchip.on { color: #08111e; background: linear-gradient(180deg, #bfe1ff, #7fbaff); border-color: #d8ecff; }
 .champ { position: relative; display: inline-block; padding: 4px 6px 2px; margin: 0 auto 6px; isolation: isolate; }
 .champ .ray {
   position: absolute; left: 50%; top: 46%; width: 460px; height: 460px; margin: -230px 0 0 -230px;
@@ -4632,7 +4658,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.27</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.28</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4687,7 +4713,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.27</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.28</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5129,6 +5155,14 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
       <div class="field"><label id="labCB">🌈 色盲友善隊色</label>
         <div class="seg" id="segCB"><button data-v="0">關</button><button data-v="1">開</button></div>
         <div class="hint" id="cbHint"></div>
+      </div>
+      <div class="field"><label id="labFont">🔠 文字大小</label>
+        <div class="seg" id="segFont"><button data-v="n">標準</button><button data-v="l">大</button></div>
+        <div class="hint" id="fontHint"></div>
+      </div>
+      <div class="field"><label id="labCalm">🎬 減少動態</label>
+        <div class="seg" id="segCalm"><button data-v="0">關</button><button data-v="1">開</button></div>
+        <div class="hint" id="calmHint"></div>
       </div>
       <div class="field"><label>小地圖（雷達）</label>
         <div class="seg" id="segMiniMap"><button data-v="1">開</button><button data-v="0">關</button></div>
@@ -5664,7 +5698,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.27';
+const VERSION = '5.28';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6371,6 +6405,8 @@ const CTRL_MODES = ['auto', 'kb', 'pad', 'touch'];
 let settings = {
   size: 'M', wins: 2, time: 120, hazards: 'on', sd: 'on', revenge: 'on',
   bgm: 1, sfx: 1, soloChar: 0,
+  font: 'n',        // v5.28：文字大小（n 標準／l 大）
+  calm: 0,          // v5.28：減少動態（暈動症友善）
   brChar: 0, brName: '',                             // v5.11：大逃殺自己的選角與暱稱
   soloDiff: 'normal',                              // 單人難易度：easy / normal / hard
   soloTime: 300,                                  // 單人關卡時間（0 = 無限）
@@ -8801,7 +8837,17 @@ function qualLevel() {
 function qualDprCap() { return QUAL_CAP[qualLevel()]; }
 function qualPart() { return QUAL_PART[qualLevel()]; }
 // 粒子上限（環境粒子用）：至少留 1 顆，不然整個場景會「空掉」
-function ambN(n) { return Math.max(1, Math.round(n * qualPart())); }
+function ambN(n) { return Math.max(1, Math.round(n * qualPart() * (settings.calm ? .45 : 1))); }
+
+/* v5.28：無障礙的兩個開關都只是「加 class 到 body」，CSS 負責放大與停動畫。
+   放在這裡是因為 resizeView 之前就會用到 settings，而且它每次改都會被呼叫。 */
+function applyA11y() {
+  try {
+    const b = document.body; if (!b) return;
+    b.classList.toggle('bigtext', settings.font === 'l');
+    b.classList.toggle('calm', !!settings.calm);
+  } catch (e) {}
+}
 // 改畫質要立刻重算畫布尺寸（不用等轉屏）
 function applyQuality() { try { resizeView(); } catch (e) {} }
 function resizeView() {
@@ -9538,6 +9584,7 @@ function placeBomb(p) {
   Game.bombs.push(b);
   AudioSys.sfx('place');
   try { Tut.hit('bomb'); } catch (e) {}
+  try { FirstRun.hit('b'); } catch (e) {}
   return true;
 }
 // 遙控引爆（E 鍵／手把 X／手機 🧨）：一次把自己場上所有遙控彈炸掉
@@ -9752,6 +9799,7 @@ function explodeBomb(b) {
   if (idx >= 0) Game.bombs.splice(idx, 1);
   const T = Game.T;
   const cx = b.cx, cy = b.cy;
+  try { DeathCard.boom((cx + .5) * T, (cy + .5) * T); } catch (e) {}   // v5.28：死因圖的爆點
   const pierce = b.owner ? b.owner.pierce : false;
   if (b.onSoft && cellAt(cx, cy) === 2) destroySoft(cx, cy);
   addFlame(cx, cy, 'center', pierce, b.owner);
@@ -9821,6 +9869,7 @@ function destroySoft(x, y) {
   const T = Game.T;
   burst(x * T + T / 2, y * T + T / 2, '#c98d4b', 8, 130);
   try { Tut.hit('soft'); } catch (e) {}
+  try { FirstRun.hit('w'); } catch (e) {}
   try { Gift.add('brick', 1); } catch (e) {}     // v4.87：每日任務「炸軟磚」
   try { if (isMyPlayer(p)) Ach.count('brick', 1); } catch (e) {}
 }
@@ -9870,6 +9919,7 @@ function applyItem(p, type) {
   const T = Game.T;
   burst(p.x, p.y, type === 'skull' ? '#b06ef7' : '#8ff0ff', 10, 130);
   try { Tut.hit('item'); } catch (e) {}
+  try { FirstRun.hit('i'); } catch (e) {}
 }
 
 // ---------- 骷髏頭（負面狀態，SBR 玩法）----------
@@ -14084,6 +14134,7 @@ const GiftUI = (function () {
 })();
 
 function startSolo(stage, bossRush, daily) {
+  try { DeathCard.reset(); } catch (e) {}
   Game.mode = 'solo';
   // v4.17：修舊 bug —— 玩過 RPG 之後 Game.rpg 一直是 true，
   //   回到單人闖關會走 RPG 的扣血邏輯（hpCur 是 undefined → 永遠不會死）。
@@ -15624,6 +15675,7 @@ function updateSolo(dt) {
           showDailyResult(false);
           return;
         }
+        try { DeathCard.finish(); } catch (e) {}
         showEnd(t('solo.overTitle'), t('solo.overSub', { n: Game.stage, s: p.score }) + '　·　' + diffLabel(), false);
         battleEndFx(false);
       } else {
@@ -15648,7 +15700,7 @@ function killPlayer(p, silent, killer) {
   if (p.air > 0) return;                    // v4.87：鴕鳥跳躍中完全免疫
   if (p.slamGuard > 0) return;              // v4.89：落地震攝保護（跳進去再跳出來不會被咬掉坐騎）
   if (p.dino) { breakDino(p); return; }     // 騎著恐龍 → 恐龍先擋一次
-  if (p === Game.players[0]) Game.hurtCount = (Game.hurtCount | 0) + 1;   // v4.87：三星判定（沒被打到才有 3 星）
+  if (p === Game.players[0]) { Game.hurtCount = (Game.hurtCount | 0) + 1; try { DeathCard.note(killer); } catch (e) {} }   // v4.87：三星判定（沒被打到才有 3 星）
   if (p.carry) {   // 手上炸彈掉在原地
     const b = p.carry;
     b.held = false; p.carry = null;
@@ -16664,6 +16716,8 @@ const Battle = {
 };
 
 function startBattle() {
+  try { Spec.hide(); Game.specIdx = null; } catch (e) {}
+  try { DeathCard.reset(); } catch (e) {}
   Game.mode = 'battle';
   Game.daily = null;                 // v4.80：離開每日挑戰的狀態，免得被殘留旗標影響
   Game.pets = [];                    // v4.17：隨從只在單人／RPG 出場
@@ -16949,7 +17003,7 @@ function killBattlePlayer(p, killer) {
   if (p.air > 0) return;                    // v4.87：鴕鳥跳躍中完全免疫
   if (p.slamGuard > 0) return;              // v4.89：落地震攝保護
   if (p.dino) { breakDino(p); return; }     // 騎著恐龍 → 恐龍先擋一次
-  if (p === Game.players[0]) Game.hurtCount = (Game.hurtCount | 0) + 1;   // v4.87：三星判定
+  if (p === Game.players[0]) { Game.hurtCount = (Game.hurtCount | 0) + 1; try { DeathCard.note(killer); } catch (e) {} }   // v4.87：三星判定
   // v4.72：大逃殺 3 點血 —— 單人／對戰是「一擊就死」，但 8 人搶一個冠軍時
   //   一開場就被一顆炸彈帶走太挫折，而且 AI 互炸會讓一整場 20 秒就結束。
   if (Game.mode === 'br') {
@@ -17717,6 +17771,8 @@ function brBossDown(e, killer) {
 }
 
 function startBR() {
+  try { Spec.hide(); Game.specIdx = null; } catch (e) {}
+  try { DeathCard.reset(); } catch (e) {}
   Game.daily = null;                 // v4.80：大逃殺不吃每日挑戰的固定規則
   // 門票：每場消耗一張（開發者帳號不扣）
   //   v4.74：正式測試結束前免費（BR.FREE）—— 只要把 FREE 改回 false 就恢復收票
@@ -18043,7 +18099,7 @@ function brOnDeath(p) {
     setTimeout(function () {
       if (Game.endShown) return;
       showBRDeath('☠️ 你被淘汰了', '第 ' + p.brPlace + ' 名 / ' + BR.N +
-        '\n金幣 +' + (BR.GOLD[Math.min(BR.GOLD.length, p.brPlace) - 1] || 80) + '　（觀戰中，鏡頭已切給存活的人）', false);
+        '\n金幣 +' + (BR.GOLD[Math.min(BR.GOLD.length, p.brPlace) - 1] || 80) + '　' + t('spec.hint'), false);
     }, 1000);
   }
 }
@@ -20589,6 +20645,152 @@ function startWinJump(chIdx) {
   winJumpRaf = (typeof requestAnimationFrame === 'function') ? requestAnimationFrame(frame) : 0;
 }
 
+/* ===== v5.28：第一次的三件事 =====
+   引導頁講得再多，玩家第一次進單人還是容易「站著不動」。
+   這裡只做三個互動里程碑（放彈／炸軟牆／吃道具），做到就用一句話
+   解釋「這代表什麼」，比再看一次說明有效。存本機、不進雲端。 */
+const FirstRun = (function () {
+  const KEY = 'bombhero-firstrun';
+  const st = { b: 0, w: 0, i: 0 };
+  try {
+    const j = JSON.parse(localStorage.getItem(KEY) || '{}');
+    if (j && typeof j === 'object') { st.b = j.b ? 1 : 0; st.w = j.w ? 1 : 0; st.i = j.i ? 1 : 0; }
+  } catch (e) {}
+
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+  function hit(k) {
+    if (st[k]) return;
+    if (Game.state !== 'play') return;
+    if (Game.mode !== 'solo' && Game.mode !== 'rpg' && Game.mode !== 'battle') return;
+    st[k] = 1; save();
+    try { toast(t('first.' + k), 3.4); } catch (e) {}
+  }
+  // 死掉時如果連一顆都沒放過，就講得更直接一點
+  function missTip() {
+    if (st.b) return '';
+    if (Game.mode !== 'solo' || (Game.stage | 0) > 3) return '';
+    return t('first.noBomb');
+  }
+  return { hit: hit, missTip: missTip, state: function () { return st; },
+    reset: function () { st.b = st.w = st.i = 0; save(); } };
+})();
+
+/* ===== v5.28：死因卡 =====
+   掛掉的時候只有一句「挑戰失敗」，玩家不知道是踩到自己的火、被誰撞、
+   還是王本來就差一下。這裡在記憶體記三件事（不進存檔）：
+     ① 最後殺死你的兇手　② 王剩幾格血　③ 最後 5 秒走位＋爆點 */
+const DeathCard = (function () {
+  const MAXP = 62;                  // 62 筆 × 80ms ≈ 5 秒
+  let trail = [], booms = [], killer = null, info = null, acc = 0;
+
+  function reset() { trail = []; booms = []; killer = null; info = null; acc = 0; }
+  function note(k) { killer = k || null; }
+
+  function rec(dt) {
+    if (Game.state !== 'play') return;
+    acc += dt; if (acc < .08) return; acc = 0;
+    const p = Game.players && Game.players[0];
+    if (!p || !p.alive) return;
+    trail.push(p.x, p.y);
+    if (trail.length > MAXP * 2) trail.splice(0, trail.length - MAXP * 2);
+  }
+
+  // 只記玩家附近的爆點 —— 遠處 AI 互相炸的跟死因無關，記進來會把圖縮到看不見
+  function boom(x, y) {
+    const p = Game.players && Game.players[0];
+    if (p) {
+      const dx = x - p.x, dy = y - p.y, lim = (Game.T || 40) * 5;
+      if (dx * dx + dy * dy > lim * lim) return;
+    }
+    booms.push(x, y);
+    if (booms.length > 24) booms.splice(0, booms.length - 24);
+  }
+
+  function foeName(e) {
+    if (!e) return '';
+    if (e.name) return e.name;
+    if (e.boss) return t('foe.bossName');
+    return t('foe.someName');
+  }
+
+  // 死亡定案：把「誰、差幾下」先算成人話（敵人陣列之後會被清掉）
+  function finish() {
+    const me = Game.players && Game.players[0];
+    let who = t('death.unknown');
+    if (killer) {
+      if (killer === me) who = t('death.selfBomb');
+      else if (Game.players && Game.players.indexOf(killer) >= 0) who = t('death.rivalBomb');
+      else who = t('death.byFoe', { n: foeName(killer) });
+    }
+    let left = 0;
+    const list = Game.enemies || [];
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].boss && (list[i].hp | 0) > 0) { left = list[i].hp | 0; break; }
+    }
+    let tip = '';
+    try { tip = FirstRun.missTip(); } catch (e) {}
+    if (!tip && (trail.length >> 1) > 1 && (trail.length >> 1) < 14) tip = t('first.stuck');
+    info = { who: who, left: left, stage: Game.stage | 0, n: trail.length >> 1, tip: tip };
+  }
+
+  function html() {
+    if (!info) return '';
+    let hint = '';
+    if (info.left > 0) hint = t('death.left', { n: info.left });
+    else if (info.stage > 0) hint = t('death.stage', { n: info.stage });
+    return '<div class="dcard">' +
+      '<div class="dwho">💀 ' + escHtml(info.who) + '</div>' +
+      (hint ? '<div class="dhint">' + escHtml(hint) + '</div>' : '') +
+      (info.tip ? '<div class="dtip2">💡 ' + escHtml(info.tip) + '</div>' : '') +
+      (info.n > 3 ? '<canvas id="dTrailCv" width="304" height="132"></canvas>' +
+        '<div class="dtip">' + escHtml(t('death.trailTip')) + '</div>' : '') +
+    '</div>';
+  }
+
+  function draw() {
+    const cv = $id('dTrailCv');
+    if (!cv || !cv.getContext || trail.length < 8) return;
+    const g = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    g.clearRect(0, 0, W, H);
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (let i = 0; i < trail.length; i += 2) {
+      const x = trail[i], y = trail[i + 1];
+      if (x < x0) x0 = x; if (x > x1) x1 = x;
+      if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    const pad = 14;
+    const w = Math.max(1, x1 - x0), h = Math.max(1, y1 - y0);
+    const sc = Math.min((W - pad * 2) / w, (H - pad * 2) / h);
+    const ox = (W - w * sc) / 2 - x0 * sc, oy = (H - h * sc) / 2 - y0 * sc;
+    const PX = function (x) { return x * sc + ox; };
+    const PY = function (y) { return y * sc + oy; };
+
+    for (let i = 0; i < booms.length; i += 2) {
+      const a = .16 + .5 * (i / Math.max(2, booms.length));
+      g.beginPath();
+      g.fillStyle = 'rgba(255,150,60,' + a.toFixed(3) + ')';
+      g.arc(PX(booms[i]), PY(booms[i + 1]), 9, 0, 6.2832);
+      g.fill();
+    }
+    g.beginPath();
+    g.moveTo(PX(trail[0]), PY(trail[1]));
+    for (let i = 2; i < trail.length; i += 2) g.lineTo(PX(trail[i]), PY(trail[i + 1]));
+    g.lineWidth = 3; g.lineJoin = 'round'; g.lineCap = 'round';
+    g.strokeStyle = 'rgba(255,92,122,.92)';
+    g.stroke();
+
+    const n = trail.length;
+    g.beginPath(); g.fillStyle = 'rgba(120,220,255,.92)';
+    g.arc(PX(trail[0]), PY(trail[1]), 3.2, 0, 6.2832); g.fill();
+    g.beginPath(); g.fillStyle = '#fff';
+    g.arc(PX(trail[n - 2]), PY(trail[n - 1]), 4.2, 0, 6.2832); g.fill();
+  }
+
+  return { reset: reset, note: note, rec: rec, boom: boom, finish: finish, html: html, draw: draw,
+    _trail: function () { return trail; }, _info: function () { return info; } };
+})();
+
 function showEnd(title, sub, good, chIdx) {
   Game.endShown = true;          // 標記「結束畫面已顯示」，重開時歸零
   const box = $id('ovBox');
@@ -20601,6 +20803,8 @@ function showEnd(title, sub, good, chIdx) {
   let sparks = '';
   if (good) for (let i = 0; i < 7; i++) sparks += '<i style="--i:' + i + '"></i>';
   const kick = grand ? 'CHAMPION' : (good ? 'CLEAR' : '');
+  // v5.28：失敗時多一張死因卡（單人／對戰；RPG 走自己的復活流程）
+  const dcard = (!good && (Game.mode === 'solo' || Game.mode === 'battle')) ? DeathCard.html() : '';
   box.innerHTML =
     '<div class="' + cls + '">' +
       '<span class="ray"></span>' +
@@ -20609,7 +20813,7 @@ function showEnd(title, sub, good, chIdx) {
       '<h3></h3>' +
       '<span class="sparks">' + sparks + '</span>' +
       '<p></p>' +
-    '</div>' +
+    '</div>' + dcard +
     '<canvas id="winJumpCv" width="170" height="168" style="display:none;margin:2px auto 4px"></canvas>' +
     '<div class="row" style="justify-content:center;gap:10px;">' +
     '<button class="mbtn warm" id="btnAgain" style="width:auto;padding:11px 26px;">' + t('over.again') + '</button>' +
@@ -20619,6 +20823,7 @@ function showEnd(title, sub, good, chIdx) {
   // 奪冠時補一記勝利音（既有音效，不新增檔案）
   if (grand) { try { AudioSys.sfx('victory'); } catch (e) {} }
   startWinJump(good ? chIdx : null);
+  if (dcard) { try { DeathCard.draw(); } catch (e) {} }
   $id('btnAgain').addEventListener('click', function () {
     AudioSys.sfx('click');
     Game.endShown = false;
@@ -21218,10 +21423,73 @@ function applyVolumesSafe() { try { AudioSys.applyVolumes(); } catch (e) {} }
 // ====
 //   渲染
 // ====
+/* ===== v5.28：觀戰跟隨 =====
+   出局之後鏡頭本來只能「自動跟著某個活人」，看不到你想看的那一場。
+   現在畫面下方會出現一條名字列：點誰就跟誰，點「自動」回到原本行為。
+   只在單機大逃殺／對戰、自己已出局、且比賽還在跑的時候出現。 */
+const Spec = (function () {
+  let el = null, sig = '';
+
+  function aliveList() {
+    const out = [];
+    const ps = Game.players || [];
+    for (let i = 0; i < ps.length; i++) if (ps[i] && ps[i].alive && !ps[i].ai) out.push(i);
+    if (!out.length) for (let i = 0; i < ps.length; i++) if (ps[i] && ps[i].alive) out.push(i);
+    return out;
+  }
+  function visible() {
+    if (typeof document === 'undefined') return false;
+    if (Net.on) return false;                       // 線上由房主推快照，客人不自己切鏡頭
+    if (Game.mode !== 'br' && Game.mode !== 'battle') return false;
+    if (Game.state !== 'play') return false;
+    const me = Game.players && Game.players[0];
+    return !!(me && !me.alive);
+  }
+  function hide() { if (el) { try { el.remove(); } catch (e) {} el = null; sig = ''; } }
+
+  function tick() {
+    if (!visible()) { hide(); return; }
+    const list = aliveList();
+    const key = list.join(',') + '|' + (Game.specIdx == null ? 'a' : Game.specIdx);
+    if (key === sig && el) return;
+    sig = key;
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'specBar';
+      document.body.appendChild(el);
+      el.addEventListener('click', function (ev) {
+        const b = ev.target && ev.target.closest ? ev.target.closest('[data-sp]') : null;
+        if (!b) return;
+        const v = parseInt(b.getAttribute('data-sp'), 10);
+        Game.specIdx = (v >= 0 && Game.players[v] && Game.players[v].alive) ? v : null;
+        Game.camSnap = true;
+        sig = '';
+        try { AudioSys.sfx('click'); } catch (e) {}
+      });
+    }
+    let h = '<b>👁 ' + escHtml(t('spec.title')) + '</b>';
+    h += '<button class="spchip' + (Game.specIdx == null ? ' on' : '') + '" data-sp="-1">' + escHtml(t('spec.auto')) + '</button>';
+    for (let k = 0; k < list.length && k < 4; k++) {
+      const i = list[k], p = Game.players[i];
+      h += '<button class="spchip' + (Game.specIdx === i ? ' on' : '') + '" data-sp="' + i + '">' +
+        escHtml(p.name || ('P' + (i + 1))) + '</button>';
+    }
+    el.innerHTML = h;
+  }
+
+  return { tick: tick, hide: hide, aliveList: aliveList, visible: visible };
+})();
+
 // ---------- 相機：畫面跟著角色置中移動 ----------
 function cameraTarget() {
   // 線上客人：鏡頭跟自己的角色
   if (Net.on && Net.role === 'guest' && Net.mySlot >= 0 && Game.players[Net.mySlot]) return Game.players[Net.mySlot];
+  // v5.28：觀戰時點名跟隨（那個人陣亡就自動退回）
+  if (Game.specIdx != null) {
+    const sp = Game.players[Game.specIdx];
+    if (sp && sp.alive) return sp;
+    Game.specIdx = null;
+  }
   // 優先跟人類玩家（單人＝玩家 0；對戰＝還沒被淘汰的人類）
   for (let i = 0; i < Game.players.length; i++) {
     const p = Game.players[i];
@@ -29733,6 +30001,7 @@ function loop(ts) {
     CharPreview.tick(dt);
     try { PetPreview.tick(dt); } catch (e) {}      // v5.17：商店的隨從圖示
     try { updateFps(0); } catch (e) {}            // v5.27：離開遊戲畫面就把 FPS 錶收起來
+    try { Spec.hide(); } catch (e) {}             // v5.28：離開遊戲畫面把觀戰列收掉
     Input.flush();
     return;
   }
@@ -29744,6 +30013,7 @@ function loop(ts) {
   if (Input.edges.Escape) togglePause();   // ESC 開啟／繼續
   if (paused) { try { Tut.tick(0); } catch (e) {} Input.flush(); return; }
   meTick(dt);                              // v5.8：「我」標示的前 5 秒計時（暫停時不跑）
+  try { Spec.tick(); } catch (e) {}          // v5.28：出局後的觀戰列
   Game.bannerT -= dt;
   if (Game.bannerT <= 0) $id('banner').style.display = 'none';
   Game.toastT -= dt;
@@ -29758,6 +30028,7 @@ function loop(ts) {
     else if (Game.mode === 'br') updateBR(gdt);
     else updateBattle(gdt);
   }
+  try { DeathCard.rec(dt); } catch (e) {}   // v5.28：最後 5 秒走位（只記 play）
   if (Net.on && Net.role === 'guest') Net.guestTick(dt);
   else if (Net.on && Net.role === 'host') Net.hostTick(dt);
   try { PlayStat.tick(dt); } catch (e) {}    // v5.5：累計遊玩時間（只算 state==='play'）
@@ -29840,6 +30111,13 @@ refreshers.push(segWire('segQual', function () { return settings.qual; }, functi
 refreshers.push(segWire('segFps', function () { return settings.fps ? '1' : '0'; }, function (v) { settings.fps = parseInt(v, 10) ? 1 : 0; }));
 refreshers.push(segWire('segShake', function () { return settings.shake ? '1' : '0'; }, function (v) { settings.shake = parseInt(v, 10) ? 1 : 0; }));
 refreshers.push(segWire('segCB', function () { return settings.cb ? '1' : '0'; }, function (v) { settings.cb = parseInt(v, 10) ? 1 : 0; }));
+// v5.28：文字大小／減少動態
+refreshers.push(segWire('segFont', function () { return settings.font === 'l' ? 'l' : 'n'; }, function (v) {
+  settings.font = (v === 'l') ? 'l' : 'n'; applyA11y();
+}));
+refreshers.push(segWire('segCalm', function () { return settings.calm ? '1' : '0'; }, function (v) {
+  settings.calm = parseInt(v, 10) ? 1 : 0; applyA11y();
+}));
 // v3.1：右上角「下一步」快捷鈕（initCta 執行時 refreshers 還在 TDZ → 只能在這裡掛進去）
 try { refreshers.push(updateCta); } catch (e) {}
 function updateAiHint() {
@@ -32978,6 +33256,7 @@ if (window.visualViewport) {
 updateViewportVars();
 (function () { const vt = $id('verTxt'); if (vt) vt.textContent = VERSION; })();
 Sprites.load();
+try { applyA11y(); } catch (e) {}   // v5.28：文字大小／減少動態
 Parts.load();
 FoeArt.load();
 ItemArt.load();          // v4.38：道具圖示
@@ -33704,6 +33983,11 @@ const Tut = (function () {
         const lc = $id('labCB'); if (lc) lc.textContent = t('ui.cb');
         const shk = $id('shakeHint'); if (shk) shk.textContent = t('ui.shakeHint');
         const cbh = $id('cbHint'); if (cbh) cbh.textContent = t('ui.cbHint');
+        /* v5.28：文字大小／減少動態（一樣是短標籤） */
+        const lfz = $id('labFont'); if (lfz) lfz.textContent = t('ui.font');
+        const lcm = $id('labCalm'); if (lcm) lcm.textContent = t('ui.calm');
+        const fzh = $id('fontHint'); if (fzh) fzh.textContent = t('ui.fontHint');
+        const cmh = $id('calmHint'); if (cmh) cmh.textContent = t('ui.calmHint');
         try { updateQualHint(); } catch (e) {}
         try { QChat.init(); } catch (e) {}
         try { NetInvite.wire(); } catch (e) {}
@@ -33838,7 +34122,16 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.27', date: '2026-11-06', now: true, items: [
+  { v: '5.28', date: '2026-11-06', now: true, items: [
+    '⚡ <b>開場更快</b>：伺服器補上 gzip（主機沒壓時自己壓 2,058KB → 648KB）、ETag 與 304，沒改版就不重傳；美術圖改成七天長快取。',
+    '💀 <b>死因卡</b>：輸了不再是乾乾一句「挑戰失敗」—— 會寫是誰用什麼打倒你、王剩幾格血，還畫出你最後 5 秒的走位與爆點。',
+    '👁 <b>觀戰可以點名</b>：大逃殺／對戰出局後，畫面下方有一排名字，點誰就跟拍誰，不用再被鏡頭拖著跑。',
+    '🎓 <b>第一次的三件事</b>：首次放炸彈／炸掉軟磚／吃到道具各給一句解釋；連一顆都沒放就陣亡會直接告訴你按哪個鍵。',
+    '🔠 <b>文字大小與減少動態</b>：設定多了「大字」與「減少動態」（關掉環境粒子、白閃、轉場），暈動症與舊手機都更友善；鍵盤 Tab 有明顯焦點框。',
+    '🛡 <b>排行榜不再照單全收</b>：伺服器會檢查成長速率，把「不可能的數字」靜默夾住（正常玩家碰不到），/api/health 看得到次數。',
+    '🌏 <b>補齊介面翻譯</b>：把畫面上對不到字典的 17 段文字（圖鑑、本機混戰、線上房號、簽到…）補進五語字典。'
+  ] },
+  { v: '5.27', date: '2026-11-06', now: false, items: [
     '🧭 <b>修掉「怪物發招虛線指向左上角」</b>：鑽地以外的招式（十字雷射／脈衝圈／連鎖落雷／俯衝／毒霧／滾石／追蹤彈）只是「出手前僵直」，從來沒有指定落點，卻跟著吐元素彈一起畫了落點圈與瞄準虛線 —— 座標留在 0,0，於是<b>整條虛線往地圖左上角指</b>。現在只有真的會鎖定格子的吐彈才畫預告（8 種會吐彈的怪逐一確認過）',
     '📖 <b>教學文案全部對回實際按鍵</b>：以前寫「空白／Enter 放炸彈」「E 遙控引爆」「F 恐龍吐火」，實際是<b>滑鼠左鍵放彈、右鍵引爆、空白鍵吐火</b>（鍵位可在設定改）。縮放範圍也從錯的 58%~185% 改成實際的 <b>42%~300%</b>；新手第一分鐘看到的說明現在都做得到',
     '🎚️ <b>新增「畫質 低／中／高（＋自動）」</b>：畫布解析度上限 1／1.5／2 倍、環境粒子 38%／65%／100%、爆炸粒子硬上限、傷害數字上限同步縮放。大逃殺 50 人一堆爆炸時可以降到「低」救幀數；自動＝高解析度手機給「中」',
@@ -36491,7 +36784,7 @@ function rpgHurt(p, silent, killer) {
   if (p.air > 0) return;                             // v4.87：鴕鳥跳躍中完全免疫
   if (p.slamGuard > 0) return;                       // v4.89：落地震攝保護
   if (p.dino) { breakDino(p); return; }              // 坐騎先擋一次
-  if (p === Game.players[0]) Game.hurtCount = (Game.hurtCount | 0) + 1;   // v4.87：三星判定
+  if (p === Game.players[0]) { Game.hurtCount = (Game.hurtCount | 0) + 1; try { DeathCard.note(killer); } catch (e) {} }   // v4.87：三星判定
   let dmg = (killer && killer.type === 'boss') ? 2 : 1;
   let left = dmg;
   const hp0 = p.hpCur, ar0 = p.armorCur;             // v4.5：記錄扣血前的量，才知道實際掉多少
@@ -39814,6 +40107,7 @@ window.__BH = {
   QUAL_CAP: QUAL_CAP, QUAL_PART: QUAL_PART, qualLevel: qualLevel, qualDprCap: qualDprCap,
   qualPart: qualPart, ambN: ambN, applyQuality: applyQuality, updateFps: updateFps,
   ModeTip: ModeTip, Season: Season, QChat: QChat, NetInvite: NetInvite,
+  DeathCard: DeathCard, Spec: Spec, FirstRun: FirstRun, applyA11y: applyA11y,
   TEAMS: TEAMS, TEAMS_CB: TEAMS_CB, teamMeta: teamMeta,
   resizeView: resizeView, viewInfo: viewInfo, tileSize: tileSize, updateCamera: updateCamera,
   recalcSpdK: recalcSpdK, foeNearPlayer: foeNearPlayer,
