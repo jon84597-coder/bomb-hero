@@ -2702,11 +2702,14 @@ color: #d8e2f5; box-shadow: 0 20px 60px rgba(0,0,0,.65); overflow: hidden;
 .bhheadr { margin-left: auto; display: flex; gap: 6px; }
 .bhheadr button { width: 30px; height: 30px; border-radius: 9px; border: 1.5px solid #2f3b52; background: #18202e; color: #9db0d0; font-size: 13px; cursor: pointer; }
 .bhheadr button:hover { background: #1f2a3d; }
-.bhtabs { display: flex; gap: 3px; background: #141b27; border: 1px solid #202a3b; border-radius: 11px; padding: 3px;
+/* v5.23：後台（深色卡片）的頁籤只管 #bhModal 底下的，不要漏到遊戲面板
+   —— 之前這裡是全域 .bhtabs，手機斷點的 order:4 把成就／排名／線上玩家的頁籤
+      整排推到面板最底部（在 footer 下面、貼著螢幕邊），既看不到也拖不動。 */
+#bhModal .bhtabs { display: flex; gap: 3px; background: #141b27; border: 1px solid #202a3b; border-radius: 11px; padding: 3px;
   overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-.bhtabs::-webkit-scrollbar { display: none; }
-.bhtabs button { flex: 0 0 auto; border: 0; background: transparent; color: #8ea3c6; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
-.bhtabs button.on { background: #2b3a55; color: #eaf2ff; box-shadow: inset 0 0 0 1px #3d5273; }
+#bhModal .bhtabs::-webkit-scrollbar { display: none; }
+#bhModal .bhtabs button { flex: 0 0 auto; border: 0; background: transparent; color: #8ea3c6; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+#bhModal .bhtabs button.on { background: #2b3a55; color: #eaf2ff; box-shadow: inset 0 0 0 1px #3d5273; }
 .bhpane { display: none; flex: 1 1 auto; min-height: 0; }
 .bhpane.on { display: flex; flex-direction: column; gap: 7px; overflow: auto; }
 .bhwarn { flex: 0 0 auto; background: rgba(120,70,20,.22); border: 1.5px solid #a8763a; color: #ffd9a8; border-radius: 10px; padding: 7px 10px; margin-bottom: 8px; font-size: 11.5px; font-weight: 700; line-height: 1.5; }
@@ -2812,9 +2815,9 @@ padding: 7px 12px; font-family: inherit; font-size: 12px; font-weight: 800; curs
 .bhhead { gap: 6px; }
 .bhhead h3 { font-size: 13.5px; }
 .bhsub { display: none; }
-.bhtabs { order: 4; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.bhtabs::-webkit-scrollbar { display: none; }
-.bhtabs button { flex: 1 0 auto; padding: 7px 10px; font-size: 11.5px; }
+#bhModal .bhtabs { order: 4; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+#bhModal .bhtabs::-webkit-scrollbar { display: none; }
+#bhModal .bhtabs button { flex: 1 0 auto; padding: 7px 10px; font-size: 11.5px; }
 .bhsplit { grid-template-columns: 1fr; grid-template-rows: 1fr; }
 .bhdetail { display: none; }
 .bhsplit.show-detail .bhlist { display: none; }
@@ -3889,10 +3892,41 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .bhx:active { transform: translateY(1px); }
 .bhtabs { flex: 0 0 auto; display: flex; gap: 6px; padding: 8px 10px; overflow-x: auto; background: #fff3dc;
   border-bottom: 1px solid #f0dcc0; scrollbar-width: thin; }
+.bhtabs > button { flex: 1 1 0; padding: 7px 13px; border-radius: 999px; border: 2px solid #e6c8a0; background: #fffaf0;
+  color: #8a5b2c; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.bhtabs > button.on { background: linear-gradient(180deg, #ffd27a, #f7a94a); border-color: #d98b2c; color: #4a2400;
+  box-shadow: 0 2px 0 #b9741c; }
 .bhtab { flex: 0 0 auto; padding: 6px 11px; border-radius: 999px; border: 2px solid #e6c8a0; background: #fffaf0;
   color: #8a5b2c; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
 .bhtab.on { background: linear-gradient(180deg, #ffd27a, #f7a94a); border-color: #d98b2c; color: #4a2400;
   box-shadow: 0 2px 0 #b9741c; }
+
+/* ===================================================================
+ * v5.23：成就／排名／線上玩家的分類頁籤 → 全部攤開
+ * ---------------------------------------------------------------
+ * 原本是一條「只能左右拖」的細長頁籤列（9～10 個分類，手機只看得到 4 個），
+ * 而且整列被推到面板最底部壓在 footer 下面 → 又暗、又難點、又拖不動。
+ * 改成網格：所有分類一次列完，每格至少 40px 高（手指好按），
+ * 選中的那格用金色實心＋上緣高光，一眼看得出現在在哪一頁。
+ * ================================================================== */
+.bhtabs.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 6px; padding: 9px 10px 10px; overflow: visible; border-bottom: 2px solid #ecd0a6;
+  background: linear-gradient(180deg, #fff6e8, #ffe9c6); }
+.bhtabs.grid .bhtab { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0;
+  min-height: 40px; padding: 6px 5px; border-radius: 12px; font-size: 12px; line-height: 1.15;
+  box-shadow: 0 1px 0 rgba(180, 130, 60, .16); }
+.bhtabs.grid .bhtab .bi { font-style: normal; font-size: 13px; line-height: 1; }
+.bhtabs.grid .bhtab.on { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 2px 0 #b9741c, 0 3px 8px rgba(190, 120, 20, .26); }
+.bhtabs.grid .bhtab:active { transform: translateY(1px); }
+@media (max-width: 380px) {
+  .bhtabs.grid { gap: 5px; }
+  .bhtabs.grid .bhtab { font-size: 11px; letter-spacing: -.2px; min-height: 38px; }
+}
+/* 桌機／平板：格子放寬，一排 6～8 個，不會擠成兩三個字換行 */
+@media (min-width: 620px) {
+  .bhtabs.grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+  .bhtabs.grid .bhtab { font-size: 12.5px; min-height: 42px; }
+}
 .bhbody { flex: 1 1 auto; overflow: auto; padding: 10px 12px 16px; -webkit-overflow-scrolling: touch; }
 .bhfoot { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 9px 12px;
   flex-wrap: wrap;
@@ -4052,7 +4086,7 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 @media (max-width: 520px) {
   .bhmodal { padding: 0; }
   .bhpanel { width: 100%; height: 100%; max-height: 100%; border-radius: 0; border-left: 0; border-right: 0;
-    padding-bottom: env(safe-area-inset-bottom, 0px); }   /* 底部那排分頁不要被 iPhone 的手勢條蓋住 */
+    padding-bottom: env(safe-area-inset-bottom, 0px); }   /* v5.23：分頁已移到標題下方，這裡只留 footer 的安全區 */
   /* v5.17：滿版時標題列要自己讓開瀏海／動態島，不然「✕」會貼在螢幕最上緣 */
   .bhhead { padding-top: calc(11px + env(safe-area-inset-top, 0px)); }
   .bhx { width: 36px; height: 36px; font-size: 15px; }
@@ -4506,7 +4540,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.22</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.23</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4561,7 +4595,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.22</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.23</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4665,7 +4699,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         <b>🏆 成就</b><span class="bhsub" id="achPts">0 分</span>
         <button class="bhx" id="achX" type="button" aria-label="關閉">✕</button>
       </div>
-      <div class="bhtabs" id="achTabs"></div>
+      <div class="bhtabs grid" id="achTabs" role="tablist"></div>
       <div class="bhbody" id="achBody"></div>
       <div class="bhfoot">
         <button class="bhbtn warm" id="achClaimAll" type="button">💰 一鍵領取</button>
@@ -4681,7 +4715,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         <b>📊 排名</b><span class="bhsub" id="rkSub">各項累積排行榜</span>
         <button class="bhx" id="rankX" type="button" aria-label="關閉">✕</button>
       </div>
-      <div class="bhtabs" id="rkTabs"></div>
+      <div class="bhtabs grid" id="rkTabs" role="tablist"></div>
       <div class="bhbody" id="rkBody"></div>
       <div class="bhfoot">
         <button class="bhbtn" id="rkReload" type="button">↻ 重新整理</button>
@@ -4697,7 +4731,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         <b>👥 線上玩家</b><span class="bhsub" id="onSub">—</span>
         <button class="bhx" id="onX" type="button" aria-label="關閉">✕</button>
       </div>
-      <div class="bhtabs" id="onTabs"></div>
+      <div class="bhtabs grid" id="onTabs" role="tablist"></div>
       <div class="bhbody" id="onBody"></div>
       <div class="bhfoot">
         <button class="bhbtn" id="onRefresh" type="button">↻ 重新整理</button>
@@ -5505,7 +5539,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.22';
+const VERSION = '5.23';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -12391,13 +12425,16 @@ const Social = (function () {
         const tabs = $id('onTabs');
         if (tabs) {
           const T = [
-            { k: 'online', lab: '🟢 線上' },
-            { k: 'friend', lab: '🤝 好友' + (S.reqs.length ? ' (' + S.reqs.length + ')' : '') },
-            { k: 'block', lab: '🚫 黑名單' },
-            { k: 'me', lab: '🙂 我的資料' }
+            { k: 'online', ico: '🟢', lab: '線上' },
+            { k: 'friend', ico: '🤝', lab: '好友' + (S.reqs.length ? ' (' + S.reqs.length + ')' : '') },
+            { k: 'block', ico: '🚫', lab: '黑名單' },
+            { k: 'me', ico: '🙂', lab: '我的資料' }
           ];
           tabs.innerHTML = T.map(function (t) {
-            return '<button class="bhtab' + (S.tab === t.k ? ' on' : '') + '" data-ontab="' + t.k + '" type="button">' + t.lab + '</button>';
+            const on = S.tab === t.k;
+            return '<button class="bhtab' + (on ? ' on' : '') + '" data-ontab="' + t.k + '" type="button"' +
+              ' role="tab" aria-selected="' + (on ? 'true' : 'false') + '">' +
+              '<i class="bi">' + t.ico + '</i>' + t.lab + '</button>';
           }).join('');
         }
         const sub = $id('onSub');
@@ -12755,8 +12792,10 @@ const AchUI = (function () {
         const tabs = $id('achTabs');
         if (tabs) {
           tabs.innerHTML = Ach.CATS.map(function (c) {
-            return '<button class="bhtab' + (S.tab === c.key ? ' on' : '') + '" data-acht="' + c.key + '" type="button">' +
-              c.ico + ' ' + c.lab + '</button>';
+            const on = S.tab === c.key;
+            return '<button class="bhtab' + (on ? ' on' : '') + '" data-acht="' + c.key + '" type="button"' +
+              ' role="tab" aria-selected="' + (on ? 'true' : 'false') + '">' +
+              '<i class="bi">' + c.ico + '</i>' + c.lab + '</button>';
           }).join('');
         }
         const pts = Ach.points();
@@ -12910,8 +12949,10 @@ const RankUI = (function () {
         const tabs = $id('rkTabs');
         if (tabs) {
           tabs.innerHTML = Rank.CATS.map(function (c) {
-            return '<button class="bhtab' + (S.cat === c.k ? ' on' : '') + '" data-rkcat="' + c.k + '" type="button">' +
-              c.ico + ' ' + c.lab + '</button>';
+            const on = S.cat === c.k;
+            return '<button class="bhtab' + (on ? ' on' : '') + '" data-rkcat="' + c.k + '" type="button"' +
+              ' role="tab" aria-selected="' + (on ? 'true' : 'false') + '">' +
+              '<i class="bi">' + c.ico + '</i>' + c.lab + '</button>';
           }).join('');
         }
         const c = catOf(S.cat);
@@ -32545,7 +32586,15 @@ function drawFlameOn(g, f, T) {
 //   v4.0：版本更新紀錄（面板資料 —— 之後每發布一版，往陣列最前面加一筆）
 // ====
 const VERSION_LOG = [
-  { v: '5.22', date: '2026-11-06', now: true, items: [
+  { v: '5.23', date: '2026-11-06', now: true, items: [
+    '🧭 <b>成就、排名、線上玩家的分類列改版了</b>：以前是擠在面板最下面一條「只能左右拖」的細線，手機上只看得到 4 個分類，還要貼著螢幕邊緣拖才拖得動。現在<b>全部分類一次攤開在標題下面</b>，一格一個，手指直接點',
+    '✨ <b>現在在哪一頁一眼看得出來</b>：選中的分類是<b>金色實心＋上緣高光</b>，其他是米白底。以前選中只是稍微亮一點，在大太陽下幾乎看不出來',
+    '👆 <b>更好按</b>：每一格至少 <b>40px 高</b>（原本約 30px），按下去不會點到隔壁那格；窄螢幕（320px）會自動變成三欄，字不會被切掉',
+    '🧱 順手修掉一個<b>版面外漏</b>：遊戲作者的管理面板樣式（把分類列排到卡片最底部）以前會套到玩家的成就／排名／線上玩家面板上 —— 這就是為什麼那三條分類列會跑到最底下還被切掉。現在那份樣式只管它自己的面板',
+    '🖥️ <b>手機、平板、電腦都對齊了</b>：大螢幕一排 6～8 個，小手機三欄，任何尺寸都不需要左右滑動。雜貨商人、招式師那兩顆分頁也順便換成同一套米白金色按鈕',
+    '🧪 新增 verify-v523：檢查三個面板的分類列都是網格、每一格都落在面板可視範圍內、每格高度 ≥40px，而且管理面板的樣式不會再外漏'
+  ] },
+  { v: '5.22', date: '2026-11-06', now: false, items: [
     '🧱 <b>每一關的地板都有陰影了</b>：所有 32 關、RPG、大逃殺、對戰，只要畫面上看得到地板，就一定看得到陰影 —— 牆邊、軟磚邊是<b>接觸陰影</b>，空曠處是<b>柔和的樹影</b>，整張圖還有一道<b>左上亮、右下暗</b>的光線',
     '📦 <b>軟牆（木箱）以前像貼紙</b>：陰影只壓在旁邊那格、又薄又短，跟石牆一比就很平。現在陰影加寬到<b>約半格</b>並分兩層（柔光帶＋貼邊帶），木箱終於是「放在地上」而不是「畫在地上」',
     '🔲 <b>牆角不再漏光</b>：兩條陰影相交的轉角補了一小塊四分之一圓，以前那裡會凹出一條亮縫，遠看像牆被切成好幾塊',
