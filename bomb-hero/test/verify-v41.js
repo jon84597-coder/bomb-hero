@@ -77,7 +77,7 @@ ok(/3 條命/.test(hBasic), '基本操作：生命說明');
 
 const hItem = tabHtml('item');
 ok(cnt(hItem, /data-sp="item:/g) === ITEM_IDS.length, '道具頁 ' + ITEM_IDS.length + ' 張小圖');
-ok(/遙控器/.test(hItem) && /按 <b>E<\/b>/.test(hItem), '道具頁：遙控器＋E 鍵用法');
+ok(/遙控器/.test(hItem) && /按 <b>滑鼠右鍵<\/b>/.test(hItem), '道具頁：遙控器＋右鍵用法（v5.27：實際是按滑鼠右鍵，不是 E）');
 ok(/穿透軟磚/.test(hItem), '道具頁：穿透彈說明');
 ok(/傳給他/.test(hItem) && /hbadge bad/.test(hItem), '道具頁：骷髏詛咒標負面');
 

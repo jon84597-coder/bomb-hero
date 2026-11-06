@@ -1529,4 +1529,58 @@ codex.hintItem|撿過的道具會在這裡點亮。|捡过的道具会在这里�
 codex.hintSkill|學會的招式會在這裡點亮。|学会的招式会在这里点亮。|Skills you learn light up here.|習得したスキルが記録されます。|습득한 스킬이 기록됩니다.
 ach.seriesProg|系列進度|系列进度|Series progress|シリーズ進行|시리즈 진행
 ach.seriesFull|{done} / {total} 個系列全滿|{done} / {total} 个系列全满|{done} / {total} series complete|{done} / {total} シリーズ制覇|{done} / {total} 시리즈 완료
+tip.solo.1|出口門一定藏在軟磚底下，而且要把小怪清光才會開——先炸磚、再找門。|出口门一定藏在软砖底下，而且要把小怪清光才会开——先炸砖、再找门。|The exit door is always hidden under a soft block and only opens once every foe is gone — blast bricks first, then look for the door.|出口は必ずソフトブロックの下。敵を全滅させると開きます。まずはブロックを壊して探そう。|출구 문은 항상 부서지는 블록 아래에 있고, 적을 모두 처치해야 열립니다. 블록부터 부수고 문을 찾으세요.
+tip.solo.2|火焰是十字型：躲到格子斜角就完全不會被燒到，貼著牆跑也很安全。|火焰是十字型：躲到格子斜角就完全不会被烧到，贴着墙跑也很安全。|Flames travel in a cross — standing on the diagonal of a tile is completely safe, so hugging walls works.|炎は十字に広がります。マスの斜めに立てば焼かれません。壁沿いに逃げるのが安全。|불꽃은 십자 모양입니다. 칸의 대각선에 있으면 안전하니 벽을 따라 움직이세요.
+tip.solo.3|看不到路就縮小：滾輪或 1／2 鍵（手機兩指捏合），範圍 42%~300%。|看不到路就缩小：滚轮或 1／2 键（手机两指捏合），范围 42%~300%。|Can't see the route? Zoom out with the wheel or 1/2 keys (pinch on mobile): 42%–300%.|道が見えないときは縮小。ホイールか 1／2 キー（スマホはピンチ）、42%〜300%。|길이 안 보이면 축소하세요. 휠 또는 1/2 키(모바일은 핀치), 42%~300%.
+tip.rpg.1|RPG 模式有血條與護甲：被打不會一下倒，護甲會先吸收傷害、每秒回一點。|RPG 模式有血条与护甲：被打不会一下倒，护甲会先吸收伤害、每秒回一点。|RPG mode has HP and armor: hits won't one-shot you, armor soaks damage first and regenerates slowly.|RPG モードは HP とアーマー制。一撃では倒れず、アーマーが先にダメージを吸収して少しずつ回復します。|RPG 모드는 체력과 방어구가 있습니다. 한 방에 죽지 않고 방어구가 먼저 피해를 흡수하며 조금씩 회복됩니다.
+tip.rpg.2|升級會給技能點：右側招式列（電腦 Q／R／F／V、手機直接點）打出爆發傷害。|升级会给技能点：右侧招式列（电脑 Q／R／F／V、手机直接点）打出爆发伤害。|Levelling grants skill points — the skill bar (Q/R/F/V on PC, tap on mobile) is where your burst damage comes from.|レベルアップでスキルポイント获得。右のスキルバー（PC は Q/R/F/V、スマホはタップ）が火力の要です。|레벨업하면 스킬 포인트를 얻습니다. 오른쪽 스킬 바(PC는 Q/R/F/V, 모바일은 터치)가 주력 딜입니다.
+tip.rpg.3|每 4 關一隻章節王，第 32 關是最終魔王——王有專屬招式，看頭上的 💥／⚡ 決定要閃還是打斷。|每 4 关一只章节王，第 32 关是最终魔王——王有专属招式，看头上的 💥／⚡ 决定要闪还是打断。|A chapter boss every 4 stages; stage 32 is the final one. Watch the 💥/⚡ icon above it — dodge or interrupt.|4 ステージごとに章ボス、32 がラスボス。頭上に出る 💥／⚡ で避けるか中断するかを判断。|4스테이지마다 챕터 보스, 32스테이지가 최종 보스입니다. 머리 위 💥／⚡ 표시를 보고 회피할지 끊을지 판단하세요.
+tip.br.1|毒圈會一直縮小：圈外的傷害愈來愈高，往安全區移動永遠是第一優先。|毒圈会一直缩小：圈外的伤害愈来愈高，往安全区移动永远是第一优先。|The ring keeps closing — damage outside grows over time, so moving toward safety always comes first.|毒リングは縮み続け、外はダメージが増えます。安全地帯へ移動が最優先。|독 장판이 계속 좁혀집니다. 바깥 피해가 커지니 안전 지역 이동이 최우선입니다.
+tip.br.2|島上有亂入 BOSS：打贏噴大量資源，但別在毒圈邊緣跟牠糾纏。|岛上有乱入 BOSS：打赢喷大量资源，但别在毒圈边缘跟它纠缠。|Bosses roam the island — killing one drops a pile of loot, but never fight one at the edge of the ring.|島には乱入ボスがいます。倒せば大量の資源が出ますが、リング際での戦闘は危険。|섬에 난입 보스가 있습니다. 잡으면 자원이 쏟아지지만 장판 경계에서 싸우면 위험합니다.
+tip.br.3|組隊時隊友腳下有隊色光環、頭上頂著名字：同隊不會互相傷害，可以放心一起炸。|组队时队友脚下有队色光环、头上顶着名字：同队不会互相伤害，可以放心一起炸。|In a team your mates get a colored ring and a name tag — teammates never damage each other, so blast away.|チーム戦では味方の足元にチーム色のリングと名前が出ます。同士討ちはありません。|팀전에서는 아군 발밑에 팀 색 링과 이름이 표시됩니다. 같은 팀끼리는 피해를 주지 않습니다.
+tip.online.1|用 4 位數房號跟朋友連線：建好房把號碼貼給對方，空位會由 AI 補滿。|用 4 位数房号跟朋友连线：建好房把号码贴给对方，空位会由 AI 补满。|Share the 4-digit room code to play with friends — empty slots get filled by AI.|4 桁の部屋番号を友だちに送るだけ。空き枠は AI が埋めます。|4자리 방 번호를 친구에게 보내세요. 빈 자리는 AI가 채웁니다.
+tip.online.2|對局中可以用快捷語溝通：右下 💬 有「掩護我」「注意後面」等句子，會自動翻成對方的語言。|对局中可以用快捷语沟通：右下 💬 有「掩护我」「注意后面」等句子，会自动翻成对方的语言。|Quick chat lives at the bottom-right 💬 — phrases like “cover me” are auto-translated for the other player.|右下の 💬 から定型文を送れます。相手の言語に自動翻訳されます。|오른쪽 아래 💬로 빠른 대사를 보낼 수 있고 상대 언어로 자동 번역됩니다.
+tip.online.3|房主可以一鍵邀好友：房間裡按「邀請」，直接把房號私訊給最近一起玩的人。|房主可以一键邀好友：房间里按「邀请」，直接把房号私讯给最近一起玩的人。|The host can invite with one tap: it DMs the room code to people you played with recently.|ホストは「招待」で最近一緒に遊んだ人へ部屋番号を DM できます。|방장은 '초대'로 최근 함께 플레이한 사람에게 방 번호를 DM할 수 있습니다.
+tip.battle.1|2～8 人同機混戰：沒人坐的位子由 AI 補滿，直接按開戰就能打。|2～8 人同机混战：没人坐的位子由 AI 补满，直接按开战就能打。|Local 2–8 player brawl: empty slots are filled by AI, so just hit start.|2〜8 人のローカル乱戦。空き枠は AI が埋めるので、そのまま開始できます。|2~8인 로컬 난전. 빈 자리는 AI가 채우니 바로 시작하면 됩니다.
+tip.battle.2|開組隊就不會誤傷自己人：同隊的炸彈與火焰對隊友完全無效。|开组队就不会误伤自己人：同队的炸弹与火焰对队友完全无效。|Team mode removes friendly fire completely — teammates' bombs and flames can't hurt you.|チーム戦では同士討ちなし。味方の爆弾も炎も当たりません。|팀전에서는 아군 피해가 없습니다. 같은 팀의 폭탄과 불꽃이 통하지 않습니다.
+tip.battle.3|時間到會「突死縮圈」：站在圈外會持續扣血，倒數結束前先回安全區。|时间到会「突死缩圈」：站在圈外会持续扣血，倒数结束前先回安全区。|When time runs out the arena shrinks — standing outside drains HP, so get back in before the countdown ends.|時間切れでエリアが縮小。外にいると HP が減り続けます。|시간이 끝나면 영역이 줄어듭니다. 바깥에 있으면 체력이 계속 줄어듭니다.
+ui.qual|🎨 畫質（手機卡就調低）|🎨 画质（手机卡就调低）|🎨 Graphics quality|🎨 画質（重いときは下げる）|🎨 그래픽 품질
+ui.qualNow|目前：{lv}（解析度上限 {cap} 倍、粒子 {part}%）|目前：{lv}（分辨率上限 {cap} 倍、粒子 {part}%）|Now: {lv} (render scale {cap}×, particles {part}%)|現在：{lv}（解像度 {cap} 倍、パーティクル {part}%）|현재: {lv}(해상도 {cap}배, 파티클 {part}%)
+ui.qLv0|低|低|Low|低|낮음
+ui.qLv1|中|中|Mid|中|보통
+ui.qLv2|高|高|High|高|높음
+ui.qualTip|自動＝高解析度手機給「中」、其他給「高」。大逃殺 50 人很卡就選「低」。|自动＝高分辨率手机给「中」、其他给「高」。大逃杀 50 人很卡就选「低」。|Auto gives high-DPI phones “Mid” and everything else “High”. Pick “Low” if 50-player Royale stutters.|自動は高解像度スマホなら「中」、それ以外は「高」。50 人バトロワが重ければ「低」。|자동은 고해상도 폰에 '중', 그 외에는 '고'. 50인 로얄이 끊기면 '저'를 선택하세요.
+ui.fps|📊 顯示 FPS|📊 显示 FPS|📊 Show FPS|📊 FPS 表示|📊 FPS 표시
+ui.shake|📳 畫面震動|📳 画面震动|📳 Screen shake|📳 画面の揺れ|📳 화면 흔들림
+ui.shakeHint|關掉就不會晃（暈動症、暈車體質建議關）。傷害回饋與打擊感都還在。|关掉就不会晃（晕动症、晕车体质建议关）。伤害反馈与打击感都还在。|Turn off to stop the camera shaking (recommended for motion sickness). Hit feedback stays.|オフにすると画面が揺れません（乗り物酔いしやすい人に推奨）。手応えは残ります。|끄면 화면이 흔들리지 않습니다(멀미하는 분께 권장). 타격감은 유지됩니다.
+ui.cb|🌈 色盲友善隊色|🌈 色盲友善队色|🌈 Colorblind-friendly teams|🌈 色覚多様性チームカラー|🌈 색약 친화 팀 색상
+ui.cbHint|打開後每隊除了換成安全色，還會加上圖形（●■▲★）與不同線型，不看顏色也分得出來。|打开后每队除了换成安全色，还会加上图形（●■▲★）与不同线型，不看颜色也分得出来。|Turns on safe colors plus a shape (●■▲★) and a distinct outline style per team, so color is never the only cue.|安全な色に加えて図形（●■▲★）と線の種類で区別します。色だけに頼りません。|안전한 색과 함께 도형(●■▲★)과 선 스타일로 구분합니다. 색만으로 판별하지 않아도 됩니다.
+se.title|🎖️ 本季賽程|🎖️ 本季赛程|🎖️ Season|🎖️ シーズン|🎖️ 시즌
+se.left|第 {s} 季 · 剩 {n} 天|第 {s} 季 · 剩 {n} 天|Season {s} · {n} days left|第 {s} シーズン・残り {n} 日|시즌 {s} · {n}일 남음
+se.pts|{p} / {n} 分|{p} / {n} 分|{p} / {n} pts|{p} / {n} 点|{p} / {n}점
+se.tier|階段 {n}|阶段 {n}|Tier {n}|段階 {n}|단계 {n}
+se.gkill|擊殺敵人（全部模式）|击杀敌人（全部模式）|Kill enemies (all modes)|敵を撃破（全モード）|적 처치(모든 모드)
+se.gboss|打倒 BOSS|打倒 BOSS|Defeat bosses|ボスを撃破|보스 처치
+se.gpvp|打倒其他玩家|打倒其他玩家|Beat other players|他プレイヤーを撃破|다른 플레이어 처치
+se.gwin|拿下冠軍|拿下冠军|Win a championship|優勝する|우승하기
+qc.0|掩護我！|掩护我！|Cover me!|援護して！|엄호해 줘!
+qc.1|小心後面！|小心后面！|Watch your back!|後ろに注意！|뒤를 조심해!
+qc.2|跟我走|跟我走|Follow me|ついてきて|따라와
+qc.3|我在這！|我在这！|I'm here!|ここだよ！|여기야!
+qc.4|別炸我 😅|别炸我 😅|Don't blow me up 😅|巻き込まないで 😅|나 폭탄 놓지 마 😅
+qc.5|打得好！|打得好！|Nice one!|ナイス！|좋았어!
+qc.6|我需要道具|我需要道具|I need items|アイテムが必要|아이템이 필요해
+qc.7|準備好了|准备好了|Ready when you are|準備できた|준비 완료
+qc.tip|送出的句子會自動翻成對方的語言|送出的句子会自动翻成对方的语言|Your phrase is auto-translated for them|送った文は相手の言語に自動翻訳されます|보낸 문장은 상대 언어로 자동 번역됩니다
+net.inviteTitle|📨 邀好友|📨 邀好友|📨 Invite friends|📨 フレンド招待|📨 친구 초대
+net.inviteMsg|房號 {c} 快來！|房号 {c} 快来！|Room {c} — come join!|部屋番号 {c}、おいで！|방 번호 {c}, 어서 와!
+net.inviteSub|把房號 {c} 私訊給朋友，對方點一下就能加入。|把房号 {c} 私讯给朋友，对方点一下就能加入。|Send room {c} to a friend — they can join with one tap.|部屋番号 {c} を友だちに送ると、ワンタップで参加できます。|방 번호 {c}를 친구에게 보내면 한 번에 참가할 수 있습니다.
+net.inviteNone|現在沒有其他線上玩家|现在没有其他在线玩家|No one else is online|他にオンラインの人はいません|다른 접속자가 없습니다
+net.inviteAnon|玩家|玩家|Player|プレイヤー|플레이어
+net.inviteSend|邀請|邀请|Invite|招待|초대
+net.inviteSent|已送出|已送出|Sent|送信済み|전송됨
+net.inviteFail|失敗|失败|Failed|失敗|실패
+net.inviteLoading|讀取中…|读取中…|Loading…|読み込み中…|불러오는 중…
+net.inviteOff|拿不到線上名單（離線或伺服器沒開）|拿不到在线名单（离线或服务器没开）|Can't reach the online list (offline or server down)|オンライン名簿を取得できません|온라인 목록을 가져올 수 없습니다
+net.inviteNeed|先建立或加入房間才能邀請|先建立或加入房间才能邀请|Create or join a room first|先に部屋を作るか参加してください|먼저 방을 만들거나 참가하세요
 `;

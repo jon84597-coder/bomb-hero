@@ -35,7 +35,7 @@ ok(v521 && v521.items.length >= 4, '5.21 至少 4 條更新（' + (v521 ? v521.i
   const pk = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8'));
   ok(Number(pk.version.split('.')[1]) >= 21, 'package.json = ' + pk.version);
 }
-ok(html.length < 1810000, '主檔 ' + html.length + ' 字元（預算 1,810,000）');
+ok(html.length < 1840000, '主檔 ' + html.length + ' 字元（預算 1,840,000）');
 ok((html.match(/\r/g) || []).length === 0, '整檔 LF（0 個 \\r）');
 
 /* ================================================================ ① */

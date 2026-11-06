@@ -763,7 +763,8 @@ function handleRelayCreate(body, res) {
   const room = {
     id: code, created: Date.now(), host: pid, phase: 'wait', count: count, teams: 0,
     roster: [{ pid: pid, name: name, ch: 0, slot: 0, entry: 1, lastSeen: Date.now() }],
-    snap: null, v: 1, inputs: {}
+    snap: null, v: 1, inputs: {},
+    chat: [], chatId: 0            // v5.27：房間快捷語（只存索引，前端各自翻譯）
   };
   relayRooms.set(code, room);
   sendJSON(res, 200, Object.assign({ ok: true, code: code, pid: pid, snap: null }, relayPub(room)));
@@ -796,8 +797,12 @@ function handleRelayPoll(query, res) {
   me.lastSeen = Date.now();
 
   const since = parseInt(query.get('v') || '0', 10) || 0;
+  const sinceChat = parseInt(query.get('c') || '0', 10) || 0;
   const out = { ok: true, pid: pid };
   Object.assign(out, relayPub(room));
+  // v5.27：只回「比我手上的更新的」那幾句，避免 100ms 輪詢一直重送同一段文字
+  out.chatId = room.chatId | 0;
+  out.chat = (room.chat || []).filter(function (m) { return m.id > sinceChat; }).slice(-8);
   if (pid === room.host) {
     out.snap = null;
     out.rosterAll = true;
@@ -845,6 +850,13 @@ function handleRelayInput(body, res) {
   const p = room.roster.find(function (x) { return x.pid === body.pid; });
   if (!p) return sendJSON(res, 404, { ok: false, err: 'not in room' });
   p.lastSeen = Date.now();
+  // v5.27：快捷語（0~11 索引；不開放自由輸入 → 不會有髒話與長度問題）
+  if (typeof body.chat === 'number' && body.chat >= 0 && body.chat < 12) {
+    if (!room.chat) { room.chat = []; room.chatId = 0; }
+    room.chatId = (room.chatId | 0) + 1;
+    room.chat.push({ id: room.chatId, pid: p.pid, n: p.name, m: '#' + (body.chat | 0), t: Date.now() });
+    if (room.chat.length > 20) room.chat.splice(0, room.chat.length - 20);
+  }
   if (!room.inputs[p.pid]) room.inputs[p.pid] = [];
   const q = room.inputs[p.pid];
   q.push({ pid: p.pid, seq: body.seq | 0, dx: body.dx | 0, dy: body.dy | 0, act: body.act ? 1 : 0, t: Date.now() });
