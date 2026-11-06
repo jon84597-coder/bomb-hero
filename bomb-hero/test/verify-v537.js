@@ -237,6 +237,33 @@ ok(/api\/lan/.test(fs.readFileSync(path.join(__dirname, '..', '..', 'server.js')
 ok(/if \(P2P && P2P\.on\) \{ P2P\.api\(path, body, cb\); return; \}/.test(src),
   'Net.api 被直連攔截（整組 relay 邏輯沿用）');
 
+/* ---------- ⑨ 三個效能分級都真的畫得出來 ---------- */
+head('⑨ 低／中／高效能各自渲染一次不報錯');
+(function () {
+  const cases = [
+    { z: 0.5, lv: 0, name: '最低（42%~100%）' },
+    { z: 1.5, lv: 1, name: '適中（100%~180%）' },
+    { z: 2.6, lv: 2, name: '高效能（180%~300%）' }
+  ];
+  ['battle', 'br', 'boss'].forEach(function (mode) {
+    cases.forEach(function (c) {
+      const e2 = makeEnv(); const P2 = e2.BH, G2 = e2.G;
+      e2.getId('body').classList.add('touch');
+      const cv = e2.getId('cv'); cv.clientWidth = 390; cv.clientHeight = 775;
+      P2.settings.ctrl = 'touch';
+      P2.settings.qual = 'auto';
+      if (mode === 'battle') P2.startBattle(2);
+      else if (mode === 'br') { P2.BR.opt.map = 1; P2.startBR(); G2.state = 'play'; }
+      else P2.startSolo(5, false);
+      G2.zoom = c.z; G2.zoomTarget = c.z;
+      P2.rqUpdate();
+      let drew = false, err = '';
+      try { P2.render(); drew = true; } catch (e) { err = e.message; }
+      ok(drew && P2.rqLv() === c.lv, mode + ' × ' + c.name + ' 畫得出來（lv ' + P2.rqLv() + '）' + (err ? ' → ' + err : ''));
+    });
+  });
+})();
+
 /* ---------- ⑧ 版本 ---------- */
 head('⑧ 版本戳記');
 const rawMain = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
