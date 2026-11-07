@@ -132,7 +132,10 @@ ok(fs.readFileSync(ROOT + '/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >=
 ok(fs.readFileSync(ROOT + '/../public/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >= 0, 'public/sw.js 跟著升版');
 ok(fs.readFileSync(ROOT + '/../bomberman-online/public/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >= 0, 'bomberman-online/public/sw.js 跟著升版');
 // v5.20 起 src = 字典（外部檔）＋主檔，這裡量的是「整頁」；主檔自己的預算線在 verify-v479
-ok(src.length < 2150000, '字元 ' + src.length + ' < 2.15M');   // v5.37：字典多了區網／對戰設定條目
+// v5.38：這一條只是「整頁不要失控」的粗略上限，真正卡住的是主檔 1,950,000 字元（verify-v479）。
+//   每加一批功能，字典（i18n-src.js）都會跟著長 10~20 KB，所以這條線放寬到 2.20M；
+//   要看的是「主檔有沒有爆」，不是這條。
+ok(src.length < 2200000, '字元 ' + src.length + ' < 2.20M');
 ok(src.indexOf('\r') === -1, '整檔 LF（CR 0）');
 
 console.log('\n========================================');

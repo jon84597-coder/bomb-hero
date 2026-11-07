@@ -284,6 +284,31 @@ ol.start|開始遊戲|开始游戏|Start Game|ゲーム開始|게임 시작
 ol.leave|離開房間|离开房间|Leave Room|部屋を出る|방 나가기
 ol.netStart|🌐 線上對戰開始（{h} 位玩家 + {a} 位 AI）|🌐 在线对战开始（{h} 位玩家 + {a} 位 AI）|🌐 Online match started ({h} players + {a} AI)|🌐 オンライン対戦開始（プレイヤー {h} 人 + AI {a} 人）|🌐 온라인 대전 시작 (플레이어 {h}명 + AI {a}명)
 ol.watching|👁 觀戰中（本局你沒有入場）|👁 观战中（本局你没有入场）|👁 Spectating (you are not in this match)|👁 観戦中（この試合には不参加）|👁 관전 중 (이번 판 미참가)
+buff.title|過關強化|过关强化|Level-up pick|クリア強化|클리어 강화
+buff.sub|選一張帶進下一關，同一個強化可以一直疊|选一张带进下一关，同一个强化可以一直叠|Pick one for the next stage — the same card stacks|1枚選んで次の面へ（同じカードは重ね掛け可）|한 장 골라 다음 스테이지로 (같은 카드는 중첩 가능)
+buff.skip|這次先跳過|这次先跳过|Skip this time|今回はパス|이번엔 건너뛰기
+buff.bomb|炸彈 +1|炸弹 +1|Bomb +1|爆弾 +1|폭탄 +1
+buffd.bomb|一次可以多放一顆|一次可以多放一颗|Place one more bomb at a time|同時に1個多く置ける|한 번에 하나 더 설치
+buff.fire|火力 +1|火力 +1|Blast +1|火力 +1|화력 +1
+buffd.fire|火焰多燒一格|火焰多烧一格|Flames reach one tile further|炎が1マス伸びる|불꽃이 한 칸 더
+buff.spd|移速 +12%|移速 +12%|Speed +12%|移動 +12%|이동 +12%
+buffd.spd|跑得更快，閃火線更輕鬆|跑得更快，闪火线更轻松|Move faster, dodge flames easier|足が速くなり火線を避けやすい|빨라져서 불길 피하기 쉬움
+buff.remote|遙控引爆|遥控引爆|Remote detonate|リモート起爆|원격 기폭
+buffd.remote|隨時引爆，順便多一顆彈量|随时引爆，顺便多一颗弹量|Detonate anytime (+1 bomb)|いつでも起爆（爆弾 +1）|언제든 기폭 (폭탄 +1)
+buff.kick|踢彈|踢弹|Kick|キック|발차기
+buffd.kick|把炸彈踢出去|把炸弹踢出去|Kick bombs across the floor|爆弾を蹴り飛ばす|폭탄을 차서 보내기
+buff.glove|手套|手套|Glove|グローブ|글러브
+buffd.glove|撿起炸彈再丟出去|捡起炸弹再丢出去|Pick up a bomb and throw it|爆弾を持ち上げて投げる|폭탄을 들어 던지기
+buff.pierce|貫穿火焰|贯穿火焰|Piercing flame|貫通炎|관통 화염
+buffd.pierce|火焰穿過軟磚繼續燒|火焰穿过软砖继续烧|Flames burn through soft blocks|炎がソフトブロックを抜ける|불꽃이 부드러운 벽을 통과
+buff.hp|生命 +1|生命 +1|Life +1|ライフ +1|생명 +1
+buffd.hp|多一格血，容錯多一次|多一格血，容错多一次|One more hit point|HPが1増える|체력 1 증가
+buff.score|得分 +25%|得分 +25%|Score +25%|スコア +25%|점수 +25%
+buffd.score|過關分數加成|过关分数加成|Bonus score on clear|クリア時のスコア増|클리어 점수 증가
+buff.fuse|引信縮短|引信缩短|Shorter fuse|信管短縮|도화선 단축
+buffd.fuse|炸彈更快爆（-12%）|炸弹更快爆（-12%）|Bombs blow up sooner (-12%)|爆発が早くなる（-12%）|폭발이 빨라짐 (-12%)
+br.dropIn|📦 空投已投放 —— 快去搶（小地圖有金框）|📦 空投已投放 —— 快去抢（小地图有金框）|📦 Airdrop incoming — go grab it (gold marker on the minimap)|📦 エアドロップ投下 —— 取りに行こう（ミニマップに金枠）|📦 공수 투하 —— 가지러 가세요 (미니맵 금색 표시)
+br.dropOpen|📦 空投箱打開了|📦 空投箱打开了|📦 Airdrop opened|📦 エアドロップを開けた|📦 공수 상자 개봉
 ol.renderNote|💡 小提醒：伺服器放在免費託管平台 Render，所以連線品質不會比較順暢　目前當作測試內容而已|💡 小提醒：服务器放在免费托管平台 Render，所以连线品质不会比较顺畅　目前当作测试内容而已|💡 Heads-up: the server runs on Render's free tier, so the connection will not be smoother — treat this as a test build for now.|💡 ご注意：サーバーは無料ホスティングの Render なので通信品質は良くなりません。現状はテスト用です。|💡 참고: 서버가 무료 호스팅 Render라서 연결 품질이 더 좋아지지는 않습니다. 현재는 테스트용입니다.
 lan.title|📶 區網連線（同一個 WiFi 就能玩，不經外網）|📶 局域网连线（同一个 WiFi 就能玩，不经外网）|📶 LAN play (same Wi-Fi, no internet)|📶 LAN 対戦（同じ Wi-Fi なら外に出ません）|📶 LAN 대전 (같은 WiFi면 외부망 불필요)
 lan.checking|檢查中…|检查中…|Checking…|確認中…|확인 중…
@@ -669,6 +694,8 @@ stage.bossName|決戰場|决战场|Boss Arena|決戦場|결전장
 boss.gateOpen|👑 BOSS 倒下！上方大門開啟|👑 BOSS 倒下！上方大门开启|👑 Boss down! The gate is open|👑 ボス撃破！上の大門が開いた|👑 보스 격파! 위쪽 대문이 열렸다
 boss.minions|👾 BOSS 召喚了兩隻護衛|👾 BOSS 召唤了两只护卫|👾 The boss summoned two guards|👾 ボスが護衛を2体呼んだ|👾 보스가 호위 2마리를 불렀다
 boss.clear|🏆 章節 BOSS 擊破！|🏆 章节 BOSS 击破！|🏆 Chapter boss defeated!|🏆 チャプターBOSS撃破！|🏆 챕터 BOSS 격파!
+boss.breakStart|💥 護盾破裂！5.5 秒內傷害加倍|💥 护盾破裂！5.5 秒内伤害加倍|💥 Shield broken! Double damage for 5.5s|💥 シールド破壊！5.5 秒間ダメージ2倍|💥 실드 파괴! 5.5초간 데미지 2배
+boss.shieldBack|🛡 護盾修復（{n} 片）· 王進入狂暴|🛡 护盾修复（{n} 片）· 王进入狂暴|🛡 Shield restored ({n} plates) · Boss enraged|🛡 シールド復活（{n} 枚）· ボスが狂暴化|🛡 실드 복구({n}장) · 보스 격노
 boss.1|咩霸 · 牧草巨獸|咩霸 · 牧草巨兽|MEEDA · Grass Titan|メエバ · 牧草の巨獣|메에바 · 목초의 거수
 boss.2|妮芙 · 沙蟲女王|妮芙 · 沙虫女王|NIF · Sandworm Queen|ニフ · 砂虫の女王|니프 · 모래벌레 여왕
 boss.3|咕嘰 · 冰霜雪人|咕叽 · 冰霜雪人|GUJI · Frost Yeti|グジ · 霜の雪男|구지 · 서리 설인
@@ -1589,10 +1616,30 @@ ui.nukeShake|☢️ 核彈震動|☢️ 核弹震动|☢️ Nuke shake|☢️ �
 ui.nukeShakeHint|核彈落地的震動是獨立的：畫面震動關掉時，只有核彈還會震。不想被震就把這裡也關掉。|核弹落地的震动是独立的：画面震动关掉时，只有核弹还会震。不想被震就把这里也关掉。|Nuke impact shake is separate: with screen shake off, only nukes still shake. Turn this off too if you want none.|核の着弾の揺れは独立しています。画面の揺れをオフにしても核だけは揺れます。不要ならここもオフに。|핵 폭발 흔들림은 별도입니다. 화면 흔들림을 꺼도 핵만은 흔들립니다. 원치 않으면 이것도 끄세요.
 ui.cb|🌈 色盲友善隊色|🌈 色盲友善队色|🌈 Colorblind-friendly teams|🌈 色覚多様性チームカラー|🌈 색약 친화 팀 색상
 ui.cbHint|打開後每隊除了換成安全色，還會加上圖形（●■▲★）與不同線型，不看顏色也分得出來。|打开后每队除了换成安全色，还会加上图形（●■▲★）与不同线型，不看颜色也分得出来。|Turns on safe colors plus a shape (●■▲★) and a distinct outline style per team, so color is never the only cue.|安全な色に加えて図形（●■▲★）と線の種類で区別します。色だけに頼りません。|안전한 색과 함께 도형(●■▲★)과 선 스타일로 구분합니다. 색만으로 판별하지 않아도 됩니다.
+week.title|🌀 本週變異|🌀 本周变异|🌀 Weekly Mutation|🌀 今週の変異|🌀 이번 주 변이
+near.time|就差 {n} 秒！|就差 {n} 秒！|Just {n}s short!|あと {n} 秒！|{n}초 차이!
+near.boss|王只剩 {n} 格血（{p}%）|王只剩 {n} 格血（{p}%）|The boss was down to {n} HP ({p}%)|ボスは残り {n}（{p}%）|보스 HP {n} 남음({p}%)
+near.foe|場上只剩 {n} 隻|场上只剩 {n} 只|Only {n} enemies left|残り {n} 体|적 {n}마리 남음
+near.bossAlive|只剩王和小兵 {n} 隻|只剩王和小兵 {n} 只|Only the boss and {n} minions left|ボスと雑魚 {n} 体だけ|보스와 잡몹 {n}마리만
+week.tag|剩 {d} 天換週|剩 {d} 天换周|{d} days left|残り {d} 日|{d}일 남음
+week.on|本週變異：{m}|本周变异：{m}|This week's mutation: {m}|今週の変異：{m}|이번 주 변이: {m}
+week.none|本週沒有變異，正常規則|本周没有变异，正常规则|No mutation this week|今週は変異なし|이번 주는 변이 없음
+week.m.rush|躁動|躁动|Restless|躁動|조급함
+week.d.rush|小怪移動 +20%，但開局道具少一點|小怪移动 +20%，但开局道具少一点|Enemies move +20%, slightly fewer starting items|敵の移動 +20%、開始アイテムは少なめ|적 이동 +20%, 시작 아이템은 조금 적음
+week.m.loot|尋寶|寻宝|Treasure Hunt|宝探し|보물찾기
+week.d.loot|開局道具 +70%，小怪稍微慢一點|开局道具 +70%，小怪稍微慢一点|+70% starting items, enemies a bit slower|開始アイテム +70%、敵はやや鈍い|시작 아이템 +70%, 적은 조금 느림
+week.m.tough|硬骨|硬骨|Hard Shell|硬骨|단단함
+week.d.tough|小怪多一格血，補償道具 +25%|小怪多一格血，补偿道具 +25%|Enemies gain 1 HP, +25% items as compensation|敵のHP +1、補償でアイテム +25%|적 HP +1, 보상으로 아이템 +25%
+week.m.swarm|蟲潮|虫潮|Swarm|虫の大群|곤충떼
+week.d.swarm|小怪多 3 隻，但比較慢|小怪多 3 只，但比较慢|3 extra enemies, but slower|敵が3体多く、その分遅い|적 3마리 추가, 대신 느림
+week.m.tiny|輕裝|轻装|Light Armor|軽装|경장
+week.d.tiny|小怪快 8%，道具 +30%|小怪快 8%，道具 +30%|Enemies 8% faster, +30% items|敵が8%速く、アイテム +30%|적 8% 빠름, 아이템 +30%
+week.m.calm|平靜|平静|Calm|平静|평온
+week.d.calm|小怪慢 15%、少 2 隻|小怪慢 15%、少 2 只|Enemies 15% slower, 2 fewer|敵が15%遅く、2体少ない|적 15% 느리고 2마리 적음
 se.title|🎖️ 本季賽程|🎖️ 本季赛程|🎖️ Season|🎖️ シーズン|🎖️ 시즌
 se.left|第 {s} 季 · 剩 {n} 天|第 {s} 季 · 剩 {n} 天|Season {s} · {n} days left|第 {s} シーズン・残り {n} 日|시즌 {s} · {n}일 남음
 se.pts|{p} / {n} 分|{p} / {n} 分|{p} / {n} pts|{p} / {n} 点|{p} / {n}점
-se.tier|階段 {n}|阶段 {n}|Tier {n}|段階 {n}|단계 {n}
+se.tier|Lv.{n}|Lv.{n}|Lv.{n}|Lv.{n}|Lv.{n}
 se.gkill|擊殺敵人（全部模式）|击杀敌人（全部模式）|Kill enemies (all modes)|敵を撃破（全モード）|적 처치(모든 모드)
 se.gboss|打倒 BOSS|打倒 BOSS|Defeat bosses|ボスを撃破|보스 처치
 se.gpvp|打倒其他玩家|打倒其他玩家|Beat other players|他プレイヤーを撃破|다른 플레이어 처치

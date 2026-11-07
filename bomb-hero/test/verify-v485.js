@@ -104,9 +104,10 @@ ok(vnum(V) >= vnum('4.85'), 'VERSION = ' + V);
   const sv = (/SW_VERSION = '(v[^']+)'/.exec(fs.readFileSync(path.join(ROOT, rel), 'utf8')) || [])[1] || '';
   ok(vnum(sv) >= vnum(V), rel + ' 跟著升版（' + sv + '）');
 });
-const first = (src.match(/const VERSION_LOG = \[\s*\{ v: '([0-9.]+)'/) || [])[1];
+// v5.38：紀錄搬到 js/version-log.js，宣告改成 window.__VERSION_LOG = [
+const first = (src.match(/(?:const VERSION_LOG|window\.__VERSION_LOG) = \[\s*\{ v: '([0-9.]+)'/) || [])[1];
 ok(first === V, 'VERSION_LOG 首位＝當前版本');
-const block = (src.match(/const VERSION_LOG = \[\s*\{[\s\S]*?\n  \{ v: '4\.84'/) || [''])[0];
+const block = (src.match(/(?:const VERSION_LOG|window\.__VERSION_LOG) = \[\s*\{[\s\S]*?\n  \{ v: '4\.84'/) || [''])[0];
 ok((block.match(/^    '/gm) || []).length >= 3, '本版至少 3 條更新（實際 ' + (block.match(/^    '/gm) || []).length + '）');
 const chars = src.length, bytes = Buffer.byteLength(src, 'utf8');
 ok(chars < 3900000, '字元 ' + chars.toLocaleString() + ' < 3.9M');

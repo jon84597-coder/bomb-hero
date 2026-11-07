@@ -4,7 +4,7 @@
 //   ③ 純函式：不存粒子、不 push、不 random（逐幀重算）
 //   ④ 實跑：八個主題都畫得出東西，而且八組的指令簽名兩兩不同
 //   ⑤ 接線順序：慢的大氣疊在快粒子之後、教學卡之前
-const { makeEnv, html } = require('./_sandbox');
+const { makeEnv, html, vlog } = require('./_sandbox');
 
 const env = makeEnv();
 const P = env.BH, G = P.Game, rec = env.rec;
@@ -194,7 +194,8 @@ head('8. 版本');
   const m = /const VERSION = '(\d+)\.(\d+)'/.exec(src);
   ok(!!m, 'VERSION 格式');
   ok(!!m && (+m[1] > 5 || (+m[1] === 5 && +m[2] >= 26)), 'VERSION ≥ 5.26（' + (m ? m[1] + '.' + m[2] : '?') + '）');
-  const log0 = /VERSION_LOG = \[\s*\{\s*v: '([\d.]+)'/.exec(src);
+  // v5.38：紀錄搬到 js/version-log.js
+  const log0 = /VERSION_LOG = \[\s*\{\s*v: '([\d.]+)'/.exec(vlog);
   ok(!!log0 && log0[1] === (m ? m[1] + '.' + m[2] : ''), '版本記錄第一筆＝目前版本');
 }
 

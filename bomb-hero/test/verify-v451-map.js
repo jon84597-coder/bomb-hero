@@ -6,6 +6,7 @@ const fs = require('fs');
 const { makeEnv, html } = require('./_sandbox');
 
 const env = makeEnv();
+try { env.BH.WeekMod.pin([]); } catch (e) {}   // v5.38：本支驗原始怪量，不吃每週變異
 const P = env.BH, G = P.Game;
 
 let pass = 0, fail = 0;

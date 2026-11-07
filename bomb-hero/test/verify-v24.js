@@ -12,6 +12,7 @@ const fs = require('fs');
 const { makeEnv, html } = require('./_sandbox');
 
 const env = makeEnv();
+try { env.BH.WeekMod.pin([]); } catch (e) {}   // v5.38：本支驗原始怪量／怪種，不吃每週變異
 const BH = env.BH, G = BH.Game, P = BH, rec = env.rec;
 const els = env.els;
 
@@ -170,13 +171,15 @@ function typesOfStage(stage) {
   G.enemies.forEach(e => { if (!e.boss) set.add(e.spec || e.type); });
   return set;
 }
-const t1 = typesOfStage(1), t4 = typesOfStage(4), t7 = typesOfStage(7);
+// v5.38：40 關制 5 關一章 → 「章內第 3 小關（全 6 種）」是第 8 關，不是第 7 關
+const t1 = typesOfStage(1), t4 = typesOfStage(4), t7 = typesOfStage(7), t8 = typesOfStage(8);
 ok(t1.size >= 2, '第 1 關就有 2 種以上小怪（' + t1.size + '）');
 // v4.36：第 4 關改成「章節魔王關」，小怪只留 6 成 → 種類數不能拿來跟前幾關比
 ok(t7.size > t1.size, '第 7 關種類比第 1 關多（' + t7.size + ' > ' + t1.size + '）');
 ok(t4.size >= 2, '第 4 關（章節魔王關）仍有小怪陪打（' + t4.size + ' 種）');
 // v4.27：每關只會出現「所屬大關」那 6 隻 → 後段關卡最多就是 6 種
-ok(t7.size >= 6, '第 7 關種類最多（' + t7.size + ' 種）');
+ok(t8.size >= 6, '第 8 關種類最多（' + t8.size + ' 種）');
+ok(t7.size === 5, '第 7 關是章內第 2 小關 → 5 種（' + t7.size + ' 種）');
 const rosterBad = [];
 for (let st = 1; st <= 32; st++) {
   const roster = P.stageRoster(st) || [];
@@ -678,7 +681,10 @@ ok(/name="viewport"/.test(html), '有 viewport meta（手機不會縮成一小�
 // v5.20：i18n 字典（162KB 純資料）抽成 js/i18n-src.js。外部 js 只准這一個，
 //   而且主檔一定要有 `|| ''` 的退路 —— 檔案 404 時只是沒有翻譯，不會白畫面。
 const extJs = html.match(/<script[^>]+src="([^"]+)"/g) || [];
-ok(extJs.length === 1 && extJs[0].indexOf('js/i18n-src.js') > 0, '唯一外部 js 是 i18n 字典（' + extJs.join(',') + '）');
+// v5.38：版本更新紀錄也搬到 js/version-log.js（純字串資料，不是程式邏輯）
+ok(extJs.length === 2 && extJs.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
+  extJs.some(function (x) { return x.indexOf('js/version-log.js') > 0; }),
+  '外部 js 只有字典與版本紀錄兩個（' + extJs.join(',') + '）');
 ok(/window\.__I18N_SRC\s*\)\s*\?\s*window\.__I18N_SRC\s*:\s*''/.test(html), '字典載入失敗有退路（不會白畫面）');
 ok((html.match(/<script(?![^>]*src=)/g) || []).length === 2, '2 個 inline script 區塊（主程式＋PWA）');
 ok(!/<link[^>]+href="http/.test(html), '沒有外部 css（不會等不到樣式）');

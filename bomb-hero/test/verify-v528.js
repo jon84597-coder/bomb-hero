@@ -8,7 +8,7 @@
 //   ⑦ i18n：新文案五語齊全、沒有空欄位；版本 5.28
 const fs = require('fs');
 const path = require('path');
-const { makeEnv, html } = require('./_sandbox');
+const { makeEnv, html, vlog } = require('./_sandbox');
 
 const env = makeEnv();
 const P = env.BH, G = P.Game;
@@ -145,10 +145,11 @@ head('7. i18n 與版本');
   const vv = P.VERSION.split('.').map(Number);
   ok(vv[0] > 5 || (vv[0] === 5 && vv[1] >= 28), 'VERSION ≥ 5.28（目前 ' + P.VERSION + '）');
   ok(/id="verTxt">5\.(2[8-9]|[3-9]\d)</.test(src), '首頁徽章同步 ≥ 5.28');
-  const logHead = src.slice(src.indexOf('const VERSION_LOG = ['), src.indexOf('const VERSION_LOG = [') + 120);
+  // v5.38：紀錄搬到 js/version-log.js
+  const logHead = vlog.slice(vlog.indexOf('window.__VERSION_LOG = ['), vlog.indexOf('window.__VERSION_LOG = [') + 120);
   ok(/now: true/.test(logHead), 'VERSION_LOG 第一筆 now:true');
-  ok(/\{ v: '5\.27'[^\n]*now: false/.test(src), '5.27 已標 now:false');
-  const entry = (src.match(/\{ v: '5\.28'[\s\S]*?\n  \] \},/) || [''])[0];
+  ok(/\{ v: '5\.27'[^\n]*now: false/.test(vlog), '5.27 已標 now:false');
+  const entry = (vlog.match(/\{ v: '5\.28'[\s\S]*?\n  \] \},/) || [''])[0];
   ok((entry.match(/'\s{0,2}[⚡💀👁🎓🔠🛡🌏]/g) || []).length >= 4, 'VERSION_LOG 5.28 至少 4 條');
   ['bomb-hero/sw.js', 'public/sw.js', 'bomberman-online/public/sw.js'].forEach(function (rel) {
     const f = path.join(root, rel);

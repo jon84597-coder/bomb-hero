@@ -16,7 +16,9 @@ function ok(c, m, extra) {
 }
 function head(s) { console.log('\n' + s); }
 
-const src = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+// v5.38：版本紀錄搬到 js/version-log.js → 掃文案時一起讀進來
+const src = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8') + '\n' +
+  (function () { try { return fs.readFileSync(path.join(ROOT, 'js', 'version-log.js'), 'utf8'); } catch (e) { return ''; } })();
 
 // 取一條選擇器開頭的大括號區塊（配平）
 function rule(selStart, hay) {
@@ -127,9 +129,9 @@ function vlt2(a, b) {
 ok(/^\d+(\.\d+)*$/.test(V || '') && !vlt2(V, '5.6'), 'VERSION = ' + V + '（純數字且不低於 5.6）');
 ok(src.indexOf('<span id="verTxt">' + V + '</span>') > 0, '首頁版本文字同步 ' + V);
 ok(src.indexOf('<span id="verLogVer">' + V + '</span>') > 0, '版本面板標題同步 ' + V);
-const vl = (src.match(/VERSION_LOG = \[\s*\{ v: '([\d.]+)'/) || [])[1];
+const vl = (src.match(/(?:const VERSION_LOG|window\.__VERSION_LOG) = \[\s*\{ v: '([\d.]+)'/) || [])[1];
 ok(vl === V, 'VERSION_LOG 第一筆 = ' + vl);
-const itemN = (src.match(/VERSION_LOG = \[[\s\S]{0,4000}?items: \[([\s\S]*?)\] \}/) || [])[1] || '';
+const itemN = (src.match(/(?:const VERSION_LOG|window\.__VERSION_LOG) = \[[\s\S]{0,4000}?items: \[([\s\S]*?)\] \}/) || [])[1] || '';
 ok((itemN.match(/'/g) || []).length >= 8, '本版至少 4 條更新（' + Math.floor((itemN.match(/'/g) || []).length / 2) + ' 條）');
 ['bomb-hero/sw.js', 'public/sw.js', 'bomberman-online/public/sw.js'].forEach(function (f) {
   const t = fs.readFileSync(path.join(ROOT, '..', f), 'utf8');
@@ -137,7 +139,8 @@ ok((itemN.match(/'/g) || []).length >= 8, '本版至少 4 條更新（' + Math.f
 });
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, '..', 'package.json'), 'utf8'));
 ok(pkg.version === V + '.0', 'package.json = ' + pkg.version);
-ok(fs.readFileSync(path.join(ROOT, '..', 'public', 'index.html'), 'utf8') === src, 'public/index.html 與主檔一致');
+ok(fs.readFileSync(path.join(ROOT, '..', 'public', 'index.html'), 'utf8') ===
+  fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'), 'public/index.html 與主檔一致');
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v5.6：' + pass + ' 通過 / ' + fail + ' 失敗');
 process.exit(fail === 0 ? 0 : 1);

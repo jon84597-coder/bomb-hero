@@ -1,0 +1,11 @@
+const { makeEnv } = require('./_sandbox.js');
+const env = makeEnv(); const P = env.BH, G = env.G;
+P.BR.opt.map = 1; P.startBR(); G.state = 'play';
+for (let i = 0; i < 40 * 30; i++) P.updateBR(1 / 30);
+const d = G.brDrops[0];
+console.log('箱子', d && (d.x + ',' + d.y), '狀態', d && d.st);
+const bI = G.items.length, bE = (G.eggs || []).length;
+const me = G.players[0];
+me.x = (d.x + .5) * G.T; me.y = (d.y + .5) * G.T;
+P.updateBR(1 / 30);
+console.log('開箱後剩', G.brDrops.length, '新增道具', G.items.length - bI, '新增蛋', (G.eggs || []).length - bE);

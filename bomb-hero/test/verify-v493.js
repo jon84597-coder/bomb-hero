@@ -11,7 +11,9 @@ function ok(cond, msg, extra) {
   else { fail++; console.log('  ✗ FAIL: ' + msg + (extra === undefined ? '' : ' → ' + JSON.stringify(extra))); }
 }
 const root = path.join(__dirname, '..');
-const SRC = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+// v5.38：版本紀錄搬到 js/version-log.js
+const SRC = fs.readFileSync(path.join(root, 'index.html'), 'utf8') + '\n' +
+  (function () { try { return fs.readFileSync(path.join(root, 'js', 'version-log.js'), 'utf8'); } catch (e) { return ''; } })();
 
 /* ================= ① 原始碼健康度 ================= */
 console.log('=== ① 原始碼健康度 ===');
@@ -75,7 +77,8 @@ ok(pkg.version === VERSION + '.0', 'package.json = VERSION.0', pkg.version);
 
 // 遊戲內版本紀錄不得出現後台／開發者字樣
 const log = (function () {
-  const i = SRC.indexOf('const VERSION_LOG = [');
+  let i = SRC.indexOf('const VERSION_LOG = [');
+  if (i < 0) i = SRC.indexOf('window.__VERSION_LOG = [');
   const j = SRC.indexOf('];', i);
   return SRC.slice(i, j);
 })();
@@ -86,7 +89,9 @@ ok(log.indexOf('開發者') < 0, 'VERSION_LOG 不含「開發者」');
 /* ================= ⑥ 三份副本一致 ================= */
 console.log('=== ⑥ 副本同步 ===');
 const pub = path.join(__dirname, '..', '..', 'public', 'index.html');
-if (fs.existsSync(pub)) ok(fs.readFileSync(pub, 'utf8') === SRC, 'public/index.html 與主檔一致');
+// v5.38：SRC 額外拼了 version-log.js → 一致性要比對「真的主檔」
+if (fs.existsSync(pub)) ok(fs.readFileSync(pub, 'utf8') ===
+  fs.readFileSync(path.join(root, 'index.html'), 'utf8'), 'public/index.html 與主檔一致');
 
 console.log('\n--- v4.93+: ' + pass + ' 通過, ' + fail + ' 失敗 ---');
 process.exit(fail ? 1 : 0);

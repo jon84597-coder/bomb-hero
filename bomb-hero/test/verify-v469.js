@@ -12,6 +12,7 @@ const path = require('path');
 const src = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 const srv = fs.readFileSync(path.join(__dirname, '../../server.js'), 'utf8');
 const env = makeEnv();
+try { env.BH.WeekMod.pin([]); } catch (e) {}   // v5.38：本支驗 T 層怪量，不吃每週變異
 try { env.BH.setDevBuild(false); } catch (e) {}   // v4.75：主檔預設開發者，這裡要模擬一般玩家
 const P = env.BH, G = P.Game;
 const S = [], F = [];
@@ -29,7 +30,8 @@ const TIERS = [
   { n: 4, cols: 26, rows: 23, foes: 16 },
   { n: 5, cols: 28, rows: 25, foes: 20 }
 ];
-function wantTier(st) { return st <= 16 ? (st - 1) % 4 : ((st - 17) % 4) + 1; }
+// v5.38：T 層改成「一章一層」—— 40 關制下舊的 %4 會算出 5 掉回最小圖
+function wantTier(st) { return Math.min(4, Math.ceil(st / 5) - 1); }
 function openCells() {
   let n = 0;
   for (let y = 1; y < G.rows - 1; y++) for (let x = 1; x < G.cols - 1; x++) if (G.grid[y][x] === 0) n++;
@@ -51,9 +53,11 @@ function ringStats(sp, r) {
 head('1. 源碼檢查');
 {
   ok(vm && parseFloat(vm[1]) >= 4.69, 'VERSION >= 4.69（目前 ' + (vm && vm[1]) + '）');
-  ok(/function stageTileIdx\(stage\)/.test(src), '有 stageTileIdx（32 關 → T1~T5）');
-  ok(/if \(st <= 16\) return \(st - 1\) % 4;/.test(src), '1~16 關每 4 關循環 T1~T4');
-  ok(/return \(\(st - 17\) % 4\) \+ 1;/.test(src), '17 關之後整段加一階（T2~T5）');
+  ok(/function stageTileIdx\(stage\)/.test(src), '有 stageTileIdx（章節 → T1~T5）');
+  // v5.38：40 關制是 5 關一章 → 改成「一章一層」。舊的 %4 在 40 關下會算出 5，
+  //   MAPTEST[5] 不存在 → 第 21/25/29/33/37 關掉回最小的「窄洞 18×16」。
+  ok(/return Math\.min\(MAPTEST\.length - 1, chapterOf\(stage\) - 1\);/.test(src), '一章一層（不會再越界掉回窄洞）');
+  ok(!/\(st - 17\) % 4/.test(src), '舊的 32 關循環寫法已經不在');
   ok(/function mapLayerFor\(stage\)/.test(src), '有 mapLayerFor（classic 回 null）');
   ok(/if \(Game\.bossRush\) return null;[\s\S]{0,140}?if \(!Game\.daily && !mapModeRandom\(\)\) return null;/.test(src), 'BOSS 挑戰一律走原本地圖（每日挑戰除外）');
   ok(/const lay = mt \|\| mapLayerFor\(stage\);/.test(src), '單人用 lay（測試關或隨機 T 圖）');
@@ -107,12 +111,13 @@ head('3. 隨機生成模式：T1~T5 配置');
   ok(badSize === 0, P.SOLO_STAGES + ' 關尺寸全部照 T 規則', { badSize });
   ok(badBig === 0, '隨機地圖全部走大圖模式（bigMap）', { badBig });
   ok(badFoe === 0, P.SOLO_STAGES + ' 關怪量全部照 T 規則', { badFoe });
-  // v5.36：第 5、10… 關是 BOSS 決戰場（不套 T 設定）→ 循環驗證改成看 1/4/9
-  ok(seen[1] === 'T1' && seen[4] === 'T4' && seen[9] === 'T1', '1~4 → T1~T4、第 9 關回到 T1',
-    { 1: seen[1], 4: seen[4], 9: seen[9] });
-  ok(seen[21] === 'T2' && seen[22] === 'T3' && seen[23] === 'T4' && seen[24] === 'T5',
-    '21~24 → T2/T3/T4/T5（使用者確認的版本）', { 21: seen[21], 22: seen[22], 23: seen[23], 24: seen[24] });
-  ok(seen[21] === 'T2' && seen[32] === 'T5', '21 關回到 T2、32 關 T5', { 21: seen[21], 32: seen[32] });
+  // v5.38：一章一層 → 第 1~4 關同一層 T1、第 6 關換 T2、第 21 關 T5、第 26 關之後維持 T5
+  ok(seen[1] === 'T1' && seen[4] === 'T1' && seen[6] === 'T2' && seen[21] === 'T5' && seen[26] === 'T5',
+    '一章一層：1/4 → T1、6 → T2、21/26 → T5',
+    { 1: seen[1], 4: seen[4], 6: seen[6], 21: seen[21], 26: seen[26] });
+  // v5.38：整章同一層（第 5 章起都是最大的 T5，不會再中途縮回小圖）
+  ok(seen[21] === 'T5' && seen[22] === 'T5' && seen[26] === 'T5' && seen[36] === 'T5',
+    '第 5 章起整段都是 T5（不再每 4 關換一層）', { 21: seen[21], 22: seen[22], 26: seen[26], 36: seen[36] });
 
   // 同一關重試同圖、換關換圖
   P.startSolo(7, false);

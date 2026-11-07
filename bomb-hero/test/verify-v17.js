@@ -87,6 +87,8 @@ vm.runInContext(code, sandbox, { filename: 'index.html' });
 
 const BH = sandbox.window.__BH;
 if (!BH) { console.error('no __BH'); process.exit(1); }
+// v5.38：這支要驗「原始」的怪量與怪種 → 把每週變異釘成空的
+try { BH.WeekMod.pin([]); } catch (e) {}
 const G = BH.Game;
 const N = BH.Net;
 
@@ -255,8 +257,11 @@ ok(kinds5.has('wander') && kinds5.has('chase'), '第 4 關有亂走＋追人怪�
 BH.buildSoloStage(7);
 const kinds7 = new Set(G.enemies.map(function (e) { return e.kind; }));
 ok(kinds7.has('fly'), '第 7 關有飛行穿牆怪（' + [...kinds7].join('/') + '）');
-const types7 = new Set(G.enemies.map(function (e) { return e.type; }));
-ok(types7.size >= 6, '第 7 關多種小怪一起登場（' + [...types7].join('/') + '）');
+// v5.38：40 關制是 5 關一章 → 第 8 關才是「章內第 3 小關」（全 6 種），
+//   第 7 關是第 2 小關只有 5 種。舊版 %4 的寫法會讓整章怪種往前錯一關。
+BH.buildSoloStage(8);
+const types8 = new Set(G.enemies.map(function (e) { return e.type; }));
+ok(types8.size >= 6, '第 8 關多種小怪一起登場（' + [...types8].join('/') + '）');
 // 飛行怪穿牆：把它丟在硬牆上也能移動
 const fl = BH.makeEnemy(1, 1, 'bat', 7);
 ok(fl.kind === 'fly' && typeof fl.vx === 'number' && typeof fl.vy === 'number', '蝙蝠有速度向量（會飛）');

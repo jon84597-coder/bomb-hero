@@ -9,7 +9,7 @@
 //   ⑦ RPG／對戰不走這條路
 const fs = require('fs');
 const path = require('path');
-const { makeEnv } = require('./_sandbox');
+const { makeEnv, vlog } = require('./_sandbox');
 
 const env = makeEnv();
 const P = env.BH, G = P.Game, S = P.settings;
@@ -162,7 +162,8 @@ head('8. 版本');
   const vm = src.match(/const VERSION = '([\d.]+)'/);
   const v = vm ? vm[1].split('.').map(Number) : [0, 0];
   ok(v[0] > 5 || (v[0] === 5 && v[1] >= 31), '主檔版號 ≥ 5.31（目前 ' + (vm && vm[1]) + '）');
-  ok(/v: '5\.30'/.test(src) && /v: '5\.31'/.test(src), 'VERSION_LOG 有 5.30 與 5.31 條目');
+  // v5.38：紀錄搬到 js/version-log.js
+  ok(/v: '5\.30'/.test(vlog) && /v: '5\.31'/.test(vlog), 'VERSION_LOG 有 5.30 與 5.31 條目');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   ok(/var SW_VERSION = 'v5\.(3[1-9]|[4-9]\d)\.\d+'/.test(sw), 'sw.js 版本 ≥ 5.31');
 }

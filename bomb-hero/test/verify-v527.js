@@ -6,12 +6,13 @@
 //   ⑤ 五模式新手提示：只顯示一次、存在 localStorage
 //   ⑥ 賽季：28 天切季、增量計分、不能重複領、不能提前領
 //   ⑦ 快捷語：送索引、對方用自己的語言解讀、伺服器端上限
-const { makeEnv, html } = require('./_sandbox');
+const { makeEnv, html, vlog } = require('./_sandbox');
 
 const env = makeEnv();
 const P = env.BH, G = P.Game, rec = env.rec;
 const src = html.replace(/\r/g, '');
-const uiOnly = src.slice(0, src.indexOf('const VERSION_LOG = ['));
+// v5.38：主檔只剩一行 `const VERSION_LOG = (window.__VERSION_LOG || [])` → 切點改成找宣告本身
+const uiOnly = src.slice(0, src.indexOf('const VERSION_LOG'));
 const i18 = require('fs').readFileSync(__dirname + '/../js/i18n-src.js', 'utf8').replace(/\r/g, '');
 
 let pass = 0, fail = 0;
@@ -190,7 +191,7 @@ head('5. 五模式新手提示');
 head('6. 賽季（四週長週期）');
 {
   const S = P.Season;
-  ok(!!S && S.TIERS.length === 5 && S.GOALS.length === 4, '五個階段＋四個目標');
+  ok(!!S && S.TIERS.length === 30 && S.GOALS.length === 4, '三十級通行證＋四個目標（v5.38）');
   const LEN = 28 * 86400000;
   ok(S.endAt(0) - S.startAt(0) === LEN, '一季 28 天');
   ok(S.startAt(1) - S.startAt(0) === LEN, '下一季接著上一季（沒有空隙）');
@@ -205,9 +206,13 @@ head('6. 賽季（四週長週期）');
   let inc = true;
   for (let i = 1; i < S.TIERS.length; i++) if (S.TIERS[i].p <= S.TIERS[i - 1].p) inc = false;
   ok(inc, '階段門檻遞增');
-  ok(S.TIERS[S.TIERS.length - 1].p === 1600, '最高階段 1600 分');
+  ok(S.TIERS[S.TIERS.length - 1].p === 2402, '最高級 2402 分（30 級曲線末端，實際 ' + S.TIERS[S.TIERS.length - 1].p + '）');
+  // 金幣總量不要比舊版 5 階（6,700）膨脹太多 —— 這是刻意的經濟上限
+  let goldSum = 0;
+  for (let i = 0; i < S.TIERS.length; i++) goldSum += S.TIERS[i].g;
+  ok(goldSum <= 7200, '30 級金幣總量不超過 7,200（實際 ' + goldSum + '）');
   // 不能提前領、不能重複領
-  const r1 = S.claimTier(4);
+  const r1 = S.claimTier(S.TIERS.length - 1);
   ok(!r1.ok, '分數不夠時不能領最後一階');
   const before = S.tiers();
   if (S.pts() >= S.TIERS[0].p) {
@@ -229,7 +234,7 @@ head('6. 賽季（四週長週期）');
   ok(/if \(i !== S\.idx\)/.test(src), '季號一變就重置');
   ok(/if \(!T \|\| i !== \(S\.tiers \| 0\) \|\| pts\(\) < T\.p\) return \{ ok: false \};/.test(src), '領階段要「剛好是下一階」且分數夠');
   ok(/function seasonBlock\(\)/.test(src), '有賽季區塊');
-  ok(/body\.innerHTML =\s*\n\s*seasonBlock\(\) \+/.test(src), '賽季區塊掛在禮物面板最上面');
+  ok(/body\.innerHTML =\s*\n\s*(?:weekModBlock\(\) \+\s*\n\s*)?seasonBlock\(\) \+/.test(src), '賽季區塊掛在禮物面板最上面（v5.38 起上面多一層「本週變異」）');
   ok(/if \(Season\.hasReward\(\)\) return true;/.test(src), '賽季可領 → 禮物按鈕亮紅點');
 }
 
@@ -269,9 +274,10 @@ head('8. 版號與整合');
 {
   // 版號用元組比較：之後每版都會往前走，這裡只保證「至少是 5.27」
   ok(P.VERSION.split('.').map(Number)[1] >= 27, '主檔版號 ≥ 5.27（目前 ' + P.VERSION + '）');
-  const log0 = src.slice(src.indexOf('const VERSION_LOG = ['), src.indexOf('const VERSION_LOG = [') + 400);
+  // v5.38：紀錄搬到 js/version-log.js → 改看那個檔（沙盒已比照瀏覽器載入，P.VERSION_LOG 也拿得到）
+  const log0 = vlog.slice(vlog.indexOf('window.__VERSION_LOG = ['), vlog.indexOf('window.__VERSION_LOG = [') + 400);
   ok(/now: true/.test(log0), 'VERSION_LOG 第一筆是 now:true');
-  ok(/v: '5\.26', date: '2026-11-06', now: false/.test(src), '上一版已改成 now:false');
+  ok(/v: '5\.26', date: '2026-11-06', now: false/.test(vlog), '上一版已改成 now:false');
   ok(new RegExp('var SW_VERSION = .v5\\.(2[7-9]|[3-9]\\d)').test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 版本 ≥ 5.27');
   ok(/id="verLogVer">5\.(2[7-9]|[3-9]\d)</.test(src), '版本號顯示同步');
   // 新功能的 i18n 都在

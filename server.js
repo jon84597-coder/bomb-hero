@@ -931,6 +931,29 @@ function gzipBuf(file, buf, st) {
   return gz;
 }
 
+/* v5.38：brotli —— 主檔 gzip 706 KB、brotli 523 KB（省 26%），而且只壓一次就常駐記憶體。
+   品質用 9（11 對 2 MB 的檔案要壓好幾秒，冷啟動會卡；9 的體積只差 1~2%）。
+   一定要比 gzip 優先，不然支援 br 的瀏覽器永遠拿不到更小的那份。 */
+const BR_CACHE = new Map();
+function brBuf(file, buf, st) {
+  const key = st.size + ':' + Math.floor(st.mtimeMs);
+  const hit = BR_CACHE.get(file);
+  if (hit && hit.key === key) return hit.br;
+  let br;
+  try {
+    br = zlib.brotliCompressSync(buf, {
+      params: {
+        [zlib.constants.BROTLI_PARAM_QUALITY]: 9,
+        [zlib.constants.BROTLI_PARAM_SIZE_HINT]: buf.length
+      }
+    });
+  } catch (e) { return null; }
+  if (!br || br.length >= buf.length) return null;      // 沒變小就不要送
+  BR_CACHE.set(file, { key: key, br: br });
+  if (BR_CACHE.size > 40) { BR_CACHE.delete(BR_CACHE.keys().next().value); }
+  return br;
+}
+
 function serveStatic(pathname, req, res) {
   let rel = pathname === '/' ? '/index.html' : pathname;
   rel = rel.replace(/\.\./g, '');
@@ -975,7 +998,17 @@ function serveStatic(pathname, req, res) {
       };
       let body = buf;
       const ae = String((req && req.headers['accept-encoding']) || '');
-      if (GZ_TYPES.test(ext) && buf.length >= GZ_MIN && /\bgzip\b/.test(ae)) {
+      const compressible = GZ_TYPES.test(ext) && buf.length >= GZ_MIN;
+      // v5.38：brotli 優先（同一份檔案小 26%），瀏覽器不支援才退回 gzip
+      if (compressible && /\bbr\b/.test(ae)) {
+        const br = brBuf(file, buf, st);
+        if (br) {
+          body = br;
+          head['Content-Encoding'] = 'br';
+          head['Vary'] = 'Accept-Encoding';
+        }
+      }
+      if (body === buf && compressible && /\bgzip\b/.test(ae)) {
         try { body = gzipBuf(file, buf, st); } catch (e) { body = buf; }
         if (body !== buf) {
           head['Content-Encoding'] = 'gzip';
