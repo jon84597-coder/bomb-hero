@@ -74,13 +74,15 @@ ok(/min-height:\s*21px/.test(rule('body.touch.in-game #gameTop .chip {')),
 head('④ RPG 配點：金幣買額外點');
 ok(P.RPG_PT_BUY === 2000, 'RPG_PT_BUY = 2000', P.RPG_PT_BUY);
 ok(P.RPG.bought === 0, 'RPG.bought 預設 0', P.RPG.bought);
+ok(!!P.RPG.paid, 'RPG.paid（各項買過幾格）存在');
+P.RPG.paid = { hp: 0, def: 0, spd: 0, atk: 0 };
 
 // 免費點用完（創角 9 點全部點在生命、生命又滿 10 格 → 用別的屬性驗）
 P.RPG.alloc = { hp: 9, def: 0, spd: 0, atk: 0 };
 P.RPG.bought = 0;
 ok(P.rpgLeft() === 0, '九點點完 → 剩 0 點', P.rpgLeft());
 P.RPG.bought = 2;
-ok(P.rpgLeft() === 2, '買過 2 點 → 可用點數跟著 +2', P.rpgLeft());
+ok(P.rpgLeft() === 0, 'v5.45：買來的點不回灌免費額度（仍剩 0）', P.rpgLeft());
 P.RPG.bought = 0;
 
 // 按鈕：還有免費點時是「＋」
@@ -158,8 +160,7 @@ const vm = src.match(/const VERSION = '([\d.]+)'/);
 ok(vm && +vm[1] >= 5.44, 'VERSION ≥ 5.44', vm && vm[1]);
 const vl = String(env.htmlAll || src);
 ok(/'5\.44'/.test(String(SB.vlog || vl)), 'VERSION_LOG 有 5.44 條目');
-ok(/v: '5\.44'[^}]*now: true/.test(String(SB.vlog || vl)) || /v: '5\.44'[\s\S]{0,80}now: true/.test(String(SB.vlog || vl)),
-  '5.44 是 now:true（最新）');
+ok(!/v: '5\.44'[\s\S]{0,120}now: true/.test(String(SB.vlog || vl)), '5.44 已改成 now:false');
 ok(!/v: '5\.43'[^}]*now: true/.test(String(SB.vlog || vl)), '5.43 已改成 now:false');
 
 console.log('\n' + (fail === 0 ? '✅ 全部 ' + pass + ' 項通過' : '❌ ' + fail + ' 項失敗 / ' + (pass + fail) + ' 項'));

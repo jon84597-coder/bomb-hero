@@ -27,6 +27,7 @@ const ATTRS = ['hp', 'def', 'spd', 'atk'];
 const BASE_POINTS = 9;          // 創角配點
 const CAP = 10;                 // 單項上限
 const MAX_POINTS = ATTRS.length * CAP;   // 40（全部點滿）
+const FREE_PER = 4;             // v5.45：每項前 4 格用免費點，第 5 格起一律金幣（價錢由前端算，這裡只當裁判）
 const MAX_STAGE = 40;   // v5.36：單人/RPG 改成 40 關（8 大主題 × 5）
 const SESSION_TTL = 30 * 24 * 3600 * 1000;
 // v4.13：「維持登入」勾選後，這次登入的有效期改成 1 年（不勾則 30 天）
@@ -191,6 +192,19 @@ function sumAlloc(a) {
   for (let i = 0; i < ATTRS.length; i++) n += (a && a[ATTRS[i]]) || 0;
   return n;
 }
+/* v5.45：這幾格是「花金幣買來的」——免費額度只算到每項第 4 格 */
+function sumPaid(p) {
+  let n = 0;
+  for (let i = 0; i < ATTRS.length; i++) n += Math.max(0, (p && p[ATTRS[i]]) | 0);
+  return n;
+}
+function freeCapOf(rpg) {
+  return Math.min(pointsTotalFor(rpg), ATTRS.length * FREE_PER);
+}
+function freeLeftOf(rpg) {
+  const p = rpg.paid || {};
+  return Math.max(0, freeCapOf(rpg) - (sumAlloc(rpg.alloc) - sumPaid(p)));
+}
 
 /* ---------------------------------------------------------------- 進度數學 */
 
@@ -278,7 +292,8 @@ function goldFor(cleared) {
 function defaultRpg() {
   return {
     alloc: { hp: 3, def: 2, spd: 2, atk: 2 },
-    bought: 0,                 // v5.44：花金幣買來的額外配點（免費點用完才能買）
+    bought: 0,                 // v5.44：花金幣買來的配點總數
+    paid: { hp: 0, def: 0, spd: 0, atk: 0 },   // v5.45：各項買了幾格 → 決定下一格價錢
     cleared: 0,
     gold: 0,
     xp: 0,                     // v5.18：累積經驗（等級由它推導）
@@ -392,10 +407,10 @@ function sanitizeLayout(v) {
 }
 
 /* 驗證配點：只能是 0..10 的整數，總和不得超過「目前可用的總點數」 */
-function validateAlloc(alloc, pointsTotal) {
+function validateAlloc(alloc, pointsTotal, paidBudget) {
   const cap = (pointsTotal == null || !isFinite(pointsTotal)) ? BASE_POINTS : clampInt(pointsTotal, 0, MAX_POINTS, BASE_POINTS);
   const out = {};
-  let spent = 0;
+  let spent = 0, free = 0, over = 0;
   for (let i = 0; i < ATTRS.length; i++) {
     const k = ATTRS[i];
     const raw = alloc ? alloc[k] : 0;
@@ -404,8 +419,12 @@ function validateAlloc(alloc, pointsTotal) {
     if (n > CAP) return { ok: false, err: 'ATTR_CAP', attr: k, cap: CAP };
     out[k] = n;
     spent += n;
+    free += Math.min(n, FREE_PER);
+    over += Math.max(0, n - FREE_PER);
   }
-  if (spent > cap) return { ok: false, err: 'POINT_OVERFLOW', spent: spent, cap: cap };
+  if (free > cap) return { ok: false, err: 'POINT_OVERFLOW', spent: free, cap: cap };
+  // v5.45：超過第 4 格的格數，只能來自「已經買過的額度」，否則改前端就能白拿
+  if (over > clampInt(paidBudget, 0, 200, 0)) return { ok: false, err: 'PAID_OVERFLOW', over: over };
   return { ok: true, alloc: out, spent: spent, cap: cap };
 }
 
@@ -420,25 +439,29 @@ function spendPoint(rpg, attr, delta, pay) {
   else if (delta === undefined || delta === null || delta === 1 || delta === '1') d = 1;
   else return { ok: false, err: 'BAD_DELTA' };
   const bought = clampInt(rpg.bought, 0, 200, 0);
-  let total = pointsTotalFor(rpg.cleared) + bought;
+  const paid = rpg.paid || (rpg.paid = { hp: 0, def: 0, spd: 0, atk: 0 });
+  const total = freeCapOf(rpg);
   const cur = rpg.alloc[attr] || 0;
   if (d > 0) {
     if (cur >= CAP) return { ok: false, err: 'ATTR_CAP', attr: attr, cap: CAP };
-    if (sumAlloc(rpg.alloc) >= total) {
+    // v5.45：第 5 格起一律要金幣；前 4 格則看免費額度還夠不夠
+    const mustPay = cur >= FREE_PER || freeLeftOf(rpg) <= 0;
+    if (mustPay) {
       if (!(Number(pay) > 0)) return { ok: false, err: 'NO_POINTS', left: 0, total: total };
       rpg.bought = bought + 1;
-      total += 1;
+      paid[attr] = (paid[attr] | 0) + 1;
     }
     rpg.alloc[attr] = cur + 1;
   } else {
     if (cur <= 0) return { ok: false, err: 'ATTR_EMPTY', attr: attr };
     rpg.alloc[attr] = cur - 1;
+    if ((paid[attr] | 0) > 0) paid[attr] = (paid[attr] | 0) - 1;   // 先退買來的
   }
   rpg.ver = (rpg.ver || 1) + 1;
   return {
     ok: true, alloc: Object.assign({}, rpg.alloc),
-    left: total - sumAlloc(rpg.alloc), total: total,
-    bought: clampInt(rpg.bought, 0, 200, 0)
+    left: freeLeftOf(rpg), total: total,
+    bought: clampInt(rpg.bought, 0, 200, 0), paid: Object.assign({}, paid)
   };
 }
 
@@ -1437,7 +1460,7 @@ function createCloud(options) {
       xpNeed: lvNow.need,           // 升下一級需要多少（65 級為 0）
       xpTotal: xp,                  // 累積總經驗
       xpMax: XP_MAX,
-      left: points + (acc.rpg.bought | 0) - sumAlloc(acc.rpg.alloc),
+      left: freeLeftOf(acc.rpg),                 // v5.45：只剩免費額度（每項前 4 格）
       pointsBought: acc.rpg.bought | 0,          // v5.44：花金幣買來的配點
       skPts: rpgSkPtsOf(acc.rpg),          // v5.19：技能點總數（營地招式師用）
       skLeft: rpgSkLeftOf(acc.rpg),        //        還沒花掉的
@@ -3052,8 +3075,11 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           if (!gate(req, res, 'alloc', 3, 1)) return true;
           const body = await readJson(req, 2048);
           if (!body) return fail(res, 400, 'BAD_BODY'), true;
-          const total = pointsTotalFor(acc.rpg) + clampInt(acc.rpg.bought, 0, 200, 0);
-          const v = validateAlloc(body.alloc, total);
+          const total = pointsTotalFor(acc.rpg);
+          // 允許的「超 4 格」數量＝已買額度，或他現在就已經有的（舊帳號相容）
+          let overNow = 0;
+          for (let i = 0; i < ATTRS.length; i++) overNow += Math.max(0, (acc.rpg.alloc[ATTRS[i]] | 0) - FREE_PER);
+          const v = validateAlloc(body.alloc, total, Math.max(clampInt(acc.rpg.bought, 0, 200, 0), overNow));
           if (!v.ok) {
             stats.tamper++;
             return send(res, 409, { ok: false, err: 'BAD_ALLOC', detail: v }), true;
@@ -3061,7 +3087,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           acc.rpg.alloc = v.alloc;
           acc.rpg.ver = (acc.rpg.ver || 1) + 1;
           store.touch();
-          return send(res, 200, { ok: true, account: publicAccount(acc), left: total - v.spent, total: total }), true;
+          return send(res, 200, { ok: true, account: publicAccount(acc), left: freeLeftOf(acc.rpg), total: total }), true;
         }
 
         /* ---- v5.19：營地（永久強化／招式／出戰欄／補給）----
@@ -3076,10 +3102,11 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         if (p === '/api/rpg/respec' && req.method === 'POST') {
           if (!gate(req, res, 'respec', 6, 2)) return true;
           acc.rpg.alloc = { hp: 0, def: 0, spd: 0, atk: 0 };
+          acc.rpg.paid = { hp: 0, def: 0, spd: 0, atk: 0 };   // v5.45：洗點＝價格階也重來
           acc.rpg.ver = (acc.rpg.ver || 1) + 1;
           store.touch();
           logEvent(acc, 'respec', {});
-          const capAll = pointsTotalFor(acc.rpg) + clampInt(acc.rpg.bought, 0, 200, 0);
+          const capAll = freeCapOf(acc.rpg);
           return send(res, 200, {
             ok: true, account: publicAccount(acc),
             left: capAll, total: capAll, bought: acc.rpg.bought | 0
@@ -3365,6 +3392,7 @@ module.exports = {
   createCloud: createCloud,
   // 給測試用的純函式
   ATTRS: ATTRS, BASE_POINTS: BASE_POINTS, CAP: CAP, MAX_POINTS: MAX_POINTS, MAX_STAGE: MAX_STAGE,
+  FREE_PER: FREE_PER, sumPaid: sumPaid, freeLeftOf: freeLeftOf, spendPoint: spendPoint,
   pointsTotalFor: pointsTotalFor, goldFor: goldFor, stageReward: stageReward,
   applyClear: applyClear, spendPoint: spendPoint,
   LV_MAX: LV_MAX, XP_MAX: XP_MAX, xpNeed: xpNeed, lvOfXp: lvOfXp, xpTotalOfLv: xpTotalOfLv,

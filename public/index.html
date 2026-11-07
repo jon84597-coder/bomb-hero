@@ -4802,7 +4802,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.44</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.45</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4857,7 +4857,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.44</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.45</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5086,10 +5086,10 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
       </div>
       <div class="rpgbar" id="rpgLvBar"></div>
       <div class="field"><label>② 能力配點</label>
-        <div class="hint" style="margin:-2px 0 7px">剩餘 <b id="rpgLeft" style="color:#d4491f">9</b> 點 · 每項上限 10 格</div>
+        <div class="hint" style="margin:-2px 0 7px">剩餘 <b id="rpgLeft" style="color:#d4491f">9</b> 免費點 · 每項前 4 格免費</div>
         <div class="rpgrows" id="rpgRows"></div>
         <div class="rpgsum" id="rpgSum"></div>
-        <div class="hint" id="rpgBuyHint" style="margin:7px 0 0">免費配點用完後，可以 2000 金幣買 1 點（每項仍上限 10 格）。</div>
+        <div class="hint" id="rpgBuyHint" style="margin:7px 0 0">第 5 格起要用金幣：<b>2000 → 2500 → 3000 → 3500 → 4000 → 4500</b>（每項上限 10 格）。</div>
       </div>
       <div class="hint" style="margin:2px 0 10px">配好點就往營地：那裡可以買補給、學招式、選關卡再出發。</div>
       <div class="rowbtns">
@@ -5913,7 +5913,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.44';
+const VERSION = '5.45';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -38404,8 +38404,10 @@ const Share = (function () {
 // ====
 const RPG_POINTS = 9;                 // 創角只能自由配 9 點
 const RPG_CAP = 10;                   // 每項屬性上限 10 格
-/* v5.44：免費配點用完後，額外 1 點的金幣價（讓金幣有一個不得不花的出口） */
-const RPG_PT_BUY = 2000;
+/* v5.45：每項前 4 格用免費點，第 5 格起一律金幣 —— 2000 / 2500 / 3000 / 3500 / 4000 / 4500 */
+const RPG_FREE_PER = 4;
+const RPG_PT_BUY = 2000;              // 該項第 1 個金幣格
+const RPG_PT_STEP = 500;              // 每多一階 +500
 const RPG_ATTRS = [
   { k: 'hp',  n: '生命 HP',  ico: '❤️', desc: '每點 +1 點生命（基礎 2 點）；生命歸零就結束冒險' },
   { k: 'def', n: '防禦 ARM', ico: '🛡️', desc: '每點 +1 點護甲；護甲先替你擋傷害，每過一關補滿' },
@@ -38414,7 +38416,8 @@ const RPG_ATTRS = [
 ];
 const RPG = {
   alloc: { hp: 3, def: 2, spd: 2, atk: 2 },
-  bought: 0,       // v5.44：花金幣買來的額外配點（每項仍上限 10 格）
+  bought: 0,       // v5.44：花金幣買來的配點總數（雲端記帳用）
+  paid: { hp: 0, def: 0, spd: 0, atk: 0 },   // v5.45：各項「買了幾格」→ 決定下一格價錢
   char: 0,
   theme: 0,
   sub: 0,
@@ -38528,7 +38531,12 @@ function rpgPowerOf(lv, extra) {
   return Math.min(10, 2 + Math.floor(Math.max(1, lv | 0) / 15) + (extra | 0));
 }
 function rpgSum(a) { return (a.hp || 0) + (a.def || 0) + (a.spd || 0) + (a.atk || 0); }
-function rpgLeft() { return Math.max(0, RPG_POINTS_TOTAL + (RPG.bought | 0) - rpgSum(RPG.alloc)); }
+function rpgSumPaid(p) { p = p || RPG.paid || {}; return (p.hp | 0) + (p.def | 0) + (p.spd | 0) + (p.atk | 0); }
+/* v5.45：免費點只能用在每項前 4 格 → 免費額度上限 16 格（4 項 × 4） */
+function rpgFreeCap() { return Math.min(RPG_POINTS_TOTAL, RPG_FREE_PER * RPG_ATTRS.length); }
+function rpgLeft() { return Math.max(0, rpgFreeCap() - (rpgSum(RPG.alloc) - rpgSumPaid())); }
+/* 該項下一格的金幣價：買過越多階越貴 */
+function rpgPrice(k) { return RPG_PT_BUY + RPG_PT_STEP * Math.max(0, ((RPG.paid || {})[k] | 0)); }
 function rpgDerive(a, o) {
   a = a || RPG.alloc;
   o = o || {};
@@ -38549,11 +38557,11 @@ function rpgDerive(a, o) {
 function rpgRandomAlloc() {
   const keys = ['hp', 'def', 'spd', 'atk'];
   const a = { hp: 1, def: 1, spd: 1, atk: 1 };     // 先各給 1 點，避免全押同一項
-  let left = Math.max(4, RPG_POINTS_TOTAL) - 4;
+  let left = Math.max(0, rpgFreeCap() - 4);
   let guard = 0;
   while (left > 0 && guard++ < 400) {
     const k = keys[Math.floor(Math.random() * keys.length)];
-    if (a[k] >= RPG_CAP) continue;
+    if (a[k] >= RPG_FREE_PER) continue;   // v5.45：隨機不替玩家花錢，只分免費點
     a[k] += 1; left -= 1;
   }
   RPG.alloc = a;
@@ -39988,15 +39996,17 @@ const Rpg = (function () {
       const v = RPG.alloc[a.k] || 0;
       let pips = '';
       for (let i = 0; i < RPG_CAP; i++) pips += '<i class="' + (i < v ? 'on' : '') + '"></i>';
-      const buy = left <= 0 && v < RPG_CAP;   // v5.44：免費點用完 → 按鈕直接寫價格
+      // v5.45：第 5 格起（或免費點用完）→ 按鈕直接寫這一格的價錢
+      const pay = rpgPrice(a.k);
+      const buy = v < RPG_CAP && (v >= RPG_FREE_PER || left <= 0);
       return '<div class="rpgrow" data-k="' + a.k + '">' +
         '<div class="rpgname">' + a.ico + ' ' + a.n + '</div>' +
         '<div class="rpgpips">' + pips + '</div>' +
         '<div class="rpgstep">' +
         '<button type="button" data-d="-1"' + (v <= 0 ? ' disabled' : '') + '>−</button>' +
         '<b>' + v + '</b>' +
-        '<button type="button" data-d="1"' + (buy ? ' class="buypt" title="再一點要 ' + RPG_PT_BUY + ' 金幣（目前 ' + (Shop.gold() | 0) + '）"' : '') +
-        (v >= RPG_CAP ? ' disabled' : '') + '>' + (buy ? '💰' + RPG_PT_BUY : '＋') + '</button>' +
+        '<button type="button" data-d="1"' + (buy ? ' class="buypt" title="這一格要 ' + pay + ' 金幣（目前 ' + (Shop.gold() | 0) + '）"' : '') +
+        (v >= RPG_CAP ? ' disabled' : '') + '>' + (buy ? '💰' + pay : '＋') + '</button>' +
         '</div>' +
         '<div class="rpgdesc">' + a.desc + '</div>' +
         '</div>';
@@ -40084,6 +40094,7 @@ const Rpg = (function () {
       if (rpgSum(RPG.alloc) <= 0) { toast(t('respec.none'), 1.8); return; }
       if (typeof confirm === 'function' && !confirm(t('respec.confirm'))) return;
       RPG.alloc = { hp: 0, def: 0, spd: 0, atk: 0 };
+      RPG.paid = { hp: 0, def: 0, spd: 0, atk: 0 };   // 洗點＝重新來過，價格階也歸零
       renderStats();
       if (Cloud.online()) {
         Cloud.respec().then(function (r) {
@@ -40809,6 +40820,7 @@ const Cloud = (function () {
       RPG.cleared = a.rpg.cleared | 0;
       RPG.gold = a.rpg.gold | 0;
       RPG.bought = Math.max(0, a.rpg.bought | 0);   // v5.44：花金幣買來的配點
+      RPG.paid = Object.assign({ hp: 0, def: 0, spd: 0, atk: 0 }, (a.rpg.paid || {}));  // v5.45
       // v5.18：經驗以伺服器為準（前端送的 exp 後端會夾上限），等級再由經驗推導
       if (isFinite(a.rpg.xp)) {
         RPG.xp = Math.max(0, a.rpg.xp | 0);
@@ -42283,22 +42295,25 @@ function rpgBuyPoint(k) {
   if (!a) return false;
   const v = RPG.alloc[k] | 0;
   if (v >= RPG_CAP) return false;
-  if (rpgLeft() > 0) return rpgAdjust(k, 1);        // 還有免費點 → 走原本那條
+  if (v < RPG_FREE_PER && rpgLeft() > 0) return rpgAdjust(k, 1);   // 還在免費 4 格內 → 不花錢
+  const price = rpgPrice(k);
   const g = Shop.gold() | 0;
-  if (g < RPG_PT_BUY) {
-    toast('💰 金幣不足：買 1 點要 ' + RPG_PT_BUY + '，還差 ' + (RPG_PT_BUY - g), 2.4);
+  if (g < price) {
+    toast('💰 金幣不足：這一格要 ' + price + '，還差 ' + (price - g), 2.4);
     AudioSys.sfx('hurt');
     return false;
   }
-  if (!Shop.spend(RPG_PT_BUY).ok) { toast('💰 金幣不足', 2); AudioSys.sfx('hurt'); return false; }
+  if (!Shop.spend(price).ok) { toast('💰 金幣不足', 2); AudioSys.sfx('hurt'); return false; }
   RPG.bought = (RPG.bought | 0) + 1;
+  RPG.paid = RPG.paid || { hp: 0, def: 0, spd: 0, atk: 0 };
+  RPG.paid[k] = (RPG.paid[k] | 0) + 1;
   RPG.alloc[k] = v + 1;
   AudioSys.sfx('item');
   Rpg.renderStats();
-  toast('💎 ' + tr(a.n) + ' +1　−' + RPG_PT_BUY + ' 金幣（剩 ' + (Shop.gold() | 0) + '）', 2.2);
+  toast('💎 ' + tr(a.n) + ' +1　−' + price + ' 金幣（剩 ' + (Shop.gold() | 0) + '）', 2.2);
   if (Cloud.online()) {
     try { Cloud.track('alloc'); } catch (e) {}
-    Cloud.spend(k, 1, RPG_PT_BUY);                  // 後端記帳：多一點 bought
+    Cloud.spend(k, 1, price);                       // 後端記帳：多一點 bought
   }
   return true;
 }
@@ -42309,16 +42324,19 @@ function rpgAdjust(k, d) {
   const v = RPG.alloc[k] || 0;
   if (d > 0) {
     if (v >= RPG_CAP) return false;
-    if (rpgLeft() <= 0) return rpgBuyPoint(k);      // v5.44：免費點用完 → 金幣買
+    // v5.45：每項前 4 格免費；第 5 格起一律金幣（免費點再多也不能白加）
+    if (v >= RPG_FREE_PER || rpgLeft() <= 0) return rpgBuyPoint(k);
   } else if (v <= 0) return false;
   const prev = Object.assign({}, RPG.alloc);
+  const prevP = Object.assign({}, RPG.paid || {});
+  if (d < 0 && RPG.paid && (RPG.paid[k] | 0) > 0) RPG.paid[k] = (RPG.paid[k] | 0) - 1;
   RPG.alloc[k] = v + d;
   AudioSys.sfx('click');
   Rpg.renderStats();
   if (Cloud.online()) {
     try { Cloud.track('alloc'); } catch (e) {}
     Cloud.spend(k, d).then(function (r) {
-      if (!r) { RPG.alloc = prev; Rpg.renderStats(); }
+      if (!r) { RPG.alloc = prev; RPG.paid = prevP; Rpg.renderStats(); }
     });
   }
   return true;
@@ -42939,9 +42957,12 @@ window.__BH = {
   Cloud: Cloud, rpgAdjust: rpgAdjust, Admin: Admin,
   Save: Save,   // v4.87：測試要驗「gift 有沒有真的進存檔」
   rpgTotalPoints: function () { return RPG_POINTS_TOTAL; },
+  rpgSetTotal: function (n) { RPG_POINTS_TOTAL = Math.max(0, n | 0); },   // 測試用
   // v5.44：配點金幣買（測試用）
   RPG: RPG, RPG_PT_BUY: RPG_PT_BUY, RPG_CAP: RPG_CAP,
   rpgBuyPoint: rpgBuyPoint, rpgAdjust: rpgAdjust, rpgLeft: rpgLeft,
+  rpgPrice: rpgPrice, rpgFreeCap: rpgFreeCap, rpgSumPaid: rpgSumPaid,
+  RPG_FREE_PER: RPG_FREE_PER, RPG_PT_STEP: RPG_PT_STEP,
   deviceId: function () { try { return localStorage.getItem('bombhero-device'); } catch (e) { return null; } },
   HELP_ITEMS: (typeof HELP_ITEMS !== 'undefined' ? HELP_ITEMS : null),
   HELP_FOES: (typeof HELP_FOES !== 'undefined' ? HELP_FOES : null),
