@@ -531,6 +531,13 @@ font-size: 15px; font-weight: 900; font-family: inherit; line-height: 1;
 }
 .rpgrow .rpgstep button:hover:not(:disabled) { background: #33456b; border-color: #6f8fd0; }
 .rpgrow .rpgstep button:disabled { opacity: .32; cursor: default; }
+/* v5.44：免費點用完後的「買 1 點」按鈕 —— 金色、自動寬、直接寫價格 */
+.rpgrow .rpgstep button.buypt {
+width: auto; min-width: 44px; padding: 0 6px; font-size: 10.5px; letter-spacing: -.2px;
+color: #7a4a06; background: linear-gradient(180deg,#ffe9b0,#ffc85f);
+border-color: #d99a2b; box-shadow: 0 2px 0 rgba(160,104,20,.35);
+}
+.rpgrow .rpgstep button.buypt:hover:not(:disabled) { background: linear-gradient(180deg,#fff2c8,#ffd479); border-color: #c98a1c; }
 .rpgrow .rpgstep b { min-width: 20px; text-align: center; font-size: 15px; color: #ffe6a3; }
 .rpgrow .rpgdesc { grid-column: 1 / -1; font-size: 11px; color: #6f7d9e; font-weight: 600; margin-top: -2px; }
 .rpgsum {
@@ -2012,23 +2019,46 @@ font-size: 14px; padding: 0 14px; gap: 7px;
 body.touch #scr-game.on .game-top { padding-top: calc(34px + env(safe-area-inset-top, 0px)); }
 /* v4.43：手機遊戲中只留「①工具列 ②資訊列」兩排，⏸ ESC 收掉，遊戲畫面吃滿 */
 @media (orientation: portrait) {
+/* v5.44：直放資訊列也貼到最上面 —— 原本這裡要空 46px 給工具列，那條空白帶在
+   小螢幕上等於 5% 的畫面。現在工具列只留右上的「⋮」（← 收進暫停選單），
+   資訊列直接貼著狀態列下緣開始，遊戲畫面往上長 44px。
+   讓位 50px ＝ ⋮ 30px ＋ 工具列右邊距 7px ＋ 資訊列右邊距 4px ＋ 緩衝。 */
 body.touch.in-game #scr-game.on .game-top {
-padding-top: calc(46px + env(safe-area-inset-top, 0px));
-padding-left: 4px; padding-right: 4px; margin-bottom: 2px;
+padding-top: calc(2px + env(safe-area-inset-top, 0px));
+padding-left: 4px; padding-right: 50px; margin-bottom: 1px;
 }
+/* 全螢幕（body.pseudo-full 會把工具列整條收掉）就不用讓位，資訊列吃滿寬度 */
+body.touch.in-game.pseudo-full #scr-game.on .game-top { padding-right: 4px; }
 body.touch.in-game #gameTop {
 flex-wrap: nowrap; overflow: hidden; justify-content: flex-start;
-gap: 3px; width: 100%;
+gap: 2px; width: 100%;
 }
 body.touch.in-game #gameTop .chip {
-min-height: 20px; padding: 0 5px; font-size: 9.5px; border-radius: 7px;
-gap: 3px; flex: 0 1 auto; min-width: 0; white-space: nowrap; line-height: 1;
+min-height: 20px; padding: 0 3px; font-size: 9.5px; border-radius: 7px;
+gap: 2px; flex: 0 1 auto; min-width: 0; white-space: nowrap; line-height: 1;
 }
 body.touch.in-game #gameTop .chip .ic { font-size: 10.5px; }
 body.touch.in-game #gameTop .chip b { font-size: 10.5px; }
 body.touch.in-game #gameTop .chip.big b { font-size: 12px; }
 body.touch.in-game #gameTop .chip .thn { display: none; }   
 body.touch.in-game #gameTop .gi { font-size: 10px; padding: 0; }
+/* 直放：右上只留一顆 ⋮（38px 在這裡太胖），←／👤 收掉
+   —— 暫停選單就有「回首頁」，帳號膠囊在首頁／選單都還在。 */
+body.touch.in-game #navBar.inGame { padding-top: calc(3px + env(safe-area-inset-top, 0px)); padding-right: 7px; }
+body.touch.in-game #navBar.inGame #btnBack,
+body.touch.in-game #navBar.inGame #acctChip { display: none; }
+body.touch.in-game #navBar.inGame .navbtn { min-height: 30px; height: 30px; padding: 0 6px; font-size: 12px; }
+body.touch.in-game #navBar.inGame #btnMore { min-width: 30px; min-height: 30px; height: 30px; font-size: 16px; }
+/* 十顆 chip 要跟 ⋮ 擠同一排：左右內距 5→3、間距 3→2（共省 49px） */
+/* 計時器永遠不准被壓縮（它是唯一「看不清楚就會輸」的數字） */
+body.touch.in-game #gameTop #hudTimer { flex: 0 0 auto; }
+@media (max-width: 400px) {
+body.touch.in-game #gameTop .chip { padding: 0 2px; }
+body.touch.in-game #gameTop .chip[data-k="spd"] { display: none; }
+}
+@media (max-width: 370px) {
+body.touch.in-game #gameTop .chip[data-k="gear"] { display: none; }
+}
 }
 body.touch.in-game #pauseBtn { display: none; }
 body.touch.in-game .wrap.game { padding: 0; }
@@ -4772,7 +4802,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.43</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.44</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4827,7 +4857,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.43</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.44</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5059,6 +5089,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         <div class="hint" style="margin:-2px 0 7px">剩餘 <b id="rpgLeft" style="color:#d4491f">9</b> 點 · 每項上限 10 格</div>
         <div class="rpgrows" id="rpgRows"></div>
         <div class="rpgsum" id="rpgSum"></div>
+        <div class="hint" id="rpgBuyHint" style="margin:7px 0 0">免費配點用完後，可以 2000 金幣買 1 點（每項仍上限 10 格）。</div>
       </div>
       <div class="hint" style="margin:2px 0 10px">配好點就往營地：那裡可以買補給、學招式、選關卡再出發。</div>
       <div class="rowbtns">
@@ -5882,7 +5913,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.43';
+const VERSION = '5.44';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -38373,6 +38404,8 @@ const Share = (function () {
 // ====
 const RPG_POINTS = 9;                 // 創角只能自由配 9 點
 const RPG_CAP = 10;                   // 每項屬性上限 10 格
+/* v5.44：免費配點用完後，額外 1 點的金幣價（讓金幣有一個不得不花的出口） */
+const RPG_PT_BUY = 2000;
 const RPG_ATTRS = [
   { k: 'hp',  n: '生命 HP',  ico: '❤️', desc: '每點 +1 點生命（基礎 2 點）；生命歸零就結束冒險' },
   { k: 'def', n: '防禦 ARM', ico: '🛡️', desc: '每點 +1 點護甲；護甲先替你擋傷害，每過一關補滿' },
@@ -38381,6 +38414,7 @@ const RPG_ATTRS = [
 ];
 const RPG = {
   alloc: { hp: 3, def: 2, spd: 2, atk: 2 },
+  bought: 0,       // v5.44：花金幣買來的額外配點（每項仍上限 10 格）
   char: 0,
   theme: 0,
   sub: 0,
@@ -38494,7 +38528,7 @@ function rpgPowerOf(lv, extra) {
   return Math.min(10, 2 + Math.floor(Math.max(1, lv | 0) / 15) + (extra | 0));
 }
 function rpgSum(a) { return (a.hp || 0) + (a.def || 0) + (a.spd || 0) + (a.atk || 0); }
-function rpgLeft() { return Math.max(0, RPG_POINTS_TOTAL - rpgSum(RPG.alloc)); }
+function rpgLeft() { return Math.max(0, RPG_POINTS_TOTAL + (RPG.bought | 0) - rpgSum(RPG.alloc)); }
 function rpgDerive(a, o) {
   a = a || RPG.alloc;
   o = o || {};
@@ -39954,13 +39988,15 @@ const Rpg = (function () {
       const v = RPG.alloc[a.k] || 0;
       let pips = '';
       for (let i = 0; i < RPG_CAP; i++) pips += '<i class="' + (i < v ? 'on' : '') + '"></i>';
+      const buy = left <= 0 && v < RPG_CAP;   // v5.44：免費點用完 → 按鈕直接寫價格
       return '<div class="rpgrow" data-k="' + a.k + '">' +
         '<div class="rpgname">' + a.ico + ' ' + a.n + '</div>' +
         '<div class="rpgpips">' + pips + '</div>' +
         '<div class="rpgstep">' +
         '<button type="button" data-d="-1"' + (v <= 0 ? ' disabled' : '') + '>−</button>' +
         '<b>' + v + '</b>' +
-        '<button type="button" data-d="1"' + ((v >= RPG_CAP || left <= 0) ? ' disabled' : '') + '>＋</button>' +
+        '<button type="button" data-d="1"' + (buy ? ' class="buypt" title="再一點要 ' + RPG_PT_BUY + ' 金幣（目前 ' + (Shop.gold() | 0) + '）"' : '') +
+        (v >= RPG_CAP ? ' disabled' : '') + '>' + (buy ? '💰' + RPG_PT_BUY : '＋') + '</button>' +
         '</div>' +
         '<div class="rpgdesc">' + a.desc + '</div>' +
         '</div>';
@@ -40772,6 +40808,7 @@ const Cloud = (function () {
       }
       RPG.cleared = a.rpg.cleared | 0;
       RPG.gold = a.rpg.gold | 0;
+      RPG.bought = Math.max(0, a.rpg.bought | 0);   // v5.44：花金幣買來的配點
       // v5.18：經驗以伺服器為準（前端送的 exp 後端會夾上限），等級再由經驗推導
       if (isFinite(a.rpg.xp)) {
         RPG.xp = Math.max(0, a.rpg.xp | 0);
@@ -41142,9 +41179,9 @@ const Cloud = (function () {
   }
 
   /* ---------------- API ---------------- */
-  function spend(attr, delta) {
+  function spend(attr, delta, pay) {
     if (!S.online) return Promise.resolve(null);
-    return req('/api/rpg/spend', { attr: attr, delta: delta }).then(function (r) {
+    return req('/api/rpg/spend', { attr: attr, delta: delta, pay: pay | 0 }).then(function (r) {
       if (r && r.ok) { adopt(r.account); return r; }
       return null;
     }, function () { return null; });
@@ -42238,12 +42275,41 @@ const Admin = (function () {
     }
   })();
 
+/* v5.44：金幣買配點 —— 免費點（升等給的）用完後，「＋」變成「💰2000 買 1 點」。
+   每項仍然上限 10 格；上線時點數由後端記帳（金幣走 Shop 錢包）。 */
+function rpgBuyPoint(k) {
+  let a = null;
+  for (let i = 0; i < RPG_ATTRS.length; i++) if (RPG_ATTRS[i].k === k) a = RPG_ATTRS[i];
+  if (!a) return false;
+  const v = RPG.alloc[k] | 0;
+  if (v >= RPG_CAP) return false;
+  if (rpgLeft() > 0) return rpgAdjust(k, 1);        // 還有免費點 → 走原本那條
+  const g = Shop.gold() | 0;
+  if (g < RPG_PT_BUY) {
+    toast('💰 金幣不足：買 1 點要 ' + RPG_PT_BUY + '，還差 ' + (RPG_PT_BUY - g), 2.4);
+    AudioSys.sfx('hurt');
+    return false;
+  }
+  if (!Shop.spend(RPG_PT_BUY).ok) { toast('💰 金幣不足', 2); AudioSys.sfx('hurt'); return false; }
+  RPG.bought = (RPG.bought | 0) + 1;
+  RPG.alloc[k] = v + 1;
+  AudioSys.sfx('item');
+  Rpg.renderStats();
+  toast('💎 ' + tr(a.n) + ' +1　−' + RPG_PT_BUY + ' 金幣（剩 ' + (Shop.gold() | 0) + '）', 2.2);
+  if (Cloud.online()) {
+    try { Cloud.track('alloc'); } catch (e) {}
+    Cloud.spend(k, 1, RPG_PT_BUY);                  // 後端記帳：多一點 bought
+  }
+  return true;
+}
+
 /* 配點：先樂觀更新畫面，伺服器若拒絕就回滾（伺服器才是真相） */
 function rpgAdjust(k, d) {
 
   const v = RPG.alloc[k] || 0;
   if (d > 0) {
-    if (v >= RPG_CAP || rpgLeft() <= 0) return false;
+    if (v >= RPG_CAP) return false;
+    if (rpgLeft() <= 0) return rpgBuyPoint(k);      // v5.44：免費點用完 → 金幣買
   } else if (v <= 0) return false;
   const prev = Object.assign({}, RPG.alloc);
   RPG.alloc[k] = v + d;
@@ -42873,6 +42939,9 @@ window.__BH = {
   Cloud: Cloud, rpgAdjust: rpgAdjust, Admin: Admin,
   Save: Save,   // v4.87：測試要驗「gift 有沒有真的進存檔」
   rpgTotalPoints: function () { return RPG_POINTS_TOTAL; },
+  // v5.44：配點金幣買（測試用）
+  RPG: RPG, RPG_PT_BUY: RPG_PT_BUY, RPG_CAP: RPG_CAP,
+  rpgBuyPoint: rpgBuyPoint, rpgAdjust: rpgAdjust, rpgLeft: rpgLeft,
   deviceId: function () { try { return localStorage.getItem('bombhero-device'); } catch (e) { return null; } },
   HELP_ITEMS: (typeof HELP_ITEMS !== 'undefined' ? HELP_ITEMS : null),
   HELP_FOES: (typeof HELP_FOES !== 'undefined' ? HELP_FOES : null),

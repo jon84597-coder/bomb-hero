@@ -278,6 +278,7 @@ function goldFor(cleared) {
 function defaultRpg() {
   return {
     alloc: { hp: 3, def: 2, spd: 2, atk: 2 },
+    bought: 0,                 // v5.44：花金幣買來的額外配點（免費點用完才能買）
     cleared: 0,
     gold: 0,
     xp: 0,                     // v5.18：累積經驗（等級由它推導）
@@ -353,6 +354,7 @@ function sanitizeCamp(rpg) {
     if (v > 0) bag[k] = v;
   });
   rpg.bag = bag;
+  rpg.bought = clampInt(rpg.bought, 0, 200, 0);   // v5.44：買來的配點上限 200（四項全滿也才 40）
   rpg.campRev = clampInt(rpg.campRev, 0, 1e9, 0);
   return rpg;
 }
@@ -407,25 +409,37 @@ function validateAlloc(alloc, pointsTotal) {
   return { ok: true, alloc: out, spent: spent, cap: cap };
 }
 
-/* 單次配點（+1 / -1）：這是真正在後端執行的增減，前端只說「哪一項」 */
-function spendPoint(rpg, attr, delta) {
+/* 單次配點（+1 / -1）：這是真正在後端執行的增減，前端只說「哪一項」。
+   v5.44：免費點用完時，pay > 0 代表「玩家已在前端付了金幣買這一點」——
+   金幣是 Shop 那一套（跟著整包存檔走，這裡向來不當金幣裁判），
+   後端只負責記「買過幾點」，避免改前端就能無限配點。 */
+function spendPoint(rpg, attr, delta, pay) {
   if (ATTRS.indexOf(attr) < 0) return { ok: false, err: 'BAD_ATTR' };
   let d = 1;
   if (delta === -1 || delta === '-1') d = -1;
   else if (delta === undefined || delta === null || delta === 1 || delta === '1') d = 1;
   else return { ok: false, err: 'BAD_DELTA' };
-  const total = pointsTotalFor(rpg.cleared);
+  const bought = clampInt(rpg.bought, 0, 200, 0);
+  let total = pointsTotalFor(rpg.cleared) + bought;
   const cur = rpg.alloc[attr] || 0;
   if (d > 0) {
     if (cur >= CAP) return { ok: false, err: 'ATTR_CAP', attr: attr, cap: CAP };
-    if (sumAlloc(rpg.alloc) >= total) return { ok: false, err: 'NO_POINTS', left: 0, total: total };
+    if (sumAlloc(rpg.alloc) >= total) {
+      if (!(Number(pay) > 0)) return { ok: false, err: 'NO_POINTS', left: 0, total: total };
+      rpg.bought = bought + 1;
+      total += 1;
+    }
     rpg.alloc[attr] = cur + 1;
   } else {
     if (cur <= 0) return { ok: false, err: 'ATTR_EMPTY', attr: attr };
     rpg.alloc[attr] = cur - 1;
   }
   rpg.ver = (rpg.ver || 1) + 1;
-  return { ok: true, alloc: Object.assign({}, rpg.alloc), left: total - sumAlloc(rpg.alloc), total: total };
+  return {
+    ok: true, alloc: Object.assign({}, rpg.alloc),
+    left: total - sumAlloc(rpg.alloc), total: total,
+    bought: clampInt(rpg.bought, 0, 200, 0)
+  };
 }
 
 /* 過關：必須是按順序解鎖（只能打「下一關」，或重打已過關的舊關卡）
@@ -1423,7 +1437,8 @@ function createCloud(options) {
       xpNeed: lvNow.need,           // 升下一級需要多少（65 級為 0）
       xpTotal: xp,                  // 累積總經驗
       xpMax: XP_MAX,
-      left: points - sumAlloc(acc.rpg.alloc),
+      left: points + (acc.rpg.bought | 0) - sumAlloc(acc.rpg.alloc),
+      pointsBought: acc.rpg.bought | 0,          // v5.44：花金幣買來的配點
       skPts: rpgSkPtsOf(acc.rpg),          // v5.19：技能點總數（營地招式師用）
       skLeft: rpgSkLeftOf(acc.rpg),        //        還沒花掉的
       campRev: acc.rpg.campRev | 0,        // v5.20：營地存檔版本（前端拿來做樂觀鎖）
@@ -3026,7 +3041,8 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           if (!body) return fail(res, 400, 'BAD_BODY'), true;
           const attr = String(body.attr || body.attribute || '');
           const delta = body.delta === -1 ? -1 : 1;
-          const r = spendPoint(acc.rpg, attr, delta);
+          if (Number(body.pay) > 0) logEvent(acc, 'alloc-buy', { attr: attr, pay: Number(body.pay) | 0 });
+          const r = spendPoint(acc.rpg, attr, delta, Number(body.pay) || 0);
           if (!r.ok) return send(res, 409, Object.assign({ ok: false }, r)), true;
           store.touch();
           return send(res, 200, Object.assign({ ok: true, account: publicAccount(acc) }, r)), true;
@@ -3036,7 +3052,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           if (!gate(req, res, 'alloc', 3, 1)) return true;
           const body = await readJson(req, 2048);
           if (!body) return fail(res, 400, 'BAD_BODY'), true;
-          const total = pointsTotalFor(acc.rpg.cleared);
+          const total = pointsTotalFor(acc.rpg) + clampInt(acc.rpg.bought, 0, 200, 0);
           const v = validateAlloc(body.alloc, total);
           if (!v.ok) {
             stats.tamper++;
@@ -3063,9 +3079,10 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           acc.rpg.ver = (acc.rpg.ver || 1) + 1;
           store.touch();
           logEvent(acc, 'respec', {});
+          const capAll = pointsTotalFor(acc.rpg) + clampInt(acc.rpg.bought, 0, 200, 0);
           return send(res, 200, {
             ok: true, account: publicAccount(acc),
-            left: pointsTotalFor(acc.rpg), total: pointsTotalFor(acc.rpg)
+            left: capAll, total: capAll, bought: acc.rpg.bought | 0
           }), true;
         }
 

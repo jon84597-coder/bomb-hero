@@ -82,7 +82,8 @@ ok(/v: '5\.42'[^}]*now: false/.test(vlog), '5.42 已改 now:false');
 const nowCount = (vlog.match(/now: true/g) || []).length;
 ok(nowCount === 1, '全檔只有一筆 now:true（實際 ' + nowCount + '）');
 const sw = (function () { try { return fs.readFileSync(__dirname + '/../sw.js', 'utf8'); } catch (e) { return ''; } })();
-ok(/SW_VERSION = 'v5\.43\.0'/.test(sw), 'sw.js SW_VERSION = v5.43.0');
+const swm = sw.match(/SW_VERSION = 'v([\d.]+)'/);
+ok(swm && parseFloat(swm[1]) >= 5.44, 'sw.js SW_VERSION ≥ v5.44（現為 ' + (swm ? swm[0] : '?') + '）');
 
 console.log('\n' + (fail === 0 ? '✅ 全部 ' + pass + ' 項通過' : '❌ ' + fail + ' 項失敗 / ' + (pass + fail) + ' 項'));
 process.exit(fail === 0 ? 0 : 1);
