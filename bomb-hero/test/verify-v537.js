@@ -241,7 +241,7 @@ head('⑨ 縮到 42%／原始／放大 300% 各自渲染一次不報錯');
 
 /* ---------- ⑧ 版本 ---------- */
 head('⑧ 版本戳記');
-const rawMain = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const rawMain = require('./_sandbox').rawHtml;
 // 版本斷言刻意不寫死：只要求「不比 5.37 舊」＋「畫面上顯示的就是 P.VERSION」
 ok(parseFloat(P.VERSION) >= 5.37, 'VERSION ≥ 5.37（實際 ' + P.VERSION + '）');
 ok(rawMain.indexOf('id="verTxt">' + P.VERSION + '<') >= 0, '#verTxt 顯示 ' + P.VERSION);

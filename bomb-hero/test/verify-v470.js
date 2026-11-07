@@ -9,7 +9,7 @@ const { makeEnv } = require('./_sandbox');
 const fs = require('fs');
 const path = require('path');
 
-const src = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+const src = require('./_sandbox').rawHtml;
 const env = makeEnv();
 const P = env.BH, G = P.Game;
 const S = [], F = [];

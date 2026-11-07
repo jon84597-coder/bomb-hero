@@ -158,7 +158,7 @@ head('7. RPG／對戰不走這條路');
 // ================================================================
 head('8. 版本');
 {
-  const src = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const src = require('./_sandbox').rawHtml;
   const vm = src.match(/const VERSION = '([\d.]+)'/);
   const v = vm ? vm[1].split('.').map(Number) : [0, 0];
   ok(v[0] > 5 || (v[0] === 5 && v[1] >= 31), '主檔版號 ≥ 5.31（目前 ' + (vm && vm[1]) + '）');

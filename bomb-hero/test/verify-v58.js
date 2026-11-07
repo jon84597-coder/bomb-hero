@@ -135,7 +135,7 @@ srv.stderr.on('data', d => { const s = String(d); if (/Error/.test(s)) console.e
 
   // ================================================================
   head('④ 前端：登出後回到登入頁 + 維持登入勾選框 + 後台錯誤不再被吞掉');
-  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const html = require('./_sandbox').rawHtml;
   ok(/S\.tab = 'login';/.test(html), '登出後切到「登入」分頁（原本是 reg → 沒有勾選框）');
   ok(/id="acctKeep"/.test(html), '有「維持登入」勾選框');
   ok(/localStorage\.getItem\('bombhero-keep-login'\)/.test(html), '維持登入的勾選狀態會被記住');

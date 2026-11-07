@@ -5,7 +5,7 @@ const fs = require('fs');
 
 // 固定種子 → 地圖每次長得一樣，牆量才可以斷言
 const FILE = 'file:///' + path.join(__dirname, '../index.html').replace(/\\/g, '/') + '?seed=12345';
-const SRC = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+const SRC = require('./_sandbox').rawHtml;
 
 let pass = 0, fail = 0;
 function ok(cond, name, extra) {

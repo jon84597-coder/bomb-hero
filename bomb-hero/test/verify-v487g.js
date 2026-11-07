@@ -10,7 +10,7 @@ function ok(cond, msg, extra) {
   else { fail++; console.log('  ✗ FAIL: ' + msg + (extra === undefined ? '' : ' → ' + JSON.stringify(extra))); }
 }
 const ROOT = path.join(__dirname, '..');
-const SRC = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+const SRC = require('./_sandbox').rawHtml;
 const CLOUD = fs.readFileSync(path.join(ROOT, '..', 'cloud.js'), 'utf8');
 
 const env = makeEnv();

@@ -158,7 +158,7 @@ head('7. i18n 與版本');
   });
   const pw = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
   ok(/^5\.(2[89]|[3-9]\d)\./.test(pw.version), 'package.json ≥ 5.28（目前 ' + pw.version + '）');
-  const rawLen = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8').length;
+  const rawLen = require('./_sandbox').rawHtml.length;
   ok(rawLen < 1950000, '主檔 ' + rawLen + ' 字元（預算 1,950,000）');
 }
 

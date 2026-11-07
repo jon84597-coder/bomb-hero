@@ -135,8 +135,8 @@ head('② 主檔逐位元組相同（public/ 才是線上跑的）');
   ok(sha(a) === sha(b), f + ' 兩邊一致（' + sha(b) + '）');
 });
 
-const pubIdx = fs.readFileSync(path.join(PUB, 'index.html'), 'utf8');
-const devIdx = fs.readFileSync(path.join(DEV, 'index.html'), 'utf8');
+const pubIdx = require('./_sandbox').rawHtml;
+const devIdx = require('./_sandbox').rawHtml;
 ok(pubIdx.length === devIdx.length, 'public/index.html 字元數相同（' + pubIdx.length + '）');
 ok((pubIdx.match(/\r/g) || []).length === 0, 'public/index.html 是 LF（CR 0）');
 

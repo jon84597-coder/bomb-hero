@@ -2,7 +2,7 @@
 const fs = require('fs');
 const vm = require('vm');
 
-const html = fs.readFileSync(__dirname + '/../index.html', 'utf8');
+const html = require('./_sandbox').rawHtml;
 const m = html.match(/<script>([\s\S]*?)<\/script>/);
 if (!m) { console.error('no script'); process.exit(1); }
 const code = m[1];
@@ -106,7 +106,7 @@ function key(codeName, down) {
     fn({ code: codeName, preventDefault() {} }));
 }
 const fs2 = require('fs');
-const htmlSrc = fs2.readFileSync(__dirname + '/../index.html', 'utf8');
+const htmlSrc = require('./_sandbox').rawHtml;
 
 console.log('=== 1. 觸控介面存在於 HTML ===');
 ['id="tpad"', 'id="tpknob"', 'class="tpring"', 'data-t="action"', 'data-t="pause"', 'id="touchUI"']

@@ -246,7 +246,7 @@ head('⑥ 版本戳記／預算／LF');
   ok(swNum(swA) >= 5.38, 'bomb-hero/sw.js ≥ v5.38（' + swNum(swA) + '）');
   ok(swA === swB, 'bomb-hero/sw.js 與部署副本 public/sw.js 完全相同');
   ok(swNum(swC) === swNum(swA), 'bomberman-online 副本版本號同步（' + swNum(swC) + '）');
-  const main = fs.readFileSync(__dirname + '/../index.html', 'utf8');
+  const main = require('./_sandbox').rawHtml;
   ok(main.indexOf('\r') === -1, '主檔整檔 LF（CR 0）');
   ok(main.length < 1950000, '主檔 ' + main.length + ' 字元 < 1,950,000');
   // 新功能的 i18n 都在

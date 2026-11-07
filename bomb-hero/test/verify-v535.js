@@ -250,7 +250,7 @@ head('9. 版本與預算');
   const swv = (sw.match(/var SW_VERSION = 'v([\d.]+)'/) || [])[1] || '0';
   const sv = swv.split('.').map(Number);
   ok(sv[0] > 5 || (sv[0] === 5 && sv[1] >= 35), 'sw.js 是 v5.35.x（目前 ' + swv + '）');
-  const raw = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const raw = require('./_sandbox').rawHtml;
   ok(raw.length <= 1950000, '主檔 ' + raw.length + ' 字元（預算 1,950,000）');
   ok(raw.indexOf('\r') === -1, '整檔 LF（CR 0）');
 }

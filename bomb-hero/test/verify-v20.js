@@ -3,7 +3,7 @@
 const fs = require('fs');
 const vm = require('vm');
 
-const html = fs.readFileSync(__dirname + '/../index.html', 'utf8');
+const html = require('./_sandbox').rawHtml;
 const m = html.match(/<script>([\s\S]*?)<\/script>/);
 if (!m) { console.error('no script'); process.exit(1); }
 const code = m[1];

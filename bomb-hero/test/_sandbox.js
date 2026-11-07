@@ -9,7 +9,24 @@ const HTML_PATH = (function () {
   const b = __dirname + '/../public/index.html';
   return fs.existsSync(a) ? a : b;
 })();
-const html = fs.readFileSync(HTML_PATH, 'utf8');
+/* v5.53：主程式（1.62M 字元）從 index.html 抽到 js/main.js 了 —— index.html 只剩
+   HTML＋CSS（328K）。這裡把 <script src="js/main.js"></script>「內聯回填」成
+   <script>…</script>，所以：
+     • makeEnv 照舊抓得到那段主邏輯（它的正則 /<script>([\s\S]*?)<\/script>/）
+     • rawHtml / html 仍然是「i18n 字典 ＋ HTML ＋ 主邏輯」的全文
+       → 25 支靠 rawHtml 找文案／量體積的舊測試完全不用改。
+   若 js/main.js 不存在（例如只複製了 index.html 的舊備份），就退回讀原始 HTML。 */
+const MAINJS = (function () {
+  const q = __dirname + '/../js/main.js';
+  return fs.existsSync(q) ? fs.readFileSync(q, 'utf8') : '';
+})();
+const html = (function () {
+  const raw = fs.readFileSync(HTML_PATH, 'utf8');
+  if (!MAINJS) return raw;
+  return raw.replace(/<script src="\.?\/?js\/main\.js"><\/script>/, function () {
+    return '<script>\n' + MAINJS + '</script>';
+  });
+})();
 // v5.20：i18n 字典抽成外部檔 —— 對外仍然提供「邏輯全文」（字典 + 主檔），
 // 這樣所有「在原始碼裡找文案」的舊測試都不用改。
 const I18N_PRE = (function () {

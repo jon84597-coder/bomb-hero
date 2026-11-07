@@ -11,7 +11,7 @@ function ok(cond, msg, extra) {
 }
 function head(s) { console.log('\n' + s); }
 
-const SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const SRC = require('./_sandbox').rawHtml;
 const env = makeEnv();
 const B = env.BH, G = env.G;
 

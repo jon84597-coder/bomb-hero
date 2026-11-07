@@ -8,7 +8,7 @@ function ok(cond, msg, extra) {
   if (cond) { pass++; console.log('  ✓ ' + msg); }
   else { fail++; console.log('  ✗ FAIL: ' + msg + (extra === undefined ? '' : ' → ' + JSON.stringify(extra))); }
 }
-const SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const SRC = require('./_sandbox').rawHtml;
 const { makeEnv } = require('./_sandbox');
 const P = makeEnv().BH;
 

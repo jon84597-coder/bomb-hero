@@ -9,7 +9,7 @@ const { makeEnv } = require('./_sandbox');
 const fs = require('fs');
 const path = require('path');
 
-const src = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+const src = require('./_sandbox').rawHtml;
 const srv = fs.readFileSync(path.join(__dirname, '../../server.js'), 'utf8');
 const env = makeEnv();
 try { env.BH.WeekMod.pin([]); } catch (e) {}   // v5.38：本支驗 T 層怪量，不吃每週變異

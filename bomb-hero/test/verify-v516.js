@@ -11,7 +11,7 @@ const { EventEmitter } = require('events');
 const { makeEnv } = require('./_sandbox');
 
 const ROOT = path.join(__dirname, '..');
-const SRC = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+const SRC = require('./_sandbox').rawHtml;
 const CLOUD_SRC = fs.readFileSync(path.join(ROOT, '..', 'cloud.js'), 'utf8');
 const cloudMod = require(path.join(ROOT, '..', 'cloud.js'));
 

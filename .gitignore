@@ -101,3 +101,11 @@ test/_tmp_*.js
 
 # v5.5：本機驗證截圖（headless chrome 產物）
 outputs/
+
+# v5.53：開發期備份與一次性補丁腳本 —— 已歸檔到 bomb-hero/_trash/（不進版控）
+# 保留例外：_bak_v468_pre.html / _bak_v471_pre.html 仍被 test/_probe-*.js 當 A/B 對照讀
+bomb-hero/_trash/
+bomb-hero/patch_v*.py
+bomb-hero/_bak_*.html
+bomb-hero/_v45*_*.py
+bomb-hero/_cur_*.html

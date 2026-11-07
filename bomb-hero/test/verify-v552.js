@@ -37,7 +37,7 @@ head('① 檔案本體');
     '瀏覽器分支與 node 分支分開（node 端不會碰到 document）');
 
   // 主檔預算：這支完全外置，不佔 1,950,000
-  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const html = require('./_sandbox').rawHtml;
   ok(html.indexOf('id="bhKeys"') < 0, '面板 HTML 不在主檔裡（外置，主檔只剩 ' +
     (1950000 - html.length) + ' 字元）');
 }
@@ -170,13 +170,15 @@ head('⑥ 版本戳記');
 {
   ok(parseFloat(P.VERSION) >= 5.52, 'VERSION ≥ 5.52（實際 ' + P.VERSION + '）');
   const vlog = fs.readFileSync(path.join(__dirname, '..', 'js', 'version-log.js'), 'utf8');
-  ok(/v: '5\.52'[\s\S]{0,300}now: true/.test(vlog), 'VERSION_LOG 有 5.52 且 now:true');
-  ok(!/v: '5\.51'[\s\S]{0,260}now: true/.test(vlog), '5.51 已改成 now:false');
+  // v5.53：改成動態 —— 每升一版都要回來改寫死的版號太痛（鐵律：版本斷言別寫死）。
+  const _ver = P.VERSION.replace(/\./g, '\\.');
+  ok(new RegExp("v: '" + _ver + "'[\\s\\S]{0,400}now: true").test(vlog), 'VERSION_LOG 有 ' + P.VERSION + ' 且 now:true');
+  ok(!/v: '5\.52'[\s\S]{0,300}now: true/.test(vlog), '5.52 已改成 now:false');
   const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8'));
   ok(parseFloat(pkg.version) >= 5.52, 'package.json 版本 ≥ 5.52（' + pkg.version + '）');
-  ok(/測試版 v<span id="verTxt">5\.52<\/span>/.test(SRC), '首頁版本文字 5.52');
+  ok(new RegExp('測試版 v<span id="verTxt">' + P.VERSION + '</span>').test(SRC), '首頁版本文字 = ' + P.VERSION);
   const html = SRC;
-  ok(/id="verLogVer">5\.52</.test(html), '「版本更新內容」標題 5.52');
+  ok(new RegExp('id="verLogVer">' + P.VERSION + '<').test(html), '「版本更新內容」標題 = ' + P.VERSION);
 }
 
 console.log('\n' + (fail ? '❌' : '✅') + ' v5.52：' + pass + ' 通過 / ' + fail + ' 失敗');

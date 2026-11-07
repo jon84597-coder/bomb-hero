@@ -8,7 +8,10 @@ const { makeEnv } = require('./_sandbox');
 
 const ROOT = path.join(__dirname, '..');
 const htmlPath = path.join(ROOT, 'index.html');
-const html = fs.readFileSync(htmlPath, 'utf8');
+// v5.53：主程式抽到 js/main.js 了 —— 這裡要的是「完整邏輯全文」，走沙盒的合併文本。
+const html = require('./_sandbox').rawHtml;
+// 但「有幾個 inline script / 幾個外部 js」必須看真實的 index.html（合併文本是回填過的）。
+const rawIndex = fs.readFileSync(htmlPath, 'utf8');
 const rd = (p) => fs.readFileSync(path.join(ROOT, p));
 
 let pass = 0, fail = 0;
@@ -356,13 +359,17 @@ ok(/'\.png': 'image\/png'/.test(srv), '圖示 MIME 是 image/png');
 // ==================================================================
 console.log('\n=== 13. 不破壞既有功能 ===');
 // v5.20：字典外移，唯一的外部 js 只能是它（純資料，壞了只是沒翻譯）
-const extJs52 = html.match(/<script[^>]+src="([^"]+)"/g) || [];
-ok((html.match(/<script(?![^>]*src=)/g) || []).length === 2, '2 個 inline script（PWA 前置＋主程式）');
+const extJs52 = rawIndex.match(/<script[^>]+src="([^"]+)"/g) || [];
+// v5.53：主程式也外置了（js/main.js）→ inline 只剩 head 裡的 pwaBoot 這一個。
+ok((rawIndex.match(/<script(?![^>]*src=)/g) || []).length === 1, '1 個 inline script（只剩 head 的 PWA 前置）');
 // v5.38：多了 js/version-log.js（純資料檔）
 // v5.52：多了 js/keys-ui.js（按鍵面板；主檔預算滿了只能外置）
-ok(extJs52.length === 3 && extJs52.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
+// v5.53：多了 js/main.js（主程式；index.html 從 1.95M 降到 328K）＋ js/onboard.js（新手任務）
+//   改成「至少要有這幾個」而不是精確數量 —— 每加一個外部檔都要回來改這行太痛。
+ok(extJs52.length >= 4 && extJs52.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
   extJs52.some(function (x) { return x.indexOf('js/version-log.js') > 0; }) &&
-  extJs52.some(function (x) { return x.indexOf('js/keys-ui.js') > 0; }), '外部 js 只有字典／版本紀錄／按鍵面板三個');
+  extJs52.some(function (x) { return x.indexOf('js/main.js') > 0; }) &&
+  extJs52.some(function (x) { return x.indexOf('js/keys-ui.js') > 0; }), '外部 js 至少四個：字典／版本紀錄／主程式／按鍵面板（實際 ' + extJs52.length + '）');
 ok(!/src="http/.test(html), '沒有外部圖片網址（離線也能開）');
 ok(html.indexOf("const VERSION = '" + P.VERSION + "';") > 0, '版本常數 = ' + P.VERSION);
 const L46 = (P.VERSION_LOG.filter(function (x) { return x.v === '4.6'; })[0] || { items: [] });

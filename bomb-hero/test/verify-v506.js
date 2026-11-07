@@ -17,7 +17,7 @@ function ok(c, m, extra) {
 function head(s) { console.log('\n' + s); }
 
 // v5.38：版本紀錄搬到 js/version-log.js → 掃文案時一起讀進來
-const src = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8') + '\n' +
+const src = require('./_sandbox').rawHtml + '\n' +
   (function () { try { return fs.readFileSync(path.join(ROOT, 'js', 'version-log.js'), 'utf8'); } catch (e) { return ''; } })();
 
 // 取一條選擇器開頭的大括號區塊（配平）

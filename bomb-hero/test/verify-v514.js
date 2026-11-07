@@ -16,7 +16,7 @@ function head(s) { console.log('\n' + s); }
 function vt(v) { return String(v).split('.').map(function (x) { return parseInt(x, 10) || 0; }); }
 function vge(a, b) { const A = vt(a), B = vt(b); for (let i = 0; i < 3; i++) { const x = A[i] || 0, y = B[i] || 0; if (x !== y) return x > y; } return true; }
 
-const src = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const src = require('./_sandbox').rawHtml;
 const cloudSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'cloud.js'), 'utf8');
 const env = makeEnv();
 const B = env.BH;

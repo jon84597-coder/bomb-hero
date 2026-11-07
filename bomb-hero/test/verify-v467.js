@@ -8,7 +8,7 @@ const { makeEnv } = require('./_sandbox');
 const fs = require('fs');
 const path = require('path');
 
-const src = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+const src = require('./_sandbox').rawHtml;
 const env = makeEnv();
 /* v5.49：單人／RPG 的預設地圖改成「隨機生成」→ 這支驗的是手工地圖（15×13）的手感與版面，
    先釘回基本地圖，免得地圖變大讓尺寸／速度／數量的斷言跟著飄。 */

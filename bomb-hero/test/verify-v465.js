@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const FILE = 'file:///' + path.join(__dirname, '../index.html').replace(/\\/g, '/');
-const SRC = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+const SRC = require('./_sandbox').rawHtml;
 
 let pass = 0, fail = 0;
 function ok(cond, name, extra) {

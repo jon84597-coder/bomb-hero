@@ -195,7 +195,7 @@ const bossDrawn = rec.calls.filter(c => c[0] === 'drawImage').length;
 ok(bossDrawn >= 6, 'game 內真的用老虎圖畫 BOSS（drawImage ' + bossDrawn + ' 次）');
 // v5.0b：血條上方改成「王的名字」（皇冠只剩大逃殺亂入王在用）
 ok(rec.calls.some(c => c[0] === 'fillText' && String(c[1]).indexOf('BOSS') >= 0) ||
-   require('fs').readFileSync(__dirname + '/../index.html', 'utf8').indexOf("const nk = 'boss.' + bi") > 0,
+   require('./_sandbox').rawHtml.indexOf("const nk = 'boss.' + bi") > 0,
    'BOSS 血條上方有名字標記');
 
 // 沒有圖時退回外星魔王（不開天窗）

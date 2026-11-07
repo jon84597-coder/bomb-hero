@@ -15,7 +15,7 @@ const { makeEnv } = require('./_sandbox');
 
 const ROOT = path.join(__dirname, '..');
 // v5.38：版本紀錄搬到 js/version-log.js
-const SRC = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8') + '\n' +
+const SRC = require('./_sandbox').rawHtml + '\n' +
   (function () { try { return fs.readFileSync(path.join(ROOT, 'js', 'version-log.js'), 'utf8'); } catch (e) { return ''; } })();
 const CLOUD_SRC = fs.readFileSync(path.join(ROOT, '..', 'cloud.js'), 'utf8');
 const cloudMod = require(path.join(ROOT, '..', 'cloud.js'));

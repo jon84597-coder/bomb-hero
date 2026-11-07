@@ -9,7 +9,7 @@ function ok(cond, msg, extra) {
   if (cond) { pass++; console.log('  ✓ ' + msg); }
   else { fail++; console.log('  ✗ FAIL: ' + msg + (extra === undefined ? '' : ' → ' + JSON.stringify(extra))); }
 }
-const SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const SRC = require('./_sandbox').rawHtml;
 const css = SRC.slice(SRC.indexOf('<style>'), SRC.indexOf('</style>'));
 
 /* ================= ① 沒有 ad 開頭的選擇器 ================= */

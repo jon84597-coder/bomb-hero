@@ -10,7 +10,7 @@ const HTML_PATH = (function () {
   const b = path.join(ROOT, 'public', 'index.html');
   return fs.existsSync(a) ? a : b;
 })();
-const html = fs.readFileSync(HTML_PATH, 'utf8');
+const html = require('./_sandbox').rawHtml;
 
 let pass = 0, fail = 0;
 function ok(c, n, x) {

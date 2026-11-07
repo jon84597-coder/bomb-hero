@@ -12,7 +12,7 @@ function ok(cond, msg, extra) {
 }
 const root = path.join(__dirname, '..');
 // v5.38：版本紀錄搬到 js/version-log.js
-const SRC = fs.readFileSync(path.join(root, 'index.html'), 'utf8') + '\n' +
+const SRC = require('./_sandbox').rawHtml + '\n' +
   (function () { try { return fs.readFileSync(path.join(root, 'js', 'version-log.js'), 'utf8'); } catch (e) { return ''; } })();
 
 /* ================= ① 原始碼健康度 ================= */

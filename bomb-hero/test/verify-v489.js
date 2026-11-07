@@ -10,7 +10,7 @@ function ok(cond, msg, extra) {
   else { fail++; console.log('  ✗ FAIL: ' + msg + (extra === undefined ? '' : ' → ' + JSON.stringify(extra))); }
 }
 // v5.20：字典已外移 → 接在後面，讓「^key|」的逐列搜尋一樣有效
-const SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8') +
+const SRC = require('./_sandbox').rawHtml +
   '\n' + (function () { try { return fs.readFileSync(path.join(__dirname, '..', 'js', 'i18n-src.js'), 'utf8'); } catch (e) { return ''; } })();
 
 console.log('=== ① 常數 ===');

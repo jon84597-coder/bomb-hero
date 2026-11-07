@@ -12,7 +12,7 @@
      · /api/ 一律不攔（帳號、雲端存檔、線上配對都必須即時）
    ================================================================ */
 
-var SW_VERSION = 'v5.52.0';
+var SW_VERSION = 'v5.53.0';
 var CORE_CACHE = 'bh-core-' + SW_VERSION;   // 遊戲本體（離線也要開得起來）
 var ASSET_CACHE = 'bh-asset-' + SW_VERSION; // 圖示等靜態資源
 var NAV_TIMEOUT = 2200;   // v4.22：Render 冷啟動一定超過，早點回快取讓畫面先出來
@@ -22,7 +22,9 @@ var CORE = [
   './index.html',
   './js/i18n-src.js',
   './js/version-log.js',
+  './js/main.js',
   './js/keys-ui.js',
+  './js/onboard.js',
   './bg/title.webp',
   './spr/title-logo.webp?v=59',
   './spr/nuke-missile.webp',
@@ -40,7 +42,20 @@ var CORE = [
 /* v4.79：美術拆成 175 個 spr/*.webp。
    安裝時只抓首頁必需的那張（CORE），其餘在啟用後「背景慢慢預熱」——
    不阻塞啟用，也不讓玩家第一次進關卡時看到程式繪製的替代圖。
-   預熱狀態記在 ASSET_CACHE 裡：已經有 150 張以上就不再抓。 */
+
+   v5.53：改成「分級預熱」。以前是照 _list.json 的檔案順序無差別抓 219 張（約 3 MB），
+   只打單人關的玩家也要付大逃殺／BOSS 的流量，而且會跟正在玩的那場搶頻寬。
+   現在照檔名前綴分三桶，越常用越早抓：
+     P0  角色／炸彈／火焰／道具／地形／UI —— 進第一關就要，批次之間不延遲
+     P1  章節 BOSS（boss-*）—— 打到該章王才要，每批之間讓 250ms
+     P2  大逃殺專用（br-* / nuke-* / drop-*）—— 沒玩大逃殺就永遠用不到，讓 600ms
+   排序只影響「抓的順序」，最終仍會補滿全部 —— 離線完整性不變。 */
+function warmBucket(f) {
+  if (/^(br-|nuke-|drop-)/.test(f)) return 2;
+  if (/^boss-/.test(f)) return 1;
+  return 0;
+}
+
 function warmSprites() {
   caches.open(ASSET_CACHE).then(function (cache) {
     return Promise.all([cache.keys(), fetch('./spr/_list.json').then(function (r) { return r.json(); }).catch(function () { return null; })])
@@ -49,11 +64,19 @@ function warmSprites() {
         if (!list || !list.length) return;
         var have = 0;
         keys.forEach(function (k) { if (k.url.indexOf('/spr/') >= 0) have++; });
-        if (have >= 150) return;
+        // v5.53：原本寫死 150 張就停 —— 現在分級抓，數量會停在「只抓到 P0」的中間值，
+        // 用比例判斷才不會每次 SW 啟動都重跑一輪。
+        if (have >= Math.floor(list.length * 0.95)) return;
+
+        var buckets = [[], [], []];
+        list.forEach(function (f) { buckets[warmBucket(f)].push(f); });
+        var order = buckets[0].concat(buckets[1], buckets[2]);
+        var coreLen = buckets[0].length;
         var i = 0;
         function next() {
-          if (i >= list.length) return;
-          var batch = list.slice(i, i + 6);
+          if (i >= order.length) return;
+          var at = i;
+          var batch = order.slice(i, i + 6);
           i += 6;
           Promise.all(batch.map(function (f) {
             var url = './spr/' + f;
@@ -61,7 +84,11 @@ function warmSprites() {
               if (hit) return null;
               return fetch(url).then(function (r) { if (r && r.ok) return cache.put(url, r); return null; }).catch(function () { return null; });
             });
-          })).then(next, next);
+          })).then(function () {
+            // P0 全速；P1／P2 讓出一點頻寬，避免跟正在玩的關卡搶圖
+            if (at < coreLen) { next(); return; }
+            setTimeout(next, at < coreLen + buckets[1].length ? 250 : 600);
+          }, next);
         }
         next();
       });

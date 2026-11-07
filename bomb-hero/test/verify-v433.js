@@ -7,7 +7,7 @@ const { makeEnv } = require('./_sandbox');
 
 const ROOT = path.join(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'index.html');
-const html = fs.readFileSync(HTML_PATH, 'utf8');
+const html = require('./_sandbox').rawHtml;
 
 let pass = 0, fail = 0;
 function ok(c, n, x) {

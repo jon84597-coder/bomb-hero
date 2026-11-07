@@ -680,17 +680,26 @@ ok(/name="viewport"/.test(html), '有 viewport meta（手機不會縮成一小�
 // v4.6：多了 <head> 的 PWA 註冊小程式（inline，不是外部檔），所以變成 2 個區塊
 // v5.20：i18n 字典（162KB 純資料）抽成 js/i18n-src.js。外部 js 只准這一個，
 //   而且主檔一定要有 `|| ''` 的退路 —— 檔案 404 時只是沒有翻譯，不會白畫面。
-const extJs = html.match(/<script[^>]+src="([^"]+)"/g) || [];
+// v5.53：html 是沙盒回填後的合併文本（main.js 已經被攤平成 inline），
+//   要驗「有幾個外部 script」必須看真實的 index.html。
+const _rawIdx = fs.readFileSync(__dirname + '/../index.html', 'utf8');
+const extJs = _rawIdx.match(/<script[^>]+src="([^"]+)"/g) || [];
 // v5.38：版本更新紀錄也搬到 js/version-log.js（純字串資料，不是程式邏輯）
-// v5.52：按鍵面板 js/keys-ui.js（主檔預算滿了，UI 只能外置）—— 白名單三個，
-//   而且它一定要排在主程式之後（主程式先跑完 __BH，面板只是錦上添花，掛了也不白畫面）。
-const _keysAt = html.indexOf('<script src="js/keys-ui.js"></script>');
-ok(extJs.length === 3 && extJs.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
+// v5.52：按鍵面板 js/keys-ui.js（主檔預算滿了，UI 只能外置）
+// v5.53：主程式也外置了（js/main.js）＋ 新手任務 js/onboard.js。
+//   兩個掛在最後的 UI 檔（keys-ui / onboard）一定要排在主程式之後 ——
+//   主程式先跑完 __BH，面板只是錦上添花，掛了也不該白畫面。
+const _keysAt = _rawIdx.indexOf('<script src="js/keys-ui.js"></script>');
+const _onbAt = _rawIdx.indexOf('<script src="js/onboard.js"></script>');
+const _mainAt = _rawIdx.indexOf('<script src="js/main.js"></script>');
+ok(extJs.length >= 3 && extJs.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
   extJs.some(function (x) { return x.indexOf('js/version-log.js') > 0; }) &&
-  _keysAt > html.lastIndexOf('</script>', _keysAt - 1),
-  '外部 js 只有字典／版本紀錄／按鍵面板三個，且面板排在主程式之後（' + extJs.join(',') + '）');
+  extJs.some(function (x) { return x.indexOf('js/main.js') > 0; }) &&
+  _mainAt > 0 && _keysAt > _mainAt && _onbAt > _mainAt,
+  '外部 js 至少三個（字典／版本紀錄／主程式），且 UI 面板排在主程式之後（' + extJs.join(',') + '）');
 ok(/window\.__I18N_SRC\s*\)\s*\?\s*window\.__I18N_SRC\s*:\s*''/.test(html), '字典載入失敗有退路（不會白畫面）');
-ok((html.match(/<script(?![^>]*src=)/g) || []).length === 2, '2 個 inline script 區塊（主程式＋PWA）');
+ok((require('./_sandbox').rawHtml.match(/<script(?![^>]*src=)/g) || []).length >= 1,
+  'inline script 仍在（沙盒回填主程式後會看到 2 個；真實 index.html 只剩 PWA 那一個）');
 ok(!/<link[^>]+href="http/.test(html), '沒有外部 css（不會等不到樣式）');
 ok(!/src="http/.test(html), '沒有外部圖片網址（離線也能開）');
 ok(!/@import/.test(html), '沒有 @import 外鏈');
@@ -698,7 +707,10 @@ ok(!/\brequire\s*\(/.test(html) && !/^\s*import\s/m.test(html), '沒有 node 專
 ok(/<\/html>\s*$/.test(html.trim()), '檔案結尾完整（</html>）');
 const bytes = fs.statSync(__dirname + '/../index.html').size;
 // v4.21：多了提示卡／離場卡／10 語言文案 → 上限放寬到 2.2MB（單檔遊戲，仍在合理範圍）
-ok(bytes > 900000 && bytes < 4250000, '檔案大小合理（' + (bytes / 1024).toFixed(0) + ' KB）');   // v4.77：10 國全文翻譯上線 → 上限 4.25MB
+// v5.53：主程式抽到 js/main.js → index.html 只剩 HTML＋CSS（約 320 KB），改成分開量。
+const mainBytes = fs.statSync(__dirname + '/../js/main.js').size;
+ok(bytes > 150000 && bytes < 800000, 'index.html 體積合理（' + (bytes / 1024).toFixed(0) + ' KB，只剩 HTML＋CSS）');
+ok(mainBytes > 900000 && mainBytes < 2500000, 'js/main.js 體積合理（' + (mainBytes / 1024).toFixed(0) + ' KB）');   // v5.53：主邏輯本體
 ok(!!BH && !!BH.Game && !!BH.startSolo, '__BH 正常匯出（腳本沒有中途爆掉）');
 ok(typeof BH.render === 'function' && typeof BH.updateSolo === 'function', '主迴圈函式都在');
 

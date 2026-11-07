@@ -10,7 +10,7 @@ function ok(cond, msg, extra) {
   else { fail++; console.log('  ✗ FAIL: ' + msg + (extra === undefined ? '' : ' → ' + JSON.stringify(extra))); }
 }
 const ROOT = path.join(__dirname, '..');
-const SRC = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+const SRC = require('./_sandbox').rawHtml;
 
 // webp 尺寸解析（VP8 有損 / VP8L 無損 / VP8X 擴充）
 function webpSize(file) {
