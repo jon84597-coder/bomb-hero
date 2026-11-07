@@ -17,6 +17,7 @@ function ok(cond, name) {
   else { fail++; console.log('  ✗ FAIL: ' + name); }
 }
 function head(t) { console.log('\n=== ' + t + ' ==='); }
+function t_(k) { try { return P.t(k); } catch (e) { return k; } }
 
 function fresh() {
   P.settings.size = 'M'; P.settings.soloDiff = 'normal'; P.settings.hazards = 'off';
@@ -110,7 +111,13 @@ head('② 每週變異');
   const n1 = G.enemies.filter(function (e) { return !e.boss; }).length;
   ok(n1 === n0 + 3, '變異真的改到小怪數量（' + n0 + ' → ' + n1 + '）');
   P.WeekMod.pin([]);
-  ok(/function weekModBlock\(\)/.test(src), '🎁 面板有本週變異區塊');
+  const wb = P.weekModBlock();
+  ok(typeof wb === 'string' && wb.length > 40, '🎁 面板的本週變異區塊渲染得出來（' + wb.length + ' 字元）');
+  ok(wb.indexOf(t_('week.title')) >= 0 || wb.indexOf('本週變異') >= 0, '區塊標題正確（不會重複圖示）');
+  ok(wb.indexOf('week.m.') < 0, '規則名稱都翻到了（沒有殘留 key）');
+  P.WeekMod.pin([]);
+  ok(P.weekModBlock().indexOf('本週沒有變異') >= 0 || P.weekModBlock().indexOf('week.none') < 0, '沒有變異時顯示「本週沒有變異」');
+  P.WeekMod.pin(null);
   ok(/weekBanner\(\)/.test(src), '進關會彈一次變異提示');
 }
 

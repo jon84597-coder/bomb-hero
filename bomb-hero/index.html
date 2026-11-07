@@ -14683,7 +14683,7 @@ const Season = (function () {
 // v5.38：本週變異（拼在签到面板最上面，跟賽季並列）
 function weekModBlock() {
   const L = WeekMod.list();
-  let h = '<div class="gsec">🌀 ' + t2('week.title') +
+  let h = '<div class="gsec">' + t2('week.title') +
     '<span class="gtag">' + t2('week.tag', { d: WeekMod.daysLeft() }) + '</span></div>';
   h += '<div class="stgoals">';
   for (let i = 0; i < L.length; i++) {
@@ -42677,6 +42677,7 @@ window.__BH = {
   BOSS_BREAK: BOSS_BREAK, bossShieldMax: bossShieldMax, bossPhaseSpd: bossPhaseSpd,
   WeekMod: WeekMod, WEEK_MODS: WEEK_MODS, weekMul: weekMul, weekAdd: weekAdd, weekBanner: weekBanner,
   Ghost: Ghost, drawDailyGhost: drawDailyGhost, nearMissSuffix: nearMissSuffix, HomeDot: HomeDot,
+  weekModBlock: weekModBlock,
   bossPhaseBombK: bossPhaseBombK, arenaBossOf: arenaBossOf,
   // v4.16：只有第 32 關有 BOSS ＋ 可躲人的樹叢／破屋
   soloIsBoss: soloIsBoss, isChapterFinal: isChapterFinal, hideTileAt: hideTileAt, playerHiding: playerHiding,
