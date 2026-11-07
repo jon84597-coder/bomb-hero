@@ -38556,9 +38556,11 @@ function rpgRespecInfo() {
   const fee = refund > 0 ? RPG_RESPEC_FEE : 0;
   return { refund: refund, fee: fee, back: Math.max(0, refund - fee) };
 }
-/* 真正执行洗點：四項歸零、價格階歸零、退錢 */
-function rpgRespecApply() {
-  const r = rpgRespecInfo();
+/* 真正执行洗點：四項歸零、價格階歸零、退錢
+   v5.46 修正：上線時會先跟雲端要洗點，而雲端回來的帳號 paid 已經歸零 ——
+   所以退款金額必須在「拿去問雲端之前」就算好、當參數傳進來，否則永遠退 0。 */
+function rpgRespecApply(known) {
+  const r = known || rpgRespecInfo();
   RPG.alloc = { hp: 0, def: 0, spd: 0, atk: 0 };
   RPG.paid = { hp: 0, def: 0, spd: 0, atk: 0 };
   RPG.bought = 0;
@@ -40126,7 +40128,7 @@ const Rpg = (function () {
         : t('respec.confirm');
       if (typeof confirm === 'function' && !confirm(ask)) return;
       const done = function () {
-        const r = rpgRespecApply();
+        const r = rpgRespecApply(info);   // v5.46：用「問雲端之前」就算好的金額，雲端回來 paid 已歸零
         renderStats();
         toast(r.back > 0 ? t('respec.done2', { back: r.back }) : t('respec.done'), 2.4);
       };

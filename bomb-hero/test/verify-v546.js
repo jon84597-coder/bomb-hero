@@ -85,6 +85,16 @@ r = P.rpgRespecApply();
 ok(r.back === 0 && added.length === 0, '沒買過的洗點不動錢包', { back: r.back, added: added });
 ok(gold === 700, '金幣沒變', gold);
 
+// 上線時的先後順序陷阱：先問雲端（回來的帳號 paid 已歸零）→ 才執行退款。
+//   所以 rpgRespecApply 必須接受「事先算好的金額」，不然會永遠退 0。
+reset({ hp: 5, def: 4 }, { hp: 2, def: 1 });
+gold = 0; added.length = 0;
+const pre = P.rpgRespecInfo();
+P.RPG.paid = { hp: 0, def: 0, spd: 0, atk: 0 };   // 模擬 Cloud adopt 已經把 paid 清零
+const r4 = P.rpgRespecApply(pre);
+ok(r4.back === 5500, '帶入事先算好的金額 → 仍然退 5,500', r4.back);
+ok(gold === 5500 && added.length === 1, '錢包真的進帳（不是退 0）', { gold: gold, added: added });
+
 /* ================= ④ 退單一格不退錢 ================= */
 head('④ 退單一格不退錢');
 reset({ hp: 6 }, { hp: 3 });
