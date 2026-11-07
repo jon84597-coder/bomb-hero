@@ -66,9 +66,9 @@ ok(card1.indexOf('rgo') > 0, '卡片有一顆確認鈕');
 ok(html.indexOf("try { RpgUI.levelUp(lvUp, L.lv); }") > 0, '升級時真的會呼叫演出卡（有 toast 退路）');
 
 /* ================================================================ ④ */
-head('④ R6：32 關全破有成績單');
+head('④ R6：40 關全破有成績單');
 ok(typeof P.RpgUI.finish === 'function', 'RpgUI.finish 存在');
-ok(html.indexOf('if (cleared >= 32) { try { RpgUI.finish(); }') > 0, '第 32 關過關會觸發成績單');
+ok(html.indexOf('if (cleared >= SOLO_STAGES) { try { RpgUI.finish(); }') > 0, '第 40 關（最後一關）過關會觸發成績單');
 ok(html.indexOf("const END_KEY = 'bombhero-rpg-end';") > 0, '全破紀錄存本機（只彈一次）');
 P.RPG.cleared = 32;
 P.RPG.xp = 120000;

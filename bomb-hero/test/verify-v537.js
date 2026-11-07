@@ -248,7 +248,9 @@ ok(rawMain.indexOf('id="verTxt">' + P.VERSION + '<') >= 0, '#verTxt 顯示 ' + P
 ok(rawMain.indexOf('id="verLogVer">' + P.VERSION + '<') >= 0, '#verLogVer 顯示 ' + P.VERSION);
 ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 首位＝' + P.VERSION + ' 且 now:true');
 ok(P.VERSION_LOG[1].now === false, '上一版 ' + P.VERSION_LOG[1].v + ' 已是 now:false');
-ok(P.VERSION_LOG[0].items.length >= 8, '本版至少 8 條（實際 ' + P.VERSION_LOG[0].items.length + '）');
+// 別抓 VERSION_LOG[0]（那是「現在最新版」，每次升版都會變）→ 找 5.37 自己那一筆
+const v537 = P.VERSION_LOG.filter(function (x) { return x.v === '5.37'; })[0];
+ok(!!v537 && v537.items.length >= 8, '5.37 至少 8 條（實際 ' + (v537 ? v537.items.length : 0) + '）');
 ok(!/後台|開發者/.test(P.VERSION_LOG[0].items.join('')), '更新內容不出現「後台／開發者」');
 const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
 const swv = (sw.match(/var SW_VERSION = 'v([\d.]+)'/) || [])[1] || '0';

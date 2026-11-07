@@ -89,7 +89,8 @@ try {
   ok(n1 >= 1 && got.length === n1, '呼叫 spawnBRBosses 生出 ' + n1 + ' 隻王');
   ok(got.length && got[0].artKey === 'b6' && got[0].brBlock === 6, '第 1 隻是牌堆第 1 張（b6）', got[0] && got[0].artKey);
   if (got.length > 1) ok(got[1].artKey === 'b2', '第 2 隻是牌堆第 2 張（b2）', got[1] && got[1].artKey);
-  ok(got.every(function (e) { return e.brStage % 4 === 0; }), 'brStage 落在魔王關（4 的倍數）');
+  ok(got.every(function (e) { return e.brStage % 5 === 0; }), 'brStage 落在魔王關（40 關制：5 的倍數）');
+  ok(got.every(function (e) { return B.isBossStage(e.brStage) && B.chapterOf(e.brStage) === e.brBlock; }), 'brStage 的章節與美術區塊一致');
   // 再抽一次要換牌 → 不同場不同王
   G.enemies = []; G.brBossPool = [5, 1]; G.brBossPoolAt = 0;
   B.spawnBRBosses();

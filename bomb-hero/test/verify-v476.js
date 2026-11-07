@@ -30,8 +30,11 @@ for (let attempt = 0; attempt < 4; attempt++) {
 }
 ok(bosses.length === 2, '開局丟 2 隻 BOSS 進場（' + bosses.length + '）');
 ok(bosses.every(function (e) { return e.boss === true && e.hp === 20 && e.maxHp === 20; }), '兩隻都是 BOSS、各 20 點血');
-ok(bosses.every(function (e) { return (e.brStage | 0) >= 1 && (e.brStage | 0) <= 32; }),
+// v5.39：40 關制 —— brStage 一定是某章第 5 關（BOSS 決戰場），不是 1~32 的任意關
+ok(bosses.every(function (e) { return (e.brStage | 0) >= 1 && (e.brStage | 0) <= 40; }),
   '關卡是隨機抽的（第 ' + bosses.map(function (e) { return e.brStage; }).join('、') + ' 關）');
+ok(bosses.every(function (e) { return P.isBossStage(e.brStage); }),
+  '抽到的都是魔王關（40 關制＝5 的倍數）');
 ok(bosses.every(function (e) {
   return G.players.every(function (p) {
     return Math.abs(p.x / G.T - e.x / G.T) >= 3 || Math.abs(p.y / G.T - e.y / G.T) >= 3;

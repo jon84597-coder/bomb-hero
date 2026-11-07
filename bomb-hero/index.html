@@ -4716,7 +4716,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.38</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.39</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4771,7 +4771,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.38</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.39</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -4787,7 +4787,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
         <button class="mbtn c-learn" id="btnLearn" data-ico="🎓"></button>
         <div class="mgrid">
-          <button class="mbtn c-solo" id="btnAdventure" data-ico="🗺️">冒險模式<small>單人 32 關 · RPG 養成</small></button>
+          <button class="mbtn c-solo" id="btnAdventure" data-ico="🗺️">冒險模式<small>單人 40 關 · RPG 養成</small></button>
           <button class="mbtn c-br has-beta" id="btnBR" data-ico="🏝️"></button>
           <button class="mbtn c-daily" id="btnDaily" data-ico="📅">每日挑戰<small>全球同一張圖</small></button>
           <button class="mbtn c-multi has-beta" id="btnMulti" data-ico="⚔️">多人對戰<small>本機混戰 · 房號連線</small></button>
@@ -4860,7 +4860,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
       <h3 id="bhPickTitle">冒險模式</h3>
       <p id="bhPickDesc">想玩哪一種？</p>
       <div class="qrows" style="flex-direction:column;gap:8px">
-        <button class="qbtn" id="btnSolo" type="button">🎯 單人闖關（32 關）</button>
+        <button class="qbtn" id="btnSolo" type="button">🎯 單人闖關（40 關）</button>
         <button class="qbtn" id="btnRpg" type="button">🎲 RPG 養成模式</button>
       </div>
       <div class="qtip" id="bhPickTip">單人闖關：炸光小怪、找到出口。RPG：配點養成，怪物有血量與護甲。</div>
@@ -5413,7 +5413,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
           <div class="chsk" id="charSk"></div>
         </div>
         <div class="chsec">
-          <div class="chsec-t">🗺️ 冒險進度<b id="charProgTxt">0 / 32</b></div>
+          <div class="chsec-t">🗺️ 冒險進度<b id="charProgTxt">0 / 40</b></div>
           <div class="chprog" id="charProg"></div>
         </div>
         <div class="chbtns">
@@ -5825,7 +5825,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.38';
+const VERSION = '5.39';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -11642,8 +11642,13 @@ function dailySeedOf(day) {
   }
   return (h >>> 0) | 0;
 }
-/* 種子 → 今天的關卡（1~31；第 32 關是純魔王關，排進去只會變成抽卡） */
-function dailyStageOf(seed) { return 1 + (((seed >>> 7) >>> 0) % 31); }
+/* v5.39：40 關制下「一般關卡」共 32 關（每章第 5 關是 BOSS 決戰場）。
+   0~31 對應到非 BOSS 的關號，維持「32 張地圖輪流」的原本手感。 */
+function normalStageOf(k) {
+  const i = ((k | 0) % 32 + 32) % 32;
+  return Math.floor(i / 4) * BOSS_SLOT + (i % 4) + 1;
+}
+function dailyStageOf(seed) { return normalStageOf((seed >>> 7) >>> 0); }
 function seedCodeOf(seed) {
   let c = (seed >>> 0).toString(36).toUpperCase();
   while (c.length < 5) c = '0' + c;
@@ -14239,11 +14244,11 @@ const Gift = (function () {
         return year + '-W' + p2(week);
       }
       function weekStage() {
-        // 用週 key 當種子 → 每週換一關（32 關輪流，讓舊內容有第二次價值）
+        // 用週 key 當種子 → 每週換一關（32 張一般地圖輪流，讓舊內容有第二次價值）
         let h = 2166136261;
         const s = 'bh-week-' + weekKey();
         for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-        return 1 + ((((h >>> 0) >>> 9) % 31));
+        return normalStageOf(((h >>> 0) >>> 9));
       }
       function weekBest() {
         load();
@@ -14381,7 +14386,7 @@ const CodexUI = (function () {
         id: 'b' + i, name: themeName(i - 1),
         img: 'spr/boss-b' + i + '-idle.webp',
         // 打贏過就點亮；也可以直接從進度推導（第 4 關＝第 1 隻魔王）
-        got: Codex.has('b', 'b' + i) || (RPG.cleared | 0) >= i * 4
+        got: Codex.has('b', 'b' + i) || (RPG.cleared | 0) >= i * BOSS_SLOT
       });
     }
     return out;
@@ -16668,7 +16673,7 @@ function updateSolo(dt) {
               try { updateHud(); } catch (e2) {}
             }
             // v5.20：32 關走完 → 成績單（只彈一次，之後重打只給 toast）
-            if (cleared >= 32) { try { RpgUI.finish(); } catch (e2) {} }
+            if (cleared >= SOLO_STAGES) { try { RpgUI.finish(); } catch (e2) {} }
             toast('⭐ 本關經驗 +' + gain, 2.4);
           }
         } catch (e) {}
@@ -18857,7 +18862,9 @@ function spawnBRBosses() {
       blk = pool[(Game.brBossPoolAt | 0) % pool.length];
       Game.brBossPoolAt = (Game.brBossPoolAt | 0) + 1;
     } else blk = 1 + rand(8);
-    const st = blk * 4;                                        // 取該區的魔王關（體型／速度係數沿用舊算法）
+    /* v5.39：原本是 blk * 4（32 關、4 關一章）。40 關制下 blockOf() 是「除以 5」，
+       所以第 8 隻王會被算成第 7 區、第 4 與第 5 隻王還會重複同一隻 → 改成 blk * BOSS_SLOT。 */
+    const st = blk * BOSS_SLOT;                                // 取該區的魔王關（體型／速度係數）
     let x = -1, y = -1;
     // 三輪放寬：先挑「離人 8 格、兩隻相隔 14 格」，30 人擠滿地圖時再說，最後一定生得出來
     const STEPS = [[8, 14], [5, 9], [3, 6]];
@@ -19593,6 +19600,52 @@ function updateBRDrop(dt) {
 function brDropBoxArt(bx, by, T, k, glow) {
   const w = T * .74 * k, h = T * .62 * k;
   const x0 = bx - w / 2, y0 = by - h / 2;
+  /* v5.39：有貼圖就畫貼圖 —— 木箱＋金扣比純幾何的軍綠鐵箱更像這款遊戲的東西。
+     貼圖還沒載到（或 off）就往下走原本的程序繪製，行為完全一樣。 */
+  const _img = (typeof DropArt !== 'undefined') ? DropArt.get() : null;
+  if (_img) {
+    const t = Game.gameT || 0;
+    const bob = Math.sin(t * 3.1) * T * .028;          // 微微上下浮，遠看就知道是「活的」
+    const DW = T * 1.24 * k, DH = DW / (DROP_ART.asp || 1);   // 比一格再大一點，空投箱要顯眼
+    const cy = by + bob + (DH - h) * .5 * 0;           // 圖比格子高，用中心對齊
+    // 地面影子
+    ctx.save();
+    ctx.globalAlpha = .24;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(bx, by + h * .56, DW * .36, T * .105, 0, 0, 6.283);
+    ctx.fill();
+    ctx.restore();
+    // 金色光暈：未開的箱子要一眼看到
+    const pulse = .55 + .45 * Math.sin(t * 5.2);
+    ctx.save();
+    const gr = ctx.createRadialGradient
+      ? ctx.createRadialGradient(bx, cy, 0, bx, cy, DW * .70) : null;
+    if (gr && gr.addColorStop) {
+      gr.addColorStop(0, 'rgba(255,226,145,' + (.40 + .30 * pulse) + ')');
+      gr.addColorStop(.62, 'rgba(255,196,80,.18)');
+      gr.addColorStop(1, 'rgba(255,180,60,0)');
+      ctx.fillStyle = gr;
+      ctx.beginPath(); ctx.arc(bx, cy, DW * .70, 0, 6.283); ctx.fill();
+    }
+    ctx.restore();
+    // 箱體（貼圖本身已含透明去背）
+    ctx.save();
+    ctx.translate(bx, cy);
+    ctx.drawImage(_img, -DW / 2, -DH / 2, DW, DH);
+    ctx.restore();
+    if (glow > 0) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, glow) * .8;
+      ctx.strokeStyle = '#ffe08a';
+      ctx.lineWidth = Math.max(1.6, T * .055);
+      ctx.beginPath();
+      ctx.arc(bx, cy, DW * .56, 0, 6.283);
+      ctx.stroke();
+      ctx.restore();
+    }
+    return;
+  }
   // 箱體（軍綠）＋ 頂面（亮一階）＋ 側面陰影
   ctx.fillStyle = '#3a4a34';
   ctx.beginPath();
@@ -30101,6 +30154,30 @@ const BOSS_ART = {
         frames: [null, "spr/boss-b8-run1.webp", "spr/boss-b8-run2.webp", "spr/boss-b8-cast.webp"] }
 };
 
+/* v5.39：大逃殺空投寶箱的美術圖（本來是 canvas 硬畫的軍綠鐵箱）。
+   走跟 ItemArt 一樣的模式：圖沒載到就退回程序繪製，不會開天窗。 */
+const DROP_ART = { u: "spr/drop-art-chest.webp", w: 240, h: 228, asp: 240 / 228 };
+const DropArt = (function () {
+  try {
+    return (function () {
+      let img = null, ready = false;
+      function load() {
+        if (typeof Image === 'undefined') return;
+        const im = new Image();
+        im.onload = function () { ready = true; };
+        im.onerror = function () {};
+        try { im.src = DROP_ART.u; } catch (e) {}
+        img = im;
+      }
+      function get() { return (ready && img && img.naturalWidth) ? img : null; }
+      return { load: load, get: get };
+    })();
+  } catch (__e) {
+    if (typeof __bootFail === 'function') __bootFail('DropArt', __e);
+    return { load: function () {}, get: function () { return null; } };
+  }
+})();
+
 const ITEM_ART = {
   fire: { u: "spr/item-art-fire.webp" },
   bomb: { u: "spr/item-art-bomb.webp" },
@@ -34076,7 +34153,7 @@ const HELP_FOES = [
 ];
 const HELP_BOSS = {
   n: { tw: '👑 暗黑魔王（BOSS）', cn: '👑 暗黑魔王（BOSS）', en: '👑 Dark Demon Lord (BOSS)' },
-  d: { tw: '每大關的第 4 張地圖（第 4／8／12 … 32 關）登場，也可以直接選「挑戰 BOSS」。<b>血量從 5 點起、每往後一區 +1（最多 12 點）</b>、火焰 2 格，頭上有血條與 👑。', cn: '每大关的第 4 张地图（第 4／8／12 … 32 关）登场，也可以直接选「挑战 BOSS」。<b>血量从 5 点起、每往后一区 +1（最多 12 点）</b>、火焰 2 格，头上有血条与 👑。', en: 'Appears on the 4th map of every chapter (stages 4/8/12 … 32), or via Boss Raid. <b>HP starts at 5 and +1 per chapter (max 12)</b>, 2-tile flames, HP bar and 👑 overhead.' },
+  d: { tw: '每章的最後一關（第 5／10／…／40 關的 BOSS 決戰場）登場，也可以直接選「挑戰 BOSS」。<b>血量從 5 點起、每往後一區 +1（最多 12 點）</b>、火焰 2 格，頭上有血條與 👑。', cn: '每章的最后一关（第 5／10／…／40 关的 BOSS 决战场）登场，也可以直接选「挑战 BOSS」。<b>血量从 5 点起、每往后一区 +1（最多 12 点）</b>、火焰 2 格，头上有血条与 👑。', en: 'Appears in the last stage of every chapter (stages 5/10/…/40, the boss arena), or via Boss Raid. <b>HP starts at 5 and +1 per chapter (max 12)</b>, 2-tile flames, HP bar and 👑 overhead.' },
   bullets: [
     { tw: '會<b>躲炸彈</b>：腳下有危險會先跑開，只走安全格。', cn: '会<b>躲炸弹</b>：脚下有危险会先跑开，只走安全格。', en: '<b>Dodges bombs</b> — flees danger tiles and only walks safe ones.' },
     { tw: '👑 <b>平常只在自己的地盤走來走去</b>（出生點附近 4 格），<b>不會主動追你、也不放炸彈</b>。', cn: '👑 <b>平常只在自己的地盘走来走去</b>（出生点附近 4 格），<b>不会主动追你、也不放炸弹</b>。', en: '👑 Normally it just <b>patrols its own turf</b> (~4 tiles around its spawn) — no chasing, no bombs.' },
@@ -34089,7 +34166,7 @@ const HELP_BOSS = {
 
 /* ---------- 基本操作 ---------- */
 const HELP_BASIC = {
-  goalSolo: { tw: '炸開軟磚 → 撿道具 → <b>清光所有怪物</b> → 找出傳送門 🚪 → 走進去過關。共 <b>32 張地圖</b>（8 大主題 × 4 張），每一區的第 4 張是魔王關，第 32 關＝最終魔王「魔王之間」。', cn: '炸开软砖 → 捡道具 → <b>清光所有怪物</b> → 找出传送门 🚪 → 走进去过关。共 <b>32 张地图</b>（8 大主题 × 4 张），每一区的第 4 张是魔王关，第 32 关＝最终魔王「魔王之间」。', en: 'Blast bricks → grab items → <b>wipe out every enemy</b> → find the portal 🚪 → step in. <b>32 maps</b> (8 chapters × 4), the 4th map of each chapter is a boss fight, stage 32 is the final boss.' },
+  goalSolo: { tw: '炸開軟磚 → 撿道具 → <b>清光所有怪物</b> → 找出傳送門 🚪 → 走進去過關。共 <b>40 關</b>（8 大主題 × 4 張地圖 ＋ 每章第 5 關的 BOSS 決戰場），第 40 關＝最終魔王「魔王之間」。', cn: '炸开软砖 → 捡道具 → <b>清光所有怪物</b> → 找出传送门 🚪 → 走进去过关。共 <b>40 关</b>（8 大主题 × 4 张地图 ＋ 每章第 5 关的 BOSS 决战场），第 40 关＝最终魔王「魔王之间」。', en: 'Blast bricks → grab items → <b>wipe out every enemy</b> → find the portal 🚪 → step in. <b>40 stages</b> (8 chapters × 4 maps + a boss arena as the 5th stage of each chapter); stage 40 is the final boss.' },
   goalBattle: { tw: '把對手炸光就得分，先拿到<b>指定勝場數</b>的人獲勝；沒人加入的位子由 🤖 AI 補位。', cn: '把对手炸光就得分，先拿到<b>指定胜场数</b>的人获胜；没人加入的位置由 🤖 AI 补位。', en: 'Blast rivals to score; first to the <b>target number of wins</b> takes it. Empty slots are filled by 🤖 AI.' },
   goalOnline: { tw: '線上配對：用<b>房號</b>開房／加入朋友的房間，或快速配對。手機連 PC 房也能一起玩。', cn: '在线配对：用<b>房号</b>开房／加入朋友的房间，或快速配对。手机连 PC 房也能一起玩。', en: 'Play online: create or join a room with a <b>4-digit code</b>, or use quick match. Phone can join a PC host.' },
   elems: [
@@ -36622,6 +36699,7 @@ try { applyA11y(); } catch (e) {}   // v5.28：文字大小／減少動態
 Parts.load();
 FoeArt.load();
 ItemArt.load();          // v4.38：道具圖示
+DropArt.load();          // v5.39：空投寶箱貼圖
 EggArt.load();           // v4.39：恐龍蛋貼圖
 HideArt.load();          // v4.40：藏人場景物件
 MountArt.load();
@@ -38225,7 +38303,7 @@ const RPG = {
   bag: {},                             // 已買好的補給 id → 數量（出發時消耗）
 
   campRev: 0,      // v5.20：營地存檔版本（樂觀鎖；每次寫入 +1）
-  unlocked: 32     // 32 = 沒有雲端時全部開放
+  unlocked: SOLO_STAGES   // v5.39：沒有雲端時全部開放（40 關）
 };
 // v4.1：可用總點數（9 + 每 5 關 1 點，最多 40）由伺服器算，前端只跟著顯示
 let RPG_POINTS_TOTAL = RPG_POINTS;
@@ -38366,7 +38444,7 @@ const RPG_XP_C0 = 40, RPG_XP_C1 = 10;        // 過關：40 + 10 × 關號
 const RPG_XP_N0 = 80, RPG_XP_N1 = 2.34;      // 升級需求：80 + 2.34 × Lv^1.5
 
 function rpgFoeLv(stage) {
-  const st = Math.max(1, Math.min(32, stage | 0 || 1));
+  const st = Math.max(1, Math.min(SOLO_STAGES, stage | 0 || 1));
   return Math.max(1, Math.min(RPG_LV_MAX - 1, 1 + Math.round((st - 1) * 2)));
 }
 function rpgFoeXp(stage) { return Math.round(RPG_XP_E0 + RPG_XP_E1 * rpgFoeLv(stage)); }
@@ -40090,7 +40168,7 @@ const RpgUI = (function () {
 
   function clearedCount() {
     const c = (RPG.cleared | 0) || Math.max(0, (RPG.unlocked | 0) - 1);
-    return Math.max(0, Math.min(32, c));
+    return Math.max(0, Math.min(SOLO_STAGES, c));
   }
 
   /* ---------------- 角色畫面 ---------------- */
@@ -40150,12 +40228,12 @@ const RpgUI = (function () {
     }
 
     const cr = clearedCount();
-    if ($id('charProgTxt')) $id('charProgTxt').textContent = cr + ' / 32';
+    if ($id('charProgTxt')) $id('charProgTxt').textContent = cr + ' / ' + SOLO_STAGES;
     if ($id('charProg')) {
       let h = '';
       for (let g = 0; g < 8; g++) {
         h += '<div class="chgrp">';
-        for (let k = 0; k < 4; k++) h += '<i class="' + (g * 4 + k + 1 <= cr ? 'on' : '') + '"></i>';
+        for (let k = 0; k < BOSS_SLOT; k++) h += '<i class="' + (g * BOSS_SLOT + k + 1 <= cr ? 'on' : '') + '"></i>';
         h += '<span>' + (g + 1) + '</span></div>';
       }
       $id('charProg').innerHTML = h;
@@ -40172,7 +40250,7 @@ const RpgUI = (function () {
     if ($id('campGold')) $id('campGold').textContent = String(Shop.gold() | 0);
     if ($id('campSkPts')) $id('campSkPts').textContent = t('skill.ptsLeft', { n: rpgSkLeft() });
     try { Rpg.renderMaps(); } catch (e) {}
-    const st = RPG.theme * 4 + RPG.sub + 1;
+    const st = RPG.theme * BOSS_SLOT + RPG.sub + 1;   /* v5.39：每章 5 關（含 BOSS），原本 ×4 會整章錯位 */
     if ($id('campStageNow')) {
       $id('campStageNow').textContent = t('camp.stageNow', { n: st }) + '・' + stageName(st);
     }
@@ -40383,7 +40461,7 @@ const RpgUI = (function () {
 
   /* ---------------- 出發 ---------------- */
   function depart() {
-    const st = RPG.theme * 4 + RPG.sub + 1;
+    const st = RPG.theme * BOSS_SLOT + RPG.sub + 1;   /* v5.39：每章 5 關（含 BOSS），原本 ×4 會整章錯位 */
     if (Cloud.online() && st > RPG.unlocked) { toast(t('acct.stageLocked')); return; }
     AudioSys.ensure(); AudioSys.sfx('click');
     if (Cloud.online()) Cloud.setAlloc(RPG.alloc);
@@ -42726,6 +42804,7 @@ window.__BH = {
   cartChargeLevel: cartChargeLevel, cartPickLanding: cartPickLanding, CART_BOUNCE_MAX: CART_BOUNCE_MAX,
   cartThrowDir: cartThrowDir, cartLandingDir: cartLandingDir,
   ItemArt: ItemArt, ITEM_ART: ITEM_ART, ITEM_TINT: ITEM_TINT,
+  DropArt: DropArt, DROP_ART: DROP_ART, brDropBoxArt: brDropBoxArt,
   EggArt: EggArt, EGG_ART: EGG_ART, revealEgg: revealEgg, EGG_HIDDEN: EGG_HIDDEN,
   HideArt: HideArt, HIDE_ART: HIDE_ART, HIDE_KINDS: HIDE_KINDS, HIDE_ART_SCALE: HIDE_ART_SCALE,
   HIDE_ART_MAXH: HIDE_ART_MAXH,

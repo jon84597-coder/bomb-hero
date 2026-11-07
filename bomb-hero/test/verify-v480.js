@@ -1,5 +1,5 @@
 // test/verify-v480.js —— v4.80：每日挑戰 ＋ 排行榜
-//   ① 每日挑戰：日期→種子→關卡（1~31），規則固定（普通難度／3 分鐘），同一天同一張圖
+//   ① 每日挑戰：日期→種子→關卡（1~40 之間的一般關卡，跳過 BOSS 決戰場），規則固定（普通難度／3 分鐘），同一天同一張圖
 //   ② 計時：只算「真的在玩」的時間，到門結算、超時／陣亡不進榜
 //   ③ 排行榜前端：後端位址判斷、本機快取、裝置指紋、送出內容
 //   ④ 排行榜後端：/api/lb/top 與 /api/lb/submit（真的起一台伺服器測）
@@ -29,13 +29,15 @@ ok(P.dailyDayKey(new Date('2026-11-04T17:00:00Z')) === '2026-11-05', 'UTC+8 換�
 ok(P.dailySeedOf('2026-11-04') === P.dailySeedOf('2026-11-04'), '同一天 → 同一個種子');
 ok(P.dailySeedOf('2026-11-04') !== P.dailySeedOf('2026-11-05'), '不同天 → 不同種子');
 let stageOk = true, stages = {};
+/* v5.39：40 關制下每日只排「一般關卡」—— 每章第 5 關是 BOSS 決戰場，
+   排進每日會變成一場純打王，所以跳過（1~40 內非 5 的倍數）。 */
 for (let d = 1; d <= 28; d++) {
   const key = '2026-03-' + (d < 10 ? '0' + d : d);
   const s = P.dailyStageOf(P.dailySeedOf(key));
-  if (!(s >= 1 && s <= 31)) stageOk = false;
+  if (!(s >= 1 && s <= 40) || P.isBossStage(s)) stageOk = false;
   stages[s] = 1;
 }
-ok(stageOk, '任何一天的關卡都落在 1~31（第 32 關是純魔王關，不排每日）');
+ok(stageOk, '任何一天的關卡都落在 1~40 且不是 BOSS 決戰場');
 ok(Object.keys(stages).length >= 10, '一個月內會打到很多不同關卡（' + Object.keys(stages).length + ' 種）');
 
 ok(P.DAILY_TIME === 180, '每日固定 3 分鐘');

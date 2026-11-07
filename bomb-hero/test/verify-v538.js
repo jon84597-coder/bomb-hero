@@ -200,15 +200,25 @@ head('⑤ 差一點結算 ＋ 首頁紅點');
 // ================================================================
 head('⑥ 版本戳記／預算／LF');
 {
-  ok(P.VERSION === '5.38', 'VERSION = 5.38');
+  // v5.39：版本斷言不寫死 —— 只要求「不比 5.38 舊」＋「5.38 自己那一筆還在、已非 now」
+  ok(parseFloat(P.VERSION) >= 5.38, 'VERSION ≥ 5.38（實際 ' + P.VERSION + '）');
   const vl = SB.vlog || '';
   ok(/v: '5\.38'/.test(vl), 'VERSION_LOG 有 5.38');
-  ok(/v: '5\.38'[\s\S]{0,80}now: true/.test(vl), '5.38 是 now:true');
-  ok(/v: '5\.37'[\s\S]{0,200}now: false/.test(vl), '5.37 已改成 now:false');
-  ok(/v: '5\.38'/.test(P.VERSION_LOG && P.VERSION_LOG[0] ? 'v: \'' + P.VERSION_LOG[0].v + '\'' : ''), '面板讀到 5.38');
-  ok(P.VERSION_LOG[0].items.length >= 10, '本版至少 10 條更新（' + P.VERSION_LOG[0].items.length + '）');
-  ok(fs.readFileSync(__dirname + '/../sw.js', 'utf8').indexOf("'v5.38.0'") >= 0, 'bomb-hero/sw.js 跟著升版');
-  ok(fs.readFileSync(__dirname + '/../../public/sw.js', 'utf8').indexOf("'v5.38.0'") >= 0, 'public/sw.js 跟著升版');
+  const v538 = (P.VERSION_LOG || []).filter(function (x) { return x.v === '5.38'; })[0];
+  ok(!!v538 && v538.now === false, '5.38 已標成 now:false');
+  ok(!!v538 && v538.items.length >= 10, '5.38 至少 10 條更新（' + (v538 ? v538.items.length : 0) + '）');
+  ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, '面板讀到最新版 ' + P.VERSION);
+  // v5.39：sw 版本改成「≥ 5.38」並要求三份同步（含 bomberman-online 副本）
+  const swNum = function (t) {
+    const m = /SW_VERSION = 'v([0-9.]+)'/.exec(t);
+    return m ? parseFloat(m[1]) : 0;
+  };
+  const swA = fs.readFileSync(__dirname + '/../sw.js', 'utf8');
+  const swB = fs.readFileSync(__dirname + '/../../public/sw.js', 'utf8');
+  const swC = fs.readFileSync(__dirname + '/../../bomberman-online/public/sw.js', 'utf8');
+  ok(swNum(swA) >= 5.38, 'bomb-hero/sw.js ≥ v5.38（' + swNum(swA) + '）');
+  ok(swA === swB, 'bomb-hero/sw.js 與部署副本 public/sw.js 完全相同');
+  ok(swNum(swC) === swNum(swA), 'bomberman-online 副本版本號同步（' + swNum(swC) + '）');
   const main = fs.readFileSync(__dirname + '/../index.html', 'utf8');
   ok(main.indexOf('\r') === -1, '主檔整檔 LF（CR 0）');
   ok(main.length < 1950000, '主檔 ' + main.length + ' 字元 < 1,950,000');
