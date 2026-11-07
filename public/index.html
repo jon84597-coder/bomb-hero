@@ -1868,7 +1868,11 @@ body.touch.in-game .pcard canvas { width: 26px; height: 26px; }
 /* v4.43：橫放時資訊列與「⋮」共用最上面那一排 → 只留一排，遊戲畫面往上長 */
 body.touch.in-game #scr-game.on .game-top {
 padding-top: calc(2px + env(safe-area-inset-top, 0px));
-padding-left: 5px; padding-right: 154px; margin-bottom: 0;
+/* v5.54：讓位改成量測值（--navreserve）。
+   原本寫死 154px，但右上那組（←／👤 帳號／⋮）的寬度會隨語言與登入狀態變：
+   綁定後膠囊會換成玩家暱稱、英文的 "Bind account" 又比中文長。
+   實測 844×390 會壓到計時器 26px，把「5:00」遮成「5」。 */
+padding-left: 5px; padding-right: var(--navreserve, 154px); margin-bottom: 0;
 }
 body.touch.in-game #gameTop { justify-content: flex-start; }
 /* ===== v5.42：橫屏頂欄再壓扁 =====
@@ -2041,7 +2045,8 @@ body.touch #scr-game.on .game-top { padding-top: calc(34px + env(safe-area-inset
    讓位 50px ＝ ⋮ 30px ＋ 工具列右邊距 7px ＋ 資訊列右邊距 4px ＋ 緩衝。 */
 body.touch.in-game #scr-game.on .game-top {
 padding-top: calc(2px + env(safe-area-inset-top, 0px));
-padding-left: 4px; padding-right: 50px; margin-bottom: 1px;
+padding-left: 4px; margin-bottom: 1px;
+padding-right: max(50px, var(--navreserve, 50px));
 }
 /* 全螢幕（body.pseudo-full 會把工具列整條收掉）就不用讓位，資訊列吃滿寬度 */
 body.touch.in-game.pseudo-full #scr-game.on .game-top { padding-right: 4px; }
@@ -3284,7 +3289,10 @@ body.touch #tutCard.mini.peek { animation: miniPeek .72s ease-out 2; }
 #zoomPill .zh { width: 23px; height: 18px; flex: 0 0 auto; display: none; }
 body.touch #zoomPill .zh { display: block; }
 #zoomHint { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%) scale(.9);
-display: none; opacity: 0; z-index: 9; pointer-events: none;
+/* v5.54：原本 z-index:9 跟 #ovIn 同層，DOM 在後面的它會蓋住「過關！」結算卡，
+   玩家看到的是一張「兩指捏合縮放」壓在分數上面。降到 8（跟 #doorHint 同層），
+   永遠在覆蓋層下面；JS 另外會在開覆蓋層時把它收掉。 */
+display: none; opacity: 0; z-index: 8; pointer-events: none;
 transition: opacity .3s ease, transform .28s cubic-bezier(.2,.9,.25,1); }
 #zoomHint.on { display: block; opacity: 1; pointer-events: auto; cursor: pointer;
 transform: translate(-50%, -50%) scale(1); }
@@ -3301,6 +3309,28 @@ box-shadow: 0 10px 30px rgba(0,0,0,.45); }
 @keyframes zfR { 0%, 100% { transform: translateX(0); } 45% { transform: translateX(-13px); } }
 @media (prefers-reduced-motion: reduce) {
 .zhCard .zf.l, .zhCard .zf.r { animation: none; } }
+/* ===== v5.54：矮視窗的開場／結算卡 =====
+   橫放手機只有 320~430px 高。標題（34px）＋內文＋三條模式提示疊起來會超過
+   卡片高度，把「出發！」推出可視範圍 —— 玩家得在卡片裡盲滑才找得到開始鍵
+   （桌機把視窗壓矮時更明顯：900×430 的遊戲區只有 215px）。
+   這裡在矮視窗把三層各縮一級，並讓提示區自己捲，按鈕永遠留在畫面上。 */
+@media (max-height: 470px) {
+.ov-box h3 { font-size: 21px; letter-spacing: .03em; margin-bottom: 5px; }
+.ov-box p { font-size: 12px; line-height: 1.5; margin-bottom: 8px; }
+.ov-box .mtips { max-height: 32vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+overscroll-behavior: contain; margin-bottom: 8px;
+/* 黏住的按鈕會蓋到最後一行 → 底部留一段空間，最後一條提示才捲得上來 */
+padding-bottom: 6px; }
+/* 最重要的一行：卡片內容比可視高度高時，按鈕「黏」在卡片底部。
+   捲動的是上面的標題與提示，開始鍵永遠看得到、點得到。 */
+.ov-box .mbtn { position: sticky; bottom: 2px; z-index: 2;
+padding: 8px 24px; font-size: 15px; }
+}
+/* 極矮（320px 级别的老橫屏／視窗被壓扁）再收一階 */
+@media (max-height: 360px) {
+.ov-box h3 { font-size: 18px; }
+.ov-box .mtips { max-height: 26vh; }
+}
 @media (orientation: portrait) {
 body.touch .menu .mbtn#btnLearn { grid-column: 1 / -1; }
 }
@@ -4945,7 +4975,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.53</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.54</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5000,7 +5030,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.53</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.54</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5229,7 +5259,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
       </div>
       <div class="rpgbar" id="rpgLvBar"></div>
       <div class="field"><label>② 能力配點</label>
-        <div class="hint" style="margin:-2px 0 7px">剩餘 <b id="rpgLeft" style="color:#d4491f">9</b> 點 · 前 3 格純點數，第 4 格起「1 點 ＋ 金幣」</div>
+        <div class="hint" style="margin:-2px 0 7px"><span id="rpgLeft" style="color:#d4491f;font-weight:700">剩餘 9 點</span><span id="rpgPtHint"> · 前 3 格純點數，第 4 格起「1 點 ＋ 金幣」</span></div>
         <div class="rpgrows" id="rpgRows"></div>
         <div class="rpgsum" id="rpgSum"></div>
         <div class="hint" id="rpgBuyHint" style="margin:7px 0 0"><b>第 4 格起每一格 = 1 屬性點 ＋ 金幣</b>：2000 → 2500 → 3000 → 3500 → 4000 → 4500 → 5000（每項上限 10 格）。洗點（全部退回）會退還花掉的金幣，<b>扣 1000 手續費</b>。</div>
@@ -5381,8 +5411,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
       <div class="field" id="padField"><label>手把指派（1P～4P）</label>
         <div class="padlist" id="padList"></div>
         <div class="padlive" id="padLive"></div>
-        <div class="hint">接上手把後<b>按一下任意鍵</b>，瀏覽器才會回報。同一支手把只能佔一個位置；
-          兩支同款也分得開（用「型號＋序號」認）。藍牙延遲高時把距離拉近或改用有線。</div>
+        <div class="hint">接上手把後<b>按一下任意鍵</b>，瀏覽器才會回報。同一支手把只能佔一個位置；兩支同款也分得開（用「型號＋序號」認）。藍牙延遲高時把距離拉近或改用有線。</div>
         <div class="keybtns"><button class="minibtn" id="btnPadReset2">清除全部指派</button></div>
       </div>
       <div class="field"><label>鍵盤按鍵（點按鈕 → 再按你要的鍵）</label>

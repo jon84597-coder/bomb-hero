@@ -162,7 +162,9 @@ console.log('=== ⑥ 版本戳記 ===');
 // ================================================================
 ok(parseFloat(P.VERSION) >= 5.53, 'VERSION ≥ 5.53（實際 ' + P.VERSION + '）');
 const vlog = fs.readFileSync(path.join(ROOT, 'js', 'version-log.js'), 'utf8');
-ok(/v: '5\.53'[\s\S]{0,600}now: true/.test(vlog), 'VERSION_LOG 有 5.53 且 now:true');
+/* v5.54：改成「跟著 P.VERSION 走」—— 寫死 5.53 的話每升一版就要回來改這支。 */
+ok(new RegExp("v: '" + P.VERSION.replace(/\./g, '\\.') + "'[\\s\\S]{0,600}now: true").test(vlog),
+  'VERSION_LOG 有當前版本（' + P.VERSION + '）且 now:true');
 ok(!/v: '5\.52'[\s\S]{0,400}now: true/.test(vlog), '5.52 已改成 now:false');
 ok(/v: '5\.53'[\s\S]{0,2400}新手任務/.test(vlog), '5.53 的更新內容提到新手任務');
 const swm = swJs.match(/SW_VERSION = 'v([\d.]+)'/);

@@ -31,6 +31,26 @@
     return v;
   }
 
+  /* v5.54：文案走主檔字典（__BH.t）。
+     第三個參數是繁中原文 —— 字典沒載到、或這個語言缺這條時就退回它，
+     玩家永遠不會看到「onb.title」這種原始 key。 */
+  function T(k, p, dflt) {
+    var str = '';
+    try {
+      var b = BH();
+      if (b && typeof b.t === 'function') str = String(b.t(k, p) || '');
+    } catch (e) { str = ''; }
+    if (!str || str === k) {
+      str = String(dflt == null ? '' : dflt);
+      if (p) {
+        for (var q in p) {
+          if (Object.prototype.hasOwnProperty.call(p, q)) str = str.split('{' + q + '}').join(p[q]);
+        }
+      }
+    }
+    return str || k;
+  }
+
   /* ---------------- 進度來源 ---------------- */
   function clearedCount() {
     // bombhero-stage = 最遠解鎖關（1 起算）→ 已通關數 = unlocked - 1
@@ -49,22 +69,30 @@
 
   /* 7 個里程碑：通關 1／3／5(BOSS)／10／15／20 ＋ 一次每日挑戰。
      need 是目標值，unit 只影響文案。 */
+  /* name／tip 是繁中原文（字典缺漏時的後備），nk／tk 才是字典 key。
+     名稱一律由 need 推導（onb.pass），不必為 5 個「通過第 N 關」各寫一份翻譯。 */
   var TASKS = [
-    { id: 'c1', ico: '1', name: '通過第 1 關', need: 1, unit: '關', gold: 300,
-      tip: '先熟悉移動、放炸彈、炸軟磚的節奏' },
-    { id: 'c3', ico: '3', name: '通過第 3 關', need: 3, unit: '關', gold: 500,
-      tip: '試著用衝刺搶位，別被自己的火燒到' },
-    { id: 'b1', ico: '👹', name: '打贏第 1 章 BOSS', need: 5, unit: '關', gold: 1200,
-      tip: '護盾會先擋傷害 —— 打光護盾才是破防時機' },
-    { id: 'c10', ico: '10', name: '通過第 10 關', need: 10, unit: '關', gold: 1500,
-      tip: '地圖會越開越大，注意小地圖上的縮圈' },
-    { id: 'd1', ico: '📅', name: '完成一次每日挑戰', need: 1, unit: '次', gold: 800,
-      tip: '每天一場，還能跟昨天的自己比快' },
-    { id: 'c15', ico: '⚔️', name: '通過第 15 關', need: 15, unit: '關', gold: 1800,
-      tip: '怪物開始有招式了，別站在直線上' },
-    { id: 'c20', ico: '🏁', name: '通過第 20 關', need: 20, unit: '關', gold: 3000,
-      tip: '一半的旅程 —— 接下來的王會愈來愈難纏' }
+    { id: 'c1', ico: '1', name: '通過第 1 關', nk: 'onb.pass', need: 1, unit: 'stage', gold: 300,
+      tip: '先熟悉移動、放炸彈、炸軟磚的節奏', tk: 'onb.t1' },
+    { id: 'c3', ico: '3', name: '通過第 3 關', nk: 'onb.pass', need: 3, unit: 'stage', gold: 500,
+      tip: '試著用衝刺搶位，別被自己的火燒到', tk: 'onb.t2' },
+    { id: 'b1', ico: '👹', name: '打贏第 1 章 BOSS', nk: 'onb.boss', need: 5, unit: 'stage', gold: 1200, boss: true,
+      tip: '護盾會先擋傷害 —— 打光護盾才是破防時機', tk: 'onb.t3' },
+    { id: 'c10', ico: '10', name: '通過第 10 關', nk: 'onb.pass', need: 10, unit: 'stage', gold: 1500,
+      tip: '地圖會越開越大，注意小地圖上的縮圈', tk: 'onb.t4' },
+    { id: 'd1', ico: '📅', name: '完成一次每日挑戰', nk: 'onb.daily', need: 1, unit: 'time', gold: 800, daily: true,
+      tip: '每天一場，還能跟昨天的自己比快', tk: 'onb.t5' },
+    { id: 'c15', ico: '⚔️', name: '通過第 15 關', nk: 'onb.pass', need: 15, unit: 'stage', gold: 1800,
+      tip: '怪物開始有招式了，別站在直線上', tk: 'onb.t6' },
+    { id: 'c20', ico: '🏁', name: '通過第 20 關', nk: 'onb.pass', need: 20, unit: 'stage', gold: 3000,
+      tip: '一半的旅程 —— 接下來的王會愈來愈難纏', tk: 'onb.t7' }
   ];
+  function taskName(t) {
+    if (t.daily) return T('onb.daily', null, t.name);
+    if (t.boss) return T('onb.boss', null, t.name);
+    return T('onb.pass', { n: t.need }, t.name);
+  }
+  function taskUnit(t) { return t.unit === 'time' ? T('onb.unitTime', null, '次') : T('onb.unitStage', null, '關'); }
   var FINAL_GOLD = 5000;
 
   function valueOf(t) {
@@ -144,8 +172,10 @@
     '#bhOnb .bhorow.isReady .bhoIco2{background:#d9f5e2;color:#1c7f43}',
     '#bhOnb .bhoInfo{flex:1 1 auto;min-width:0}',
     '#bhOnb .bhoInfo b{display:block;font-size:13px;color:#123a63}',
-    '#bhOnb .bhoInfo small{display:block;font-size:11px;color:#6a86a3;margin-top:2px;',
-    'white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    /* v5.54：提示改成最多兩行 —— 這一行的內容是「為什麼要這樣打」，
+       英文／日文比中文長很多，單行省略會把重點整段切掉。 */
+    '#bhOnb .bhoInfo small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;',
+    'overflow:hidden;font-size:11px;color:#6a86a3;margin-top:2px;line-height:1.45}',
     '#bhOnb .bhoGo{flex:0 0 auto;border:0;border-radius:999px;padding:7px 13px;font-size:12px;',
     'font-weight:700;color:#fff;cursor:pointer;background:linear-gradient(180deg,#63b8f5,#2f86d4);',
     'box-shadow:0 2px 6px rgba(30,90,160,.28)}',
@@ -222,21 +252,25 @@
     var n = doneCount(), r = readyCount(), t = nextTask();
     var sub, num, ico;
     if (r > 0) {
-      sub = '有 ' + r + ' 個獎勵可以領了，點進來拿';
-      num = '領取';
+      sub = T('onb.readyN', { n: r }, '有 ' + r + ' 個獎勵可以領了，點進來拿');
+      num = T('onb.claimShort', null, '領取');
       ico = '🎁';
     } else if (t) {
-      sub = '下一個：' + t.name + '（' + Math.min(valueOf(t), t.need) + '/' + t.need + ' ' + t.unit + '）';
+      sub = T('onb.next', {
+        name: taskName(t), v: Math.min(valueOf(t), t.need), n: t.need, unit: taskUnit(t)
+      }, '下一個：' + t.name + '（' + Math.min(valueOf(t), t.need) + '/' + t.need + ' ' + t.unit + '）');
       num = n + '/' + TASKS.length;
       ico = '🎯';
     } else {
-      sub = '全部完成，最後的大獎等你拿';
+      sub = T('onb.allDone', null, '全部完成，最後的大獎等你拿');
       num = n + '/' + TASKS.length;
       ico = '🏆';
     }
     c.querySelector('.bhoIco').textContent = ico;
     var tEl = c.querySelector('.bhoTx b');
-    if (tEl) tEl.textContent = r > 0 ? '新手任務 · 可以領獎' : '新手任務';
+    if (tEl) tEl.textContent = r > 0
+      ? T('onb.titleReady', null, '新手任務 · 可以領獎')
+      : T('onb.title', null, '新手任務');
     c.querySelector('.bhoTx small').textContent = sub;
     c.querySelector('.bhoNum').textContent = num;
   }
@@ -252,8 +286,8 @@
     p.innerHTML =
       '<div class="bhowrap" role="dialog" aria-modal="true" aria-labelledby="bhoTitle">' +
         '<div class="bhohead">' +
-          '<h3 id="bhoTitle">新手任務</h3>' +
-          '<p>跟著這 7 步走一遍，基礎玩法就都摸熟了</p>' +
+          '<h3 id="bhoTitle"></h3>' +
+          '<p id="bhoDesc"></p>' +
           '<button class="bhoClose" id="bhoClose" type="button" aria-label="關閉">✕</button>' +
         '</div>' +
         '<div class="bhoBar"><i id="bhoBarFill" style="width:0%"></i></div>' +
@@ -263,6 +297,7 @@
       '</div>';
     (document.body || document.documentElement).appendChild(p);
     panelEl = p;
+    /* 標題／說明搬進 paint() 一起更新（v5.54：換語言時也會呼叫 paint） */
 
     p.addEventListener('click', function (e) {
       if (e.target === p) close();           // 點遮罩關閉
@@ -279,18 +314,29 @@
     var v = Math.min(valueOf(t), t.need);
     var cls = st === 'ready' ? ' isReady' : (st === 'got' ? ' isGot' : '');
     var btn;
-    if (st === 'ready') btn = '<button class="bhoGo" data-id="' + t.id + '" type="button">領 ' + t.gold + '</button>';
-    else if (st === 'got') btn = '<button class="bhoGo isGot" type="button" disabled>已領</button>';
+    if (st === 'ready') btn = '<button class="bhoGo" data-id="' + t.id + '" type="button">' +
+      T('onb.claim', { n: t.gold }, '領 ' + t.gold) + '</button>';
+    else if (st === 'got') btn = '<button class="bhoGo isGot" type="button" disabled>' +
+      T('onb.got', null, '已領') + '</button>';
     else btn = '<button class="bhoGo isTodo" type="button" disabled>' + v + '/' + t.need + '</button>';
-    var sub = st === 'todo' ? t.tip : (st === 'ready' ? '完成！可以領 ' + t.gold + ' 金幣' : '已領取 ' + t.gold + ' 金幣');
+    var sub = st === 'todo' ? T(t.tk, null, t.tip)
+      : (st === 'ready'
+        ? T('onb.readyTip', { n: t.gold }, '完成！可以領 ' + t.gold + ' 金幣')
+        : T('onb.gotTip', { n: t.gold }, '已領取 ' + t.gold + ' 金幣'));
     return '<div class="bhorow' + cls + '">' +
       '<span class="bhoIco2">' + (st === 'got' ? '✓' : t.ico) + '</span>' +
-      '<span class="bhoInfo"><b>' + t.name + '</b><small>' + sub + '</small></span>' +
+      '<span class="bhoInfo"><b>' + taskName(t) + '</b><small>' + sub + '</small></span>' +
       btn + '</div>';
   }
 
   function paint() {
     var p = ensurePanel();
+    var h3 = p.querySelector('#bhoTitle');
+    if (h3) h3.textContent = T('onb.title', null, '新手任務');
+    var pdesc = p.querySelector('#bhoDesc');
+    if (pdesc) pdesc.textContent = T('onb.desc', null, '跟著這 7 步走一遍，基礎玩法就都摸熟了');
+    var cbtn = p.querySelector('#bhoClose');
+    if (cbtn) cbtn.setAttribute('aria-label', T('kx.close', null, '關閉'));
     var list = p.querySelector('#bhoList');
     if (list) {
       var h = '';
@@ -301,13 +347,15 @@
     var fill = p.querySelector('#bhoBarFill');
     if (fill) fill.style.width = Math.round(n / TASKS.length * 100) + '%';
     var tx = p.querySelector('#bhoBarTx');
-    if (tx) tx.textContent = '已完成 ' + n + ' / ' + TASKS.length + '　·　完成全部再送 ' + FINAL_GOLD + ' 金幣';
+    if (tx) tx.textContent = T('onb.bar', { d: n, n: TASKS.length, g: FINAL_GOLD },
+      '已完成 ' + n + ' / ' + TASKS.length + '　·　完成全部再送 ' + FINAL_GOLD + ' 金幣');
     var ft = p.querySelector('#bhoFoot');
     if (ft) {
       var got = readClaim();
       var all = TASKS.every(function (t) { return got[t.id]; });
-      ft.textContent = all ? '全部完成！這條引導就到這裡，接下來隨你玩。'
-        : '進度會自動記錄，不用一次做完 —— 隨時回來看還差幾步。';
+      ft.textContent = all
+        ? T('onb.footAll', null, '全部完成！這條引導就到這裡，接下來隨你玩。')
+        : T('onb.foot', null, '進度會自動記錄，不用一次做完 —— 隨時回來看還差幾步。');
     }
   }
 
@@ -342,7 +390,7 @@
     try {
       var b2 = BH();
       if (b2 && typeof b2.toast === 'function') {
-        b2.toast((paid ? '💰 +' + gold + ' 金幣' : '✅ 任務完成') + '　' + t.name, 2.6);
+        b2.toast((paid ? '💰 +' + gold + ' 金幣' : '✅ ' + T('onb.got', null, '已領')) + '　' + taskName(t), 2.6);
       }
     } catch (e2) {}
     try {
@@ -388,6 +436,14 @@
     }, 3000);
   }
 
+  /* v5.54：換語言 → 首頁卡片與（開著的）面板都要重畫 */
+  try {
+    document.addEventListener('bh:lang', function () {
+      try { refreshCard(); } catch (e) {}
+      try { if (isOpen()) paint(); } catch (e) {}
+    });
+  } catch (e) {}
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
   } else {
@@ -396,7 +452,7 @@
 
   /* 測試／除錯用 */
   var API = {
-    TASKS: TASKS, FINAL_GOLD: FINAL_GOLD,
+    TASKS: TASKS, FINAL_GOLD: FINAL_GOLD, taskName: taskName, taskUnit: taskUnit, T: T,
     clearedCount: clearedCount, dailyDone: dailyDone,
     stateOf: stateOf, doneCount: doneCount, readyCount: readyCount, allGot: allGot,
     claim: claim, open: open, close: close, isOpen: isOpen,

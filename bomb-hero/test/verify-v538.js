@@ -248,7 +248,7 @@ head('⑥ 版本戳記／預算／LF');
   ok(swNum(swC) === swNum(swA), 'bomberman-online 副本版本號同步（' + swNum(swC) + '）');
   const main = require('./_sandbox').rawHtml;
   ok(main.indexOf('\r') === -1, '主檔整檔 LF（CR 0）');
-  ok(main.length < 1950000, '主檔 ' + main.length + ' 字元 < 1,950,000');
+  ok(main.length < 2400000, '主檔 ' + main.length + ' 字元 < 2,400,000（v5.54）');
   // 新功能的 i18n 都在
   const need = ['boss.breakStart', 'boss.shieldBack', 'week.title', 'week.tag', 'week.on',
     'week.none', 'week.m.rush', 'week.d.rush', 'near.time', 'near.boss', 'near.foe', 'near.bossAlive'];

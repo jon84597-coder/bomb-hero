@@ -1,0 +1,78 @@
+{
+  "R": [
+    {
+      "s": "存檔全毀仍能開機",
+      "c": true,
+      "n": "{\"ver\":\"5.53\",\"home\":true,\"shop\":\"object\"}"
+    },
+    {
+      "s": "存檔全毀沒有拋錯",
+      "c": true,
+      "n": ""
+    },
+    {
+      "s": "存檔全毀仍能開關卡",
+      "c": false,
+      "n": "{\"state\":\"idle\",\"en\":2}"
+    },
+    {
+      "s": "320×568 版面不溢出",
+      "c": true,
+      "n": "{\"cv\":[292,131],\"wrap\":[292,131],\"ovfX\":false,\"ovfY\":false,\"T\":30}"
+    },
+    {
+      "s": "768×1024 版面不溢出",
+      "c": true,
+      "n": "{\"cv\":[740,782],\"wrap\":[740,782],\"ovfX\":false,\"ovfY\":false,\"T\":30}"
+    },
+    {
+      "s": "1280×720 版面不溢出",
+      "c": true,
+      "n": "{\"cv\":[1252,524],\"wrap\":[1252,524],\"ovfX\":false,\"ovfY\":false,\"T\":30}"
+    },
+    {
+      "s": "1920×1080 版面不溢出",
+      "c": true,
+      "n": "{\"cv\":[1892,884],\"wrap\":[1892,884],\"ovfX\":false,\"ovfY\":false,\"T\":30}"
+    },
+    {
+      "s": "12 次開局後節點沒膨脹（9548 → 9567）",
+      "c": true,
+      "n": ""
+    },
+    {
+      "s": "12 次開局後監聽器沒膨脹（932 → 933）",
+      "c": true,
+      "n": ""
+    },
+    {
+      "s": "12 次開局後記憶體沒失控（4.4 → 4.4 MB）",
+      "c": true,
+      "n": ""
+    },
+    {
+      "s": "全程無錯誤",
+      "c": true,
+      "n": ""
+    }
+  ],
+  "all": [],
+  "realKeys": [
+    "bombhero-rank-v1",
+    "bombhero-br-ticket",
+    "bombhero-soc-v1",
+    "bombhero-settings-v1",
+    "bombhero-tpad-def",
+    "bombhero-daily-best",
+    "bombhero-pets",
+    "bombhero-stage",
+    "bombhero-device",
+    "bombhero-gift-v1",
+    "bombhero-cloud-save",
+    "bombhero-ach-v1",
+    "bombhero.ann.min",
+    "bombhero-tut2",
+    "bombhero-br-free",
+    "bombhero-gold"
+  ]
+}

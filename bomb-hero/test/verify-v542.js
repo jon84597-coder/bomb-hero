@@ -75,7 +75,11 @@ ok(/margin-bottom:\s*0/.test(gt), '#gameTop 下緣 margin 歸零（原 2px）');
 head('⑥ 上方留白與右側保留區');
 const gtRow = rule('body.touch.in-game #scr-game.on .game-top {');
 ok(/padding-top:\s*calc\(2px \+ env\(safe-area-inset-top, 0px\)\)/.test(gtRow), '資訊列上方留白 4px → 2px', gtRow);
-ok(/padding-right:\s*154px/.test(gtRow), '右側仍保留 154px 給「返回／個人／⋮」（沒動它）');
+// v5.54：154px 是寫死的，但那一組按鈕的寬度會隨語言／登入狀態變（綁定後會換成暱稱），
+//   實測 844×390 會壓到計時器 26px。改成「量多少讓多少」：CSS 吃 --navreserve，
+//   154px 只留著當 JS 還沒跑之前的後備值。
+ok(/padding-right:[ ]*var\(--navreserve,[ ]*154px\)/.test(gtRow),
+  '右側讓位改成 var(--navreserve)（後備 154px）');
 ok(/padding-left:\s*5px/.test(gtRow), '左側 5px 保留');
 ok(/margin-bottom:\s*0/.test(gtRow), '資訊列下緣 margin 2px → 0');
 ok(!/padding-top:\s*calc\(4px/.test(src), '舊的 4px 留白已不存在');

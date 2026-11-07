@@ -114,7 +114,7 @@ head('7. 版本與預算');
   const sv = swv.split('.').map(Number);
   ok(sv[0] > 5 || (sv[0] === 5 && sv[1] >= 32), 'sw.js 是 v5.32.x（目前 ' + swv + '）');
   const raw = require('./_sandbox').rawHtml;
-  ok(raw.length <= 1950000, '主檔 ' + raw.length + ' 字元（預算 1,950,000）');
+  ok(raw.length <= 2400000, '主檔 ' + raw.length + ' 字元（v5.54：合併全文防呆上限 2,400,000；單檔預算已拆成 index.html／js/main.js）');
 }
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v5.32：' + pass + ' 通過 / ' + fail + ' 失敗');

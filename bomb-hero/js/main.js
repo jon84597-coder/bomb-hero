@@ -158,7 +158,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.53';
+const VERSION = '5.54';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -295,7 +295,11 @@ function trLiveAttr(el) {
 }
 /* v4.77：說明頁／教學頁是「一段話夾幾個 <b>」組出來的，逐個文字節點翻會翻不動 →
    改成「整個區塊的 innerHTML 當一條字串查字典」，查到就整塊換掉（查不到就原樣留著）。 */
-const TRBLOCK_CLS = ' hd hlead hsub hh hen dt dd th td hbadge hlede hnote hn ';
+const TRBLOCK_CLS = ' hd hlead hsub hh hen dt dd th td hbadge hlede hnote hn '
+  /* v5.54：這幾個是「一整句夾好幾個 <b>」的說明／提示，逐節點永遠翻不動，
+     只能整塊比對（字典裡有含 <b> 的完整原文才會命中，沒命中就照舊走逐節點）。 */
+  + 'shname shdesc rpgname rpgdesc hint desc padnone soloDiffHint soloTimeHint '
+  + 'soloCharHint shopDesc shopGoldHint lvhint ctrlHint setCmdHint rpgSum rpgBuyHint ';
 const TRBLOCK_ID = ' learnSub learnDesc learnTitle tutLead btnLearn btnBR btnTourAll tutTitle tutBody tutGoal lpH0 lpP0 learnTag ';
 /* v4.77：說明頁是「一大段 HTML 夾 <b>」組出來的，DOM 逐節點翻不動（節點被切碎）→
    改成在字串上做「繁中原文 → 譯文」的最長字串替換，設定 innerHTML 之前先過一次水。 */
@@ -393,8 +397,22 @@ function trLiveTree(root) {
     while ((n = wk.nextNode())) { if (n.nodeType === 3) trLiveNode(n); else trLiveAttr(n); }
   } catch (e) {}
 }
-function retranslateLive() {
-  TR_CACHE.clear();
+/* v5.54：有些說明／提示是在「開機時寫一次」，之後除非重畫否則不會有 DOM 變動，
+   換語言時 MutationObserver 根本不會被觸發 → 這裡主動掃一遍做整塊比對。
+   只掃已知的說明類 class（跟 TRBLOCK_CLS 同步），一般元素不受影響。 */
+const TRSWEEP_SEL = '.hint,.desc,.shname,.shdesc,.rpgname,.rpgdesc,.padnone,.lvhint,'
+  + '.setCmdHint,.rpgSum,.rpgBuyHint,.shopDesc,.shopGoldHint,.soloDiffHint,'
+  + '.soloTimeHint,.soloCharHint,.hlead,.hsub,.hen';
+function trSweepBlocks() {
+  if (LANG === 'zh-TW' || typeof document.querySelectorAll !== 'function') return 0;
+  let n = 0;
+  try {
+    const els = document.querySelectorAll(TRSWEEP_SEL);
+    for (let i = 0; i < els.length; i++) if (trBlockInner(els[i])) n++;
+  } catch (e) {}
+  return n;
+}
+function retranslateLive() {  TR_CACHE.clear();
   try {
     if (typeof document.createTreeWalker !== 'function') return;
     const wk = document.createTreeWalker(document.body, 4, null, false);
@@ -417,7 +435,17 @@ function startI18NWatch() {
         const m = list[i];
         if (m.type === 'characterData') trLiveNode(m.target);
         else if (m.type === 'attributes') trLiveAttr(m.target);
-        else for (let j = 0; j < m.addedNodes.length; j++) trLiveTree(m.addedNodes[j]);
+        else {
+          /* v5.54：說明／提示是「el.innerHTML = 一大段含 <b> 的字串」寫進去的，
+             新增的節點是它的「子節點」→ 父節點自己不會被 trLiveTree 掃到，
+             整塊比對也就永遠不會發生。這裡補一次（只對清單內的 class/id 生效，
+             且必須整段原文命中字典才會替換，翻完再跑一次就查不到、自然停止）。
+             ⚠️ 一定得排在逐節點之前：先走子節點會把各段文字換掉，
+                父節點的 innerHTML 就跟字典裡的原文對不上了（第一版就是這樣失敗）。 */
+          const tg = m.target;
+          if (tg && tg.nodeType === 1 && tg !== document.body && tg.tagName !== 'CANVAS') trBlockInner(tg);
+          for (let j = 0; j < m.addedNodes.length; j++) trLiveTree(m.addedNodes[j]);
+        }
       }
     });
     _i18nObs.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['title', 'placeholder', 'aria-label'] });
@@ -501,6 +529,15 @@ function refreshI18NUI() {
   try { if (typeof Cloud !== 'undefined' && Cloud && Cloud.paint) Cloud.paint(); } catch (e) {}
   // v4.80：每日挑戰／排行榜的文字是 JS 注入的（不是靜態節點）→ 換語言要重畫
   try { if (typeof renderDailyScreen === 'function' && typeof Screen !== 'undefined' && Screen.current === 'daily') renderDailyScreen(); } catch (e) {}
+  // v5.54：按鍵表是「開機時鋪一次、之後只在改鍵時重畫」→ 換語言要主動重鋪
+  try { if (typeof renderKeyRow === 'function') renderKeyRow(); } catch (e) {}
+  try { if (typeof refreshCmdHint === 'function') refreshCmdHint(); } catch (e) {}
+  // v5.54：商店／RPG 配點頁也是「進頁面才畫」，換語言時沒重畫就會留一半中文
+  try { if (typeof Shop !== 'undefined' && Shop && Shop.render) Shop.render(); } catch (e) {}
+  try { if (typeof Rpg !== 'undefined' && Rpg && Rpg.renderStats) Rpg.renderStats(); } catch (e) {}
+  // v5.54：把「開機時寫一次」的說明／提示整塊換掉（上面那些重畫函式不一定涵蓋到）
+  try { trSweepBlocks(); } catch (e) {}
+  try { setTimeout(function () { trSweepBlocks(); }, 80); } catch (e) {}
 }
 function updateLangBtn() {
   const el = typeof $id === 'function' ? $id('btnLang') : null;
@@ -551,10 +588,19 @@ function setLang(id, silent) {
   LANG = id;
   try { localStorage.setItem(LANG_STORE, id); } catch (e) {}
   try { document.documentElement.setAttribute('lang', id); } catch (e) {}
+  /* v5.54：整塊比對要「先於」逐節點翻譯 —— applyI18N 會把「一句話夾 <b>」的各段
+     先換掉，之後父節點的 innerHTML 就跟字典原文對不上了（會翻一半）。 */
+  try { trSweepBlocks(); } catch (e) {}
   applyI18N();
   try { retranslateLive(); } catch (e) {}
   updateLangBtn();
   refreshI18NUI();
+  /* v5.54：外部模組（js/keys-ui.js、js/onboard.js）是後來才加的，
+     它們自己鋪好的 DOM 不會被 applyI18N 掃到 → 這裡發一個事件讓它們重畫。
+     CustomEvent 在無頭沙盒可能不存在，包起來不吃錯。 */
+  try {
+    document.dispatchEvent(new CustomEvent('bh:lang', { detail: { lang: id } }));
+  } catch (e) {}
   if (!silent) { try { toast(t('lang.saved', { name: langLabel(id) }), 1.8); } catch (e) {} }
 }
 captureI18N();
@@ -2449,6 +2495,44 @@ function updateNavUI() {
   if (m) m.classList.toggle('off', !(settings.bgm > 0));
   if (sf) sf.classList.toggle('off', !(settings.sfx > 0));
   try { pwaSync(); } catch (e) {}      // v4.6：換畫面時同步「加入桌面捷徑」按鈕
+  try { syncNavReserve(); } catch (e) {}   // v5.54：工具列寬度會隨畫面／語言變 → 重算讓位
+}
+/* ===== v5.54：HUD 讓位改成「量多少讓多少」 =====
+   #gameTop 是一整條 flex，計時器靠 margin-left:auto 貼右邊 —— 右上那組工具列
+   （←／👤 帳號／⋮）是 fixed、z-index 1200，會直接蓋在計時器上面。
+   舊版在橫放寫死 padding-right:154px、直放 50px，但那一組的寬度不是常數：
+     · 綁定帳號後膠囊會換成玩家暱稱
+     · 英文 "Bind account" 比中文「綁定帳號」長
+     · 直放會把 ← 和 👤 收起來，只剩 ⋮
+   實測 844×390 壓到計時器 26px，把「5:00」遮成「5」—— 看不出剩幾秒是會輸的。
+   這裡量「工具列右緣到按鈕群左緣」的距離寫進 --navreserve，CSS 直接吃這個值。 */
+function syncNavReserve() {
+  try {
+    const de = document.documentElement;
+    const bar = $id('navBar');
+    if (!bar || !de || !de.style) return;
+    const cs = (typeof getComputedStyle === 'function') ? getComputedStyle(bar) : null;
+    if (!cs || cs.display === 'none' || cs.visibility === 'hidden') {
+      de.style.setProperty('--navreserve', '0px');
+      return;
+    }
+    /* 量「最左邊那顆還看得見的按鈕」到視窗右緣的距離。
+       不能只量 .navright —— 「←」是 .navright 的兄弟節點，在橫放時會顯示，
+       只量 .navright 會少算它 34px（第一版就是這樣，還剩 20px 重疊）。 */
+    const b2 = bar.getBoundingClientRect ? bar.getBoundingClientRect() : null;
+    if (!b2) { de.style.setProperty('--navreserve', '0px'); return; }
+    let minL = b2.right;
+    const btns = bar.querySelectorAll('button, a');
+    for (let i = 0; i < btns.length; i++) {
+      const r = btns[i].getBoundingClientRect ? btns[i].getBoundingClientRect() : null;
+      if (!r || r.width < 2 || r.height < 2) continue;     // display:none / 收起來的
+      if (r.left < minL) minL = r.left;
+    }
+    if (minL >= b2.right) { de.style.setProperty('--navreserve', '0px'); return; }
+    let pad = Math.ceil(b2.right - minL) + 8;        // ＋8 = 計時器與按鈕之間留一點空隙
+    if (!isFinite(pad) || pad < 0) pad = 0;
+    de.style.setProperty('--navreserve', pad + 'px');
+  } catch (e) {}
 }
 /* ---- v4.6：PWA「加入桌面捷徑」 ---- */
 // 攔事件的程式在 <head>（免得 beforeinstallprompt 太早 fire 被漏掉），這裡只管 UI 與觸發。
@@ -17396,6 +17480,10 @@ function ovShow() {
   const el = $id('ovIn');
   if (el) el.classList.remove('hide');
   if (document.body && document.body.classList) document.body.classList.add('ovopen');
+  // v5.54：開覆蓋層（開場／結算／暫停）就先把「兩指捏合縮放」提示收掉 ——
+  //   它會壓在結算卡上面（實測「過關！」被蓋住、分數看不到）。只收不標記，
+  //   下次進關卡還會再提示一次；真的看滿 5.6 秒或點掉才算「看過了」。
+  try { hideZoomHint(); } catch (e) {}
 }
 function ovHide() {
   const el = $id('ovIn');
@@ -27382,23 +27470,34 @@ function drawCart(p, T) {
 
   // ===== v4.50：手機第一次實戰 → 教「兩指捏合縮放」 =====
   let _zhDone = false;
+  let _zhTimer = null;
+  function hideZoomHint() {
+    const el = $id('zoomHint');
+    if (el) el.classList.remove('on');
+    if (_zhTimer) { clearTimeout(_zhTimer); _zhTimer = null; }
+  }
   function showZoomHint() {
     const el = $id('zoomHint');
     if (!el) return;
     if (!document.body || !document.body.classList.contains('touch')) return;
     try { if (localStorage.getItem('bombhero-zoomtip') === '1') return; } catch (e) {}
     const t1 = $id('zhTxt'), s1 = $id('zhSub');
-    if (t1 && !t1.textContent) t1.textContent = '兩指捏合縮放';
-    if (s1 && !s1.textContent) s1.textContent = '縮小看全局，放大看細節';
-    let tm = null;
-    const kill = function () {
-      el.classList.remove('on');
-      try { localStorage.setItem('bombhero-zoomtip', '1'); } catch (e) {}
-      if (tm) clearTimeout(tm);
-    };
-    el.addEventListener('click', kill);
+    // v5.54：改走字典（原本寫死中文，英日韓玩家看到的是中文）
+    if (t1 && !t1.textContent) t1.textContent = t('zh.title');
+    if (s1 && !s1.textContent) s1.textContent = t('zh.sub');
+    if (!el._zhWired) {
+      el._zhWired = true;
+      el.addEventListener('click', function () {
+        hideZoomHint();
+        try { localStorage.setItem('bombhero-zoomtip', '1'); } catch (e) {}
+      });
+    }
+    hideZoomHint();          // 先把上一個計時器清掉，連按才不會疊
     el.classList.add('on');
-    tm = setTimeout(kill, 5600);
+    _zhTimer = setTimeout(function () {
+      hideZoomHint();
+      try { localStorage.setItem('bombhero-zoomtip', '1'); } catch (e) {}
+    }, 5600);
   }
 
 // ====
@@ -28019,8 +28118,7 @@ function applyCtrl() {
     if (!force && sig === lastSig) return;
     lastSig = sig;
     if (!info.pads.length) {
-      box.innerHTML = '<div class="padnone">還沒偵測到手把 —— 藍牙配對完<b>按一下手把上的鍵</b>，' +
-        'Chrome／Edge 才會把它交給網頁（iOS Safari 不支援手把 API）。</div>';
+      box.innerHTML = '<div class="padnone">' + t('pad.none') + '</div>';
       return;
     }
     box.innerHTML = info.pads.map(function (p) {
@@ -28126,10 +28224,15 @@ function refreshCmdHint() {
   if (!el) return;
   const k = (keyPlayer === 1 ? settings.keys1 : settings.keys2) || {};
   const esc = (typeof hesc === 'function') ? hesc : function (s) { return s; };
-  el.innerHTML = '現在（' + keyPlayer + 'P）：<b>' + esc(keyName(k.up)) + '／' + esc(keyName(k.left)) + '／' +
-    esc(keyName(k.down)) + '／' + esc(keyName(k.right)) + '</b> 移動 · <b>' + esc(keyName(k.act)) + '</b> 放炸彈 · <b>' +
-    esc(keyName(k.det)) + '</b> 引爆 · <b>中鍵／Shift</b> 衝刺 · <b>' + esc(keyName(k.fire)) + '</b> 坐騎招式。'
-    + '改鍵：<u>點一下按鈕，再按你要的鍵（也可以直接按滑鼠鍵）</u>。';
+  /* v5.54：整句改成單一模板 key —— 原本是「中文碎片 + <b>鍵名</b>」串起來的，
+     逐節點翻不動、拼起來的語序也沒辦法翻。 */
+  el.innerHTML = t('cmd.hint', {
+    n: keyPlayer,
+    u: esc(tr(keyName(k.up))), l: esc(tr(keyName(k.left))),
+    d: esc(tr(keyName(k.down))), r: esc(tr(keyName(k.right))),
+    act: esc(tr(keyName(k.act))), det: esc(tr(keyName(k.det))),
+    fire: esc(tr(keyName(k.fire)))
+  });
 }
 function renderKeyRow() {
   const row = $id('keyRow');
@@ -28137,7 +28240,7 @@ function renderKeyRow() {
   const map = curKeys();
   row.innerHTML = KEY_ORDER.map(function (k) {
     return '<button class="keybtn" data-k="' + k + '"><small>' + t(KEY_LABELS[k]) + '</small><b>' +
-      keyName(map[k]) + '</b></button>';
+      tr(keyName(map[k])) + '</b></button>';
   }).join('');
   Array.prototype.forEach.call(row.querySelectorAll('.keybtn'), function (btn) {
     btn.addEventListener('click', function () { startCapture(btn.getAttribute('data-k'), btn); });
@@ -31177,6 +31280,8 @@ function applyHomeWide() {
 }
 function relayout() {
   updateViewportVars();
+  try { syncNavReserve(); } catch (e) {}                       // v5.54
+  setTimeout(function () { try { syncNavReserve(); } catch (e) {} }, 90);   // 版面穩定後再量一次
   applyHomeWide();      // v5.47：旋轉／縪窗後重算首頁橫屏版面
   setTimeout(resizeView, 60);
   // v4.4：橫幅是 fixed 定位、貼著資訊列下緣，旋轉或改變視窗大小後要重新量
@@ -31435,8 +31540,8 @@ const Tut = (function () {
           if (sub) sub.textContent = isDone() ? '想複習再玩一次' : '3 分鐘帶你玩一輪';
         }
         const hs = $id('lpHomeS'), ps = $id('lpPlayS');
-        if (hs) hs.textContent = doneP.home ? '✓ 已完成' : '未完成';
-        if (ps) ps.textContent = doneP.play ? '✓ 已完成' : '未完成';
+        if (hs) hs.textContent = doneP.home ? t('learn.done') : t('learn.undone');
+        if (ps) ps.textContent = doneP.play ? t('learn.done') : t('learn.undone');
         const hw = $id('lpHome'), pw = $id('lpPlay');
         if (hw) hw.classList.toggle('ok', !!doneP.home);
         if (pw) pw.classList.toggle('ok', !!doneP.play);
@@ -31519,7 +31624,10 @@ const Tut = (function () {
           '<b>縮小看全局</b>：縮到 58% 可以一次看到大半張地圖，找出口、看敵人位置都比放大好用；要走窄巷再放大回來。'
         ]]
       ];
-      (function renderCh() {
+      /* v5.54：改成具名函式並彙出，換語言時由 fillUI() 重畫 —— 之前是 IIFE，
+         只畫一次，切到英日韓之後整份功能總覽還停在中文（trPairs 逐節點翻不動
+         「一段話夾好幾個 <b>」的結構）。 */
+      function renderCh() {
         const box = $id('learnChapters'); if (!box) return;
         let h = '';
         for (let k = 0; k < CH.length; k++) {
@@ -31528,7 +31636,8 @@ const Tut = (function () {
           h += '</ul></details>';
         }
         box.innerHTML = h;
-      })();
+      }
+      renderCh();
 
       /* ---------- 首頁導覽步驟 ---------- */
       /* v4.81：首頁從 14 顆按鈕改成「5 張玩法卡 + 更多抽屜」，導覽跟著重寫。
@@ -31996,6 +32105,8 @@ const Tut = (function () {
         const avap = $id('avApply'); if (avap) avap.textContent = t('ui.avApply');
         const avdl = $id('avDel'); if (avdl) avdl.textContent = t('ui.avDel');
         const avsb = $id('avSub'); if (avsb) avsb.textContent = t('ui.avDrag');
+        try { renderCh(); } catch (e) {}
+        try { syncTag(); } catch (e) {}
         try { homeFill(); } catch (e) {}
       }
 
@@ -32335,24 +32446,21 @@ const Shop = (function () {
     const w = $id('shopWallet');
     if (w) w.textContent = dev() ? '∞' : String(gold | 0);
     const d = $id('shopDesc');
-    if (d) d.textContent = '用金幣雇用隨從跟在身邊幫你打怪、撿道具。隨從只在「單人闖關」與「RPG 模式」出場，' +
-      '對戰／線上配對不會出現。三位隨從各有自己的動物造型與招式。';
+    if (d) d.textContent = t('shop.followerDesc');
     const gh = $id('shopGoldHint');
-    if (gh) gh.textContent = dev() ? '開發者：金幣無限' : '過關或分享獲得';
+    if (gh) gh.textContent = dev() ? t('shop.devGold') : t('shop.goldHow');
     const h = $id('shopHint');
-    if (h) h.innerHTML = '被打倒的隨從會坐在地上哭、頭上冒出 <b>Help</b>；主角靠近 <b>5 秒</b>就能救回來。' +
-      '每種隨從只能雇用一隻。';
+    if (h) h.innerHTML = t('shop.hint');
     if (!grid) return;
     const canT = dev() || gold >= TICKET_PRICE;
     const ticketCard = '<div class="shopcard">' +
-      '<div class="shhead"><span class="shico">🏝️</span>大逃殺門票</div>' +
-      '<div class="shdesc">每張可以玩一場大逃殺。玩法還在開發中，買了會先存在錢包裡，' +
-      '開放後直接在入口使用（不會過期）。</div>' +
+      '<div class="shhead"><span class="shico">🏝️</span>' + t('shop.ticket') + '</div>' +
+      '<div class="shdesc">' + t('shop.ticketDesc') + '</div>' +
       '<div class="shfoot"><span class="shprice">💰 ' + TICKET_PRICE + '</span>' +
       '<button class="shbuy" data-buy-ticket="1"' + (canT ? '' : ' disabled') + '>' +
-      (canT ? '購買' : '金幣不足') + '</button></div>' +
-      '<div class="shdesc" style="margin-top:6px;color:#d4491f"><b>持有 ' + tickets + ' 張</b>' +
-      '<span style="color:#1c7a4a;margin-left:8px">（每天登入送 1 張，今日已送）</span></div>' +
+      (canT ? t('shop.buy') : t('shop.noGold')) + '</button></div>' +
+      '<div class="shdesc" style="margin-top:6px;color:#d4491f"><b>' + t('shop.hold', { n: tickets }) + '</b>' +
+      '<span style="color:#1c7a4a;margin-left:8px">' + t('shop.ticketDaily') + '</span></div>' +
       '</div>';
     grid.innerHTML = PET_KINDS.map(function (k) {
       const own = has(k.key);
@@ -32366,7 +32474,7 @@ const Shop = (function () {
         '<div class="shfoot"><span class="shprice">💰 ' + k.price + '</span>' +
         '<button class="shbuy' + (own ? ' owned' : '') + '" data-buy="' + k.key + '"' +
         (own || !can ? ' disabled' : '') + '>' +
-        (own ? '✔ 已雇用' : (can ? '雇用' : '金幣不足')) + '</button></div></div>';
+        (own ? t('shop.hired') : (can ? t('shop.hire') : t('shop.noGold'))) + '</button></div></div>';
     }).join('') + ticketCard;
     try { PetPreview.mount(grid); } catch (e) {}      // v5.17：隨從圖示會走動
     grid.querySelectorAll('[data-buy-ticket]').forEach(function (b) {
@@ -32770,7 +32878,7 @@ const Share = (function () {
       const done = !!claimed[pl.k] || dev;
       return '<button class="sharebtn' + (done ? ' done' : '') + '" data-share="' + pl.k + '"' +
         (done || busy ? ' disabled' : '') + '>' +
-        '<span class="sbico">' + pl.ico + '</span>' + pl.name +
+        '<span class="sbico">' + pl.ico + '</span>' + tr(pl.name) +
         '<span class="sbamt">' + (dev ? '∞' : (done ? '✔' : '+' + REWARD)) + '</span></button>';
     }).join('');
     grid.querySelectorAll('[data-share]').forEach(function (b) {
@@ -34410,9 +34518,12 @@ const Rpg = (function () {
   let inited = false;
   function sumHtml() {
     const d = rpgDerive(RPG.alloc);
-    return '實際能力 → ❤️ 生命 <b>' + d.maxHp + '</b>　🛡️ 護甲 <b>' + d.armor +
-      '</b>　👟 速度 <b>+' + Math.round((d.spdMul - 1) * 100) + '%</b>　💥 火力 <b>' + d.range +
-      ' 格</b>（傷害 ' + d.dmg + '）';
+    /* v5.54：原本是「中文碎片 + <b>數字</b>」串出來的，換語言只會翻到一半 → 走模板 key。 */
+    return t('rpg.sum', {
+      hp: d.maxHp, arm: d.armor,
+      spd: Math.round((d.spdMul - 1) * 100),
+      rg: d.range, dmg: d.dmg
+    });
   }
   function renderStats() {
     const box = $id('rpgRows');
@@ -34425,8 +34536,9 @@ const Rpg = (function () {
       lb.innerHTML = '<div class="lvrow"><span class="lvtag">⭐ Lv.' + L.lv + '</span>' +
         '<span class="lvxp"><i style="width:' + L.pct + '%"></i></span>' +
         '<span class="lvnum">' + (L.need ? L.cur + ' / ' + L.need : 'MAX') + '</span></div>' +
-        '<div class="lvhint">' + (L.lv >= RPG_LV_MAX ? '已滿級（' + RPG_LV_MAX + '）· 配點 ' + RPG_POINTS_TOTAL + ' 點'
-          : '累積經驗就會升級 · 每 2 級 +1 配點（再 ' + nx + ' 級 +1）· 目前 ' + RPG_POINTS_TOTAL + ' 點') + '</div>';
+        '<div class="lvhint">' + (L.lv >= RPG_LV_MAX
+          ? t('rpg.lvmax', { max: RPG_LV_MAX, n: RPG_POINTS_TOTAL })
+          : t('rpg.lvhint', { nx: nx, n: RPG_POINTS_TOTAL })) + '</div>';
     }
     const left = rpgLeft();
     box.innerHTML = RPG_ATTRS.map(function (a) {
@@ -34451,8 +34563,12 @@ const Rpg = (function () {
         '<div class="rpgdesc">' + a.desc + '</div>' +
         '</div>';
     }).join('');
+    /* v5.54：原本是「剩餘 <b>N</b> 點 · …」，數字夾在中間讓日／韓文語序翻不動 →
+       整句走模板（#rpgLeft 仍在，只是從 <b> 變成 <span>，整句照原色顯示）。 */
     const lf = $id('rpgLeft');
-    if (lf) lf.textContent = String(left);
+    if (lf) lf.textContent = t('rpg.leftRow', { n: left });
+    const ph = $id('rpgPtHint');
+    if (ph) ph.textContent = ' · ' + t('rpg.ptHint');
     const sm = $id('rpgSum');
     if (sm) sm.innerHTML = sumHtml();
   }

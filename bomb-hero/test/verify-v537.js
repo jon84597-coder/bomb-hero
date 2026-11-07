@@ -256,7 +256,7 @@ const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
 const swv = (sw.match(/var SW_VERSION = 'v([\d.]+)'/) || [])[1] || '0';
 const sv = swv.split('.').map(Number);
 ok(sv[0] > 5 || (sv[0] === 5 && sv[1] >= 37), 'sw.js 是 v5.37.x（目前 ' + swv + '）');
-ok(rawMain.length <= 1950000, '主檔 ' + rawMain.length + ' 字元（預算 1,950,000）');
+ok(rawMain.length <= 2400000, '主檔 ' + rawMain.length + ' 字元（v5.54：合併全文防呆上限 2,400,000；單檔預算已拆成 index.html／js/main.js）');
 ok(rawMain.indexOf('\r') === -1, '整檔 LF（CR 0）');
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v5.37：' + pass + ' 通過 / ' + fail + ' 失敗');

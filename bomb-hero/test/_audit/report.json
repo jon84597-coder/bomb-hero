@@ -1,0 +1,65 @@
+{
+  "report": [
+    {
+      "sec": "載入無錯誤",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "sec": "主程式載入（VERSION=5.53）",
+      "ok": true
+    },
+    {
+      "sec": "關鍵模組都在",
+      "ok": true,
+      "note": "{\"solo\":\"function\",\"rpg\":\"object\",\"br\":\"function\",\"shop\":\"object\",\"season\":\"object\",\"ach\":\"object\",\"gift\":\"object\",\"onb\":\"object\"}"
+    },
+    {
+      "sec": "單人第 1 關可玩",
+      "ok": true,
+      "note": "{\"mode\":\"solo\",\"paused\":false,\"foes\":0,\"T\":62}"
+    },
+    {
+      "sec": "單人幀率健康（平均 16.7ms，最差 16.8ms）",
+      "ok": true,
+      "note": "90 幀共 1497ms"
+    },
+    {
+      "sec": "BOSS 決戰場（第 5 關）",
+      "ok": true,
+      "note": "{\"arena\":true,\"boss\":true,\"shield\":1}"
+    },
+    {
+      "sec": "大逃殺可開局",
+      "ok": true,
+      "note": "{\"mode\":\"br\",\"W\":79,\"players\":100,\"foes\":0}"
+    },
+    {
+      "sec": "大逃殺持續 5 秒無錯",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "sec": "RPG 第 1 關",
+      "ok": true,
+      "note": "{\"mode\":\"rpg\",\"rpg\":false}"
+    },
+    {
+      "sec": "對戰模式",
+      "ok": true,
+      "note": "{\"mode\":\"battle\"}"
+    }
+  ],
+  "errs": [],
+  "ver": "5.53",
+  "api": {
+    "solo": "function",
+    "rpg": "object",
+    "br": "function",
+    "shop": "object",
+    "season": "object",
+    "ach": "object",
+    "gift": "object",
+    "onb": "object"
+  }
+}

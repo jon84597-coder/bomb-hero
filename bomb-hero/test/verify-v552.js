@@ -39,7 +39,7 @@ head('① 檔案本體');
   // 主檔預算：這支完全外置，不佔 1,950,000
   const html = require('./_sandbox').rawHtml;
   ok(html.indexOf('id="bhKeys"') < 0, '面板 HTML 不在主檔裡（外置，主檔只剩 ' +
-    (1950000 - html.length) + ' 字元）');
+    (2400000 - html.length) + ' 字元）');
 }
 
 /* ================================================================ ② */
@@ -144,7 +144,9 @@ head('⑤ 面板掛點與快取');
 
   ok(/getElementById\('quickRow'\)/.test(RAW) && /b\.id = 'btnKeys'/.test(RAW),
     '首頁 #quickRow 會插入一顆 🕹️ 按鍵');
-  ok(/b\.innerHTML = '<span class="qico2">🕹️<\/span><b>按鍵<\/b>'/.test(RAW), 'chip 文字是「🕹️ 按鍵」');
+  // v5.54：chip 文字改走字典（kx.btn），繁中只是後備值 → 兩種寫法都接受
+  ok(/b\.innerHTML = '<span class="qico2">🕹️<\/span><b>' \+ T\('kx\.btn', null, '按鍵'\) \+ '<\/b>'/.test(RAW),
+    'chip 文字是「🕹️ 按鍵」（v5.54 起走字典 kx.btn，繁中當後備）');
   ok(/getElementById\('paneCtrl'\)/.test(RAW) && /bhkSetBtn/.test(RAW),
     '設定 → 操作設定 最上面也有一顆入口');
   ok(/insertBefore\(box, pane\.firstChild\)/.test(RAW), '設定頁入口插在 paneCtrl 最前面（最明顯）');

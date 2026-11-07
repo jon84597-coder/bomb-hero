@@ -149,7 +149,7 @@ head('8. 版本與預算');
   ok(!!swm[1] && parseFloat(swm[1].slice(1)) >= 5.34,
      'sw.js 已升到 5.34 以上（' + (swm[1] || 'undefined') + '）');
   const chars = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf8').length;
-  ok(chars <= 1950000, '主檔 ' + chars + ' 字元（預算 1,950,000）');
+  ok(chars <= 2400000, '主檔 ' + chars + ' 字元（v5.54：合併全文防呆上限 2,400,000；單檔預算已拆成 index.html／js/main.js）');
 }
 
 console.log('\n' + (fail === 0 ? '✅ ' : '❌ ') + 'v5.34：' + pass + ' 通過 / ' + fail + ' 失敗');

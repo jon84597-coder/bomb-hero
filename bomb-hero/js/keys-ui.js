@@ -18,12 +18,35 @@
 (function () {
   'use strict';
 
+  /* v5.54：文案走主檔字典（__BH.t）。第三個參數是繁中原文，
+     字典沒載到就退回它 —— 玩家不會看到 kx.title 這種原始 key。 */
+  function T(k, p, dflt) {
+    var str = '';
+    try {
+      var b = window.__BH;
+      if (b && typeof b.t === 'function') str = String(b.t(k, p) || '');
+    } catch (e) { str = ''; }
+    if (!str || str === k) {
+      str = String(dflt == null ? '' : dflt);
+      if (p) {
+        for (var q in p) {
+          if (Object.prototype.hasOwnProperty.call(p, q)) str = str.split('{' + q + '}').join(p[q]);
+        }
+      }
+    }
+    return str || k;
+  }
+
   /* ---------------- 鍵位定義 ---------------- */
   var K_ORDER = ['up', 'down', 'left', 'right', 'act', 'det', 'fire'];
+  /* 標籤本體走字典；K_LABEL 只留繁中當後備 */
   var K_LABEL = {
     up: '上', down: '下', left: '左', right: '右',
     act: '放炸彈', det: '引爆', fire: '坐騎招式'
   };
+  var K_KEY = { up: 'kx.up', down: 'kx.down', left: 'kx.left', right: 'kx.right',
+    act: 'kx.bomb', det: 'kx.detonate', fire: 'kx.mount' };
+  function kLabel(k) { return T(K_KEY[k] || '', null, K_LABEL[k] || k); }
 
   var CLASSIC = {
     1: { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight',
@@ -55,6 +78,27 @@
       ['衝刺', 'Shift 或滑鼠中鍵', '加速衝刺']
     ]
   };
+
+  /* 畫面上用的版本（純 key）：第一欄＝功能、第二欄＝按鍵、第三欄＝說明。
+     中間那欄只有「中文鍵名」需要翻（Space 空白鍵／滑鼠左鍵…），Ctrl、Alt、
+     Shift、W A S D、↑ ↓ ← → 這種本來就是各語言共用的符號，直接照字串輸出。 */
+  var ROW_T = {
+    classic: [
+      ['kx.move', '↑ ↓ ← →', 'kx.dMove'],
+      ['kx.bomb', 'kx.kSpace', 'kx.dBomb'],
+      ['kx.dash', 'Shift', 'kx.dDash'],
+      ['kx.detonate', 'Ctrl', 'kx.dDet'],
+      ['kx.mount', 'Alt', 'kx.dMount']
+    ],
+    modern: [
+      ['kx.move', 'W A S D', 'kx.dMove'],
+      ['kx.bomb', 'kx.kMouseL', 'kx.dBomb'],
+      ['kx.detonate', 'kx.kMouseR', 'kx.dDet2'],
+      ['kx.mount', 'kx.kSpace', 'kx.dMount2'],
+      ['kx.dash', 'kx.kShiftMid', 'kx.dDash2']
+    ]
+  };
+  function rowCell(x) { return x.indexOf('kx.') === 0 ? T(x, null, '') : x; }
 
   /* ---------------- 純函式（測試可以直接 require） ---------------- */
   function sameMap(a, b) {
@@ -107,8 +151,11 @@
     '#bhkSetBtn{display:flex;align-items:center;gap:9px;width:100%;padding:11px 13px;border-radius:13px;',
     'border:2px solid #e6c8a0;background:#fff8ea;color:#8a5b2c;font-family:inherit;font-size:12.5px;',
     'font-weight:900;cursor:pointer;text-align:left;box-shadow:0 2px 0 rgba(180,130,60,.16)}',
-    '#bhkSetBtn .ki{font-size:17px}',
-    '#bhkSetBtn b{color:#c2410c}',
+    '#bhkSetBtn .ki{font-size:17px;flex:none}',
+    /* v5.54：設定頁那欄很窄，日文會在「クラシ／ック」這種地方斷字（CJK 逐字可斷）。
+       keep-all 讓整段詞不斷行，真的塞不下時才換行；數字與英文仍可正常斷。 */
+    '#bhkSetBtn > span{flex:1;min-width:0;word-break:keep-all;overflow-wrap:break-word;line-height:1.45}',
+    '#bhkSetBtn b{color:#c2410c;white-space:nowrap}',
     '#bhkSetBtn:active{transform:translateY(1px);box-shadow:none}',
 
     '#bhKeys{position:fixed;inset:0;z-index:1310;display:none;align-items:center;justify-content:center;',
@@ -202,37 +249,67 @@
     root.id = 'bhKeys';
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-modal', 'true');
-    root.setAttribute('aria-label', '按鍵控制');
+    root.setAttribute('aria-label', T('kx.title', null, '按鍵控制'));
     root.innerHTML =
       '<div class="kcard">' +
-        '<div class="khead"><span class="kt">🎮 按鍵控制</span>' +
-          '<button class="kx" type="button" aria-label="關閉">✕</button></div>' +
-        '<div class="klead">點一張卡就切換 —— <b>只影響鍵盤</b>，手把與手機觸控不受影響，' +
-          '也不用離開現在這一頁。</div>' +
+        '<div class="khead"><span class="kt">' + T('kx.title', null, '🎮 按鍵控制') + '</span>' +
+          '<button class="kx" type="button" aria-label="' + T('kx.close', null, '關閉') + '">✕</button></div>' +
+        '<div class="klead">' + T('kx.lead', null, '點一張卡就切換 —— 只影響鍵盤，手把與手機觸控不受影響，也不用離開現在這一頁。') + '</div>' +
         '<div class="kpick">' +
           '<button class="kopt" type="button" data-p="classic">' +
-            '<span class="kico">🕹️</span><b>爆爆王經典</b>' +
-            '<small>方向鍵移動 · Space 放彈</small><i class="kok">✓ 使用中</i></button>' +
+            '<span class="kico">🕹️</span><b>' + T('kx.classicName', null, '爆爆王經典') + '</b>' +
+            '<small>' + T('kx.classicSub', null, '方向鍵移動 · Space 放彈') + '</small>' +
+            '<i class="kok">' + T('kx.using', null, '✓ 使用中') + '</i></button>' +
           '<button class="kopt" type="button" data-p="modern">' +
-            '<span class="kico">⌨️</span><b>現代 WASD</b>' +
-            '<small>WASD 移動 · 滑鼠左右鍵</small><i class="kok">✓ 使用中</i></button>' +
+            '<span class="kico">⌨️</span><b>' + T('kx.modernName', null, '現代 WASD') + '</b>' +
+            '<small>' + T('kx.modernSub', null, 'WASD 移動 · 滑鼠左右鍵') + '</small>' +
+            '<i class="kok">' + T('kx.using', null, '✓ 使用中') + '</i></button>' +
         '</div>' +
-        '<div class="knote hide" id="bhkNote">目前是<b>自訂鍵位</b>（不是上面兩套）—— ' +
-          '點任一張卡就會整組覆蓋過去。</div>' +
+        '<div class="knote hide" id="bhkNote">' + T('kx.note', null, '目前是自訂鍵位（不是上面兩套）—— 點任一張卡就會整組覆蓋過去。') + '</div>' +
         '<div class="ktb" id="bhkTable"></div>' +
-        '<div class="kfoot">同機對戰時兩套自動互補：<b>1P 吃方向鍵，2P 就自動換成 WASD</b>' +
-          '（反之亦然），兩人不會撞鍵。方向鍵／Space／Ctrl／Alt 在遊戲中都不會觸發瀏覽器預設行為。</div>' +
-        '<details class="kmore"><summary>✏️ 想自己改？點按鈕 → 再按你要的鍵（ESC 取消）</summary>' +
+        '<div class="kfoot">' + T('kx.foot', null, '同機對戰時兩套自動互補：1P 吃方向鍵，2P 就自動換成 WASD（反之亦然），兩人不會撞鍵。') + '</div>' +
+        '<details class="kmore"><summary>' + T('kx.more', null, '✏️ 想自己改？點按鈕 → 再按你要的鍵（ESC 取消）') + '</summary>' +
           '<div class="krow" id="bhkRow"></div>' +
           '<div class="kbtns">' +
-            '<button class="kmini" type="button" data-a="reset">回復本方案預設</button>' +
-            '<button class="kmini" type="button" data-a="cancel">取消設定</button>' +
+            '<button class="kmini" type="button" data-a="reset">' + T('kx.reset', null, '回復本方案預設') + '</button>' +
+            '<button class="kmini" type="button" data-a="cancel">' + T('kx.cancel', null, '取消設定') + '</button>' +
           '</div>' +
         '</details>' +
       '</div>';
+    try { root._lang = document.documentElement.lang || ''; } catch (e) {}
     document.body.appendChild(root);
     paint();
   }
+
+  /* v5.54：換語言後重鋪（面板的標題／說明是一次性 innerHTML，applyI18N 掃不到） */
+  function langNow() {
+    try { return document.documentElement.lang || ''; } catch (e) { return ''; }
+  }
+  function relabel() {
+    var b = document.getElementById('btnKeys');
+    if (b) b.innerHTML = '<span class="qico2">🕹️</span><b>' + T('kx.btn', null, '按鍵') + '</b>';
+    var sb = document.getElementById('bhkSetBtn');
+    if (sb && sb.parentNode) {
+      var lb = sb.parentNode.querySelector('label');
+      if (lb) lb.textContent = T('kx.setRow', null, '按鍵方案（一鍵切換）');
+      var hint = sb.parentNode.querySelector('.hint');
+      if (hint) hint.textContent = T('kx.hint', null, '想逐鍵微調，下面「鍵盤按鍵」也可以改；兩邊改的是同一份設定。');
+      /* v5.54：按鈕上那行「經典 ／ 現代 WASD 點這裡換」是 boot 時鋪的，
+         換語言時只換 label／hint 會留下半句中文（探針就是抓到這個）。 */
+      var sp = sb.querySelector('span:not(.ki)');
+      if (sp) {
+        sp.innerHTML = T('kx.classicName', null, '爆爆王經典') + ' ／ ' + T('kx.modernName', null, '現代 WASD') +
+          ' <b>' + T('kx.goto', null, '點這裡換') + '</b>';
+      }
+    }
+    if (root && root._lang !== langNow()) {         // 面板開過但語言變了 → 整塊重鋪
+      try { root.parentNode.removeChild(root); } catch (e) {}
+      root = null;
+    }
+  }
+  try {
+    document.addEventListener('bh:lang', function () { try { relabel(); } catch (e) {} });
+  } catch (e) {}
 
   function paint() {
     if (!root) return;
@@ -252,10 +329,10 @@
   function paintTable(which) {
     var tb = document.getElementById('bhkTable');
     if (!tb) return;
-    tb.innerHTML = ROWS[which].map(function (r) {
-      return '<div class="kl"><div class="klf">' + r[0] + '</div>' +
-        '<div class="klk"><em>' + r[1] + '</em></div>' +
-        '<div class="kld">' + r[2] + '</div></div>';
+    tb.innerHTML = ROW_T[which].map(function (r) {
+      return '<div class="kl"><div class="klf">' + rowCell(r[0]) + '</div>' +
+        '<div class="klk"><em>' + rowCell(r[1]) + '</em></div>' +
+        '<div class="kld">' + rowCell(r[2]) + '</div></div>';
     }).join('');
   }
 
@@ -265,7 +342,7 @@
     var map = (P && P.settings && P.settings.keys1) || {};
     row.innerHTML = K_ORDER.map(function (k) {
       return '<button class="kb" type="button" data-k="' + k + '">' +
-        '<small>' + K_LABEL[k] + '</small><b>' + kn(map[k]) + '</b></button>';
+        '<small>' + kLabel(k) + '</small><b>' + kn(map[k]) + '</b></button>';
     }).join('');
     var btns = row.querySelectorAll('.kb');
     for (var i = 0; i < btns.length; i++) {
@@ -284,7 +361,7 @@
     if (capEl) capEl.classList.remove('listen');
     capKey = k; capEl = el;
     el.classList.add('listen');
-    el.innerHTML = '<small>' + K_LABEL[k] + '</small><b>按下…</b>';
+    el.innerHTML = '<small>' + kLabel(k) + '</small><b>' + T('kx.press', null, '按下…') + '</b>';
     sfx('click');
   }
   function stopCap() {
@@ -319,11 +396,14 @@
     repaintSettings();
     paint();
     sfx('item');
-    say(which === 'classic' ? '🕹️ 已切換：爆爆王經典鍵位' : '⌨️ 已切換：現代 WASD 鍵位');
+    say(which === 'classic'
+      ? T('kx.sayClassic', null, '🕹️ 已切換：爆爆王經典鍵位')
+      : T('kx.sayModern', null, '⌨️ 已切換：現代 WASD 鍵位'));
   }
 
   /* ---------------- 開關 ---------------- */
   function open() {
+    relabel();
     if (!root) build();
     stopCap();
     paint();
@@ -380,8 +460,8 @@
     b.className = 'qchip';
     b.id = 'btnKeys';
     b.type = 'button';
-    b.title = '按鍵控制：爆爆王經典 / 現代 WASD 一鍵切換';
-    b.innerHTML = '<span class="qico2">🕹️</span><b>按鍵</b>';
+    b.title = T('kx.titleTip', null, '按鍵控制：爆爆王經典 / 現代 WASD 一鍵切換');
+    b.innerHTML = '<span class="qico2">🕹️</span><b>' + T('kx.btn', null, '按鍵') + '</b>';
     b.addEventListener('click', open);
     qr.appendChild(b);
     qr.classList.add('many');       // 四顆要收一點，不然「線上玩家」會被擠成兩行
@@ -393,10 +473,11 @@
     if (!pane || document.getElementById('bhkSetBtn')) return;
     var box = document.createElement('div');
     box.className = 'field';
-    box.innerHTML = '<label>按鍵方案（一鍵切換）</label>' +
+    box.innerHTML = '<label>' + T('kx.setRow', null, '按鍵方案（一鍵切換）') + '</label>' +
       '<button id="bhkSetBtn" type="button"><span class="ki">🎮</span>' +
-      '<span>爆爆王經典 ／ 現代 WASD <b>點這裡換</b></span></button>' +
-      '<div class="hint">想逐鍵微調，下面「鍵盤按鍵」也可以改；兩邊改的是同一份設定。</div>';
+      '<span>' + T('kx.classicName', null, '爆爆王經典') + ' ／ ' + T('kx.modernName', null, '現代 WASD') +
+      ' <b>' + T('kx.goto', null, '點這裡換') + '</b></span></button>' +
+      '<div class="hint">' + T('kx.hint', null, '想逐鍵微調，下面「鍵盤按鍵」也可以改；兩邊改的是同一份設定。') + '</div>';
     pane.insertBefore(box, pane.firstChild);
     document.getElementById('bhkSetBtn').addEventListener('click', open);
   }

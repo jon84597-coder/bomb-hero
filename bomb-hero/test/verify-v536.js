@@ -229,7 +229,7 @@ head('⑤ 版本與預算');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const swv = (sw.match(/var SW_VERSION = 'v([\d.]+)'/) || [])[1] || '0';
   ok(Number(swv.split('.')[1]) >= 36, 'sw.js = v' + swv);
-  ok(rawHtml.length < 1950000, '主檔 ' + rawHtml.length + ' 字元（預算 1,950,000）');
+  ok(rawHtml.length < 2400000, '主檔 ' + rawHtml.length + ' 字元（v5.54：合併全文防呆上限 2,400,000；單檔預算已拆成 index.html／js/main.js）');
   ok((rawHtml.match(/\r/g) || []).length === 0, '整檔 LF（0 個 \\r）');
 }
 

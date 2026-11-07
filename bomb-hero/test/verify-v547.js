@@ -100,7 +100,10 @@ ok(/@media \(min-width: 900px\) \{[\s\S]{0,200}\.menu \{ max-width: none; displa
 
 /* ================= ⑤ 接線 ================= */
 head('⑤ 旋轉／切換模式會重算');
-ok(/function relayout\(\) \{\s*updateViewportVars\(\);\s*applyHomeWide\(\);/.test(src), 'relayout() 會呼叫 applyHomeWide()');
+ok(/function relayout\(\) \{[\s\S]{0,400}?updateViewportVars\(\)[\s\S]{0,400}?applyHomeWide\(\);/.test(src),
+  'relayout() 會呼叫 applyHomeWide()');
+ok(/function relayout\(\) \{[\s\S]{0,400}?syncNavReserve\(\)/.test(src),
+  'relayout() 也會重算 HUD 讓位（v5.54 syncNavReserve）');
 ok(/applyHomeWide\(\);\s*\/\/ v5\.47：切換觸控模式後重算橫屏版面/.test(src), 'applyCtrl() 也會呼叫（切換操作模式立即生效）');
 
 /* ================= ⑥ 版本 ================= */

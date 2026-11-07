@@ -1,0 +1,74 @@
+{
+  "R": [
+    {
+      "s": "觸控模擬生效",
+      "c": true,
+      "n": "{\"touch\":true,\"coarse\":true,\"nohover\":true,\"mtp\":5}"
+    },
+    {
+      "s": "手機開場卡：出發鈕看得到（[323,372]）",
+      "c": true,
+      "n": "{\"btn\":[323,372],\"box\":[97,376],\"win\":[900,430],\"visible\":true,\"clipped\":false}"
+    },
+    {
+      "s": "手機單人：進入 play 且有觸控介面",
+      "c": true,
+      "n": "{\"T\":57,\"cols\":15,\"rows\":13,\"state\":\"play\",\"board\":[855,741],\"cv\":[872,407],\"touchUI\":true,\"tuVisible\":true}"
+    },
+    {
+      "s": "手機單人：地圖整張或接近整張看得到",
+      "c": true,
+      "n": "board 855 vs cv 872"
+    },
+    {
+      "s": "手機大逃殺：出發鈕看得到",
+      "c": true,
+      "n": "{\"btn\":[348,397],\"visible\":true}"
+    },
+    {
+      "s": "手機流程無錯誤",
+      "c": true,
+      "n": ""
+    }
+  ],
+  "cta": {
+    "btn": [
+      323,
+      372
+    ],
+    "box": [
+      97,
+      376
+    ],
+    "win": [
+      900,
+      430
+    ],
+    "visible": true,
+    "clipped": false
+  },
+  "cta2": {
+    "btn": [
+      348,
+      397
+    ],
+    "visible": true
+  },
+  "g": {
+    "T": 57,
+    "cols": 15,
+    "rows": 13,
+    "state": "play",
+    "board": [
+      855,
+      741
+    ],
+    "cv": [
+      872,
+      407
+    ],
+    "touchUI": true,
+    "tuVisible": true
+  },
+  "errs": []
+}

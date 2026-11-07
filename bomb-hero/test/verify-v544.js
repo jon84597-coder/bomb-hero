@@ -36,7 +36,9 @@ const ptTop = ruleFrom('body.touch.in-game #scr-game.on .game-top {', PORT);
 ok(/padding-top:\s*calc\(2px \+ env\(safe-area-inset-top/.test(ptTop),
   'padding-top 從 46px 收到 2px + 安全區（貼著狀態列下緣）', ptTop.slice(0, 130));
 ok(!/calc\(46px/.test(ptTop), '舊的 46px 讓位已移除');
-ok(/padding-right:\s*50px/.test(ptTop), '右邊讓 50px 給右上角的 ⋮');
+// v5.54：直放改成 max(50px, var(--navreserve)) —— 下限仍是 50px，量到的更大就跟著讓更多
+ok(/padding-right:[ ]*max\(50px,[ ]*var\(--navreserve/.test(ptTop),
+  '右邊至少讓 50px 給右上角的 ⋮（v5.54 起改吃 --navreserve，下限 50px）');
 ok(/margin-bottom:\s*1px/.test(ptTop), '下緣 margin 2px → 1px（再省 1px）');
 
 const ptFull = rule('body.touch.in-game.pseudo-full #scr-game.on .game-top {');
