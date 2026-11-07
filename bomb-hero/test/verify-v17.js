@@ -264,11 +264,16 @@ const types8 = new Set(G.enemies.map(function (e) { return e.type; }));
 ok(types8.size >= 6, '第 8 關多種小怪一起登場（' + [...types8].join('/') + '）');
 // 飛行怪穿牆：把它丟在硬牆上也能移動
 const fl = BH.makeEnemy(1, 1, 'bat', 7);
+fl.skill = null;                         // v5.51：蝙蝠的 dive 會隨機改向（約 1/5 機率倒著飛）→ 這條只驗穿牆
 ok(fl.kind === 'fly' && typeof fl.vx === 'number' && typeof fl.vy === 'number', '蝙蝠有速度向量（會飛）');
 G.enemies = [fl];
 fl.x = 3 * T + T / 2; fl.y = 3 * T + T / 2;
+// v5.51：預設地圖是「隨機生成」→ 3,3 有時本來就是牆，飛行怪會走「飛回可行格」那條
+//   （方向被改掉 → 約 1/4 機率倒著飛）。這裡先把周圍清成空地，只留左邊那一格硬牆。
+for (let yy = 2; yy <= 4; yy++) for (let xx = 2; xx <= 4; xx++) if (G.grid[yy]) G.grid[yy][xx] = 0;
 G.grid[3][2] = 1;                       // 左邊是硬牆
 fl.vx = -40; fl.vy = 0;
+fl.turnT = 99;                           // v5.51：不讓它中途隨機轉向（否則約 1/3 機率倒著飛 → 偶發紅）
 const fx0 = fl.x;
 for (let i = 0; i < 30; i++) BH.updateFlyer(fl, 1 / 60);
 ok(fl.x < fx0, '飛行怪直接穿過硬牆（x ' + fx0.toFixed(1) + ' → ' + fl.x.toFixed(1) + '）');

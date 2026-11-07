@@ -159,7 +159,7 @@ head('⑧ 版本戳記');
 const vm = src.match(/const VERSION = '([\d.]+)'/);
 ok(vm && parseFloat(vm[1]) >= 5.50, 'VERSION ≥ 5.50', vm && vm[1]);
 const vlog = String(SB.vlog || fs.readFileSync(__dirname + '/../js/version-log.js', 'utf8'));
-ok(/v: '5\.50'[\s\S]{0,260}now: true/.test(vlog), 'VERSION_LOG 5.50 是 now:true');
+ok(!/v: '5\.50'[\s\S]{0,280}now: true/.test(vlog), '5.50 已改成 now:false（被更新的一版蓋過）');
 ok(!/v: '5\.49'[\s\S]{0,260}now: true/.test(vlog), '5.49 已改成 now:false');
 [
   ['bomb-hero/sw.js', fs.readFileSync(__dirname + '/../sw.js', 'utf8')],
