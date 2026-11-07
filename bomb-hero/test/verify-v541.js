@@ -60,24 +60,24 @@ ok(fknob.style.transform === 'translate(0px,0px)', '剛按下時小球在正中�
 
 /* ============ ④ 往哪拖往哪偏 ============ */
 head('④ 方向跟手');
-fire(zone, 'pointermove', pev(180, 300, 7));          // dx=60 → m=60/110*44≈24.0
-ok(fknob.style.transform === 'translate(30.0px,0.0px)', '往右拖 60px → 小球右偏 30.0px', fknob.style.transform);
-fire(zone, 'pointermove', pev(120, 360, 7));          // dx=0, dy=60
-ok(fknob.style.transform === 'translate(0.0px,30.0px)', '往下拖 60px → 小球下偏 30.0px', fknob.style.transform);
-fire(zone, 'pointerup', pev(120, 360, 7));
+fire(zone, 'pointermove', pev(150, 300, 7));          // dx=30 → m=30/58*29≈15.0
+ok(fknob.style.transform === 'translate(15.0px,0.0px)', '往右拖 30px → 小球右偏 15.0px', fknob.style.transform);
+fire(zone, 'pointermove', pev(120, 330, 7));          // dx=0, dy=30
+ok(fknob.style.transform === 'translate(0.0px,15.0px)', '往下拖 30px → 小球下偏 15.0px', fknob.style.transform);
+fire(zone, 'pointerup', pev(120, 330, 7));
 
 fire(zone, 'pointerdown', pev(300, 300, 8));
-fire(zone, 'pointermove', pev(240, 240, 8));          // dx=-60, dy=-60, len≈84.85, m≈0.771*44≈33.9
-ok(/translate\(-30\.0px,-30\.0px\)/.test(fknob.style.transform),
-  '往左上斜拖（45°）→ 小球左上都偏 30.0px（360° 任意角度都成立）', fknob.style.transform);
+fire(zone, 'pointermove', pev(280, 280, 8));          // dx=-20, dy=-20, len≈28.28, m≈28.28/58*29≈14.1
+ok(/translate\(-10\.0px,-10\.0px\)/.test(fknob.style.transform),
+  '往左上斜拖（45°）→ 小球左上都偏 10.0px（360° 任意角度都成立）', fknob.style.transform);
 
 /* ============ ⑤ 封頂不跑出圓 ============ */
 head('⑤ 拉到極限也不出圈');
-fire(zone, 'pointermove', pev(900, 300, 8));          // 遠超上限 → 原點前帶，dx 固定 120 → m=44
-ok(fknob.style.transform === 'translate(44.0px,0.0px)', '狂拖到天邊 → 小球封頂在 44.0px', fknob.style.transform);
+fire(zone, 'pointermove', pev(900, 300, 8));          // 遠超上限 → 原點前帶，dx 固定 120 → 封頂
+ok(fknob.style.transform === 'translate(29.0px,0.0px)', '狂拖到天邊 → 小球封頂在 29.0px', fknob.style.transform);
 {
-  // 幾何：外圈半徑 76、小球半徑 31 → 44 + 31 = 75 ≤ 76，永遠不會溢出
-  const fpR = 152 / 2, knR = 62 / 2, maxD = 44;
+  // 幾何：外圈半徑 49.5、小球半徑 20 → 29 + 20 = 49 ≤ 49.5，永遠不會溢出
+  const fpR = 99 / 2, knR = 40 / 2, maxD = 29;
   ok(maxD + knR <= fpR, '幾何：小球位移 ' + maxD + ' + 半徑 ' + knR + ' = ' + (maxD + knR) + ' ≤ 外圈半徑 ' + fpR);
 }
 fire(zone, 'pointerup', pev(900, 300, 8));

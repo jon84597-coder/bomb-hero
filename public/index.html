@@ -1527,35 +1527,36 @@ background: transparent; -webkit-tap-highlight-color: transparent;
 }
 #touchUI .tslide.right { left: auto; right: 0; }
 body.touch.slidepad #touchUI .tslide { display: block; }
-/* v5.41：浮動虛擬搖桿 —— 手指按在左半屏哪裡，圓盤就出現在那裡（360° 全向） */
+/* v5.41：浮動虛擬搖桿 —— 手指按在左半屏哪裡，圓盤就出現在那裡（360° 全向）
+   v5.43：使用者實測覺得太佔畫面 → 整組等比縮到 65%（152→99、62→40、位移 44→29、拉滿 88→58） */
 #touchUI .fpad {
 display: none; position: absolute; left: 0; top: 0;
-width: 152px; height: 152px; margin: -76px 0 0 -76px;
+width: 99px; height: 99px; margin: -49.5px 0 0 -49.5px;
 border-radius: 50%; pointer-events: none; z-index: 2; opacity: 0;
 transform: scale(.86); transition: opacity .12s ease-out, transform .12s ease-out;
 background: radial-gradient(circle at 50% 40%, rgba(44,70,122,.50), rgba(7,11,22,.66) 74%);
-border: 2px solid rgba(168,204,255,.50);
+border: 1.5px solid rgba(168,204,255,.50);
 box-shadow: inset 0 5px 20px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.10), 0 12px 26px -14px rgba(0,0,0,.9);
 will-change: opacity, transform;
 }
 body.touch.slidepad #touchUI .fpad { display: block; }
 #touchUI .fpad.on { opacity: 1; transform: scale(1); }
 #touchUI .fpad .fring {
-position: absolute; inset: 30px; border-radius: 50%;
+position: absolute; inset: 19.5px; border-radius: 50%;
 border: 1px dashed rgba(168,204,255,.24);
 }
 #touchUI .fpad .fknob {
-position: absolute; left: 50%; top: 50%; width: 62px; height: 62px; margin: -31px 0 0 -31px;
+position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px;
 border-radius: 50%;
 background: radial-gradient(circle at 40% 32%, rgba(228,242,255,.98), rgba(126,166,226,.88) 52%, rgba(56,84,142,.92));
-border: 2px solid rgba(228,242,255,.82);
-box-shadow: 0 0 0 2px rgba(18,30,54,.42), 0 8px 16px -6px rgba(0,0,0,.78),
+border: 1.5px solid rgba(228,242,255,.82);
+box-shadow: 0 0 0 1.5px rgba(18,30,54,.42), 0 6px 12px -5px rgba(0,0,0,.78),
 inset 0 -5px 12px rgba(0,0,0,.26), inset 0 4px 8px rgba(255,255,255,.55);
 will-change: transform;
 }
 #touchUI .fpad .fknob::after {
-content: ''; position: absolute; left: 50%; top: 50%; width: 16px; height: 16px;
-margin: -8px 0 0 -8px; border-radius: 50%;
+content: ''; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px;
+margin: -5px 0 0 -5px; border-radius: 50%;
 background: rgba(30,52,90,.40); box-shadow: inset 0 2px 4px rgba(0,0,0,.34);
 }
 /* 模式 A 時實體圓盤整組收起來（留著盒子只是為了版面換算與量測） */
@@ -4771,7 +4772,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.42</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.43</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4826,7 +4827,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.42</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.43</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5881,7 +5882,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.42';
+const VERSION = '5.43';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -35197,7 +35198,7 @@ updateTips();
   const zone = $id('slideZone');                 // v4.2：模式 A 的隱形滑動區
   // v5.41：浮動虛擬搖桿視覺層（按哪出現哪；手指拖多遠，小球就在大圓裡走多遠）
   const fpadEl = $id('fpad'), fknobEl = $id('fknob');
-  const FP_KNB = 44;                              // 小球最大位移（外圈半徑 76 − 小球半徑 31）
+  const FP_KNB = 29;                              // 小球最大位移（外圈半徑 49.5 − 小球半徑 20，留 0.5 給邊框）
   function fpadShow(e) {
     if (!fpadEl || padMode() !== 'slide') return;
     const r = ui.getBoundingClientRect();
@@ -35210,7 +35211,7 @@ updateTips();
   function fpadMove(dx, dy, len) {
     if (!fpadEl || !fknobEl || fpadEl.dataset.on !== '1') return;
     if (len < 9) return;                          // 死區內（同 SLIDE_DEAD）小球釘住不動，手指微抖不會讓它亂晃
-    const m = Math.min(1, len / 88) * FP_KNB;     // 拖 88px 就拉滿，跟手更緊（只影響視覺，判定照舊）
+    const m = Math.min(1, len / 58) * FP_KNB;     // 拖 58px 就拉滿（等比縮小；只影響視覺，判定照舊）
     fknobEl.style.transform = 'translate(' + (dx / len * m).toFixed(1) + 'px,' + (dy / len * m).toFixed(1) + 'px)';
   }
   function fpadHide() {
