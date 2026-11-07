@@ -3,6 +3,9 @@
 //   ② 單人闖關 8 關 → 32 張地圖（8 大主題 × 4 張；v4.16 起只有第 32 關有魔王）
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
+/* v5.49：單人／RPG 的預設地圖改成「隨機生成」→ 這支驗的是手工地圖（15×13）的手感與版面，
+   先釘回基本地圖，免得地圖變大讓尺寸／速度／數量的斷言跟著飄。 */
+env.BH.settings.mapMode = 'classic';
 const P = env.BH, G = P.Game, html = env.html;
 
 let pass = 0, fail = 0;

@@ -4,6 +4,9 @@
 const { makeEnv, html } = require('./_sandbox');
 
 const env = makeEnv();
+/* v5.49：單人／RPG 的預設地圖改成「隨機生成」→ 這支驗的是手工地圖（15×13）的手感與版面，
+   先釘回基本地圖，免得地圖變大讓尺寸／速度／數量的斷言跟著飄。 */
+env.BH.settings.mapMode = 'classic';
 const BH = env.BH, G = BH.Game, P = BH, rec = env.rec, els = env.els, sandbox = env.sandbox;
 
 let pass = 0, fail = 0;

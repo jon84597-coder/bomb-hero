@@ -6,6 +6,8 @@
 //   ⑤ 版本與 SW 快取
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
+/* v5.49：預設地圖改成「隨機生成」→ 這支靠手工地圖的固定地形，先釘回基本地圖。 */
+env.BH.settings.mapMode = 'classic';
 const P = env.BH, G = P.Game, rec = env.rec, html = env.html;
 const fs = require('fs');
 
@@ -153,7 +155,7 @@ head('5. 中階怪：2 格內 → 生氣蓄力 → 撲上來');
   // 蓄力結束 → 衝刺
   let sawDash = false, minD = 1e9;
   const d0 = Math.hypot(e.x - p.x, e.y - p.y);
-  for (let i = 0; i < 42; i++) {
+  for (let i = 0; i < 90; i++) {          // v5.49：ANGER_DASH_T 已經 1.15 秒，42 幀跑不到底
     P.updateEnemy(e, DT);
     if (e.dashT > 0) sawDash = true;
     minD = Math.min(minD, Math.hypot(e.x - p.x, e.y - p.y));
@@ -256,7 +258,7 @@ head('9. BOSS：平常只在自己的地盤踱步');
   ok(minD < d0 - T * .5, '被惹到就追人（' + Math.round(d0) + ' → ' + Math.round(minD) + ' px）');
   for (let i = 0; i < 200; i++) P.updateBoss(boss, DT);
   ok(G.bombs.length > 0, '被惹到才放炸彈（' + G.bombs.length + ' 顆）');
-  ok(/if \(e\.aggro && e\.bombT <= 0 && bossBombs/.test(css), '放彈條件多了 e.aggro');
+  ok(/if \(!casting && e\.aggro && e\.bombT <= 0 && bossBombs/.test(css), '放彈條件多了 e.aggro（v5.1 起前面還有 !casting）');
   // 跑遠 → BOSS 回去踱步
   place(p, px + 1, Math.max(1, py - 1));
   p.alive = false;                            // 玩家離場（死亡）＝沒有目標

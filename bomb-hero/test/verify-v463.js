@@ -7,6 +7,9 @@
 //   ⑤ 電腦撿到遙控器真的會引爆了（以前只在對手貼著炸彈 2 格時才按）
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
+/* v5.49：單人／RPG 的預設地圖改成「隨機生成」→ 這支驗的是手工地圖（15×13）的手感與版面，
+   先釘回基本地圖，免得地圖變大讓尺寸／速度／數量的斷言跟著飄。 */
+env.BH.settings.mapMode = 'classic';
 const P = env.BH, G = P.Game, html = env.html, src = html;
 
 let pass = 0, fail = 0;

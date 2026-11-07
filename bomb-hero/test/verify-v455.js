@@ -10,6 +10,8 @@ const fs = require('fs');
 const { makeEnv, html } = require('./_sandbox');
 
 const env = makeEnv();
+/* v5.49：預設地圖改成「隨機生成」→ 這支靠手工地圖的固定地形，先釘回基本地圖。 */
+env.BH.settings.mapMode = 'classic';
 const P = env.BH, G = P.Game, rec = env.rec;
 const src = html.replace(/\r/g, '');
 

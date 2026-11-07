@@ -4940,7 +4940,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.48</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.49</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4995,7 +4995,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.48</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.49</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5274,7 +5274,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
       </div>
       <div class="field"><label id="soloMapLbl"></label>
         <div class="seg" id="segSoloMap">
-          <button data-v="classic"></button><button data-v="random"></button>
+          <button data-v="random"></button><button data-v="classic"></button>
         </div>
         <div class="hint" id="soloMapHint"></div>
       </div>
@@ -5677,7 +5677,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
       </div>
       <div class="campstage">
         <div class="campstage-t">出發關卡<span id="campStageNow">—</span></div>
-        <div class="seg" id="segRpgMode" style="margin-bottom:7px"><button data-v="classic"></button><button data-v="random"></button></div>
+        <div class="seg" id="segRpgMode" style="margin-bottom:7px"><button data-v="random"></button><button data-v="classic"></button></div>
         <div class="seg" id="segRpgTheme"></div>
         <div class="seg" id="segRpgMap" style="margin-top:7px"></div>
       </div>
@@ -6051,7 +6051,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.48';
+const VERSION = '5.49';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6764,7 +6764,8 @@ let settings = {
   soloDiff: 'normal',                              // v5.31：單人難易度預設「普通」（3 條命 × 2 格血）
   diffV: 0,                                        // v5.31：難度設定的版本戳記（0→2 一次性把舊預設 easy 搬回 normal）
   soloTime: 300,                                  // 單人關卡時間（0 = 無限）
-  mapMode: 'classic',                             // v4.69：地圖模式 classic = 原本 32 張 / random = 隨機生成
+  mapMode: 'random',                              // v5.49：預設「隨機生成」（單人闖關＋RPG 共用）；classic = 原本 32 張手工圖
+  mapV: 0,                                        // v5.49：地圖模式預設值戳記（<1 的舊存檔一次性搬到 random）
   miniMap: 1,                                     // v4.70：小地圖（雷達），1 = 開 / 0 = 關
   count: 4,                                       // v4.15：對戰人數 2～8
   teams: 0,                                       // v4.15：組隊對戰隊數（0 = 關閉混戰 / 2 / 3 / 4）
@@ -6856,7 +6857,11 @@ try {
   }
   settings.soloTime = [0, 180, 300, 600].indexOf(parseInt(settings.soloTime, 10)) >= 0
     ? parseInt(settings.soloTime, 10) : 300;
-  if (['classic', 'random'].indexOf(settings.mapMode) < 0) settings.mapMode = 'classic';
+  if (['classic', 'random'].indexOf(settings.mapMode) < 0) settings.mapMode = 'random';
+  /* v5.49：地圖模式預設從「基本地圖」改成「隨機生成」（單人闖關＋RPG 共用）。
+     舊存檔裡的 classic 是當時的預設值（不是玩家自己挑的）→ 用 mapV 戳記一次性搬過來；
+     搬完蓋上 mapV=1，之後玩家在設定裡切回基本地圖就會一直保留。 */
+  if ((settings.mapV | 0) < 1) { settings.mapMode = 'random'; settings.mapV = 1; }
   const nm = [];
   for (let i = 0; i < 8; i++) nm.push(String((settings.names || [])[i] || '').trim().slice(0, 8));
   settings.names = nm;
