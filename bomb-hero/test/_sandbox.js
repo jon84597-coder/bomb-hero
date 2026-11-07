@@ -103,7 +103,22 @@ function makeEnv(opts) {
     } else el.textContent = '';
     Object.defineProperty(el, 'innerHTML', {
       get() { return _inner; },
-      set(v) { _inner = String(v); el.children = []; if (rec.texts && _inner) rec.texts.push(_inner); }
+      set(v) {
+        _inner = String(v); el.children = [];
+        if (rec.texts && _inner) rec.texts.push(_inner);
+        /* v5.40：可選「真 innerHTML 行為」—— 重畫之後舊的子節點就作廢了，
+           真瀏覽器 getElementById 會拿到新節點（舊節點的事件監聽自然消失）。
+           預設不開（139 支舊測試靠「同一個 id 永遠同一個物件」），
+           要驗「重畫後事件有沒有重綁」的測試請 makeEnv({ realInner: true })。 */
+        if (opts.realInner) {
+          const re = /id="([\w-]+)"/g;
+          let m;
+          while ((m = re.exec(_inner))) {
+            delete els[m[1]];
+            for (const k in qmap) if (k.indexOf(m[1] + '|') === 0) delete qmap[k];
+          }
+        }
+      }
     });
     els[id] = el;
     return el;

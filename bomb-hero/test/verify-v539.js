@@ -136,13 +136,15 @@ head('⑤ 空投寶箱貼圖');
 /* ================================================================ ⑥ */
 head('⑥ 版本');
 {
-  ok(P.VERSION === '5.39', 'VERSION = 5.39');
-  ok(src.indexOf('id="verTxt">5.39<') >= 0, '#verTxt 顯示 5.39');
-  ok(src.indexOf('id="verLogVer">5.39<') >= 0, '#verLogVer 顯示 5.39');
-  ok(P.VERSION_LOG[0].v === '5.39' && P.VERSION_LOG[0].now === true, '版本紀錄最上面是 5.39（now）');
-  ok(P.VERSION_LOG[1].v === '5.38' && P.VERSION_LOG[1].now === false, '5.38 已標成非 now');
+  // v5.40：不寫死版號（後續版本沿用這支）—— 只驗「≥ 5.39」與四處戳記同步
+  ok(parseFloat(P.VERSION) >= 5.39, 'VERSION ≥ 5.39（實際 ' + P.VERSION + '）');
+  ok(src.indexOf('id="verTxt">' + P.VERSION + '<') >= 0, '#verTxt 顯示 ' + P.VERSION);
+  ok(src.indexOf('id="verLogVer">' + P.VERSION + '<') >= 0, '#verLogVer 顯示 ' + P.VERSION);
+  ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, '版本紀錄首位＝' + P.VERSION + '（now）');
+  ok(P.VERSION_LOG[1] && P.VERSION_LOG[1].now === false, '上一版 ' + (P.VERSION_LOG[1] || {}).v + ' 已標成非 now');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
-  ok(/SW_VERSION = 'v5\.39\.0'/.test(sw), 'sw.js SW_VERSION = v5.39.0');
+  const swm = /SW_VERSION = 'v([0-9.]+)'/.exec(sw);
+  ok(swm && parseFloat(swm[1]) >= 5.39, 'sw.js SW_VERSION ≥ v5.39（' + (swm ? swm[1] : '?') + '）');
 }
 
 console.log('\n' + (fail ? '❌' : '✅') + ' v5.39：' + pass + ' 通過 / ' + fail + ' 失敗');

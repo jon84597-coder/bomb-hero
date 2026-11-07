@@ -4716,7 +4716,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.39</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.40</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4771,7 +4771,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.39</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.40</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5825,7 +5825,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.39';
+const VERSION = '5.40';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -34850,6 +34850,40 @@ function brSumText() {
     : t('brsum.solo', { n: n, d: du, r: du === 5 ? 5 : 10, b: brBossN() });
 }
 
+/* v5.40：卡片裡的按鈕（✕／出發）與名字輸入改成「每次重畫都重新綁」。
+   以前只在第一次開卡時綁一次，但「切換地圖尺寸」會讓 ov.innerHTML = brCardHTML() 整張重畫，
+   #brGo / #brOk 變成全新的節點 → 舊的事件監聽全部消失 → 按「出發」完全沒反應。
+   這就是「選小地圖不能開、切了地圖也不能開」的真正原因（地圖尺寸是唯一會重畫的選項）。 */
+function brCardWire(ov) {
+  try { CharPreview.mount(ov); } catch (e) {}
+  const nmIn = $id('brName');
+  if (nmIn) {
+    nmIn.addEventListener('input', function () {
+      settings.brName = String(nmIn.value || '').slice(0, 8);
+      saveSettings();
+    });
+    // 打字時不要把按鍵送進遊戲（WASD 會被當成移動）
+    nmIn.addEventListener('keydown', function (ev) { ev.stopPropagation(); });
+  }
+  const okB = $id('brOk');
+  if (okB) okB.addEventListener('click', function () {
+    AudioSys.sfx('click'); ov.classList.add('hide');
+  });
+  const goB = $id('brGo');
+  if (goB) goB.addEventListener('click', function () {
+    AudioSys.sfx('click');
+    let tkN = 0;
+    try { tkN = Shop.tickets ? Shop.tickets() : 0; } catch (e) {}
+    if (!BR.FREE && tkN <= 0) {
+      ov.classList.add('hide');
+      try { Shop.open(); } catch (e) {}
+      return;
+    }
+    ov.classList.add('hide');
+    try { startBR(); } catch (e) { try { __bootFail('startBR', e); } catch (e2) {} }
+  });
+}
+
 $id('btnBR').addEventListener('click', function () {
   AudioSys.sfx('click');
   let ov = $id('brOv');
@@ -34860,19 +34894,8 @@ $id('btnBR').addEventListener('click', function () {
   }
   ov.innerHTML = brCardHTML();
   ov.classList.remove('hide');
-  // v5.11：角色預覽（走動畫）＋ 命名輸入
-  (function () {
-    try { CharPreview.mount(ov); } catch (e) {}
-    const nmIn = $id('brName');
-    if (nmIn) {
-      nmIn.addEventListener('input', function () {
-        settings.brName = String(nmIn.value || '').slice(0, 8);
-        saveSettings();
-      });
-      // 打字時不要把按鍵送進遊戲（WASD 會被當成移動）
-      nmIn.addEventListener('keydown', function (ev) { ev.stopPropagation(); });
-    }
-  })();
+  // v5.11：角色預覽（走動畫）＋ 命名輸入；v5.40 統一走 brCardWire（重畫後也要重綁）
+  brCardWire(ov);
   ov.onclick = function (ev) {
     const tgt = ev.target;
     // 選角箭頭（比照對戰：◀ ▶ 切換外觀，選了會記住）
@@ -34903,9 +34926,7 @@ $id('btnBR').addEventListener('click', function () {
         BR.opt.n = Math.min(BR.opt.n | 0, bigNow ? 100 : 50);
         saveSettings();
         ov.innerHTML = brCardHTML();
-        try { CharPreview.mount(ov); } catch (e) {}
-        const nm3 = $id('brName');
-        if (nm3) nm3.addEventListener('keydown', function (ev) { ev.stopPropagation(); });
+        brCardWire(ov);                         // v5.40：重畫後一定要重綁，否則「出發」按不動
         return;
       }
       const on = b.parentNode.querySelectorAll('b');
@@ -34918,21 +34939,6 @@ $id('btnBR').addEventListener('click', function () {
         : ('出發（' + BR.opt.n + ' 人混戰）');
     }
   };
-  $id('brOk').addEventListener('click', function () {
-    AudioSys.sfx('click'); ov.classList.add('hide');
-  });
-  $id('brGo').addEventListener('click', function () {
-    AudioSys.sfx('click');
-    let tkN = 0;
-    try { tkN = Shop.tickets ? Shop.tickets() : 0; } catch (e) {}
-    if (!BR.FREE && tkN <= 0) {
-      ov.classList.add('hide');
-      try { Shop.open(); } catch (e) {}
-      return;
-    }
-    ov.classList.add('hide');
-    try { startBR(); } catch (e) { try { __bootFail('startBR', e); } catch (e2) {} }
-  });
 });
 $id('btnSettings').addEventListener('click', function () {
   AudioSys.sfx('click');
@@ -42916,6 +42922,7 @@ window.__BH = {
   setDevBuild: function (v) { DEV_BUILD = !!v; },
   brTip: brTip, brCardHTML: brCardHTML,
   BR: BR, startBR: startBR, buildBRMap: buildBRMap, updateBR: updateBR, brFinish: brFinish,
+  brBig: brBig, brBossN: brBossN, brFoeN: brFoeN, brCardWire: brCardWire,
   updateBRBoss: updateBRBoss, spawnBRBosses: spawnBRBosses, drawMateTag: drawMateTag,
   brOnDeath: brOnDeath, drawBRHud: drawBRHud, drawBRZone: drawBRZone, brSteer: brSteer, viewRange: viewRange,
   // v5.33：核彈（測試要直接驗落點、燒地、AI 逃跑）與敵我炸彈分辨
