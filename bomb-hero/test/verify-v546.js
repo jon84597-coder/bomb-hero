@@ -127,7 +127,8 @@ head('⑥ 版本戳記');
 const vm = src.match(/const VERSION = '([\d.]+)'/);
 ok(vm && parseFloat(vm[1]) >= 5.46, 'VERSION ≥ 5.46', vm && vm[1]);
 const vlog = String(SB.vlog || '');
-ok(/v: '5\.46'[\s\S]{0,160}now: true/.test(vlog), 'VERSION_LOG 5.46 是 now:true');
+ok(/'5\.46'/.test(vlog), 'VERSION_LOG 有 5.46 條目');
+ok(!/v: '5\.46'[\s\S]{0,160}now: true/.test(vlog), '5.46 已改成 now:false（被更新的一版蓋過）');
 ok(/1000 \u91d1\u5e63\u624b\u7e8c\u8cbb|1000<\/b> \u91d1\u5e63\u624b\u7e8c\u8cbb/.test(vlog), '更新紀錄有寫到 1000 手續費');
 
 P.Shop.gold = gp; P.Shop.spend = gs; P.Shop.addGold = ga;

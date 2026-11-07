@@ -147,8 +147,7 @@ const vm = src.match(/const VERSION = '([\d.]+)'/);
 ok(vm && parseFloat(vm[1]) >= 5.46, 'VERSION ≥ 5.46', vm && vm[1]);
 const vlog = String(SB.vlog || '');
 ok(/'5\.46'/.test(vlog), 'VERSION_LOG 有 5.46 條目');
-ok(/v: '5\.46'[\s\S]{0,160}now: true/.test(vlog), '5.46 是 now:true（最新）');
-ok(!/v: '5\.45'[\s\S]{0,120}now: true/.test(vlog), '5.45 已改成 now:false');
+ok(!/v: '5\.46'[\s\S]{0,160}now: true/.test(vlog), '5.46 已改成 now:false（被更新的一版蓋過）');
 
 P.Shop.gold = gp; P.Shop.spend = gs;
 
