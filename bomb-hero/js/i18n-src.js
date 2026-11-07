@@ -1565,6 +1565,8 @@ respec.none|目前沒有配點可以退回|目前没有配点可以退回|Nothin
 respec.confirm|把四項配點全部退回？退回之後要重新分配。|把四项配点全部退回？退回之后要重新分配。|Reset all attributes? You will need to re-allocate them.|4 項目をすべて戻しますか？再割り振りが必要です。|능력치를 모두 되돌릴까요? 다시 분배해야 합니다.
 respec.done|♻️ 配點已全部退回|♻️ 配点已全部退回|♻️ Points reset|♻️ ポイントを戻しました|♻️ 포인트를 되돌렸습니다
 respec.fail|退回失敗 —— 網路不穩，稍後再試|退回失败 —— 网络不稳，稍后再试|Reset failed — check your connection|戻せませんでした（通信エラー）|되돌리지 못했습니다(통신 오류)
+respec.confirm2|四項配點全部退回？會退還你花掉的 {refund} 金幣，但要付 {fee} 金幣手續費（實拿 {back}）。|四项配点全部退回？会退还你花掉的 {refund} 金币，但要付 {fee} 金币手续费（实拿 {back}）。|Reset all attributes? You get back the {refund} gold you spent, minus a {fee} gold reset fee ({back} net).|4 項目をすべて戻しますか？使った {refund} ゴールドは戻りますが、手数料 {fee} ゴールドがかかります（受取 {back}）。|능력치를 모두 되돌릴까요? 쓴 {refund} 골드는 돌려받지만 수수료 {fee} 골드가 차감됩니다(실수령 {back}).
+respec.done2|♻️ 配點已全部退回 · 退還 {back} 金幣|♻️ 配点已全部退回 · 退还 {back} 金币|♻️ Points reset · {back} gold refunded|♻️ ポイントを戻しました · {back} ゴールド返還|♻️ 포인트를 되돌렸습니다 · {back} 골드 환급
 end.k|ADVENTURE CLEAR|冒险完成|ADVENTURE CLEAR|ADVENTURE CLEAR|ADVENTURE CLEAR
 end.t|32 關全破！|32 关全破！|All 32 stages cleared!|32 ステージ制覇！|32 스테이지 클리어!
 end.sub|你走完了整段冒險。下面是這一輪的成績。|你走完了整段冒险。下面是这一轮的成绩。|You finished the whole run. Here is how it went.|全ステージを踏破しました。今回の記録です。|모험을 모두 마쳤습니다. 이번 기록입니다.

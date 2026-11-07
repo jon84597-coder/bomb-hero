@@ -85,8 +85,8 @@ P.RPG.bought = 2;
 ok(P.rpgLeft() === 0, 'v5.45：買來的點不回灌免費額度（仍剩 0）', P.rpgLeft());
 P.RPG.bought = 0;
 
-// 按鈕：還有免費點時是「＋」
-P.RPG.alloc = { hp: 3, def: 0, spd: 0, atk: 0 };
+// 按鈕：還有免費點、且四項都還在免費格內（< RPG_FREE_PER）時是「＋」
+P.RPG.alloc = { hp: 2, def: 1, spd: 0, atk: 0 };
 P.Rpg.renderStats();
 let rows = String(env.getId('rpgRows').innerHTML || '');
 ok(!/buypt/.test(rows), '還有免費點時不顯示價格，維持「＋」');

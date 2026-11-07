@@ -27,7 +27,7 @@ const ATTRS = ['hp', 'def', 'spd', 'atk'];
 const BASE_POINTS = 9;          // 創角配點
 const CAP = 10;                 // 單項上限
 const MAX_POINTS = ATTRS.length * CAP;   // 40（全部點滿）
-const FREE_PER = 4;             // v5.45：每項前 4 格用免費點，第 5 格起一律金幣（價錢由前端算，這裡只當裁判）
+const FREE_PER = 3;             // v5.46：每項前 3 格用免費點，第 4 格起一律金幣（價錢由前端算，這裡只當裁判）
 const MAX_STAGE = 40;   // v5.36：單人/RPG 改成 40 關（8 大主題 × 5）
 const SESSION_TTL = 30 * 24 * 3600 * 1000;
 // v4.13：「維持登入」勾選後，這次登入的有效期改成 1 年（不勾則 30 天）
@@ -192,12 +192,23 @@ function sumAlloc(a) {
   for (let i = 0; i < ATTRS.length; i++) n += (a && a[ATTRS[i]]) || 0;
   return n;
 }
-/* v5.45：這幾格是「花金幣買來的」——免費額度只算到每項第 4 格 */
+/* v5.46：這幾格是「花金幣買來的」——免費額度只算到每項第 3 格 */
 function sumPaid(p) {
   let n = 0;
   for (let i = 0; i < ATTRS.length; i++) n += Math.max(0, (p && p[ATTRS[i]]) | 0);
   return n;
 }
+/* v5.46：洗點退款額 —— 跟前端 rpgPaidRefund() 同一套算法（2000 + 2500 + …） */
+function paidRefund(rpg) {
+  const p = (rpg && rpg.paid) || {};
+  let sum = 0;
+  for (let i = 0; i < ATTRS.length; i++) {
+    const c = Math.max(0, p[ATTRS[i]] | 0);
+    for (let j = 0; j < c; j++) sum += 2000 + 500 * j;
+  }
+  return sum;
+}
+const RESPEC_FEE = 1000;        // v5.46：洗點手續費（前端扣金幣用）
 function freeCapOf(rpg) {
   return Math.min(pointsTotalFor(rpg), ATTRS.length * FREE_PER);
 }
@@ -423,7 +434,7 @@ function validateAlloc(alloc, pointsTotal, paidBudget) {
     over += Math.max(0, n - FREE_PER);
   }
   if (free > cap) return { ok: false, err: 'POINT_OVERFLOW', spent: free, cap: cap };
-  // v5.45：超過第 4 格的格數，只能來自「已經買過的額度」，否則改前端就能白拿
+  // v5.46：超過第 3 格的格數，只能來自「已經買過的額度」，否則改前端就能白拿
   if (over > clampInt(paidBudget, 0, 200, 0)) return { ok: false, err: 'PAID_OVERFLOW', over: over };
   return { ok: true, alloc: out, spent: spent, cap: cap };
 }
@@ -444,7 +455,7 @@ function spendPoint(rpg, attr, delta, pay) {
   const cur = rpg.alloc[attr] || 0;
   if (d > 0) {
     if (cur >= CAP) return { ok: false, err: 'ATTR_CAP', attr: attr, cap: CAP };
-    // v5.45：第 5 格起一律要金幣；前 4 格則看免費額度還夠不夠
+    // v5.46：第 4 格起一律要金幣；前 3 格則看免費額度還夠不夠
     const mustPay = cur >= FREE_PER || freeLeftOf(rpg) <= 0;
     if (mustPay) {
       if (!(Number(pay) > 0)) return { ok: false, err: 'NO_POINTS', left: 0, total: total };
@@ -3102,14 +3113,18 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         if (p === '/api/rpg/respec' && req.method === 'POST') {
           if (!gate(req, res, 'respec', 6, 2)) return true;
           acc.rpg.alloc = { hp: 0, def: 0, spd: 0, atk: 0 };
-          acc.rpg.paid = { hp: 0, def: 0, spd: 0, atk: 0 };   // v5.45：洗點＝價格階也重來
+          const refund = paidRefund(acc.rpg);
+          const fee = refund > 0 ? RESPEC_FEE : 0;
+          acc.rpg.paid = { hp: 0, def: 0, spd: 0, atk: 0 };   // v5.46：洗點＝價格階也重來
+          acc.rpg.bought = 0;                                 //          買過的額度一起歸零
           acc.rpg.ver = (acc.rpg.ver || 1) + 1;
           store.touch();
-          logEvent(acc, 'respec', {});
+          logEvent(acc, 'respec', { refund: refund, fee: fee });
           const capAll = freeCapOf(acc.rpg);
           return send(res, 200, {
             ok: true, account: publicAccount(acc),
-            left: capAll, total: capAll, bought: acc.rpg.bought | 0
+            left: capAll, total: capAll, bought: acc.rpg.bought | 0,
+            refund: refund, fee: fee, back: Math.max(0, refund - fee)   // v5.46：前端據此退金幣
           }), true;
         }
 
@@ -3393,6 +3408,7 @@ module.exports = {
   // 給測試用的純函式
   ATTRS: ATTRS, BASE_POINTS: BASE_POINTS, CAP: CAP, MAX_POINTS: MAX_POINTS, MAX_STAGE: MAX_STAGE,
   FREE_PER: FREE_PER, sumPaid: sumPaid, freeLeftOf: freeLeftOf, spendPoint: spendPoint,
+  paidRefund: paidRefund, RESPEC_FEE: RESPEC_FEE,   // v5.46
   pointsTotalFor: pointsTotalFor, goldFor: goldFor, stageReward: stageReward,
   applyClear: applyClear, spendPoint: spendPoint,
   LV_MAX: LV_MAX, XP_MAX: XP_MAX, xpNeed: xpNeed, lvOfXp: lvOfXp, xpTotalOfLv: xpTotalOfLv,
