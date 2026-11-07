@@ -137,7 +137,7 @@ ok(G.door && G.door.x === 8 && G.door.y === 1 && G.door.revealed === true && G.d
   '大門固定在王正上方 (8,1)，要打完才開');
 const bs = (G.enemies || []).filter(function (e) { return e.boss; })[0];
 ok(!!bs && Math.floor(bs.x / G.T) === 8 && Math.floor(bs.y / G.T) === 2, '王站在 (8,2)');
-ok(!!bs && bs.hp >= 10, '王血量正常（' + (bs && bs.hp) + '）');
+ok(!!bs && bs.hp >= 4 && bs.hp <= 10, 'v5.48：王血量在 4～10 格之間（' + (bs && bs.hp) + '）');
 ok(!!G.bossArena && G.bossArena.bossDead === false, 'bossArena 已建立且王還活著（章節 ' + (G.bossArena && G.bossArena.chapter) + '）');
 
 /* ---------- ④ 大逃殺雙尺寸數量 ---------- */

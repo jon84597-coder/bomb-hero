@@ -77,79 +77,76 @@ ok(P.RPG.bought === 0, 'RPG.bought 預設 0', P.RPG.bought);
 ok(!!P.RPG.paid, 'RPG.paid（各項買過幾格）存在');
 P.RPG.paid = { hp: 0, def: 0, spd: 0, atk: 0 };
 
-// 免費點用完（創角 9 點全部點在生命、生命又滿 10 格 → 用別的屬性驗）
+// v5.48：每一格都吃 1 點（前 3 格只吃點、第 4 格起還要金幣）。總點數自己給 20 點好驗
+P.rpgSetTotal(20);
 P.RPG.alloc = { hp: 9, def: 0, spd: 0, atk: 0 };
 P.RPG.bought = 0;
-ok(P.rpgLeft() === 0, '九點點完 → 剩 0 點', P.rpgLeft());
-P.RPG.bought = 2;
-ok(P.rpgLeft() === 0, 'v5.45：買來的點不回灌免費額度（仍剩 0）', P.rpgLeft());
-P.RPG.bought = 0;
+ok(P.rpgLeft() === 11, '九點點完 → 剩 11（20 - 9）', P.rpgLeft());
 
-// 按鈕：還有免費點、且四項都還在免費格內（< RPG_FREE_PER）時是「＋」
+// 按鈕：四項都還在免費格內 → 「＋」、不顯示價錢
 P.RPG.alloc = { hp: 2, def: 1, spd: 0, atk: 0 };
 P.Rpg.renderStats();
 let rows = String(env.getId('rpgRows').innerHTML || '');
-ok(!/buypt/.test(rows), '還有免費點時不顯示價格，維持「＋」');
-ok(/data-d="1"[^>]*>＋</.test(rows) || rows.indexOf('>＋<') > 0, '＋ 按鈕存在');
+ok(!/buypt/.test(rows), '前 3 格不顯示價錢，維持「＋」');
+ok(rows.indexOf('>＋<') > 0, '＋ 按鈕存在');
 
-// 按鈕：免費點用完 → 💰2000（生命刻意給到 10 格，驗「滿格不能買」）
-P.RPG.alloc = { hp: 10, def: 0, spd: 0, atk: 0 };
+// 第 4 格起 → 顯示價錢；滿 10 格 → 禁用
+P.RPG.alloc = { hp: 10, def: 3, spd: 0, atk: 0 };
 P.Rpg.renderStats();
 rows = String(env.getId('rpgRows').innerHTML || '');
-ok(/class="buypt"/.test(rows), '免費點用完 → 按鈕加上 class="buypt"');
-ok(rows.indexOf('💰2000') > 0, '按鈕直接寫價格 💰2000');
-ok(!/data-d="1" class="buypt"[^>]*disabled/.test(rows), '「＋」在買點模式下不能被禁用（否則點不動）');
-ok(/data-d="1" disabled/.test(rows), '滿 10 格那一項（生命）仍然是禁用狀態');
-ok((rows.match(/class="buypt"/g) || []).length === 3,
-  '生命已滿 10 格 → 只有另外三項顯示價格', (rows.match(/class="buypt"/g) || []).length);
+ok(/class="buypt"/.test(rows), '第 4 格起 → 按鈕加上 class="buypt"');
+ok(rows.indexOf('💰2000') > 0, '按鈕直接寫價格 2000');
+ok(!/class="buypt"[^>]*disabled/.test(rows), '「＋」在買點模式下不能被禁用（否則點不動）');
+ok((rows.match(/class="buypt"/g) || []).length === 1,
+  '只有防禦那一項（第 4 格）顯示價錢', (rows.match(/class="buypt"/g) || []).length);
+ok(/data-d="1"[^>]*disabled/.test(rows), '滿 10 格那一項（生命）仍然是禁用狀態');
 
-// 金幣足夠 → 買成功
+// 金幣足、點數也足 → 買成功（金幣與點數兩個都要扣）
 let goldNow = 5000, spent = [];
 const gp = P.Shop.gold, sp = P.Shop.spend;
 P.Shop.gold = function () { return goldNow; };
 P.Shop.spend = function (n) { spent.push(n); goldNow -= n; return { ok: true, gold: goldNow }; };
-P.RPG.alloc = { hp: 9, def: 0, spd: 0, atk: 0 };
+P.RPG.alloc = { hp: 4, def: 3, spd: 0, atk: 0 };
 P.RPG.bought = 0;
+P.RPG.paid = { hp: 0, def: 0, spd: 0, atk: 0 };
 const r1 = P.rpgBuyPoint('def');
-ok(r1 === true, '金幣足夠 → 買點成功', r1);
-ok(P.RPG.alloc.def === 1, '防禦 0 → 1');
+ok(r1 === true, '金幣與點數都夠 → 買點成功', r1);
+ok(P.RPG.alloc.def === 4, '防禦 3 → 4');
 ok(P.RPG.bought === 1, 'bought 累加 1');
 ok(spent.length === 1 && spent[0] === 2000, 'Shop.spend 收到 2000 金幣', spent);
 ok(goldNow === 3000, '金幣 5000 → 3000', goldNow);
+ok(P.rpgLeft() === 12, '點數也扣了 1（13 → 12）', P.rpgLeft());
 
-// 拿到買來的點之後，rpgLeft 要回到 0
-ok(P.rpgLeft() === 0, '買到的點馬上被用掉 → 剩 0', P.rpgLeft());
-
-// 再點一次 → 又買一點
-P.rpgBuyPoint('atk');
-ok(P.RPG.alloc.atk === 1 && P.RPG.bought === 2, '再買一次：攻擊 1、bought 2', [P.RPG.alloc.atk, P.RPG.bought]);
+// 點數用完 → 就算有錢也不能再買
+goldNow = 99999; spent.length = 0;
+P.rpgSetTotal(4);
+P.RPG.alloc = { hp: 4, def: 0, spd: 0, atk: 0 };
+ok(P.rpgBuyPoint('hp') === false, 'v5.48：沒有屬性點 → 有錢也買不了', P.RPG.alloc.hp);
+ok(spent.length === 0, '點數不足時一毛都沒扣', spent);
 
 // 金幣不足
-goldNow = 500;
-spent.length = 0;
-P.RPG.alloc = { hp: 9, def: 1, spd: 0, atk: 1 };
-P.RPG.bought = 2;
-const r2 = P.rpgBuyPoint('spd');
+P.rpgSetTotal(20);
+goldNow = 500; spent.length = 0;
+P.RPG.alloc = { hp: 4, def: 3, spd: 0, atk: 0 };
+const r2 = P.rpgBuyPoint('def');
 ok(r2 === false, '金幣不足 → 回 false', r2);
-ok(P.RPG.alloc.spd === 0, '金幣不足時不會偷加點');
-ok(P.RPG.bought === 2, '金幣不足時 bought 不變');
+ok(P.RPG.alloc.def === 3, '金幣不足時不會偷加點');
 ok(spent.length === 0, '金幣不足時完全沒有扣款');
 
-// 單項上限 10 格：就算有錢也買不了
+// 單項上限 10 格：就算有錢有點也買不了
 goldNow = 99999;
 P.RPG.alloc = { hp: 10, def: 0, spd: 0, atk: 0 };
-P.RPG.bought = 20;
 ok(P.rpgBuyPoint('hp') === false, '生命已滿 10 格 → 有錢也不能買');
 
-// 還有免費點時，rpgBuyPoint 走原本那條（不扣金幣）
+// 還有屬性點時，rpgBuyPoint 走原本那條（不扣金幣）
 goldNow = 5000;
 spent.length = 0;
 P.RPG.alloc = { hp: 0, def: 0, spd: 0, atk: 0 };
 P.RPG.bought = 0;
-P.RPG_POINTS_TOTAL = 9;
+P.rpgSetTotal(9);
 const r3 = P.rpgBuyPoint('def');
-ok(r3 === true && P.RPG.alloc.def === 1, '還有免費點 → 正常配點成功');
-ok(spent.length === 0, '還有免費點時不會扣金幣', spent);
+ok(r3 === true && P.RPG.alloc.def === 1, '還有屬性點 → 正常配點成功');
+ok(spent.length === 0, '前 3 格不會扣金幣', spent);
 
 // 還原
 P.Shop.gold = gp; P.Shop.spend = sp;

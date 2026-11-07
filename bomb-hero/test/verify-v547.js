@@ -62,12 +62,12 @@ ok(/body\.touch\.home-wide #scr-title \.title-card \{ display: contents; \}/.tes
   '標題卡片改成 display:contents（子元素直接進 grid，不用改 DOM）');
 ok(/body\.touch\.home-wide #scr-title \.toprow \{[^}]*position: static;[^}]*grid-column: 1; grid-row: 1;/.test(src),
   '版本更新／作者公告：不再浮在右上，回到左欄第一列');
-ok(/body\.touch\.home-wide #scr-title \.menu \{[^}]*grid-column: 2; grid-row: 1 \/ span 5;/.test(src),
-  '選單搬到右欄、跨滿五列');
+ok(/body\.touch\.home-wide #scr-title \.menu \{[^}]*grid-column: 2; grid-row: 1 \/ -1;/.test(src),
+  '選單搬到右欄、跨滿所有列（v5.48：改成 1 / -1，欄數改了也不用回頭改）');
 ok(/body\.touch\.home-wide #scr-title \.menu \.mgrid \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/.test(src),
   '右欄選單固定兩欄（直的兩排）');
-ok(/body\.touch\.home-wide #scr-title \.title-card \.title-logo \{\s*width: clamp\(120px, min\(44vw, 52vh\), 280px\)/.test(src),
-  'LOGO 尺寸同時吃寬與高（min(44vw,52vh)），橫屏不會撐爆左欄');
+ok(/body\.touch\.home-wide #scr-title \.title-card \.title-logo \{[^}]*width: 100%;[^}]*max-height: 100%/.test(src),
+  'v5.48：LOGO 放到欄寬極限（width:100%，高度用 max-height 夾住）');
 ok(/body\.touch\.home-wide #scr-title \.platrow \{ display: none; \}/.test(src),
   '平台小圖示在橫屏收起（省一整行給暱稱）');
 ok(/body\.touch\.home-wide #scr-title \.ver \{[^}]*grid-column: 1; grid-row: 3;/.test(src), '版本號在左欄第三列（LOGO 下面）');
@@ -108,7 +108,8 @@ head('⑥ 版本戳記');
 const vm = src.match(/const VERSION = '([\d.]+)'/);
 ok(vm && parseFloat(vm[1]) >= 5.47, 'VERSION ≥ 5.47', vm && vm[1]);
 const vlog = String(SB.vlog || '');
-ok(/v: '5\.47'[\s\S]{0,200}now: true/.test(vlog), 'VERSION_LOG 5.47 是 now:true');
+ok(/'5\.47'/.test(vlog), 'VERSION_LOG 有 5.47 條目');
+ok(!/v: '5\.47'[\s\S]{0,200}now: true/.test(vlog), '5.47 已改成 now:false（被更新的一版蓋過）');
 ok(!/v: '5\.46'[\s\S]{0,200}now: true/.test(vlog), '5.46 已改成 now:false');
 const sws = [
   ['bomb-hero/sw.js', fs.readFileSync(__dirname + '/../sw.js', 'utf8')],

@@ -50,7 +50,7 @@ ok(typeof P.isBossStage === 'function', '__BH 有匯出 isBossStage');
   }
   ok(bad.length === 0, '40 關實際生成：每章第 5 關都有 BOSS' +
     (bad.length ? '（' + bad.join(',') + '）' : ''));
-  ok(hp40 === 18, '總魔王血量 18 下（10 + 章節 8；' + hp40 + '）');
+  ok(hp40 === 9, 'v5.48：第 40 關總魔王 9 格血（普通）；' + hp40 + '）');
   ok(mobs39 > mobs40, '第 39 關的小怪比第 40 關多（魔王關沒小怪：' + mobs39 + ' vs ' + mobs40 + '）');
 }
 ok(css.indexOf('function soloIsBoss(stage)') > 0 && css.indexOf('soloIsBoss(stage) ? t(') > 0,

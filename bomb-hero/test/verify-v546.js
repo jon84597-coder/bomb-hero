@@ -77,7 +77,8 @@ ok(P.RPG.bought === 0, '「買過幾點」也歸零');
 ok(gold === 500 + 5500, '金幣真的進錢包（500 → 6,000）', gold);
 ok(added.length === 1 && added[0] === 5500, '只加一次，金額正確', added);
 ok(P.rpgPrice('hp') === 2000, '洗點後下一格重新從 2000 起算', P.rpgPrice('hp'));
-ok(P.rpgLeft() === 12, '免費額度全部回來（12）', P.rpgLeft());
+ok(P.rpgLeft() === 16, 'v5.48：洗點後點數全部回來', P.rpgLeft());
+ok(P.rpgSum(P.RPG.alloc) === 0, '四項歸零（每格都吃點，歸零就是全部還回）', P.rpgSum(P.RPG.alloc));
 // 沒花過錢 → 一毛都不加
 reset({ hp: 2, def: 2 }, {});
 gold = 700; added.length = 0;

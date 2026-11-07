@@ -209,12 +209,13 @@ function paidRefund(rpg) {
   return sum;
 }
 const RESPEC_FEE = 1000;        // v5.46：洗點手續費（前端扣金幣用）
+/* v5.48：每一格都吃 1 點（前 3 格只吃點、第 4 格起還要金幣）→
+   「可用點數」就是總點數，「剩餘」就是總點數減掉已配。 */
 function freeCapOf(rpg) {
-  return Math.min(pointsTotalFor(rpg), ATTRS.length * FREE_PER);
+  return pointsTotalFor(rpg);
 }
 function freeLeftOf(rpg) {
-  const p = rpg.paid || {};
-  return Math.max(0, freeCapOf(rpg) - (sumAlloc(rpg.alloc) - sumPaid(p)));
+  return Math.max(0, freeCapOf(rpg) - sumAlloc(rpg.alloc));
 }
 
 /* ---------------------------------------------------------------- 進度數學 */
@@ -421,7 +422,7 @@ function sanitizeLayout(v) {
 function validateAlloc(alloc, pointsTotal, paidBudget) {
   const cap = (pointsTotal == null || !isFinite(pointsTotal)) ? BASE_POINTS : clampInt(pointsTotal, 0, MAX_POINTS, BASE_POINTS);
   const out = {};
-  let spent = 0, free = 0, over = 0;
+  let spent = 0, over = 0;
   for (let i = 0; i < ATTRS.length; i++) {
     const k = ATTRS[i];
     const raw = alloc ? alloc[k] : 0;
@@ -430,10 +431,9 @@ function validateAlloc(alloc, pointsTotal, paidBudget) {
     if (n > CAP) return { ok: false, err: 'ATTR_CAP', attr: k, cap: CAP };
     out[k] = n;
     spent += n;
-    free += Math.min(n, FREE_PER);
     over += Math.max(0, n - FREE_PER);
   }
-  if (free > cap) return { ok: false, err: 'POINT_OVERFLOW', spent: free, cap: cap };
+  if (spent > cap) return { ok: false, err: 'POINT_OVERFLOW', spent: spent, cap: cap };
   // v5.46：超過第 3 格的格數，只能來自「已經買過的額度」，否則改前端就能白拿
   if (over > clampInt(paidBudget, 0, 200, 0)) return { ok: false, err: 'PAID_OVERFLOW', over: over };
   return { ok: true, alloc: out, spent: spent, cap: cap };
@@ -455,9 +455,9 @@ function spendPoint(rpg, attr, delta, pay) {
   const cur = rpg.alloc[attr] || 0;
   if (d > 0) {
     if (cur >= CAP) return { ok: false, err: 'ATTR_CAP', attr: attr, cap: CAP };
-    // v5.46：第 4 格起一律要金幣；前 3 格則看免費額度還夠不夠
-    const mustPay = cur >= FREE_PER || freeLeftOf(rpg) <= 0;
-    if (mustPay) {
+    // v5.48：每一格都要 1 點；第 4 格起另外要付金幣（pay = 前端付掉的價錢）
+    if (sumAlloc(rpg.alloc) >= total) return { ok: false, err: 'NO_POINTS', left: 0, total: total };
+    if (cur >= FREE_PER) {
       if (!(Number(pay) > 0)) return { ok: false, err: 'NO_POINTS', left: 0, total: total };
       rpg.bought = bought + 1;
       paid[attr] = (paid[attr] | 0) + 1;

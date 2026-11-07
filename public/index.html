@@ -766,6 +766,22 @@ border-radius: 999px; flex: 0 1 auto; min-width: 0;
 .pkrow .pstars { font-size: 14.5px; }
 }
 
+/* ===== v5.48：大逃殺的「小頭像列」=====
+   以前 100 個玩家全部同時名牌化，flex 把每張卡壓成 14px 細條（頭像變成黑白碎片），
+   且剛好貼在小地圖上緣。現在只留頭像、固定 24px、排在小地圖右邊。 */
+#pkRoster.mini { gap: 2px; padding: 0; max-height: 26px; align-items: center; }
+#pkRoster.mini .pcard {
+  padding: 0; gap: 0; flex: 0 0 auto; border: 0; background: none; box-shadow: none; border-radius: 50%;
+}
+#pkRoster.mini .pcard canvas {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1.5px solid rgba(12,18,30,.62); box-shadow: 0 1px 4px rgba(0,0,0,.55);
+}
+#pkRoster.mini .pkinfo { display: none; }
+#pkRoster.mini .pcard.dead { opacity: .3; }
+#pkRoster .pmore { font-size: 10.5px; font-weight: 900; color: #ffd166; align-self: center; padding: 0 3px;
+  text-shadow: 0 1px 3px rgba(0,0,0,.9); letter-spacing: -.02em; }
+
 @media (max-width: 899px) {
 .pkrow { gap: 4px; left: 8px; padding: 2px; max-width: calc(100vw - 300px); }
 .pkrow .pcard { padding: 2px 7px 2px 3px; gap: 4px; }
@@ -4800,7 +4816,7 @@ body.touch.home-wide #navBar .navbtn { white-space: nowrap; }
 
 /* 版面骨架：一張 grid 分左右兩欄 */
 body.touch.home-wide .wrap:not(.game) {
-  padding: calc(35px + env(safe-area-inset-top, 0px)) 10px calc(4px + env(safe-area-inset-bottom, 0px));
+  padding: calc(30px + env(safe-area-inset-top, 0px)) 10px calc(4px + env(safe-area-inset-bottom, 0px));
   max-width: min(1080px, 100%); overflow: hidden;
 }
 body.touch.home-wide #scr-title.on {
@@ -4808,7 +4824,8 @@ body.touch.home-wide #scr-title.on {
   /* 左下角有 📚 圖鑑（y≈270）與 🎁 簽到（y≈326）兩顆浮動鈕，左欄從 58px 開始才不會壓到它們 */
   padding-left: 58px; padding-right: 6px;
   grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
-  grid-template-rows: auto auto auto auto auto;
+  /* v5.48：最後一列（暱稱）吃光剩下的高度 → 自動跟右欄按鈕列的下緣切齊 */
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   align-content: center; align-items: center;
   gap: 1px 14px;
 }
@@ -4826,14 +4843,18 @@ body.touch.home-wide #scr-title .toprow .annhead {
 body.touch.home-wide #scr-title .toprow .annbox { flex: 0 1 auto; }
 body.touch.home-wide #scr-title .toprow .annbox .annhead { border-bottom: 0; }
 /* 左欄②③：LOGO 與版本號 */
-body.touch.home-wide #scr-title .titlewrap { grid-column: 1; grid-row: 2; padding: 0; }
+body.touch.home-wide #scr-title .titlewrap {
+  grid-column: 1; grid-row: 2; padding: 0; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+/* v5.48：LOGO 放到欄寬的極限（左右只留一點點），高度用 max-height 夾住不壓到版本號 */
 body.touch.home-wide #scr-title .title-card .title-logo {
-  width: clamp(120px, min(44vw, 52vh), 280px); max-width: 100%;
+  width: 100%; max-width: 100%; height: auto; max-height: 100%; object-fit: contain;
 }
 body.touch.home-wide #scr-title .ver { grid-column: 1; grid-row: 3; justify-self: center; margin-top: 3px; }
 body.touch.home-wide #scr-title .gap24 { display: none !important; }
 /* 左欄④：暱稱 */
-body.touch.home-wide #scr-title .nickwrap { grid-column: 1; grid-row: 4; margin: 4px 0 0; gap: 6px; }
+body.touch.home-wide #scr-title .nickwrap { grid-column: 1; grid-row: 4; align-self: end; margin: 4px 0 0; gap: 6px; }
 body.touch.home-wide #scr-title .nickwrap .nklabel { font-size: 10.5px; }
 body.touch.home-wide #scr-title .nickwrap .tinput {
   width: 100%; max-width: 150px; flex: 1 1 auto; min-width: 0;
@@ -4843,7 +4864,7 @@ body.touch.home-wide #scr-title .nickwrap .tinput {
 body.touch.home-wide #scr-title .platrow { display: none; }   /* 平台小圖示在橫屏不重要，省下一整行給暱稱 */
 /* 右欄：新手教學 ＋ 2×3 卡片 ＋ 社群三入口 */
 body.touch.home-wide #scr-title .menu {
-  grid-column: 2; grid-row: 1 / span 5;
+  grid-column: 2; grid-row: 1 / -1;
   display: flex; flex-direction: column; align-items: stretch; gap: 6px;
   width: 100%; max-width: none; margin: 0; padding-bottom: 0; align-self: center;
 }
@@ -4919,7 +4940,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.47</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.48</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4974,7 +4995,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.47</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.48</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5203,10 +5224,10 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
       </div>
       <div class="rpgbar" id="rpgLvBar"></div>
       <div class="field"><label>② 能力配點</label>
-        <div class="hint" style="margin:-2px 0 7px">剩餘 <b id="rpgLeft" style="color:#d4491f">9</b> 免費點 · 每項前 3 格免費</div>
+        <div class="hint" style="margin:-2px 0 7px">剩餘 <b id="rpgLeft" style="color:#d4491f">9</b> 點 · 前 3 格純點數，第 4 格起「1 點 ＋ 金幣」</div>
         <div class="rpgrows" id="rpgRows"></div>
         <div class="rpgsum" id="rpgSum"></div>
-        <div class="hint" id="rpgBuyHint" style="margin:7px 0 0">第 4 格起要用金幣：<b>2000 → 2500 → 3000 → 3500 → 4000 → 4500 → 5000</b>（每項上限 10 格）。洗點（全部退回）會退還花掉的金幣，<b>扣 1000 手續費</b>。</div>
+        <div class="hint" id="rpgBuyHint" style="margin:7px 0 0"><b>第 4 格起每一格 = 1 屬性點 ＋ 金幣</b>：2000 → 2500 → 3000 → 3500 → 4000 → 4500 → 5000（每項上限 10 格）。洗點（全部退回）會退還花掉的金幣，<b>扣 1000 手續費</b>。</div>
       </div>
       <div class="hint" style="margin:2px 0 10px">配好點就往營地：那裡可以買補給、學招式、選關卡再出發。</div>
       <div class="rowbtns">
@@ -6030,7 +6051,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.47';
+const VERSION = '5.48';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -15443,7 +15464,7 @@ function buildBossArenaStage(stage, fresh, rpg) {
   Game.enemies = [];
   // v5.36：RPG 最終章（第 8 章）保留舊版「總魔王」規格（48 血、def 2），其餘章節照章數遞增
   const bossFin = rpg && ch >= 8;
-  const boss = makeBoss(8, 2, bossFin ? 48 : (rpg ? (12 + ch * 2) : (10 + ch)));
+  const boss = makeBoss(8, 2, bossFin ? 48 : (rpg ? (12 + ch * 2) : bossHpOf(ch)));
   boss.dirName = 'down'; boss.chapterBoss = true; boss.sizeMul = 1.28;
   if (bossFin) boss.def = 2;
   if (rpg) { boss.lv = rpgFoeLv(stage); boss.exp = rpgFoeXp(stage) * 5; }   // 魔王經驗 5 倍（沿用舊版）
@@ -15508,6 +15529,20 @@ function arenaBossOf(e) {
 // 護盾片數：第 1 章 3 片，之後每兩章 +1（第 8 章 6 片）
 function bossShieldMax(ch) {
   return 2 + Math.ceil((ch || 1) / 2);
+}
+/* ===== v5.48：BOSS 血量曲線（單人闖關）=====
+   第一隻王以前是 11 格血 ＋ 3 片護盾，新手沒有隨從根本打不動 → 砍成 4/5/6 格（簡單/普通/困難）。
+   第 2 隻維持，第 3、5、7、8 隻各再加一格（往後才慢慢變硬）。
+   每日挑戰固定難度，不看玩家自己調的設定。 */
+const BOSS_HP_BASE = { easy: 4, normal: 5, hard: 6 };
+function bossHpOf(ch) {
+  let hp = BOSS_HP_BASE[(Game.daily ? DAILY_DIFF : settings.soloDiff)] || BOSS_HP_BASE.normal;
+  ch = ch | 0;
+  if (ch >= 3) hp++;
+  if (ch >= 5) hp++;
+  if (ch >= 7) hp++;
+  if (ch >= 8) hp++;
+  return hp;
 }
 // 移速倍率：破防期會懵一下（給你貼上去打），狂暴每層 +12%
 function bossPhaseSpd(e) {
@@ -15676,7 +15711,7 @@ function buildSoloStageInner(stage, fresh) {
   if (!Game.bossRush && isChapterFinal(stage)) {
     const bc = pickBossCell(clamp(Math.floor(cols / 2), 1, cols - 2), Math.max(1, rows - 2), cols, rows);
     const bx = bc.x, by = bc.y;
-    const cb = makeBoss(bx, by, 4 + blockOf(stage));     // 5～12 滴血
+    const cb = makeBoss(bx, by, bossHpOf(blockOf(stage)));   // v5.48：4～10 滴血
     cb.dirName = 'up';
     cb.sizeMul = 1.12;                                   // 比最終魔王小一號
     cb.chapterBoss = true;
@@ -23891,8 +23926,27 @@ function updateHud() {
           (tmC ? tmC.dot : '') + pname(p) + (p.ai ? '🤖' : '') + (p.cart ? '🛒' : '') + '</span>' +
         '<span class="pstars">⭐' + p.wins + '</span></span></div>';
     };
-    const phtml = Game.players.map(card).join('');
-    if (pkEl && pkKey !== phtml) { pkKey = phtml; pkEl.innerHTML = phtml; drawAvatarsIn(pkEl); }
+    /* v5.48：大逃殺 100 人不再整排硬塞（每張卡被壓成 14px 細條、又正好壓在小地圖上緣）。
+       改成「小地圖右邊一條小頭像列」：只放塞得下的前 N 個 ＋「+N」，存活數看左下 HUD。 */
+    const brMany = Game.mode === 'br' && Game.players.length > 8;
+    let mmBox = null;
+    try { if (miniMapOn()) mmBox = miniMapBox(); } catch (e) {}
+    let list = Game.players, more = 0;
+    if (brMany) {
+      const lx0 = mmBox ? mmBox.x + mmBox.w + 6 : 8;
+      const room = VIEW_W - lx0 - (VIEW_W > VIEW_H ? 130 : 62);      // 讓開右上角的計時器
+      const n = Math.max(4, Math.min(12, Math.floor((room - 34) / 26)));
+      if (Game.players.length > n) { list = Game.players.slice(0, n); more = Game.players.length - n; }
+    }
+    const phtml = list.map(card).join('') + (more ? '<i class="pmore">+' + more + '</i>' : '');
+    if (pkEl) {
+      const cls = 'pkrow' + (brMany ? ' mini' : '');
+      const lx = mmBox ? mmBox.x + mmBox.w + 6 : 8;
+      const mw = Math.max(120, VIEW_W - lx - 6);
+      if (pkEl.className !== cls) pkEl.className = cls;
+      if (pkEl.style.left !== lx + 'px') { pkEl.style.left = lx + 'px'; pkEl.style.maxWidth = mw + 'px'; }
+      if (pkKey !== phtml) { pkKey = phtml; pkEl.innerHTML = phtml; drawAvatarsIn(pkEl); }
+    }
   }
   html += '<button id="pauseBtn">⏸ ESC</button>';
   const key = html;
@@ -38675,7 +38729,9 @@ function rpgSum(a) { return (a.hp || 0) + (a.def || 0) + (a.spd || 0) + (a.atk |
 function rpgSumPaid(p) { p = p || RPG.paid || {}; return (p.hp | 0) + (p.def | 0) + (p.spd | 0) + (p.atk | 0); }
 /* v5.46：免費點只能用在每項前 3 格 → 免費額度上限 12 格（4 項 × 3） */
 function rpgFreeCap() { return Math.min(RPG_POINTS_TOTAL, RPG_FREE_PER * RPG_ATTRS.length); }
-function rpgLeft() { return Math.max(0, rpgFreeCap() - (rpgSum(RPG.alloc) - rpgSumPaid())); }
+/* v5.48：每一格（含第 4 格之後）都要吃 1 點 —— 前 3 格只吃點，第 4 格起「1 點 ＋ 金幣」。
+   40 格全滿剛好等於 40 點，點數與格子數一比一，升級給的點不會再浪費。 */
+function rpgLeft() { return Math.max(0, RPG_POINTS_TOTAL - rpgSum(RPG.alloc)); }
 /* 該項下一格的金幣價：買過越多階越貴 */
 function rpgPrice(k) { return RPG_PT_BUY + RPG_PT_STEP * Math.max(0, ((RPG.paid || {})[k] | 0)); }
 /* v5.46：洗點要退多少 —— 把「買過的每一格」當時的價錢加總（2000 + 2500 + …）
@@ -40165,17 +40221,20 @@ const Rpg = (function () {
       const v = RPG.alloc[a.k] || 0;
       let pips = '';
       for (let i = 0; i < RPG_CAP; i++) pips += '<i class="' + (i < v ? 'on' : '') + '"></i>';
-      // v5.46：第 4 格起（或免費點用完）→ 按鈕直接寫這一格的價錢
+      // v5.48：第 4 格起＝1 點 ＋ 金幣 → 按鈕直接寫這一格的價錢；沒點數就整排鎖住
       const pay = rpgPrice(a.k);
-      const buy = v < RPG_CAP && (v >= RPG_FREE_PER || left <= 0);
+      const buy = v < RPG_CAP && v >= RPG_FREE_PER;
+      const noPt = left <= 0;
+      const tip = v >= RPG_CAP ? '這一項已經滿了'
+        : (buy ? '1 點 ＋ ' + pay + ' 金幣（金幣 ' + (Shop.gold() | 0) + '）' : '1 點（前 3 格免金幣）');
       return '<div class="rpgrow" data-k="' + a.k + '">' +
         '<div class="rpgname">' + a.ico + ' ' + a.n + '</div>' +
         '<div class="rpgpips">' + pips + '</div>' +
         '<div class="rpgstep">' +
         '<button type="button" data-d="-1"' + (v <= 0 ? ' disabled' : '') + '>−</button>' +
         '<b>' + v + '</b>' +
-        '<button type="button" data-d="1"' + (buy ? ' class="buypt" title="這一格要 ' + pay + ' 金幣（目前 ' + (Shop.gold() | 0) + '）"' : '') +
-        (v >= RPG_CAP ? ' disabled' : '') + '>' + (buy ? '💰' + pay : '＋') + '</button>' +
+        '<button type="button" data-d="1"' + (buy ? ' class="buypt"' : '') + ' title="' + tip + '"' +
+        ((v >= RPG_CAP || noPt) ? ' disabled' : '') + '>' + (buy ? '💰' + pay : '＋') + '</button>' +
         '</div>' +
         '<div class="rpgdesc">' + a.desc + '</div>' +
         '</div>';
@@ -42469,6 +42528,11 @@ function rpgBuyPoint(k) {
   const v = RPG.alloc[k] | 0;
   if (v >= RPG_CAP) return false;
   if (v < RPG_FREE_PER && rpgLeft() > 0) return rpgAdjust(k, 1);   // 還在免費 3 格內 → 不花錢
+  if (rpgLeft() <= 0) {                                              // v5.48：金幣買的格子也要 1 點
+    toast('💎 屬性點不足：每格都要 1 點，升級才會再給（第 4 格起＝1 點 ＋ 金幣）', 2.6);
+    AudioSys.sfx('hurt');
+    return false;
+  }
   const price = rpgPrice(k);
   const g = Shop.gold() | 0;
   if (g < price) {
@@ -42483,7 +42547,7 @@ function rpgBuyPoint(k) {
   RPG.alloc[k] = v + 1;
   AudioSys.sfx('item');
   Rpg.renderStats();
-  toast('💎 ' + tr(a.n) + ' +1　−' + price + ' 金幣（剩 ' + (Shop.gold() | 0) + '）', 2.2);
+  toast('💎 ' + tr(a.n) + ' +1　−1 點 · −' + price + ' 金幣（點數剩 ' + rpgLeft() + '／金幣 ' + (Shop.gold() | 0) + '）', 2.4);
   if (Cloud.online()) {
     try { Cloud.track('alloc'); } catch (e) {}
     Cloud.spend(k, 1, price);                       // 後端記帳：多一點 bought
@@ -43103,6 +43167,7 @@ window.__BH = {
   stageName: stageName, mapIdxOfStage: mapIdxOfStage, buildBossArenaStage: buildBossArenaStage,
   arenaFreeCell: arenaFreeCell, updateBossArena: updateBossArena, BOSS_SLOT: BOSS_SLOT,
   BOSS_BREAK: BOSS_BREAK, bossShieldMax: bossShieldMax, bossPhaseSpd: bossPhaseSpd,
+  bossHpOf: bossHpOf, BOSS_HP_BASE: BOSS_HP_BASE,
   WeekMod: WeekMod, WEEK_MODS: WEEK_MODS, weekMul: weekMul, weekAdd: weekAdd, weekBanner: weekBanner,
   Ghost: Ghost, drawDailyGhost: drawDailyGhost, nearMissSuffix: nearMissSuffix, HomeDot: HomeDot,
   weekModBlock: weekModBlock,
@@ -43110,7 +43175,7 @@ window.__BH = {
   // v4.16：只有第 32 關有 BOSS ＋ 可躲人的樹叢／破屋
   soloIsBoss: soloIsBoss, isChapterFinal: isChapterFinal, hideTileAt: hideTileAt, playerHiding: playerHiding,
   buildSdList: buildSdList, sdSoon: sdSoon, SD_STEP_T: SD_STEP_T,
-  placeHideTiles: placeHideTiles, drawHideCanopy: drawHideCanopy, ovShow: ovShow, ovHide: ovHide,
+  placeHideTiles: placeHideTiles, drawHideCanopy: drawHideCanopy, ovShow: ovShow, ovHide: ovHide, updateHud: updateHud,
   // v4.15：2～8 人 ＋ 組隊對戰
   TEAMS: TEAMS, clampCount: clampCount, teamCount: teamCount, teamName: teamName,
   gameTeams: gameTeams, teamMeta: teamMeta, nextBattleRound: nextBattleRound,

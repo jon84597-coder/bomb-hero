@@ -61,18 +61,18 @@ for (let i = 0; i < 3; i++) P.rpgAdjust('atk', 1);
 ok(P.RPG.alloc.atk === 3, '連按 3 次 → 攻擊 3 格');
 ok(spent.length === 0, '前 3 格完全沒扣金幣', spent);
 ok(P.RPG.paid.atk === 0, '前 3 格不會記成買來的');
-ok(P.rpgLeft() === 9, '免費點還剩 9（12 - 3）', P.rpgLeft());
+ok(P.rpgLeft() === 13, 'v5.48：前 3 格吃 3 點（16 - 3 = 13）', P.rpgLeft());
 P.rpgAdjust('atk', 1);
 ok(P.RPG.alloc.atk === 4, '第 4 格有加上去');
 ok(spent.length === 1 && spent[0] === 2000, '第 4 格扣 2000（免費點再多也不能白加）', spent);
 ok(P.RPG.paid.atk === 1, '記下「攻擊買過 1 格」');
-ok(P.rpgLeft() === 9, '買來的格子不吃免費額度 → 仍剩 9', P.rpgLeft());
+ok(P.rpgLeft() === 12, '第 4 格也要吃 1 點（16 - 4 = 12）', P.rpgLeft());
 
 /* ================= ③ 免費額度上限 12 ================= */
 head('③ 免費額度 = 3 格 × 4 項 = 12');
 reset({ hp: 3, def: 3, spd: 3, atk: 3 }, {}, 40);
 ok(P.rpgFreeCap() === 12, '總點數 40 時，免費額度仍夾在 12', P.rpgFreeCap());
-ok(P.rpgLeft() === 0, '四項都滿 3 格 → 剩 0（不會顯示一堆用不掉的點）', P.rpgLeft());
+ok(P.rpgLeft() === 28, '四項各 3 格（共 12）、總點數 40 → 還剩 28（v5.48：不再被 12 格卡住）', P.rpgLeft());
 reset({ hp: 3, def: 3 }, {}, 9);
 ok(P.rpgLeft() === 3, '兩項滿 3 格、總點數 9 → 剩 3', P.rpgLeft());
 reset({ hp: 3 }, {}, 9);
@@ -128,8 +128,8 @@ ok(!res.ok && res.err === 'NO_POINTS', '第 4 格不帶 pay → 後端直接拒�
 res = C.spendPoint(r, 'def', 1, 2000);
 ok(res.ok && r.alloc.def === 4, '帶了 pay → 放行', res);
 ok(r.paid.def === 1 && r.bought === 1, '後端也記「買過 1 格」', [r.paid.def, r.bought]);
-// 這個帳號總點數 9 → 免費額度 9；用掉 3 格免費後應該剩 6
-ok(C.freeLeftOf(r) === 6, '買來的那格不吃免費額度（仍剩 6，不是 5）', C.freeLeftOf(r));
+// 這個帳號總點數 9；每一格都吃點，用掉 4 格後應該剩 5
+ok(C.freeLeftOf(r) === 5, 'v5.48：第 4 格也扣掉 1 點（總點 9 − 已用 4 = 5）', C.freeLeftOf(r));
 // 退點先退買來的
 res = C.spendPoint(r, 'def', -1, 0);
 ok(r.alloc.def === 3 && r.paid.def === 0, '後端退點也是先退買來的', [r.alloc.def, r.paid.def]);

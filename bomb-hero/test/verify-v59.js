@@ -170,7 +170,7 @@ ok(/buildOrganicMap\(cols, rows, theme, info, rngFrom\(seed\)/.test(html),
         if (G.cols !== 17 || G.rows !== 15) bad.push(st + ':arena' + G.cols + 'x' + G.rows);
         if (!G.door || G.door.x !== 8 || G.door.y !== 1) bad.push(st + ':gate');
         const b = G.enemies.filter(function (e) { return e.type === 'boss'; })[0];
-        const want = 10 + Math.ceil(st / 5);
+        const want = P.bossHpOf(Math.ceil(st / 5));   // v5.48：第 1 隻 4/5/6，第 3、5、7、8 隻各加一格
         if (b.maxHp !== want) bad.push(st + ':hp' + b.maxHp + '/' + want);
       } else {
         if (G.grid[1][1] !== 0) bad.push(st + ':spawn');
