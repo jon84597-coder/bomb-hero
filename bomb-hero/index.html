@@ -4331,6 +4331,11 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .emojipick button:active { background: #ffe0ae; }
 .chatin { flex: 1 1 auto; min-width: 0; padding: 9px 11px; border-radius: 11px; border: 2px solid #e6c8a0;
   background: #fffdf7; font-size: 12.5px; color: #5b3a1e; }
+/* v5.50：iOS Safari 對「字小於 16px」的輸入框會在 focus 時自動放大整頁，
+   打字打到一半畫面突然被拉大、位置跑掉（＝使用者說的「跳出去」）。觸控裝置統一 16px 就完全不縮放。 */
+@media (hover: none) and (pointer: coarse) {
+  .chatin { font-size: 16px; }
+}
 .onprof { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
 @media (max-width: 520px) {
   .bhmodal { padding: 0; }
@@ -4940,7 +4945,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.49</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.50</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4995,7 +5000,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.49</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.50</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -6051,7 +6056,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.49';
+const VERSION = '5.50';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -13614,20 +13619,43 @@ const Social = (function () {
           '</div></div>';
       }
 
-      function renderChat() {
-        const p = findPid(S.chatWith) || { pid: S.chatWith, name: '玩家' };
-        const log = S.msgs.map(function (m) {
+      function chatLogHTML() {
+        return S.msgs.map(function (m) {
           const mine = m.from === (S.me && S.me.pid);
           return '<div class="chatmsg ' + (mine ? 'me' : 'you') + '">' + esc(m.m) + '</div>';
         }).join('') || '<div class="chatmsg sys">還沒有訊息，打個招呼吧 👋</div>';
+      }
+      function chatHeadHTML() {
+        const p = findPid(S.chatWith) || { pid: S.chatWith, name: '玩家' };
+        return '與 <b>' + esc(p.name) + '</b> 的對話' + (S.chatErr ? '　⚠️ ' + S.chatErr : '');
+      }
+      /* v5.50：打字的時候「不要整塊重畫」。
+         以前信箱每 12 秒輪詢一次就 paint() → box.innerHTML 全部換掉 → 輸入框整個被銷毀：
+         手機鍵盤自己收起來（＝打到一半跳出去）、打到一半的字不見，瀏覽器還可能把舊值記在欄位上。
+         現在第一次進對話才鋪骨架（data-chat 記住是跟誰聊），之後只換「訊息區」與標題，
+         輸入框永遠是同一個節點 → 焦點、游標、打好的字都不會被動到。
+         回傳空字串＝骨架已經在了，呼叫端什麼都不用做。 */
+      function renderChat() {
+        const box = $id('onBody'), lg = $id('onChatLog');
+        if (lg && box && box.getAttribute && box.getAttribute('data-chat') === String(S.chatWith)) {
+          const h = chatLogHTML();
+          if (lg.innerHTML !== h) {                     // 只有真的有新訊息才動 DOM
+            lg.innerHTML = h;
+            lg.scrollTop = lg.scrollHeight;
+          }
+          const hd = $id('onChatWho');
+          if (hd) hd.innerHTML = chatHeadHTML();
+          return '';
+        }
         return '<button class="bhbtn" id="onChatBack" type="button" style="margin-bottom:9px">← 回資料</button>' +
-          '<div class="bhnote">與 <b>' + esc(p.name) + '</b> 的對話' + (S.chatErr ? '　⚠️ ' + S.chatErr : '') + '</div>' +
-          '<div class="chatbox"><div class="chatlog" id="onChatLog">' + log + '</div>' +
+          '<div class="bhnote" id="onChatWho">' + chatHeadHTML() + '</div>' +
+          '<div class="chatbox"><div class="chatlog" id="onChatLog">' + chatLogHTML() + '</div>' +
           '<div class="emojipick" id="onEmoji">' + EMOJIS.map(function (e) {
             return '<button type="button" data-emo="' + e + '">' + e + '</button>';
           }).join('') + '</div>' +
           '<div class="chatrow"><button class="chemj" id="onEmojiBtn" type="button" aria-label="表情符號" title="表情符號">😊</button>' +
-          '<input class="chatin" id="onChatIn" maxlength="60" placeholder="輸入訊息（最多 60 字）">' +
+          '<input class="chatin" id="onChatIn" type="text" maxlength="60" autocomplete="off" autocorrect="off"' +
+          ' autocapitalize="off" spellcheck="false" enterkeyhint="send" placeholder="輸入訊息（最多 60 字）">' +
           '<button class="bhbtn warm" id="onChatSend" type="button">送出</button></div></div>';
       }
 
@@ -13636,6 +13664,10 @@ const Social = (function () {
         if (!box) return;
         // v5.17：私訊頁讓 body 變成 flex（輸入框固定在下方、只有訊息區滾動）
         if (box.classList) box.classList.toggle('chatmode', S.view === 'chat');
+        // v5.50：離開對話就清掉骨架標記 → 下次進來一定重鋪（不會沿用舊的輸入框與舊文字）
+        if (S.view !== 'chat' && box.getAttribute && box.getAttribute('data-chat') && box.setAttribute) {
+          box.setAttribute('data-chat', '');
+        }
         const tabs = $id('onTabs');
         if (tabs) {
           const T = [
@@ -13655,7 +13687,15 @@ const Social = (function () {
         if (sub) sub.textContent = S.on ? ('線上 ' + S.total + ' 人') : (S.err ? '連線失敗（' + S.err + '）' : '連線中…');
         if (S.tab === 'me') { box.innerHTML = renderMe(); ensureAv(); return; }
         if (S.view === 'detail') { box.innerHTML = renderDetail(); ensureAv(); return; }
-        if (S.view === 'chat') { box.innerHTML = renderChat(); const lg = $id('onChatLog'); if (lg) lg.scrollTop = lg.scrollHeight; return; }
+        if (S.view === 'chat') {
+          const html = renderChat();
+          if (html) {
+            box.innerHTML = html;
+            if (box.setAttribute) box.setAttribute('data-chat', String(S.chatWith));
+            const lg = $id('onChatLog'); if (lg) lg.scrollTop = lg.scrollHeight;
+          }
+          return;
+        }
         box.innerHTML = renderList();
         ensureAv();
         syncNotice();
@@ -13678,6 +13718,16 @@ const Social = (function () {
       function close() { opened = false; const m = $id('onModal'); if (m) m.classList.remove('on'); }
 
       /* 事件（用委派，重畫不會掉 listener） */
+      /* v5.50：輸入框按 Enter 直接送出（手機鍵盤右上角那顆「送出」也是走這裡）。
+         選字中的 Enter（isComposing）不攔，不然中文打字選字會一直被送出去。 */
+      function onBodyKey(e) {
+        if (!e || e.key !== 'Enter' || e.isComposing) return;
+        const t = e.target;
+        if (!t || !t.closest || !t.closest('#onChatIn')) return;
+        if (e.preventDefault) e.preventDefault();
+        const inp = $id('onChatIn');
+        if (inp) { send(inp.value); inp.value = ''; try { inp.focus(); } catch (x) {} }
+      }
       function onBodyClick(e) {
         const t = e.target;
         if (!t || !t.closest) return;
@@ -13685,7 +13735,7 @@ const Social = (function () {
         if (t.closest('#onChatBack')) { S.view = 'detail'; paint(); return; }
         if (t.closest('#onChatSend')) {
           const inp = $id('onChatIn');
-          if (inp) { send(inp.value); inp.value = ''; }
+          if (inp) { send(inp.value); inp.value = ''; try { inp.focus(); } catch (e2) {} }   // v5.50：焦點留在輸入框，鍵盤不會自己收
           return;
         }
         if (t.closest('#onEmojiBtn')) {                    // v5.17：表情符號面板開／關
@@ -13774,7 +13824,7 @@ const Social = (function () {
         loadP();
         avCacheLoad();
         const bodyEl = $id('onBody');
-        if (bodyEl) bodyEl.addEventListener('click', onBodyClick);
+        if (bodyEl) { bodyEl.addEventListener('click', onBodyClick); bodyEl.addEventListener('keydown', onBodyKey); }
         const tabsEl = $id('onTabs');
         if (tabsEl) tabsEl.addEventListener('click', onTabClick);
         const ob = $id('btnPlayers');
@@ -15469,7 +15519,10 @@ function buildBossArenaStage(stage, fresh, rpg) {
   Game.enemies = [];
   // v5.36：RPG 最終章（第 8 章）保留舊版「總魔王」規格（48 血、def 2），其餘章節照章數遞增
   const bossFin = rpg && ch >= 8;
-  const boss = makeBoss(8, 2, bossFin ? 48 : (rpg ? (12 + ch * 2) : bossHpOf(ch)));
+  /* v5.50：RPG 的王改成跟單人同一條血量曲線，每個難度再 +5 格（RPG 有護甲、等級、配點可以吃）。
+     以前是 12 + 章數×2 —— 第 1 章就 14 格，比單人第 1 章的 4~6 格硬兩倍多。
+     第 8 章的最終魔王也不再硬寫 48 格，只保留 def 2 的減傷。 */
+  const boss = makeBoss(8, 2, (rpg ? (bossHpOf(ch) + 5) : bossHpOf(ch)));
   boss.dirName = 'down'; boss.chapterBoss = true; boss.sizeMul = 1.28;
   if (bossFin) boss.def = 2;
   if (rpg) { boss.lv = rpgFoeLv(stage); boss.exp = rpgFoeXp(stage) * 5; }   // 魔王經驗 5 倍（沿用舊版）
@@ -15531,9 +15584,13 @@ function arenaBossOf(e) {
   const A = Game.bossArena;
   return (A && A.boss && e === A.boss) ? A : null;
 }
-// 護盾片數：第 1 章 3 片，之後每兩章 +1（第 8 章 6 片）
+/* v5.50：護盾片數改成「看難度，不看章節」—— 簡單 0 片、普通 1 片、困難 3 片。
+   以前是 3~6 片（每片要一發才破），加上血量等於一隻王要打十幾下，這才是新手打不動的主因。
+   簡單模式 0 片＝火焰直接扣血、不會進破防窗口；ch 參數留著給舊呼叫端（片數不再隨章節增加）。 */
+const BOSS_SHIELD = { easy: 0, normal: 1, hard: 3 };
 function bossShieldMax(ch) {
-  return 2 + Math.ceil((ch || 1) / 2);
+  const n = BOSS_SHIELD[(Game.daily ? DAILY_DIFF : settings.soloDiff)];
+  return n == null ? 1 : n;
 }
 /* ===== v5.48：BOSS 血量曲線（單人闖關）=====
    第一隻王以前是 11 格血 ＋ 3 片護盾，新手沒有隨從根本打不動 → 砍成 4/5/6 格（簡單/普通/困難）。
@@ -43171,7 +43228,7 @@ window.__BH = {
   chapterOf: chapterOf, stageSlot: stageSlot, isBossStage: isBossStage, isChapterFinal: isChapterFinal,
   stageName: stageName, mapIdxOfStage: mapIdxOfStage, buildBossArenaStage: buildBossArenaStage,
   arenaFreeCell: arenaFreeCell, updateBossArena: updateBossArena, BOSS_SLOT: BOSS_SLOT,
-  BOSS_BREAK: BOSS_BREAK, bossShieldMax: bossShieldMax, bossPhaseSpd: bossPhaseSpd,
+  BOSS_BREAK: BOSS_BREAK, BOSS_SHIELD: BOSS_SHIELD, bossShieldMax: bossShieldMax, bossPhaseSpd: bossPhaseSpd,
   bossHpOf: bossHpOf, BOSS_HP_BASE: BOSS_HP_BASE,
   WeekMod: WeekMod, WEEK_MODS: WEEK_MODS, weekMul: weekMul, weekAdd: weekAdd, weekBanner: weekBanner,
   Ghost: Ghost, drawDailyGhost: drawDailyGhost, nearMissSuffix: nearMissSuffix, HomeDot: HomeDot,

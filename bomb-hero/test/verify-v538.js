@@ -36,8 +36,18 @@ head('① BOSS 分階段破防');
   ok(!!A && !!B, '第 5 關建出 BOSS 決戰場');
   ok(A.shieldMax === P.bossShieldMax(1) && A.shield === A.shieldMax, '開場護盾補滿（' + A.shield + ' 片）');
   ok(A.breakT === 0 && A.rageN === 0, '開場沒破防、沒狂暴');
-  ok(P.bossShieldMax(1) === 3 && P.bossShieldMax(8) === 6, '護盾片數 3 → 6（依章節）');
-  ok(A.shieldMax >= 3 && A.shieldMax <= 6, '決戰場護盾片數落在 3~6');
+  // v5.50：護盾片數只看難度（簡單 0／普通 1／困難 3），不再隨章節 3→6
+  {
+    const d0 = P.settings.soloDiff;
+    P.settings.soloDiff = 'easy';
+    ok(P.bossShieldMax(5) === 0, '簡單 0 片護盾');
+    P.settings.soloDiff = 'normal';
+    ok(P.bossShieldMax(1) === 1 && P.bossShieldMax(8) === 1, '普通 1 片（第 1 章到第 8 章都一樣）');
+    P.settings.soloDiff = 'hard';
+    ok(P.bossShieldMax(8) === 3, '困難 3 片');
+    P.settings.soloDiff = d0;
+  }
+  ok(A.shieldMax === 1, '決戰場護盾 1 片（普通）');
 
   const hp0 = B.hp;
   const hits = [];
@@ -68,6 +78,23 @@ head('① BOSS 分階段破防');
   // 畫面：血條下方要畫護盾方塊／破防倒數
   ok(/drawBossPhaseFx/.test(src), '有護盾／破防的繪製函式');
   ok(/A3\.shield > 0/.test(src) && /A3\.breakT > 0/.test(src), '血條下方有護盾方塊與破防倒數條');
+}
+
+// ================================================================
+head('①-b 簡單模式：王沒有護盾，火焰直接扣血');
+{
+  fresh();
+  P.settings.soloDiff = 'easy';
+  P.startSolo(5, false);
+  G.state = 'play';
+  const A = G.bossArena, B = A.boss;
+  ok(A.shieldMax === 0 && A.shield === 0, '簡單模式開場 0 片護盾');
+  const hp0 = B.hp, d = P.flameHitDamage(B);
+  ok(d > 0, '火焰有傷害（' + d + '）');
+  B.hp -= d;                                  // 模擬 updateBoss 套用傷害
+  ok(B.hp === hp0 - d, '血直接扣（' + hp0 + ' → ' + B.hp + '）');
+  ok(A.breakT === 0, '不會進破防窗口（沒有盾可破）');
+  P.settings.soloDiff = 'normal';
 }
 
 // ================================================================

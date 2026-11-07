@@ -267,8 +267,9 @@ head('⑧ 怪物血量與魔王（配合新傷害）');
   const all = Object.keys(F).map(function (k) { return F[k].hp; });
   ok(all.every(function (v) { return v >= 4 && v <= 6; }), '小怪血量 4~6（' + all.join('/') + '）');
   ok(P.FOE_HP.slime === 4, '史萊姆 4 血（攻擊 0 也要打 2 下）');
-  // v5.36：最終魔王搬到第 8 章決戰場（bossFin）→ 一樣 48 血；其他章節依章數遞增
-  ok(/makeBoss\([^)]*bossFin \? 48 :/.test(SRC), '最終魔王 48 血（其餘章節 12 + 章節 × 2）');
+  // v5.50：RPG 的王改成跟單人同一條血量曲線 ＋ 每種難度 5 格（連最終魔王也不再硬寫 48）
+  ok(/makeBoss\(8, 2, \(rpg \? \(bossHpOf\(ch\) \+ 5\) : bossHpOf\(ch\)\)\)/.test(SRC),
+    'RPG 的王＝單人血量曲線 ＋5 格');
   ok(/boss\.def\s*=\s*2/.test(SRC), '最終魔王防禦 2');
 }
 

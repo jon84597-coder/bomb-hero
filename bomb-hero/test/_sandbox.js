@@ -174,6 +174,12 @@ function makeEnv(opts) {
 
   const BH = sandbox.window.__BH;
   if (!BH) throw new Error('no __BH');
+  /* v5.50：單人／RPG 的預設地圖改成「隨機生成」。
+     舊測試（一百多支）幾乎都假設 15×13 手工圖：地圖一隨機，尺寸／縮放 T／速度係數／牆位
+     每個 run 都不一樣 → 會變成「這次紅這支、下次紅那支」的隨機失敗。
+     所以沙盒預設釘回 classic；要驗真正的預設值（random）或隨機地圖行為，
+     請自己 makeEnv({ realMapDefault: true })，或建立後再 settings.mapMode = 'random'。 */
+  if (!opts.realMapDefault) { try { BH.settings.mapMode = 'classic'; } catch (e) {} }
   // v5.20：html 回傳「邏輯全文」（外部字典 + 主檔）—— 舊測試會直接在裡面找中文文案
   return { html: pre + src, sandbox, BH, rec, mkCtx2D, getId, listeners, storage, els,
            G: BH.Game, P: BH, fakeImg: (w, h) => ({ naturalWidth: w, naturalHeight: h, __fake: true }) };

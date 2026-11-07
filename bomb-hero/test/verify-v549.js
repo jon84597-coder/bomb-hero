@@ -5,7 +5,7 @@
 //   ④ 同一關重試沿用同一張圖（種子）
 //   ⑤ 版本
 const SB = require('./_sandbox');
-const env = SB.makeEnv();
+const env = SB.makeEnv({ realMapDefault: true });   // v5.50：沙盒預設釘 classic，這支要驗真正的預設值
 const P = env.BH, G = P.Game;
 const src = SB.rawHtml;
 const fs = require('fs');
@@ -29,14 +29,14 @@ ok(P.settings.mapMode === 'random', '全新玩家（沙盒預設）拿到 random
 ok((P.settings.mapV | 0) === 1, '遷移後蓋上 mapV=1', P.settings.mapV);
 
 // 舊存檔：mapMode=classic、沒有 mapV（＝當時的預設，不是玩家挑的）→ 升上來要變 random
-const oldEnv = SB.makeEnv({ storage: { 'bombhero-settings-v1': JSON.stringify({ mapMode: 'classic', soloDiff: 'normal' }) } });
+const oldEnv = SB.makeEnv({ realMapDefault: true, storage: { 'bombhero-settings-v1': JSON.stringify({ mapMode: 'classic', soloDiff: 'normal' }) } });
 ok(oldEnv.BH.settings.mapMode === 'random', '舊存檔（classic、無 mapV）升級後自動變 random', oldEnv.BH.settings.mapMode);
 ok((oldEnv.BH.settings.mapV | 0) === 1, '舊存檔補上 mapV=1（只搬一次）', oldEnv.BH.settings.mapV);
 
 // 玩家自己選過（mapV 已存在）→ 不准動
-const keepEnv = SB.makeEnv({ storage: { 'bombhero-settings-v1': JSON.stringify({ mapMode: 'classic', mapV: 1 }) } });
+const keepEnv = SB.makeEnv({ realMapDefault: true, storage: { 'bombhero-settings-v1': JSON.stringify({ mapMode: 'classic', mapV: 1 }) } });
 ok(keepEnv.BH.settings.mapMode === 'classic', '已經自己切回基本地圖的玩家 → 保留 classic', keepEnv.BH.settings.mapMode);
-const keepEnv2 = SB.makeEnv({ storage: { 'bombhero-settings-v1': JSON.stringify({ mapMode: 'classic', mapV: 3 }) } });
+const keepEnv2 = SB.makeEnv({ realMapDefault: true, storage: { 'bombhero-settings-v1': JSON.stringify({ mapMode: 'classic', mapV: 3 }) } });
 ok(keepEnv2.BH.settings.mapMode === 'classic', 'mapV 更大的存檔（未來版）也不會被覆蓋', keepEnv2.BH.settings.mapMode);
 
 /* ================= ② 選項順序 ================= */
@@ -132,7 +132,7 @@ head('⑧ 版本戳記');
 const vm = src.match(/const VERSION = '([\d.]+)'/);
 ok(vm && parseFloat(vm[1]) >= 5.49, 'VERSION ≥ 5.49', vm && vm[1]);
 const vlog = String(SB.vlog || fs.readFileSync(__dirname + '/../js/version-log.js', 'utf8'));
-ok(/v: '5\.49'[\s\S]{0,240}now: true/.test(vlog), 'VERSION_LOG 5.49 是 now:true');
+ok(!/v: '5\.49'[\s\S]{0,260}now: true/.test(vlog), '5.49 已改成 now:false（被更新的一版蓋過）');
 ok(!/v: '5\.48'[\s\S]{0,240}now: true/.test(vlog), '5.48 已改成 now:false');
 [
   ['bomb-hero/sw.js', fs.readFileSync(__dirname + '/../sw.js', 'utf8')],

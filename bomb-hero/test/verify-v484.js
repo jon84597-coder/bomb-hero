@@ -135,7 +135,7 @@ ok(fs.readFileSync(ROOT + '/../bomberman-online/public/sw.js', 'utf8').indexOf("
 // v5.38：這一條只是「整頁不要失控」的粗略上限，真正卡住的是主檔 1,950,000 字元（verify-v479）。
 //   每加一批功能，字典（i18n-src.js）都會跟著長 10~20 KB，所以這條線放寬到 2.20M；
 //   要看的是「主檔有沒有爆」，不是這條。
-ok(src.length < 2200000, '字元 ' + src.length + ' < 2.20M');
+ok(src.length < 2350000, '字元 ' + src.length + ' < 2.35M');   // v5.50：主檔＋字典已到 2.20M，這條只是防爆炸性成長
 ok(src.indexOf('\r') === -1, '整檔 LF（CR 0）');
 
 console.log('\n========================================');

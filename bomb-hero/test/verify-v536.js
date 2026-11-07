@@ -201,7 +201,8 @@ head('④ 每章第 5 關＝BOSS 決戰場');
   // RPG 也走同一套
   P.startRpg(5);
   ok(G.cols === 17 && G.rows === 15 && !!G.bossArena, 'RPG 第 5 關也是 17×15 決戰場');
-  ok(G.bossArena.boss.hp === 14, 'RPG 第 5 關王血 14（12 + 章節 1×2）');
+  ok(G.bossArena.boss.hp === P.bossHpOf(1) + 5,
+    'v5.50：RPG 第 5 關王血＝單人第 1 章 ＋5（' + G.bossArena.boss.hp + '）');
 }
 
 // ================================================================

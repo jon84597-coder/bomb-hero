@@ -141,16 +141,17 @@ head('4. RPG 每章第 5 關是 BOSS 決戰場');
   ok(b4.length === 0, 'v5.36：第 4 關不再出王（章節王搬到第 5 關決戰場）');
   const b5 = bosses(5);
   ok(b5.length === 1, '第 5 關（第 1 章決戰場）有魔王');
-  ok(b5[0] && b5[0].hp === 14 && b5[0].chapterBoss === true && Math.abs(b5[0].sizeMul - 1.28) < 1e-6,
-    '章節魔王：血量 12+1×2=14、體型 1.28、標記 chapterBoss', b5[0] && { hp: b5[0].hp, sm: b5[0].sizeMul });
+  ok(b5[0] && b5[0].hp === P.bossHpOf(1) + 5 && b5[0].chapterBoss === true && Math.abs(b5[0].sizeMul - 1.28) < 1e-6,
+    '章節魔王：血量＝單人第 1 章 ＋5（' + (b5[0] && b5[0].hp) + '）、體型 1.28、標記 chapterBoss',
+    b5[0] && { hp: b5[0].hp, sm: b5[0].sizeMul });
   const b10 = bosses(10);
-  ok(b10.length === 1 && b10[0].hp === 16, '第 10 關魔王血量 12+2×2=16', b10[0] && b10[0].hp);
+  ok(b10.length === 1 && b10[0].hp === P.bossHpOf(2) + 5, '第 10 關魔王血量＝單人第 2 章 ＋5（' + (b10[0] && b10[0].hp) + '）', b10[0] && b10[0].hp);
   const b15 = bosses(15);
-  ok(b15.length === 1 && b15[0].hp === 18, '第 15 關魔王血量 12+3×2=18', b15[0] && b15[0].hp);
+  ok(b15.length === 1 && b15[0].hp === P.bossHpOf(3) + 5, '第 15 關魔王血量＝單人第 3 章 ＋5（' + (b15[0] && b15[0].hp) + '）', b15[0] && b15[0].hp);
   const b40 = bosses(40);
-  // v5.36：第 8 章決戰場＝總魔王，沿用舊版第 32 關的規格（48 血、def 2）
-  ok(b40.length === 1 && b40[0].hp === 48 && b40[0].def === 2 && b40[0].chapterBoss === true,
-    '第 40 關是總魔王（血量 48、def 2）', b40[0] && { hp: b40[0].hp, def: b40[0].def });
+  // v5.50：總魔王不再硬寫 48 血，跟其他章節同一條曲線 ＋5，但保留 def 2 的減傷
+  ok(b40.length === 1 && b40[0].hp === P.bossHpOf(8) + 5 && b40[0].def === 2 && b40[0].chapterBoss === true,
+    '第 40 關是總魔王（血量＝單人第 8 章 ＋5、def 2）', b40[0] && { hp: b40[0].hp, def: b40[0].def });
   ok(b5[0] && G.grid[Math.floor(b5[0].y / G.T)][Math.floor(b5[0].x / G.T)] === 0, '魔王站在現成空地上');
 }
 
