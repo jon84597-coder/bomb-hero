@@ -1527,6 +1527,37 @@ background: transparent; -webkit-tap-highlight-color: transparent;
 }
 #touchUI .tslide.right { left: auto; right: 0; }
 body.touch.slidepad #touchUI .tslide { display: block; }
+/* v5.41：浮動虛擬搖桿 —— 手指按在左半屏哪裡，圓盤就出現在那裡（360° 全向） */
+#touchUI .fpad {
+display: none; position: absolute; left: 0; top: 0;
+width: 152px; height: 152px; margin: -76px 0 0 -76px;
+border-radius: 50%; pointer-events: none; z-index: 2; opacity: 0;
+transform: scale(.86); transition: opacity .12s ease-out, transform .12s ease-out;
+background: radial-gradient(circle at 50% 40%, rgba(44,70,122,.50), rgba(7,11,22,.66) 74%);
+border: 2px solid rgba(168,204,255,.50);
+box-shadow: inset 0 5px 20px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.10), 0 12px 26px -14px rgba(0,0,0,.9);
+will-change: opacity, transform;
+}
+body.touch.slidepad #touchUI .fpad { display: block; }
+#touchUI .fpad.on { opacity: 1; transform: scale(1); }
+#touchUI .fpad .fring {
+position: absolute; inset: 30px; border-radius: 50%;
+border: 1px dashed rgba(168,204,255,.24);
+}
+#touchUI .fpad .fknob {
+position: absolute; left: 50%; top: 50%; width: 62px; height: 62px; margin: -31px 0 0 -31px;
+border-radius: 50%;
+background: radial-gradient(circle at 40% 32%, rgba(228,242,255,.98), rgba(126,166,226,.88) 52%, rgba(56,84,142,.92));
+border: 2px solid rgba(228,242,255,.82);
+box-shadow: 0 0 0 2px rgba(18,30,54,.42), 0 8px 16px -6px rgba(0,0,0,.78),
+inset 0 -5px 12px rgba(0,0,0,.26), inset 0 4px 8px rgba(255,255,255,.55);
+will-change: transform;
+}
+#touchUI .fpad .fknob::after {
+content: ''; position: absolute; left: 50%; top: 50%; width: 16px; height: 16px;
+margin: -8px 0 0 -8px; border-radius: 50%;
+background: rgba(30,52,90,.40); box-shadow: inset 0 2px 4px rgba(0,0,0,.34);
+}
 /* 模式 A 時實體圓盤整組收起來（留著盒子只是為了版面換算與量測） */
 body.touch.slidepad #touchUI .tpad { visibility: hidden; pointer-events: none; }
 /* 模式 B：玩家自訂的搖桿位置（百分比 → 換手機、橫放直放都不會跑掉） */
@@ -4716,7 +4747,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.40</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.41</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -4771,7 +4802,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.40</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.41</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5540,6 +5571,7 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
         <div id="touchUI">
           <!-- v4.2 模式 A：肉眼看不到、但整半邊都能滑的隱形方向區 -->
           <div class="tslide" id="slideZone"></div>
+          <div class="fpad" id="fpad"><div class="fring"></div><div class="fknob" id="fknob"></div></div>
           <div class="tpad" id="tpad">
             <span class="tparr up">▲</span><span class="tparr dn">▼</span>
             <span class="tparr lf">◀</span><span class="tparr rt">▶</span>
@@ -5825,7 +5857,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.40';
+const VERSION = '5.41';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -33350,6 +33382,8 @@ function applyTouchLayout() {
   if (zn && zn.classList) zn.classList.toggle('right', settings.tpad.side === 'right');
   // 換模式／換位置時把軸向歸零，避免手指還按著卻停在舊方向
   try { Input.setTouchAxis(0, 0); } catch (e) {}
+  const fpx = $id('fpad');
+  if (fpx && fpx.classList) { fpx.classList.remove('on'); fpx.dataset.on = '0'; }
   const hint = $id('tpadHint');
   if (hint) {
     // v4.77：整句走字典（含 <b> 標記），各語言自己排語序
@@ -35137,6 +35171,30 @@ updateTips();
   const all = ui.querySelectorAll('[data-t]');
   const pad = $id('tpad'), knob = $id('tpknob');
   const zone = $id('slideZone');                 // v4.2：模式 A 的隱形滑動區
+  // v5.41：浮動虛擬搖桿視覺層（按哪出現哪；手指拖多遠，小球就在大圓裡走多遠）
+  const fpadEl = $id('fpad'), fknobEl = $id('fknob');
+  const FP_KNB = 44;                              // 小球最大位移（外圈半徑 76 − 小球半徑 31）
+  function fpadShow(e) {
+    if (!fpadEl || padMode() !== 'slide') return;
+    const r = ui.getBoundingClientRect();
+    fpadEl.style.left = (e.clientX - r.left) + 'px';
+    fpadEl.style.top = (e.clientY - r.top) + 'px';
+    fpadEl.classList.add('on');
+    fpadEl.dataset.on = '1';
+    if (fknobEl) fknobEl.style.transform = 'translate(0px,0px)';
+  }
+  function fpadMove(dx, dy, len) {
+    if (!fpadEl || !fknobEl || fpadEl.dataset.on !== '1') return;
+    if (len < 9) return;                          // 死區內（同 SLIDE_DEAD）小球釘住不動，手指微抖不會讓它亂晃
+    const m = Math.min(1, len / 88) * FP_KNB;     // 拖 88px 就拉滿，跟手更緊（只影響視覺，判定照舊）
+    fknobEl.style.transform = 'translate(' + (dx / len * m).toFixed(1) + 'px,' + (dy / len * m).toFixed(1) + 'px)';
+  }
+  function fpadHide() {
+    if (!fpadEl) return;
+    fpadEl.classList.remove('on');
+    fpadEl.dataset.on = '0';
+    if (fknobEl) fknobEl.style.transform = 'translate(0px,0px)';
+  }
   let padHeld = false;      // 搖桿是否正被按住（避免放開動作鍵時把搖桿一起歸零）
   let slideHeld = false;    // 隱形滑動區是否正被按住
   function releaseAll(force) {
@@ -35148,6 +35206,7 @@ updateTips();
       padHeld = false;
       if (!force) slideHeld = false;
       Input.setTouchAxis(0, 0);
+      fpadHide();
       if (pad && knob) {
         pad.classList.remove('on'); pad.classList.add('idle');
         knob.style.transform = 'translate(0px,0px)';
@@ -35224,6 +35283,7 @@ updateTips();
       Input.setTouchAxis(on ? dx / len : 0, on ? dy / len : 0);
       zone.dataset.ax = on ? (dx / len).toFixed(3) : '0';
       zone.dataset.ay = on ? (dy / len).toFixed(3) : '0';
+      fpadMove(dx, dy, len);
     }
     zone.addEventListener('pointerdown', function (e) {
       if (e.cancelable) e.preventDefault();
@@ -35235,6 +35295,7 @@ updateTips();
       try { zone.setPointerCapture(sid); } catch (err) {}
       Input.setTouchAxis(0, 0);
       zone.dataset.on = '1';
+      fpadShow(e);
     });
     zone.addEventListener('pointermove', function (e) {
       if (sid === null || e.pointerId !== sid) return;
@@ -35249,6 +35310,7 @@ updateTips();
       zone.dataset.on = '0';
       zone.dataset.ax = '0'; zone.dataset.ay = '0';
       Input.setTouchAxis(0, 0);
+      fpadHide();
     }
     zone.addEventListener('pointerup', zoneUp);
     zone.addEventListener('pointercancel', zoneUp);
