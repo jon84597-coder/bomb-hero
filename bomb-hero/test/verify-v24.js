@@ -682,9 +682,13 @@ ok(/name="viewport"/.test(html), '有 viewport meta（手機不會縮成一小�
 //   而且主檔一定要有 `|| ''` 的退路 —— 檔案 404 時只是沒有翻譯，不會白畫面。
 const extJs = html.match(/<script[^>]+src="([^"]+)"/g) || [];
 // v5.38：版本更新紀錄也搬到 js/version-log.js（純字串資料，不是程式邏輯）
-ok(extJs.length === 2 && extJs.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
-  extJs.some(function (x) { return x.indexOf('js/version-log.js') > 0; }),
-  '外部 js 只有字典與版本紀錄兩個（' + extJs.join(',') + '）');
+// v5.52：按鍵面板 js/keys-ui.js（主檔預算滿了，UI 只能外置）—— 白名單三個，
+//   而且它一定要排在主程式之後（主程式先跑完 __BH，面板只是錦上添花，掛了也不白畫面）。
+const _keysAt = html.indexOf('<script src="js/keys-ui.js"></script>');
+ok(extJs.length === 3 && extJs.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
+  extJs.some(function (x) { return x.indexOf('js/version-log.js') > 0; }) &&
+  _keysAt > html.lastIndexOf('</script>', _keysAt - 1),
+  '外部 js 只有字典／版本紀錄／按鍵面板三個，且面板排在主程式之後（' + extJs.join(',') + '）');
 ok(/window\.__I18N_SRC\s*\)\s*\?\s*window\.__I18N_SRC\s*:\s*''/.test(html), '字典載入失敗有退路（不會白畫面）');
 ok((html.match(/<script(?![^>]*src=)/g) || []).length === 2, '2 個 inline script 區塊（主程式＋PWA）');
 ok(!/<link[^>]+href="http/.test(html), '沒有外部 css（不會等不到樣式）');

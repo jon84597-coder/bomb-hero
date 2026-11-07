@@ -4945,7 +4945,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.51</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.52</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5000,7 +5000,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.51</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.52</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -6056,7 +6056,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.51';
+const VERSION = '5.52';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -43496,6 +43496,8 @@ document.addEventListener('pointerdown', function once() {
     else if (typeof console !== 'undefined') console.log('MAINFAIL', __e && __e.stack);
   }
 </script>
+<!-- v5.52：按鍵控制面板（外部檔；主檔預算已滿，UI 一律放 js/keys-ui.js） -->
+<script src="js/keys-ui.js"></script>
 <!-- v4.1：帳號彈窗（內容依登入狀態由 Cloud 模組產生） -->
 <div id="acctModal" role="dialog" aria-modal="true" aria-label="帳號">
   <div class="acctcard">

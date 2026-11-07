@@ -359,8 +359,10 @@ console.log('\n=== 13. 不破壞既有功能 ===');
 const extJs52 = html.match(/<script[^>]+src="([^"]+)"/g) || [];
 ok((html.match(/<script(?![^>]*src=)/g) || []).length === 2, '2 個 inline script（PWA 前置＋主程式）');
 // v5.38：多了 js/version-log.js（純資料檔）
-ok(extJs52.length === 2 && extJs52.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
-  extJs52.some(function (x) { return x.indexOf('js/version-log.js') > 0; }), '外部 js 只有字典與版本紀錄兩個');
+// v5.52：多了 js/keys-ui.js（按鍵面板；主檔預算滿了只能外置）
+ok(extJs52.length === 3 && extJs52.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
+  extJs52.some(function (x) { return x.indexOf('js/version-log.js') > 0; }) &&
+  extJs52.some(function (x) { return x.indexOf('js/keys-ui.js') > 0; }), '外部 js 只有字典／版本紀錄／按鍵面板三個');
 ok(!/src="http/.test(html), '沒有外部圖片網址（離線也能開）');
 ok(html.indexOf("const VERSION = '" + P.VERSION + "';") > 0, '版本常數 = ' + P.VERSION);
 const L46 = (P.VERSION_LOG.filter(function (x) { return x.v === '4.6'; })[0] || { items: [] });

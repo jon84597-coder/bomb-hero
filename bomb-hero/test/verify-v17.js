@@ -267,7 +267,11 @@ const fl = BH.makeEnemy(1, 1, 'bat', 7);
 fl.skill = null;                         // v5.51：蝙蝠的 dive 會隨機改向（約 1/5 機率倒著飛）→ 這條只驗穿牆
 ok(fl.kind === 'fly' && typeof fl.vx === 'number' && typeof fl.vy === 'number', '蝙蝠有速度向量（會飛）');
 G.enemies = [fl];
-fl.x = 3 * T + T / 2; fl.y = 3 * T + T / 2;
+/* v5.52：buildSoloStage 會換地圖尺寸 → T 會變。上面那顆 T 是第 143 行抓的舊值，
+   用舊的 T 去算「第 3 格」有時會落到別的格子（那裡可能本來就是牆 → 走「飛回可行格」那條，
+   方向被改掉就紅）。這裡重新取一次。 */
+const TF = G.T;
+fl.x = 3 * TF + TF / 2; fl.y = 3 * TF + TF / 2;
 // v5.51：預設地圖是「隨機生成」→ 3,3 有時本來就是牆，飛行怪會走「飛回可行格」那條
 //   （方向被改掉 → 約 1/4 機率倒著飛）。這裡先把周圍清成空地，只留左邊那一格硬牆。
 for (let yy = 2; yy <= 4; yy++) for (let xx = 2; xx <= 4; xx++) if (G.grid[yy]) G.grid[yy][xx] = 0;
@@ -277,12 +281,12 @@ fl.turnT = 99;                           // v5.51：不讓它中途隨機轉向�
 const fx0 = fl.x;
 for (let i = 0; i < 30; i++) BH.updateFlyer(fl, 1 / 60);
 ok(fl.x < fx0, '飛行怪直接穿過硬牆（x ' + fx0.toFixed(1) + ' → ' + fl.x.toFixed(1) + '）');
-ok(fl.x >= T * .6 - .01 && fl.x <= (G.cols * T - T * .6) + .01, '飛行怪不會飛出地圖外（邊界反彈）');
+ok(fl.x >= TF * .6 - .01 && fl.x <= (G.cols * TF - TF * .6) + .01, '飛行怪不會飛出地圖外（邊界反彈）');
 // 一般怪不能穿牆（對照組）
 G.enemies = [];
 BH.startSolo(1);
 const walker = G.enemies[0];
-G.grid[Math.floor(walker.y / T)][Math.floor(walker.x / T) - 1] = 1;
+G.grid[Math.floor(walker.y / G.T)][Math.floor(walker.x / G.T) - 1] = 1;
 walker.dirName = 'left'; walker.dirT = 5;
 const wx0 = walker.x;
 for (let i = 0; i < 60; i++) BH.updateEnemy(walker, 1 / 60);
