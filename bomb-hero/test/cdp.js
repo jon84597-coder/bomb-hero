@@ -20,6 +20,10 @@ async function launch(opts = {}) {
   const args = [
     '--headless=new', '--disable-gpu', '--no-sandbox', '--hide-scrollbars',
     '--no-first-run', '--no-default-browser-check',
+    /* v5.64：這台機器有系統 proxy（127.0.0.1:13608），它不會轉 localhost ——
+       headless Chrome 會乖乖照系統設定走，於是本地探針全部連不上（拿到 proxy 的錯誤頁，
+       症狀是 __BH undefined）。繞過 proxy 直接連本地。 */
+    '--no-proxy-server', '--proxy-bypass-list=*',
     '--remote-debugging-port=' + port,
     '--user-data-dir=' + userDir,
     '--window-size=' + (opts.w || 1280) + ',' + (opts.h || 900),

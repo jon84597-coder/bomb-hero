@@ -1227,7 +1227,9 @@ function createCloud(options) {
 
   const states = new Map();     // OAuth state → { provider, bind, redirect, exp }
   const limiter = makeLimiter();
-  const stats = { logins: 0, bindings: 0, tamper: 0, rateLimited: 0, syncs: 0, registers: 0, webLogins: 0, bans: 0 };
+  const stats = { logins: 0, bindings: 0, tamper: 0, rateLimited: 0, syncs: 0, registers: 0, webLogins: 0, bans: 0,
+    // v5.64：登入失敗要分得出來是「查無帳號」還是「密碼不符」，否則永遠查不到真正的病因
+    authNoAcc: 0, authBadPw: 0, dupKey: 0, sessionsRenewed: 0, sessionsExpired: 0 };
   const DEV_EMAILS = devEmailList(env);
   db.announce = db.announce || null;
   db.tamper = db.tamper || 0;
@@ -1242,6 +1244,19 @@ function createCloud(options) {
       if (a && !a.mergedInto && a.key === key) return a;
     }
     return null;
+  }
+  /* v5.64：同一個識別鍵可能有不只一筆帳號（歷史上併發註冊、或資料修補留下的）。
+     舊的寫法只回第一筆 —— 只要第一筆的密碼不是玩家手上一那一組，就會出現
+     「密碼明明正確卻一直說帳號或密碼錯誤」。這裡回全部，登入時逐筆驗證。 */
+  function findAllByKey(key) {
+    const out = [];
+    for (const id in db.accounts) {
+      const a = db.accounts[id];
+      if (a && !a.mergedInto && a.key === key) out.push(a);
+    }
+    // 最近活躍的排前面：玩家通常記得住自己最後在用的那一個
+    out.sort(function (x, y) { return (Number(y.lastSeen) || 0) - (Number(x.lastSeen) || 0); });
+    return out;
   }
   function findByEmail(email) {
     const em = String(email || '').toLowerCase();
@@ -2780,6 +2795,12 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         if (dev.length < 8) return fail(res, 400, 'BAD_DEVICE'), true;
         const hash = sha256(dev + '|' + secret).slice(0, 40);
         const cur = session(req);
+        /* v5.64：帶著 cookie 卻驗不過 session（過期／換過簽章密鑰／帳號被後台刪掉）
+           → 告訴前端「你剛剛是被登出的」，玩家才不會以為進度不見了。
+           舊版是靜靜發一個新遊客並覆蓋 cookie —— 玩家只會看到「莫名其妙被登出」。 */
+        const hadTok = !!((cookieGet(req, COOKIE) || bearer(req)));
+        const expired = hadTok && !cur;
+        if (expired) stats.sessionsExpired++;
         let acc = guestByDevice(hash);
         // 這台裝置之前綁定過正式帳號 → 登出後不要再被自動帶回去，改發一個新的遊客身分
         if (acc && acc.kind === 'member') acc = null;
@@ -2797,7 +2818,8 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         acc.lastSeen = Date.now();
         store.touch();
         cookieSet(res, req, makeToken(secret, acc.id));
-        return send(res, 200, { ok: true, account: publicAccount(acc), announce: announceOut() }), true;
+        return send(res, 200, { ok: true, account: publicAccount(acc), announce: announceOut(),
+          expired: expired }), true;
       }
 
       /* ---------------- 我是誰 ---------------- */
@@ -2806,6 +2828,17 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         const ann = announceOut();
         if (!acc) return send(res, 200, { ok: true, guest: true, account: null, announce: ann,
           persistWarning: persistWarning }), true;
+        /* v5.64：滑動續期 —— 只要玩家還有在開遊戲，就不該因為「30 天到了」被登出。
+           剩不到一半效期就重發一張（不影響「維持登入」那張 1 年的）。
+           舊版只在登入那一刻發一次 cookie，玩兩個月的人會突然某天掉回登入畫面。 */
+        try {
+          const rawTok = cookieGet(req, COOKIE) || bearer(req);
+          const s = readToken(secret, rawTok);
+          if (s && (s.exp - Date.now()) < (SESSION_TTL / 2)) {
+            cookieSet(res, req, makeToken(secret, acc.id));
+            stats.sessionsRenewed++;
+          }
+        } catch (e) {}
         return send(res, 200, {
           ok: true, guest: acc.kind === 'guest', account: publicAccount(acc), announce: ann,
           persistWarning: persistWarning
@@ -2883,7 +2916,8 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         const keep = !!(body && body.keep);
         const idc = validIdent(body.id || body.username || body.email);
         const raw = String(body.pw || body.password || '');
-        const acc = idc.ok ? findByKey(idc.key) : null;
+        const cands = idc.ok ? findAllByKey(idc.key) : [];
+        let acc = cands.length ? cands[0] : null;
         if (acc && acc.banned) {
           return send(res, 403, {
             ok: false, err: 'BANNED',
@@ -2895,18 +2929,47 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           const retry = Math.ceil((acc.lockUntil - now) / 1000);
           return send(res, 423, { ok: false, err: 'LOCKED', retry: retry }, { 'Retry-After': String(retry) }), true;
         }
-        let okPw = false;
-        if (acc && acc.pass) okPw = await verifyPassword(raw, acc.pass);
-        else await hashPassword(raw || 'x');        // 帳號不存在也花同樣成本，避免 timing 探測
-        if (!acc || !acc.pass || !okPw) {
+        /* v5.64：逐筆驗密碼。只有一筆帳號時行為與舊版完全相同；
+           有多筆同識別鍵的帳號時，選「這一組密碼對得上」的那一筆，而不是盲目取第一筆
+           —— 那正是「密碼明明正確卻一直說帳號或密碼錯誤」的來源。 */
+        let picked = null;
+        for (let i = 0; i < cands.length; i++) {
+          const c = cands[i];
+          if (!c.pass) continue;
+          if (await verifyPassword(raw, c.pass)) { picked = c; break; }
+        }
+        if (!picked) await hashPassword(raw || 'x');   // 帳號不存在也花同樣成本，避免 timing 探測
+        if (!picked) {
+          /* 先判斷「這是不是第三方帳號」—— 必須在 acc 為 null 時也算，
+             因為用 Email 當帳號名登入時，web:... 根本找不到（key 是 google:sub）。 */
+          let oauthAcc = null, hasAnyPass = false;
+          for (let i = 0; i < cands.length; i++) if (cands[i].pass) hasAnyPass = true;
+          if (cands.length && !hasAnyPass) oauthAcc = cands[0];
+          if (!oauthAcc && idc.ok && idc.kind === 'email') {
+            const other = findByEmail(idc.id);
+            if (other && !other.pass) oauthAcc = other;
+          }
           if (acc) {
             acc.fails = (acc.fails | 0) + 1;
             if (acc.fails >= 5) { acc.lockUntil = now + 300000; acc.fails = 0; logEvent(acc, 'lock', { ip: ip(req), via: '帳號密碼' }); }
             logEvent(acc, 'login-fail', { ip: ip(req), via: '帳號密碼', fails: acc.fails | 0 });
             store.touch();
+          } else {
+            stats.authNoAcc++;
           }
+          /* 直接告訴玩家該用哪個按鈕進來，比丟一句「密碼錯誤」有用得多。 */
+          if (oauthAcc) {
+            const pv = String(oauthAcc.provider || '');
+            return send(res, 401, {
+              ok: false, err: 'NEED_OAUTH',
+              provider: (PROVIDERS[pv] && PROVIDERS[pv].label) || pv || 'Google'
+            }), true;
+          }
+          if (acc) stats.authBadPw++;
           return send(res, 401, { ok: false, err: 'BAD_LOGIN' }), true;
         }
+        acc = picked;
+        if (cands.length > 1) { stats.dupKey++; logEvent(acc, 'dup-key', { n: cands.length, ip: ip(req) }); }
         acc.fails = 0;
         acc.lockUntil = 0;
         acc.loginCount = (acc.loginCount | 0) + 1;
@@ -3534,6 +3597,13 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
       webLogins: stats.webLogins,
       bindings: stats.bindings,
       syncs: stats.syncs,
+      /* v5.64：登入健檢 —— 有了這幾個數字，才分得出來「查無帳號」（資料掉了）
+         和「密碼不符」（玩家記錯）。沒有它就只能靠猜。 */
+      authNoAcc: stats.authNoAcc,
+      authBadPw: stats.authBadPw,
+      dupKey: stats.dupKey,
+      sessionsRenewed: stats.sessionsRenewed,
+      sessionsExpired: stats.sessionsExpired,
       persisted: store.remoteOn ? store.state.loaded : !!persist,
       storage: store.state.mode,
       storageLoaded: store.state.loaded,

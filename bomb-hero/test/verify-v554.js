@@ -146,7 +146,11 @@ ok(rawIndex.indexOf('id="rpgPtHint"') > 0, 'index.html 有 #rpgPtHint（後半�
 ok(!/剩餘 <b id="rpgLeft"/.test(rawIndex), '不再是「剩餘 <b>N</b> 點」被數字切開的結構');
 ok(/t\('learn\.done'\) : t\('learn\.undone'\)/.test(mainJs), '新手卡狀態走字典，不寫死中文');
 ok(/t\('shop\.ticket'\)/.test(mainJs) && /t\('shop\.ticketDesc'\)/.test(mainJs), '大逃殺門票卡走字典');
-ok(/t\('shop\.hire'\)/.test(mainJs) && /t\('shop\.hired'\)/.test(mainJs), '隨從「雇用／已雇用」走字典');
+/* v5.64：隨從卡片改版 —— 「已雇用」那顆按鈕換成「等級 ＋ 升級」，
+   所以這裡改成驗「現在真的會出現在卡片上的那幾個字」都要走字典。
+   （不是放寬：本來就不准在卡片裡硬寫中文。） */
+ok(/t\('shop\.hire'\)/.test(mainJs) && /t\('shop\.upgrade'\)/.test(mainJs) &&
+   /t\('pet\.lv', \{ n: lv \}\)/.test(mainJs), '隨從「雇用／升級／等級」走字典');
 ok(/t\('pad\.none'\)/.test(mainJs), '手把未偵測提示走字典');
 ok(/tr\(pl\.name\)/.test(mainJs), '分享平台名稱（複製連結）會翻譯');
 ok(!/瀏覽器才會回報。同一支手把只能佔一個位置；\n/.test(rawIndex), '手把提示已收成單行（可整塊比對）');

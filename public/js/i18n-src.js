@@ -35,6 +35,8 @@ web.regOk|註冊成功！遊客進度已綁定到新帳號|注册成功！游客
 web.loginOk|登入成功|登录成功|Logged in|ログインしました|로그인되었습니다
 web.errTaken|這個帳號已經有人使用了，換一個或直接登入|这个账号已经有人用了，换一个或直接登录|That account is already taken — pick another or just log in|このアカウントは使用済みです。別の名前かログインを|이미 사용 중인 계정입니다. 다른 이름이나 로그인을
 web.errBad|帳號或密碼錯誤|账号或密码错误|Wrong account or password|アカウントかパスワードが違います|계정 또는 비밀번호가 틀립니다
+web.errNet|連線失敗或伺服器正在喚醒，請再按一次（不是帳號密碼的問題）|连接失败或服务器正在唤醒，请再按一次（不是账号密码的问题）|Connection failed or the server is waking up — please try again (your password is fine)|接続に失敗、またはサーバー起動中です。もう一度お試しください（パスワードは正しいままです）|연결 실패 또는 서버가 깨어나는 중입니다. 다시 시도해 주세요(비밀번호 문제가 아닙니다)
+web.waking|伺服器正在喚醒（最多 60 秒），稍等一下…|服务器正在唤醒（最多 60 秒），稍等一下…|Server is waking up (up to 60s) — hang on…|サーバー起動中です（最大 60 秒）少々お待ちください…|서버가 깨어나는 중입니다(최대 60초). 잠시만요…
 web.errLocked|嘗試次數過多，請 {s} 秒後再試|尝试次数过多，请 {s} 秒后再试|Too many attempts, try again in {s}s|試行回数が多すぎます。{s} 秒後にどうぞ|시도가 너무 많습니다. {s}초 후에 다시
 web.errBanned|此帳號已被停權，請聯絡客服|此账号已被停权，请联系客服|This account is suspended — please contact support|このアカウントは停止中です。サポートへ|정지된 계정입니다. 고객센터에 문의하세요
 web.errPw|密碼至少 8 位，且需包含英文字母與數字|密码至少 8 位，且需包含英文字母和数字|Password must be at least 8 characters with letters and digits|パスワードは 8 文字以上、英字と数字を含めてください|비밀번호는 8자 이상, 영문과 숫자를 포함하세요
@@ -291,6 +293,12 @@ ol.watching|👁 觀戰中（本局你沒有入場）|👁 观战中（本局你
 buff.title|過關強化|过关强化|Level-up pick|クリア強化|클리어 강화
 buff.sub|選一張帶進下一關，同一個強化可以一直疊|选一张带进下一关，同一个强化可以一直叠|Pick one for the next stage — the same card stacks|1枚選んで次の面へ（同じカードは重ね掛け可）|한 장 골라 다음 스테이지로 (같은 카드는 중첩 가능)
 buff.skip|這次先跳過|这次先跳过|Skip this time|今回はパス|이번엔 건너뛰기
+buff.reroll|換一批（💰 {c}）|换一批（💰 {c}）|Reroll (💰 {c})|引き直す（💰 {c}）|다시 뽑기 (💰 {c})
+buff.rerollEnd|本局的重抽次數用完了|本局的重抽次数用完了|No rerolls left this run|この挑戦の引き直しは使い切りました|이번 판 다시 뽑기 횟수를 다 썼습니다
+buff.lockHint|點卡片左上角可以鎖住不換|点卡片左上角可以锁住不换|Tap the corner to lock a card|カード左上をタップすると固定できます|카드 왼쪽 위를 누르면 고정됩니다
+rev.live|原地復活|原地复活|Revive here|その場で復活|그 자리에서 부활
+rev.half|半血復活，本局一次|半血复活，本局一次|Half HP, once per run|半分のHPで復活（この挑戦で1回）|체력 절반으로 부활(이번 판 1회)
+rev.used|已經用過復活|已经用过复活|Revive already used|復活は使用済みです|부활을 이미 사용했습니다
 buff.bomb|炸彈 +1|炸弹 +1|Bomb +1|爆弾 +1|폭탄 +1
 buffd.bomb|一次可以多放一顆|一次可以多放一颗|Place one more bomb at a time|同時に1個多く置ける|한 번에 하나 더 설치
 buff.fire|火力 +1|火力 +1|Blast +1|火力 +1|화력 +1
@@ -529,6 +537,15 @@ acct.player|玩家|玩家|Player|プレイヤー|플레이어
 acct.offShort|離線|离线|Offline|オフライン|오프라인
 acct.memberTitle|已登入|已登录|Signed in|ログイン済み|로그인됨
 acct.needBind|綁定後可跨裝置續玩|绑定后可在不同设备继续游玩|Bind to keep progress across devices|連携すると別の端末でも続きが遊べます|연동하면 다른 기기에서도 이어서 플레이할 수 있어요
+acct.expired|登入已過期，請用帳號密碼或第三方重新登入一次|登录已过期，请用账号密码或第三方重新登录一次|Your sign-in expired — please log in again|ログインの有効期限が切れました。もう一度ログインしてください|로그인이 만료되었습니다. 다시 로그인해 주세요
+pet.lv|Lv.{n}|Lv.{n}|Lv.{n}|Lv.{n}|Lv.{n}
+pet.upTip|升級後冷卻更短、傷害更高|升级后冷却更短、伤害更高|Higher level: shorter cooldown, more damage|レベルが上がると再使用が短く、威力も上がります|레벨이 오르면 재사용이 짧아지고 피해가 커집니다
+pet.lvUp|{n} 升到 Lv.{v}！|{n} 升到 Lv.{v}！|{n} is now Lv.{v}!|{n} が Lv.{v} になりました！|{n}이(가) Lv.{v}이(가) 되었습니다!
+br.bet|押注金幣|押注金币|Bet gold|ゴールドを賭ける|골드 걸기
+br.betOff|不押注|不押注|No bet|賭けない|걸지 않기
+br.betTip|前三名依名次賠付，其餘歸零|前三名依名次赔付，其余归零|Top three pay out by rank; the rest lose it|3位以内は順位に応じて払い戻し、それ以外は没収|3위 안은 순위대로 지급, 나머지는 소멸
+br.betWin|押注命中！+{n} 金幣|押注命中！+{n} 金币|Bet won! +{n} gold|賭け的中！+{n} ゴールド|베팅 적중! +{n} 골드
+br.betLose|押注沒中，−{n} 金幣|押注没中，−{n} 金币|Bet lost — {n} gold|賭け外れ、−{n} ゴールド|베팅 실패, −{n} 골드
 acct.bindNote|綁定時會把遊客的關卡進度、配點、金幣完整合併到正式帳號，不會被覆蓋。|绑定后会把游客的关卡进度、配点、金币完整合并到正式账号，不会被覆盖。|Binding merges your guest stages, stats and gold into the account. Nothing gets overwritten.|連携するとゲストのステージ・能力値・ゴールドはそのまま正式アカウントへ統合されます（上書きされません）。|연동하면 게스트의 스테이지 진행, 능력치, 골드가 그대로 정식 계정에 합쳐집니다(덮어쓰지 않음).
 acct.google|使用 Google 登入|使用 Google 登录|Continue with Google|Google でログイン|Google로 로그인
 acct.facebook|使用 Facebook 登入|使用 Facebook 登录|Continue with Facebook|Facebook でログイン|Facebook으로 로그인

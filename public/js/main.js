@@ -111,7 +111,9 @@ function pwEsc(x) {
 /* 三個密碼欄共用同一個產生器，行為完全一致 */
 function pwFieldHtml(id, ac, val) {
   const lab = pwEsc(t('web.pwShow'));
-  const pv = val ? ' value="' + pwEsc(String(val)) + '"' : '';
+  /* v5.64：填回記住的密碼時，點進去先全選 —— 不然游標停在字尾，玩家一打字就變成
+     「舊密碼＋新字」，然後一直被說密碼錯誤（這是實際回報的症狀之一）。 */
+  const pv = val ? ' value="' + pwEsc(String(val)) + '" onfocus="this.select()"' : '';
   return '<span class="pwrow">' +
     '<input id="' + id + '" class="acctin" type="password" autocomplete="' + ac + '" maxlength="128"' + pv + '>' +
     '<button type="button" class="pwtoggle" data-acct="pwEye" data-for="' + id + '" ' +
@@ -158,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.63';
+const VERSION = '5.64';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4296,19 +4298,70 @@ function applyBuffs(p, isRpg) {
 
 const BuffPick = (function () {
   let cb = null, picks = null, wired = false;
+  /* v5.64：重抽 —— 金幣第一個「每一局都會碰到」的出口。
+     價格遞增（200／400／800）所以刷不出便宜牌；一局上限 3 次，免得三選一變成抽卡機。
+     鎖卡是必要的配套：沒有它，重抽會把已經抽到的好牌一起洗掉，玩家就不敢按。 */
+  const REROLL_COST = [200, 400, 800];
+  let rerollN = 0, locks = {};
   function el(id) { return document.getElementById(id); }
-  function roll() {
+  function availList() {
     const b = Game.buffs;
-    const avail = BUFF_DEFS.filter(function (d) {
+    return BUFF_DEFS.filter(function (d) {
       if (d.flag) return !b.flags[d.id];
       return (b[d.id] | 0) < (d.max || 3);
     });
-    const a = avail.slice(), out = [];
-    for (let i = 0; i < 3 && a.length; i++) {
-      const k = Math.floor(Math.random() * a.length);
-      out.push(a.splice(k, 1)[0]);
+  }
+  function roll(keep) {
+    const pool = [], used = {}, out = [];
+    availList().forEach(function (d) { pool.push(d); });
+    if (keep) {
+      for (let i = 0; i < 3; i++) {
+        if (locks[i]) { out[i] = locks[i]; used[locks[i].id] = 1; }
+      }
     }
-    return out;
+    const left = pool.filter(function (d) { return !used[d.id]; });
+    for (let i = 0; i < 3; i++) {
+      if (out[i]) continue;
+      if (!left.length) break;
+      const k = Math.floor(Math.random() * left.length);
+      out[i] = left.splice(k, 1)[0];
+    }
+    return out.filter(Boolean);
+  }
+  function barHtml() {
+    const rb = el('bpReroll'), lh = el('bpLockHint');
+    if (rb) {
+      if (rerollN >= REROLL_COST.length) {
+        rb.disabled = true;
+        rb.textContent = (function () { const k = 'buff.rerollEnd'; const v = t(k); return (v && v !== k) ? v : ''; })();
+      } else {
+        rb.disabled = false;
+        rb.textContent = t('buff.reroll', { c: REROLL_COST[rerollN] });
+      }
+    }
+    if (lh) lh.textContent = (function () { const k = 'buff.lockHint'; const v = t(k); return (v && v !== k) ? v : ''; })();
+  }
+  function doReroll() {
+    if (rerollN >= REROLL_COST.length) return;
+    const c = REROLL_COST[rerollN];
+    let r = null;
+    try { r = Shop.spend(c); } catch (e) { r = null; }
+    if (!r || !r.ok) {
+      try { AudioSys.sfx('hurt'); } catch (e) {}
+      try { toast(t('shop.noGold'), 2); } catch (e) {}
+      return;
+    }
+    rerollN++;
+    picks = roll(true);
+    render();
+    barHtml();
+    try { AudioSys.sfx('item'); } catch (e) {}
+  }
+  function toggleLock(i) {
+    if (!picks || !picks[i]) return;
+    if (locks[i]) delete locks[i]; else locks[i] = picks[i];
+    render();
+    try { AudioSys.sfx('click'); } catch (e) {}
   }
   function nameOf(d) {
     const k = 'buff.' + d.id;
@@ -4328,6 +4381,8 @@ const BuffPick = (function () {
       const b = Game.buffs;
       const have = d.flag ? 0 : (b[d.id] | 0);
       h += '<button class="bpcard" type="button" data-bp="' + i + '">' +
+        '<span class="bplock' + (locks[i] ? ' on' : '') + '" data-bplock="' + i + '">' +
+        (locks[i] ? '🔒' : '🔓') + '</span>' +
         '<span class="bpico">' + d.ico + '</span>' +
         '<div class="bpname">' + nameOf(d) + '</div>' +
         '<div class="bpdesc">' + descOf(d) + '</div>' +
@@ -4356,8 +4411,15 @@ const BuffPick = (function () {
     const row = el('bpRow');
     if (row) {
       row.addEventListener('click', function (ev) {
-        let n = ev.target;
-        while (n && n !== row && !(n.getAttribute && n.getAttribute('data-bp') != null)) n = n.parentNode;
+        let n = ev.target, lk = -1;
+        while (n && n !== row) {
+          if (n.getAttribute) {
+            if (n.getAttribute('data-bplock') != null) { lk = parseInt(n.getAttribute('data-bplock'), 10); break; }
+            if (n.getAttribute('data-bp') != null) break;
+          }
+          n = n.parentNode;
+        }
+        if (lk >= 0) { toggleLock(lk); return; }
         if (!n || n === row) return;
         const i = parseInt(n.getAttribute('data-bp'), 10) || 0;
         const d = picks && picks[i];
@@ -4366,6 +4428,8 @@ const BuffPick = (function () {
         close();
       });
     }
+    const rr = el('bpReroll');
+    if (rr) rr.addEventListener('click', function () { AudioSys.ensure(); doReroll(); });
     const sk = el('bpSkip');
     if (sk) sk.addEventListener('click', function () { try { AudioSys.sfx('click'); } catch (e) {} close(); });
   }
@@ -4373,7 +4437,8 @@ const BuffPick = (function () {
     /* v5.63：第一關開場那次也叫「過關強化」就顯得很怪（還沒過關），
        用 isStart 換成「起手強化」。其餘行為完全一樣。 */
     if (!Game.buffs) resetBuffs();
-    picks = roll();
+    rerollN = 0; locks = {};
+    picks = roll(false);
     if (!picks.length) { if (done) done(); return; }   // 全部滿了就直接過
     cb = done;
     wire();
@@ -4385,6 +4450,7 @@ const BuffPick = (function () {
     if (sub) sub.textContent = (function () { const v = t(sk2); return (v && v !== sk2) ? v : ''; })();
     if (sk) sk.textContent = (function () { const k = 'buff.skip'; const v = t(k); return (v && v !== k) ? v : ''; })();
     render();
+    barHtml();
     if (box) box.classList.add('on');
     try { AudioSys.sfx('item'); } catch (e) {}
   }
@@ -9611,6 +9677,8 @@ function startSolo(stage, bossRush, daily) {
   } catch (e) {}
   Game.players = [];
   Game.endShown = false;        // 重新開始 → 結束畫面標記歸零
+  Game.revived = false;         // v5.64：每局只能金幣復活一次
+  Game.paidScore = 0;           // v5.64：已經結算進錢包的分數（復活後不重複給）
   Game.state = 'idle';          // 清掉上一場的 'over' / 'roundover'，避免卡住不更新
   paused = false;
   const soloScheme = settings.ctrl === 'auto' ? Input.schemes.auto
@@ -10559,18 +10627,24 @@ const PET_SENSE_T = 2;        // 幾格內有怪才動手
 const PET_HELP_SEC = 5;       // 主角要靠近幾秒才救得回來
 const PET_FOLLOW_SPD = 3.6;   // 跟隨速度（× 格子大小）
 function petHero() { return (Game.players && Game.players[0]) ? Game.players[0] : null; }
-function petHpMax(kind) {
-  if (Game.mode === 'solo') return kind === 'guard' ? 3 : 1;   // 單人：一擊倒（格檔可以擋三下）
+function petHpMax(kind, lv) {
+  const L = Math.max(1, Math.min(5, lv | 0 || 1));
+  if (Game.mode === 'solo') return (kind === 'guard' ? 3 : 1) + (kind === 'guard' ? L - 1 : 0);   // 單人：一擊倒（格檔可以擋三下，升級再多擋）
   // RPG：有 HP（隨著關卡成長，格檔再硬一點）
-  return 6 + Math.floor(((Game.stage || 1) - 1) / 6) * 2 + (kind === 'guard' ? 4 : 0);
+  return 6 + Math.floor(((Game.stage || 1) - 1) / 6) * 2 + (kind === 'guard' ? 4 : 0) + (L - 1) * 2;
 }
-function makePet(kind, chIdx, idx) {
+/* v5.64：隨從等級的兩個效果 —— 冷卻 −8%／級、傷害 +1／2 級。
+   放在這裡（而不是散在各分支）是為了讓三個隨從走同一條公式，之後調平衡只改一處。 */
+function petCdMul(pt) { return 1 - .08 * (Math.max(1, Math.min(5, (pt && pt.lv) | 0 || 1)) - 1); }
+function petDmgOf(pt) { return 1 + Math.floor((Math.max(1, Math.min(5, (pt && pt.lv) | 0 || 1)) - 1) / 2); }
+function makePet(kind, chIdx, idx, lvIn) {
   const hero = petHero();
   const T = Game.T || 40;
-  const hp = petHpMax(kind);
+  const lv = Math.max(1, Math.min(5, lvIn | 0 || 1));
+  const hp = petHpMax(kind, lv);
   const a = .7 + idx * 2.1;
   return {
-    __pet: true, kind: kind, chIdx: Math.abs(chIdx | 0) % CHARACTERS.length, idx: idx,
+    __pet: true, kind: kind, chIdx: Math.abs(chIdx | 0) % CHARACTERS.length, idx: idx, lv: lv,
     x: hero.x + Math.cos(a) * T * .85, y: hero.y + Math.sin(a) * T * .85,
     facing: 'down', walkT: 0, moving: false,
     hp: hp, maxHp: hp,
@@ -10591,7 +10665,7 @@ function spawnPets() {
   const hero = petHero();
   if (!hero) return 0;
   const list = shopMod.active();
-  for (let i = 0; i < list.length; i++) Game.pets.push(makePet(list[i].kind, list[i].ch, i));
+  for (let i = 0; i < list.length; i++) Game.pets.push(makePet(list[i].kind, list[i].ch, i, list[i].lv));
   return Game.pets.length;
 }
 function petFreeCell(x, y) { return cellAt(x, y) === 0 && !bombAt(x, y); }
@@ -10948,11 +11022,11 @@ function updatePets(dt) {
         const d = Math.hypot(foe.x - pt.x, foe.y - pt.y);
         if (d <= T * 1.12) {
           if (pt.atkCd <= 0) {
-            pt.atkCd = 2;                                  // 冷卻 2 秒
+            pt.atkCd = 2 * petCdMul(pt);                   // 冷卻 2 秒（升級後更短）
             pt.slashT = .28;                               // 刀光
             const dx = foe.x - pt.x, dy = foe.y - pt.y;
             pt.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-            petHitEnemy(foe, 1);
+            petHitEnemy(foe, petDmgOf(pt));               // v5.64：Lv.3／5 各 +1 傷害
             burst(foe.x, foe.y, '#8ff0ff', 7, 160);
           }
         } else petStepTo(pt, foe.x, foe.y, dt, T * 3.4);
@@ -10967,7 +11041,7 @@ function updatePets(dt) {
         const d = Math.hypot(foe.x - pt.x, foe.y - pt.y);
         const heroSafe = Math.hypot(foe.x - hero.x, foe.y - hero.y) > T * 1.6;
         if (d > T * .6 && heroSafe) {
-          pt.atkCd = 3;                                    // 冷卻 3 秒
+          pt.atkCd = 3 * petCdMul(pt);                     // 冷卻 3 秒（升級後更短）
           if (petThrowBomb(pt, foe)) pt.throwT = .3;
         }
       }
@@ -11292,7 +11366,9 @@ function updateSolo(dt) {
           // v4.21：關卡裡賺到的金幣（HUD 上那顆 💰）就是你的商城金幣 ——
           //   過關時「本關金幣 + 過關獎勵」一起進商店錢包
           const base = 40 + Math.floor((cleared - 1) / 4) * 10;
-          const coins = Math.max(0, Math.round(p.score || 0));
+          /* v5.64：復活過的話，陣亡當下已經先結算過一段 —— 這裡只補差額。 */
+          const coins = Math.max(0, Math.round(p.score || 0) - Math.max(0, Game.paidScore | 0));
+          Game.paidScore = Math.max(0, Math.round(p.score || 0));
           Shop.addGold(base + coins);
           toast('💰 本關金幣 ' + coins + ' ＋ 過關獎勵 ' + base + '　→　商店金幣 ' + Shop.gold(), 3);
         } catch (e) {}
@@ -11415,9 +11491,14 @@ function updateSolo(dt) {
         RPG.xpGain = 0;
         // v4.21：這關賺到的金幣還是你的（陣亡不沒收，但沒有過關獎勵）
         try {
-          const coins = Math.max(0, Math.round(p.score || 0));
+          /* v5.64：只結算「還沒付過的」那一部分 —— 復活後再死一次不會重複領。
+             沒有這個，策略就變成「一直死、一直復活、一直領同一筆」。 */
+          const all = Math.max(0, Math.round(p.score || 0));
+          const paid = Math.max(0, Game.paidScore | 0);
+          const coins = Math.max(0, all - paid);
           if (coins > 0) {
             Shop.addGold(coins);
+            Game.paidScore = all;
             toast('💰 本關賺到的 ' + coins + ' 金幣已放進商店錢包', 2.8);
           }
         } catch (e) {}
@@ -11434,7 +11515,7 @@ function updateSolo(dt) {
         showEnd(t('solo.overTitle'),
           (rev > 0 ? '💢 ' + t('rev.gain', { n: rev }) + '\n' : '') +
           t('solo.overSub', { n: Game.stage, s: p.score }) + '　·　' + diffLabel() + nearMissSuffix(p),
-          false);
+          false, null, reviveCanOffer() ? revivePrice() : 0);
         battleEndFx(false);
       } else {
         resetPlayerStats(p);
@@ -12893,7 +12974,8 @@ const BR = {
   FREE: true,          // v4.74：正式測試結束前不扣門票
   ART_K: .84,          // v4.74：大圖（T≈30）怪物畫得偏大 → 美術半徑與判定一起縮一級
   // v4.75：開局選項（入口卡）—— 人數／組隊人數／場長
-  opt: { n: 100, team: 1, dur: 10, map: 1 },   // v5.37：map 1＝大圖 79×62、0＝原圖 56×44
+  opt: { n: 100, team: 1, dur: 10, map: 1, bet: 0 },   // v5.37：map 1＝大圖 79×62、0＝原圖 56×44
+  //   v5.64：bet＝押注金幣（0／500／2000／5000），前三名依名次賠付，其餘歸零
   TEAM: 1,             // 1 = 單人混戰；2／3／4 = 組隊（隊員之間不會互炸）
   // [等待秒數, 目標半徑（格）]：10 段 × 60 秒 = 10 分鐘
   // v5.36：地圖放大 → 半徑整套重算（首圈 34 格，末圈 3.4 格，每段約 ×0.84）
@@ -15126,6 +15208,16 @@ function brFinish(winner) {
   const place = win ? 1 : Math.min(BR.N, me.brPlace || (Game.brAlive + 1));
   const loot = Math.max(0, Game.brLootGold | 0);        // v5.35：戰場上撿到的金幣
   const gold = (BR.GOLD[Math.max(1, Math.min(BR.GOLD.length, place)) - 1] || 80) + loot;
+  /* v5.64：押注賠付。倍率 1.6／1.2／1.0，期望值 < 1 ——
+     所以它是「長期回收金幣」的機制，不是送錢。沒進前三名就是 -100%。 */
+  const bet = Math.max(0, Game.brBet | 0);
+  Game.brBet = 0;
+  let payout = 0;
+  if (bet > 0) {
+    const mul = place === 1 ? 1.6 : place === 2 ? 1.2 : place === 3 ? 1.0 : 0;
+    payout = Math.round(bet * mul);
+    if (payout > 0) { try { Shop.addGold(payout); } catch (e) {} }
+  }
   let tk = 0;
   try { Shop.addGold(gold); } catch (e) {}
   if (place <= 3) {
@@ -15146,7 +15238,8 @@ function brFinish(winner) {
   const title = win ? ((BR.TEAM | 0) >= 2 ? '🏆 你們這隊奪冠！' : '🏆 大逃殺冠軍！') : ('🏝️ 第 ' + place + ' 名 / ' + BR.N);
   const sub = (win ? '整座群島只剩你一個。' : '再撐一下就更前面了。') +
     '\n金幣 +' + gold + (loot ? '（戰場掉落 ' + loot + '）' : '') +
-    (place <= 3 ? '　🎟️ 門票 +1（現有 ' + tk + ' 張）' : '');
+    (place <= 3 ? '　🎟️ 門票 +1（現有 ' + tk + ' 張）' : '') +
+    (bet > 0 ? '\n' + (payout > 0 ? t('br.betWin', { n: payout }) : t('br.betLose', { n: bet })) : '');
   Game.state = 'over';
   Game.endShown = true;
   if (win) {
@@ -17903,8 +17996,52 @@ function nearMissSuffix(p) {
   return msg ? ('．．．' + msg) : '';
 }
 
-function showEnd(title, sub, good, chIdx) {
-  Game.endShown = true;          // 標記「結束畫面已顯示」，重開時歸零
+/* ============================================================================
+ * v5.64：金幣出口② —— 原地復活
+ *   死亡那一瞬間是玩家最想「再撐一下」的時候，錢包就在旁邊，轉換率最高。
+ *   限制三個，否則難度會崩：
+ *     · 每局一次（Game.revived）
+ *     · 每日挑戰不給（那是比公平的）／BOSS 連戰不給／決戰場不給
+ *     · 只回半血，不是滿血
+ * ========================================================================== */
+function revivePrice() { return 300 + Math.max(1, Game.stage | 0) * 40; }
+function reviveCanOffer() {
+  if (Game.revived) return false;
+  if (Game.mode !== 'solo' && Game.mode !== 'rpg') return false;
+  if (Game.daily || Game.bossRush) return false;
+  if (Game.bossArena) return false;
+  if (!Game.players || !Game.players[0]) return false;
+  let g = 0;
+  try { g = (Shop.dev && Shop.dev()) ? 1e9 : Shop.gold(); } catch (e) { g = 0; }
+  return g >= revivePrice();
+}
+function reviveApply() {
+  const p = Game.players && Game.players[0];
+  if (!p) return false;
+  const T = Game.T || 40;
+  const rs = safeRespawnCell(p);
+  p.x = (rs.x + .5) * T; p.y = (rs.y + .5) * T;
+  p.dead = false; p.alive = true;
+  p.lives = Math.max(1, p.lives | 0);
+  p.respawnT = 0; p.cry = 0;
+  /* 只補血，不呼叫 resetPlayerStats —— 那會把整輪的強化洗掉，
+     等於用金幣買「重來一次」，玩家會覺得被坑。 */
+  p.sHpMax = Math.max(1, p.sHpMax | 0);
+  p.sHp = Math.max(1, Math.ceil(p.sHpMax / 2));
+  if (Game.rpg) { p.hpMax = Math.max(1, p.hpMax | 0); p.hp = Math.max(1, Math.ceil(p.hpMax / 2)); }
+  p.invuln = Math.max(p.invuln | 0, soloGuardInvuln() + 1.2);
+  p.camSnap = true;
+  Game.revived = true;
+  Game.endShown = false;
+  Game.state = 'play';
+  hideOverlay();
+  paused = false;
+  try { AudioSys.sfx('item'); } catch (e) {}
+  try { toast('💖 ' + t('rev.half'), 2.8); } catch (e) {}
+  return true;
+}
+
+function showEnd(title, sub, good, chIdx, reviveCost) {  Game.endShown = true;          // 標記「結束畫面已顯示」，重開時歸零
   const box = $id('ovBox');
   /* v5.11：把「大標題」做成一整組頒獎視覺（樣式見 .champ）。
      對戰／大逃殺奪冠＝gold 大版（放射光芒＋皇冠＋閃光）；
@@ -17928,6 +18065,9 @@ function showEnd(title, sub, good, chIdx) {
     '</div>' + dcard +
     '<canvas id="winJumpCv" width="170" height="168" style="display:none;margin:2px auto 4px"></canvas>' +
     '<div class="row" style="justify-content:center;gap:10px;">' +
+    /* v5.64：金幣出口② —— 原地復活。放在「再來一次」前面，因為這是他此刻最想按的那顆。 */
+    (reviveCost ? '<button class="mbtn warm" id="btnRevive" style="width:auto;padding:11px 22px;">💰 ' +
+      reviveCost + '　' + t('rev.live') + '</button>' : '') +
     '<button class="mbtn warm" id="btnAgain" style="width:auto;padding:11px 26px;">' + t('over.again') + '</button>' +
     '<button class="ghostbtn" id="btnHome">' + t('over.home') + '</button></div>';
   box.querySelector('h3').textContent = tr(title);
@@ -17936,8 +18076,22 @@ function showEnd(title, sub, good, chIdx) {
   if (grand) { try { AudioSys.sfx('victory'); } catch (e) {} }
   startWinJump(good ? chIdx : null);
   if (dcard) { try { DeathCard.draw(); } catch (e) {} }
-  $id('btnAgain').addEventListener('click', function () {
+  /* v5.64：金幣出口② —— 原地復活。
+     扣錢 → 回半血 → 解除凍結。不呼叫 resetPlayerStats（那會把整輪的強化洗掉，
+     等於用金幣買了「重來」，玩家會覺得被坑）。 */
+  const rvBtn = $id('btnRevive');
+  if (rvBtn) rvBtn.addEventListener('click', function () {
     AudioSys.sfx('click');
+    let r = null;
+    try { r = Shop.spend(reviveCost); } catch (e) { r = null; }
+    if (!r || !r.ok) {
+      try { AudioSys.sfx('hurt'); } catch (e) {}
+      toast(t('shop.noGold'), 2.2);
+      return;
+    }
+    if (!reviveApply()) return;
+  });
+  $id('btnAgain').addEventListener('click', function () {    AudioSys.sfx('click');
     Game.endShown = false;
     hideOverlay();
     paused = false;
@@ -29781,6 +29935,9 @@ function brCardHTML() {
         '<input class="brname" id="brName" type="text" maxlength="8" autocomplete="off" ' +
           'placeholder="' + hesc(charName(CHARACTERS[brIdx()])) + '" value="' + hesc(settings.brName || '') + '">' +
       '</div></div>' +
+    '<div class="brrow"><label class="brlab">' + t('br.bet') + '</label>' +
+      seg('bet', [[0, t('br.betOff')], [500, '500'], [2000, '2000'], [5000, '5000']]) + '</div>' +
+    '<div class="brrow brtiprow"><span class="brbettip">' + t('br.betTip') + '</span></div>' +
     '<div class="brsum" id="brSum">' + brSumText() + '</div>' +
     '<div class="brgo-box"><button class="mbtn warm" id="brGo" type="button">' +
       (tm >= 2 ? t('br.goTeams', { a: Math.ceil(n / tm), b: tm }) : t('br.goSolo', { n: n })) +
@@ -29824,6 +29981,20 @@ function brCardWire(ov) {
       try { Shop.open(); } catch (e) {}
       return;
     }
+    /* v5.64：押注要在「出發當下」就扣 —— 不能等結算才扣，
+       否則輸了直接關視窗就逃帳，這條出口等於不存在。 */
+    Game.brBet = 0;
+    const bet = Math.max(0, BR.opt.bet | 0);
+    if (bet > 0) {
+      let rr = null;
+      try { rr = Shop.spend(bet); } catch (e) { rr = null; }
+      if (rr && rr.ok) Game.brBet = bet;
+      else {
+        BR.opt.bet = 0;
+        try { AudioSys.sfx('hurt'); } catch (e) {}
+        try { toast(t('shop.noGold'), 2.2); } catch (e) {}
+      }
+    }
     ov.classList.add('hide');
     try { startBR(); } catch (e) { try { __bootFail('startBR', e); } catch (e2) {} }
   });
@@ -29863,7 +30034,7 @@ $id('btnBR').addEventListener('click', function () {
     const b = ev.target;
     if (b && b.tagName === 'B' && b.dataset && b.dataset.v) {
       const k = b.parentNode.getAttribute('data-k');
-      const keepZero = (k === 'map');           // v5.37：map 的 0 是「原圖」，不能被 || 1 吃掉
+      const keepZero = (k === 'map' || k === 'bet');   // v5.37：map 的 0 是「原圖」；v5.64：bet 的 0 是「不押注」——都不能被 || 1 吃掉
       BR.opt[k] = keepZero ? (parseInt(b.dataset.v, 10) || 0) : (parseInt(b.dataset.v, 10) || 1);
       AudioSys.sfx('click');
       if (k === 'map') {                        // 換尺寸 → 人數選項與上限一起換，整張卡重畫
@@ -32715,10 +32886,13 @@ const VersionLog = (function () {
 // ====
 const PET_KINDS = [
   { key: 'blade', ico: '⚔️', name: '武士狼 · 刀客', price: 8000,
+    ups: [4000, 8000, 16000, 32000],
     desc: '灰狼武士，腰間一把武士刀。怪物靠近 2 格就衝上去揮刀（1 格範圍），冷卻 2 秒。揮刀有刀光與音效，單人模式一刀一隻。' },
   { key: 'bomber', ico: '💣', name: '爆彈猴 · 投彈', price: 8000,
+    ups: [4000, 8000, 16000, 32000],
     desc: '頑皮的猴子，手上永遠抱著一顆炸彈。幫你朝怪物丟炸彈（冷卻 3 秒、一次一顆）。自己人不會被這顆炸到，放心讓它支援。' },
   { key: 'guard', ico: '🛡️', name: '盾犀 · 格檔', price: 8000,
+    ups: [4000, 8000, 16000, 32000],
     desc: '粗壯高大的犀牛，舉著木盾。不攻擊，主動擋在怪物前面替你和怪物硬碰；擋一次要原地休息 3 秒。單人模式可以擋三下。' }
 ];
 function petKind(key) {
@@ -32744,7 +32918,9 @@ const Shop = (function () {
     try { owned = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { owned = []; }
     if (!Array.isArray(owned)) owned = [];
     owned = owned.filter(function (o) { return o && petKind(o.kind); }).map(function (o) {
-      return { kind: o.kind, ch: Math.abs(o.ch | 0) % CHARACTERS.length };
+      return { kind: o.kind, ch: Math.abs(o.ch | 0) % CHARACTERS.length,
+        // v5.64：隨從等級（1~5）。舊存檔沒有這個欄位 → 一律當 Lv.1
+        lv: Math.max(1, Math.min(5, (o.lv | 0) || 1)) };
     });
     // 同一種只留一隻
     const seen = {};
@@ -32813,6 +32989,29 @@ const Shop = (function () {
   function has(kind) {
     return owned.some(function (o) { return o.kind === kind; });
   }
+  function lvOf(kind) {
+    for (let i = 0; i < owned.length; i++) if (owned[i].kind === kind) return Math.max(1, Math.min(5, owned[i].lv | 0 || 1));
+    return 0;   // 0 = 還沒雇用
+  }
+  /* v5.64：隨從升級（Lv.1→5）。這是給老玩家的長期金幣池 ——
+     本來三隻買斷就結束了（8,000×3＝24,000），現在每一隻還有一段路可以走。 */
+  function upgrade(kind) {
+    const k = petKind(kind);
+    if (!k) return { ok: false, err: 'NO_KIND' };
+    let o = null;
+    for (let i = 0; i < owned.length; i++) if (owned[i].kind === kind) o = owned[i];
+    if (!o) return { ok: false, err: 'NOT_OWNED' };
+    const lv = Math.max(1, Math.min(5, o.lv | 0 || 1));
+    if (lv >= 5) return { ok: false, err: 'MAX' };
+    const price = (k.ups || [])[lv - 1] | 0;
+    if (!price) return { ok: false, err: 'MAX' };
+    if (!dev() && gold < price) return { ok: false, err: 'GOLD', need: price - gold };
+    if (!dev()) gold -= price;
+    o.lv = lv + 1;
+    save();
+    render();
+    return { ok: true, kind: kind, lv: o.lv, price: price };
+  }
   function active() { return owned.slice(); }
   function buy(kind) {
     const k = petKind(kind);
@@ -32820,7 +33019,7 @@ const Shop = (function () {
     if (has(kind)) return { ok: false, err: 'OWNED' };
     if (!dev() && gold < k.price) return { ok: false, err: 'GOLD', need: k.price - gold };
     if (!dev()) gold -= k.price;
-    owned.push({ kind: kind, ch: Math.floor(Math.random() * CHARACTERS.length) });
+    owned.push({ kind: kind, ch: Math.floor(Math.random() * CHARACTERS.length), lv: 1 });
     save();
     render();
     return { ok: true, kind: kind };
@@ -32862,17 +33061,32 @@ const Shop = (function () {
       '</div>';
     grid.innerHTML = PET_KINDS.map(function (k) {
       const own = has(k.key);
+      const lv = lvOf(k.key);
+      const MAXLV = 5;
+      const up = (k.ups || []);
+      const upPrice = (own && lv < MAXLV) ? (up[lv - 1] | 0) : 0;
+      const canUp = dev() || gold >= upPrice;
       const can = dev() || gold >= k.price;
+      /* v5.64：已雇用的隨從，腳踏位置換成「等級 ＋ 升級」。買斷之後還有路可走。 */
+      const foot = own
+        ? '<span class="shprice">' + t('pet.lv', { n: lv }) + ' / ' + MAXLV +
+            (upPrice ? '　💰 ' + upPrice : '') + '</span>' +
+          '<button class="shbuy' + (lv >= MAXLV ? ' owned' : '') + '" data-petup="' + k.key + '"' +
+            ' title="' + hesc(t('pet.upTip')) + '"' +
+            (lv >= MAXLV || !canUp ? ' disabled' : '') + '>' +
+            (lv >= MAXLV ? 'MAX' : (canUp ? t('shop.upgrade') : t('shop.noGold'))) + '</button>'
+        : '<span class="shprice">💰 ' + k.price + '</span>' +
+          '<button class="shbuy" data-buy="' + k.key + '"' + (can ? '' : ' disabled') + '>' +
+            (can ? t('shop.hire') : t('shop.noGold')) + '</button>';
       return '<div class="shopcard' + (own ? ' owned' : '') + '">' +
         '<div class="shmain">' +
           '<div class="shstage"><canvas class="petpv" width="240" height="240" data-pet="' + k.key + '"></canvas></div>' +
-          '<div class="shmeta"><div class="shname">' + k.name + '</div>' +
+          '<div class="shmeta"><div class="shname">' + k.name +
+            (own ? ' <span style="color:#ffd777;font-size:12px">' + t('pet.lv', { n: lv }) + '</span>' : '') +
+            '</div>' +
             '<div class="shdesc">' + k.desc + '</div></div>' +
         '</div>' +
-        '<div class="shfoot"><span class="shprice">💰 ' + k.price + '</span>' +
-        '<button class="shbuy' + (own ? ' owned' : '') + '" data-buy="' + k.key + '"' +
-        (own || !can ? ' disabled' : '') + '>' +
-        (own ? t('shop.hired') : (can ? t('shop.hire') : t('shop.noGold'))) + '</button></div></div>';
+        '<div class="shfoot">' + foot + '</div></div>';
     }).join('') + ticketCard;
     try { PetPreview.mount(grid); } catch (e) {}      // v5.17：隨從圖示會走動
     grid.querySelectorAll('[data-buy-ticket]').forEach(function (b) {
@@ -32904,6 +33118,23 @@ const Shop = (function () {
       });
     });
     try { if (typeof Share !== 'undefined') Share.render(); } catch (e) {}
+    grid.querySelectorAll('[data-petup]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        AudioSys.ensure();
+        const kind = b.getAttribute('data-petup');
+        const r = upgrade(kind);
+        if (r.ok) {
+          AudioSys.sfx('item');
+          const k = petKind(kind);
+          toast(t('pet.lvUp', { n: k ? k.name : kind, v: r.lv }), 2.6);
+        } else if (r.err === 'GOLD') {
+          AudioSys.sfx('hurt');
+          toast('💰 金幣不足，還差 ' + r.need + ' 枚', 2.2);
+        } else if (r.err === 'MAX') {
+          toast('已經滿級了', 1.8);
+        }
+      });
+    });
   }
   function open() {
     // v4.70：今天第一次拿到免費門票 → 進商店時提醒一次（不重複洗頻）
@@ -32924,6 +33155,7 @@ const Shop = (function () {
   load();
   return {
     open: open, render: render, buy: buy, active: active, has: has,
+    upgrade: upgrade, lvOf: lvOf,
     addGold: addGold, syncGold: syncGold,
     // v5.19：營地商店要真的扣錢（原本只有加錢）
     spend: function (n) {
@@ -32944,7 +33176,7 @@ const Shop = (function () {
     state: function () {
       return {
         gold: gold, tickets: tickets,
-        pets: owned.map(function (o) { return { kind: o.kind, ch: o.ch }; })
+        pets: owned.map(function (o) { return { kind: o.kind, ch: o.ch, lv: Math.max(1, o.lv | 0 || 1) }; })
       };
     },
     setState: function (st) {
@@ -32954,7 +33186,8 @@ const Shop = (function () {
       if (Array.isArray(st.pets)) {
         const seen = {};
         owned = st.pets.filter(function (o) { return o && petKind(o.kind); }).map(function (o) {
-          return { kind: o.kind, ch: Math.abs((o.ch | 0)) % CHARACTERS.length };
+          return { kind: o.kind, ch: Math.abs((o.ch | 0)) % CHARACTERS.length,
+            lv: Math.max(1, Math.min(5, (o.lv | 0) || 1)) };
         }).filter(function (o) {
           if (seen[o.kind]) return false;
           seen[o.kind] = 1; return true;
@@ -33006,7 +33239,7 @@ const PetPanel = (function () {
     if (!has || !petKind(kind)) return false;
     if (!petHero()) return false;
     const ps = pets();
-    ps.push(makePet(kind, ch, ps.length));
+    ps.push(makePet(kind, ch, ps.length, (function () { try { return Shop.lvOf(kind); } catch (e) { return 1; } })()));
     AudioSys.sfx('item');
     return true;
   }
@@ -35706,29 +35939,51 @@ const Cloud = (function () {
     }
     return { ok: false, err: (r && r.err) || 'NET', retry: r && r.retry, provider: r && r.provider };
   }
+  /* v5.64：冷啟動重試 —— 只重試「連線類」錯誤。
+     Render 免費方案閒置 15 分鐘就休眠，喚醒要 30~60 秒，第一個請求常常直接逾時或
+     拿到一張 HTML 錯誤頁（→ BAD_JSON）。以前這些都會被當成「帳號或密碼錯誤」，
+     玩家明明打對了卻被告知打錯，接著重試幾次就被伺服器鎖 5 分鐘。
+     真的帳密錯（BAD_LOGIN）不重試 —— 重試只會白燒「錯 5 次鎖 5 分鐘」的額度。 */
+  function authPost(path, body) {
+    function once() {
+      return req(path, body).then(function (r) {
+        return (r && r.err === 'BAD_JSON') ? { ok: false, err: 'NET' } : (r || { ok: false, err: 'NET' });
+      }, function () { return { ok: false, err: 'NET' }; });
+    }
+    function soft(r) { return !!r && !r.ok && (r.err === 'NET' || r.err === 'OFFLINE'); }
+    return once().then(function (r) {
+      if (!soft(r)) return r;
+      try { toast(t('web.waking'), 3.4); } catch (e) {}
+      return new Promise(function (res) { setTimeout(res, 1500); }).then(once)
+        .then(function (r2) {
+          if (!soft(r2)) return r2;
+          return new Promise(function (res) { setTimeout(res, 3500); }).then(once);
+        });
+    });
+  }
   function register(id, pw, name) {
     if (!S.online) return Promise.resolve({ ok: false, err: 'OFFLINE' });
-    return req('/api/auth/register', { id: id, pw: pw, name: name || '' }).then(function (r) {
+    return authPost('/api/auth/register', { id: id, pw: pw, name: name || '' }).then(function (r) {
       const out = webDone(r);
       if (out.ok) { S.tab = 'info'; toast(t('web.regOk'), 3.2); close(); }
       return out;
-    }, function () { return { ok: false, err: 'NET' }; });
+    });
   }
   function login(id, pw, keep) {
     if (!S.online) return Promise.resolve({ ok: false, err: 'OFFLINE' });
     // v4.13：keep=true → 伺服器把這次登入的有效期拉到 1 年（維持登入）
-    return req('/api/auth/login', { id: id, pw: pw, keep: !!keep }).then(function (r) {
+    return authPost('/api/auth/login', { id: id, pw: pw, keep: !!keep }).then(function (r) {
       const out = webDone(r);
       if (out.ok) { S.tab = 'info'; toast(t('web.loginOk'), 2.4); close(); }
       return out;
-    }, function () { return { ok: false, err: 'NET' }; });
+    });
   }
   function changePw(oldPw, newPw) {
     if (!S.online) return Promise.resolve({ ok: false, err: 'OFFLINE' });
-    return req('/api/auth/password', { old: oldPw, pw: newPw }).then(function (r) {
+    return authPost('/api/auth/password', { old: oldPw, pw: newPw }).then(function (r) {
       if (r && r.ok && r.account) { adopt(r.account); return { ok: true, r: r }; }
-      return { ok: false, err: (r && r.err) || 'NET' };
-    }, function () { return { ok: false, err: 'NET' }; });
+      return { ok: false, err: (r && r.err) || 'NET', provider: r && r.provider };
+    });
   }
 
   /* v4.3：行為足跡（開關卡／拿道具／配點…）→ 後台客服核對用；節流避免洗版 */
@@ -36054,18 +36309,29 @@ const Cloud = (function () {
     if ((mode === 'reg' || mode === 'pass') && pw2El && pw2El.value !== pw) { say(t('web.mismatch')); return; }
     if (mode === 'pass' && !oldEl.value) { say(t('web.needFill')); return; }
     if (btnEl) { btnEl.disabled = true; btnEl.classList.add('dim'); }
+    /* v5.64：密碼欄是「從 localStorage 填回來的」——玩家點進去打字時游標停在字尾，
+       很容易變成「舊密碼＋新字」的鬼東西，然後一直被說密碼錯誤。失敗就清掉重打。 */
+    function clearPw() {
+      const el = $id('acctPwIn');
+      if (!el) return;
+      try { el.value = ''; el.focus(); } catch (e) {}
+      try { el.select(); } catch (e) {}
+    }
     function done(ok, err, extra) {
       if (btnEl) { btnEl.disabled = false; btnEl.classList.remove('dim'); }
       if (ok) return;
       if (err === 'ID_TAKEN') say(t('web.errTaken'));
-      else if (err === 'BAD_LOGIN') say(t('web.errBad'));
+      else if (err === 'BAD_LOGIN') { say(t('web.errBad')); clearPw(); }
       else if (err === 'LOCKED') say(t('web.errLocked', { s: (extra && extra.retry) || 60 }));
       else if (err === 'BANNED') say(t('web.errBanned'));
-      else if (err === 'EMAIL_OAUTH') say(t('web.errOauth', { p: (extra && extra.provider) || 'Google' }));
+      else if (err === 'EMAIL_OAUTH' || err === 'NEED_OAUTH') say(t('web.errOauth', { p: (extra && extra.provider) || 'Google' }));
       else if (err === 'RATE_LIMIT') say(t('web.errRate'));
       else if (err && err.indexOf('PW_') === 0) say(t('web.errPw'));
       else if (err === 'BAD_USER' || err === 'BAD_EMAIL' || err === 'BAD_ID') say(t('web.errId'));
-      else say(t('web.errBad'));
+      /* v5.64：剩下的（NET／OFFLINE／伺服器忙／未知）一律走「連線」訊息。
+         以前全部落到 web.errBad「帳號或密碼錯誤」—— 那句話會讓玩家去改密碼、重註冊，
+         甚至以為帳號被盜，實際上只是伺服器還沒醒。 */
+      else say(t('web.errNet'));
     }
     if (mode === 'reg') register(id, pw).then(function (r) { done(r.ok, r.err, r); });
     else if (mode === 'pass') changePw(oldEl.value, pw).then(function (r) {
@@ -36295,15 +36561,31 @@ const Cloud = (function () {
 
   function init() {
     const loginSt = takeLoginParam();
+    /* v5.64：冷啟動時第一個 /api/auth/me 很容易被逾時砍掉（Render 喚醒要 30~60 秒）。
+       以前一次失敗就直接掉進「建立遊客」——玩家明明有登入卻變成新遊客，
+       而且 cookie 被遊客 token 蓋掉，等於被真的登出了。這裡先重試一次再降級。 */
+    let meTried = 0;
+    function meStep() {
+      return req('/api/auth/me').catch(function () {
+        if (meTried >= 1) return { ok: false, err: 'NET' };
+        meTried++;
+        return new Promise(function (res) { setTimeout(res, 1600); })
+          .then(function () { return req('/api/auth/me'); })
+          .catch(function () { return { ok: false, err: 'NET' }; });
+      });
+    }
     return req('/api/auth/config').then(function (c) {
       if (c && c.ok) S.providers = c.providers || {};
-      return req('/api/auth/me');
+      return meStep();
     }).then(function (m) {
       if (m && m.ok && m.account) { S.ready = true; adopt(m.account); if (m.announce) setAnnounce(m.announce); return; }
       return req('/api/auth/guest', { deviceId: devId() }).then(function (g) {
         S.ready = true;
         if (g && g.ok) adopt(g.account); else paint();
         if (g && g.announce) setAnnounce(g.announce);
+        /* v5.64：伺服器說「你帶著 cookie，但那個 session 已經不算數了」。
+           老實告訴玩家要重新登入，而不是讓他看著一個空的新遊客以為進度消失了。 */
+        if (g && g.expired) { try { toast(t('acct.expired'), 5); } catch (e) {} }
       });
     }).then(function () {
       if (loginSt) loginToast(loginSt);

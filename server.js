@@ -1121,6 +1121,12 @@ const server = http.createServer(function (req, res) {
       storageWrites: cs.storageWrites,
       storageFails: cs.storageFails,
       rankClamped: cs.rankClamped,   // v5.28：排行榜被合理性檢查夾住的次數
+      /* v5.64：登入健檢。authNoAcc 一直長大＝帳號資料在掉；authBadPw 長大＝玩家記錯；
+         sessionsExpired 長大＝有人被踢回登入（多半是 cookie 過期或換過簽章密鑰）。 */
+      auth: {
+        noAcc: cs.authNoAcc | 0, badPw: cs.authBadPw | 0, dupKey: cs.dupKey | 0,
+        renewed: cs.sessionsRenewed | 0, expired: cs.sessionsExpired | 0
+      },
       storageDiag: cs.storageDiag,     // v4.85f：遮罩過的 URL/金鑰指紋（不含金鑰本體）
       bootAt: BOOT_AT,                 // v4.85i：這次啟動的時間戳（判斷容器有沒有真的換過）
       uptimeSec: Math.round((Date.now() - BOOT_AT) / 1000)

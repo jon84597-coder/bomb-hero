@@ -3941,6 +3941,9 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .brsum { margin: 13px 14px 0; padding: 9px 11px; border-radius: 11px; font-size: 11.5px; line-height: 1.55;
   color: #b8cbe4; background: rgba(90,150,220,.10); border: 1px solid rgba(120,190,255,.20); }
 .brsum b { color: #ffe0a0; }
+/* v5.64：押注（金幣出口④）。說明字要小、要淡 —— 它是「規則」不是「廣告」。 */
+.brrow.brtiprow { display: block; margin: -4px 14px 0; }
+.brbettip { display: block; color: #7f93ab; font-size: 11px; line-height: 1.45; }
 /* v5.11：大逃殺入口的「我的角色」—— 比照對戰的選角（頭像左右切換）＋ 可以命名 */
 .brrow.brwho { align-items: flex-start; }
 .brchar { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
@@ -4803,6 +4806,20 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
   background:rgba(255,215,120,.14);border-radius:8px;padding:1px 6px;}
 #buffPick .bpskip{margin-top:14px;background:none;border:0;color:#8fa3ba;font-size:13px;
   text-decoration:underline;cursor:pointer;padding:8px 14px;}
+/* v5.64：重抽（金幣出口）＋鎖卡。鎖卡是必要的 —— 沒有它，重抽會把已經抽到的好牌一起洗掉，
+   玩家就不敢按，等於白做一個消耗點。 */
+#buffPick .bpbar{margin-top:14px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+#buffPick .bpbar .bpskip{margin-top:0;}
+#buffPick .bpreroll{background:rgba(255,215,120,.13);border:1px solid rgba(255,215,120,.55);
+  color:#ffd777;border-radius:12px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;
+  transition:background .12s,border-color .12s;}
+#buffPick .bpreroll:hover,#buffPick .bpreroll:focus{background:rgba(255,215,120,.24);outline:none;}
+#buffPick .bpreroll[disabled]{opacity:.4;cursor:default;background:rgba(255,215,120,.06);}
+#buffPick .bplockhint{color:#7d8ea6;font-size:11px;margin-top:8px;}
+#buffPick .bplock{position:absolute;top:5px;left:7px;font-size:13px;line-height:1;opacity:.35;
+  cursor:pointer;padding:3px 4px;border-radius:8px;}
+#buffPick .bplock:hover{opacity:.9;background:rgba(255,255,255,.10);}
+#buffPick .bplock.on{opacity:1;background:rgba(255,215,120,.20);}
 @media (max-width:520px){
   #buffPick .bprow{gap:7px;}
   #buffPick .bpcard{padding:12px 8px 11px;border-radius:13px;}
@@ -4981,7 +4998,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.63</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.64</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5036,7 +5053,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.63</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.64</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5934,7 +5951,11 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="bptitle" id="bpTitle"></div>
     <div class="bpsub" id="bpSub"></div>
     <div class="bprow" id="bpRow"></div>
-    <button class="bpskip" id="bpSkip" type="button"></button>
+    <div class="bpbar">
+      <button class="bpreroll" id="bpReroll" type="button"></button>
+      <button class="bpskip" id="bpSkip" type="button"></button>
+    </div>
+    <div class="bplockhint" id="bpLockHint"></div>
   </div>
 </div>
 
