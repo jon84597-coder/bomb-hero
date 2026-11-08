@@ -155,6 +155,10 @@ solo.ovBossSub2|暗黑魔王在此！用炸彈轟爆牠！|暗黑魔王在此！
 solo.ovSub|殲滅所有敵人後，走進傳送門過關！|歼灭所有敌人后，走进传送门过关！|Wipe out every enemy, then step into the portal to clear the stage!|敵を全滅させたら、ワープゲートに入ってクリア！|적을 전멸시킨 뒤 워프 게이트로 들어가 클리어!
 solo.ovTime|\\n難易度：{d}　·　時間：{t}|\\n难度：{d}　·　时间：{t}|\\nDifficulty: {d}  ·  Time: {t}|\\n難易度：{d}　·　時間：{t}|\\n난이도: {d}  ·  시간: {t}
 solo.ovGo|出發！|出发！|Go!|出発！|출발!
+rev.gain|復仇值 ×{n}：下一局開場多 {n} 顆炸彈|复仇值 ×{n}：下一局开场多 {n} 颗炸弹|Revenge ×{n} — next run starts with +{n} bomb|リベンジ ×{n}：次の挑戦は爆弾 {n} 個多くスタート|복수 ×{n}: 다음 판은 폭탄 {n}개 추가로 시작
+rev.on|復仇 ×{n}：開場多 {n} 顆炸彈|复仇 ×{n}：开场多 {n} 颗炸弹|Revenge ×{n}: +{n} bomb at start|リベンジ ×{n}：開始時爆弾 +{n}|복수 ×{n}: 시작 시 폭탄 +{n}
+buff.startTitle|起手強化|起手强化|Starting boon|開始時の強化|시작 강화
+buff.startSub|選一張帶進這一輪，重開會重抽|选一张带进这一轮，重开会重抽|Pick one for this run — rerolls when you restart|1つ選んでこの挑戦へ（やり直すと引き直し）|이번 판에 쓸 것을 하나 고르세요 (다시 시작하면 재추첨)
 solo.clearTitle|過關！|过关！|Stage Clear!|ステージクリア！|스테이지 클리어!
 solo.clearSub|分數 {s}　·　前進第 {n} 關「{name}」|分数 {s}　·　前进第 {n} 关「{name}」|Score {s}  ·  On to Stage {n} "{name}"|スコア {s}　·　第 {n} ステージ「{name}」へ|점수 {s}  ·  제 {n} 스테이지 "{name}"(으)로
 solo.clearBtn|繼續|继续|Continue|次へ|계속

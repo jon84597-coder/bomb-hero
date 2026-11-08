@@ -366,10 +366,12 @@ ok((rawIndex.match(/<script(?![^>]*src=)/g) || []).length === 1, '1 個 inline s
 // v5.52：多了 js/keys-ui.js（按鍵面板；主檔預算滿了只能外置）
 // v5.53：多了 js/main.js（主程式；index.html 從 1.95M 降到 328K）＋ js/onboard.js（新手任務）
 //   改成「至少要有這幾個」而不是精確數量 —— 每加一個外部檔都要回來改這行太痛。
-ok(extJs52.length >= 4 && extJs52.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
-  extJs52.some(function (x) { return x.indexOf('js/version-log.js') > 0; }) &&
+// v5.63：版本紀錄改成點開面板才動態載入（181 KB 不再擋在首屏）→ 從「要有」的名單移除
+ok(extJs52.length >= 3 && extJs52.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
   extJs52.some(function (x) { return x.indexOf('js/main.js') > 0; }) &&
-  extJs52.some(function (x) { return x.indexOf('js/keys-ui.js') > 0; }), '外部 js 至少四個：字典／版本紀錄／主程式／按鍵面板（實際 ' + extJs52.length + '）');
+  extJs52.some(function (x) { return x.indexOf('js/keys-ui.js') > 0; }) &&
+  extJs52.every(function (x) { return x.indexOf('js/version-log.js') < 0; }),
+  '外部 js 至少三個：字典／主程式／按鍵面板，且版本紀錄改成懶載入（實際 ' + extJs52.length + '）');
 ok(!/src="http/.test(html), '沒有外部圖片網址（離線也能開）');
 ok(html.indexOf("const VERSION = '" + P.VERSION + "';") > 0, '版本常數 = ' + P.VERSION);
 const L46 = (P.VERSION_LOG.filter(function (x) { return x.v === '4.6'; })[0] || { items: [] });

@@ -692,11 +692,16 @@ const extJs = _rawIdx.match(/<script[^>]+src="([^"]+)"/g) || [];
 const _keysAt = _rawIdx.indexOf('<script src="js/keys-ui.js"></script>');
 const _onbAt = _rawIdx.indexOf('<script src="js/onboard.js"></script>');
 const _mainAt = _rawIdx.indexOf('<script src="js/main.js"></script>');
+// v5.63：版本紀錄（181 KB）改成「點開面板才動態載入」—— 不再出現在 index.html 的 script 清單裡，
+//   改驗「主程式有那個注入器」，否則就是真的掉了。
+const _mainSrc24 = fs.readFileSync(__dirname + '/../js/main.js', 'utf8');
 ok(extJs.length >= 3 && extJs.some(function (x) { return x.indexOf('js/i18n-src.js') > 0; }) &&
-  extJs.some(function (x) { return x.indexOf('js/version-log.js') > 0; }) &&
   extJs.some(function (x) { return x.indexOf('js/main.js') > 0; }) &&
+  extJs.every(function (x) { return x.indexOf('js/version-log.js') < 0; }) &&
   _mainAt > 0 && _keysAt > _mainAt && _onbAt > _mainAt,
-  '外部 js 至少三個（字典／版本紀錄／主程式），且 UI 面板排在主程式之後（' + extJs.join(',') + '）');
+  '外部 js 至少三個（字典／主程式），且 UI 面板排在主程式之後（' + extJs.join(',') + '）');
+ok(/function ensureVlog\(/.test(_mainSrc24) && /el\.src = 'js\/version-log\.js'/.test(_mainSrc24),
+  '版本紀錄改成點開面板才動態注入（首屏不再下載 181 KB）');
 ok(/window\.__I18N_SRC\s*\)\s*\?\s*window\.__I18N_SRC\s*:\s*''/.test(html), '字典載入失敗有退路（不會白畫面）');
 ok((require('./_sandbox').rawHtml.match(/<script(?![^>]*src=)/g) || []).length >= 1,
   'inline script 仍在（沙盒回填主程式後會看到 2 個；真實 index.html 只剩 PWA 那一個）');

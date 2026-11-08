@@ -12,7 +12,7 @@
      · /api/ 一律不攔（帳號、雲端存檔、線上配對都必須即時）
    ================================================================ */
 
-var SW_VERSION = 'v5.62.0';
+var SW_VERSION = 'v5.63.0';
 var CORE_CACHE = 'bh-core-' + SW_VERSION;   // 遊戲本體（離線也要開得起來）
 var ASSET_CACHE = 'bh-asset-' + SW_VERSION; // 圖示等靜態資源
 var NAV_TIMEOUT = 2200;   // v4.22：Render 冷啟動一定超過，早點回快取讓畫面先出來
@@ -46,15 +46,24 @@ var CORE = [
 
    v5.53：改成「分級預熱」。以前是照 _list.json 的檔案順序無差別抓 219 張（約 3 MB），
    只打單人關的玩家也要付大逃殺／BOSS 的流量，而且會跟正在玩的那場搶頻寬。
-   現在照檔名前綴分三桶，越常用越早抓：
-     P0  角色／炸彈／火焰／道具／地形／UI —— 進第一關就要，批次之間不延遲
-     P1  章節 BOSS（boss-*）—— 打到該章王才要，每批之間讓 250ms
-     P2  大逃殺專用（br-* / nuke-* / drop-*）—— 沒玩大逃殺就永遠用不到，讓 600ms
-   排序只影響「抓的順序」，最終仍會補滿全部 —— 離線完整性不變。 */
+
+   v5.63：P0 再收窄一次。實測首屏 240 個請求 / 3.4 MB，其中 218 張圖佔 2.5 MB，
+   而 P0 桶居然有 184 張 / 1.7 MB 且「全速無延遲」—— 等於跟 main.js 搶頻寬。
+   分桶規則只有 br- 與 boss- 兩條，剩下的全部掉進 P0，連「買了隨從才看得到」的
+   pet-（327 KB）、「打了 RPG 才有」的 mount-（131 KB）、
+   「RPG 王／坐騎拼裝件」img-parts-（230 KB）都在裡面。
+   現在四桶：
+     P0  地形／火焰／蛋／道具／UI／角色拼裝（約 107 張 / 0.4 MB）—— 首頁＋第一關真的會畫到
+     P1  怪物與 BOSS（約 80 張）—— 第一關只遇到其中幾種，每批 80ms 很快跟上
+     P2  大逃殺、RPG 王／坐騎拼裝件 —— 沒玩那個模式就永遠用不到，400ms
+     P3  隨從／坐騎 —— 沒買、沒進 RPG 就永遠用不到，1200ms
+   排序只影響「先抓哪張」，最終仍會補滿全部 —— 離線完整性不變。 */
 function warmBucket(f) {
-  if (/^(br-|nuke-|drop-)/.test(f)) return 2;
-  if (/^boss-/.test(f)) return 1;
-  return 0;
+  if (/^(pet-|mount-)/.test(f)) return 3;              /* 隨從／坐騎：買了才看得到 */
+  if (/^(br-|nuke-|drop-)/.test(f)) return 2;          /* 大逃殺專用 */
+  if (/^img-parts-/.test(f)) return 2;                 /* RPG 的王／龍坐騎拼裝件 */
+  if (/^(foe-|boss-)/.test(f)) return 1;               /* 怪物：第一關只遇得到幾種 */
+  return 0;                                            /* 地形／火焰／道具／UI／角色 */
 }
 
 function warmSprites() {
@@ -69,10 +78,12 @@ function warmSprites() {
         // 用比例判斷才不會每次 SW 啟動都重跑一輪。
         if (have >= Math.floor(list.length * 0.95)) return;
 
-        var buckets = [[], [], []];
+        var buckets = [[], [], [], []];
         list.forEach(function (f) { buckets[warmBucket(f)].push(f); });
-        var order = buckets[0].concat(buckets[1], buckets[2]);
-        var coreLen = buckets[0].length;
+        var order = buckets[0].concat(buckets[1], buckets[2], buckets[3]);
+        var len0 = buckets[0].length;
+        var len1 = len0 + buckets[1].length;
+        var len2 = len1 + buckets[2].length;
         var i = 0;
         function next() {
           if (i >= order.length) return;
@@ -86,9 +97,10 @@ function warmSprites() {
               return fetch(url).then(function (r) { if (r && r.ok) return cache.put(url, r); return null; }).catch(function () { return null; });
             });
           })).then(function () {
-            // P0 全速；P1／P2 讓出一點頻寬，避免跟正在玩的關卡搶圖
-            if (at < coreLen) { next(); return; }
-            setTimeout(next, at < coreLen + buckets[1].length ? 250 : 600);
+            /* P0 全速（首屏就要）；其餘讓出頻寬，避免跟正在玩的那場搶圖。
+               P1 只有 80ms —— 怪物圖晚 1 秒才到就會看到程序繪製的替代圖。 */
+            if (at < len0) { next(); return; }
+            setTimeout(next, at < len1 ? 80 : at < len2 ? 400 : 1200);
           }, next);
         }
         next();

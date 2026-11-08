@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <!-- v4.6：PWA —— 可以「加入桌面捷徑／手機主畫面」，從捷徑開啟就是全螢幕獨立視窗 -->
+<!-- v5.63：主程式 600 KB 排在 6000 行 HTML 的最後面才被發現，等於整份 328 KB 解析完才開始下載。
+     這裡提早宣告，讓下載與 HTML 解析並行。preload 只改「什麼時候開始抓」，
+     不改執行順序 —— 比把 script 搬進 head 加 defer 安全得多（那會動到一堆位置斷言）。 -->
+<link rel="preload" as="script" href="js/main.js">
+<link rel="preload" as="script" href="js/i18n-src.js">
+
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#ff4500">
 <meta name="application-name" content="爆爆英雄">
@@ -4975,7 +4981,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.62</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.63</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5030,7 +5036,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.62</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.63</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5933,7 +5939,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
 </div>
 
 <script src="js/i18n-src.js"></script>
-<script src="js/version-log.js"></script>
+<!-- v5.63：版本紀錄（181 KB 純字串）改成點開面板才動態載入，不再擋在首屏 -->
 <script src="js/main.js"></script>
 <!-- v5.52：按鍵控制面板（外部檔；主檔預算已滿，UI 一律放 js/keys-ui.js） -->
 <script src="js/keys-ui.js"></script>

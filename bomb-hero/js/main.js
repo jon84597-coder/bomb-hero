@@ -158,7 +158,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.62';
+const VERSION = '5.63';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4229,6 +4229,31 @@ const BUFF_DEFS = [
 function resetBuffs() {
   Game.buffs = { bomb: 0, fire: 0, spd: 0, hp: 0, score: 0, fuse: 0, flags: {} };
 }
+/* ===================================================================
+ * v5.63：復仇值 —— 死一次 +1，下一局開場多一顆炸彈（最多 3）。
+ *   為什麼要有：大逃殺被 100 人圍毆、或單人卡在某關反覆死，
+ *   玩家的體感是「一點收穫都沒有」，於是關掉不玩了。
+ *   這裡刻意不給永久成長（會通膨、也會讓難度失去意義），
+ *   只把挫敗換成立刻看得到的補償：下一局開場就能多帶一顆。
+ *   它是止痛藥不是補品 —— 下一局開場就歸零。
+ * =================================================================== */
+const REV_KEY = 'bombhero-revenge';
+const REV_MAX = 3;
+function revGet() {
+  try { return Math.max(0, Math.min(REV_MAX, parseInt(localStorage.getItem(REV_KEY), 10) || 0)); }
+  catch (e) { return 0; }
+}
+function revAdd() {
+  const n = Math.min(REV_MAX, revGet() + 1);
+  try { localStorage.setItem(REV_KEY, String(n)); } catch (e) {}
+  return n;
+}
+function revTake() {
+  const n = revGet();
+  if (n > 0) { try { localStorage.setItem(REV_KEY, '0'); } catch (e) {} }
+  return n;
+}
+
 function buffsOn() {
   return Game.mode === 'solo' || Game.mode === 'rpg';
 }
@@ -4264,6 +4289,9 @@ function applyBuffs(p, isRpg) {
   if (b.flags.pierce) p.pierce = true;
   if (b.fuse && p.fuseMul) p.fuseMul = Math.max(.55, p.fuseMul * (1 - b.fuse * .12));
   if (b.hp && isRpg) { p.hpMax = (p.hpMax | 0) + b.hp; p.hpCur = p.hpMax; }
+  /* v5.63：復仇值要在這裡加 —— buildSoloStage 會 resetPlayerStats(p) 把 maxBombs 打回 1，
+     直接寫在 startSolo 裡會被蓋掉（而且每一關都要帶，不只第一關）。 */
+  if (Game.revBonus) p.maxBombs = Math.min(8, (p.maxBombs | 0) + (Game.revBonus | 0));
 }
 
 const BuffPick = (function () {
@@ -4341,7 +4369,9 @@ const BuffPick = (function () {
     const sk = el('bpSkip');
     if (sk) sk.addEventListener('click', function () { try { AudioSys.sfx('click'); } catch (e) {} close(); });
   }
-  function open(done) {
+  function open(done, isStart) {
+    /* v5.63：第一關開場那次也叫「過關強化」就顯得很怪（還沒過關），
+       用 isStart 換成「起手強化」。其餘行為完全一樣。 */
     if (!Game.buffs) resetBuffs();
     picks = roll();
     if (!picks.length) { if (done) done(); return; }   // 全部滿了就直接過
@@ -4349,8 +4379,10 @@ const BuffPick = (function () {
     wire();
     const box = el('buffPick');
     const ttl = el('bpTitle'), sub = el('bpSub'), sk = el('bpSkip');
-    if (ttl) ttl.textContent = (function () { const k = 'buff.title'; const v = t(k); return (v && v !== k) ? v : ''; })();
-    if (sub) sub.textContent = (function () { const k = 'buff.sub'; const v = t(k); return (v && v !== k) ? v : ''; })();
+    const tk = isStart ? 'buff.startTitle' : 'buff.title';
+    const sk2 = isStart ? 'buff.startSub' : 'buff.sub';
+    if (ttl) ttl.textContent = (function () { const v = t(tk); return (v && v !== tk) ? v : ''; })();
+    if (sub) sub.textContent = (function () { const v = t(sk2); return (v && v !== sk2) ? v : ''; })();
     if (sk) sk.textContent = (function () { const k = 'buff.skip'; const v = t(k); return (v && v !== k) ? v : ''; })();
     render();
     if (box) box.classList.add('on');
@@ -9585,6 +9617,10 @@ function startSolo(stage, bossRush, daily) {
     : ctrlMode() === 'touch' ? Input.schemes.touch
     : ctrlMode() === 'pad' ? Input.schemes.pad(0) : Input.schemes.kb1;
   const p = makePlayer(0, settings.soloChar || 0, soloScheme, { px: 0, py: 0 });
+  /* v5.63：把上次死亡累積的復仇值兌現（開場多帶幾顆炸彈），兌完就歸零。
+     每日挑戰／BOSS 連戰不給 —— 那兩個是「公平比時間」的場合。 */
+  const revN = (daily || bossRush) ? 0 : revTake();
+  Game.revBonus = revN;                  // 交給 applyBuffs 加（resetPlayerStats 之後才執行）
   p.lives = soloLives();                 // v5.30：簡單 1 條命（配 2 格血）、普通／困難 3 條命（每日／BOSS 固定 3）
   p.sHpMax = soloHpMax();                // v5.30：每條命的血格 —— 簡單 2 格、其他 1 格
   p.sHp = p.sHpMax;
@@ -9608,14 +9644,31 @@ function startSolo(stage, bossRush, daily) {
       t('daily.ovRule', { t: fmtTime(tSec) }) + '　🔑 ' + seedCodeOf(Game.daily.seed)
     : (Game.bossRush ? t('solo.ovBossSub') : (soloIsBoss(stage) ? t('solo.ovBossSub2') : t('solo.ovSub'))) +
       t('solo.ovTime', { d: diffLabel(), t: (tSec ? fmtTime(tSec) : t('time.inf')) }) +
-      seedTag();
+      seedTag() +
+      (revN > 0 ? '\n💢 ' + t('rev.on', { n: revN }, '復仇 ×' + revN + '：開場多 ' + revN + ' 顆炸彈') : '');
   showOverlay({
     title: ovT,
     sub: ovS,
     btn: t('solo.ovGo'),
     tips: ModeTip.tips(Game.rpg ? 'rpg' : 'solo'),
     tipMode: Game.rpg ? 'rpg' : 'solo',
-    action: function () { beginCountdown('battle'); }
+    action: function () {
+      /* v5.63：第一關開場先給一次「起手三選一」。
+         原本只有「過關後」才抽 —— 新玩家第一關永遠是白板，
+         點「再來一局」重開也還是同一個白板，等於每局開頭都一樣。
+         重試第 N 關不彈（那時 Game.buffs 還在，本來就沿用上一輪的）。 */
+      if (buffsOn() && Game.stage === 1 && !Game.daily && !Game.bossRush) {
+        /* 先把開場卡收掉 —— buffPick 的半透明遮罩底下會透出「第 1 關・微風草原」
+           和難度／時間那幾行，兩層字疊在一起看起來像壞掉（截圖確認過）。
+           hideOverlay 會把 ovopen 拿掉讓觸控介面冒出來，這裡補回去；
+           選完 → beginCountdown → hideOverlay 時自然收掉。 */
+        hideOverlay();
+        try { document.body.classList.add('ovopen'); } catch (e) {}
+        BuffPick.open(function () { beginCountdown('battle'); }, true);
+        return;
+      }
+      beginCountdown('battle');
+    }
   });
   AudioSys.startBGM(stageBGM(stage));
   updateHud();
@@ -11376,7 +11429,12 @@ function updateSolo(dt) {
           return;
         }
         try { DeathCard.finish(); } catch (e) {}
-        showEnd(t('solo.overTitle'), t('solo.overSub', { n: Game.stage, s: p.score }) + '　·　' + diffLabel() + nearMissSuffix(p), false);
+        const rev = revAdd();          // v5.63：死一次 +1，下一局開場多一顆炸彈
+        /* 復仇值放最前面 —— 夾在死因後面會被玩家直接略過（這裡是他最需要看到的一句）。 */
+        showEnd(t('solo.overTitle'),
+          (rev > 0 ? '💢 ' + t('rev.gain', { n: rev }) + '\n' : '') +
+          t('solo.overSub', { n: Game.stage, s: p.score }) + '　·　' + diffLabel() + nearMissSuffix(p),
+          false);
         battleEndFx(false);
       } else {
         resetPlayerStats(p);
@@ -32539,7 +32597,30 @@ function drawFlameOn(g, f, T) {
 /* 版本更新紀錄搬到 js/version-log.js（v5.38）：主檔預算只剩幾千字元，
    這兩千多行的純字串資料沒有理由留在主 script 裡。外部檔沒載到就退回空陣列，
    版本面板顯示「暫無資料」，其餘功能完全不受影響。 */
-const VERSION_LOG = (typeof window !== 'undefined' && window.__VERSION_LOG) || [];
+let VERSION_LOG = (typeof window !== 'undefined' && window.__VERSION_LOG) || [];
+
+/* v5.63：版本紀錄改成「點開面板才下載」。181 KB 的純字串資料沒理由擋在首屏，
+   而且它原本還排在主程式前面同步執行。首頁那顆版號是 index.html 寫死的文字，
+   不依賴這裡；面板本身有「暫無資料」的退路，載不到也不會壞。
+   載入中重複點擊只會掛一次 request，不會重複插 script。 */
+let vlogReq = null;
+function ensureVlog(cb) {
+  if (VERSION_LOG.length) { cb(); return; }
+  if (vlogReq) { vlogReq.push(cb); return; }
+  vlogReq = [cb];
+  const done = function () {
+    VERSION_LOG = (typeof window !== 'undefined' && window.__VERSION_LOG) || [];
+    const q = vlogReq || []; vlogReq = null;
+    for (let i = 0; i < q.length; i++) { try { q[i](); } catch (e) {} }
+  };
+  try {
+    const el = document.createElement('script');
+    el.src = 'js/version-log.js';
+    el.onload = done;
+    el.onerror = done;
+    document.head.appendChild(el);
+  } catch (e) { done(); }
+}
 
 const VersionLog = (function () {
     try {
@@ -32587,10 +32668,16 @@ const VersionLog = (function () {
       if (b) b.textContent = top.v;
     }
   }
-  function show() { build(true); const p = $id('verLog'); if (p) p.classList.remove('hide'); }
+  function show() {
+    ensureVlog(function () { built = false; build(true); const p = $id('verLog'); if (p) p.classList.remove('hide'); });
+  }
   function hide() { const p = $id('verLog'); if (p) p.classList.add('hide'); }
   /* 換帳號（登入／登出）後重畫：開發者可能剛好切換身分 */
-  function refresh() { built = false; build(true); if ($id('verLog') && !$id('verLog').classList.contains('hide')) build(true); }
+  function refresh() {
+    if (!VERSION_LOG.length) return;
+    built = false; build(true);
+    if ($id('verLog') && !$id('verLog').classList.contains('hide')) build(true);
+  }
   return { show: show, hide: hide, build: build, refresh: refresh, list: visible, all: function () { return VERSION_LOG; } };
       })();
     } catch (__e) {

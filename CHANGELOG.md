@@ -567,6 +567,15 @@
 |  | 💾 <b>記得住、不影響平衡</b>：選過的顏色存在本機，下次打開面板還在；按「取消」回到預設外觀但色碼仍留著，想再套用不必重挑。純外觀、不進雲端存檔、不改任何數值，對手的火仍走原本配色。|
 |  | 🧪 新增 <b>verify-v560</b>（53 項：色票數量與合法性、五段色停、真的套用到 <code>__BHSKIN.cache</code>、存檔讀回、亂傳色碼被擋）＋真瀏覽器探針 <b>_p36</b>（29 項：開面板點色票 → 爆風／光環／炸彈都換色、取色盤、關掉再開還在、門檻在真頁面生效）。<b>verify-v556</b> 的門檻斷言同步改成 3／6／9。|
 |  | 📦 改 <code>js/unlock.js</code>、<code>js/skins.js</code>、<code>index.html</code>（版本字樣）；字典 1,995 → <b>2,002 條</b>；SW v5.60.0。|
+| **v5.63** | 🚀 <b>首屏瘦身（實測 DCL 385ms → 94ms）</b>：主程式 600 KB 原本排在六千行 HTML 的最後面才被發現，等於整份 328 KB 解析完才開始下載。加 <code>&lt;link rel="preload" as="script"&gt;</code> 讓下載與解析並行 —— <b>只改「什麼時候開始抓」，不動執行順序</b>（比把 script 搬進 head 加 defer 安全，那會動到一堆位置斷言）。|
+|  | 🖼️ <b>圖片預熱四級分桶</b>：v5.53 的分桶只認 <code>br-</code>／<code>boss-</code> 兩條前綴，其餘 <b>184 張 / 1,687 KB 全掉進 P0 且全速無延遲</b>，連「買了隨從才看得到」的 <code>pet-</code>（327 KB）、「打了 RPG 才有」的 <code>mount-</code>（131 KB）、RPG 王拼裝件 <code>img-parts-</code>（230 KB）都在跟 main.js 搶頻寬。改成四級：<b>P0 首頁＋第一關真的會畫到的 107 張 / 615 KB（-64%）</b>、P1 怪物與 BOSS（80ms 就補上）、P2 大逃殺與 RPG 拼裝件、P3 隨從與坐騎。順序只影響「先抓哪張」，最終仍補滿，離線完整性不變。|
+|  | 📜 <b>版本紀錄懶載入</b>：<code>version-log.js</code> 181 KB 純字串原本同步載入在主程式<b>前面</b>。改成 <code>let VERSION_LOG</code> ＋ <code>ensureVlog()</code> 動態注入，只在你點開「版本更新內容」那一刻才下載；載入中重複點只掛一次請求，<code>refresh()</code> 在還沒載入時直接跳過（不會把面板畫成空的）。|
+|  | 🎁 <b>起手三選一</b>：<code>BuffPick</code>（過關三選一）v5.38 就有了，但<b>第一關開場永遠是白板</b> —— 等於每一輪的開頭長一樣，「每局不同」只發生在第二關之後。現在第一關點「出發」也給一次三選一，選完才倒數；重試第 N 關不彈（那時 <code>Game.buffs</code> 還在，沿用上一輪）。|
+|  | 💢 <b>復仇值（新）</b>：每死一次 +1，下一局開場多帶一顆炸彈（<b>上限 3，兌現即歸零</b>）。刻意不給永久成長（會通膨、也會讓難度失去意義），它是止痛藥不是補品。每日挑戰與 BOSS 連戰不計入 —— 那兩個是公平比時間的場合。|
+|  | ⚠️ <b>踩到的坑</b>：加成原本直接寫 <code>p.maxBombs += revN</code>，實測<b>沒生效</b> —— <code>buildSoloStage</code> 會 <code>resetPlayerStats(p)</code> 把 <code>maxBombs</code> 打回 1。改記在 <code>Game.revBonus</code> 由 <code>applyBuffs()</code> 套（它在 reset 之後才跑，而且每一關都會帶）。|
+|  | 🧪 新增 <b>verify-v563</b>（65 項，含把 <code>warmBucket</code> 從 sw.js 挖出來對 219 張真檔案逐類驗、<code>revGet/revAdd/revTake</code> 真的跑起來驗上限與歸零）＋真瀏覽器 <b>_p40</b>（22 項：實際進第一關點「出發」驗三選一彈出、選完生效進倒數、實際打死玩家驗復仇值累積與兌現、每日挑戰不吃、首屏真的沒下載版本紀錄）。|
+|  | 🔧 四支舊測試跟著改（<b>不是放寬</b>，是實作變了）：<code>verify-v24</code>／<code>v52</code>／<code>v553</code> 的 script 清單與分桶門檻、<code>verify-v61</code> 的「點出發進倒數」要多跳過一次三選一。|
+|  | 📦 改 <code>js/main.js</code>、<code>js/i18n-src.js</code>、<code>sw.js</code>×3、<code>index.html</code>；159 支全綠＋padtest 56／56；字典 2,006 條；SW v5.63.0。|
 | **v5.62** | ⏱️ <b>修掉「20765 天前有動靜」</b>：跟加入時間同一個毛病的另一半 —— 玩家從沒在線上名單出現過時，那個時間是 <b>0</b>，<code>Date.now() - 0</code> 硬算就成了「幾萬天前」。現在遇到 0／負數／秒級／undefined 一律回「<b>—</b>」，資料頁改說「<b>還沒有動靜</b>」。|
 |  | 🛡️ <b><code>ago()</code> 加防呆</b>：只認 1e11～4e12（2001～2100 年），名單底部的「更新於」與「剛剛／幾分鐘前」都不會再自己編數字；正常值（剛剛、3 天前）行為不變。|
 |  | 🧪 <b>verify-v561</b> 60 → <b>61 項</b>（新增 ④b：把 <code>ago()</code> 真的跑起來，驗 0／負數／undefined／秒級四種壞值與兩種正常值）；<b>_p38</b> 25 → <b>28 項</b>（新增「seen=0 時說還沒有動靜」）。|

@@ -46,8 +46,10 @@ const vlogAt = at('<script src="js/version-log.js"></script>');
 const mainAt = at('<script src="js/main.js"></script>');
 const keysAt = at('<script src="js/keys-ui.js"></script>');
 const onbAt = at('<script src="js/onboard.js"></script>');
-ok(i18nAt > 0 && vlogAt > i18nAt, '字典在最前（主程式要用 __I18N_SRC）');
-ok(mainAt > vlogAt, '版本紀錄在字典之後、主程式之前');
+/* v5.63：版本紀錄（181 KB）改成點開面板才動態載入 → 不再出現在同步清單裡。 */
+ok(i18nAt > 0, '字典在最前（主程式要用 __I18N_SRC）');
+ok(vlogAt < 0, '版本紀錄不在同步清單（v5.63 起點開面板才載入）');
+ok(mainAt > i18nAt, '主程式在字典之後（要用 __I18N_SRC）');
 ok(keysAt > mainAt, '按鍵面板在主程式之後（它要讀 __BH.settings）');
 ok(onbAt > mainAt, '新手任務在主程式之後（它要讀 __BH.Shop）');
 ok(!/js\/main\.js[^>]*\bdefer\b/.test(rawIndex), 'main.js 沒有 defer（key-ui／onboard 依賴它的執行順序）');
@@ -70,12 +72,14 @@ ok(swJs.indexOf("'./js/main.js'") > 0, 'CORE 收錄 js/main.js（離線也要開
 ok(swJs.indexOf("'./js/onboard.js'") > 0, 'CORE 收錄 js/onboard.js');
 ok(/function warmBucket\s*\(/.test(swJs), '有 warmBucket 分桶');
 ok(/\/\^\(br-\|nuke-\|drop-\)\//.test(swJs), '大逃殺素材（br- / nuke- / drop-）被判到最後一批');
-ok(/\/\^boss-\//.test(swJs), '章節 BOSS（boss-）被判到第二批');
+// v5.63：四級分桶 —— BOSS 與怪物同一級（第一關只遇得到幾種，其餘 80ms 後補上）
+ok(/\^\(foe-\|boss-\)\//.test(swJs), '章節 BOSS（boss-）被判到第二級');
 ok(/return 0;/.test(swJs), '其餘（角色／炸彈／地形）是第一批');
 ok(/Math\.floor\(list\.length \* 0\.95\)/.test(swJs), '完成判定改成比例（不再寫死 150 張）');
-ok(/setTimeout\(next, at < coreLen \+ buckets\[1\]\.length \? 250 : 600\)/.test(swJs),
-  'P1 讓 250ms、P2 讓 600ms（不跟正在玩的關卡搶頻寬）');
-ok(/buckets\[0\]\.concat\(buckets\[1\], buckets\[2\]\)/.test(swJs), '抓取順序是 P0 → P1 → P2');
+// v5.63：P1 縮到 80ms（怪物圖晚 1 秒才到就會看到程序繪製的替代圖）
+ok(/setTimeout\(next, at < len1 \? 80 : at < len2 \? 400 : 1200\)/.test(swJs),
+  'P1 讓 80ms、P2 400ms、P3 1200ms（不跟正在玩的關卡搶頻寬）');
+ok(/buckets\[0\]\.concat\(buckets\[1\], buckets\[2\], buckets\[3\]\)/.test(swJs), '抓取順序是 P0 → P1 → P2 → P3');
 
 // ================================================================
 console.log('=== ⑤ 新手任務 ===');

@@ -104,7 +104,9 @@ ok(/function hideOverlay\(\) \{ Game\.ovInfo = null; stopWinJump\(\); ovHide\(\)
   ok(G.players[0].alive === true && G.players[0].lives === P.soloLives(), '新的一場：活著、生命＝這一關的格數（' + P.soloLives() + '）');
   ok(env.els.body._cls.has('ovopen'), '出發前的確認視窗重新打開（ovopen 掛回）');
   click('ovBox|button');
-  ok(G.state === 'countdown', '按「出發！」進入倒數');
+  /* v5.63：第一關開場多了一次「起手三選一」，要先跳過才會進倒數。 */
+  if (G.state !== 'countdown') ok(click('bpSkip'), '起手三選一可以跳過');
+  ok(G.state === 'countdown', '按「出發！」（跳過三選一）進入倒數');
   ok(!env.els.body._cls.has('ovopen'), '倒數開始 → ovopen 移除、觸控介面回來');
 }
 
