@@ -56,7 +56,7 @@ const HOOK = 'window.__errs=[];' +
     ok(M.ul, '__BHUnlock 有載入');
     ok(M.sh, '__BHShare 有載入');
     ok(M.nd, '__BHNotify 有載入');
-    ok(M.ver === '5.57', '版本是 5.57（實際 ' + M.ver + '）');
+    ok(M.ver === '5.58', '版本是 5.58（實際 ' + M.ver + '）');
 
     console.log('\n=== ② 外觀面板 ===');
     const S = JSON.parse(await p.eval(`(function(){
@@ -109,24 +109,44 @@ const HOOK = 'window.__errs=[];' +
         localStorage.removeItem('bombhero-unlock-v1');
         C.online = function(){ return true; };
         C.guest  = function(){ return true; };
-        C.acc    = function(){ return {kind:'guest', unlocked:0}; };
+        /* 線上全新遊客帳號的真實長相：unlocked 預設就是 1、rpg 全 0 */
+        C.acc    = function(){ return {kind:'guest', unlocked:1, rpg:{cleared:0, xp:0}}; };
         U.paint();
-        var g = { rpg:document.getElementById('btnRpg').classList.contains('locked'),
-                  br:document.getElementById('btnBR').classList.contains('locked'),
-                  mp:document.getElementById('btnMulti').classList.contains('locked'),
-                  vet:U.isVeteran(), all:U.state().all };
-        C.guest = function(){ return false; };
-        C.acc   = function(){ return {kind:'member', unlocked:0}; };
-        U.paint();
-        var m = { rpg:document.getElementById('btnRpg').classList.contains('locked'),
-                  vet:U.isVeteran(), all:U.state().all };
-        return JSON.stringify({g:g,m:m});
+        return JSON.stringify({
+          rpg:document.getElementById('btnRpg').classList.contains('locked'),
+          br:document.getElementById('btnBR').classList.contains('locked'),
+          mp:document.getElementById('btnMulti').classList.contains('locked'),
+          vet:U.isVeteran(), all:U.state().all
+        });
       }catch(e){return JSON.stringify({err:String(e)});}
     })()`) || '{}');
-    ok(G.g && G.g.vet === false, '自動建立的遊客帳號不算老玩家');
-    ok(G.g && G.g.rpg === true && G.g.br === true && G.g.mp === true, '遊客 → 三個入口仍然上鎖');
-    ok(G.m && G.m.vet === true && G.m.all === 1, '真的登入的會員 → 判成老玩家、全開');
-    ok(G.m && G.m.rpg === false, '會員 → RPG 入口解鎖');
+    ok(!G.err, '狀態取得成功' + (G.err ? '（' + G.err + '）' : ''));
+    ok(G.vet === false, '自動建立的遊客帳號不算老玩家（unlocked 預設 1 也不算）');
+    ok(G.rpg === true && G.br === true && G.mp === true, '遊客 → 三個入口仍然上鎖');
+    ok(G.all === 0, '沒有被誤標成「全開」');
+
+    /* 主檔的 homeFill／面板開合會整段重畫首頁 → locked 被洗掉。
+       線上就是這樣漏掉的（開一次外觀面板再關，鎖就不見）。輪詢必須補回來。 */
+    await p.eval("document.getElementById('btnRpg').classList.remove('locked');document.getElementById('btnBR').classList.remove('locked');");
+    await new Promise(function (r) { setTimeout(r, 1500); });
+    const RP = JSON.parse(await p.eval(`JSON.stringify({
+      rpg:document.getElementById('btnRpg').classList.contains('locked'),
+      br:document.getElementById('btnBR').classList.contains('locked')
+    })`) || '{}');
+    ok(RP.rpg === true && RP.br === true, 'class 被重畫洗掉後，900ms 輪詢會自己補回鎖定');
+
+    const M2 = JSON.parse(await p.eval(`(function(){
+      try{
+        var C = window.__BH.Cloud, U = window.__BHUnlock;
+        C.guest = function(){ return false; };
+        C.acc   = function(){ return {kind:'member', rpg:{cleared:0, xp:0}}; };
+        U.paint();
+        return JSON.stringify({ rpg:document.getElementById('btnRpg').classList.contains('locked'),
+                                vet:U.isVeteran(), all:U.state().all });
+      }catch(e){return JSON.stringify({err:String(e)});}
+    })()`) || '{}');
+    ok(M2.vet === true && M2.all === 1, '真的登入的會員 → 判成老玩家、全開');
+    ok(M2.rpg === false, '會員 → RPG 入口解鎖');
 
     console.log('\n=== ④ 解鎖（老玩家）===');
     await p.eval("localStorage.setItem('bombhero-stage','20');localStorage.removeItem('bombhero-unlock-v1');");

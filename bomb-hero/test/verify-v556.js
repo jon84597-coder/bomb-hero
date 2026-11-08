@@ -166,10 +166,17 @@ ok(/5/.test(R5.needTitle || ''), '上鎖時 title 有講「通關第幾關」（
 const R6 = runUnlock(offCloud, { 'bombhero-stage': '11' });
 ok(R6.rpg === false && R6.br === false && R6.multi === true, '通關 10 關 → RPG＋大逃殺都開，多人還鎖');
 
-const R7 = runUnlock({ online: function () { return true; }, guest: function () { return true; }, acc: function () { return { kind: 'guest', unlocked: 6 }; } }, {});
-ok(R7.vet === true, '遊客但伺服器上有 RPG 進度（unlocked=6）→ 補判成老玩家，換裝置的玩家不會被鎖回去');
+const R7 = runUnlock({ online: function () { return true; }, guest: function () { return true; }, acc: function () { return { kind: 'guest', unlocked: 1, rpg: { cleared: 0, xp: 0 } }; } }, {});
+ok(R7.vet === false, '全新遊客帳號（unlocked 預設就是 1、rpg 全 0）→ 不算老玩家（v5.56 第二個洞）');
+
+const R8 = runUnlock({ online: function () { return true; }, guest: function () { return true; }, acc: function () { return { kind: 'guest', unlocked: 1, rpg: { cleared: 3, xp: 120 } }; } }, {});
+ok(R8.vet === true && R8.rpg === false, '遊客但伺服器上有 RPG 進度（cleared=3）→ 視為老玩家，換裝置不會被鎖回去');
 
 ok(/C\.guest\(\)/.test(unlockSrc) && /!guest/.test(unlockSrc), '老玩家判定有讀遊客身分（反向：改回「online 就算」會在這裡紅）');
+ok(!/a\.unlocked \| 0\) > 0/.test(unlockSrc), '反向：不再用 acc.unlocked 當「玩過 RPG」（遊客帳號預設就是 1）');
+ok(/rg\.cleared \| 0\) > 0/.test(unlockSrc), '改看 rpg.cleared／rpg.xp 這種「真的打過」的欄位');
+ok(/function tick\(\)[\s\S]{0,600}paint\(!changed\)/.test(unlockSrc),
+  '輪詢每一輪都重鋪（主檔 homeFill 重畫首頁會把 locked 洗掉，不能只在關數變了才鋪）');
 
 ok(/btnSkins/.test(htmlSrc), '「更多」抽屜有外觀入口');
 ok(/skins\.js/.test(htmlSrc) && /sharecard\.js/.test(htmlSrc) && /notify\.js/.test(htmlSrc),

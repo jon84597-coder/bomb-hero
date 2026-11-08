@@ -74,13 +74,14 @@
      ① 真的註冊／登入的會員（或伺服器上已經有 RPG 進度的人）。
      ② 本機進度已經走完整條階梯（通關 ≥15 關），鎖他沒有任何意義。
 
-     2026-11 兩次修正（都是線上實測才抓到）：
+     2026-11 三次修正（全部是線上實測才抓到）：
      a. 原本寫成 Cloud.online() || Cloud.acc()。但 Cloud.init() 一開場就打
         /api/auth/guest，替每位訪客自動建遊客帳號 → online 恆為 true、acc 恆非 null
         → 所有人第一次進來就被判成老玩家，三個門檻形同不存在。
-     b. 也不能只認「有 bombhero-stage 這個鍵」：過完第 1 關它就被寫進去，
-        於是第 2 關就全開，階梯還是等於不存在（0 與 1 之間沒有區別）。
-        所以改成看「走了多遠」，不是「有沒有開始走」。
+     b. 也不能只認「有 bombhero-stage 這個鍵」：開機就會寫成 1，
+        於是階梯只剩 0 與 1 兩格。改成看「走了多遠」，不是「有沒有開始走」。
+     c. 也不能用 acc.unlocked > 0 當「玩過 RPG」：全新遊客帳號的 unlocked
+        本來就是 1（第 1 章預設解鎖）。要看真的打過（rpg.cleared／rpg.xp）。
 
      已經開過 v5.56 的玩家不受影響：那時 ST.all 早就被寫成 1，存在 bombhero-unlock-v1。 */
   function isVeteran() {
@@ -92,7 +93,8 @@
         var a = (typeof C.acc === 'function') ? C.acc() : null;
         if (on && !guest) return true;                              /* 會員 */
         if (a && a.kind && a.kind !== 'guest') return true;         /* 保險：kind 認得出是會員 */
-        if (a && (a.unlocked | 0) > 0) return true;                 /* 玩過 RPG ＝ 老玩家 */
+        var rg = (a && a.rpg) || null;
+        if (rg && ((rg.cleared | 0) > 0 || (rg.xp | 0) > 0)) return true;  /* 真的打過 RPG */
       }
     } catch (e2) {}
     var last = GATES[GATES.length - 1];
@@ -205,13 +207,19 @@
   var timer = 0;
   var lastN = -1;
 
-  /* 只盯「已通關關數」這個數字 —— 它一變就重畫。
+  /* 900ms 一次：讀「已通關關數」＋重鋪鎖定狀態。
      不去碰畫面可見性判斷：各版本的標題畫面用 class 或 display 控制都有，
-     與其猜，不如讓這 900ms 的檢查變成純字串讀取（成本可忽略）。 */
+     與其猜，不如讓這 900ms 的檢查變成純字串讀取＋三次 classList（成本可忽略）。 */
   function tick() {
     try {
       var n = cleared();
-      if (n !== lastN) { lastN = n; paint(false); }
+      var changed = (n !== lastN);
+      lastN = n;
+      /* 每輪都重鋪，不只是關數變了才鋪：主檔的 homeFill／面板開合會整段重畫首頁，
+         locked 這個 class 會被洗掉（線上實測：開一次外觀面板再關，鎖就不見了）。
+         paint 只是三次 getElementById ＋ classList 比對，900ms 一次的成本可忽略。
+         關數有變才慶祝（silent=false），其餘只做靜默修補。 */
+      paint(!changed);
     } catch (e) {}
   }
 
