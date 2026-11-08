@@ -151,6 +151,19 @@ ok(Array.isArray(PC.SEL) && PC.SEL.length === 7, 'SEL 有 7 條（實際 ' + (PC
 ok(typeof PC.open === 'function' && typeof PC.close === 'function', '有 open／close');
 
 /* ============================================================
+   ③c 榜單帶 pid：不再靠名字比對
+   ============================================================ */
+sec('③c 榜單記「這一行是誰」');
+ok(/const whoPid = \/\^p_\[0-9a-f\]\{10\}\$\//.test(cloudSrc), '後端只收長得像 p_xxxxxxxxxx 的 pid');
+ok(/if \(whoPid\) mine\.pid = whoPid;/.test(cloudSrc), '新舊紀錄都會補上 pid（補一次就永久有）');
+ok(/if \(e\.pid\) o\.pid = e\.pid;/.test(cloudSrc), '/api/lb/top 會把 pid 帶出去');
+ok(/data-pid="' \+ hesc\(String\(e\.pid\)\)/.test(mainSrc), '榜單那一列有 data-pid');
+ok(/body\.pid = \(typeof Social !== 'undefined' && Social\.pid\)/.test(mainSrc), '送成績時會帶自己的 pid');
+ok(/pid: function \(\) \{ return \(S\.me && S\.me\.pid\) \|\| ''; \}/.test(mainSrc), 'Social 對外給了 pid()');
+ok(/hot\.closest\('\[data-pid\]'\)/.test(pcSrc), '卡片會往外層找 data-pid（榜單的 pid 寫在列上）');
+ok(/\^p_\[0-9a-f\]\{10\}\$\/\.test\(pid\)/.test(pcSrc), '前端也驗 pid 形狀（不接受亂傳）');
+
+/* ============================================================
    ④ Social.showPlayer
    ============================================================ */
 sec('④ Social.showPlayer（卡片 → 完整資料頁）');

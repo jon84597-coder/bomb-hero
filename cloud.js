@@ -1640,6 +1640,7 @@ function createCloud(options) {
     for (let i = 0; i < arr.length && out.length < (limit || 50); i++) {
       const e = arr[i];
       const o = { n: e.n, ms: e.ms | 0, at: Number(e.at) || 0 };
+      if (e.pid) o.pid = e.pid;      // v5.59：榜上這個人是誰（前端拿去查公開資料）
       /* v5.56：稱號代號與佩戴成就（沒戴就不帶欄位，省流量） */
       if (typeof e.tt === 'number' && e.tt >= 0) o.tt = e.tt | 0;
       if (e.eq) o.eq = e.eq;
@@ -2631,6 +2632,9 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         const ms = Math.round(Number(body.ms));
         if (!isFinite(ms) || ms < LB_MIN_MS || ms > LB_MAX_MS) return fail(res, 400, 'BAD_TIME', CORS_LB), true;
         const name = lbCleanName(body.name);
+        /* v5.59：順便把「社交身分」記進榜單。名字可以改、也可能跟 brName 不一樣，
+           只靠名字比對會有一堆人查不到；pid 是穩定的（見 socPublic / pidOf）。 */
+        const whoPid = /^p_[0-9a-f]{10}$/.test(String(body.pid || '')) ? String(body.pid) : '';
         const dev = sha256(deviceId + '|lb|' + secret).slice(0, 20);
         /* v5.56：每日榜才收殘影軌跡（每週榜沒有固定地圖，影子沒意義） */
         const ghostPath = weekly ? '' : lbCleanPath(body.p);
@@ -2661,6 +2665,8 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         if (mine) {
           if (wearTT >= 0) mine.tt = wearTT; else delete mine.tt;
           if (wearEq) mine.eq = wearEq; else delete mine.eq;
+          /* v5.59：新舊紀錄都補上 pid（舊紀錄沒有，補一次就永久有了） */
+          if (whoPid) mine.pid = whoPid;
           store.touch();
         }
         lbSort(b.list);

@@ -445,8 +445,17 @@
     var n = pickName(hot);
     if (!n) return;
     if (/已離線|已离线/.test(n)) return;
+    /* pid 可能寫在名字節點上，也可能寫在外層那一列（榜單就是寫在 .lbrow 上）。
+       有 pid 就用 pid 查 —— 名字會改、也可能跟 brName 不一樣，比名字可靠得多。 */
     var pid = '';
-    try { pid = hot.getAttribute('data-pid') || ''; } catch (e2) {}
+    try {
+      pid = hot.getAttribute('data-pid') || '';
+      if (!pid && hot.closest) {
+        var row = hot.closest('[data-pid]');
+        if (row) pid = row.getAttribute('data-pid') || '';
+      }
+    } catch (e2) { pid = ''; }
+    if (!/^p_[0-9a-f]{10}$/.test(pid)) pid = '';
     var btn = e.target && e.target.closest ? e.target.closest('button,a') : null;
     if (btn && !btn.closest('#pcModal')) return;   // 名字外層是顆按鈕（例如加入房間）→ 不搶
     open(n, { pid: pid });

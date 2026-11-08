@@ -6324,6 +6324,7 @@ const Lb = {
       let s = '';
       for (let i = 0; i < em.length && i < 3; i++) s += String(em[i].i || '');
       if (s) body.eq = s;
+      body.pid = (typeof Social !== 'undefined' && Social.pid) ? Social.pid() : '';
     } catch (e0) { body.tt = -1; }
     return Lb._post(Lb.origin() + '/api/lb/submit', body);
   },
@@ -8156,6 +8157,7 @@ const Social = (function () {
 
       window.Social = { open: open, close: close, hb: hb, list: fetchList, render: paint, init: init, dmTo: dmTo,
         showPlayer: showPlayer,
+        pid: function () { return (S.me && S.me.pid) || ''; },   // v5.59：榜單要記「我是誰」
         notice: syncNotice, openNotice: openNotice,
         state: function () { return { gender: P.gender, region: P.region, bio: P.bio }; },
         setState: function (o) {
@@ -18087,7 +18089,9 @@ function dailyLbRow(e, i, me) {
         hesc(String(T0.name || '')) + '">' + T0.ico + '</i>';
     }
   }
-  return '<div class="lbrow' + (me ? ' me' : '') + '">' +
+  /* v5.59：榜上這一行是誰 —— 讓「點名字看資料」不必靠名字比對（名字會改、也可能跟 brName 不同） */
+  const who = (e && /^p_[0-9a-f]{10}$/.test(String(e.pid || ''))) ? ' data-pid="' + hesc(String(e.pid)) + '"' : '';
+  return '<div class="lbrow' + (me ? ' me' : '') + '"' + who + '>' +
     '<span class="rk">' + medal + '</span>' +
     '<span class="nm"></span>' + wear + tt +
     '<span class="tm">' + fmtMs(e.ms) + '</span></div>';
