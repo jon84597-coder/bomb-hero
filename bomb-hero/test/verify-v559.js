@@ -70,7 +70,7 @@ ok(/window\.__BHPlayerCard = API/.test(pcSrc), '有掛全域（測試與其他�
 ok(/module\.exports = API/.test(pcSrc), '有 module.exports（測試能直接 require）');
 ok(/window\.__BH/.test(pcSrc) && /typeof b\.t === 'function'/.test(pcSrc), '文案走主檔的 t()（不是自己寫死中文）');
 
-const SEL_NEED = ['[data-pc]', '.lbrow .nm', '.rkname', '.gwrow > span', '#pkRoster .plabel', '#onChatWho b', '#invList .invrow b'];
+const SEL_NEED = ['[data-pc]', '.lbrow .nm', '.rkname', '.gwrow > span:first-child', '#pkRoster .plabel', '#onChatWho b', '#invList .invrow b'];
 SEL_NEED.forEach(function (s) {
   ok(pcSrc.indexOf("'" + s + "'") >= 0, '選擇器有 ' + s);
 });
@@ -88,6 +88,9 @@ ok(/delete inflight\[key\]/.test(pcSrc), '同一個人同時點兩次只打一�
 ok(/cur\.n !== n/.test(pcSrc), '期間被點去別人時，舊回應不會蓋掉新卡片');
 ok(/navigator\.clipboard/.test(pcSrc) && /execCommand\('copy'\)/.test(pcSrc), '複製有兩條路（clipboard／舊瀏覽器 fallback）');
 ok(/已離線\|已离线/.test(pcSrc), '「（已離線）玩家 1234」這種佔位名不當成真人');
+/* 每週榜一列有兩個 span（名字＋秒數），只認第一格；空榜那格是提示語，不是人 */
+ok(/hot\.closest\('\.gwrow'\) &&/.test(pcSrc) && /\^\\d\+\\s\*\[\.、\]/.test(pcSrc),
+  '每週榜只認「1. 名字」那一格（點秒數、空榜提示語都不會開卡片）');
 
 /* 真的 require 起來驗 pickName（靜態正則驗不出剝皮順序） */
 sec('③b pickName 真的跑');

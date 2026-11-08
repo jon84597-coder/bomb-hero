@@ -29,7 +29,7 @@
     '[data-pc]',                    // 手動標記（別的地方要加很容易）
     '.lbrow .nm',                   // 每日榜（結算迷你榜＋完整榜）
     '.rkname',                      // 十項排名
-    '.gwrow > span',                // 每週榜：「1. 名字」
+    '.gwrow > span:first-child',    // 每週榜：「1. 名字」——第二格是秒數，不是人
     '#pkRoster .plabel',            // 對局右上玩家卡
     '#onChatWho b',                 // 私訊標題「與 XXX 的對話」
     '#invList .invrow b'            // 一鍵邀好友的名單
@@ -442,6 +442,10 @@
     if (!e || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     var hot = findHot(e.target);
     if (!hot) return;
+    /* 每週榜整列只有第一格是名字，而且一定要是「1. 名字」；
+       空榜時那一格是「本週還沒有人上榜」—— 別把它當人名去查。 */
+    if (hot.closest && hot.closest('.gwrow') &&
+        !/^\d+\s*[.、]/.test(String(hot.textContent || '').trim())) return;
     var n = pickName(hot);
     if (!n) return;
     if (/已離線|已离线/.test(n)) return;
