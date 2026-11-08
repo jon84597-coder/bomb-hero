@@ -1911,6 +1911,13 @@ sk.free|一開始就有|一开始就有|Available from the start|最初から使
 sk.slot.flame|爆風|爆风|Blast|爆風|폭발
 sk.slot.aura|光環|光环|Aura|オーラ|오라
 sk.slot.bomb|炸彈|炸弹|Bomb|ボム|폭탄
+sk.custTitle|🎨 自訂顏色|🎨 自定义颜色|🎨 Custom color|🎨 カスタムカラー|🎨 사용자 색상
+sk.custSub|不想用預設？自己挑一個，馬上換上。|不想用预设？自己挑一个，马上换上。|Don't like the presets? Pick your own — it applies right away.|プリセットが合わない？自分で選べばすぐ反映されます。|프리셋이 마음에 안 들면 직접 골라 바로 적용됩니다.
+sk.custPick|自由選色|自由选色|Pick any color|自由に選ぶ|자유 색 선택
+sk.custUse|套用|套用|Apply|適用|적용
+sk.custClear|取消|取消|Reset|解除|해제
+sk.custOn|使用中|使用中|In use|使用中|사용 중
+sk.custNone|目前用預設外觀|目前用预设外观|Using a preset|現在はプリセット|현재 프리셋 사용 중
 sk.slotd.flame|炸彈炸開的顏色|炸弹炸开的颜色|The colour of your blast|爆発の色|폭발 색상
 sk.slotd.aura|腳下那圈光|脚下那圈光|The ring under your feet|足元の光|발밑의 빛
 sk.slotd.bomb|手上的炸彈外殼|手上的炸弹外壳|The shell of your bombs|手に持つボムの外殻|손에 든 폭탄 외형

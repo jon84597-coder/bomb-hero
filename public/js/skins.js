@@ -167,13 +167,17 @@
     return '';
   }
 
-  /* ---------------- 存檔 ---------------- */
-  var ST = { own: {}, eq: {} };
+  /* ---------------- 存檔 ----------------
+     v5.60：多了「自訂顏色」—— 玩家自己挑的色碼。eq 存 'custom' 當作一項虛擬外觀，
+     真的顏色在 custom[slot]，所以不用把色碼塞進 ITEMS（清單仍然是固定的收藏品）。 */
+  var ST = { own: {}, eq: {}, custom: { flame: '', aura: '', bomb: '' } };
+
+  function _hexOk(h) { return /^#[0-9a-f]{6}$/.test(String(h || '').toLowerCase()); }
 
   function load() {
     var o = null;
     try { o = JSON.parse(ls(KEY) || 'null'); } catch (e) { o = null; }
-    ST = { own: {}, eq: {} };
+    ST = { own: {}, eq: {}, custom: { flame: '', aura: '', bomb: '' } };
     if (o && typeof o === 'object') {
       if (o.own && typeof o.own === 'object') {
         for (var k in o.own) if (Object.prototype.hasOwnProperty.call(o.own, k) && byId(k)) ST.own[k] = 1;
@@ -181,8 +185,16 @@
       if (o.eq && typeof o.eq === 'object') {
         for (var s in o.eq) {
           if (!Object.prototype.hasOwnProperty.call(o.eq, s)) continue;
+          if (String(o.eq[s]) === 'custom') { if (o.custom && _hexOk(o.custom[s])) ST.eq[s] = 'custom'; continue; }
           var it = byId(String(o.eq[s]));
           if (it && it.slot === s) ST.eq[s] = it.id;
+        }
+      }
+      if (o.custom && typeof o.custom === 'object') {
+        for (var c in ST.custom) {
+          if (Object.prototype.hasOwnProperty.call(o.custom, c) && _hexOk(o.custom[c])) {
+            ST.custom[c] = String(o.custom[c]).toLowerCase();
+          }
         }
       }
     }
@@ -192,11 +204,14 @@
     }
     for (var j = 0; j < SLOTS.length; j++) {
       var sk = SLOTS[j].k;
-      if (!ST.eq[sk] || !ST.own[ST.eq[sk]]) ST.eq[sk] = defaultOf(sk);
+      /* 'custom' 不是 ITEMS 裡的項目，不能拿 own 去擋；但色碼不見了就退回預設 */
+      var eq = ST.eq[sk];
+      if (eq === 'custom') { if (!ST.custom[sk]) ST.eq[sk] = defaultOf(sk); }
+      else if (!eq || !ST.own[eq]) ST.eq[sk] = defaultOf(sk);
     }
   }
   function save() {
-    try { ls(KEY, JSON.stringify({ own: ST.own, eq: ST.eq })); } catch (e) {}
+    try { ls(KEY, JSON.stringify({ own: ST.own, eq: ST.eq, custom: ST.custom })); } catch (e) {}
   }
 
   /* 條件達成的就自動記為「已解鎖」（不自動裝備，讓玩家自己選） */
@@ -231,14 +246,28 @@
     var A = _rgb(a), B = _rgb(b);
     return _hex(A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t);
   }
+  function csv(h) { var c = _rgb(h); return c[0] + ',' + c[1] + ',' + c[2]; }
+
+  /* 自己挑的顏色 → 5 段爆風色停（跟內建 pal 同一個格式：白熱核心 → 主色 → 暗邊透明）。
+     主檔的 drawFlame 只認「長度 5、含 A 佔位符」的字串，所以在這裡算好，熱路徑零成本。 */
+  function flamePal(hex) {
+    return [
+      'rgba(255,255,255,A)',
+      'rgba(' + csv(mix(hex, '#ffffff', .74)) + ',A)',
+      'rgba(' + csv(mix(hex, '#ffffff', .38)) + ',A)',
+      'rgba(' + csv(hex) + ',A)',
+      'rgba(' + csv(mix(hex, '#000000', .46)) + ',0)'
+    ];
+  }
 
   function rebuild() {
     var f = byId(ST.eq.flame) || null;
-    CACHE.flame = (f && f.pal) ? f.pal : null;
-    var a = byId(ST.eq.aura) || null;
-    CACHE.aura = (a && a.hex) ? a.hex : '';
-    var b = byId(ST.eq.bomb) || null;
-    CACHE.bomb = (b && b.hex) ? b.hex : '';
+    if (ST.eq.flame === 'custom' && ST.custom.flame) CACHE.flame = flamePal(ST.custom.flame);
+    else CACHE.flame = (f && f.pal) ? f.pal : null;
+    if (ST.eq.aura === 'custom' && ST.custom.aura) CACHE.aura = ST.custom.aura;
+    else { var a = byId(ST.eq.aura) || null; CACHE.aura = (a && a.hex) ? a.hex : ''; }
+    if (ST.eq.bomb === 'custom' && ST.custom.bomb) CACHE.bomb = ST.custom.bomb;
+    else { var b = byId(ST.eq.bomb) || null; CACHE.bomb = (b && b.hex) ? b.hex : ''; }
     CACHE.bombStops = CACHE.bomb
       ? [mix(BOMB_BASE[0], CACHE.bomb, .55), mix(BOMB_BASE[1], CACHE.bomb, .58),
          mix(BOMB_BASE[2], CACHE.bomb, .55), mix(BOMB_BASE[3], CACHE.bomb, .40)]
@@ -261,6 +290,84 @@
     }
     if (it.hex) return '<i class="sw dot" style="--c1:' + it.hex + '"></i>';
     return '<i class="sw none"></i>';
+  }
+
+  /* ---------------- 自訂顏色（v5.60） ----------------
+     預設外觀只有 6~8 個選項，玩家想要「自己的顏色」時沒地方去。
+     這裡給一組色票（色相 × 明度）＋ 系統取色盤，選了就立刻換上。
+     色票是算出來的，不是寫死 42 個色碼 —— 想調密度只改兩個陣列。 */
+  function hsl2hex(h, s, l) {
+    h = ((h % 360) + 360) % 360 / 360; s /= 100; l /= 100;
+    if (s === 0) return _hex(l * 255, l * 255, l * 255);
+    var q = l < .5 ? l * (1 + s) : l + s - l * s;
+    var p = 2 * l - q;
+    var hue = function (t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    return _hex(hue(h + 1 / 3) * 255, hue(h) * 255, hue(h - 1 / 3) * 255);
+  }
+
+  var HUES = [0, 22, 45, 70, 95, 125, 150, 170, 190, 210, 235, 260, 285, 310, 335];
+  var LIGHTS = [72, 56, 42];
+  var GREYS = ['#ffffff', '#d9d9d9', '#a6a6a6', '#737373', '#404040', '#111111'];
+
+  function swatches() {
+    var out = [], i, j;
+    for (j = 0; j < LIGHTS.length; j++) {
+      for (i = 0; i < HUES.length; i++) out.push(hsl2hex(HUES[i], j === 2 ? 92 : 82, LIGHTS[j]));
+    }
+    return out.concat(GREYS);
+  }
+
+  /* 目前這個槽的狀態：用自訂色 / 用預設外觀 */
+  function customNow(slot) {
+    return (ST.eq[slot] === 'custom' && ST.custom[slot]) ? ST.custom[slot] : '';
+  }
+
+  function customBlock() {
+    var slot = curSlot;
+    var now = customNow(slot);
+    var list = swatches(), i;
+    var h = '<div class="skcus">' +
+      '<div class="skcush"><b>' + T('sk.custTitle', null, '🎨 自訂顏色') + '</b>' +
+      '<small>' + T('sk.custSub', null, '不想用預設？自己挑一個，馬上換上。') + '</small></div>' +
+      '<div class="skcusw">';
+    for (i = 0; i < list.length; i++) {
+      h += '<button type="button" class="skcud' + (now === list[i] ? ' on' : '') +
+        '" data-cust="' + list[i] + '" title="' + list[i] + '" style="--c:' + list[i] + '"></button>';
+    }
+    h += '</div><div class="skcurow">' +
+      '<label class="skculab"><input type="color" class="skcuin" value="' + (now || '#ff8844') + '">' +
+      '<span>' + T('sk.custPick', null, '自由選色') + '</span></label>' +
+      '<button type="button" class="skcubtn" data-custuse="1">' + T('sk.custUse', null, '套用') + '</button>' +
+      (now ? '<button type="button" class="skcubtn ghost" data-custclear="1">' +
+        T('sk.custClear', null, '取消') + '</button>' : '') +
+      '</div>';
+    h += '<div class="skcufoot">' + (now
+      ? '<i class="skcudot" style="--c:' + now + '"></i>' +
+        T('sk.custOn', null, '使用中') + ' · <code>' + now + '</code>'
+      : '<span class="skcuhint">' + T('sk.custNone', null, '目前用預設外觀') + '</span>') + '</div></div>';
+    return h;
+  }
+
+  function applyCustom(slot, hex) {
+    hex = String(hex || '').toLowerCase();
+    if (!_hexOk(hex)) return;
+    ST.custom[slot] = hex;
+    ST.eq[slot] = 'custom';
+    save(); rebuild(); render();
+    try { var A = api('AudioSys'); if (A && A.sfx) A.sfx('coin'); } catch (e) {}
+  }
+
+  function clearCustom(slot) {
+    ST.eq[slot] = defaultOf(slot);
+    save(); rebuild(); render();
+    try { var A = api('AudioSys'); if (A && A.sfx) A.sfx('click'); } catch (e) {}
   }
 
   function render() {
@@ -296,7 +403,7 @@
         (lock && pr.need > 1 ? '<em>' + Math.min(pr.cur, pr.need) + '/' + pr.need + '</em>' : '') +
         '</button>';
     }
-    box.innerHTML = '<div class="skgrid">' + h + '</div>';
+    box.innerHTML = '<div class="skgrid">' + h + '</div>' + customBlock();
 
     var cnt = root.querySelector('.skcnt');
     if (cnt) {
@@ -305,11 +412,31 @@
       cnt.textContent = T('sk.count', { a: got, b: tot }, '已收集 {a} / {b}');
     }
 
+    /* 系統取色盤：只在「放開」時套用，不然拖動過程中會被 render 重建而中斷 */
+    var inp = box.querySelector('.skcuin');
+    if (inp) inp.onchange = function () { applyCustom(curSlot, inp.value); };
+
     box.onclick = function (e) {
       var el = e.target;
-      while (el && el !== box && !el.getAttribute('data-id')) el = el.parentNode;
-      if (!el || el === box) return;
-      var id = el.getAttribute('data-id');
+      /* 自訂配色區先處理：色票 / 套用 / 取消（都不該落到外觀清單那條路） */
+      var c2 = el;
+      while (c2 && c2 !== box && !(c2.getAttribute &&
+             (c2.getAttribute('data-cust') || c2.getAttribute('data-custuse') != null ||
+              c2.getAttribute('data-custclear') != null))) c2 = c2.parentNode;
+      if (c2 && c2 !== box && c2.getAttribute) {
+        var chex = c2.getAttribute('data-cust');
+        if (chex) { applyCustom(curSlot, chex); return; }
+        if (c2.getAttribute('data-custuse') != null) {
+          var ip = box.querySelector('.skcuin');
+          applyCustom(curSlot, ip ? ip.value : (ST.custom[curSlot] || ''));
+          return;
+        }
+        if (c2.getAttribute('data-custclear') != null) { clearCustom(curSlot); return; }
+      }
+      var el2 = el;
+      while (el2 && el2 !== box && !el2.getAttribute('data-id')) el2 = el2.parentNode;
+      if (!el2 || el2 === box) return;
+      var id = el2.getAttribute('data-id');
       pick(id);
     };
     var tabsEl = root.querySelector('.sktabs');
@@ -401,6 +528,26 @@
       + '#skinPanel .sw.dot{background:radial-gradient(circle at 38% 34%,#fff 0%,var(--c1) 42%,var(--c1) 100%);'
       + 'box-shadow:0 0 10px var(--c1)}'
       + '#skinPanel .sw.none{background:#e8e3d8;box-shadow:inset 0 0 0 2px #d6cfc0}'
+      /* v5.60：自訂顏色區（色票＋系統取色盤） */
+      + '#skinPanel .skcus{margin-top:14px;padding-top:12px;border-top:1px dashed rgba(120,96,60,.28)}'
+      + '#skinPanel .skcush{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}'
+      + '#skinPanel .skcush b{font-size:13px;color:#3a2c18}'
+      + '#skinPanel .skcush small{font-size:11px;color:#9b8c70}'
+      + '#skinPanel .skcusw{display:grid;grid-template-columns:repeat(auto-fill,minmax(26px,1fr));gap:6px}'
+      + '#skinPanel .skcud{height:26px;border-radius:8px;border:1px solid rgba(60,44,24,.20);'
+      + 'background:var(--c);cursor:pointer;padding:0;box-shadow:inset 0 -7px 10px rgba(0,0,0,.14)}'
+      + '#skinPanel .skcud.on{box-shadow:0 0 0 2px #fff,0 0 0 4px #c9922a}'
+      + '#skinPanel .skcurow{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}'
+      + '#skinPanel .skculab{display:flex;align-items:center;gap:7px;border:1px solid rgba(120,96,60,.24);'
+      + 'border-radius:11px;padding:6px 10px;background:#fff;cursor:pointer;font:600 12px/1 inherit;color:#3a2c18}'
+      + '#skinPanel .skcuin{width:30px;height:24px;border:none;background:none;padding:0;cursor:pointer}'
+      + '#skinPanel .skcubtn{border:1px solid rgba(120,96,60,.26);border-radius:11px;padding:9px 15px;'
+      + 'font:700 12px/1 inherit;background:#fff;color:#3a2c18;cursor:pointer}'
+      + '#skinPanel .skcubtn.ghost{background:#f3ede0;color:#8a7a5c}'
+      + '#skinPanel .skcufoot{margin-top:9px;font-size:11px;color:#8a7a5c;display:flex;align-items:center;gap:6px;flex-wrap:wrap}'
+      + '#skinPanel .skcudot{width:14px;height:14px;border-radius:50%;background:var(--c);'
+      + 'box-shadow:inset 0 0 0 2px #fff,0 0 0 1px rgba(0,0,0,.18)}'
+      + '#skinPanel .skcufoot code{font:600 11px/1 ui-monospace,monospace;color:#3a2c18}'
       + '#skinPanel .skfoot{display:flex;justify-content:center;margin-top:14px}'
       + '#skinPanel .skclose{border:none;border-radius:12px;padding:11px 30px;font:700 14px/1 inherit;'
       + 'background:linear-gradient(180deg,#5c4526,#3a2c18);color:#ffe9b8;cursor:pointer}'
@@ -435,9 +582,12 @@
   var Skins = {
     ITEMS: ITEMS, SLOTS: SLOTS,
     open: open,
-    state: function () { return { own: ST.own, eq: ST.eq }; },
+    state: function () { return { own: ST.own, eq: ST.eq, custom: ST.custom }; },
     of: byId, progress: progress, howText: howText,
     color: function (slot) { return CACHE[slot] || (slot === 'flame' ? null : ''); },
+    /* v5.60：自訂顏色（面板用，也給測試直接驗） */
+    swatches: swatches, applyCustom: applyCustom, clearCustom: clearCustom,
+    flamePal: flamePal, customNow: customNow,
     refresh: function () { load(); syncOwn(); rebuild(); }
   };
 

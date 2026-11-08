@@ -63,7 +63,7 @@ ok(/ctx\.globalCompositeOperation = 'lighter'/.test(mainSrc) && /auraHex/.test(m
    ============================================================ */
 sec('② 模式遞進解鎖');
 ok(/bombhero-unlock-v1/.test(unlockSrc), '有獨立存檔 key');
-ok(/need: 5/.test(unlockSrc) && /need: 10/.test(unlockSrc) && /need: 15/.test(unlockSrc), '門檻 5／10／15 關');
+ok(/need: 3/.test(unlockSrc) && /need: 6/.test(unlockSrc) && /need: 9/.test(unlockSrc), '門檻 3／6／9 關（測試期壓低，讓大家快點摸到每個玩法）');
 ok(/sel: 'btnRpg'/.test(unlockSrc) && /sel: 'btnBR'/.test(unlockSrc) && /sel: 'btnMulti'/.test(unlockSrc), '三個被鎖的入口都對得上實際 id');
 ok(/function isVeteran\(\)/.test(unlockSrc), '有老玩家判定');
 ok(/cleared\(\) >= /.test(unlockSrc), '老玩家判定看「走了多遠」而不是「有沒有開始走」（過完第 1 關不算老玩家）');
@@ -155,16 +155,23 @@ ok(R2.rpg === false && R2.br === false, '會員 → 三個入口全開');
 const R3 = runUnlock(offCloud, { 'bombhero-stage': '20' });
 ok(R3.vet === true && R3.rpg === false, '有通關紀錄（離線）→ 全開');
 
-const R4 = runUnlock(offCloud, { 'bombhero-stage': '6' });
-ok(R4.rpg === false && R4.br === true && R4.multi === true, '通關 5 關（stage=6）→ 只開 RPG（br／multi 仍鎖）');
+const R4 = runUnlock(offCloud, { 'bombhero-stage': '4' });
+ok(R4.rpg === false && R4.br === true && R4.multi === true, '通關 3 關（stage=4）→ 只開 RPG（br／multi 仍鎖）');
 
 const R5 = runUnlock(offCloud, { 'bombhero-stage': '1' });
 ok(R5.rpg === true && R5.br === true && R5.multi === true, '全新（0 關）→ 三個都鎖');
 ok(R5.vet === false, '只過完第 1 關（鍵已存在）也不算老玩家 —— 否則階梯只剩 0／1 兩格');
-ok(/5/.test(R5.needTitle || ''), '上鎖時 title 有講「通關第幾關」（實際：' + R5.needTitle + '）');
+ok(/3/.test(R5.needTitle || ''), '上鎖時 title 有講「通關第幾關」（實際：' + R5.needTitle + '）');
 
-const R6 = runUnlock(offCloud, { 'bombhero-stage': '11' });
-ok(R6.rpg === false && R6.br === false && R6.multi === true, '通關 10 關 → RPG＋大逃殺都開，多人還鎖');
+const R6 = runUnlock(offCloud, { 'bombhero-stage': '7' });
+ok(R6.rpg === false && R6.br === false && R6.multi === true, '通關 6 關 → RPG＋大逃殺都開，多人還鎖');
+
+const R6b = runUnlock(offCloud, { 'bombhero-stage': '9' });
+ok(R6b.rpg === false && R6b.br === false && R6b.multi === true && R6b.vet === false,
+  '通關 8 關 → 多人仍鎖，而且還沒被當老玩家（階梯最後一階＝9 關）');
+
+const R6c = runUnlock(offCloud, { 'bombhero-stage': '10' });
+ok(R6c.rpg === false && R6c.br === false && R6c.multi === false, '通關 9 關（走完階梯）→ 三個全開');
 
 const R7 = runUnlock({ online: function () { return true; }, guest: function () { return true; }, acc: function () { return { kind: 'guest', unlocked: 1, rpg: { cleared: 0, xp: 0 } }; } }, {});
 ok(R7.vet === false, '全新遊客帳號（unlocked 預設就是 1、rpg 全 0）→ 不算老玩家（v5.56 第二個洞）');
