@@ -158,7 +158,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.61';
+const VERSION = '5.62';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -7443,8 +7443,12 @@ const Social = (function () {
         const q = function (n) { return (n < 10 ? '0' : '') + n; };
         return d.getFullYear() + '/' + q(d.getMonth() + 1) + '/' + q(d.getDate());
       }
+      /* v5.62：t 是 0 或壞值時，算出來會是「20765 天前」這種荒唐數字。
+         這裡擋掉不合理範圍（2001～2100 年），叫不出來就回破折號。 */
       function ago(t) {
-        const d = Math.max(0, Date.now() - (t || 0)) / 1000;
+        const ts = Number(t) || 0;
+        if (ts < 1e11 || ts > 4e12) return '—';
+        const d = Math.max(0, Date.now() - ts) / 1000;
         if (d < 60) return '剛剛';
         if (d < 3600) return Math.floor(d / 60) + ' 分鐘前';
         if (d < 86400) return Math.floor(d / 3600) + ' 小時前';
@@ -7853,7 +7857,7 @@ const Social = (function () {
           '<div class="odname">' + esc(p.name || '無名玩家') + '</div>' +
           '<div class="odtt">' + titleChip(titleByNo(p.tt)) + '</div>' +
           '<div class="odid">玩家編號 ' + pcode(p.pid) + ' · ' + (p.kind === 'member' ? '會員' : '遊客') +
-          ' · ' + ago(p.seen) + '有動靜</div></div></div>' +
+          ' · ' + (ago(p.seen) === '—' ? '還沒有動靜' : ago(p.seen) + '有動靜') + '</div></div></div>' +
           '<div class="odgrid">' +
             '<div class="odcell">性別<b>' + esc(p.gender || '不公開') + '</b></div>' +
             '<div class="odcell">來自<b>' + esc(p.region || '未知') + '</b></div>' +

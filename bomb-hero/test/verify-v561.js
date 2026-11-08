@@ -133,11 +133,29 @@ ok(/function okTs\(ts\)/.test(pcSrc) && /t > 1e12 && t < 4e12/.test(pcSrc),
   '合理範圍寫死（2001～2100 年），超出就不顯示');
 
 /* ============================================================
+   ④b ago()：壞值不要變成「20765 天前」
+   ============================================================ */
+sec('④b 相對時間的防呆');
+let agoFn = null;
+try { agoFn = new Function('return ' + grab(mainSrc, 'ago'))(); } catch (e) { agoFn = null; }
+ok(typeof agoFn === 'function', 'ago 可執行');
+if (typeof agoFn === 'function') {
+  ok(agoFn(0) === '—', 'seen 為 0 → —，不是「20765 天前」（實際 ' + agoFn(0) + '）');
+  ok(agoFn(-1394471074) === '—', '截斷的負數 → —');
+  ok(agoFn(undefined) === '—', 'undefined → —');
+  ok(agoFn(1793901858) === '—', '秒級時間戳 → —');
+  ok(/^剛剛|分鐘前|小時前|天前$/.test(agoFn(Date.now())) || /剛剛/.test(agoFn(Date.now())),
+    '現在的時間 → 剛剛（' + agoFn(Date.now()) + '）');
+  ok(/天前/.test(agoFn(Date.now() - 3 * 86400000)), '三天前 → 「3 天前」');
+}
+ok(/ago\(p\.seen\) === '—' \? '還沒有動靜'/.test(mainSrc), 'seen 無效時說「還沒有動靜」，不硬湊一句');
+
+/* ============================================================
    ⑤ 版本
    ============================================================ */
 sec('⑤ 版本');
 const ver = (mainSrc.match(/const VERSION = '([\d.]+)'/) || [])[1] || '0';
-ok(parseFloat(ver) >= 5.61, '主檔版本 ≥ 5.61（實際 ' + ver + '）');
+ok(parseFloat(ver) >= 5.62, '主檔版本 ≥ 5.62（實際 ' + ver + '）');
 ok(new RegExp("v: '" + ver + "'[^\\n]*now: true").test(vlogSrc), 'VERSION_LOG 有 ' + ver + ' 且是 now:true');
 ok(/5\.60[^]*now: false/.test(vlogSrc), '上一版 5.60 已標成 now:false');
 ok(/加入時間/.test(vlogSrc), '版本日誌有提到這次修的內容');
