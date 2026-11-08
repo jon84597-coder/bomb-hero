@@ -1901,4 +1901,62 @@ pad.none|還沒偵測到手把 —— 藍牙配對完<b>按一下手把上的鍵
 settings.padHint|接上手把後<b>按一下任意鍵</b>，瀏覽器才會回報。同一支手把只能佔一個位置；兩支同款也分得開（用「型號＋序號」認）。藍牙延遲高時把距離拉近或改用有線。|接上手把后<b>按一下任意键</b>，浏览器才会回报。同一支手把只能占一个位置；两支同款也分得开（用「型号＋序号」认）。蓝牙延迟高时把距离拉近或改用有线。|After connecting a pad, <b>press any button</b> so the browser reports it. One pad takes one slot, and two identical pads are still told apart (by model and serial). If Bluetooth lags, move closer or use a cable.|パッドを接続したら<b>いずれかのボタンを押す</b>とブラウザが認識します。1台につき1スロットで、同型番2台も区別できます（型番＋シリアルで判定）。Bluetooth の遅延が大きいときは距離を縮めるか有線にしてください。|패드를 연결한 뒤 <b>아무 버튼이나 누르면</b> 브라우저가 인식합니다. 패드 하나당 슬롯 하나이며, 같은 모델 두 대도 구분됩니다(모델＋시리얼 기준). 블루투스 지연이 크면 가까이 대거나 유선을 사용하세요.
 rpg.leftRow|剩餘 {n} 點|剩余 {n} 点|Points left: {n}|残り {n} ポイント|남은 포인트 {n}
 rpg.ptHint|前 3 格純點數，第 4 格起「1 點 ＋ 金幣」|前 3 格纯点数，第 4 格起「1 点 ＋ 金币」|the first 3 slots cost points only; from the 4th each slot costs points plus coins|最初の3マスはポイントのみ、4マス目からは「1ポイント＋コイン」|처음 3칸은 포인트만, 4번째 칸부터는 「1포인트 ＋ 코인」
+sk.title|外觀收藏|外观收藏|Appearance|外見コレクション|외형 컬렉션
+sk.close|關閉|关闭|Close|閉じる|닫기
+sk.tip|這些外觀不能用金幣買 —— 只能靠玩遊戲拿到。|这些外观不能用金币买 —— 只能靠玩游戏拿到。|These can't be bought with coins — you earn them by playing.|これらはコインで買えません —— プレイして獲得するだけです。|이 외형은 코인으로 살 수 없습니다 — 플레이로만 얻습니다.
+sk.count|已收集 {a} / {b}|已收集 {a} / {b}|Collected {a} / {b}|{a} / {b} 収集済み|{a} / {b} 수집
+sk.on|使用中|使用中|In use|使用中|사용 중
+sk.tapUse|點一下換上|点一下换上|Tap to wear|タップで装着|탭하여 착용
+sk.free|一開始就有|一开始就有|Available from the start|最初から使えます|처음부터 사용 가능
+sk.slot.flame|爆風|爆风|Blast|爆風|폭발
+sk.slot.aura|光環|光环|Aura|オーラ|오라
+sk.slot.bomb|炸彈|炸弹|Bomb|ボム|폭탄
+sk.slotd.flame|炸彈炸開的顏色|炸弹炸开的颜色|The colour of your blast|爆発の色|폭발 색상
+sk.slotd.aura|腳下那圈光|脚下那圈光|The ring under your feet|足元の光|발밑의 빛
+sk.slotd.bomb|手上的炸彈外殼|手上的炸弹外壳|The shell of your bombs|手に持つボムの外殻|손에 든 폭탄 외형
+sk.how.stage|通關第 {n} 關|通关第 {n} 关|Clear stage {n}|ステージ {n} クリア|스테이지 {n} 클리어
+sk.how.ach|成就分達 {n}|成就分达 {n}|Reach {n} achievement points|実績ポイント {n}|업적 점수 {n}
+sk.how.daily|完成 {n} 天每日挑戰|完成 {n} 天每日挑战|Finish {n} daily challenges|デイリーチャレンジ {n} 日達成|데일리 챌린지 {n}일 완료
+sk.how.season|賽季達到 {n} 級|赛季达到 {n} 级|Reach season tier {n}|シーズン {n} 到達|시즌 {n} 도달
+sk.how.br|大逃殺奪冠 {n} 次|大逃杀夺冠 {n} 次|Win the battle royale {n} times|バトロワ優勝 {n} 回|배틀로얄 우승 {n}회
+sk.how.boss|戰勝 BOSS {n} 次|战胜 BOSS {n} 次|Beat {n} bosses|BOSS {n} 体撃破|BOSS {n}마리 격파
+sk.n.flame.orange|經典烈焰|经典烈焰|Classic Flame|クラシックフレイム|클래식 플레임
+sk.n.flame.blue|深海蒼焰|深海苍焰|Abyss Flame|深海の蒼炎|심해 창염
+sk.n.flame.green|翠毒孢子|翠毒孢子|Venom Spores|翠毒の胞子|독성 포자
+sk.n.flame.violet|虛空紫電|虚空紫电|Void Violet|虚空の紫電|공허의 자전
+sk.n.flame.rose|玫瑰金|玫瑰金|Rose Gold|ローズゴールド|로즈 골드
+sk.n.flame.gold|黃金聖火|黄金圣火|Sacred Gold|黄金の聖火|황금 성화
+sk.n.flame.void|漆黑業火|漆黑业火|Pitch Black|漆黒の業火|칠흑의 업화
+sk.n.flame.rainbow|虹彩幻火|虹彩幻火|Prism Fire|虹彩の幻火|무지개 환화
+sk.n.aura.none|無|无|None|なし|없음
+sk.n.aura.red|赤紅|赤红|Crimson|紅蓮|진홍
+sk.n.aura.cyan|青霜|青霜|Frost|青霜|청상
+sk.n.aura.rose|桃粉|桃粉|Peach|桃色|복숭아
+sk.n.aura.lime|翠光|翠光|Verdant|翠光|취광
+sk.n.aura.gold|流金|流金|Gilded|流金|유금
+sk.n.bomb.dark|原色|原色|Original|オリジナル|기본
+sk.n.bomb.navy|深海藍|深海蓝|Deep Navy|深海の藍|심해 남색
+sk.n.bomb.emerald|翡翠綠|翡翠绿|Emerald|エメラルド|에메랄드
+sk.n.bomb.crimson|血櫻紅|血樱红|Blood Cherry|血桜|혈앵홍
+sk.n.bomb.sun|烈日金|烈日金|Blazing Sun|烈日の金|열일금
+ul.need|通關第 {n} 關解鎖|通关第 {n} 关解锁|Clear stage {n} to unlock|ステージ {n} クリアで解放|스테이지 {n} 클리어 시 해금
+ul.word|解鎖|解锁|unlock|解放|해금
+ul.unlocked|解鎖「{n}」！|解锁「{n}」！|Unlocked: {n}!|「{n}」を解放！|「{n}」해금!
+ul.now|現在 {n} 關|现在 {n} 关|{n} cleared|現在 {n} クリア|현재 {n} 클리어
+sh.timeLab|完成時間|完成时间|FINISH TIME|クリアタイム|완료 시간
+sh.ofTotal|共 {n} 人|共 {n} 人|of {n} players|全 {n} 人中|전체 {n}명 중
+sh.offline|離線完成 · 未進榜|离线完成 · 未进榜|Cleared offline — not ranked|オフラインクリア · ランク外|오프라인 완료 · 순위 없음
+sh.cta|全球同一張圖 · 你敢來比嗎|全球同一张图 · 你敢来比吗|Same map for everyone — dare to compare?|世界中が同じマップ · 勝負してみる？|전 세계 같은 맵 — 겨뤄 볼래요?
+sh.share|分享|分享|Share|共有|공유
+sh.save|儲存圖片|储存图片|Save image|画像を保存|이미지 저장
+sh.copy|複製文字|复制文字|Copy text|テキストをコピー|텍스트 복사
+sh.close|關閉|关闭|Close|閉じる|닫기
+sh.copied|已複製，去貼給朋友吧|已复制，去贴给朋友吧|Copied — paste it to a friend|コピーしました。友だちに貼ってね|복사했습니다. 친구에게 붙여넣으세요
+sh.copyFail|複製失敗，請長按選取|复制失败，请长按选取|Copy failed — long press to select|コピー失敗。長押しで選択してください|복사 실패 — 길게 눌러 선택하세요
+sh.saved|已儲存|已储存|Saved|保存しました|저장했습니다
+sh.saveFail|這個瀏覽器不支援儲存|这个浏览器不支持储存|This browser can't save files|このブラウザは保存に対応していません|이 브라우저는 저장을 지원하지 않습니다
+nd.daily|今天的每日挑戰還沒打 —— 全球同一張圖，打完就進榜。|今天的每日挑战还没打 —— 全球同一张图，打完就进榜。|Today's daily challenge is still open — same map for everyone, clear it to get ranked.|今日のデイリーチャレンジがまだです —— 世界中が同じマップ、クリアでランク入り。|오늘의 데일리 챌린지가 아직입니다 — 전 세계 같은 맵, 클리어하면 순위에 오릅니다.
+nd.season|本季只剩 {n} 天，通行證的獎勵記得領。|本季只剩 {n} 天，通行证的奖励记得领。|Only {n} days left this season — remember to claim your pass rewards.|今シーズン残り {n} 日。パス報酬を受け取ってね。|이번 시즌 {n}일 남았습니다. 패스 보상을 챙기세요.
+daily.share|分享成績|分享成绩|Share result|成績を共有|기록 공유
+home.d.skins|外觀|外观|Looks|外見|외형
 `;

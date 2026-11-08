@@ -29,7 +29,10 @@ ok(/Waking the server/.test(swSrc), '有英文喚醒文案');
 const catchSeg = swSrc.slice(swSrc.indexOf("}).catch(function () {"), swSrc.indexOf("}).catch(function () {") + 220);
 ok(catchSeg.indexOf('clearTimeout(hard)') < 0, 'catch 分支沒有 clearTimeout(hard)（保留兜底）');
 ok(/if \(res && res\.status >= 500\) \{ done\(wakePage\(\)\); return; \}/.test(swSrc), '5xx 會回喚醒頁');
-ok(/SW_VERSION = 'v5\.55\.0'/.test(swSrc), 'SW_VERSION 是 v5.55.0');
+/* 版本斷言刻意不寫死（記憶鐵律）：只要求「不低於本功能的版本」，
+   否則每升一版都要回頭改舊測試，改到最後沒人敢升版。 */
+const swVer = (swSrc.match(/SW_VERSION = 'v([\d.]+)'/) || [])[1] || '';
+ok(swVer.slice(0, 4) >= '5.55', 'SW_VERSION ≥ v5.55（實際 ' + swVer + '）');
 ok(swSrc.indexOf('\r') < 0, '整檔 LF');
 
 /* ---------------- ② 假時鐘 + 假 SW 環境 ---------------- */

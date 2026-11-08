@@ -158,7 +158,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.55';
+const VERSION = '5.56';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -919,6 +919,7 @@ let settings = {
   soloTime: 300,                                  // 單人關卡時間（0 = 無限）
   mapMode: 'random',                              // v5.49：預設「隨機生成」（單人闖關＋RPG 共用）；classic = 原本 32 張手工圖
   mapV: 0,                                        // v5.49：地圖模式預設值戳記（<1 的舊存檔一次性搬到 random）
+  smvBase: 0,                                     // v5.56：賽季重排的基準季（第一次跑 v5.56 時寫入當時的季號；預設 0 才會觸發）
   miniMap: 1,                                     // v4.70：小地圖（雷達），1 = 開 / 0 = 關
   count: 4,                                       // v4.15：對戰人數 2～8
   teams: 0,                                       // v4.15：組隊對戰隊數（0 = 關閉混戰 / 2 / 3 / 4）
@@ -5605,7 +5606,10 @@ function map32Name(i) {
 function stageName(stage) {
   const m = soloInfo(stage);
   if (m && m.boss) return chapterOf(stage) + '-' + BOSS_SLOT + '　' + t('stage.bossName');
-  return m.theme + 1 + '-' + (m.sub + 1) + '　' + mapName(m);
+  /* v5.56：編號用「關卡自己的」章-小關，不再用「地圖的」。
+     賽季重排後第 1 關可能借第 3 章的地圖，用 map 的編號會顯示成 3-1，玩家會以為跳關了。
+     沒有重排時兩者是同一個值，顯示完全不變。 */
+  return chapterOf(stage) + '-' + stageSlot(stage) + '　' + mapName(m);
 }
 // v4.77：32 張地圖的名字依語言（mn.1～mn.32）；查不到就用原本的中文
 function mapName(m) {
@@ -5629,8 +5633,48 @@ function stageSlot(stage) {
   return ((((stage | 0) - 1) % BOSS_SLOT) + BOSS_SLOT) % BOSS_SLOT + 1;    // 1~5
 }
 function isBossStage(stage) { return stageSlot(stage) === BOSS_SLOT; }
+// v5.56：賽季重排 —— 每換一季，40 關的「章節順序」重排一次。
+//   為什麼不是打散 32 張地圖：難度曲線會崩（第 1 關變成魔王之間就沒人玩得下去）。
+//   做法是「4 章一組的組內重排」—— 前 4 章（草原／沙漠／雪原／森林）互相換位，
+//   後 4 章（火山／海底／機械／魔城）互相換位，跨度永遠 ≤3 章，難度不會突變。
+//   基準季寫在 settings.smvBase（第一次跑這個版本時記下當時的季號）：
+//   同一季內永遠是同一張圖，換季才動 —— 玩家才有「這季不太一樣」的感覺。
+function seasonMapBaseNo() {
+  try {
+    if (!(settings.smvBase > 0)) {
+      let cur = 1;
+      try { if (typeof Season !== 'undefined' && Season.seasonNo) cur = Season.seasonNo() | 0; } catch (e) { cur = 1; }
+      settings.smvBase = Math.max(1, cur | 0);
+      try { saveSettings(); } catch (e2) {}
+    }
+    return settings.smvBase | 0;
+  } catch (e) { return 1; }
+}
+function seasonMapShift() {
+  try {
+    let cur = 1;
+    try { if (typeof Season !== 'undefined' && Season.seasonNo) cur = Season.seasonNo() | 0; } catch (e) { cur = 1; }
+    return Math.max(0, (cur | 0) - seasonMapBaseNo());
+  } catch (e) { return 0; }
+}
+// 章節 → 這一季實際要用的章節（1~8）。shift = 0 時是恆等映射（＝改版前完全一樣）
+function seasonChapterMap(ch) {
+  const c = Math.max(1, Math.min(8, ch | 0));
+  const sh = seasonMapShift();
+  if (!sh) return c;
+  const k = ((sh - 1) % 4) + 1;
+  const g = Math.floor((c - 1) / 4);            // 0 = 前四章、1 = 後四章
+  const w = (c - 1) % 4;                        // 組內位置 0~3
+  let m;
+  if (k === 1) m = [1, 0, 3, 2];                // 1↔2、3↔4
+  else if (k === 2) m = [0, 3, 2, 1];           // 2↔3（1 與 4 不動）
+  else if (k === 3) m = [2, 3, 0, 1];           // 1↔3、2↔4
+  else m = [3, 2, 1, 0];                        // 1↔4、2↔3
+  return g * 4 + m[w] + 1;
+}
 function mapIdxOfStage(stage) {
-  return (chapterOf(stage) - 1) * 4 + Math.min(4, stageSlot(stage)) - 1;
+  const ch = seasonChapterMap(chapterOf(stage));
+  return (ch - 1) * 4 + Math.min(4, stageSlot(stage)) - 1;
 }
 function soloInfo(stage) {
   if (isBossStage(stage)) {
@@ -6161,6 +6205,8 @@ const Daily = {
       done: false,
       sent: false
     };
+    /* v5.56：開場就去抓榜上殘影（到手就生效，不必等下一場） */
+    try { Ghost.fetchRivals(); } catch (e3) {}
     try { startSolo(st.stage, false, st); } catch (e) {
       console.error('[daily]', e);
       try { toast('⚠️ ' + ((e && e.message) || e), 3.2); } catch (e2) {}
@@ -6251,7 +6297,8 @@ const Lb = {
   _post(url, body) { return Lb._retry(url, 'POST', body || {}); },
   top(day) {
     const d = day || dailyDayKey();
-    return Lb._get(Lb.origin() + '/api/lb/top?mode=daily&day=' + encodeURIComponent(d) + '&limit=50')
+    /* v5.56：ghosts=3 → 順便把前三名的殘影軌跡帶回來（約 3 KB），用來畫對手影子 */
+    return Lb._get(Lb.origin() + '/api/lb/top?mode=daily&day=' + encodeURIComponent(d) + '&limit=50&ghosts=3')
       .then(function (j) {
         if (j && j.ok && j.list) {
           Lb.last = { day: d, list: j.list, online: true, at: Date.now() };
@@ -6263,11 +6310,22 @@ const Lb = {
         return Lb.last;
       });
   },
-  submit(day, name, ms) {
-    return Lb._post(Lb.origin() + '/api/lb/submit', {
+  submit(day, name, ms, path) {
+    const body = {
       mode: 'daily', day: day, name: name || '', ms: Math.round(ms), deviceId: Lb.deviceId(),
       ver: VERSION
-    });
+    };
+    /* v5.56：附上殘影軌跡（後端只留前三名，其餘自動丟掉） */
+    if (path) body.p = path;
+    /* v5.56：順便帶上「我是誰」的展示資訊 —— 稱號代號＋配戴成就圖示 */
+    try {
+      body.tt = (typeof Ach !== 'undefined' && Ach.wornIdx) ? (Ach.wornIdx() | 0) : -1;
+      const em = (typeof Ach !== 'undefined' && Ach.equippedMini) ? Ach.equippedMini() : [];
+      let s = '';
+      for (let i = 0; i < em.length && i < 3; i++) s += String(em[i].i || '');
+      if (s) body.eq = s;
+    } catch (e0) { body.tt = -1; }
+    return Lb._post(Lb.origin() + '/api/lb/submit', body);
   },
   /* v4.87：每週榜（同一個後端，換 mode／key）*/
   topWeek(week, limit) {
@@ -17867,6 +17925,97 @@ const Ghost = {
       }
     }
     return null;                   // 跑完了 → 殘影消失（代表你已經超過他了）
+  },
+
+  /* ---- v5.56：排行榜對手的殘影 ----
+     自己那條是「昨天的我」，這裡三條是「榜上前三名」。零伺服器成本：
+     軌跡跟分數一起存在排行榜的同一筆紀錄裡（後端只留前 3 名、只留每日榜）。
+     間隔 1 秒（GAP2），跟後端 LB_GHOST_GAP 必須一致 —— 不一致影子會跑得比本尊快或慢。 */
+  GAP2: 1,
+  RKEY: 'bombhero-rivals-v1',
+  _rivals: null,
+  _rivalsDay: '',
+  HEX: ['#ffd166', '#c79bff', '#7ef0b8'],
+
+  /* 把 0.5 秒一格的記錄壓成 1 秒一格的字串（不存時間戳：索引 × GAP2 就是秒數） */
+  pack(rec) {
+    if (!rec || rec.length < 2) return '';
+    const out = [];
+    for (let i = 0; i < rec.length; i += 2) out.push(rec[i][1] + ',' + rec[i][2]);
+    const last = rec[rec.length - 1];
+    if ((rec.length - 1) % 2 !== 0) out.push(last[1] + ',' + last[2]);
+    return out.slice(0, 200).join('|');
+  },
+  parse(str) {
+    if (typeof str !== 'string' || !str) return null;
+    const parts = str.split('|'), arr = [];
+    for (let i = 0; i < parts.length; i++) {
+      const q = parts[i].split(',');
+      if (q.length !== 2) continue;
+      const x = parseInt(q[0], 10), y = parseInt(q[1], 10);
+      if (!isFinite(x) || !isFinite(y)) continue;
+      arr.push([x, y]);
+    }
+    return arr.length > 1 ? arr : null;
+  },
+  /* t 秒時某條軌跡應該在哪（線性內插；跑完就回 null → 影子消失） */
+  atPath(arr, sec, gap) {
+    if (!arr || arr.length < 2) return null;
+    const f = Math.max(0, sec) / (gap || Ghost.GAP2);
+    const i = Math.floor(f);
+    if (i >= arr.length - 1) return null;
+    const a = arr[i], b = arr[i + 1], k = f - i;
+    return { x: a[0] + (b[0] - a[0]) * k, y: a[1] + (b[1] - a[1]) * k };
+  },
+  /* 把一份排行榜（帶 p 欄位）存成本機快取，下次開場就有影子可跑 */
+  saveRivals(list) {
+    if (!list || !list.length) return;
+    const day = dailyDayKey();
+    const out = [];
+    for (let i = 0; i < list.length && out.length < 3; i++) {
+      const e = list[i];
+      if (!e || !e.p) continue;
+      const arr = Ghost.parse(e.p);
+      if (!arr) continue;
+      out.push({ n: String(e.n || '').slice(0, 14), ms: e.ms | 0, arr: arr });
+    }
+    if (!out.length) return;
+    Ghost._rivals = out;
+    Ghost._rivalsDay = day;
+    try {
+      localStorage.setItem(Ghost.RKEY, JSON.stringify({ day: day, list: out.map(function (r) {
+        return { n: r.n, ms: r.ms, arr: r.arr };
+      }) }));
+    } catch (e) {}
+  },
+  rivals() {
+    if (Ghost._rivals && Ghost._rivalsDay === dailyDayKey()) return Ghost._rivals;
+    try {
+      const o = JSON.parse(localStorage.getItem(Ghost.RKEY) || 'null');
+      if (o && o.day === dailyDayKey() && Array.isArray(o.list) && o.list.length) {
+        const out = [];
+        for (let i = 0; i < o.list.length && out.length < 3; i++) {
+          const r = o.list[i];
+          if (!r || !Array.isArray(r.arr) || r.arr.length < 2) continue;
+          out.push({ n: String(r.n || '').slice(0, 14), ms: r.ms | 0, arr: r.arr });
+        }
+        Ghost._rivals = out;
+        Ghost._rivalsDay = o.day;
+        return out;
+      }
+    } catch (e) {}
+    Ghost._rivals = [];
+    Ghost._rivalsDay = dailyDayKey();
+    return Ghost._rivals;
+  },
+  /* 背景抓一次榜（帶 ghosts=3）→ 影子到手就立刻生效，不用等下一次開場 */
+  fetchRivals() {
+    try {
+      return Lb.top().then(function (r) {
+        if (r && r.list) Ghost.saveRivals(r.list);
+        return Ghost.rivals();
+      }, function () { return Ghost.rivals(); });
+    } catch (e) { return null; }
   }
 };
 
@@ -17878,6 +18027,8 @@ function dailyClear(p) {
   d.ms = Math.round(d.ms || 0);
   Daily.saveBest(d.day, d.ms);
   try { Ghost.finish(d.day, d.ms); } catch (e) {}   // v5.38：破紀錄才存殘影
+  /* v5.56：本次路線壓成 1 秒一格，跟成績一起送榜 —— 別人下次就能跟這條影子比 */
+  try { d.pack = Ghost.pack(Game.ghost && Game.ghost.rec); } catch (e5) { d.pack = ''; }
   try { HomeDot.markDaily(); } catch (e) {}         // v5.38：今天打過了 → 📅 紅點熄掉
   // v5.11：獎金推送 —— 過關當下就把金幣進錢包，並記在 d.prize 給結算畫面顯示
   try {
@@ -17898,9 +18049,23 @@ function dailyTimeUp(p) {
 }
 function dailyLbRow(e, i, me) {
   const medal = i < 3 ? ['🥇', '🥈', '🥉'][i] : String(i + 1);
+  /* v5.56：榜上看得見別人的稱號與配戴成就 —— 沒被看見的成就等於沒有。
+     稱號只傳代號，這裡用本地那一階的圖示畫（跨語言不會變成中文）。 */
+  let wear = '';
+  if (e && e.eq) wear = '<i style="font-style:normal;font-size:11px;opacity:.78;margin-left:2px">' +
+    hesc(String(e.eq)) + '</i>';
+  let tt = '';
+  if (e && typeof e.tt === 'number' && e.tt >= 0) {
+    let T0 = null;
+    try { T0 = (typeof Ach !== 'undefined' && Ach.TITLES && Ach.TITLES[e.tt]) ? Ach.TITLES[e.tt] : null; } catch (x) {}
+    if (T0 && T0.ico) {
+      tt = '<i style="font-style:normal;font-size:11px;margin-left:2px" title="' +
+        hesc(String(T0.name || '')) + '">' + T0.ico + '</i>';
+    }
+  }
   return '<div class="lbrow' + (me ? ' me' : '') + '">' +
     '<span class="rk">' + medal + '</span>' +
-    '<span class="nm"></span>' +
+    '<span class="nm"></span>' + wear + tt +
     '<span class="tm">' + fmtMs(e.ms) + '</span></div>';
 }
 /* 把名字用 textContent 塞回去（暱稱可能含 < > & 之類，不能直接拼進 HTML） */
@@ -17922,6 +18087,7 @@ function showDailyResult(ok) {
     '<div class="lblist" id="dailyMini" style="margin:10px 0 4px"></div>' +
     '<div class="row" style="justify-content:center;gap:10px;flex-wrap:wrap;">' +
     '<button class="mbtn warm" id="btnDailyAgain" style="width:auto;padding:11px 22px;"></button>' +
+    '<button class="ghostbtn" id="btnDailyShare"></button>' +
     '<button class="ghostbtn" id="btnDailyLb"></button>' +
     '<button class="ghostbtn" id="btnHome"></button></div>';
   box.querySelector('h3').textContent = t(ok ? 'daily.winTitle' : 'daily.loseTitle');
@@ -17962,14 +18128,21 @@ function showDailyResult(ok) {
 
   // 只有真的走完（有時間）才送榜 —— 陣亡不進榜，避免有人用「快速自殺」刷記錄
   if (ok && ms >= 1000) {
-    Lb.submit(d.day, settings.playerName || '', ms).then(function (j) {
+    Lb.submit(d.day, settings.playerName || '', ms, d.pack || '').then(function (j) {
       if (j && j.ok) {
         if (j.list && j.list.length) {
           Lb.last = { day: d.day, list: j.list, online: true, at: Date.now() };
           Lb.writeCache(d.day, j.list);
+          /* v5.56：把榜上前三名的殘影抓下來 → 下一場就有人可以追 */
+          try { Ghost.saveRivals(j.list); } catch (e6) {}
           paint(j.list);
         }
-        if (j.rank) pEl.textContent = t('daily.rankLine', { r: j.rank, n: j.total, t: fmtMs(ms) });
+        if (j.rank) {
+          pEl.textContent = t('daily.rankLine', { r: j.rank, n: j.total, t: fmtMs(ms) });
+          /* v5.56：名次留給「分享成績卡」用 */
+          d.rank = j.rank | 0; d.total = j.total | 0;
+          Game.dailyRank = { rank: j.rank | 0, total: j.total | 0 };
+        }
       } else {
         pEl.textContent += '　·　' + t('lb.offline');
       }
@@ -17982,6 +18155,27 @@ function showDailyResult(ok) {
     again.addEventListener('click', function () {
       AudioSys.sfx('click'); Game.endShown = false; hideOverlay(); paused = false; Daily.begin();
     });
+  }
+  /* v5.56：分享成績卡（實作在 js/sharecard.js；沒有那個模組就把按鈕藏起來） */
+  const shBtn = $id('btnDailyShare');
+  if (shBtn) {
+    if (window.__BHShare) {
+      shBtn.textContent = '📤 ' + t('daily.share');
+      shBtn.addEventListener('click', function () {
+        AudioSys.sfx('click');
+        const rk = Game.dailyRank || (d && d.rank ? { rank: d.rank, total: d.total } : null);
+        try {
+          window.__BHShare.make({
+            ms: ms, day: d.day || Daily.today(),
+            stage: mapName(soloInfo(Game.stage)) || '',
+            name: settings.playerName || '',
+            rank: rk ? rk.rank : 0, total: rk ? rk.total : 0
+          });
+        } catch (e) {}
+      });
+    } else {
+      shBtn.style.display = 'none';
+    }
   }
   const toLb = $id('btnDailyLb');
   if (toLb) {
@@ -22985,10 +23179,12 @@ function drawBombArt(r, seed, hot, armed, remote, danger, ally) {
     g.addColorStop(.60, '#d3dded');
     g.addColorStop(1, '#8d99b0');
   } else {
-    g.addColorStop(0, '#5b6172');
-    g.addColorStop(.22, '#34384a');
-    g.addColorStop(.60, '#15171f');
-    g.addColorStop(1, '#050609');
+    /* v5.56：炸彈外殼外觀 —— 染色後仍是「上亮下暗」的黑曜質感 */
+    const bs = skinBombStops();
+    g.addColorStop(0, bs ? bs[0] : '#5b6172');
+    g.addColorStop(.22, bs ? bs[1] : '#34384a');
+    g.addColorStop(.60, bs ? bs[2] : '#15171f');
+    g.addColorStop(1, bs ? bs[3] : '#050609');
   }
   ctx.fillStyle = g;
   ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.283); ctx.fill();
@@ -23124,6 +23320,27 @@ function flameDrop(cx, cy, w, h, color) {
   ctx.fill();
 }
 // v4.11：單顆翻滾火球（白熱核心 → 黃 → 橘 → 深紅邊），組成爆炸雲
+/* ============================================================================
+ * v5.56：外觀（js/skins.js）
+ *   熱路徑（每格火焰、每顆炸彈、每個角色每幀）只讀 __BHSKIN.cache 這個純物件，
+ *   沒有函式呼叫、沒有 localStorage。外觀模組沒載到／壞掉 → 全部回退原色。
+ * ========================================================================== */
+function skinCache() {
+  try { const s = window.__BHSKIN && window.__BHSKIN.cache; return s || null; } catch (e) { return null; }
+}
+function skinFlamePal() {
+  const c = skinCache();
+  return (c && c.flame && c.flame.length === 5) ? c.flame : null;
+}
+function skinAuraHex() {
+  const c = skinCache();
+  return (c && c.aura) ? c.aura : '';
+}
+function skinBombStops() {
+  const c = skinCache();
+  return (c && c.bombStops && c.bombStops.length === 4) ? c.bombStops : null;
+}
+
 function drawFlameBlob(cx, cy, r, cols, a) {
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
   g.addColorStop(0,    cols[0].replace('A', (0.98 * a).toFixed(3)));
@@ -23174,7 +23391,7 @@ function drawFlame(f, T) {
     ? [ 'rgba(255,255,255,A)', 'rgba(246,214,255,A)', 'rgba(210,120,255,A)', 'rgba(150,40,230,A)', 'rgba(110,20,170,0)' ]
     : allyFire
     ? [ 'rgba(248,252,255,A)', 'rgba(150,206,255,A)', 'rgba(64,146,255,A)', 'rgba(26,92,238,A)', 'rgba(8,36,150,0)' ]
-    : [ 'rgba(255,255,255,A)', 'rgba(255,246,214,A)', 'rgba(255,214,130,A)', 'rgba(255,150,50,A)', 'rgba(214,60,16,0)' ];
+    : (skinFlamePal() || [ 'rgba(255,255,255,A)', 'rgba(255,246,214,A)', 'rgba(255,214,130,A)', 'rgba(255,150,50,A)', 'rgba(214,60,16,0)' ]);
   // 主體：一整團白熱火（不是小圓球，是塞滿整格）
   drawFlameBlob(cx, cy, s * .82, cols, k);
   // 翻滾的雲團：8 顆沿著「臂的垂直方向」左右鋪開 + 沿臂方向往前推
@@ -27116,30 +27333,61 @@ function bombUnderFoot(p) {
   return bombAt(Math.floor(p.x / T), Math.floor(p.y / T));
 }
 /* v5.38：每日挑戰的殘影（半透明的自己）—— 全程序繪製，不吃美術 */
-function drawDailyGhost(T) {
-  const at = Ghost.at((Game.daily.ms || 0) / 1000);
-  if (!at) return;
-  if (typeof onScreen === 'function' && !onScreen(at.x, at.y, T * 1.6)) return;
+/* v5.56：一條殘影的畫法（自己與對手共用）。hex 換色、alpha 調濃淡，形狀完全一樣 ——
+   玩家一眼就知道「這個半透明的東西是某人的路線」，不需要額外圖示。 */
+function drawGhostFigure(at, T, hex, alpha, emoji) {
   const R = T * .40;
   const t = Game.gameT || 0;
   ctx.save();
-  ctx.globalAlpha = .34;
-  ctx.fillStyle = '#9fe4ff';
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = hex;
   ctx.beginPath(); ctx.arc(at.x, at.y - R * 1.34, R * .56, 0, 6.283); ctx.fill();          // 頭
   ctx.beginPath(); ctx.ellipse(at.x, at.y - R * .22, R * .80, R * 1.00, 0, 0, 6.283); ctx.fill();  // 身
-  ctx.globalAlpha = .20;
-  ctx.strokeStyle = '#9fe4ff';
+  ctx.globalAlpha = alpha * .58;
+  ctx.strokeStyle = hex;
   ctx.lineWidth = Math.max(1.5, T * .05);
   const rr = R * (1.16 + .12 * Math.sin(t * 4));
   ctx.beginPath(); ctx.ellipse(at.x, at.y + R * .72, rr, rr * .34, 0, 0, 6.283); ctx.stroke();
   ctx.restore();
-  ctx.save();
-  ctx.globalAlpha = .70;
-  ctx.font = '700 ' + Math.round(T * .36) + 'px sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('👻', at.x, at.y - R * 2.20);
-  ctx.restore();
+  if (emoji) {
+    ctx.save();
+    ctx.globalAlpha = .70;
+    ctx.font = '700 ' + Math.round(T * .36) + 'px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, at.x, at.y - R * 2.20);
+    ctx.restore();
+  }
   ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+}
+
+function drawDailyGhost(T) {
+  const sec = (Game.daily.ms || 0) / 1000;
+  /* 自己（👻）：上一次最快的那條 */
+  const at = Ghost.at(sec);
+  if (at && !(typeof onScreen === 'function' && !onScreen(at.x, at.y, T * 1.6))) {
+    drawGhostFigure(at, T, '#9fe4ff', .34, '👻');
+  }
+  /* v5.56：榜上前三名的影子 —— 三種顏色 + 頭上名字，追得到、看得出來是誰 */
+  let rs = [];
+  try { rs = Ghost.rivals() || []; } catch (e) { rs = []; }
+  for (let i = 0; i < rs.length; i++) {
+    const p = Ghost.atPath(rs[i].arr, sec, Ghost.GAP2);
+    if (!p) continue;                                   // 他已經跑完了 → 影子消失
+    if (typeof onScreen === 'function' && !onScreen(p.x, p.y, T * 1.6)) continue;
+    const hex = Ghost.HEX[i % Ghost.HEX.length];
+    drawGhostFigure(p, T, hex, .30, null);
+    const nm = String(rs[i].n || '').slice(0, 8);
+    if (nm) {
+      ctx.save();
+      ctx.globalAlpha = .66;
+      ctx.font = '700 ' + Math.round(Math.max(9, T * .26)) + 'px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = hex;
+      ctx.fillText(nm, p.x, p.y - T * .82);
+      ctx.restore();
+      ctx.textAlign = 'start';
+    }
+  }
 }
 
 function drawPlayer(p, T) {
@@ -27188,6 +27436,25 @@ function drawPlayer(p, T) {
     }
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
+  }
+  /* v5.56：外觀光環 —— 只有自己畫（別人是 AI，沒有皮膚），但自己在小地圖上很好認 */
+  const auraHex = skinAuraHex();
+  if (auraHex && p.alive && isMyPlayer(p)) {
+    const puls = 1 + .06 * Math.sin(Game.gameT * 3.4);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = .34;
+    ctx.strokeStyle = auraHex;
+    ctx.lineWidth = Math.max(2, T * .07);
+    ctx.beginPath();
+    ctx.ellipse(x, y + T * .37, R * 1.02 * puls, R * .40 * puls, 0, 0, 6.283);
+    ctx.stroke();
+    ctx.globalAlpha = .14;
+    ctx.fillStyle = auraHex;
+    ctx.beginPath();
+    ctx.ellipse(x, y + T * .37, R * 1.02 * puls, R * .40 * puls, 0, 0, 6.283);
+    ctx.fill();
+    ctx.restore();
   }
   // 角色本體（與選角預覽同一套畫法）
   const charArgs = {
@@ -28368,7 +28635,7 @@ function homeFill() {
   card('btnMulti', 'home.multi', 'home.multi.sub', true);
   card('btnStore', 'home.d.store', 'home.shop.sub');
   card('btnMoreMenu', 'home.more', 'home.more.sub');
-  const dr = { btnHelp: 'home.d.help', btnSettings: 'home.d.set', btnQuit: 'home.d.quit' };
+  const dr = { btnSkins: 'home.d.skins', btnHelp: 'home.d.help', btnSettings: 'home.d.set', btnQuit: 'home.d.quit' };
   Object.keys(dr).forEach(function (id) {
     const b = $id(id);
     if (b) b.textContent = t(dr[id]);
@@ -37493,6 +37760,7 @@ window.__BH = {
   // v5.36：40 關制／BOSS 決戰場（測試用）
   chapterOf: chapterOf, stageSlot: stageSlot, isBossStage: isBossStage, isChapterFinal: isChapterFinal,
   stageName: stageName, mapIdxOfStage: mapIdxOfStage, buildBossArenaStage: buildBossArenaStage,
+  seasonChapterMap: seasonChapterMap, seasonMapShift: seasonMapShift,   // v5.56：賽季重排（測試用）
   arenaFreeCell: arenaFreeCell, updateBossArena: updateBossArena, BOSS_SLOT: BOSS_SLOT,
   BOSS_BREAK: BOSS_BREAK, BOSS_SHIELD: BOSS_SHIELD, bossShieldMax: bossShieldMax, bossPhaseSpd: bossPhaseSpd,
   bossHpOf: bossHpOf, BOSS_HP_BASE: BOSS_HP_BASE,

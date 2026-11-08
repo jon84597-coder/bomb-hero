@@ -4975,7 +4975,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.55</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.56</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5030,7 +5030,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.55</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.56</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5056,6 +5056,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         <!-- v5.0：商店升上首頁，抽屜只留低頻的說明／設定／離開 -->
         <div class="mdrawer" id="mDrawer">
           <button class="drawbtn" id="btnChar" type="button" data-ico="🧙">角色</button>
+          <button class="drawbtn" id="btnSkins" type="button" data-ico="🎨">外觀</button>
           <button class="drawbtn" id="btnHelp" type="button" data-ico="📖">遊戲說明</button>
           <button class="drawbtn" id="btnSettings" type="button" data-ico="⚙️">設定</button>
           <button class="drawbtn" id="btnQuit" type="button" data-ico="🚪">離開遊戲</button>
@@ -5938,6 +5939,14 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
 <script src="js/keys-ui.js"></script>
 <!-- v5.53：新手任務引導（外部檔；只讀存檔＋發獎，不碰遊戲邏輯） -->
 <script src="js/onboard.js"></script>
+<!-- v5.56：外觀收藏（外部檔；主檔只讀 __BHSKIN.cache 這個快取物件） -->
+<script src="js/skins.js"></script>
+<!-- v5.56：模式遞進解鎖（外部檔；只加 class＋捕獲階段攔點擊） -->
+<script src="js/unlock.js"></script>
+<!-- v5.56：每日挑戰成績卡（外部檔；純 canvas 生成，不依賴伺服器） -->
+<script src="js/sharecard.js"></script>
+<!-- v5.56：今日提醒（外部檔；每天最多一條站內橫幅，系統通知預設關） -->
+<script src="js/notify.js"></script>
 <!-- v4.1：帳號彈窗（內容依登入狀態由 Cloud 模組產生） -->
 <div id="acctModal" role="dialog" aria-modal="true" aria-label="帳號">
   <div class="acctcard">

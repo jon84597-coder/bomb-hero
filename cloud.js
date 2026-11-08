@@ -1575,6 +1575,36 @@ function createCloud(options) {
   }
   /* 把太久以前的榜砍掉，避免檔案一直長大
      v4.87：改成「每種模式各留 N 筆」—— 每日榜每天多一筆，混在一起算會把每週榜擠掉。 */
+  /* v5.56：殘影軌跡 —— 讓玩家能跟「排行榜前三名」的影子一起跑，而不是只有自己。
+     格式刻意選最笨的 "x,y|x,y|…"（1 秒一格、上限 200 格，約 1 KB）：
+       · 不存時間戳 —— 索引 × GAP 就是秒數，省一半體積
+       · 只給每日榜的前三名存（每週榜不存），21 天 × 3 名 × 1 KB ≈ 63 KB
+     LB_GHOST_GAP 必須與前端 Ghost.GAP2 一致，否則影子會跑得比本尊快或慢。 */
+  const LB_GHOST_GAP = 1.0;
+  const LB_GHOST_MAX = 200;
+  const LB_GHOST_KEEP = 3;
+  function lbCleanPath(s) {
+    if (typeof s !== 'string') return '';
+    const str = s.trim();
+    if (!str || str.length > 3000) return '';
+    if (!/^[0-9]{1,3},[0-9]{1,3}(\|[0-9]{1,3},[0-9]{1,3})*$/.test(str)) return '';
+    const parts = str.split('|');
+    return parts.length > LB_GHOST_MAX ? parts.slice(0, LB_GHOST_MAX).join('|') : str;
+  }
+  /* v5.56：稱號與配戴成就 —— 只是「展示」，不影響公平性，所以不驗證來源。
+     稱號只收代號（-1 沒戴 / 0~7 階級 / 8 開發者），用代號而不是中文名，
+     讓各語言的前端自己決定要顯示什麼。
+     eq 是佩戴成就的圖示串（前端已限 3 個），只做字元白名單與長度裁剪。 */
+  function lbCleanEq(s) {
+    if (typeof s !== 'string') return '';
+    const str = s.replace(/[\u0000-\u001f\u007f<>"'`&\\]/g, '').trim();
+    return str.slice(0, 48);
+  }
+  function lbCleanTT(v) {
+    const n = parseInt(v, 10);
+    if (!isFinite(n) || n < -1 || n > 8) return -1;
+    return n | 0;
+  }
   function lbPrune() {
     const days = db.lb && db.lb.days;
     if (!days) return;
@@ -1602,13 +1632,20 @@ function createCloud(options) {
     list.sort(function (a, b) { return (a.ms | 0) - (b.ms | 0) || (Number(a.at) || 0) - (Number(b.at) || 0); });
     return list;
   }
-  function lbList(mode, day, limit) {
+  function lbList(mode, day, limit, ghosts) {
     const b = lbBucket(mode, day, false);
     const arr = (b && b.list) ? lbSort(b.list.slice()) : [];
     const out = [];
+    const gh = Math.max(0, Math.min(LB_GHOST_KEEP, ghosts | 0));
     for (let i = 0; i < arr.length && out.length < (limit || 50); i++) {
       const e = arr[i];
-      out.push({ n: e.n, ms: e.ms | 0, at: Number(e.at) || 0 });
+      const o = { n: e.n, ms: e.ms | 0, at: Number(e.at) || 0 };
+      /* v5.56：稱號代號與佩戴成就（沒戴就不帶欄位，省流量） */
+      if (typeof e.tt === 'number' && e.tt >= 0) o.tt = e.tt | 0;
+      if (e.eq) o.eq = e.eq;
+      /* v5.56：只把前三名的軌跡帶出去（其他人只是陪榜，不需要 1 KB 的影子） */
+      if (gh && i < gh && e.p) { o.p = e.p; o.gap = LB_GHOST_GAP; }
+      out.push(o);
     }
     return out;
   }
@@ -2460,7 +2497,9 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           ? (lbWeekOk(qd) ? qd : lbThisWeek())
           : (lbDayOk(qd) ? qd : lbToday());
         const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get('limit'), 10) || 50));
-        const list = lbList(mode, day, limit);
+        /* v5.56：ghosts=N → 順便把前 N 名的殘影軌跡帶回去（0 = 不要，省流量） */
+        const ghosts = Math.max(0, Math.min(LB_GHOST_KEEP, parseInt(url.searchParams.get('ghosts'), 10) || 0));
+        const list = lbList(mode, day, limit, ghosts);
         return send(res, 200, {
           ok: true, mode: mode, day: day,
           today: weekly ? lbThisWeek() : lbToday(),
@@ -2470,7 +2509,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
 
       if (p === '/api/lb/submit' && req.method === 'POST') {
         if (!gate(req, res, 'lb', 40, 0.25, CORS_LB)) return true;
-        const body = await readJson(req, 2048);
+        const body = await readJson(req, 8192);
         if (!body) return fail(res, 400, 'BAD_BODY', CORS_LB), true;
         const mode = String(body.mode || 'daily');
         if (!LB_MODES[mode]) return fail(res, 400, 'BAD_MODE', CORS_LB), true;
@@ -2490,6 +2529,10 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         if (!isFinite(ms) || ms < LB_MIN_MS || ms > LB_MAX_MS) return fail(res, 400, 'BAD_TIME', CORS_LB), true;
         const name = lbCleanName(body.name);
         const dev = sha256(deviceId + '|lb|' + secret).slice(0, 20);
+        /* v5.56：每日榜才收殘影軌跡（每週榜沒有固定地圖，影子沒意義） */
+        const ghostPath = weekly ? '' : lbCleanPath(body.p);
+        const wearTT = lbCleanTT(body.tt);
+        const wearEq = lbCleanEq(body.eq);
 
         const b = lbBucket(mode, day, true);
         if (!b.list) b.list = [];
@@ -2497,21 +2540,38 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         for (let i = 0; i < b.list.length; i++) { if (b.list[i].d === dev) { mine = b.list[i]; break; } }
         const improved = !mine || ms < (mine.ms | 0);
         if (improved) {
-          if (mine) { mine.ms = ms; mine.n = name; mine.at = Date.now(); }
-          else b.list.push({ d: dev, n: name, ms: ms, at: Date.now() });
+          if (mine) {
+            mine.ms = ms; mine.n = name; mine.at = Date.now();
+            if (ghostPath) mine.p = ghostPath;
+          } else {
+            const rec = { d: dev, n: name, ms: ms, at: Date.now() };
+            if (ghostPath) rec.p = ghostPath;
+            b.list.push(rec);
+            mine = rec;
+          }
           lbSort(b.list);
           if (b.list.length > LB_MAX_DAY) b.list.length = LB_MAX_DAY;
           lbPrune();
           store.touch();
         }
+        /* 展示資訊跟成績分開更新 —— 換個稱號不必重跑一次成績 */
+        if (mine) {
+          if (wearTT >= 0) mine.tt = wearTT; else delete mine.tt;
+          if (wearEq) mine.eq = wearEq; else delete mine.eq;
+          store.touch();
+        }
         lbSort(b.list);
+        /* 只有前 LB_GHOST_KEEP 名留著軌跡 —— 後面的清掉，不然 21 天會累積幾百 KB */
+        for (let i = LB_GHOST_KEEP; i < b.list.length; i++) {
+          if (b.list[i] && b.list[i].p) delete b.list[i].p;
+        }
         let rank = 0, best = ms, total = b.list.length;
         for (let i = 0; i < b.list.length; i++) {
           if (b.list[i].d === dev) { rank = i + 1; best = b.list[i].ms | 0; break; }
         }
         return send(res, 200, {
           ok: true, day: day, improved: improved, best: best, rank: rank, total: total,
-          list: lbList(mode, day, 50)
+          list: lbList(mode, day, 50, LB_GHOST_KEEP)
         }, CORS_LB), true;
       }
 
