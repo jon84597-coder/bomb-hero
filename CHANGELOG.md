@@ -567,6 +567,13 @@
 |  | 💾 <b>記得住、不影響平衡</b>：選過的顏色存在本機，下次打開面板還在；按「取消」回到預設外觀但色碼仍留著，想再套用不必重挑。純外觀、不進雲端存檔、不改任何數值，對手的火仍走原本配色。|
 |  | 🧪 新增 <b>verify-v560</b>（53 項：色票數量與合法性、五段色停、真的套用到 <code>__BHSKIN.cache</code>、存檔讀回、亂傳色碼被擋）＋真瀏覽器探針 <b>_p36</b>（29 項：開面板點色票 → 爆風／光環／炸彈都換色、取色盤、關掉再開還在、門檻在真頁面生效）。<b>verify-v556</b> 的門檻斷言同步改成 3／6／9。|
 |  | 📦 改 <code>js/unlock.js</code>、<code>js/skins.js</code>、<code>index.html</code>（版本字樣）；字典 1,995 → <b>2,002 條</b>；SW v5.60.0。|
+| **v5.61** | 📅 <b>修好「加入時間」（真 bug，每位玩家都錯）</b>：個人資料頁的加入時間全部顯示成 <b>1969/12/16</b>。原因是 <code>Social.showPlayer</code> 把毫秒時間戳寫成 <code>join: o.join \| 0</code> —— <code>\| 0</code> 是 <b>ToInt32</b>，1,793,901,858,654 遠超 32 位元上限 → 溢位變負數 <code>-1,394,471,074</code> → 1969 年。同一條路徑上的 <code>seen</code>（有動靜時間）與 <code>avt</code>（頭貼版本，也是時間戳）一樣有病，一起改成 <code>Number() \|\| 0</code>。|
+|  | 🧭 <b>「加入」認最早的那天</b>：後端原本優先用「帳號建立時間」—— 但遊客帳號會在換裝置／清快取時自動重建，玩了兩個月的老玩家個人資料上卻寫著「今天加入」。改成同時看「帳號」與「社交名單上的身分」，<b>取兩者中較早的那個</b>（<code>pcJoin()</code>），並用 <code>pcMs()</code> 正規化秒／毫秒兩種舊資料。|
+|  | 🎯 <b>顯示方式</b>：資料頁的加入時間改走新的 <code>fmtJoin()</code>，固定 <code>YYYY/MM/DD</code>（不用 <code>toLocaleDateString</code> —— 那個會隨語言變格式，遇到壞值還會安靜地顯示錯的日期）；玩家資訊卡上那一格從「3 天前」改成具體日期（加入日不該明天變成「4 天前」），「上線／剛剛有動靜」這類即時資訊仍用相對時間。|
+|  | 🛡️ <b>壞資料顯示「—」</b>：<code>fmtJoin</code>／<code>fmtDate</code> 只管 1e11～4e12 這個區間（2001～2100 年），負數、0、秒級 10 位數、離譜大值一律回破折號，不會硬編一個 1970/01/01 出來。|
+|  | 🩹 <b>同病三處一起修</b>：玩家名單的「更新於 X 天前」（每週榜 <code>S.at</code> 從存檔讀回來也被 <code>\| 0</code> 截斷）、每一列的「有動靜」時間、頭像版本判斷。|
+|  | 🧪 新增 <b>verify-v561</b>（53 項）：把 <code>fmtJoin</code>／<code>pcMs</code>／<code>pcJoin</code>／<code>fmtDate</code> <b>真的跑起來</b>驗（毫秒、秒、負數、空值、字串、跨年邊界、取較早），並加<b>反向斷言</b> —— 主檔裡 <code>join／seen／created／lastSeen／avt</code> 任一欄位只要再出現 <code>\| 0</code> 就失敗。真瀏覽器探針 <b>_p38</b>（25 項）：剛建的玩家卡片與資料頁都是今天、指定固定時間戳原樣顯示、四種壞值都顯示「—」、名單的「更新於」不含 1969。|
+|  | 📦 改 <code>js/main.js</code>、<code>js/playercard.js</code>、<code>cloud.js</code>；158 支全綠＋padtest 56／56；SW v5.61.0。|
 | **v5.58** | 🩹 <b>「鎖住了又自己解開」（真 bug，線上實測）</b>：開一次「🎨 外觀」面板再關掉，三個 🔒 全部消失 —— 主檔 <code>homeFill</code> 重畫首頁會整段換掉按鈕的 class，而解鎖模組只在「已通關關數變了」才重鋪，重畫後就再也沒人補回去。改成 900 ms 一輪<b>每輪都重鋪</b>（三次 <code>getElementById</code> ＋ class 比對）。|
 |  | 🩹 <b>「全新遊客又被當老玩家」</b>：伺服器給全新遊客的 <code>unlocked</code> <b>本來就是 1</b>（第 1 章預設），v5.57 拿它當「玩過 RPG」的證據 → 判定又恆真。改看 <code>rpg.cleared</code>／<code>rpg.xp</code>。線上實測全新環境 <code>unlocked=1、rpg 全 0</code> → 正確判成新玩家。|
 |  | 🧪 verify-v556 ②b 加「unlocked=1 不算」「rpg.cleared=3 才算」；_p30 ③b 改用線上遊客帳號的真實長相，並加「把 class 硬拔掉 → 1.5 秒後鎖必須自己回來」。|

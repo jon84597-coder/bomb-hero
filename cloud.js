@@ -2246,6 +2246,23 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
     }
     return hit;
   }
+  /* v5.61：時間戳一律走這裡再回傳。
+     ① 舊資料可能有「秒」等級的寫法（10 位數），直接丟給前端會被當成 1970 年。
+     ② 玩家會覺得「加入」是他第一次玩的那天 —— 帳號是後來才自動建立的
+        （換裝置／清快取就重建一個新的遊客帳號），所以取「帳號建立」與
+        「社交身分建立」兩者中**較早**的那個，而不是帳號優先。 */
+  function pcMs(v) {
+    const t = Number(v) || 0;
+    if (t > 1e11 && t < 1e14) return Math.floor(t);      /* 毫秒 */
+    if (t > 1e8 && t <= 1e11) return Math.floor(t) * 1000;  /* 秒（舊資料） */
+    return 0;
+  }
+  function pcJoin(acc, s) {
+    const a = acc ? pcMs(acc.created) : 0;
+    const b = s ? pcMs(s.join) : 0;
+    if (a && b) return a < b ? a : b;
+    return a || b || 0;
+  }
   function pcStars(sv) {
     let n = 0;
     if (sv && sv.stars) for (const k in sv.stars) n += clampInt(sv.stars[k], 0, 3, 0);
@@ -2277,7 +2294,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
       tt: (s && s.tt != null) ? clampInt(s.tt, -1, 8, -1) : -1,
       eq: (s && Array.isArray(s.eq)) ? s.eq.slice(0, 3) : [],
       avt: s ? clampInt(s.avt, 0, 4e12, 0) : 0,
-      join: (acc && acc.created) || (s && s.join) || 0,
+      join: pcJoin(acc, s),
       seen: seen,
       online: !!(s && (Date.now() - (s.seen || 0)) <= SOC_TTL),
       sec: Math.max(s ? clampInt(s.sec, 0, 1e9, 0) : 0, acc ? clampInt(acc.playSec, 0, 1e9, 0) : 0),

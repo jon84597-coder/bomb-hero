@@ -158,7 +158,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.60';
+const VERSION = '5.61';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6938,7 +6938,7 @@ const Rank = (function () {
             S.base = (o.base && typeof o.base === 'object') ? o.base : {};
             S.claimed = String(o.claimed || '');
             S.lb = (o.lb && typeof o.lb === 'object') ? o.lb : {};
-            S.at = o.at | 0;
+            S.at = Number(o.at) || 0;   // v5.61：Date.now() 不能用 | 0（會變負數）
           }
         } catch (e) {}
         syncWeek();
@@ -7433,6 +7433,16 @@ const Social = (function () {
         if (h > 0) return h + ' 小時 ' + m + ' 分';
         return m + ' 分';
       }
+      /* v5.61：「加入時間」用固定數字格式，不用 toLocaleDateString ——
+         那個會隨語言變成 2026/11/6、2026. 11. 6.，而且遇到 1969 這種
+         壞值不會報錯、只會安靜地顯示錯的日期。這裡直接擋掉不合理範圍。 */
+      function fmtJoin(ts) {
+        const t = Number(ts) || 0;
+        if (t < 1e11 || t > 4e12) return '—';
+        const d = new Date(t);
+        const q = function (n) { return (n < 10 ? '0' : '') + n; };
+        return d.getFullYear() + '/' + q(d.getMonth() + 1) + '/' + q(d.getDate());
+      }
       function ago(t) {
         const d = Math.max(0, Date.now() - (t || 0)) / 1000;
         if (d < 60) return '剛剛';
@@ -7847,7 +7857,7 @@ const Social = (function () {
           '<div class="odgrid">' +
             '<div class="odcell">性別<b>' + esc(p.gender || '不公開') + '</b></div>' +
             '<div class="odcell">來自<b>' + esc(p.region || '未知') + '</b></div>' +
-            '<div class="odcell">加入時間<b>' + (p.join ? new Date(p.join).toLocaleDateString('zh-TW') : '—') + '</b></div>' +
+            '<div class="odcell">加入時間<b>' + fmtJoin(p.join) + '</b></div>' +
             '<div class="odcell">累積遊玩<b>' + fmtDur(p.sec) + '</b></div>' +
             '<div class="odcell">成就分<b>' + (p.pts | 0) + '</b></div>' +
             '<div class="odcell">冠軍次數<b>' + (p.wins | 0) + '</b></div>' +
@@ -8142,9 +8152,11 @@ const Social = (function () {
           pid: String(o.pid), name: String(o.n || '無名玩家'), ch: o.ch | 0,
           kind: o.k === 'member' ? 'member' : 'guest',
           gender: o.g || '', region: o.r || '', bio: o.b || '',
-          join: o.join | 0, seen: o.seen | 0, sec: o.sec | 0,
+          /* v5.61：join／seen 是毫秒時間戳，| 0 會 ToInt32 溢位（1.79e12 → 負數 → 1969 年），
+             必須用 Number()。sec／pts／wins 才是小整數，| 0 沒問題。 */
+          join: Number(o.join) || 0, seen: Number(o.seen) || 0, sec: o.sec | 0,
           pts: o.pts | 0, wins: o.wins | 0, mode: o.mode || '',
-          avt: o.avt | 0, eq: Array.isArray(o.eq) ? o.eq.slice(0, 3) : [],
+          avt: Number(o.avt) || 0, eq: Array.isArray(o.eq) ? o.eq.slice(0, 3) : [],   // 頭貼版本＝時間戳，不能用 | 0
           tt: (o.tt == null ? -1 : o.tt)
         };
         open();

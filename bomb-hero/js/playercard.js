@@ -101,8 +101,23 @@
     return m ? T('pc.hm', { h: h, m: m }, '{h} 小時 {m} 分') : T('pc.hr', { n: h }, '{n} 小時');
   }
 
-  function fmtAgo(ts) {
+  /* v5.61：時間戳的合理範圍（2001 年 ~ 2100 年）。
+     低於這個門檻多半是「秒」或被位運算截斷過的壞值，
+     硬算會得到 1970 年或「0 天前」，不如直接不顯示。 */
+  function okTs(ts) {
     var t = Number(ts) || 0;
+    return (t > 1e12 && t < 4e12) ? t : 0;
+  }
+  /* 「加入」是一個日期概念，看固定日期比「N 天前」清楚，也不會每次看都變。 */
+  function fmtDate(ts) {
+    var t = okTs(ts);
+    if (!t) return '';
+    var d = new Date(t);
+    var q = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '/' + q(d.getMonth() + 1) + '/' + q(d.getDate());
+  }
+  function fmtAgo(ts) {
+    var t = okTs(ts);
     if (!t) return '';
     var d = Math.max(0, Math.floor((Date.now() - t) / 86400000));
     if (d <= 0) return T('pc.today', null, '今天');
@@ -233,7 +248,7 @@
         ? '<i class="pcbadge m">' + esc(T('pc.member', null, '會員')) + '</i>'
         : '<i class="pcbadge">' + esc(T('pc.guest', null, '遊客')) + '</i>');
       if (d.online) bits.push('<i class="pcbadge on">' + esc(T('pc.online', null, '在線')) + '</i>');
-      else if (d.seen) bits.push('<span>' + esc(T('pc.last', { t: fmtAgo(d.seen) }, '{t}上線')) + '</span>');
+      else if (fmtAgo(d.seen)) bits.push('<span>' + esc(T('pc.last', { t: fmtAgo(d.seen) }, '{t}上線')) + '</span>');
       var t = titleOf(d.tt);
       if (t) bits.push('<span class="pctt" style="color:' + esc(t.color) + ';background:' + esc(t.bg) + '">' +
         esc(t.ico) + ' ' + esc(t.name) + '</span>');
@@ -319,7 +334,8 @@
     if (d.g) who.push(d.g);
     if (d.r) who.push(d.r);
     if (who.length) cells += cell(T('pc.from', null, '來自'), who.join(' · '));
-    if (d.join > 0) cells += cell(T('pc.join', null, '加入'), fmtAgo(d.join));
+    var jd = fmtDate(d.join);
+    if (jd) cells += cell(T('pc.join', null, '加入'), jd);
     grid.innerHTML = cells;
 
     if (bio) {
