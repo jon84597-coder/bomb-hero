@@ -806,7 +806,12 @@ function createStore(dir, persist, remote) {
     social: { v: 1, players: {}, dm: {}, dmN: 0 },
     // v5.16：頭貼。刻意**不放進 social**：社交分片每次心跳都會重推，
     //   把 base64 圖片塞進去，等於每 45 秒重傳一次幾百 KB。
-    avatars: { v: 1, m: {} } };
+    avatars: { v: 1, m: {} },
+    /* v5.65：累計計數（註冊／登入／綁定／同步…）。
+       以前這些只活在記憶體，**每次重新部署或 Render 休眠喚醒就全部歸零** ——
+       後台總覽看起來就像「所有人的紀錄都不見了」（名單還在，數字全變 0）。
+       跟 meta 分片一起存（很小，只在數字真的變動時才推）。 */
+    cnt: {} };
   let timer = null;
   let dirty = false;
   let retry = 0;
@@ -838,7 +843,8 @@ function createStore(dir, persist, remote) {
     // v4.85e：sec = session 簽章密鑰。放在 meta 分片裡，重新部署／休眠喚醒後仍然同一把，
     //   否則每換一個容器就重新生成 secret.key → 所有玩家的 cookie 立刻失效（被迫重新登入）。
     return {
-      meta: { v: db.v, tamper: db.tamper, created: db.created, announce: db.announce, sec: db.sec || '' },
+      meta: { v: db.v, tamper: db.tamper, created: db.created, announce: db.announce, sec: db.sec || '',
+        cnt: db.cnt || {} },                                                    // v5.65：累計計數
       accounts: { accounts: db.accounts, devices: db.devices },
       lb: db.lb,
       visits: db.visits || { v: 1, pv: 0, dev: {}, days: {}, first: Date.now() },  // v5.5：拜訪紀錄
@@ -862,6 +868,22 @@ function createStore(dir, persist, remote) {
       if (!a || typeof a !== 'object') continue;
       if (!a.id) { a.id = key; n++; }
       else if (String(a.id) !== key && !db.accounts[a.id]) { a.id = key; n++; }
+    }
+    return n;
+  }
+
+  /* v5.65：累計計數的載入。**必須就地合併**，不能換掉 db.cnt 這個物件本身 ——
+     createCloud 的 stats 就是它的參照，換掉等於兩份計數分家，後台永遠看到 0。
+     只往上不合往下：遠端或本機可能留著更舊的快照，別把已經算過的數字壓回去。 */
+  function mergeCnt(src) {
+    if (!db.cnt) db.cnt = {};
+    if (!src || typeof src !== 'object') return 0;
+    let n = 0;
+    for (const k in src) {
+      if (!Object.prototype.hasOwnProperty.call(src, k)) continue;
+      const v = Number(src[k]);
+      if (!isFinite(v) || v < 0) continue;
+      if (v > (Number(db.cnt[k]) || 0)) { db.cnt[k] = v; n++; }
     }
     return n;
   }
@@ -899,6 +921,7 @@ function createStore(dir, persist, remote) {
       db.created = val.created || db.created;
       db.announce = val.announce || null;
       db.sec = typeof val.sec === 'string' ? val.sec : '';
+      mergeCnt(val.cnt);   // v5.65：累計計數
       return true;
     }
     return false;
@@ -921,6 +944,7 @@ function createStore(dir, persist, remote) {
       db.visits = (obj.visits && typeof obj.visits === 'object') ? obj.visits : db.visits;   // v5.5：拜訪紀錄
       db.rank = (obj.rank && typeof obj.rank === 'object') ? obj.rank : db.rank;             // v5.13
       db.social = (obj.social && typeof obj.social === 'object') ? obj.social : db.social;    // v5.13
+      mergeCnt(obj.cnt);                                                                       // v5.65：累計計數
     } catch (e) {
       // 壞檔 → 備份起來再看，不要讓伺服器起不來
       try { fs.renameSync(file, file + '.bad-' + Date.now()); } catch (e2) {}
@@ -1043,6 +1067,22 @@ function createStore(dir, persist, remote) {
     if (timer.unref) timer.unref();
   }
 
+  /* v5.65：計數（登入／註冊／限流…）都是純記憶體 ++，很多路徑不會順手 touch
+     → 沒有帳號變動時就一直沒落盤，一重啟全歸零。這裡每分鐘比對一次計數快照，
+     真的有變才排一次 flush（一次小分片比對，成本可忽略）。 */
+  let cntSig = '';
+  try { cntSig = JSON.stringify(db.cnt || {}); } catch (e) { cntSig = ''; }
+  if (persist || remoteOn) {
+    const cntTimer = setInterval(function () {
+      let s = '';
+      try { s = JSON.stringify(db.cnt || {}); } catch (e) { return; }
+      if (s === cntSig) return;
+      cntSig = s;
+      if (!dirty) touch();
+    }, 60000);
+    if (cntTimer.unref) cntTimer.unref();
+  }
+
   // 先讀本機快取（讓服務就算遠端慢也能起），再由遠端覆蓋
   if (persist) loadLocal();
   let readyP = Promise.resolve(true);
@@ -1056,7 +1096,8 @@ function createStore(dir, persist, remote) {
 
   return {
     db: db, touch: touch, flush: flush, file: file,
-    ready: readyP, state: state, remoteOn: remoteOn, pushNow: pushRemote
+    ready: readyP, state: state, remoteOn: remoteOn, pushNow: pushRemote,
+    applyPart: applyPart   // v5.65：測試用（驗「舊快照不能把計數壓回去」這條規則）
   };
 }
 
@@ -1227,9 +1268,15 @@ function createCloud(options) {
 
   const states = new Map();     // OAuth state → { provider, bind, redirect, exp }
   const limiter = makeLimiter();
-  const stats = { logins: 0, bindings: 0, tamper: 0, rateLimited: 0, syncs: 0, registers: 0, webLogins: 0, bans: 0,
-    // v5.64：登入失敗要分得出來是「查無帳號」還是「密碼不符」，否則永遠查不到真正的病因
-    authNoAcc: 0, authBadPw: 0, dupKey: 0, sessionsRenewed: 0, sessionsExpired: 0 };
+  const stats = db.cnt || (db.cnt = {});
+  /* v5.65：stats 就是 db.cnt 的參照 —— 每次 ++ 都直接落在要存檔的物件上，
+     不用到處補「存檔」呼叫。缺的鍵補 0，避免 undefined++ 變 NaN 後被 JSON 吞掉。 */
+  ['logins', 'bindings', 'tamper', 'rateLimited', 'syncs', 'registers', 'webLogins', 'bans',
+   'authNoAcc', 'authBadPw', 'dupKey', 'sessionsRenewed', 'sessionsExpired'].forEach(function (k) {
+    if (typeof stats[k] !== 'number' || !isFinite(stats[k])) stats[k] = 0;
+  });
+  /* 竄改攔阻：db.tamper 本來就有存檔，拿它當基準才不會讓舊資料看起來像「歸零」。 */
+  if (!stats.tamper && db.tamper > 0) stats.tamper = db.tamper | 0;
   const DEV_EMAILS = devEmailList(env);
   db.announce = db.announce || null;
   db.tamper = db.tamper || 0;
