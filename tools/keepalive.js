@@ -96,8 +96,10 @@ async function tick() {
 }
 
 function schedule() {
-  const t = setTimeout(tick, EVERY);
-  if (t.unref) t.unref();
+  /* 注意：這裡刻意「不」呼叫 unref()。
+     一旦 unref，事件迴圈沒有其他待辦時 node 會直接退出（實測：起來就結束，exit 0）。
+     這個腳本本來就該常駐，所以 timer 必須 hold 住事件迴圈。 */
+  setTimeout(tick, EVERY);
 }
 
 log('keepalive 啟動：' + TARGET);
