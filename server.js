@@ -1137,6 +1137,7 @@ const server = http.createServer(function (req, res) {
       url.pathname.indexOf('/api/share/') === 0 ||
       url.pathname.indexOf('/api/rank/') === 0 ||      // v5.13：十項排名
       url.pathname.indexOf('/api/social/') === 0 ||    // v5.13：線上玩家／好友／私訊
+      url.pathname === '/api/player/card' ||           // v5.59：玩家資訊卡（只回公開欄位）
       url.pathname === '/api/visit') {           // v5.5：拜訪紀錄（免登入，cloud.js 內限流）
     cloud.handle(req, res, url).then(function (done) {
       if (!done) sendJSON(res, 404, { ok: false, err: 'no such api' });

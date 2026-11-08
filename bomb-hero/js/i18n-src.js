@@ -1959,4 +1959,37 @@ nd.daily|今天的每日挑戰還沒打 —— 全球同一張圖，打完就進
 nd.season|本季只剩 {n} 天，通行證的獎勵記得領。|本季只剩 {n} 天，通行证的奖励记得领。|Only {n} days left this season — remember to claim your pass rewards.|今シーズン残り {n} 日。パス報酬を受け取ってね。|이번 시즌 {n}일 남았습니다. 패스 보상을 챙기세요.
 daily.share|分享成績|分享成绩|Share result|成績を共有|기록 공유
 home.d.skins|外觀|外观|Looks|外見|외형
+pc.anon|無名玩家|无名玩家|Unnamed player|名無しプレイヤー|이름 없는 플레이어
+pc.member|會員|会员|Member|会員|회원
+pc.guest|遊客|游客|Guest|ゲスト|게스트
+pc.online|在線|在线|Online|オンライン|온라인
+pc.last|{t}上線|{t}上线|seen {t}|{t}にログイン|{t} 접속
+pc.loading|讀取中…|读取中…|Loading…|読み込み中…|불러오는 중…
+pc.lv|等級|等级|Level|レベル|레벨
+pc.cleared|RPG 通關|RPG 通关|RPG cleared|RPG クリア|RPG 클리어
+pc.stages|關|关|stages|面|스테이지
+pc.stage|最高關卡|最高关卡|Best stage|最高ステージ|최고 스테이지
+pc.stars|三星|三星|3-stars|3つ星|별 3개
+pc.best|每日最佳|每日最佳|Daily best|デイリー最高|데일리 최고
+pc.play|累積遊玩|累计游玩|Play time|累計プレイ時間|누적 플레이
+pc.pts|成就分|成就分|Ach. points|実績ポイント|업적 점수
+pc.wins|冠軍次數|冠军次数|Wins|優勝回数|우승 횟수
+pc.from|來自|来自|From|出身|지역
+pc.join|加入|加入|Joined|登録|가입
+pc.more|看完整資料|看完整资料|Full profile|詳しいプロフィール|전체 프로필
+pc.copy|複製名字|复制名字|Copy name|名前をコピー|이름 복사
+pc.copied|已複製「{n}」|已复制「{n}」|Copied “{n}”|「{n}」をコピーしました|「{n}」 복사됨
+pc.copyFail|複製失敗，請長按名字手動複製|复制失败，请长按名字手动复制|Copy failed — long-press the name|コピーできませんでした（長押しで選択してください）|복사 실패 — 이름을 길게 눌러 복사하세요
+pc.notFound|查不到這位玩家的公開資料 —— 可能換過名字，或還沒上傳過任何紀錄。|查不到这位玩家的公开资料 —— 可能换过名字，或还没上传过任何纪录。|No public record for this player — maybe they changed their name or never uploaded one.|このプレイヤーの公開データが見つかりません（名前を変えたか、記録がまだありません）。|이 플레이어의 공개 기록을 찾을 수 없습니다(이름을 바꿨거나 기록이 없을 수 있습니다).
+pc.noPid|這位玩家目前不在線上名單裡，只能看到公開紀錄。|这位玩家目前不在线上名单里，只能看到公开纪录。|This player isn’t in the online list right now — public record only.|このプレイヤーは現在オンライン一覧にいません（公開記録のみ）。|이 플레이어는 현재 온라인 목록에 없습니다(공개 기록만 표시).
+pc.noMore|這位玩家目前不在線上名單裡|这位玩家目前不在线上名单里|This player isn’t in the online list right now|このプレイヤーは現在オンライン一覧にいません|이 플레이어는 현재 온라인 목록에 없습니다
+pc.sec|{n} 秒|{n} 秒|{n}s|{n} 秒|{n}초
+pc.min|{n} 分鐘|{n} 分钟|{n} min|{n} 分|{n}분
+pc.hr|{n} 小時|{n} 小时|{n} h|{n} 時間|{n}시간
+pc.hm|{h} 小時 {m} 分|{h} 小时 {m} 分|{h}h {m}m|{h} 時間 {m} 分|{h}시간 {m}분
+pc.today|今天|今天|today|今日|오늘
+pc.d1|昨天|昨天|yesterday|昨日|어제
+pc.dn|{n} 天前|{n} 天前|{n} days ago|{n} 日前|{n}일 전
+pc.mn|{n} 個月前|{n} 个月前|{n} months ago|{n} か月前|{n}개월 전
+pc.yn|{n} 年前|{n} 年前|{n} years ago|{n} 年前|{n}년 전
 `;

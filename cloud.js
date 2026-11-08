@@ -2205,6 +2205,93 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
       unread: un.n, unreadBy: un.by };
   }
 
+  /* ============================================================
+     v5.59：玩家資訊卡（公開資料）
+     ------------------------------------------------------------
+     為什麼要有：排行榜、十項排名、私訊標題上的名字以前是「死文字」——
+     看到有興趣的人，沒有任何辦法知道他是誰、玩到哪、戴什麼稱號。
+
+     身分有兩套，都要查：
+       · 社交名單（p_ 開頭）：有性別／地區／自介／配戴成就／稱號／遊玩時數
+       · 帳號（u_）：有 RPG 等級、章節進度、存檔（最高關卡／三星／每日最佳）
+     兩邊都有就合併；都沒有就回 404，讓前端老實說「查不到」而不是壞掉。
+
+     隱私是硬規則：**白名單輸出**。email、username、IP、裝置、密碼雜湊、
+     存檔信封（makeEnvelope）一律不外流 —— 這是公開端點，任何人都能打。
+     名字可能重複，所以規則寫死：優先用線上／最近活躍的那個。
+     ============================================================ */
+  function pcName(s) {
+    return String(s == null ? '' : s).replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 24);
+  }
+  function pcSoc(pid, name) {
+    const S = socDb();
+    if (pid && S.players[pid]) return { pid: pid, p: S.players[pid] };
+    if (!name) return null;
+    let hit = null;
+    for (const k in S.players) {
+      const p = S.players[k];
+      if (!p || p.n !== name) continue;
+      if (!hit || (p.seen || 0) > (hit.p.seen || 0)) hit = { pid: k, p: p };
+    }
+    return hit;
+  }
+  function pcAcc(name) {
+    if (!name) return null;
+    let hit = null;
+    for (const id in db.accounts) {
+      const a = db.accounts[id];
+      if (!a || a.mergedInto || a.name !== name) continue;
+      if (!hit || (a.lastSeen || 0) > (hit.lastSeen || 0)) hit = a;
+    }
+    return hit;
+  }
+  function pcStars(sv) {
+    let n = 0;
+    if (sv && sv.stars) for (const k in sv.stars) n += clampInt(sv.stars[k], 0, 3, 0);
+    return n;
+  }
+  function pcCard(pid, name) {
+    const soc = pcSoc(pid, name);
+    const s = soc ? soc.p : null;
+    const acc = pcAcc(name || (s && s.n));
+    if (!soc && !acc) return null;
+    const rpg = (acc && acc.rpg) || null;
+    const xp = rpg ? (Math.max(0, Math.floor(Number(rpg.xp) || 0))) : 0;
+    const sv = (acc && acc.save) ? acc.save : null;
+    let best = 0;
+    if (sv && sv.daily) for (const k in sv.daily) {
+      const ms = clampInt(sv.daily[k], 0, 3600000, 0);
+      if (ms > 0 && (!best || ms < best)) best = ms;
+    }
+    const seen = Math.max(s ? (s.seen || 0) : 0, acc ? (acc.lastSeen || 0) : 0);
+    return {
+      ok: true, found: true,
+      n: pcName(name || (s && s.n) || (acc && acc.name) || ''),
+      pid: soc ? soc.pid : '',
+      k: (s && s.k === 'member') ? 'member' : ((acc && acc.kind === 'member') ? 'member' : 'guest'),
+      ch: s ? clampInt(s.ch, 0, 7, 0) : 0,
+      g: s ? String(s.g || '').slice(0, 8) : '',
+      r: s ? String(s.r || '').slice(0, 12) : '',
+      b: s ? String(s.b || '').slice(0, 24) : '',
+      tt: (s && s.tt != null) ? clampInt(s.tt, -1, 8, -1) : -1,
+      eq: (s && Array.isArray(s.eq)) ? s.eq.slice(0, 3) : [],
+      avt: s ? clampInt(s.avt, 0, 4e12, 0) : 0,
+      join: (acc && acc.created) || (s && s.join) || 0,
+      seen: seen,
+      online: !!(s && (Date.now() - (s.seen || 0)) <= SOC_TTL),
+      sec: Math.max(s ? clampInt(s.sec, 0, 1e9, 0) : 0, acc ? clampInt(acc.playSec, 0, 1e9, 0) : 0),
+      pts: s ? clampInt(s.pts, 0, 1e6, 0) : 0,
+      wins: s ? clampInt(s.wins, 0, 1e6, 0) : 0,
+      mode: s ? String(s.mode || '').slice(0, 8) : '',
+      lv: lvOfXp(xp).lv,
+      xp: xp,
+      cleared: rpg ? clampInt(rpg.cleared, 0, MAX_STAGE, 0) : 0,
+      stage: sv ? clampInt(sv.stage, 1, MAX_STAGE, 1) : 0,
+      stars: pcStars(sv),
+      best: best
+    };
+  }
+
   async function handle(req, res, url) {
     const p = url.pathname;
     if (p.indexOf('/api/') !== 0) return false;
@@ -2217,7 +2304,8 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
     const isVisit = (p === '/api/visit');                  // v5.5：拜訪紀錄（不需要登入）
     const isRank = p.indexOf('/api/rank/') === 0;          // v5.13：十項排名（免登入、CORS）
     const isSoc = p.indexOf('/api/social/') === 0;         // v5.13：線上玩家／好友／私訊（免登入、CORS）
-    if (!isAuth && !isRpg && !isAdmin && !isShare && !isLb && !isVisit && !isRank && !isSoc) return false;
+    const isPc = p === '/api/player/card';                 // v5.59：玩家資訊卡（免登入、只回公開欄位）
+    if (!isAuth && !isRpg && !isAdmin && !isShare && !isLb && !isVisit && !isRank && !isSoc && !isPc) return false;
 
     /* ---- 共用：全域 IP 限流（每分鐘 300 次，避免被腳本掃） ---- */
     if (!limiter.take('ip:' + ip(req), 300, 5).ok) {
@@ -2487,6 +2575,21 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
       // 這兩個端點刻意「不帶 cookie」：前端從 GitHub Pages（純靜態）也能直接跨網域讀寫，
       // 所以一定要回 Access-Control-Allow-Origin；帳號相關的端點完全不受影響。
       const CORS_LB = { 'Access-Control-Allow-Origin': '*' };
+
+      /* ---------------- v5.59：玩家資訊卡 ----------------
+         名字→資料的查詢。刻意只吃 GET、只回白名單欄位（見 pcCard）。
+         60 次／分的限流：這是公開端點，不能讓人拿來列舉整個資料庫。 */
+      if (isPc && req.method === 'GET') {
+        const CORS_PC = { 'Access-Control-Allow-Origin': '*' };
+        if (!gate(req, res, 'pcard', 60, 0.5, CORS_PC)) return true;
+        const qn = pcName(url.searchParams.get('n') || '');
+        const qp = String(url.searchParams.get('pid') || '').slice(0, 24);
+        if (!qn && !qp) return fail(res, 400, 'BAD_NAME', CORS_PC), true;
+        const card = pcCard(qp, qn);
+        if (!card) return fail(res, 404, 'NOT_FOUND', CORS_PC), true;
+        stats.pcCard = (stats.pcCard | 0) + 1;
+        return send(res, 200, card, CORS_PC), true;
+      }
 
       if (p === '/api/lb/top' && req.method === 'GET') {
         const mode = String(url.searchParams.get('mode') || 'daily');

@@ -158,7 +158,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.58';
+const VERSION = '5.59';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -8131,7 +8131,31 @@ const Social = (function () {
           .then(function (j) { return j; },
                 function () { return null; });
       }
+      /* v5.59：從「玩家資訊卡」跳進來。
+         那張卡是公開資料（唯讀），這裡才是可互動的完整頁（加好友／私訊／封鎖）。
+         卡片把整包公開資料傳進來，所以**離線的人也進得來** ——
+         findPid 只查 150 秒內在線的人，以前離線好友永遠點不開。 */
+      function showPlayer(o) {
+        if (!o || !o.pid) return false;
+        const p = {
+          pid: String(o.pid), name: String(o.n || '無名玩家'), ch: o.ch | 0,
+          kind: o.k === 'member' ? 'member' : 'guest',
+          gender: o.g || '', region: o.r || '', bio: o.b || '',
+          join: o.join | 0, seen: o.seen | 0, sec: o.sec | 0,
+          pts: o.pts | 0, wins: o.wins | 0, mode: o.mode || '',
+          avt: o.avt | 0, eq: Array.isArray(o.eq) ? o.eq.slice(0, 3) : [],
+          tt: (o.tt == null ? -1 : o.tt)
+        };
+        open();
+        S.tab = 'online';
+        S.sel = p;
+        S.view = 'detail';
+        paint();
+        return true;
+      }
+
       window.Social = { open: open, close: close, hb: hb, list: fetchList, render: paint, init: init, dmTo: dmTo,
+        showPlayer: showPlayer,
         notice: syncNotice, openNotice: openNotice,
         state: function () { return { gender: P.gender, region: P.region, bio: P.bio }; },
         setState: function (o) {
