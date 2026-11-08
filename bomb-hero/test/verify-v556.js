@@ -66,7 +66,7 @@ ok(/bombhero-unlock-v1/.test(unlockSrc), '有獨立存檔 key');
 ok(/need: 5/.test(unlockSrc) && /need: 10/.test(unlockSrc) && /need: 15/.test(unlockSrc), '門檻 5／10／15 關');
 ok(/sel: 'btnRpg'/.test(unlockSrc) && /sel: 'btnBR'/.test(unlockSrc) && /sel: 'btnMulti'/.test(unlockSrc), '三個被鎖的入口都對得上實際 id');
 ok(/function isVeteran\(\)/.test(unlockSrc), '有老玩家判定');
-ok(/ls\('bombhero-stage'\) !== null/.test(unlockSrc), '老玩家判定看「有沒有通關紀錄」（新玩家從沒寫過這個鍵）');
+ok(/cleared\(\) >= /.test(unlockSrc), '老玩家判定看「走了多遠」而不是「有沒有開始走」（過完第 1 關不算老玩家）');
 ok(/ST\.all = 1/.test(unlockSrc), '老玩家一次性全開');
 ok(/document\.addEventListener\('click', onCap, true\)/.test(unlockSrc), '點擊在捕獲階段攔（改不動主檔的 handler）');
 ok(/stopImmediatePropagation/.test(unlockSrc), '攔下來後主檔監聽不會再跑');
@@ -75,6 +75,102 @@ ok(/::before/.test(unlockSrc), '鎖角標用 ::before（.mbtn 的 ::after 已被
 ok(/q\.get\('unlock'\) === 'all'/.test(unlockSrc), '有 ?unlock=all 逃生口');
 ok(/catch \(e\) \{[\s\S]{0,400}classList\.remove\('locked'\)/.test(unlockSrc), '自身出錯時全部解鎖（寧可少一層引導，也不能把人鎖在門外）');
 ok(/unlock\.js/.test(htmlSrc), 'index.html 有載入 unlock.js');
+
+/* ---- ②b 真的把 unlock.js 跑起來 ----
+   為什麼要這一節：v5.56 上線後才發現「三個門檻對所有人都失效」 ——
+   Cloud.init() 一定會打 /api/auth/guest 自動建遊客帳號，於是
+   「Cloud.online() || Cloud.acc()」恆為真，所有人一進來就被判成老玩家。
+   這種錯只有真的執行才抓得到（靜態正則全綠）。 */
+function runUnlock(cloud, ls0) {
+  const store = Object.assign({}, ls0 || {});
+  const els = {};
+  function mkEl() {
+    const s = new Set();
+    return {
+      classList: {
+        add: function (c) { s.add(c); }, remove: function (c) { s.delete(c); },
+        contains: function (c) { return s.has(c); }
+      },
+      attrs: {},
+      setAttribute: function (k, v) { this.attrs[k] = String(v); },
+      getAttribute: function (k) { return this.attrs[k] === undefined ? null : this.attrs[k]; },
+      removeAttribute: function (k) { delete this.attrs[k]; },
+      isLocked: function () { return s.has('locked'); }
+    };
+  }
+  ['btnRpg', 'btnBR', 'btnMulti'].forEach(function (id) { els[id] = mkEl(); });
+
+  const saved = {
+    win: global.window, doc: global.document, ls: global.localStorage,
+    si: global.setInterval, loc: global.location
+  };
+  global.localStorage = {
+    getItem: function (k) { return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null; },
+    setItem: function (k, v) { store[k] = String(v); },
+    removeItem: function (k) { delete store[k]; }
+  };
+  global.document = {
+    getElementById: function (id) { return els[id] || null; },
+    addEventListener: function () {},
+    createElement: function () { return { style: {}, id: '', textContent: '' }; },
+    head: { appendChild: function () {} },
+    body: {}
+  };
+  global.location = { search: '' };
+  global.setInterval = function () { return 0; };   // 不讓輪詢把 node 卡住
+  global.window = { document: global.document, localStorage: global.localStorage, __BH: { Cloud: cloud, t: null, toast: function () {} } };
+
+  let API = null;
+  try {
+    const p = path.join(ROOT, 'js/unlock.js');
+    delete require.cache[require.resolve(p)];
+    API = require(p);
+  } catch (e) {
+    API = { err: String(e && e.message) };
+  }
+  const out = {
+    rpg: els.btnRpg.isLocked(), br: els.btnBR.isLocked(), multi: els.btnMulti.isLocked(),
+    vet: API && typeof API.isVeteran === 'function' ? API.isVeteran() : null,
+    all: API && API.state ? API.state().all : null,
+    needTitle: els.btnRpg.getAttribute('title')
+  };
+  global.window = saved.win; global.document = saved.doc; global.localStorage = saved.ls;
+  global.setInterval = saved.si; global.location = saved.loc;
+  return out;
+}
+
+sec('②b 解鎖真的跑起來（遊客 ≠ 老玩家）');
+const guestCloud = { online: function () { return true; }, guest: function () { return true; }, acc: function () { return { kind: 'guest', unlocked: 0 }; } };
+const membCloud = { online: function () { return true; }, guest: function () { return false; }, acc: function () { return { kind: 'member', unlocked: 0 }; } };
+const offCloud = { online: function () { return false; }, guest: function () { return true; }, acc: function () { return null; } };
+
+const R1 = runUnlock(guestCloud, {});
+ok(R1.vet === false, '自動建立的遊客帳號不算老玩家（isVeteran=false）');
+ok(R1.rpg === true && R1.br === true && R1.multi === true, '遊客 → 三個入口維持上鎖');
+
+const R2 = runUnlock(membCloud, {});
+ok(R2.vet === true && R2.all === 1, '真的登入的會員 → 視為老玩家、全開');
+ok(R2.rpg === false && R2.br === false, '會員 → 三個入口全開');
+
+const R3 = runUnlock(offCloud, { 'bombhero-stage': '20' });
+ok(R3.vet === true && R3.rpg === false, '有通關紀錄（離線）→ 全開');
+
+const R4 = runUnlock(offCloud, { 'bombhero-stage': '6' });
+ok(R4.rpg === false && R4.br === true && R4.multi === true, '通關 5 關（stage=6）→ 只開 RPG（br／multi 仍鎖）');
+
+const R5 = runUnlock(offCloud, { 'bombhero-stage': '1' });
+ok(R5.rpg === true && R5.br === true && R5.multi === true, '全新（0 關）→ 三個都鎖');
+ok(R5.vet === false, '只過完第 1 關（鍵已存在）也不算老玩家 —— 否則階梯只剩 0／1 兩格');
+ok(/5/.test(R5.needTitle || ''), '上鎖時 title 有講「通關第幾關」（實際：' + R5.needTitle + '）');
+
+const R6 = runUnlock(offCloud, { 'bombhero-stage': '11' });
+ok(R6.rpg === false && R6.br === false && R6.multi === true, '通關 10 關 → RPG＋大逃殺都開，多人還鎖');
+
+const R7 = runUnlock({ online: function () { return true; }, guest: function () { return true; }, acc: function () { return { kind: 'guest', unlocked: 6 }; } }, {});
+ok(R7.vet === true, '遊客但伺服器上有 RPG 進度（unlocked=6）→ 補判成老玩家，換裝置的玩家不會被鎖回去');
+
+ok(/C\.guest\(\)/.test(unlockSrc) && /!guest/.test(unlockSrc), '老玩家判定有讀遊客身分（反向：改回「online 就算」會在這裡紅）');
+
 ok(/btnSkins/.test(htmlSrc), '「更多」抽屜有外觀入口');
 ok(/skins\.js/.test(htmlSrc) && /sharecard\.js/.test(htmlSrc) && /notify\.js/.test(htmlSrc),
   '四個新模組都在 index.html 裡');

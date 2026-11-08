@@ -11,8 +11,9 @@
      · 通關第 15 關 → 解鎖多人對戰。
      每次解鎖都給一次慶祝 —— 「有東西等著」本身就是回來的理由。
 
-   老玩家不會被鎖：只要本地有 bombhero-stage（代表曾通關）或已登入帳號，
-   一律視為老玩家、直接全開。新玩家第一次進來時這個鍵不存在。
+   誰不會被鎖：① 真的註冊／登入的會員 ② 本機已通關 ≥15 關（走完整條階梯）。
+   匿名遊客帳號不算 —— Cloud.init() 會替每位訪客自動建一個，把「online」當老玩家
+   等於門檻對所有人都失效（v5.56 上線當天實測抓到的）。
 
    設計約束：不碰遊戲邏輯、不改按鈕的 innerHTML（會被主檔的 homeFill 重寫），
    只加／移 class；點擊用捕獲階段攔，抗重繪。
@@ -68,14 +69,34 @@
     return Math.max(0, n - 1);
   }
 
-  /* 老玩家判定：本地有過關紀錄（新玩家從沒寫過這個鍵），或已登入帳號 */
+  /* 老玩家判定 —— 只有這兩種人不必再爬門檻：
+
+     ① 真的註冊／登入的會員（或伺服器上已經有 RPG 進度的人）。
+     ② 本機進度已經走完整條階梯（通關 ≥15 關），鎖他沒有任何意義。
+
+     2026-11 兩次修正（都是線上實測才抓到）：
+     a. 原本寫成 Cloud.online() || Cloud.acc()。但 Cloud.init() 一開場就打
+        /api/auth/guest，替每位訪客自動建遊客帳號 → online 恆為 true、acc 恆非 null
+        → 所有人第一次進來就被判成老玩家，三個門檻形同不存在。
+     b. 也不能只認「有 bombhero-stage 這個鍵」：過完第 1 關它就被寫進去，
+        於是第 2 關就全開，階梯還是等於不存在（0 與 1 之間沒有區別）。
+        所以改成看「走了多遠」，不是「有沒有開始走」。
+
+     已經開過 v5.56 的玩家不受影響：那時 ST.all 早就被寫成 1，存在 bombhero-unlock-v1。 */
   function isVeteran() {
-    try { if (ls('bombhero-stage') !== null) return true; } catch (e) {}
     try {
       var C = api('Cloud');
-      if (C && C.online && C.online()) return true;
-      if (C && C.acc && C.acc()) return true;
+      if (C) {
+        var guest = (typeof C.guest === 'function') ? !!C.guest() : true;
+        var on = (C.online && typeof C.online === 'function') ? !!C.online() : false;
+        var a = (typeof C.acc === 'function') ? C.acc() : null;
+        if (on && !guest) return true;                              /* 會員 */
+        if (a && a.kind && a.kind !== 'guest') return true;         /* 保險：kind 認得出是會員 */
+        if (a && (a.unlocked | 0) > 0) return true;                 /* 玩過 RPG ＝ 老玩家 */
+      }
     } catch (e2) {}
+    var last = GATES[GATES.length - 1];
+    if (cleared() >= (last ? last.need : 15)) return true;           /* 已走完整條階梯 */
     return false;
   }
 

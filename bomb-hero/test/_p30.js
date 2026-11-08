@@ -56,7 +56,7 @@ const HOOK = 'window.__errs=[];' +
     ok(M.ul, '__BHUnlock 有載入');
     ok(M.sh, '__BHShare 有載入');
     ok(M.nd, '__BHNotify 有載入');
-    ok(M.ver === '5.56', '版本是 5.56（實際 ' + M.ver + '）');
+    ok(M.ver === '5.57', '版本是 5.57（實際 ' + M.ver + '）');
 
     console.log('\n=== ② 外觀面板 ===');
     const S = JSON.parse(await p.eval(`(function(){
@@ -95,6 +95,38 @@ const HOOK = 'window.__errs=[];' +
     ok(N.rpg === true, 'RPG 上鎖');
     ok(N.br === true, '大逃殺上鎖');
     ok(N.mp === true, '多人對戰上鎖');
+
+    console.log('\n=== ③b 遊客帳號不算老玩家（線上實況模擬）===');
+    /* 本機沒有 /api，Cloud 一定是離線的 → ③ 那幾條測不到真正的線上狀態。
+       線上每位訪客都會被自動建立遊客帳號（online=true、acc 非 null），
+       這正是 v5.56.0 門檻全失效的原因。這裡直接把 Cloud 換成那個狀態。 */
+    const G = JSON.parse(await p.eval(`(function(){
+      try{
+        var C = window.__BH && window.__BH.Cloud, U = window.__BHUnlock;
+        if(!C || !U) return JSON.stringify({err:'no Cloud/Unlock'});
+        /* 清成新玩家，並讓本機紀錄不干擾 */
+        localStorage.setItem('bombhero-stage','1');
+        localStorage.removeItem('bombhero-unlock-v1');
+        C.online = function(){ return true; };
+        C.guest  = function(){ return true; };
+        C.acc    = function(){ return {kind:'guest', unlocked:0}; };
+        U.paint();
+        var g = { rpg:document.getElementById('btnRpg').classList.contains('locked'),
+                  br:document.getElementById('btnBR').classList.contains('locked'),
+                  mp:document.getElementById('btnMulti').classList.contains('locked'),
+                  vet:U.isVeteran(), all:U.state().all };
+        C.guest = function(){ return false; };
+        C.acc   = function(){ return {kind:'member', unlocked:0}; };
+        U.paint();
+        var m = { rpg:document.getElementById('btnRpg').classList.contains('locked'),
+                  vet:U.isVeteran(), all:U.state().all };
+        return JSON.stringify({g:g,m:m});
+      }catch(e){return JSON.stringify({err:String(e)});}
+    })()`) || '{}');
+    ok(G.g && G.g.vet === false, '自動建立的遊客帳號不算老玩家');
+    ok(G.g && G.g.rpg === true && G.g.br === true && G.g.mp === true, '遊客 → 三個入口仍然上鎖');
+    ok(G.m && G.m.vet === true && G.m.all === 1, '真的登入的會員 → 判成老玩家、全開');
+    ok(G.m && G.m.rpg === false, '會員 → RPG 入口解鎖');
 
     console.log('\n=== ④ 解鎖（老玩家）===');
     await p.eval("localStorage.setItem('bombhero-stage','20');localStorage.removeItem('bombhero-unlock-v1');");
