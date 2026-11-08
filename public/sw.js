@@ -12,10 +12,11 @@
      · /api/ 一律不攔（帳號、雲端存檔、線上配對都必須即時）
    ================================================================ */
 
-var SW_VERSION = 'v5.54.0';
+var SW_VERSION = 'v5.55.0';
 var CORE_CACHE = 'bh-core-' + SW_VERSION;   // 遊戲本體（離線也要開得起來）
 var ASSET_CACHE = 'bh-asset-' + SW_VERSION; // 圖示等靜態資源
 var NAV_TIMEOUT = 2200;   // v4.22：Render 冷啟動一定超過，早點回快取讓畫面先出來
+var HARD_TIMEOUT = 10000; // v5.55：硬上限。到這裡還沒拿到任何回應就給「喚醒中」頁，絕不讓玩家無限轉圈
 
 var CORE = [
   './',
@@ -185,35 +186,78 @@ function watchForNewer(cachedRes, req) {
   }).catch(function () {});
 }
 
-/* 導覽：網路優先（有逾時）→ 快取 → 首頁 */
+/* 導覽：網路優先（有逾時）→ 快取 → 喚醒頁 → 離線頁
+   v5.55：舊版只有三個出口（2.2 秒查快取「有才 resolve」＋ fetch 成功／失敗），
+   而「沒快取 ＋ 網路整個掛住」時它們全都不成立 → Promise 永不 resolve
+   → 瀏覽器一直轉圈，玩家以為遊戲壞了。2026-11-08 Render 免費實例假死時，
+   沒快取的裝置（新機／無痕／清過資料）就是卡在這裡，白屏十幾分鐘。
+   現在多一道硬上限：時間到就給一張「會自己重試」的頁面，Promise 保證 settle。 */
+function wakePage() {
+  var zh = true, offline = false;
+  try { zh = !navigator.language || /^zh/i.test(navigator.language); } catch (e) {}
+  try { offline = navigator.onLine === false; } catch (e) {}
+  var msg;
+  if (offline) {
+    msg = zh ? '<h1>目前沒有網路</h1><p>連上網路後重新整理即可繼續玩《爆爆英雄》。</p>'
+             : '<h1>You are offline</h1><p>Reconnect and reload to keep playing Bomb Hero.</p>';
+  } else {
+    msg = zh ? '<h1>伺服器正在喚醒</h1><p>免費主機睡着後要 30~60 秒才會醒。<br>畫面會自己重試，不用重新整理。</p>'
+             : '<h1>Waking the server</h1><p>The free host sleeps when idle and needs 30-60 s to wake.<br>This page retries automatically.</p>';
+  }
+  var html = '<!doctype html><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>' + (zh ? '連線中' : 'Connecting') + ' · 爆爆英雄</title>' +
+    '<style>html,body{margin:0;height:100%}' +
+    'body{background:#0d1220;color:#e8eefc;font-family:-apple-system,"Segoe UI","Noto Sans TC",system-ui,sans-serif;' +
+    'display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box}' +
+    '.b{max-width:320px}' +
+    '.s{width:32px;height:32px;margin:0 auto 16px;border:3px solid #22314d;border-top-color:#7cb4ff;' +
+    'border-radius:50%;animation:r 1s linear infinite}@keyframes r{to{transform:rotate(360deg)}}' +
+    'h1{font-size:17px;margin:0 0 8px;font-weight:700}' +
+    'p{font-size:13px;line-height:1.6;color:#93a7c4;margin:0 0 16px}' +
+    'button{padding:11px 26px;border:0;border-radius:12px;color:#fff;background:#e2603a;' +
+    'font:600 14px/1 inherit;cursor:pointer}</style>' +
+    '<div class="b"><div class="s"></div>' + msg +
+    '<button onclick="location.reload()">' + (zh ? '立即重試' : 'Retry now') + '</button></div>' +
+    '<script>(function(){var n=0;try{n=+sessionStorage.getItem("bhwake")||0}catch(e){}' +
+    'if(n<8){try{sessionStorage.setItem("bhwake",n+1)}catch(e){}setTimeout(function(){location.reload()},3000)}})()</script>';
+  return new Response(html, {
+    status: 200,
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }
+  });
+}
+
 function navFetch(req) {
   return new Promise(function (resolve) {
     var settled = false;
     function done(res) { if (settled) return; settled = true; resolve(res); }
 
+    // 第 1 層：2.2 秒還沒回來，有快取就先給快取（冷啟動時玩家先看到畫面，背景再確認新版）
     var timer = setTimeout(function () {
       caches.match('./index.html').then(function (c) {
-        if (c) { done(c); watchForNewer(c, req); }   // 先讓玩家看到畫面，背景確認有沒有新版
-      });
+        if (c) { done(c); watchForNewer(c, req); }
+      }).catch(function () {});
     }, NAV_TIMEOUT);
+
+    /* 第 2 層（v5.55）：硬上限。刻意不 clearTimeout —— 它就是最後一道保險，
+       保證這個 Promise 在 HARD_TIMEOUT 之內一定會 settle。 */
+    var hard = setTimeout(function () { done(wakePage()); }, HARD_TIMEOUT);
 
     fetch(req).then(function (res) {
       clearTimeout(timer);
-      if (res && res.ok) putSafe(CORE_CACHE, './index.html', res);
+      clearTimeout(hard);
+      if (res && res.ok) { putSafe(CORE_CACHE, './index.html', res); done(res); return; }
+      /* 5xx＝主機沒醒／路由壞掉：與其讓瀏覽器丟一張看不懂的錯誤頁，不如給可重試的畫面 */
+      if (res && res.status >= 500) { done(wakePage()); return; }
       done(res);
     }).catch(function () {
       clearTimeout(timer);
       caches.match(req).then(function (r1) {
         if (r1) { done(r1); watchForNewer(r1, req); return; }
         caches.match('./index.html').then(function (r2) {
-          done(r2 || new Response(
-            '<!doctype html><meta charset="utf-8"><title>離線</title>' +
-            '<body style="background:#0d1220;color:#e8eefc;font-family:sans-serif;text-align:center;padding:60px 20px">' +
-            '<h2>目前沒有網路</h2><p>連上網路後重新整理即可繼續玩《爆爆英雄》。</p></body>',
-            { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-          ));
-        });
-      });
+          done(r2 || wakePage());
+        }).catch(function () { done(wakePage()); });
+      }).catch(function () { done(wakePage()); });
     });
   });
 }
