@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.70';
+const VERSION = '5.71';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -928,6 +928,8 @@ let settings = {
   aiLevel: 'normal',                              // AI 難度：weak / normal / strong
   netName: '',                                    // 線上暱稱
   playerName: '',                                 // v4.8：固定暱稱（首次必填，之後都用這個玩）
+  nameLock: 0,                                    // v5.71：暱稱已定案（首頁輸入框收起、改用招呼語；改名要花 NICK_PRICE 金幣）
+  nameAuto: 0,                                    // v5.71：名字是系統自動取的（玩家自己沒填）→ 不算定案，還能免費自己取
   names: ['', '', '', '', '', '', '', ''],        // 玩家暱稱（空白 = 用角色名）
   ctrl: 'auto',                                   // auto / kb / pad / touch
   keys1: Object.assign({}, DEF_KEYS1),            // 玩家 1 鍵盤
@@ -1096,6 +1098,133 @@ function touchEnabled() { return ctrlMode() === 'touch'; }
 function saveSettings() {
   try { localStorage.setItem(SET_KEY, JSON.stringify(settings)); } catch (e) {}
 }
+
+/* ============================================================================
+ * v5.71：暱稱 — 首頁招呼語 ＋ 改名要花金幣
+ * ----------------------------------------------------------------------------
+ * 以前首頁的暱稱輸入框「每打一個字」就直接寫進 settings.playerName，等於隨時
+ * 都能改名 —— 招呼語也就沒有意義（名字一直變），排行榜也比對不上人。
+ *
+ * 現在：
+ *   · 首頁第一次取名仍然免費，輸入框照舊（打錯字還來得及改）
+ *   · 一離開首頁／開始玩就「定案」（settings.nameLock = 1）→ 輸入框收起來，
+ *     換成「隨機招呼語 ＋ 暱稱」；暱稱走 .gname 金色漸層字，其餘是一般文字
+ *   · 想改名只有一條路：「線上玩家 → 我的資料」花 NICK_PRICE 金幣
+ *   · 系統自動取的名字（玩家123）不算定案 → 玩家還能在首頁自己取名，不用付錢
+ * ========================================================================== */
+const NICK_PRICE = 5000;
+const NICK_MAX = 8;
+const NICK_GREETS = 5;
+const Nick = (function () {
+  let lastG = 0;                                   // 上一句招呼語（避免連兩次同一句）
+  let wired = false;
+  function nm() { return String((settings && settings.playerName) || '').trim().slice(0, NICK_MAX); }
+  function locked() { return !!settings.nameLock && !!nm(); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+  function goldTxt() {
+    try { return Shop.dev() ? '∞' : String(Shop.gold() | 0); } catch (e) { return '0'; }
+  }
+  /* 招呼語：五句輪流抽、不連莊（同一句連兩次就不像在打招呼了） */
+  function pickG() {
+    let k = 1 + Math.floor(Math.random() * NICK_GREETS);
+    if (k === lastG) k = (k % NICK_GREETS) + 1;
+    lastG = k;
+    return k;
+  }
+  /* 把 {n} 換成「設計過的暱稱」，其餘文字維持一般樣式。
+     t() 不帶參數時 {n} 會原封不動留著 → 這裡自己切開，才不會把 <b> 一起跳脫掉。 */
+  function greetHTML(k, name) {
+    const parts = String(t('nick.greet.' + k)).split('{n}');
+    return esc(parts[0]) + '<b class="gname">' + esc(name) + '</b>' + esc(parts.slice(1).join(''));
+  }
+  /* 重畫首頁那一列：定案 → 招呼語；還沒定案 → 保留輸入框。
+     refresh = true 才換新的一句（每次回首頁換一句，其他重畫沿用同一句）。 */
+  function render(refresh) {
+    const wrap = $id('nickWrap'), box = $id('greetLine'), inp = $id('playerName');
+    const n = nm();
+    if (inp && inp.value !== n) inp.value = n;
+    if (!wrap || !box) return '';
+    const lock = locked();
+    if (wrap.classList) wrap.classList.toggle('lock', lock);
+    if (!lock) {
+      box.innerHTML = '';
+      if (box.setAttribute) box.setAttribute('data-g', '');
+      return '';
+    }
+    let k = parseInt(box.getAttribute ? box.getAttribute('data-g') : '', 10) || 0;
+    if (refresh || !(k >= 1 && k <= NICK_GREETS)) k = pickG();
+    if (box.setAttribute) box.setAttribute('data-g', String(k));
+    box.innerHTML = '<span class="gi">👋</span><span class="gt">' + greetHTML(k, n) + '</span>' +
+      '<button class="gedit" type="button" title="' + esc(t('nick.editTip')) + '">✏️</button>';
+    return box.innerHTML;
+  }
+  function greet() { return render(true); }
+  /* 定案：離開首頁或開始玩。系統自動取的名字不算定案。 */
+  function commit() {
+    if (!nm()) return false;
+    if (settings.nameAuto) { render(); return false; }
+    if (settings.nameLock) return true;
+    settings.nameLock = 1;
+    try { saveSettings(); } catch (e) {}
+    render();
+    return true;
+  }
+  /* 舊存檔升級：已經有名字的老玩家一律視為定案（他們早就取過名）。
+     例外：看起來就是系統自動取的名字（玩家123）→ 標成 nameAuto，還能免費改。 */
+  function migrate() {
+    const n = nm();
+    if (!n || settings.nameLock || settings.nameAuto) return false;
+    if (/^玩家\d{3}$/.test(n)) { settings.nameAuto = 1; try { saveSettings(); } catch (e) {} return false; }
+    settings.nameLock = 1;
+    try { saveSettings(); } catch (e) {}
+    return true;
+  }
+  /* 改名（唯一入口在「我的資料」）。回傳 { ok, err }：EMPTY / SAME / GOLD。 */
+  function rename(v) {
+    const nv = String(v || '').trim().slice(0, NICK_MAX);
+    if (!nv) return { ok: false, err: 'EMPTY' };
+    if (nv === nm()) return { ok: false, err: 'SAME' };
+    let r = null;
+    try { r = Shop.spend(NICK_PRICE); } catch (e) { r = null; }
+    if (!r || !r.ok) {
+      let have = 0;
+      try { have = Shop.gold() | 0; } catch (e) {}
+      return { ok: false, err: 'GOLD', need: Math.max(0, NICK_PRICE - have) };
+    }
+    const old = nm();
+    settings.playerName = nv;
+    settings.nameLock = 1;
+    settings.nameAuto = 0;
+    /* 大逃殺維持「brName 沒另外取就用暱稱」的規則：舊的 brName 等於舊暱稱時一起換掉，
+       玩家自己另外取過（不一樣）就不動它。 */
+    if (String(settings.brName || '').trim() === old) settings.brName = '';
+    try { saveSettings(); } catch (e) {}
+    render();
+    return { ok: true, name: nv, price: NICK_PRICE };
+  }
+  /* 招呼語右邊那支 ✏️ → 直接開「我的資料」（改名還是在那裡付費） */
+  function wire() {
+    if (wired) return;
+    const box = $id('greetLine');
+    if (!box || !box.addEventListener) return;
+    wired = true;
+    box.addEventListener('click', function (e) {
+      const t2 = e && e.target;
+      if (!t2 || !t2.closest || !t2.closest('.gedit')) return;
+      try { if (window.Social && window.Social.open) window.Social.open('me'); } catch (er) {}
+    });
+    /* 打了名字就直接關掉分頁的人也要定案 —— 不然下次回來還是那格輸入框，招呼語永遠不出現 */
+    try {
+      window.addEventListener('pagehide', function () { try { commit(); } catch (er) {} });
+    } catch (er) {}
+  }
+  return { nm: nm, locked: locked, render: render, greet: greet, commit: commit, migrate: migrate,
+    rename: rename, wire: wire, goldTxt: goldTxt, PRICE: NICK_PRICE, MAX: NICK_MAX, GREETS: NICK_GREETS };
+})();
 
 // ---------- 音效 + 音樂（WebAudio 合成，無外部資源） ----------
 const AudioSys = (function () {
@@ -2321,6 +2450,8 @@ const Screen = (function () {
     try { if (typeof refreshers !== 'undefined') refreshers.forEach(function (f) { try { f(); } catch (e) {} }); } catch (e) {}
     // v4.87：回到首頁就刷新 🎁 紅點（簽到／任務有沒有東西可領）
     try { if (name === 'title') HomeDot.refresh(); } catch (e) {}   // v5.38：紅點總管
+    // v5.71：回首頁換一句招呼語；離開首頁就代表名字定案了（首頁的輸入框從此收起）
+    try { if (name === 'title') Nick.greet(); else Nick.commit(); } catch (e) {}
     // v5.27：進設定頁就重算畫質說明（畫質可能在別的裝置／別的地方被改過）
     try { if (name === 'settings') updateQualHint(); } catch (e) {}
   }
@@ -7256,6 +7387,7 @@ const Social = (function () {
         on: false, list: [], total: 0, at: 0, err: '',
         me: null, friends: [], blocks: [], reqs: [],
         tab: 'online', view: 'list', sel: null,
+        nickEdit: false,                       // v5.71：我的資料裡「改名」小表單是否展開
         chatWith: '', msgs: [], chatAt: 0, chatErr: '', sending: false,
         /* v5.14：通知狀態（req = 好友邀請數、dm = 未讀私訊數、by = 誰傳的） */
         nt: { n: 0, req: 0, dm: 0, by: {} }, dismiss: false,
@@ -7916,6 +8048,32 @@ const Social = (function () {
           ' 人 · 更新於 ' + ago(S.at) + '</div><div class="onlist">' + arr.map(rowHTML).join('') + '</div>';
       }
 
+      /* v5.71：onBodyClick 裡有 `const t = e.target`，會蓋掉全域的 t() 翻譯函式
+         （v5.71 寫招呼語時踩到：t('nick.done') 被當成「把 DOM 元素當函式呼叫」→ 整個 toast 被 try 吞掉）。
+         這裡留一個別名，事件處理常式一律用它。 */
+      function tk(key, p) { return t(key, p); }
+
+      /* v5.71：暱稱 —— 改名是唯一入口（花 NICK_PRICE 金幣）。
+         首頁那個輸入框在名字定案後就收起來了，這裡是玩家唯一改得到名字的地方。 */
+      function nickRowHTML() {
+        const n = esc(myName());
+        if (S.nickEdit) {
+          let g = '0';
+          try { g = (typeof Shop !== 'undefined' && Shop.dev()) ? '∞' : String((Shop.gold ? Shop.gold() : 0) | 0); } catch (e) {}
+          return '<div class="onprof" style="grid-template-columns:1fr">' +
+            '<label class="odcell nodcell">' + t('nick.new') +
+            '<input class="chatin" id="socNickIn" maxlength="8" autocomplete="off" spellcheck="false"' +
+            ' enterkeyhint="done" placeholder="' + esc(t('nick.ph')) + '" value="' + n + '"></label></div>' +
+            '<div class="odact"><button class="bhbtn warm" id="socNickOk" type="button">' +
+            t('nick.okPay', { p: NICK_PRICE }) + '</button>' +
+            '<button class="bhbtn" id="socNickNo" type="button">' + t('nick.cancel') + '</button></div>' +
+            '<div class="bhnote">' + t('nick.cost', { p: NICK_PRICE, g: g }) + '</div>';
+        }
+        return '<div class="odcell" style="margin-top:8px">' + t('nick.cur') + '<b>' + n + '</b></div>' +
+          '<div class="odact"><button class="bhbtn" id="socNickEdit" type="button">' +
+          t('nick.btn', { p: NICK_PRICE }) + '</button></div>';
+      }
+
       function renderMe() {
         const me = S.me || {};
         const opt = GENDERS.map(function (g) {
@@ -7929,6 +8087,7 @@ const Social = (function () {
           '<div class="odid">玩家編號 ' + pcode(me.pid) + ' · ' + (myKind() === 'member' ? '會員' : '遊客') + '</div></div></div>' +
           '<div class="bhnote">這些資料會顯示給其他線上玩家看。' +
           (myKind() === 'member' ? '' : '（遊客身分也能用，但換裝置就換一個身分）') + '</div>' +
+          nickRowHTML() +
           '<div class="odact" style="margin:8px 0 10px"><button class="bhbtn" id="socAvBtn" type="button">📷 換頭貼</button>' +
           '<span class="bhnote" style="align-self:center">上傳後可以拖曳、縮放，決定要露哪一塊</span></div>' +
           myTitleHTML() +
@@ -8061,11 +8220,14 @@ const Social = (function () {
 
       function paint() { try { render(); } catch (e) { console.warn('[Social] 畫面更新失敗', e); } }
 
-      function open() {
+      function open(tab) {
         opened = true;
         const m = $id('onModal');
         if (m) m.classList.add('on');
         S.view = 'list';
+        /* v5.71：open('me') 直接停在「我的資料」。注意 #btnPlayers 是 click → open，
+           事件物件也會被當成參數傳進來 → 只認字串，不然 S.tab 會變成一個 MouseEvent。 */
+        if (typeof tab === 'string' && tab) { S.tab = tab; S.nickEdit = false; }
         paint();
         hb();
         fetchList();
@@ -8081,6 +8243,13 @@ const Social = (function () {
       function onBodyKey(e) {
         if (!e || e.key !== 'Enter' || e.isComposing) return;
         const t = e.target;
+        /* v5.71：改名輸入框按 Enter ＝ 按「確定改名」 */
+        if (t && t.closest && t.closest('#socNickIn')) {
+          if (e.preventDefault) e.preventDefault();
+          const okb = $id('socNickOk');
+          if (okb && okb.click) { try { okb.click(); } catch (x) {} }
+          return;
+        }
         if (!t || !t.closest || !t.closest('#onChatIn')) return;
         if (e.preventDefault) e.preventDefault();
         const inp = $id('onChatIn');
@@ -8146,6 +8315,31 @@ const Social = (function () {
           return;
         }
         if (t.closest('#socHb')) { hb().then(fetchList); return; }
+        /* v5.71：改名（要花 NICK_PRICE 金幣，扣款走 Shop.spend） */
+        if (t.closest('#socNickEdit')) {
+          S.nickEdit = true;
+          paint();
+          try { const f = $id('socNickIn'); if (f && f.focus) f.focus(); } catch (e) {}
+          return;
+        }
+        if (t.closest('#socNickNo')) { S.nickEdit = false; paint(); return; }
+        if (t.closest('#socNickOk')) {
+          const f = $id('socNickIn');
+          const r = Nick.rename(f ? f.value : '');
+          if (r && r.ok) {
+            S.nickEdit = false;
+            try { toast(tk('nick.done', { n: r.name }), 2.6); } catch (e) {}
+            paint();
+            hb();
+          } else if (r && r.err === 'SAME') {
+            try { toast(tk('nick.same'), 2.4); } catch (e) {}
+          } else if (r && r.err === 'EMPTY') {
+            try { toast(tk('nick.empty'), 2.4); } catch (e) {}
+          } else {
+            try { toast(tk('nick.noGold', { n: (r && r.need) || NICK_PRICE }), 2.8); AudioSys.sfx('hurt'); } catch (e) {}
+          }
+          return;
+        }
         const sa = t.closest('[data-socact]');           // v5.14：好友邀請的接受／忽略
         if (sa) {
           const pid = sa.getAttribute('data-pid');
@@ -8174,6 +8368,7 @@ const Social = (function () {
         if (!b) return;
         S.tab = b.getAttribute('data-ontab');
         S.view = 'list';
+        S.nickEdit = false;        // v5.71：換分頁就收起改名表單
         paint();
         if (S.tab !== 'me') fetchList();
       }
@@ -29155,17 +29350,23 @@ function showAdvPick(on) {
     el.value = settings.playerName || '';
     el.addEventListener('input', function () {
       settings.playerName = String(el.value || '').trim().slice(0, 8);
+      settings.nameAuto = 0;        // v5.71：玩家自己打的字 → 不再是「系統自動取名」
       saveSettings();
       const nm = $id('netName');
       if (nm && !nm.value) nm.value = settings.playerName;
     });
   }
 })();
+    /* v5.71：招呼語。migrate() 把「已經有名字的老玩家」標成定案，
+       然後畫出招呼語（有定案才畫，沒定案時首頁仍然是原本的輸入框）。 */
+    try { Nick.migrate(); Nick.wire(); Nick.greet(); } catch (__n) {}
   } catch (__e) { __bootFail('wire', __e); }
 // v4.18：暱稱可以留空 —— 沒填就自動取一個「玩家xxx」，之後仍可在首頁改
 function autoNickname() {
   const n = '玩家' + (100 + Math.floor(Math.random() * 900));
   settings.playerName = n;
+  settings.nameAuto = 1;          // v5.71：系統取的名字不算定案 → 玩家不改也不用付錢
+  settings.nameLock = 0;
   saveSettings();
   const el = $id('playerName');
   if (el) el.value = n;
@@ -38320,6 +38521,8 @@ window.__BH = {
   TileArt: TileArt, TILE_ART: TILE_ART, drawStone: drawStone, drawCrate: drawCrate, paintFloorStyle: paintFloorStyle,
   updateCart: updateCart, putOnCart: putOnCart, reviveFromCart: reviveFromCart, cartThrowBomb: cartThrowBomb, onRingCell: onRingCell, drawCart: drawCart,
   VERSION: VERSION, Help: (typeof Help !== 'undefined' ? Help : null),
+  // v5.71：暱稱（招呼語／定案／改名）與售價
+  Nick: Nick, NICK_PRICE: NICK_PRICE, NICK_GREETS: NICK_GREETS,
   // v4.0：RPG 模式
   RPG: RPG, RPG_ATTRS: RPG_ATTRS, RPG_POINTS: RPG_POINTS, RPG_CAP: RPG_CAP, RPG_FOE: RPG_FOE, FOE_HP: FOE_HP,
   // v5.18：等級／經驗（測試與 UI 共用同一份）

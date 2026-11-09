@@ -3523,6 +3523,28 @@ body.touch #scr-title .menu .mgrid .mbtn .betaTag { right: 6px; top: 5px; font-s
 #scr-title .nickwrap { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 8px 0 4px; }
 #scr-title .nickwrap .nklabel { font-size: 13px; font-weight: 600; color: #7a5a2e; text-shadow: 0 1px 0 rgba(255,255,255,.65); }
 #scr-title .nickwrap .tinput { width: 100%; max-width: 320px; }
+/* v5.71：暱稱定案後的那一句招呼語。
+   名字用「金色漸層字」做區隔（玩家自己設計過的文字），其餘招呼詞維持一般內文樣式；
+   右邊那支 ✏️ 直接跳「我的資料」（改名要花 5,000 金幣）。 */
+#scr-title .nickwrap .greet { display: none; align-items: center; gap: 7px; max-width: 100%;
+  padding: 5px 11px 5px 9px; border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,241,216,.9));
+  border: 1.5px solid #e9c68d; box-shadow: 0 2px 0 rgba(190,150,90,.2), inset 0 1px 0 #fff;
+  font-size: 12.5px; font-weight: 700; color: #6b3a12; line-height: 1.35; }
+#scr-title .nickwrap.lock .nklabel,
+#scr-title .nickwrap.lock .tinput { display: none; }
+#scr-title .nickwrap.lock .greet { display: flex; }
+#scr-title .nickwrap .greet .gi { flex: 0 0 auto; font-size: 14px; line-height: 1; }
+#scr-title .nickwrap .greet .gt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#scr-title .nickwrap .greet .gname {
+  font-size: 14.5px; font-weight: 900; letter-spacing: .01em; padding: 0 1px;
+  background: linear-gradient(180deg, #ffd45e 8%, #f08a1a 62%, #c25a09 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: #c25a09;
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,.95)); }
+#scr-title .nickwrap .greet .gedit { flex: 0 0 auto; border: 0; background: transparent; cursor: pointer;
+  font-size: 12px; line-height: 1; padding: 3px 2px; color: #a8763c; border-radius: 8px; font-family: inherit; }
+#scr-title .nickwrap .greet .gedit:active { background: #ffe6bf; }
 /* 桌機 820px 容器裡，新手教學條如果吃滿就是一條超長綠棒 → 置中限寬，當成單獨的主 CTA */
 @media (min-width: 900px) {
   #scr-title .menu > .mbtn#btnLearn { max-width: 420px; margin-left: auto; margin-right: auto; }
@@ -4368,6 +4390,9 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .odcell { padding: 7px 9px; border-radius: 10px; background: #fff6e4; border: 1px solid #f0dcb9; font-size: 11px;
   color: #8a6b45; display: flex; justify-content: space-between; gap: 6px; }
 .odcell b { color: #6b3a12; }
+/* v5.71：我的資料 → 暱稱列（標題在上、輸入框在下） */
+.odcell.nodcell { flex-direction: column; align-items: stretch; gap: 5px; }
+.odcell.nodcell .chatin { width: 100%; padding: 7px 9px; }
 .odact { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
 .chatbox { display: flex; flex-direction: column; height: 100%; min-height: 240px; }
 .chatlog { flex: 1 1 auto; overflow: auto; display: flex; flex-direction: column; gap: 5px; padding: 6px 2px 10px; }
@@ -4943,6 +4968,10 @@ body.touch.home-wide #scr-title .nickwrap .tinput {
   width: 100%; max-width: 150px; flex: 1 1 auto; min-width: 0;
   padding: 6px 8px; font-size: 12.5px;
 }
+/* v5.71：招呼語在窄橫屏的左欄只有 ~230px → 字級與內距各收一級，長暱稱照樣省略 */
+body.touch.home-wide #scr-title .nickwrap .greet { font-size: 11px; padding: 4px 9px 4px 8px; gap: 5px; }
+body.touch.home-wide #scr-title .nickwrap .greet .gname { font-size: 12.5px; }
+body.touch.home-wide #scr-title .nickwrap .greet .gi { font-size: 12px; }
 /* 左欄⑤：支援平台 */
 body.touch.home-wide #scr-title .platrow { display: none; }   /* 平台小圖示在橫屏不重要，省下一整行給暱稱 */
 /* 右欄：新手教學 ＋ 2×3 卡片 ＋ 社群三入口 */
@@ -5023,7 +5052,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.70</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.71</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5078,11 +5107,13 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.70</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.71</span></div>
       <div class="gap24" style="height:24px"></div>
-      <div class="nickwrap">
+      <div class="nickwrap" id="nickWrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
         <input class="tinput" id="playerName" maxlength="8" placeholder="可留空，系統自動取名字">
+        <!-- v5.71：名字定案後輸入框整列換成招呼語（暱稱走 .gname 金色漸層字） -->
+        <div class="greet" id="greetLine" aria-live="polite"></div>
       </div>
       <div class="menu" id="homeMenu">
         <!-- v5.14：好友邀請／私訊通知。有未讀才出現（.hide），不佔遊戲畫面 -->

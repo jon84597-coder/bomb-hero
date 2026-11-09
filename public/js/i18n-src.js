@@ -55,7 +55,25 @@ web.keep|維持登入（30 天）|保持登录（30 天）|Keep me signed in (30
 acct.adminFail|後台開不起來：請確認已用開發者帳號登入|后台打不开：请确认已用开发者账号登录|Dashboard could not open: make sure you are signed in with the developer account|管理画面を開けません：開発者アカウントでログインしているか確認してください|관리 화면을 열 수 없습니다: 개발자 계정으로 로그인했는지 확인하세요
 acct.adminErr|後台開啟失敗：|后台开启失败：|Dashboard failed to open: |管理画面の起動に失敗：|관리 화면 열기 실패: 
 nick.need|請先輸入你的暱稱（最多 8 字）|请先输入你的昵称（最多 8 字）|Please enter your nickname first (max 8 chars)|ニックネームを入力してください（最大8文字）|닉네임을 먼저 입력하세요 (최대 8자)
-nick.auto|🦸 沒填暱稱，先用「{n}」開始（首頁可以再改）|🦸 没填昵称，先用「{n}」开始（首页可以再改）|🦸 No nickname — starting as “{n}” (change it on the home screen)|🦸 ニックネーム未入力。「{n}」で開始します（ホームで変更できます）|🦸 닉네임이 없어 「{n}」로 시작합니다 (홈에서 변경 가능)
+nick.auto|🦸 沒填暱稱，先用「{n}」開始（回上一頁可以自己取名）|🦸 没填昵称，先用「{n}」开始（回上一页可以自己取名）|🦸 No nickname — starting as “{n}” (go back and type your own)|🦸 ニックネーム未入力。「{n}」で開始します（戻れば自分で入力できます）|🦸 닉네임이 없어 「{n}」(으)로 시작합니다 (뒤로 가서 직접 정할 수 있어요)
+/* v5.71：首頁招呼語（五組，每次回來抽一句）＋改名介面 */
+nick.greet.1|歡迎回來，{n}！炸彈都幫你暖好了。|欢迎回来，{n}！炸弹都帮你暖好了。|Welcome back, {n}! Your bombs are already warmed up.|おかえりなさい、{n}！爆弾はもう準備できてるよ。|다시 오셨네요, {n}! 폭탄은 이미 준비됐어요.
+nick.greet.2|又見面了，{n}。今天想炸掉幾個？|又见面了，{n}。今天想炸掉几个？|Good to see you again, {n}. How many are we blowing up today?|また会えたね、{n}。今日はいくつ爆破する？|또 만났네요, {n}. 오늘은 몇 개 터뜨릴까요?
+nick.greet.3|{n} 上線啦，大家都在等你。|{n} 上线啦，大家都在等你。|{n} is online — everyone has been waiting.|{n} が来たよ、みんな待ってた。|{n} 님이 접속했어요. 다들 기다리고 있었어요.
+nick.greet.4|嗨，{n}！今天也拜託你手下留情。|嗨，{n}！今天也拜托你手下留情。|Hey {n}! Go easy on us today, okay?|やあ {n}！今日も手加減してね。|안녕하세요 {n}! 오늘도 살살 부탁해요.
+nick.greet.5|歡迎歸隊，{n}。先去每日挑戰熱個手？|欢迎归队，{n}。先去每日挑战热个手？|Welcome back to the squad, {n}. Warm up with the daily challenge?|お帰り、{n}。まずはデイリーチャレンジで肩慣らし？|복귀를 환영해요, {n}. 데일리 챌린지로 몸을 풀어 볼까요?
+nick.cur|目前暱稱|当前昵称|Current nickname|現在のニックネーム|현재 닉네임
+nick.new|新暱稱（最多 8 字）|新昵称（最多 8 字）|New nickname (max 8)|新しいニックネーム（8文字まで）|새 닉네임 (최대 8자)
+nick.btn|✏️ 更改暱稱（💰{p}）|✏️ 更改昵称（💰{p}）|✏️ Change nickname (💰{p})|✏️ ニックネーム変更（💰{p}）|✏️ 닉네임 변경 (💰{p})
+nick.ph|例：炸彈王|例：炸弹王|e.g. BombKing|例：ボムキング|예: 폭탄왕
+nick.okPay|💰 {p} 確定改名|💰 {p} 确定改名|Pay {p} and rename|💰 {p} で改名する|💰 {p} 결제하고 변경
+nick.cancel|取消|取消|Cancel|キャンセル|취소
+nick.cost|改名要花 {p} 金幣（目前 💰{g}）|改名要花 {p} 金币（当前 💰{g}）|Renaming costs {p} gold (you have 💰{g})|改名には {p} ゴールド必要（所持 💰{g}）|이름 변경에는 {p} 골드가 필요합니다 (보유 💰{g})
+nick.same|這跟你現在的名字一樣|这跟你现在的名字一样|That is already your name|今と同じ名前です|지금과 같은 이름이에요
+nick.empty|暱稱不能空白|昵称不能空白|Nickname cannot be empty|名前を入力してください|닉네임을 입력해 주세요
+nick.done|✅ 暱稱換成「{n}」|✅ 昵称换成「{n}」|✅ You are now “{n}”|✅ 名前を「{n}」に変更しました|✅ 닉네임이 「{n}」(으)로 바뀌었어요
+nick.noGold|💰 金幣不足，還差 {n}|💰 金币不足，还差 {n}|💰 Not enough gold — {n} short|💰 ゴールド不足（あと {n}）|💰 골드 부족 ({n} 모자람)
+nick.editTip|更改暱稱（到我的資料）|更改昵称（到我的资料）|Change nickname (in My profile)|ニックネーム変更（マイプロフィール）|닉네임 변경 (내 프로필)
 webview.banner|💡 偵測到你在通訊軟體的內建瀏覽器開啟，建議用 Chrome 或 Safari 開啟以獲得最佳體驗|💡 检测到你在通讯软件的内置浏览器打开，建议用 Chrome 或 Safari 打开以获得最佳体验|💡 This page is open inside a chat app built-in browser. For the best experience, open it in Chrome or Safari.|💡 チャットアプリ内のブラウザで開いています。最高の体験のため Chrome や Safari で開いてください|💡 채팅 앱 내장 브라우저에서 열려 있습니다. 최상의 경험을 위해 Chrome 또는 Safari에서 여세요
 webview.copy|📋 複製網址|📋 复制网址|📋 Copy link|📋 リンクをコピー|📋 링크 복사
 webview.open|🌐 在瀏覽器開啟|🌐 在浏览器打开|🌐 Open in browser|🌐 ブラウザで開く|🌐 브라우저에서 열기

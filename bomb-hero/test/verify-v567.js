@@ -38,7 +38,7 @@ sec('② 字典與說明');
 ok(dict.indexOf('solo.bossgo|') < 0, '字典沒有 solo.bossgo 這一列');
 const rows = dict.split('\n').filter(function (l) { return /^[a-z0-9][a-zA-Z0-9._]*\|/.test(l); });
 ok(rows.every(function (r) { return r.split('|').length === 6; }), '字典每列仍是 6 欄（共 ' + rows.length + ' 列）');
-ok(rows.length === 2014, '字典 2,014 條（v5.69 加 1 條「外觀只套在自己身上」）');
+ok(rows.length >= 2031, '字典至少 2,031 條（v5.71 加 17 條：招呼語 5 ＋ 改名介面 12）→ ' + rows.length);
 
 /* ---------------------------------------------------------------- ③ */
 sec('③ 正常路線：第 40 關＝最終魔王關');
