@@ -416,18 +416,26 @@ const RpgUI = (function () {
     }
 
     const lo = rpgLoadout();
+    /* v5.76：空格子原本只畫一個「＋」，玩家在角色頁看完四格空的也不知道下一步去哪 ——
+       改成可點：空格 → 招式師「學習招式」，已裝 → 「出戰配置」。提示文字順帶一起換。 */
+    let skEmpty = 0;
     if ($id('charSk')) {
       let h = '';
       for (let k = 0; k < RPG_SK_SLOTS; k++) {
         const id = lo[k], def = id ? rpgSkDef(id) : null, lv = id ? rpgSkLv(id) : 0;
-        h += '<div class="chslot' + (def ? '' : ' off') + '" title="' + (def ? def.n + ' Lv.' + lv : '尚未學習') + '">' +
-          (def ? def.ico : '＋') + (lv ? '<em>' + lv + '</em>' : '') + '</div>';
+        if (!def) skEmpty++;
+        h += '<button type="button" class="chslot' + (def ? '' : ' off') + '" data-skgoto="' +
+          (def ? 'load' : 'learn') + '" title="' +
+          escHtml(def ? tr(def.n) + ' Lv.' + lv : t('char.skGo')) + '">' +
+          (def ? def.ico : '＋') + (lv ? '<em>' + lv + '</em>' : '') + '</button>';
       }
       $id('charSk').innerHTML = h;
     }
     if ($id('charSkHint')) {
-      $id('charSkHint').textContent = rpgSkLeft() > 0
-        ? t('skill.ptsLeft', { n: rpgSkLeft() }) : t('char.skHint');
+      const left = rpgSkLeft();
+      $id('charSkHint').textContent = left > 0
+        ? t('skill.ptsLeft', { n: left })
+        : (skEmpty > 0 ? t('char.skGo') : t('char.skHint'));
     }
     /* v5.74：角色專屬技原本只寫在 aria-label 裡 —— 玩家在角色頁看不到「這隻會什麼」，
        等於八個角色還是只差一行天賦。補一張小卡：圖示＋名稱＋說明＋冷卻。 */
@@ -713,6 +721,13 @@ const RpgUI = (function () {
 
     on('shopRX', 'click', function () { $id('rpgShopModal').classList.remove('on'); renderCamp(); });
     on('shopRDone', 'click', function () { $id('rpgShopModal').classList.remove('on'); renderCamp(); });
+    /* v5.76：角色頁的招式格可點 —— 空格去學、已裝去換 */
+    const csk = $id('charSk');
+    if (csk) csk.addEventListener('click', function (e) {
+      const b = e.target.closest('[data-skgoto]'); if (!b) return;
+      AudioSys.sfx('click');
+      openSkill(b.getAttribute('data-skgoto') || 'learn');
+    });
     on('skillRX', 'click', function () { $id('rpgSkillModal').classList.remove('on'); renderChar(); });
     on('skillRDone', 'click', function () { $id('rpgSkillModal').classList.remove('on'); renderChar(); });
 

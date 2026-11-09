@@ -175,18 +175,21 @@ head('6. 同一首不要重來（深淵換層／同章節下一關）');
      '深淵換層仍然是同一條入口（因此會命中「同名不重播」）');
 }
 
-head('7. 版本 5.75 七處');
+head('7. 版本 >= 5.75、七處一致');
 {
+  /* 版本會一直往上跳，這裡驗「有 5.75 以上」＋「七處寫的是同一個號」，
+     不是把號碼寫死 —— 否則每次升版都得回來改這支。 */
   const ver = mainJs.match(/const VERSION = '([\d.]+)'/);
-  ok(ver && ver[1] === '5.75', 'VERSION 5.75', ver && ver[1]);
+  ok(ver && parseFloat(ver[1]) >= 5.75, 'VERSION >= 5.75', ver && ver[1]);
+  const V = ver ? ver[1] : '0';
   const idx = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  ok(/id="verTxt"[^>]*>5\.75</.test(idx), 'index.html verTxt 5.75');
-  ok(/id="verLogVer"[^>]*>5\.75</.test(idx), 'index.html 版本面板 5.75');
+  ok(new RegExp('id="verTxt"[^>]*>' + V.replace(/\./g, '\\.') + '<').test(idx), 'index.html verTxt = ' + V);
+  ok(new RegExp('id="verLogVer"[^>]*>' + V.replace(/\./g, '\\.') + '<').test(idx), 'index.html 版本面板 = ' + V);
   const vlog = fs.readFileSync(path.join(__dirname, '..', 'js', 'version-log.js'), 'utf8');
   ok(/\{ v: '5\.75'/.test(vlog), 'VERSION_LOG 有 5.75');
   ok(/\{ v: '5\.74',[^}]*now: false/.test(vlog), '5.74 收成 now:false');
   const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8'));
-  ok(/^5\.75/.test(pkg.version), 'package.json 5.75', pkg.version);
+  ok(parseFloat(pkg.version) >= 5.75, 'package.json >= 5.75', pkg.version);
   /* 三份 sw.js：bomb-hero/、根 public/、bomberman-online/public/ */
   const sws = [path.join(__dirname, '..', 'sw.js'),
     path.join(__dirname, '..', '..', 'public', 'sw.js'),
@@ -194,7 +197,8 @@ head('7. 版本 5.75 七處');
   sws.forEach(function (f) {
     if (!fs.existsSync(f)) return;
     const t = fs.readFileSync(f, 'utf8');
-    ok(/SW_VERSION = 'v5\.75\.0'/.test(t), f.replace(path.join(__dirname, '..', '..') + path.sep, '') + ' → v5.75.0');
+    const m = t.match(/SW_VERSION = 'v([\d.]+)'/);
+    ok(m && parseFloat(m[1]) >= 5.75, f.replace(path.join(__dirname, '..', '..') + path.sep, '') + ' → v' + (m && m[1]));
   });
 }
 

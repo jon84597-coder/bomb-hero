@@ -2208,6 +2208,10 @@ body.touch.in-game #gameTop .chip[data-k="spd"] { display: none; }
 @media (max-width: 370px) {
 body.touch.in-game #gameTop .chip[data-k="gear"] { display: none; }
 }
+/* v5.76：手機（含 390／414／430）上空背包不要在頂列佔一格。
+   實測 390 直放時它是「🎒 —」——一個永遠只有破折號的格子，
+   既看不出是什麼、又擠掉 33px；改成「有道具才出現」，撿到東西立刻就長回來。 */
+body.touch.in-game #gameTop .chip[data-k="gear"].empty { display: none; }
 }
 body.touch.in-game #pauseBtn { display: none; }
 body.touch.in-game .wrap.game { padding: 0; }
@@ -3416,7 +3420,7 @@ body.touch #tutCard.mini.peek { animation: miniPeek .72s ease-out 2; }
 /* ===== v4.50：手機縮放 —— 兩指捏合手勢圖示 ===== */
 #zoomPill .zh { width: 23px; height: 18px; flex: 0 0 auto; display: none; }
 body.touch #zoomPill .zh { display: block; }
-#zoomHint { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%) scale(.9);
+#zoomHint { position: absolute; left: 50%; top: 27%; transform: translate(-50%, -50%) scale(.9);
 /* v5.54：原本 z-index:9 跟 #ovIn 同層，DOM 在後面的它會蓋住「過關！」結算卡，
    玩家看到的是一張「兩指捏合縮放」壓在分數上面。降到 8（跟 #doorHint 同層），
    永遠在覆蓋層下面；JS 另外會在開覆蓋層時把它收掉。 */
@@ -4695,6 +4699,11 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
   font-size: 21px; background: #fffaf0; border: 2px solid #e2c39c;
   box-shadow: inset 0 2px 0 #fff, 0 3px 0 #e6cba2; position: relative; }
 .chslot.off { opacity: .62; border-style: dashed; color: #c9a97e; }
+/* v5.76：招式格改成 <button> —— 清掉按鈕預設外觀，補可點手感 */
+.chslot { padding: 0; font: inherit; font-size: 21px; color: inherit; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: transform .09s, box-shadow .12s; }
+.chslot.off:hover, .chslot.off:active { border-color: #d9a35c; color: #a8742f; background: #fff3dc; }
+.chslot:active { transform: translateY(2px); box-shadow: inset 0 2px 0 #fff, 0 1px 0 #e6cba2; }
 .chslot em { position: absolute; right: -3px; bottom: -3px; font-style: normal; font-size: 9px; font-weight: 900;
   background: linear-gradient(180deg,#ffd27a,#f7a94a); color: #4a2400; border: 1px solid #d98b2c;
   border-radius: 6px; padding: 0 4px; }
@@ -5177,6 +5186,24 @@ body.touch.home-wide #scr-title .menu .mgrid .mbtn small {
 body.touch.home-wide #scr-title .menu .quickrow { margin: 0; gap: 6px; }
 body.touch.home-wide #scr-title .menu .qchip { padding: 6px 4px; font-size: 11px; border-radius: 9px; }
 body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
+/* ===== v5.76：筆電視窗首屏就要看得到「冒險模式」 =====
+   實測（1280×800 / 1366×768）：LOGO 佔 397 / 381px，加上上方 159px 的列
+   → 「冒險模式」的 top 是 868 / 852，比視窗還低 68~84px。
+   玩家一進站只看到 LOGO 與新手教學，最主要的入口要往下滑才找得到。
+   矮視窗把 LOGO 收到 44vh（桌機仍遠大於手機版），入場卡與主選單就進得了首屏。 */
+@media (min-width: 900px) and (max-height: 920px) {
+body:not(.touch) .title-card .title-logo { width: clamp(240px, min(46vw, 44vh), 620px); }
+body:not(.touch) .title-card { padding-top: 2px; }
+}
+/* ===== v5.76：暫停選單的「本輪契約」 ===== */
+#ovBox .pmperks { margin: 2px 0 10px; padding: 9px 12px; border-radius: 12px;
+background: rgba(72, 44, 110, .30); border: 1px solid rgba(190, 160, 255, .28); }
+#ovBox .pmpt { font-size: 13px; font-weight: 900; letter-spacing: .04em; color: #e6d7ff; margin-bottom: 6px; }
+#ovBox .pmpl { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+#ovBox .pmperk { font-size: 12.5px; font-weight: 800; color: #fff8ea; padding: 3px 9px; border-radius: 999px;
+background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .18); white-space: nowrap; }
+#ovBox .pmperk b { color: #ffd479; }
+#ovBox .pmps { margin-top: 7px; font-size: 11.5px; line-height: 1.5; color: #cfc3e6; }
 </style>
 </head>
 <body>
@@ -5226,7 +5253,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.75</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.76</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5282,7 +5309,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.75</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.76</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" id="nickWrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>

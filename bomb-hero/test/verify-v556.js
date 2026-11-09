@@ -195,7 +195,7 @@ ok(/skins\.js/.test(htmlSrc) && /sharecard\.js/.test(htmlSrc) && /notify\.js/.te
 /* ============================================================
    ③ 賽季重排 40 關
    ============================================================ */
-sec('③ 賽季重排 40 關');
+sec('③ 地圖就是關卡自己那一章（v5.76 撤掉賽季重排）');
 (function () {
   const env = SB.makeEnv();
   const P = env.BH;
@@ -203,44 +203,55 @@ sec('③ 賽季重排 40 關');
   ok(typeof P.seasonMapShift === 'function', 'seasonMapShift 有匯出');
   ok(P.hasOwnProperty('mapIdxOfStage') || typeof P.mapIdxOfStage === 'function', 'mapIdxOfStage 可用');
 
-  /* 剛升上這個版本：smvBase 會被寫成「當下這一季」→ shift = 0 → 完全等於改版前 */
+  /* v5.56 的「每季重排章節」已經撤掉：地圖若跟著賽季搬家，小怪卻永遠看關卡章節
+     （stageTypes → blockOf → chapterOf），就會出現「冰雪的怪站在熔岩上」。
+     現在 seasonMapShift 恆為 0、seasonChapterMap 恆等。 */
+  ok(P.seasonMapShift() === 0, 'seasonMapShift 恆為 0（地圖不再隨賽季搬家）');
   const idn = [];
   for (let c = 1; c <= 8; c++) idn.push(P.seasonChapterMap(c));
-  ok(idn.join(',') === '1,2,3,4,5,6,7,8', 'shift 0 時是恆等映射（改版當下地圖不變）');
+  ok(idn.join(',') === '1,2,3,4,5,6,7,8', 'seasonChapterMap 是恆等映射');
 
-  /* 40 關每一關都要落在 0~31 的合法索引，且同一季內穩定 */
+  /* 就算把基準季往前推（模擬換季），地圖也不能動 */
+  const cur0 = P.Season.seasonNo();
+  P.settings.smvBase = Math.max(1, cur0 - 3);
+  const still = [];
+  for (let c = 1; c <= 8; c++) still.push(P.seasonChapterMap(c));
+  ok(still.join(',') === '1,2,3,4,5,6,7,8', '模擬換季後仍不動（玩家永遠看到同一張圖）');
+  P.settings.smvBase = 0;
+
+  /* 40 關每一關都要落在 0~31 的合法索引，且穩定 */
   const a1 = [], a2 = [];
-  for (let s = 1; s <= 40; s++) { a1.push(P.mapIdxOfStage(s)); a2.push(P.mapIdxOfStage(s)); }
-  ok(a1.join(',') === a2.join(','), '同一季內重複呼叫結果一致（可重現）');
+  for (let s2 = 1; s2 <= 40; s2++) { a1.push(P.mapIdxOfStage(s2)); a2.push(P.mapIdxOfStage(s2)); }
+  ok(a1.join(',') === a2.join(','), '重複呼叫結果一致（可重現）');
   ok(a1.every(function (v) { return v >= 0 && v <= 31; }), '40 關全部落在 0~31 的合法地圖索引');
   ok(a1.every(function (v) { return Number.isInteger(v); }), '索引都是整數');
 
-  /* 模擬換季：把基準季往前推一季 → shift = 1 → 1↔2、3↔4 … */
-  const cur = P.Season.seasonNo();
-  P.settings.smvBase = Math.max(1, cur - 1);
-  const m1 = [];
-  for (let c = 1; c <= 8; c++) m1.push(P.seasonChapterMap(c));
-  ok(m1.join(',') === '2,1,4,3,6,5,8,7', 'shift 1：章節兩兩對調（1↔2、3↔4…）');
-
-  /* shift 2 / 3 / 4 都要是「同一組 4 章內的重排」——不能出現跨組 */
-  const want = { 2: '1,4,3,2,5,8,7,6', 3: '3,4,1,2,7,8,5,6', 4: '4,3,2,1,8,7,6,5' };
-  for (let sh = 2; sh <= 4; sh++) {
-    P.settings.smvBase = Math.max(1, cur - sh);
-    const got = [];
-    for (let c = 1; c <= 8; c++) got.push(P.seasonChapterMap(c));
-    ok(got.join(',') === want[sh], 'shift ' + sh + ' 的章節映射正確');
-    /* 每組 4 章只能在自己的組內換 → 前四章的值都在 1~4、後四章在 5~8 */
-    ok(got.slice(0, 4).every(function (v) { return v >= 1 && v <= 4; }) &&
-       got.slice(4).every(function (v) { return v >= 5 && v <= 8; }),
-      'shift ' + sh + ' 不會把第 1 章換成第 8 章的地圖（難度跨度 ≤3 章）');
-    /* 一定要是「排列」：8 個值不重複 */
-    ok(new Set(got).size === 8, 'shift ' + sh + ' 是一一對應（不會兩關同一張圖）');
+  /* 核心斷言：地圖主題 == 關卡章節，而且小怪名單也來自同一章 */
+  let sameTheme = true, sameRoster = true;
+  for (let s2 = 1; s2 <= 40; s2++) {
+    const ch = P.chapterOf ? P.chapterOf(s2) : Math.ceil(s2 / 5);
+    const info = P.soloInfo(s2);
+    if (info.boss) {
+      if ((info.theme | 0) + 1 !== ch) sameTheme = false;
+    } else if ((info.theme | 0) + 1 !== ch) sameTheme = false;
+    /* 小怪：這一關的 6 隻名單，至少要有一隻屬於同一章（roster 以 stage 反查） */
+    const roster = P.stageRoster(s2);
+    if (!roster || !roster.length) sameRoster = false;
   }
+  ok(sameTheme, '40 關的地圖主題 == 關卡章節（不會再出現冰山配熔岩）');
+  ok(sameRoster, '每一關都查得到小怪名單（不會是空生態）');
 
-  /* 關卡名稱的編號要用「關卡自己的」章-小關，而不是地圖的 */
-  P.settings.smvBase = Math.max(1, cur - 1);
+  /* 逐關列出「章節 → 地圖」，最後一關是決戰場 */
+  const map1 = [], map2 = [];
+  for (let k = 1; k <= 4; k++) map1.push(P.map32Name((0) * 4 + k - 1).replace(/^\d-\d　/, ''));
+  ok(map1.length === 4, '第 1 章有 4 張地圖');
+  ok(/決戰|決戰場/.test(P.stageName(5)) || P.soloInfo(5).boss, '每章第 5 關是決戰場');
+
+  /* 關卡名稱的編號要用「關卡自己的」章-小關 */
   const nm = P.stageName(1);
-  ok(/^1-1/.test(nm), '重排後第 1 關仍顯示 1-1（不會跳成 3-1）');
+  ok(/^1-1/.test(nm), '第 1 關顯示 1-1');
+  const nm12 = P.stageName(12);
+  ok(/^3-2/.test(nm12), '第 12 關顯示 3-2（冰雪原第 2 小關）', nm12);
 })();
 
 /* ============================================================

@@ -552,7 +552,9 @@
       + '#skinPanel .skcudot{width:14px;height:14px;border-radius:50%;background:var(--c);'
       + 'box-shadow:inset 0 0 0 2px #fff,0 0 0 1px rgba(0,0,0,.18)}'
       + '#skinPanel .skcufoot code{font:600 11px/1 ui-monospace,monospace;color:#3a2c18}'
-      + '#skinPanel .skfoot{display:flex;justify-content:center;margin-top:14px}'
+      + '#skinPanel .skfoot{display:flex;justify-content:center;margin-top:14px;'
+      + 'position:sticky;bottom:-1px;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));'
+      + 'background:linear-gradient(180deg,rgba(255,251,240,0),#fffbf0 34%);z-index:2}'   /* v5.76：直放手機面板比視窗高，關閉鈕黏底才不用滑到底 */
       + '#skinPanel .skclose{border:none;border-radius:12px;padding:11px 30px;font:700 14px/1 inherit;'
       + 'background:linear-gradient(180deg,#5c4526,#3a2c18);color:#ffe9b8;cursor:pointer}'
       + '@media (max-width:420px){#skinPanel .skgrid{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}}';

@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.75';
+const VERSION = '5.76';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -2635,6 +2635,8 @@ const Screen = (function () {
     try { if (typeof hideDoorHint === 'function') hideDoorHint(); } catch (e) {}
     try { updateNavUI(); } catch (e) {}
     try { window.scrollTo(0, 0); } catch (e) {}
+    /* v5.76：進戰場時把還開著的面板關掉（外觀收藏是全螢幕 fixed，會整片蓋住戰場） */
+    if (name === 'game') { try { closeAllDialogs(); } catch (e) {} }
     // v4.84：換頁後版面高度會變 → 重新判斷這一頁要不要顯示下滑提示
     try { if (window.ScrollHint) setTimeout(function () { window.ScrollHint.sync(); }, 60); } catch (e) {}
     try { if (typeof refreshers !== 'undefined') refreshers.forEach(function (f) { try { f(); } catch (e) {} }); } catch (e) {}
@@ -6116,12 +6118,14 @@ function stageSlot(stage) {
   return ((((stage | 0) - 1) % BOSS_SLOT) + BOSS_SLOT) % BOSS_SLOT + 1;    // 1~5
 }
 function isBossStage(stage) { return stageSlot(stage) === BOSS_SLOT; }
-// v5.56：賽季重排 —— 每換一季，40 關的「章節順序」重排一次。
-//   為什麼不是打散 32 張地圖：難度曲線會崩（第 1 關變成魔王之間就沒人玩得下去）。
-//   做法是「4 章一組的組內重排」—— 前 4 章（草原／沙漠／雪原／森林）互相換位，
-//   後 4 章（火山／海底／機械／魔城）互相換位，跨度永遠 ≤3 章，難度不會突變。
-//   基準季寫在 settings.smvBase（第一次跑這個版本時記下當時的季號）：
-//   同一季內永遠是同一張圖，換季才動 —— 玩家才有「這季不太一樣」的感覺。
+// v5.76：**撤掉賽季地圖重排**（v5.56 加的）。
+//   玩家回報：「冰天的怪在熔岩地圖、火地的怪在冰雪地圖」—— 因為
+//   · 地圖走 seasonChapterMap（每換一季把章節兩兩對調）
+//   · 小怪走 stageTypes → blockOf → chapterOf（永遠看「關卡自己的章節」）
+//   兩邊不同步，畫面就變成「這張圖不是這一章的圖」。
+//   現在地圖一律用關卡自己那一章：第 N 章的第 1~4 小關就是該章的 4 張地圖、
+//   第 5 小關是該章的決戰場 —— 也就是玩家熟悉的「草原→沙漠→雪原→熔岩→…」。
+//   seasonMapShift 留著回 0（呼叫端與舊存檔不必改），smvBase 也不再寫入。
 function seasonMapBaseNo() {
   try {
     if (!(settings.smvBase > 0)) {
@@ -6134,13 +6138,13 @@ function seasonMapBaseNo() {
   } catch (e) { return 1; }
 }
 function seasonMapShift() {
-  try {
-    let cur = 1;
-    try { if (typeof Season !== 'undefined' && Season.seasonNo) cur = Season.seasonNo() | 0; } catch (e) { cur = 1; }
-    return Math.max(0, (cur | 0) - seasonMapBaseNo());
-  } catch (e) { return 0; }
+  /* v5.76：永遠 0 —— 地圖不再隨賽季搬家（見上面的說明）。
+     函式保留回傳 0，seasonChapterMap 走恆等映射，全遊戲的地圖就回到原本的關卡風貌。 */
+  return 0;
 }
-// 章節 → 這一季實際要用的章節（1~8）。shift = 0 時是恆等映射（＝改版前完全一樣）
+// 章節 → 實際要用的章節（1~8）。v5.76 起 shift 恆為 0，所以永遠是恆等映射。
+//   （重排規則留在下面：日後若真的想再做「季節換圖」，記得小怪生態要一起換，
+//     否則又會出現「冰雪的怪站在熔岩上」。測試 verify-v556 有一條就是釘這件事。）
 function seasonChapterMap(ch) {
   const c = Math.max(1, Math.min(8, ch | 0));
   const sh = seasonMapShift();
@@ -19806,7 +19810,7 @@ function renderWkChal() {
   const md = $id('wkChalMod');
   if (md) md.innerHTML = mod.ico + ' <b>' + escHtml(t('wk.modName.' + mod.id)) + '</b>　' + escHtml(t(mod.key));
   const sd = $id('wkChalStage');
-  if (sd) sd.innerHTML = '\uD83D\uDFFA <b>' + escHtml(t('wk.stageLine', { n: st, name: mapName(soloInfo(st)) })) + '</b>';
+  if (sd) sd.innerHTML = '\uD83D\uDCCD <b>' + escHtml(t('wk.stageLine', { n: st, name: mapName(soloInfo(st)) })) + '</b>';
   const bk = WeekChal.best();
   const bd = $id('wkChalBest');
   if (bd) {
@@ -19973,7 +19977,7 @@ function updateHud() {
       '<div class="chip" data-k="pow"><span class="ic">🔥</span><b>' + p.power + '</b></div>' +
       '<div class="chip" data-k="bomb"><span class="ic">💣</span><b>' + p.maxBombs + '</b></div>' +
       '<div class="chip" data-k="spd"><span class="ic">🛼</span><b>Lv' + p.speedLv + '</b></div>' +
-      '<div class="chip" data-k="gear"><span class="ic">🎒</span>' + gear + '</div>';
+      '<div class="chip' + (gear === '—' ? ' empty' : '') + '" data-k="gear"><span class="ic">🎒</span>' + gear + '</div>';
     // v4.86：隨從控制台（單人／RPG 且已雇用隨從時才出現；數字＝目前出場幾隻）
     try {
       if (PetPanel.available()) {
@@ -20206,7 +20210,25 @@ function togglePause() {
   }
   AudioSys.stopBGM();
   const box = $id('ovBox');
-  box.innerHTML = '<h3>' + t('pause.title') + '</h3>' +
+  /* v5.76：深淵的「本輪契約」在遊戲中原本完全看不到 —— 玩家按了暫停才知道自己這輪
+     選了哪幾張（🔥 火力＋1 但引信 −12% 這種），死掉之後更是想不起來為什麼這麼難。
+     暫停選單是玩家一定會開的地方，直接把清單放在這裡，不必另外長一個面板。 */
+  const perkBlock = (function () {
+    const ps = (Game.abyss && Game.abyss.perks) || [];
+    if (!ps.length) return '';
+    const cnt = {};
+    ps.forEach(function (id) { cnt[id] = (cnt[id] | 0) + 1; });
+    const chips = Object.keys(cnt).map(function (id) {
+      const d = abyssPerkDef(id);
+      return '<span class="pmperk" title="' + escHtml(t('perk.' + id + '.g') + '　▼ ' + t('perk.' + id + '.b')) + '">' +
+        (d ? d.ico + ' ' : '') + escHtml(t('perk.' + id)) +
+        (cnt[id] > 1 ? ' <b>×' + cnt[id] + '</b>' : '') + '</span>';
+    }).join('');
+    return '<div class="pmperks"><div class="pmpt">\uD83C\uDF00 ' + t('ap.runTitle') + '</div>' +
+      '<div class="pmpl">' + chips + '</div>' +
+      '<div class="pmps">' + t('ap.runHint') + '</div></div>';
+  })();
+  box.innerHTML = '<h3>' + t('pause.title') + '</h3>' + perkBlock +
     '<div class="row" style="justify-content:center;gap:10px;flex-wrap:wrap;margin-top:4px">' +
     '<button class="mbtn warm" id="pmResume" style="width:auto;padding:12px 26px;">' + t('pause.resume') + '</button>' +
     '<button class="mbtn" id="pmRestart" style="width:auto;padding:12px 26px;">' + t('pause.restart') + '</button>' +
@@ -29577,7 +29599,7 @@ function drawCart(p, T) {
     _zhTimer = setTimeout(function () {
       hideZoomHint();
       try { localStorage.setItem('bombhero-zoomtip', '1'); } catch (e) {}
-    }, 5600);
+    }, 4600);   // v5.76：5.6 秒太長，第一次玩會被這張卡擋住視線太久
   }
 
 // ====
@@ -39518,6 +39540,76 @@ const PlayStat = (function () {
     _load: load, _save: save, FLUSH_EVERY: FLUSH_EVERY, MAX_PER_POST: MAX_PER_POST
   };
 })();
+
+/* ============================================================================
+   v5.76：Escape 關掉「最上層的面板」
+   ─────────────────────────────────────────────────────────────────────────
+   問題（實際巡檢抓到）：
+     · 圖鑑／成就／排名／線上玩家／版本面板／外觀收藏 <b>全部不吃 Escape</b>，
+       桌機玩家按 Escape 一點反應都沒有，只能去摸右上角那顆小叉。
+     · 更嚴重的是「面板沒關就直接開遊戲」——外觀收藏是 position:fixed 全螢幕，
+       它會整片蓋在戰場上，玩家看不到自己在哪（截圖確認過）。
+   做法：
+     · 一個捕獲階段的全域監聽：有面板開著時 Escape 只關面板，並且吞掉事件，
+       不要讓下面的「ESC 開暫停」也一起觸發。
+     · 進遊戲（Screen.apply('game')）時把還開著的面板全部關掉。
+   ========================================================================== */
+function bhDialogVisible(el) {
+  if (!el || !el.getClientRects) return false;
+  if (!el.getClientRects().length) return false;
+  const cs = getComputedStyle(el);
+  if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) < .05) return false;
+  return true;
+}
+const BH_DIALOG_IDS = ['codexModal', 'achModal', 'rankModal', 'onModal', 'avModal',
+  'multiPick', 'giftPanel', 'verLog', 'skinPanel'];
+function bhOpenDialogs() {
+  const out = [];
+  BH_DIALOG_IDS.forEach(function (id) {
+    const el = document.getElementById(id);
+    if (!bhDialogVisible(el)) return;
+    const z = parseInt(getComputedStyle(el).zIndex, 10);
+    out.push({ el: el, id: id, z: isNaN(z) ? 0 : z });
+  });
+  // z-index 大的在上面；同層就照 DOM 順序（後面的在上面）
+  out.sort(function (a, b) {
+    if (a.z !== b.z) return a.z - b.z;
+    return (a.el.compareDocumentPosition(b.el) & 4) ? -1 : 1;
+  });
+  return out;
+}
+function bhCloseDialog(box) {
+  if (!box) return false;
+  const btn = box.querySelector('.skclose, [id$="X"], [id$="Close"], [data-close]');
+  if (btn) { try { btn.click(); return true; } catch (e) { return false; } }
+  return false;
+}
+function closeTopDialog() {
+  const list = bhOpenDialogs();
+  if (!list.length) return false;
+  return bhCloseDialog(list[list.length - 1].el);
+}
+function closeAllDialogs() {
+  let n = 0;
+  const done = {};
+  for (let i = 0; i < 6; i++) {
+    const list = bhOpenDialogs().filter(function (d) { return !done[d.id]; });
+    if (!list.length) break;
+    const top = list[list.length - 1];
+    done[top.id] = 1;
+    if (!bhCloseDialog(top.el)) break;
+    n++;
+  }
+  return n;
+}
+window.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape' && e.code !== 'Escape') return;
+  if (!bhOpenDialogs().length) return;      // 沒開面板 → 交給原本的 ESC（開暫停）
+  closeTopDialog();
+  try { Input.edges.Escape = false; } catch (e2) {}   // 不要順便開暫停
+  try { e.preventDefault(); } catch (e3) {}
+  try { e.stopPropagation(); } catch (e4) {}
+}, true);
 
 window.__BH = {
   Game: Game, Solo: Solo, Battle: Battle, Screen: Screen, settings: settings, SIZES: SIZES, Input: Input, IS_TOUCH: IS_TOUCH,

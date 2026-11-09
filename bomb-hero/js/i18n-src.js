@@ -1481,6 +1481,7 @@ gift.soloTip|★★★ 沒被打到　★★ 剩餘時間夠　★ 通關|★★
 char.title|角色|角色|Character|キャラクター|캐릭터
 char.sk|🎯 出戰招式|🎯 出战招式|🎯 Battle skills|🎯 出撃スキル|🎯 출전 스킬
 char.skHint|在營地向招式師學習|在营地向招式师学习|Learn from the skill master at camp|キャンプの師匠に教わる|캠프의 스승에게 배우기
+char.skGo|點格子去學招式|点格子去学招式|Tap a slot to learn a skill|枠をタップしてスキルを覚える|칸을 눌러 스킬을 배우기
 char.prog|🗺️ 冒險進度|🗺️ 冒险进度|🗺️ Adventure progress|🗺️ 冒険の進み具合|🗺️ 모험 진행도
 char.go|繼續冒險 →|继续冒险 →|Continue →|冒険を続ける →|모험 계속 →
 char.alloc|🎯 配點|🎯 配点|🎯 Stats|🎯 ステータス|🎯 스탯
@@ -2106,6 +2107,8 @@ d.bag.smoked|開場 10 秒怪物看不到你 —— 可以大膽衝過怪群|开
 d.bag.warp|傳送卷|传送卷|Warp scroll|転送の巻物|전송 두루마리
 d.bag.warpd|陣亡時自動傳回起點並復活（半血，每張一次）|阵亡时自动传回起点并复活（半血，每张一次）|On death, warp back to the start and revive at half HP (once per scroll)|死亡時に開始地点へ戻って半血で復活（1枚1回）|사망 시 시작점으로 돌아가 반피로 부활(1장 1회)
 ap.title|深淵契約|深渊契约|Abyss Pact|深淵の契約|심연 계약
+ap.runTitle|本輪契約|本轮契约|This run's pacts|今回の契約|이번 계약
+ap.runHint|效果已經套用在這一層（火力／引信／怪量都算進去了）|效果已经应用到这一层（火力／引信／怪物数量都算进去了）|Effects are already applied for this layer (power, fuse and foes included).|効果はこの階層にすでに反映済み（火力・導火線・敵の数を含む）。|효과는 이미 이번 층에 적용되었습니다(화력·도화선·몬스터 수 포함).
 ap.sub|每打完一隻深淵王，選一張契約帶進下一層 —— 好處與代價會跟你到這一輪結束。|每打完一只深渊王，选一张契约带进下一层 —— 好处与代价会跟你到这一轮结束。|After each Abyss lord, take one pact into the next layer. Its boon and price stay with you until the run ends.|深淵の王を倒すたびに契約を1枚選んで次の層へ。効能と代償はこの挑戦が終わるまで続く。|심연의 왕을 쓰러뜨릴 때마다 계약 1장을 골라 다음 층으로. 효과와 대가는 이번 도전이 끝날 때까지 이어진다.
 perk.power|烈焰契約|烈焰契约|Inferno Pact|烈火の契約|화염 계약
 perk.power.g|火力 +1|火力 +1|+1 blast|火力 +1|화력 +1
