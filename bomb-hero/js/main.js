@@ -19629,6 +19629,9 @@ function updateHud() {
     $id('pauseBtn').addEventListener('click', togglePause);
     $id('petBtn') && $id('petBtn').addEventListener('click', function () { PetPanel.open(); });
     applyHudFx();   // v4.4：HUD 重畫後把還在時效內的高亮補回去
+    /* v5.73：整塊 innerHTML 重畫會把深淵徽章一起洗掉（手機進場時 HUD 一定會重畫一次，
+       徽章就消失了）→ 重畫後補回去。 */
+    try { if (Game.abyss) AbyssHud.paint(); } catch (e) {}
   }
 }
 function updateCountHint() {
