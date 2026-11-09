@@ -131,7 +131,17 @@ head('5. 打過深淵之後，其他入口不能再播深淵曲');
      '舊寫法（startSolo 之後才釘狀態）已經移除');
 }
 
-head('6. 版本 5.75 七處');
+head('6. 同一首不要重來（深淵換層／同章節下一關）');
+{
+  ok(/if \(name && lastBGMName === name && song && bgmTimer\) return;/.test(mainJs),
+     'startBGM 同名且正在播 → 直接返回（不從第 0 步重播）');
+  ok(/lastBGMName = name \|\| '';/.test(mainJs), '仍然會記錄路由結果（lastBGM 用得到）');
+  /* 深淵換層走的是同一個曲名 → 靠上面那條守衛讓曲子連續 */
+  ok(/Game\.abyssNext = info;[\s\S]{0,120}startSolo\(layerStage\(layer\)/.test(mainJs),
+     '深淵換層仍然是同一條入口（因此會命中「同名不重播」）');
+}
+
+head('7. 版本 5.75 七處');
 {
   const ver = mainJs.match(/const VERSION = '([\d.]+)'/);
   ok(ver && ver[1] === '5.75', 'VERSION 5.75', ver && ver[1]);

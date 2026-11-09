@@ -2081,6 +2081,11 @@ const AudioSys = (function () {
   let lastBGMName = '';
   function lastBGM() { return lastBGMName; }
   function startBGM(name) {
+    /* v5.75：同一首已經在播就不要重來。
+       以前每進一關（或深淵每換一層）都會 stopBGM→從第 0 步重播：
+       章節曲在同一個章節裡每關都從頭、深淵曲每層都回到「序」，
+       玩家永遠聽不到歌的中後段，再好的段落設計都白做。 */
+    if (name && lastBGMName === name && song && bgmTimer) return;
     stopBGM();
     lastBGMName = name || '';
     if (!settings.bgm || !ensure()) return;
