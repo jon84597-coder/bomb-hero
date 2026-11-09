@@ -96,6 +96,9 @@ sandbox.removeEventListener = () => {};
 sandbox.globalThis = sandbox;
 sandbox.window.window = sandbox;
 vm.createContext(sandbox);
+/* v5.66：字典已外置成 js/i18n-src.js（rawHtml 只有 index.html＋主檔），
+   不先補上的話 t() 沒有中文，靠文案的斷言（例如「目前選用」）會誤紅。 */
+vm.runInContext(fs.readFileSync(__dirname + '/../js/i18n-src.js', 'utf8'), sandbox, { filename: 'i18n-src.js' });
 vm.runInContext(code, sandbox, { filename: 'index.html' });
 
 const BH = sandbox.window.__BH;
@@ -130,6 +133,9 @@ function freshSolo(stage) {
 }
 function dieOnce(p) {
   p.invuln = 0;
+  // v5.30 起單人有「格血」（普通 2 格）：被打到一次只掉一格，人還站著。
+  // 這支測的是「命數」，所以先把血格打到剩 1 格，一擊才會真的算一條命。
+  if (typeof p.sHp === 'number' && p.sHp > 1) p.sHp = 1;
   P.killPlayer(p, false, null);
   for (let i = 0; i < 300 && p.dead; i++) P.updateSolo(0.02);
 }
@@ -173,20 +179,13 @@ ok(!els.ovIn._cls.has('hide'), '出發前的確認視窗已顯示');
 const goOk = click('ovBox|button');
 ok(goOk && G.state === 'countdown', '按「出發！」進入倒數（state=' + G.state + '）');
 
-console.log('\n=== 3. BOSS 模式死完也能重開 ===');
-P.startBossRush();
-G.state = 'play';
-let bp = G.players[0];
-bp.invuln = 0;
-for (let k = 0; k < 3; k++) {
-  bp.invuln = 0;
-  P.killPlayer(bp, false, null);
-  for (let i = 0; i < 300 && bp.dead; i++) P.updateSolo(0.02);
-}
-ok(G.state === 'over' && bp.lives === 0, 'BOSS 模式命數歸零 → over');
-click('btnAgain');
-ok(G.bossRush === true && G.stage === 32, 'v4.14：BOSS 模式重開仍直接進第 32 關');
-ok(G.players[0].lives === 3 && G.state === 'idle', 'BOSS 模式重開後狀態正常');
+console.log('\n=== 3. 最終魔王關（v5.66 起沒有跳關入口） ===');
+// 舊版這裡測的是「跳過關卡直接打最終魔王」，那個入口已移除。
+// 現在只確認「正常路線的第 40 關」開得起來，而且就是決戰場。
+P.startSolo(P.SOLO_STAGES, false);
+ok(G.stage === P.SOLO_STAGES && !!G.bossArena, '第 ' + P.SOLO_STAGES + ' 關＝最終魔王關（決戰場）');
+ok(G.enemies.some(function (e) { return e.boss; }), '最終關場上有魔王');
+ok(G.state !== 'over', '開起來不是結束狀態');
 
 console.log('\n=== 4. 八隻動物（對應選角圖的順序與特色） ===');
 const CH = BH.CHARACTERS;
@@ -296,7 +295,9 @@ BH.CharPreview.tick(0.016);
 const n1 = fakeCanvases.reduce(function (s, c) { return s + c._n; }, 0);
 ok(n1 > n0, '在選角畫面時 8 隻角色持續被繪製（幀間有動作）');
 ok(fakeCanvases.every(function (c) { return c._n > 0; }), '每張卡的 canvas 都有畫東西');
-BH.Screen.show('title');
+// v5.66：v5.11 起「首頁」也允許跑選角預覽（大逃殺入口卡在首頁開），
+//   所以改用真的不該畫的畫面（商店）來驗「離開就不畫」。
+BH.Screen.show('shop');
 const n2 = fakeCanvases.reduce(function (s, c) { return s + c._n; }, 0);
 BH.CharPreview.tick(0.016);
 ok(fakeCanvases.reduce(function (s, c) { return s + c._n; }, 0) === n2, '離開選角畫面就停止繪製（不浪費效能）');

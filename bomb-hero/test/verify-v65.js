@@ -70,7 +70,8 @@ head('4. 商店／RPG／帳號：先切畫面，再畫內容');
   const rpg = css1.slice(css1.indexOf("const btn = $id('btnRpg')"), css1.indexOf("const btn = $id('btnRpg')") + 700);
   ok(rpg.indexOf("Screen.show('rpg')") > 0 && rpg.indexOf("Screen.show('rpg')") < rpg.indexOf('Rpg.render()'), 'RPG 先切畫面再 render');
   ok(/toast\('⚠️ RPG 表單載入失敗/.test(css), 'RPG 出錯會 toast');
-  ok(/toast\('⚠️ BOSS 挑戰開不起來/.test(css), 'BOSS 出錯會 toast');
+  // v5.66：「跳過關卡直接打最終魔王」整組移除 → 連帶的「開不起來」提示也不該留著
+  ok(css.indexOf('BOSS 挑戰開不起來') < 0, 'BOSS 跳關入口已整組移除（沒有殘留的錯誤提示）');
   ok(/toast\('⚠️ 找不到帳號視窗/.test(css), '帳號視窗找不到會 toast');
   // 帳號彈窗真的會開
   P.Cloud.open();

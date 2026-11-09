@@ -60,7 +60,8 @@ for (let st = 1; st <= 8; st++) run('solo ' + st, (P, G) => { P.startSolo(st, fa
 // ---- RPG 32 章（抽樣） ----
 for (const st of [1, 5, 9, 12, 16, 20, 24, 28, 32]) run('rpg ' + st, (P, G) => { try { P.startRpg(st); } catch (e) { P.startSolo(st, false); } });
 // ---- BOSS 挑戰 ----
-run('bossrush', (P, G) => { P.startBossRush(); });
+// v5.66：BOSS 跳關入口已移除 → 掃第 40 關（本身就是最終魔王關）
+run('boss40', (P, G) => { P.startSolo(P.SOLO_STAGES, false); });
 // ---- 對戰 2~8 人 ----
 for (const n of [2, 4, 8]) run('battle ' + n, (P, G) => { try { P.settings.count = n; P.startBattle(n); } catch (e) {} });
 // ---- 大逃殺 ----

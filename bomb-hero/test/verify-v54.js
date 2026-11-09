@@ -10,6 +10,7 @@
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
 const P = env.BH, G = P.Game, html = env.html;
+try { P.WeekMod.pin([]); } catch (e) {}   // v5.66：這支驗「基礎數值」，先釘住每週變異
 
 let pass = 0, fail = 0;
 function ok(cond, msg) {
@@ -35,8 +36,8 @@ soloEnemies.forEach(function (e) {
 });
 ok(hpOk, '單人怪的 hp 全部 = 1（一擊必殺，v4.12 規格）');
 ok(maxOk, '單人怪的 maxHp 也 = 1（沒有血量概念 → 不畫血條）');
-ok(P.RPG_FOE.slime.hp === 3 && P.RPG_FOE.beetle.hp === 4 && P.RPG_FOE.lizard.hp === 5,
-  'RPG 模式仍有自己的血量表（v4.17 調回：史萊姆 3／鐵甲蟲 4／疾風蜥 5）');
+ok(P.RPG_FOE.slime.hp === 4 && P.RPG_FOE.beetle.hp === 5 && P.RPG_FOE.lizard.hp === 6,
+  'RPG 模式仍有自己的血量表（v5.19 起：史萊姆 4／鐵甲蟲 5／疾風蜥 6）');
 const hudFn = html.slice(html.indexOf('function drawRpgHud(T) {'), html.indexOf('function drawRpgHud(T) {') + 900);
 ok(hudFn.indexOf('if (!e.maxHp || e.maxHp <= 1) continue;') >= 0 &&
    hudFn.indexOf('if (!Game.rpg) return;') >= 0 &&
@@ -126,10 +127,13 @@ ok(/function flameDrop/.test(html), 'flameDrop 函式本身還在（其他地方
 head('4. 「我」＝ 頭上圖示徽章（推車也套用，名牌沒有文字）');
 ok(/const ME_BADGE_TXT = '我'/.test(html), '「我」徽章是圖示（ME_BADGE_TXT）');
 ok(/function drawMeBadge/.test(html), 'drawMeBadge 存在');
-const codeNoLog = html.slice(0, html.indexOf('const VERSION_LOG = ['));
-ok(codeNoLog.indexOf('⭐我') < 0, '程式碼裡沒有「⭐我」文字（只剩版本紀錄敘述）');ok(/const label = \(small \? '' : pname\(p\) \+ '🛒'\) \+ \(p\.ai && !small \? '🤖' : ''\) \|\| '🛒';/.test(html),
+// v5.66：版本紀錄已外置成 js/version-log.js，而且整份被併進 env.html →
+//   先把那個陣列整段抽掉，再驗「程式碼其他地方沒有 ⭐我」。
+const codeNoLog = html.replace(/window\.__VERSION_LOG = \[[\s\S]*?\n\];/, '');
+ok(codeNoLog.indexOf('⭐我') < 0 && html.indexOf('⭐我') > 0, '程式碼裡沒有「⭐我」文字（只剩版本紀錄敘述）');ok(/const label = \(small \? '' : pname\(p\) \+ '🛒'\) \+ \(p\.ai && !small \? '🤖' : ''\) \|\| '🛒';/.test(html),
   '推車名牌只有名字＋🛒＋🤖（小螢幕省略文字），沒有「⭐我」文字');
-ok(/if \(\(Game\.mode === 'battle' \|\| Game\.mode === 'br'\) && p\.alive && isMyPlayer\(p\)\) drawMeBadge/.test(html),
+// v5.66：v5.x 起改由 meBadgeMode() 決定（對戰／大逃殺／推車共用，單人也可以開）
+ok(/if \(meMode !== 'off' && p\.alive && isMyPlayer\(p\)\) \{/.test(html),
   '場內活著時頭上畫「我」徽章（v4.5x 起大逃殺也共用）');
 ok(/if \(Game\.mode === 'battle' && isMyPlayer\(p\)\) drawMeBadge\(x, y - T \* \.30/.test(html),
   '推車上的「我」也畫頭上徽章（不要求 alive，推車上 alive=false）');

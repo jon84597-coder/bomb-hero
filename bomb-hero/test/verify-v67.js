@@ -121,8 +121,8 @@ head('5. 首頁選單分層（v4.81：6 張玩法卡 + 更多抽屜）');
   ['btnBoss', 'btnLb"', 'btnBattle', 'btnOnline', 'btnAcctBig'].forEach(function (id) {
     ok(menuSeg.indexOf(id) < 0, '首頁已移除 #' + id);
   });
-  ok(menuSeg.indexOf('btnSoloBoss') < 0 && src.indexOf('id="btnSoloBoss"') > 0,
-    'BOSS 入口搬到單人關卡畫面（不在首頁）');
+  ok(menuSeg.indexOf('btnSoloBoss') < 0 && src.indexOf('id="btnSoloBoss"') < 0,
+    'v5.66：BOSS 跳關入口已完全移除（首頁與單人畫面都沒有）');
 }
 
 head('6. 寒冰地圖：四種元件分得出來');

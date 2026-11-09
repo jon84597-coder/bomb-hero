@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.65';
+const VERSION = '5.66';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -9650,6 +9650,9 @@ function startSolo(stage, bossRush, daily) {
   Game.rpg = false;
   Game.pets = [];
   Game.bossRush = !!bossRush;
+  /* v5.66：bossRush 這個參數已經沒有入口會傳 true（按鈕與 ?boss=1 都移除了），
+     但下面的守衛（命數／地圖／決戰場／復活／開局加成）刻意留著：
+     它們都是「有 BOSS 連戰就不適用」的判斷，拔掉會動到每日與 RPG 的既有行為。 */
   // v4.80：每日挑戰 —— 難度／時間／種子全部由日期決定，玩家不能自己調（要公平就要固定）
   const hadDailySeed = !!(Game._seed && Game._dailySeedFlag);
   Game.daily = daily || null;
@@ -9742,8 +9745,8 @@ function startSolo(stage, bossRush, daily) {
   updateHud();
   enterImmersive();          // 手機：全螢幕＋鎖定橫向
 }
-// 首頁「挑戰 BOSS」：直接打最終魔王（第 32 張地圖「魔王之間」），場上沒有小怪
-function startBossRush() { startSolo(SOLO_STAGES, true); }
+// v5.66：原本這裡是 startBossRush()（跳過所有關卡直接打最終魔王），
+//   40 關制下第 40 關本身就是有決戰場的最終魔王關，這個入口已移除。
 
 // ===== v4.51：不公開的地圖生成測試關 =====
 // 可走格 100／150／200／250／300，怪 6→20。橫向比直向寬（攤開更開闊，
@@ -28896,8 +28899,6 @@ function homeFill() {
     const b = $id(id);
     if (b) b.textContent = t(dr[id]);
   });
-  const sb = $id('btnSoloBoss');
-  if (sb) sb.textContent = '👹 ' + t('solo.bossgo');
   const mp = $id('mpTitle');
   if (mp) mp.textContent = t('multi.title');
   const pn = $id('playerName');
@@ -29016,20 +29017,9 @@ function ensureNickname() {
 }
 // v1.9：明顯的「開始遊戲」大按鈕
 $id('btnSoloGo').addEventListener('click', function () { AudioSys.ensure(); AudioSys.sfx('click'); Solo.go(); });
-// v4.81：BOSS 挑戰併進「單人闖關」（本質就是 startSolo 的 bossRush 模式），首頁不再單獨一顆
-function goBoss() {
-  AudioSys.ensure(); AudioSys.sfx('click');
-  if (!ensureNickname()) return;
-  // v4.21：BOSS 挑戰任何環節出錯都要講出來，不要靜靜地什麼都沒發生
-  clearMapTest();
-  try { startBossRush(); }
-  catch (e) {
-    console.error('[boss]', e);
-    try { toast('⚠️ BOSS 挑戰開不起來：' + ((e && e.message) || e), 3.6); } catch (e2) {}
-  }
-}
-const _soloBossBtn = $id('btnSoloBoss');
-if (_soloBossBtn) _soloBossBtn.addEventListener('click', goBoss);
+/* v5.66：移除「跳過關卡，直接單挑最終魔王」（v4.81 從首頁搬進來的那顆）。
+   40 關制下每 5 關就有一場王的決戰場、第 40 關就是最終魔王，
+   一鍵跳到最後等於把整條進度線作廢，所以連同 goBoss() 與 ?boss=1 一起拿掉。 */
 // 單人難易度 / 關卡時間
 function updateSoloHints() {
   const dh = $id('soloDiffHint'), th = $id('soloTimeHint');
@@ -32728,11 +32718,9 @@ Screen.show('title');
       if (go === 'online') { const nm = $id('netName'); if (nm && !nm.value) nm.value = settings.netName || ''; Net.lobbyStart(); }
       Screen.show(go);
     }
-    // ?stage=3 直接開第 3 關、?boss=1 直接開 BOSS 戰（截圖／除錯用）
-    if (q.get('boss') === '1') startBossRush();
-    // ?maptest=1~5 直接開地圖生成測試關（v4.51，不公開）
-    else if (q.get('maptest')) startMapTest(parseInt(q.get('maptest'), 10) || 1);
-    else if (q.get('stage')) startSolo(Math.max(1, Math.min(8, parseInt(q.get('stage'), 10) || 1)), false);
+    // ?stage=3 直接開第 3 關（截圖／除錯用）；?boss=1 已於 v5.66 移除
+    if (q.get('maptest')) startMapTest(parseInt(q.get('maptest'), 10) || 1);
+    else if (q.get('stage')) startSolo(Math.max(1, Math.min(SOLO_STAGES, parseInt(q.get('stage'), 10) || 1)), false);
     // ?dino=1 直接騎上小龍、?item=speed 在旁邊放一個道具（截圖／除錯用）
     if (q.get('dino') === '1' && Game.players[0]) rideDino(Game.players[0]);
     const it = q.get('item');
@@ -38112,7 +38100,7 @@ window.__BH = {
   Gift: Gift, GiftUI: GiftUI,
   // v4.81：首頁分層
   homeFill: homeFill, setDrawer: setDrawer, showMultiPick: showMultiPick,
-  goBoss: goBoss, openBattle: openBattle, openOnline: openOnline,
+  openBattle: openBattle, openOnline: openOnline,
   fmtMs: fmtMs, seedCodeOf: seedCodeOf, DAILY_TIME: DAILY_TIME, DAILY_DIFF: DAILY_DIFF,
   buildSoloStageInner: buildSoloStageInner, dailyClear: dailyClear, dailyTimeUp: dailyTimeUp,
   showDailyResult: showDailyResult, renderDailyScreen: renderDailyScreen, renderLbList: renderLbList,
@@ -38231,7 +38219,7 @@ window.__BH = {
   Pad: Pad, PadUI: PadUI, PAD_MAP: PAD_MAP, SOLO_DIFF: SOLO_DIFF, soloDiffCfg: soloDiffCfg, soloTimeVal: soloTimeVal,
   soloLives: soloLives, soloGuardInvuln: soloGuardInvuln,   // v5.29：難度 → 命數／重生無敵
   soloHpMax: soloHpMax, soloHpInvuln: soloHpInvuln, soloHurt: soloHurt,   // v5.30：格血（簡單 2 格）
-  startBossRush: startBossRush, detonateRemote: detonateRemote, aiRemoteTick: aiRemoteTick, pickBossCell: pickBossCell,
+  detonateRemote: detonateRemote, aiRemoteTick: aiRemoteTick, pickBossCell: pickBossCell,
   spawnEggs: spawnEggs, eggAt: eggAt, rideDino: rideDino, breakDino: breakDino, fireBreath: fireBreath,
   takeEgg: takeEgg, CART_LV: CART_LV, CART_CHARGE_MAX: CART_CHARGE_MAX, cartChargeLevel: cartChargeLevel, mixHex: mixHex, CART_STEP1: CART_STEP1, CART_STEP2: CART_STEP2,
   cartChargeLevel: cartChargeLevel, cartPickLanding: cartPickLanding, CART_BOUNCE_MAX: CART_BOUNCE_MAX,

@@ -24,8 +24,9 @@ ok(/if \(canLandOnPlayer && playerAtCell\(nx, ny\)\)/.test(html),
   'findLanding 支援「可以停在玩家格」的選項');
 ok(/findLanding\(cx, cy, d\.x, d\.y, true, false, p\)/.test(html),
   'throwCarried（手套投彈）開啟 canLandOnPlayer 並帶上投彈者');
-ok(/const land = findLanding\(bx, by, d\.x, d\.y, false, true\);/.test(html),
-  'punchBomb（拳擊）則是 stopAtFoe（停在敵人前一格）');
+// v5.66：v4.13 起拳擊有自己的 punchLanding（不再共用 findLanding 的 stopAtFoe）
+ok(/function punchLanding\(bx, by, dx, dy\)/.test(html) && /if \(enemyAtCell\(nx, ny\)\) break;/.test(html),
+  'punchBomb（拳擊）走 punchLanding，遇到敵人停在前面');
 
 // 實測：投彈者站在第 5 格、對手（玩家）在第 7 格 → 炸彈要停在對手身上（第 7 格）
 {

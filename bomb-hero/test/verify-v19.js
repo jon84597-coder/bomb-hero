@@ -124,6 +124,9 @@ freshBattle();
 clearHazards();
 clearArea(1, 1, G.cols - 2, G.rows - 2);
 const T = G.T;
+/* v5.66：T（一格幾 px）會隨地圖尺寸變動（第 7 關 15×13 → 59，預設 40）。
+   下面每次換關都要重新取，不然拿舊的 T 算格子座標一定錯格。 */
+function reT() { return G.T; }
 const p0 = G.players[0];
 // 在 (3,3) 放一條往右的輸送帶
 G.hazards[3][3] = { type: 'convey', dir: 'right' };
@@ -197,36 +200,37 @@ ok(Object.keys(byColor).length >= 2, '一張圖上有多組不同顏色的門（
 ok(BH.WARP_COLORS.length === 7, '顏色表 7 種：' + BH.WARP_COLORS.map(function (c) { return c.name; }).join('/'));
 
 // 傳送行為
+const TT = G.T;   // v5.66：這一關的格子大小（換關後 T 會變）
 G.state = 'play';
 const w0 = warpTiles[0];
 const w1 = { x: w0.h.link.x, y: w0.h.link.y };
 const pp = G.players[0];
-pp.x = w0.x * T + T / 2; pp.y = w0.y * T + T / 2;
+pp.x = w0.x * TT + TT / 2; pp.y = w0.y * TT + TT / 2;
 pp.warpLock = ''; pp.warpCool = 0;
 BH.hazardTick(pp, 1 / 60, false);
-ok(Math.floor(pp.x / T) === w1.x && Math.floor(pp.y / T) === w1.y,
+ok(Math.floor(pp.x / TT) === w1.x && Math.floor(pp.y / TT) === w1.y,
   '踩上傳送門 → 傳到同色的另一頭 (' + w1.x + ',' + w1.y + ')');
 ok(pp.warpLock === w1.x + ',' + w1.y, '落地後把該格上鎖，不會原地反覆傳送');
 
 // 站著不動不會一直被傳
 let hops = 0;
 for (let i = 0; i < 60; i++) {
-  const bx = Math.floor(pp.x / T), by = Math.floor(pp.y / T);
+  const bx = Math.floor(pp.x / TT), by = Math.floor(pp.y / TT);
   BH.hazardTick(pp, 1 / 60, false);
-  if (Math.floor(pp.x / T) !== bx || Math.floor(pp.y / T) !== by) hops++;
+  if (Math.floor(pp.x / TT) !== bx || Math.floor(pp.y / TT) !== by) hops++;
 }
 ok(hops === 0, '站在門上不動 → 不會反覆傳送（' + hops + ' 次）');
 
 // 離開格子 → 解鎖
-pp.x = 8 * T + T / 2; pp.y = 8 * T + T / 2;
+pp.x = 8 * TT + TT / 2; pp.y = 8 * TT + TT / 2;
 pp.warpCool = 0;
 BH.hazardTick(pp, 1 / 60, false);
 ok(pp.warpLock === '', '離開傳送門格子 → 解鎖');
 
 // 再走回來 → 又會傳
-pp.x = w1.x * T + T / 2; pp.y = w1.y * T + T / 2;
+pp.x = w1.x * TT + TT / 2; pp.y = w1.y * TT + TT / 2;
 BH.hazardTick(pp, 1 / 60, false);
-ok(Math.floor(pp.x / T) === w0.x && Math.floor(pp.y / T) === w0.y, '離開後再走回來 → 又傳回去（可重複使用）');
+ok(Math.floor(pp.x / TT) === w0.x && Math.floor(pp.y / TT) === w0.y, '離開後再走回來 → 又傳回去（可重複使用）');
 
 // 不同顏色的門不會互通
 const idxs = Object.keys(byColor).map(Number).sort(function (a, b) { return a - b; });

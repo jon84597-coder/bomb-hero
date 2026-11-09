@@ -97,20 +97,20 @@ P.showMultiPick(true);
 click('mpBack');
 ok(!hasCls('multiPick', 'on'), '「返回」關得掉');
 
-// ---------- 4. BOSS 搬進單人關卡 ----------
-head('4. BOSS 併進單人闖關');
-ok(!!els.btnSoloBoss, '#btnSoloBoss 存在');
-ok(src.indexOf('id="btnSoloBoss"') > src.indexOf('id="scr-solo"'), '住在單人關卡畫面裡（不在首頁）');
-ok(typeof P.goBoss === 'function', 'goBoss 有匯出');
-ok(els.btnSoloBoss._on.click && els.btnSoloBoss._on.click.length > 0, '按鈕有綁 click');
+// ---------- 4. BOSS 跳關入口（v5.66 移除） ----------
+head('4. BOSS 跳關入口已移除');
+ok(!els.btnSoloBoss, '單人關卡畫面沒有 #btnSoloBoss');
+ok(src.indexOf('id="btnSoloBoss"') < 0, 'HTML 裡也沒有殘留');
+ok(typeof P.goBoss === 'undefined' && typeof P.startBossRush === 'undefined', 'goBoss / startBossRush 都沒匯出');
+ok(src.indexOf("q.get('boss')") < 0, '?boss=1 除錯入口一併移除');
+ok(!!els.btnSoloGo, '「開始遊戲」大按鈕還在（正常遊玩入口不受影響）');
 {
+  // 直接從第 40 關出發仍然進得了決戰場（功能拿掉的只有「跳過關卡」）
   P.settings.playerName = '測試員';
   P.settings.soloDiff = 'normal';
-  click('btnSoloBoss');
-  ok(P.Game.bossRush === true, '按下去真的進 BOSS 挑戰（bossRush = true）');
-  // 沙盒沒有真的 rAF，state 機器不一定會推到 play；改驗「地圖真的蓋出來了」
+  P.startSolo(P.SOLO_STAGES, false);
   ok(!!(P.Game.grid && P.Game.grid.length), '地圖有蓋出來（' + (P.Game.grid ? P.Game.grid.length : 0) + ' 列）');
-  ok(P.Game.stage === P.SOLO_STAGES, '直接跳最終關（第 ' + P.Game.stage + ' 關）');
+  ok(P.Game.stage === P.SOLO_STAGES && !!P.Game.bossArena, '第 ' + P.Game.stage + ' 關是決戰場');
 }
 
 // ---------- 5. 版面 ----------
@@ -160,7 +160,7 @@ head('7. 10 語系');
 {
   const KEYS = ['home.multi', 'home.multi.sub', 'home.more', 'home.more.sub', 'home.daily', 'home.solo.sub', 'home.namePh',
     'multi.title', 'multi.desc', 'multi.tip', 'multi.local', 'multi.online', 'multi.back',
-    'solo.bossgo', 'beta.tag',
+    'beta.tag',
     'home.d.store', 'home.d.help', 'home.d.set', 'home.d.quit', 'home.rpg.sub',
     'ver.4.81.1', 'ver.4.81.2', 'ver.4.81.3', 'ver.4.81.4'];
   const LANGS = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko'];

@@ -1391,7 +1391,6 @@ multi.tip|沒人加入時 AI 會自動補位，一個人也能玩。|没人加�
 multi.local|本機混戰（2～8 人）|本机混战（2～8 人）|Local melee (2–8)|ローカル対戦（2～8人）|로컬 난투 (2~8인)
 multi.online|線上房號（跟朋友連線）|在线房号（和朋友连线）|Online room (play with friends)|ルーム番号（友達と対戦）|온라인 방 번호 (친구와)
 multi.back|返回|返回|Back|戻る|뒤로
-solo.bossgo|跳過關卡，直接單挑最終魔王|跳过关卡，直接单挑最终魔王|Skip stages — face the final boss|ステージを飛ばしてラスボスと一対一|스테이지 건너뛰고 최종 보스와 1:1
 beta.tag|測試版|测试版|Beta|ベータ|베타
 home.d.store|商店|商店|Store|ショップ|상점
 home.d.help|遊戲說明|游戏说明|How to play|遊び方|게임 설명
@@ -1714,7 +1713,6 @@ ui.nodeOnlineRoom|🌐 線上房號（跟朋友連線）|🌐 线上房号（跟
 ui.nodeAvatarNote|照片會壓成 128×128 的小圖（約 5～10 KB），存在雲端名單裡，其他線上玩家看得到。|照片会压成 128×128 的小图（约 5～10 KB），存在云端名单里，其他线上玩家看得到。|Your photo is compressed to 128×128 (about 5–10 KB), stored in the online list and visible to other players.|写真は 128×128（約5〜10KB）に圧縮され、オンライン名簿に保存されて他のプレイヤーに見えます。|사진은 128×128(약 5~10KB)로 압축되어 온라인 목록에 저장되고 다른 플레이어에게 보입니다.
 ui.nodeStart|開始挑戰 →|开始挑战 →|Start →|挑戦する →|도전 시작 →
 ui.nodeRevert|♻️ 全部退回|♻️ 全部退回|♻️ Revert all|♻️ すべて戻す|♻️ 모두 되돌리기
-ui.nodeSkipStage|👹 跳過關卡，直接單挑最終魔王|👹 跳过关卡，直接单挑最终魔王|👹 Skip ahead and face the final boss|👹 ステージを飛ばしてラスボスと直接対決|👹 스테이지를 건너뛰고 최종 보스와 대결
 ui.nodePadAssign|手把指派（1P～4P）|手柄指派（1P～4P）|Controller assignment (P1–P4)|コントローラー割り当て（1P〜4P）|컨트롤러 지정(1P~4P)
 ui.nodePadAfter|接上手把後|接上手柄后|After you plug in a controller, |コントローラーを接続したら|컨트롤러를 연결한 뒤
 ui.nodePadPress|按一下任意鍵|按一下任意键|press any button|いずれかのボタンを押す|아무 버튼이나 누르면

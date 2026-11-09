@@ -222,11 +222,13 @@ head('7. 整體回歸：跑 frames 不報錯');
 {
   let threw = null;
   try {
-    P.startBossRush();
-    ok(G.stage === 40 && G.bossRush === true, '「挑戰 BOSS」直接打第 40 關最終魔王');
+    // v5.66：「跳過關卡直接打最終魔王」已移除，改走正常路線的第 40 關（本身就是最終魔王關）
+    P.startSolo(P.SOLO_STAGES, false);
+    ok(G.stage === 40, '第 40 關＝最終魔王關');
+    ok(G.enemies.some(function (e) { return e.boss; }), '最終關場上有魔王');
     for (let i = 0; i < 120; i++) { P.updateWorld(1 / 60); P.updateSolo(1 / 60); }
   } catch (e) { threw = e; }
-  ok(threw === null, 'BOSS 連戰跑 120 幀不報錯' + (threw ? '（' + threw.message + '）' : ''));
+  ok(threw === null, '最終魔王關跑 120 幀不報錯' + (threw ? '（' + threw.message + '）' : ''));
 }
 
 console.log('\n通過 ' + pass + ' / ' + (pass + fail));

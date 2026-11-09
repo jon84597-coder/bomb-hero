@@ -42,7 +42,7 @@ const OUT = p => path.join(__dirname, p);
   }
 
   // 3) BOSS 戰
-  await page.goto(URL + '?boss=1', 1600);
+  await page.goto(URL + '?stage=40', 1600);
   await page.eval(`(function(){ var b=document.querySelector('.overlay-in .mbtn'); if(b) b.click(); return 1; })()`);
   await sleep(1200);
   await page.shot(OUT('v16-boss.png'));

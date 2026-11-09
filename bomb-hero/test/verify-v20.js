@@ -115,6 +115,10 @@ function clearHazards() {
 }
 
 const P = BH;
+/* v5.66：v5.49 起地圖預設「隨機」，尺寸一變 → 怪量／藏門／速度全都跟著飄。
+   這支驗的是固定關卡的既有規則，釘回 classic。 */
+try { P.settings.mapMode = 'classic'; } catch (e) {}
+try { P.WeekMod.pin([]); } catch (e) {}   // 每週變異會改怪量／血量，這支驗的是基準值
 
 // ---------- 共用小工具 ----------
 function clearAll() {
@@ -150,21 +154,23 @@ function fakePad(pressed) {
 }
 
 // ================================================================
-console.log('=== 1. 版本號 & 首頁 BOSS 項目 ===');
+console.log('=== 1. 版本號 & BOSS 跳關入口（v5.66 已移除） ===');
 ok(parseFloat(P.VERSION) >= 1.2, '版本已推進（目前 v' + P.VERSION + '，每次改版 +0.1）');
-// v4.81：BOSS 從首頁搬進單人關卡畫面（本質是 startSolo 的 bossRush 模式）
-ok(/id="btnSoloBoss"/.test(html), '單人關卡畫面有「直接單挑最終魔王」入口');
-ok(html.indexOf('startBossRush()') >= 0, 'BOSS 按鈕接到 startBossRush()');
+// v5.66：移除「跳過關卡，直接單挑最終魔王」（v4.81 搬進單人畫面的那一顆）
+ok(!/id="btnSoloBoss"/.test(html), '單人關卡畫面沒有「跳過關卡」按鈕');
+ok(!/function startBossRush/.test(html) && typeof P.startBossRush === 'undefined', 'startBossRush 已整個移除（連匯出都沒有）');
+ok(typeof P.goBoss === 'undefined', 'goBoss 也移除');
+ok(html.indexOf("q.get('boss')") < 0, '?boss=1 這個除錯入口一併移除');
 P.settings.ctrl = 'kb';
 P.settings.soloDiff = 'normal';
 P.settings.soloTime = 300;
-P.startBossRush();
+P.startSolo(P.SOLO_STAGES, false);
 const GB = P.Game;
-ok(GB.bossRush === true, 'BOSS 模式旗標開啟');
-ok(GB.stage === 32, 'v4.14：直接進入第 32 關（魔王之間／暗黑魔王城）');
+ok(GB.stage === P.SOLO_STAGES, '第 ' + P.SOLO_STAGES + ' 關＝最終魔王關（正常遊玩走到底才到得了）');
+ok(!!GB.bossArena, '最終關走決戰場（Game.bossArena）');
 ok(GB.enemies.length === 1 && GB.enemies[0].boss === true, '場上只有魔王、沒有小怪（敵人數 ' + GB.enemies.length + '）');
-ok(GB.players[0].lives === 3, 'BOSS 模式 3 條命');
-ok(!!GB.door, 'BOSS 關也有出口門');
+ok(GB.players[0].lives === 3, '最終關 3 條命');
+ok(!!GB.door, '魔王關也有出口門');
 
 // ================================================================
 console.log('=== 2. PC 自動控制：鍵盤／藍牙手把自動辨識 ===');
@@ -180,9 +186,10 @@ ok(P.ctrlMode() === 'pad', '偵測到手把並自動切到手把模式');
 ok(P.Pad.name().indexOf('Xbox') >= 0, '讀得到手把名稱（' + P.Pad.name() + '）');
 ok(typeof P.PadUI.tick === 'function', '手把選單導航模組存在');
 ok(html.indexOf('.padfocus') >= 0, '選單有手把焦點樣式（方向鍵可選項目）');
-ok(html.indexOf("if (Input.padEdge(0, 0)) activate();") >= 0, '手把 A 鍵可以確認選項');
-ok(html.indexOf("if (Input.padEdge(0, 1)) back();") >= 0, '手把 B 鍵可以返回');
-ok(html.indexOf("Input.padEdge(0, 12) ? 'up'") >= 0, '手把十字鍵可以選擇選單項目');
+// v5.66：v5.x 手把導航重寫（支援多支手把與多層彈窗）→ 改成對應目前的寫法
+ok(/if \(Input\.padEdge\([^,]+, 0\)\) activate\(\);/.test(html), '手把 A 鍵可以確認選項');
+ok(/if \(Input\.padEdge\([^,]+, 1\)\) back\(\);/.test(html), '手把 B 鍵可以返回');
+ok(/Input\.padDown\([^,]+, 12\)[\s\S]{0,60}?dir = 'up'/.test(html), '手把十字鍵可以選擇選單項目');
 // 一按鍵盤就切回鍵盤
 const kd = (listeners.keydown || []);
 kd.forEach(function (fn) { fn({ code: 'KeyD', preventDefault: function () {} }); });
@@ -220,9 +227,10 @@ ok(nDet === 2, 'E 鍵引爆一次炸掉 2 發（回傳 ' + nDet + '）');
 for (let i = 0; i < 4; i++) P.updateWorld(1 / 60);
 ok(P.Game.bombs.length === 0, '引爆後炸彈全部消失');
 ok(P.Game.flames.length > 0, '引爆產生火焰');
-ok(html.indexOf("detonate: function () { return !!edges[getMap().det]; }") >= 0, '鍵盤 E 鍵接上遙控引爆');
-ok(P.DEF_KEYS1.det === 'KeyE', '預設引爆鍵是 E');
-ok(P.DEF_KEYS1.fire === 'KeyF', '預設吐火鍵是 F');
+// v5.66：預設鍵位早就改成「滑鼠右鍵引爆／空白鍵吐火」（E／F 是 v2.x 的舊預設）
+ok(/detonate: function \(\) \{ return keyEdge\(getMap\(\)\.det\); \}/.test(html), '引爆鍵接上遙控引爆（keyEdge → getMap().det）');
+ok(P.DEF_KEYS1.det === 'Mouse2', '預設引爆鍵是滑鼠右鍵（' + P.DEF_KEYS1.det + '）');
+ok(P.DEF_KEYS1.fire === 'Space', '預設吐火鍵是空白鍵（' + P.DEF_KEYS1.fire + '）');
 
 // ================================================================
 console.log('=== 5. 道具被炸到不會消失 ===');
@@ -335,6 +343,7 @@ ok(pd.lives === 3, '生命沒有減少（還是 3）');
 ok(pd.invuln > 0, '恐龍幫擋後有短暫無敵');
 // 再被打就死
 pd.invuln = 0;
+if (typeof pd.sHp === 'number') pd.sHp = 1;   // v5.30 起有格血：先打到剩 1 格，一擊才算一條命
 P.killPlayer(pd, false, null);
 ok(pd.alive === false && pd.lives === 2, '恐龍沒了再被打就正常陣亡');
 // 吐火
@@ -391,11 +400,14 @@ for (let st = 1; st <= 8; st++) {
     if (st !== 8) G.enemies.length = 0; else G.enemies.length = 0;
     P.updateSolo(1 / 60);
     // v2.0：門藏在軟磚底下 → 清光敵人當下還不會現身（磚還沒炸）
-    if (G.door.revealed && G.door.open) doorOpenAll = false;
+    // v5.36 起第 5 關是 BOSS 決戰場：門一開始就看得見、王死才開，不適用「藏在磚下」這條
+    if (!P.isBossStage(st) && G.door.revealed && G.door.open) doorOpenAll = false;
     // 炸掉場上所有軟磚 → 門一定現身且可通過（不會卡關）
     for (let yy = 1; yy < G.rows - 1; yy++) for (let xx = 1; xx < G.cols - 1; xx++)
       if (G.grid[yy][xx] === 2) P.destroySoft(xx, yy);
     P.updateSolo(1 / 60);
+    // v5.36：第 5 關是 BOSS 決戰場 —— 門一開始就看得見，但要「王死」才開
+    if (P.isBossStage(st) && G.bossArena && G.bossArena.boss) { G.bossArena.boss.hp = 0; P.updateSolo(1 / 60); }
     if (!(G.door.revealed && G.door.open)) doorOpenAll = false;
   }
 }

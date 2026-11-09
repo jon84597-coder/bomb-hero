@@ -52,9 +52,12 @@ ok(noArt.length === 0, '每隻都有專屬美術（缺的：' + (noArt.join(',')
 const badArt = species.filter(function (s) { return s.art && ART_KINDS.indexOf(s.art) < 0; });
 ok(badArt.length === 0, 'art 原型都在實作清單內' + (badArt.length ? '（' + badArt.map(function (s) { return s.id + ':' + s.art; }).join(',') + '）' : ''));
 // 新種都在關卡怪池裡
-ok(/'scavenger', 'sapper', 'bomber', 'wizard'/.test(html), '四隻有技能的怪都在怪池中');
-ok(/'panda', 'penguin', 'octopus', 'robot'/.test(html), '四隻新的地面怪在怪池中');
-ok(/'wisp', 'hornet'/.test(html), '兩隻新的飛行怪在怪池中');
+// v5.66：怪池早就不寫成一行了（v4.27 起是 STAGE_ROSTER 八章 × 6 隻）→ 直接查資料
+const rosterIds = (P.STAGE_ROSTER || []).reduce(function (a, l) { return a.concat(l); }, []);
+const inRoster = function (ids) { return ids.every(function (id) { return rosterIds.indexOf(id) >= 0; }); };
+ok(inRoster(['scavenger', 'sapper', 'bomber', 'wizard']), '四隻有技能的怪都在怪池中');
+ok(inRoster(['panda', 'penguin', 'octopus', 'robot']), '四隻新的地面怪在怪池中');
+ok(inRoster(['wisp', 'hornet']), '兩隻新的飛行怪在怪池中');
 // 美術是「精緻」的：新種都有多層造型（不是單純一團）
 ok(/if \(sp === 'panda'\)/.test(html) && /if \(sp === 'robot'\)/.test(html) &&
    /if \(sp === 'octopus'\)/.test(html) && /if \(sp === 'wizard'\)/.test(html),
@@ -168,12 +171,9 @@ ok(/power: 1,\s*\/\/ v4\.13：放彈怪的火焰只有 1 格/.test(html), '放�
 
 // ================================================================
 head('⑥ 單人闖關與 RPG 的怪池都擴充了');
-ok(/const skills = \['scavenger', 'sapper', 'bomber', 'wizard'\];/.test(html),
-  '技能怪有專屬的怪池區塊');
-ok(/return ground\.concat\(flying\)\.concat\(skills\);/.test(html),
-  'RPG 後期關卡會出技能怪');
-ok(/ground\.concat\(flying\)\.concat\(skills\);/.test(html),
-  '單人後期關卡也會出技能怪');
+ok(rosterIds.length === 48, '八章 × 6 隻＝' + rosterIds.length + ' 隻（每隻都排進某一章）');
+ok(P.stageRoster(21).indexOf('scavenger') >= 0, 'RPG 後期（第 5 章）會出技能怪');
+ok(P.stageRoster(36).indexOf('wizard') >= 0, '單人後期（第 8 章）也會出技能怪');
 
 console.log('');
 console.log(fail === 0 ? ('通過 ' + pass + ' / ' + (pass + fail)) : ('✗ ' + fail + ' 項失敗（通過 ' + pass + '）'));

@@ -6,6 +6,7 @@
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
 const P = env.BH, G = P.Game, html = env.html;
+try { P.WeekMod.pin([]); } catch (e) {}   // v5.66：這支驗「基礎數值」，先釘住每週變異
 
 let pass = 0, fail = 0;
 function ok(cond, msg) {
@@ -131,8 +132,8 @@ ok(allMaxOne, '單人闖關的小怪 maxHp = 1（沒有血量概念）');
 }
 // RPG 模式仍有血量
 {
-  ok(P.RPG_FOE.slime.hp === 3 && P.RPG_FOE.beetle.hp === 4 && P.RPG_FOE.lizard.hp === 5,
-    'RPG 模式的怪仍有血量（v4.17 調回：史萊姆 3／鐵甲蟲 4／疾風蜥 5）');
+  ok(P.RPG_FOE.slime.hp === 4 && P.RPG_FOE.beetle.hp === 5 && P.RPG_FOE.lizard.hp === 6,
+    'RPG 模式的怪仍有血量（v5.19 起：史萊姆 4／鐵甲蟲 5／疾風蜥 6）');
   ok(typeof P.FOE_HP === 'object', 'FOE_HP 仍存在（RPG 模式共用）');
 }
 

@@ -7,6 +7,7 @@
 const { makeEnv } = require('./_sandbox');
 const env = makeEnv();
 const P = env.BH, G = P.Game, S = P.settings, html = env.html, els = env.els;
+try { P.WeekMod.pin([]); } catch (e) {}   // v5.66：這支驗的是「基礎數值」，先釘住每週變異（不然某些週次會紅）
 const fs = require('fs');
 
 let pass = 0, fail = 0;
