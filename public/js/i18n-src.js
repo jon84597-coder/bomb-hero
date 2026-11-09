@@ -248,6 +248,10 @@ bt.padPlay|AI 電腦對打 · 手把按 A 可取代|AI 电脑对打 · 手柄按
 bt.aiHosted|🤖 AI 託管中（點 🤖 改回人類）|🤖 AI 托管中（点 🤖 改回人类）|🤖 Run by AI (tap 🤖 to make it human)|🤖 AI が操作中（🤖 タップで人間に戻す）|🤖 AI 조작 중 (🤖 탭으로 사람으로)
 bt.startOv|對戰開始！|对战开始！|Battle Start!|対戦開始！|대전 시작!
 bt.startSub|先拿 {n} 勝的人獲勝\\n沒人類的槽位由 🤖 AI 託管 · 踢彈・投彈・打彈・遙控（E 引爆）・恐龍吐火（F） · 活用自己的裝備|先拿 {n} 胜的人获胜\\n没人类的槽位由 🤖 AI 托管 · 踢弹・投弹・打弹・遥控（E 引爆）・恐龙吐火（F） · 活用自己的装备|First to {n} wins takes it\\nEmpty slots run on 🤖 AI · Kick · Throw · Punch · Remote (E) · Dino Flame (F) · use your gear|先に {n} 勝した人が優勝\\n空き枠は 🤖 AI が操作 · キック・投げ・パンチ・リモコン（E）・恐竜の炎（F） · 装備を活かそう|먼저 {n}승한 사람이 우승\\n빈 슬롯은 🤖 AI가 조작 · 킥·투척·펀치·원격(E)·공룡 화염(F) · 장비를 활용하세요
+bt.theme|地圖風格|地图风格|Map style|マップの種類|맵 스타일
+bt.themeRandom|🎲 隨機輪替|🎲 随机轮替|🎲 Rotate all 8|🎲 8種を順番に|🎲 8종 순환
+bt.themeHint|🎲 隨機輪替：八張風格地圖洗牌輪流，一輪之內不重複、也不會連兩場同一張；也可以直接指定要玩哪一張。|🎲 随机轮替：八张风格地图洗牌轮流，一轮之内不重复、也不会连两场同一张；也可以直接指定要玩哪一张。|🎲 Rotate all 8: every style takes a turn, none repeats until all 8 have been played — or lock one style.|🎲 全8種を順番に：一周するまで同じマップは出ません（連続もなし）。1種類に固定もできます。|🎲 8종 순환: 8개를 한 바퀴 돌 때까지 같은 맵이 나오지 않아요. 하나로 고정할 수도 있습니다.
+bt.round|第 {n} 回合|第 {n} 回合|Round {n}|第 {n} ラウンド|{n} 라운드
 bt.startBtn|開戰！|开战！|Fight!|対戦開始！|대전 시작!
 bt.win|{n} 獲勝！|{n} 获胜！|{n} wins!|{n} の勝ち！|{n} 승리!
 bt.draw|平手！|平手！|Draw!|引き分け！|무승부!

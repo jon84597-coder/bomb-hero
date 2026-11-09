@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.71';
+const VERSION = '5.72';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -533,6 +533,8 @@ function refreshI18NUI() {
   try { if (typeof renderDailyScreen === 'function' && typeof Screen !== 'undefined' && Screen.current === 'daily') renderDailyScreen(); } catch (e) {}
   // v5.54：按鍵表是「開機時鋪一次、之後只在改鍵時重畫」→ 換語言要主動重鋪
   try { if (typeof renderKeyRow === 'function') renderKeyRow(); } catch (e) {}
+  // v5.72：地圖風格選單也是「開機鋪一次」（主題名要跟著語言換）
+  try { if (typeof paintThemeSegs === 'function') paintThemeSegs(); } catch (e) {}
   try { if (typeof refreshCmdHint === 'function') refreshCmdHint(); } catch (e) {}
   // v5.54：商店／RPG 配點頁也是「進頁面才畫」，換語言時沒重畫就會留一半中文
   try { if (typeof Shop !== 'undefined' && Shop && Shop.render) Shop.render(); } catch (e) {}
@@ -912,6 +914,7 @@ const CTRL_MODES = ['auto', 'kb', 'pad', 'touch'];
 
 let settings = {
   size: 'M', wins: 2, time: 120, hazards: 'on', sd: 'on', revenge: 'on',
+  battleTheme: 'r',                                 // v5.72：對戰／線上連線的地圖風格（'r' = 八張洗牌輪替；'0'~'7' = 指定那一張）
   bgm: 1, sfx: 1, soloChar: 0,
   font: 'n',        // v5.28：文字大小（n 標準／l 大）
   calm: 0,          // v5.28：減少動態（暈動症友善）
@@ -1005,6 +1008,10 @@ try {
   } catch (e) {}
   settings.count = clampCount(settings.count);
   settings.teams = [0, 2, 3, 4].indexOf(parseInt(settings.teams, 10)) >= 0 ? parseInt(settings.teams, 10) : 0;
+  /* v5.72：地圖風格合法值只有 'r'（八張輪替）與 '0'~'7'（指定主題）。
+     這裡不寫 THEMES.length —— THEMES 在後面才宣告，這裡讀到會踩 TDZ。 */
+  const bt0 = String(settings.battleTheme == null ? 'r' : settings.battleTheme);
+  settings.battleTheme = /^(r|[0-7])$/.test(bt0) ? bt0 : 'r';
   if (['weak', 'normal', 'strong'].indexOf(settings.aiLevel) < 0) settings.aiLevel = 'normal';
   if (['easy', 'normal', 'hard'].indexOf(settings.soloDiff) < 0) settings.soloDiff = 'normal';   // v5.31：壞值退回普通
   // v5.31：預設從「簡單」改成「普通」。v5.29 那版會把 easy 自動寫進存檔（那不是玩家的選擇），
@@ -3728,6 +3735,68 @@ const THEMES = [
   { name: '天空要塞', style: 'sky', bg1: '#5d7fb0', bg2: '#9dc0e0', floor: '#b6c6e3', floor2: '#a9bad9', hard: '#c6d2e8', out: '#94aacb', soft: '#ffffff', soft2: '#c9d9f2', accent: '#e8c878', hazards: ['convey', 'warp'] },
   { name: '暗黑魔王城', style: 'dark', bg1: '#170812', bg2: '#2a0e1c', floor: '#584050', floor2: '#4f3947', hard: '#35202c', out: '#7a4358', soft: '#7b3757', soft2: '#55243b', accent: '#ff5e9a', hazards: ['ice', 'warp', 'convey'] }
 ];
+
+/* ============================================================================
+ * v5.72：對戰／線上連線的地圖風格 —— 八張全部上場
+ * ----------------------------------------------------------------------------
+ * 以前 buildBattleRound 寫的是 `THEMES[rand(7)]`：
+ *   · 索引只到 6 → 第 8 張「暗黑魔王城」永遠抽不到
+ *   · 純亂數會一直撞同一張（實測玩 12 回合只看得到 4~5 種風格）
+ * 現在改成「洗牌輪替」：八張洗好放進袋子、一張一張抽，抽完一輪才重洗；
+ *   重洗後如果袋底剛好是上一回合那張，就跟袋首交換 → 不會連兩回合同一張。
+ * 玩家在設定裡挑了某一張（'0'~'7'）就固定用那一張，不進袋子。
+ * ========================================================================== */
+const BattleTheme = (function () {
+  let bag = [], last = -1;
+  function refill() {
+    bag = [];
+    for (let i = 0; i < THEMES.length; i++) bag.push(i);
+    for (let i = bag.length - 1; i > 0; i--) {              // Fisher-Yates
+      const j = rand(i + 1);
+      const v = bag[i]; bag[i] = bag[j]; bag[j] = v;
+    }
+    if (bag.length > 1 && bag[bag.length - 1] === last) {   // 袋底 = 下一次抽到的 → 別跟上一回合連莊
+      const v = bag[bag.length - 1];
+      bag[bag.length - 1] = bag[0];
+      bag[0] = v;
+    }
+  }
+  function next() {
+    if (!bag.length) refill();
+    const i = bag.pop();
+    last = i;
+    return i;
+  }
+  return {
+    next: next, last: function () { return last; },
+    reset: function () { bag = []; last = -1; },
+    left: function () { return bag.length; },
+    size: function () { return THEMES.length; }
+  };
+})();
+/* 這一回合要用哪一張：設定指定了就用指定的，否則從袋子抽 */
+function battleThemeIdx() {
+  const v = String(settings.battleTheme == null ? 'r' : settings.battleTheme);
+  const i = parseInt(v, 10);
+  if (v !== 'r' && i >= 0 && i < THEMES.length) return i;
+  return BattleTheme.next();
+}
+/* 回合開始時在畫面上方報一句「這一場是哪張圖」（對戰／線上共用；客人端靠快照換圖時也呼叫）。
+   兩個守門員：
+     · Game.ovInfo 有值＝開場說明還開著（本機對戰第一回合）→ 先不報，等按下「開戰」進倒數時再報，
+       不然提示卡會跟說明卡疊在一起。
+     · 同一回合同一張圖只報一次（buildBattleRound 與 beginCountdown 都會叫它）。 */
+let _miKey = '';
+function mapIntroCard() {
+  try {
+    if (Game.ovInfo) return;
+    const ti = (Game.themeIdx == null) ? Math.max(0, THEMES.indexOf(Game.theme)) : (Game.themeIdx | 0);
+    const key = (Game.round | 0) + ':' + ti;
+    if (key === _miKey) return;
+    _miKey = key;
+    doorHintCard('\uD83D\uDDFA\uFE0F', themeName(ti), t('bt.round', { n: Game.round | 0 }), 2.4);
+  } catch (e) {}
+}
 
 // ---------- 道具 ----------
 const ITEMS = {
@@ -12970,9 +13039,12 @@ function buildBattleRound() {
   // 隨機出生點：從棋盤通行走道（奇數格）隨機挑選，彼此保持距離、不固定四角
   const spawns = pickBattleSpawns(cols, rows, Game.players.length);
   Game.hidden = {};
-  const theme = THEMES[rand(7)];
+  /* v5.72：`THEMES[rand(7)]` → 八張洗牌輪替（或玩家指定的那一張） */
+  const ti = battleThemeIdx();
+  const theme = THEMES[ti] || THEMES[0];
   Game.theme = theme;
-  Game.stage = THEMES.indexOf(theme) + 1;    // v1.7：讓 BGM 跟著這一張地圖走
+  Game.themeIdx = ti;
+  Game.stage = ti + 1;                       // v1.7：讓 BGM 跟著這一張地圖走
   buildMap(cols, rows, theme, {
     spawns: spawns,
     items: 18, emptyRate: .35   // v2.8：對戰道具微量增加
@@ -12998,6 +13070,11 @@ function buildBattleRound() {
   hideOverlay();
   buildSdList();
   updateHud();
+  /* v5.72：上方提示卡報「第 N 回合 · 地圖風格」。
+     本機對戰的開場說明是「建好地圖之後」才蓋上來的 —— 直接報會疊在一起，
+     所以延到下一輪事件迴圈；那時說明卡已經蓋上（Game.ovInfo）就先跳過，
+     等玩家按「開戰」→ beginCountdown 再補報。 */
+  try { setTimeout(mapIntroCard, 0); } catch (e) { mapIntroCard(); }
 }
 
 const SD_STEP_T = .55;
@@ -17818,6 +17895,9 @@ function beginCountdown(bgmName) {
   hideOverlay();
   //   這裡等 overlay 收掉、版面定下來再量一次 → 格子重算、地圖剛好貼齊畫布
   if (Game.bigMap) resizeView();
+  /* v5.72：對戰／線上開始倒數時補報地圖名 —— 一定要排在 hideOverlay() 之後，
+     不然 mapIntroCard 的守門員（ovInfo 還開著就跳過）會把第一回合的提示卡吃掉。 */
+  if (Game.mode === 'battle') { try { mapIntroCard(); } catch (e) {} }
 }
 function updateCountdown(dt) {
   Game.countdown -= dt;
@@ -28557,6 +28637,59 @@ refreshers.push(segWire('segHaz', function () { return settings.hazards; }, func
 refreshers.push(segWire('segSd', function () { return settings.sd; }, function (v) { settings.sd = v; }));
 refreshers.push(segWire('segRevenge', function () { return settings.revenge; }, function (v) { settings.revenge = v; }));
 refreshers.push(segWire('segAi', function () { return settings.aiLevel; }, function (v) { settings.aiLevel = v; updateAiHint(); }));
+/* v5.72：地圖風格 —— 隨機（八張輪替）＋ 指定八張。
+   按鈕是 JS 鋪的（主題名要跟著語言換），所以監聽一律掛在 .seg 上（事件委派），
+   換語言重鋪 innerHTML 也不會掉。 */
+function themeSegHTML() {
+  return '<button data-v="r" type="button">' + t('bt.themeRandom') + '</button>' +
+    THEMES.map(function (x, i) {
+      return '<button data-v="' + i + '" type="button">' + themeName(i) + '</button>';
+    }).join('');
+}
+function paintThemeSegs() {
+  const want = themeSegHTML();
+  const bt = $id('segTheme');
+  if (bt) {
+    if (bt.getAttribute('data-h') !== want) { bt.innerHTML = want; bt.setAttribute('data-h', want); }
+    const cur = String(settings.battleTheme == null ? 'r' : settings.battleTheme);
+    bt.querySelectorAll('button').forEach(function (b) {
+      b.classList.toggle('sel', b.getAttribute('data-v') === cur);
+    });
+  }
+  const nt = $id('netTheme');
+  if (nt) {
+    if (nt.getAttribute('data-h') !== want) { nt.innerHTML = want; nt.setAttribute('data-h', want); }
+    // 線上房間的選取狀態與唯讀交給 Net.renderOpts（房主可點、其他人變灰）
+    try { if (typeof Net !== 'undefined' && Net && Net.renderOpts) Net.renderOpts(); } catch (e) {}
+  }
+}
+function wireThemeSegs() {
+  const bt = $id('segTheme');
+  if (bt && !bt.getAttribute('data-w')) {
+    bt.setAttribute('data-w', '1');
+    bt.addEventListener('click', function (e) {
+      const b = (e && e.target && e.target.closest) ? e.target.closest('button') : null;
+      if (!b) return;
+      try { AudioSys.sfx('click'); } catch (er) {}
+      settings.battleTheme = String(b.getAttribute('data-v') || 'r');
+      if (settings.battleTheme !== 'r') BattleTheme.reset();   // 指定單張 → 袋子清掉，切回隨機時重洗
+      saveSettings();
+      paintThemeSegs();
+    });
+  }
+  const nt = $id('netTheme');
+  if (nt && !nt.getAttribute('data-w')) {
+    nt.setAttribute('data-w', '1');
+    nt.addEventListener('click', function (e) {
+      const b = (e && e.target && e.target.closest) ? e.target.closest('button') : null;
+      if (!b) return;
+      try { AudioSys.sfx('click'); } catch (er) {}
+      try { Net.setOpt('netTheme', String(b.getAttribute('data-v') || 'r')); } catch (er) {}
+      paintThemeSegs();
+    });
+  }
+}
+try { paintThemeSegs(); wireThemeSegs(); } catch (e) {}
 // v5.27：畫質／FPS／震動／色盲
 refreshers.push(segWire('segQual', function () { return settings.qual; }, function (v) {
   settings.qual = v; applyQuality(); updateQualHint();
@@ -31510,6 +31643,7 @@ const Net = {
   /* ---------- v5.37：房間設定（把本機對戰的全部選項搬過來；房主設定、其他人唯讀） ---------- */
   optDefs: [
     { id: 'netSize', k: 'size', t: 'str' },
+    { id: 'netTheme', k: 'battleTheme', t: 'str' },   // v5.72：地圖風格（房主設定）
     { id: 'netWins', k: 'wins', t: 'int' },
     { id: 'netTime', k: 'time', t: 'int' },
     { id: 'netHaz', k: 'hazards', t: 'str' },
@@ -31522,6 +31656,7 @@ const Net = {
       size: settings.size, wins: parseInt(settings.wins, 10) || 2,
       time: parseInt(settings.time, 10) || 120,
       hazards: settings.hazards, sd: settings.sd, revenge: settings.revenge,
+      battleTheme: String(settings.battleTheme == null ? 'r' : settings.battleTheme),
       ai: settings.aiLevel
     };
   },
@@ -31849,7 +31984,12 @@ const Net = {
       }
       Net.placeSnap = true;
     }
-    if (Game.theme !== THEMES[s.th]) Game.theme = THEMES[s.th] || THEMES[0];
+    /* v5.72：房間主人抽到的地圖（含洗牌輪替結果）就是這一場的圖 —— 客人端跟著同步，
+       換圖時也報一次「第 N 回合 · 地圖風格」，不然手機上根本看不出換了地圖。 */
+    const thChanged = (Game.theme !== THEMES[s.th]);
+    Game.theme = THEMES[s.th] || THEMES[0];
+    Game.themeIdx = Math.max(0, s.th | 0);
+    if (thChanged && rebuild) { try { mapIntroCard(); } catch (e) {} }
     for (let y = 0; y < s.r; y++) {
       const row = s.g[y] || '';
       for (let x = 0; x < s.c; x++) {
@@ -38723,6 +38863,8 @@ window.__BH = {
   showBRDeath: showBRDeath, aiEscape: aiEscape, placeHideTiles: placeHideTiles,
   seedCode: seedCode, seedTag: seedTag,
   themeName: themeName, charName: charName, charTag: charTag,
+  BattleTheme: BattleTheme, battleThemeIdx: battleThemeIdx, mapIntroCard: mapIntroCard,
+  paintThemeSegs: paintThemeSegs, themeSegHTML: themeSegHTML,
   // v3.0 作者公告欄
   ANN_STORE: ANN_STORE, ANN_URL: ANN_URL,
   // v3.1 右上角「下一步」快捷鈕

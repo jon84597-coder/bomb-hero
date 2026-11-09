@@ -5052,7 +5052,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.71</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.72</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5107,7 +5107,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.71</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.72</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" id="nickWrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5442,6 +5442,11 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
           <button data-v="L">大 17×15</button><button data-v="XL">超大 21×15</button>
         </div>
       </div>
+      <!-- v5.72：八大張風格地圖全部上場。按鈕由 JS 鋪（主題名要跟著語言換） -->
+      <div class="field"><label>地圖風格</label>
+        <div class="seg" id="segTheme"></div>
+        <div class="hint">🎲 隨機輪替：八張風格地圖洗牌輪流，一輪之內不重複、也不會連兩場同一張；也可以直接指定要玩哪一張。</div>
+      </div>
       <div class="field"><label>勝場數</label>
         <div class="seg" id="segWins"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
       </div>
@@ -5679,6 +5684,9 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
           <label>對戰設定（房主設定，其他人唯讀）</label>
           <div class="netopt"><span class="netoptl">地圖尺寸</span>
             <div class="seg" id="netSize"><button data-v="S">小 13×11</button><button data-v="M">中 15×13</button><button data-v="L">大 17×15</button><button data-v="XL">超大 21×15</button></div>
+          </div>
+          <div class="netopt"><span class="netoptl">地圖風格</span>
+            <div class="seg" id="netTheme"></div>
           </div>
           <div class="netopt"><span class="netoptl">勝場數</span>
             <div class="seg" id="netWins"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
