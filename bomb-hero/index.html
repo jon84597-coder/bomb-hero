@@ -838,18 +838,17 @@ display: flex; align-items: center; gap: 7px; min-height: 38px;
 .chip .hpicks { font-size: 12px; letter-spacing: -1.6px; line-height: 1; white-space: nowrap; }
 body.touch.in-game .chip .hpicks { font-size: 11px; letter-spacing: -2px; }
 /* v5.31：簡單模式 3 顆心會把頂欄擠成三行（ESC 掉到第三行）—— 頂欄專屬收窄，不動其他面板的 .chip */
-#gameTop { gap: 6px; position: relative; }
+#gameTop { gap: 6px; }
 /* ===== v5.73：深淵 HUD 徽章 / 每日特惠 ===== */
-/* v5.73：貼在頂欄「正下方・靠右」——原本 fixed top:52px 壓到地圖名 chip，
-   靠左又會蓋到小地圖；靠右那一角在遊戲裡永遠是空的。
-   absolute + top:100%：頂欄長高（血格變多換行）也永遠不會撞到。 */
-#abyssBadge { position: absolute; right: 0; top: 100%; margin-top: 5px; z-index: 12; display: flex; flex-direction: column;
-  align-items: flex-end; text-align: right;
-  gap: 1px; padding: 5px 10px 6px; border-radius: 13px; pointer-events: none;
-  background: linear-gradient(180deg, rgba(34,12,52,.88), rgba(10,3,20,.92));
+/* v5.73：深淵 HUD —— 直接當頂欄裏的一顆 chip（跟著 flex 排版）。
+   走 fixed／absolute 都會撞東西：fixed top:52 壓地圖名、靠左壓小地圖、靠右被手機的圓形按鈕蓋住。 */
+#abyssBadge { display: flex; flex-direction: column; justify-content: center; gap: 1px;
+  align-self: center; min-height: 30px;
+  padding: 4px 10px 5px; border-radius: 12px; pointer-events: none;
+  background: linear-gradient(180deg, rgba(34,12,52,.92), rgba(10,3,20,.96));
   border: 1px solid rgba(178,118,255,.55);
-  box-shadow: 0 5px 16px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.16);
-  font-size: 11px; line-height: 1.25; color: #efe4ff; }
+  box-shadow: 0 3px 10px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.16);
+  font-size: 11px; line-height: 1.15; color: #efe4ff; }
 #abyssBadge b { font-size: 12.5px; font-weight: 900; color: #cfadff;
   text-shadow: 0 0 9px rgba(158,96,255,.8); }
 #abyssBadge i { font-style: normal; font-size: 10px; color: #9d8bb9; letter-spacing: .2px; }
