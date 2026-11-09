@@ -24,7 +24,7 @@ async function launch(opts = {}) {
     '--user-data-dir=' + userDir,
     '--window-size=' + (opts.w || 1280) + ',' + (opts.h || 900),
     'about:blank'
-  ];
+  ].concat(opts.args || []);
   const proc = spawn(CHROME, args, { stdio: 'ignore' });
   let info = null;
   for (let i = 0; i < 60; i++) {
