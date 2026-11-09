@@ -207,8 +207,9 @@ sec('⑧ 版本');
 
 const ver = (mainSrc.match(/const VERSION = '([0-9.]+)'/) || [])[1] || '0';
 ok(parseFloat(ver) >= 5.63, '主檔版本 ≥ 5.63（實際 ' + ver + '）');
-ok(/var SW_VERSION = 'v5\.6[3-9]\.0';/.test(swSrc), 'SW 版本同步');
-ok(/"version": "5\.6[3-9]\.0"/.test(fs.readFileSync(path.join(SRC, 'package.json'), 'utf8')), 'package.json 同步');
+/* v5.70：不再寫死「5.6x」——直接拿主檔的版本去比，之後升版才不會每次都要回頭改這支 */
+ok(new RegExp("var SW_VERSION = 'v" + ver.replace(/\./g, '\\.') + "\\.0';").test(swSrc), 'SW 版本同步（v' + ver + '.0）');
+ok(new RegExp('"version": "' + ver.replace(/\./g, '\\.') + '\\.0"').test(fs.readFileSync(path.join(SRC, 'package.json'), 'utf8')), 'package.json 同步（' + ver + '.0）');
 const vlog = fs.readFileSync(path.join(ROOT, 'js/version-log.js'), 'utf8');
 ok(new RegExp("v: '5\\." + ver.split('.')[1] + "', date: '[^']+', now: true").test(vlog),
   'VERSION_LOG 第一筆是這版且 now:true');

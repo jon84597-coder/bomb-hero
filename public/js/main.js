@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.69';
+const VERSION = '5.70';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -18759,9 +18759,52 @@ function updateHud() {
   } else {
     // 對戰：左右側欄玩家卡（SBR 風），頂部只留大計時器
     html = '<div class="chip big" id="hudTimer"><span class="ic">⏱️</span><b>' + fmtTime(Game.timer) + '</b></div>';
-    // v2.9：一橫排玩家卡（頭像＋暱稱＋星星）放右上；PC 大、手機自動縮小（CSS media query）
+    /* v5.48：大逃殺 100 人不再整排硬塞（每張卡被壓成 14px 細條、又正好壓在小地圖上緣）。
+       改成「小地圖右邊一條小頭像列」：只放塞得下的前 N 個 ＋「+N」，存活數看左下 HUD。 */
+    const brMany = Game.mode === 'br' && Game.players.length > 8;
+    /* v5.70：對戰（手機直放／橫放）也走同一套。
+       舊版 2~8 張「頭像＋暱稱＋星星」的膠囊卡釘在 left:8 / top:5，
+       直放實測 416×46px，把頂列的計時器整個蓋掉；橫放也吃掉左邊 441px。
+       改成只留頭像圓圈（隊色外框＋勝場角標），排在頂列左側、讓開右上角的計時器。 */
+    const touchUi = !!(document.body && document.body.classList && document.body.classList.contains('touch'));
+    const vsMini = Game.mode === 'battle' && touchUi;
+    const miniRow = brMany || vsMini;
+    let mmBox = null;
+    try { if (miniMapOn()) mmBox = miniMapBox(); } catch (e) {}
+    /* 小地圖方框是「畫布內座標」；貼到頁面時要加上畫布位移（橫放時畫布在 x=14,y=33） */
+    let mmRight = 0;
+    if (mmBox) {
+      let ox = 0;
+      try {
+        const cvEl = $id('cv');
+        const cr = cvEl && cvEl.getBoundingClientRect ? cvEl.getBoundingClientRect() : null;
+        if (cr) ox = Math.round(cr.left);
+      } catch (e) { ox = 0; }
+      mmRight = ox + mmBox.x + mmBox.w + 6;
+    }
+    const lx = mmRight || 8;
+    // 右上角一定要讓開：計時器（直放實測 328~380、橫放 570~628）
+    const room = Math.max(60, VIEW_W - lx - (VIEW_W > VIEW_H ? 132 : 96));
+    let list = Game.players, more = 0;
+    if (miniRow) {
+      const cell = vsMini ? 31 : 26;
+      const n = Math.max(2, Math.min(vsMini ? 8 : 12, Math.floor((room - 30) / cell)));
+      if (Game.players.length > n) { list = Game.players.slice(0, n); more = Game.players.length - n; }
+    }
+    // v2.9：一橫排玩家卡（頭像＋暱稱＋星星）；PC 大、手機小頭像列
+    /* v5.70：小頭像列要標出「哪一個是我」——本機兩人對戰時兩個都是人類，
+       直接問 isMyPlayer 會亮兩圈；這裡只取第一個（線上對戰仍由座位判定）。 */
+    let meP = null;
+    try { meP = Game.players.filter(function (q) { return isMyPlayer(q); })[0] || null; } catch (e) { meP = null; }
     const card = function (p) {
       const tmC = (p.team >= 0) ? teamMeta(p.team) : null;   // v4.15：組隊 → 隊色
+      if (miniRow) {
+        const ring = tmC ? tmC.hex : ((p.ch && p.ch.color) || '#26355c');
+        return '<div class="pcard' + (p.alive ? '' : ' dead') +
+          (p === meP ? ' me' : '') + '" style="--ring:' + ring + '">' +
+          '<canvas class="pav" width="52" height="52" data-ch="' + p.chIdx + '"></canvas>' +
+          (vsMini ? '<b class="pwin">' + Math.max(0, p.wins | 0) + '</b>' : '') + '</div>';
+      }
       return '<div class="pcard' + (p.alive ? '' : ' dead') + '"' +
         (tmC ? ' style="border-color:' + tmC.hex + '"' : '') + '>' +
         '<canvas class="pav" width="52" height="52" data-ch="' + p.chIdx + '"></canvas>' +
@@ -18770,22 +18813,9 @@ function updateHud() {
           (tmC ? tmC.dot : '') + pname(p) + (p.ai ? '🤖' : '') + (p.cart ? '🛒' : '') + '</span>' +
         '<span class="pstars">⭐' + p.wins + '</span></span></div>';
     };
-    /* v5.48：大逃殺 100 人不再整排硬塞（每張卡被壓成 14px 細條、又正好壓在小地圖上緣）。
-       改成「小地圖右邊一條小頭像列」：只放塞得下的前 N 個 ＋「+N」，存活數看左下 HUD。 */
-    const brMany = Game.mode === 'br' && Game.players.length > 8;
-    let mmBox = null;
-    try { if (miniMapOn()) mmBox = miniMapBox(); } catch (e) {}
-    let list = Game.players, more = 0;
-    if (brMany) {
-      const lx0 = mmBox ? mmBox.x + mmBox.w + 6 : 8;
-      const room = VIEW_W - lx0 - (VIEW_W > VIEW_H ? 130 : 62);      // 讓開右上角的計時器
-      const n = Math.max(4, Math.min(12, Math.floor((room - 34) / 26)));
-      if (Game.players.length > n) { list = Game.players.slice(0, n); more = Game.players.length - n; }
-    }
     const phtml = list.map(card).join('') + (more ? '<i class="pmore">+' + more + '</i>' : '');
     if (pkEl) {
-      const cls = 'pkrow' + (brMany ? ' mini' : '');
-      const lx = mmBox ? mmBox.x + mmBox.w + 6 : 8;
+      const cls = 'pkrow' + (miniRow ? ' mini' : '') + (vsMini ? ' vs' : '');
       const mw = Math.max(120, VIEW_W - lx - 6);
       if (pkEl.className !== cls) pkEl.className = cls;
       if (pkEl.style.left !== lx + 'px') { pkEl.style.left = lx + 'px'; pkEl.style.maxWidth = mw + 'px'; }
@@ -38270,6 +38300,7 @@ window.__BH = {
   cellAt: cellAt, beginCountdown: beginCountdown, spawnItem: spawnItem, markWallKinds: markWallKinds, freeRimRocks: freeRimRocks,
   guardTaunt: guardTaunt, petHeroThreat: petHeroThreat, bombUnderFoot: bombUnderFoot, drawOuterWall: drawOuterWall,
   updateEnemy: updateEnemy, updateBoss: updateBoss, buildSdList: buildSdList,
+  updateHud: updateHud,                 // v5.70：對戰清單（小頭像列）要能被測試直接叫
   // v5.68：防左右抖動的三件套 ＋ 亂入王（測試用）
   updateBRBoss: updateBRBoss, bossCellMemory: bossCellMemory, bossBackCost: bossBackCost,
   bossStepHold: bossStepHold, aiCellNoise: aiCellNoise,

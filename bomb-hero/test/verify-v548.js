@@ -144,8 +144,8 @@ ok(/#pkRoster\.mini \.pcard canvas \{[^}]*width: 24px; height: 24px/.test(src), 
 ok(/#pkRoster\.mini \.pkinfo \{ display: none; \}/.test(src), '大逃殺把名字／星星收起來（只留頭像）');
 ok(/\.pmore \{/.test(src), '塞不下時有「+N」溢出徽章');
 ok(/const brMany = Game\.mode === 'br' && Game\.players\.length > 8/.test(src), '只在 9 人以上才切精簡模式（對戰 4~8 人保留名字）');
-ok(/Math\.max\(4, Math\.min\(12, Math\.floor\(\(room - 34\) \/ 26\)\)\)/.test(src), '同時最多 12 個頭像，窄機自動減到 4 個');
-ok(/mmBox \? mmBox\.x \+ mmBox\.w \+ 6 : 8/.test(src), '整條列往右讓開小地圖（minimapBox 右緣 +6）');
+ok(/Math\.min\(vsMini \? 8 : 12, Math\.floor\(\(room - 30\) \/ cell\)\)/.test(src), '同時最多 12 個頭像（手機對戰另有 8 人上限），窄機自動減量');
+ok(/mmRight = ox \+ mmBox\.x \+ mmBox\.w \+ 6;/.test(src), '整條列往右讓開小地圖（畫布位移＋minimapBox 右緣 +6）');
 ok(/pkEl\.style\.left = lx \+ 'px'/.test(src), '位置用 inline style 設定（CSS 只管外觀）');
 
 // 沙盒實跑：100 人只渲染 12 張卡 + 溢出徽章
