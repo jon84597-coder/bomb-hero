@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.67';
+const VERSION = '5.68';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -11956,6 +11956,36 @@ function updateEnemy(e, dt) {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   v5.68：BOSS／亂入王的「防抽筋」走位共用件
+   ------------------------------------------------------------------
+   症狀：魔王貼在格線上左右橫跳，看起來像壞掉。
+   原因是牠們**每一幀**都重算「下一格」，於是：
+     ① 斜著追人時「橫一格」與「豎一格」的曼哈頓距離同分 → 跨過格線就翻面
+     ② 兩格分數一模一樣時，取誰只取決於迴圈順序，而順序在格線兩側剛好相反
+     ③ 走回上一格與繼續往前同分 → A↔B 無限循環
+   解法三件套：記住上一格（回頭重罰）＋ 鎖定本格目標（走到格心才准換）＋ 主軸優先。
+   ══════════════════════════════════════════════════════════════ */
+function bossCellMemory(e, cx, cy, T) {
+  if (!e.lastC || e.lastC.x !== cx || e.lastC.y !== cy) {
+    e.prevC = e.lastC;
+    e.lastC = { x: cx, y: cy };
+  }
+  return Math.abs(e.x - (cx * T + T / 2)) < T * .09 && Math.abs(e.y - (cy * T + T / 2)) < T * .09;
+}
+// 回頭懲罰：走回剛剛那一格要多付 1.5 格距離 → 直接切斷 A↔B 的 2 循環
+function bossBackCost(e, nx, ny, T) {
+  return (e.prevC && nx === e.prevC.x && ny === e.prevC.y) ? T * 1.5 : 0;
+}
+// 承諾：走到格心為止不改主意（被牆擋住、變危險、或超時才作廢）
+function bossStepHold(e, dt, centered, canGo, isDanger) {
+  if (!e.step) return null;
+  e.stepT = (e.stepT || 0) + dt;
+  const ok = canGo(e.step.x, e.step.y) && !isDanger(e.step.x, e.step.y);
+  if (centered || e.stepT > 1.4 || !ok) { e.step = null; e.stepT = 0; return null; }
+  return e.step;
+}
+
 // v4.19：BOSS 沒被惹到時，只在自己的地盤裡走來走去（不會滿場追人）
 function bossPatrolStep(e, cx, cy, T, dt) {
   const R = e.homeTiles || 4;
@@ -11990,7 +12020,7 @@ function bossPatrolStep(e, cx, cy, T, dt) {
     const nx = cx + v[0], ny = cy + v[1];
     if (cellAt(nx, ny) !== 0 || bombAt(nx, ny)) return;
     if (dangerAtBoss(nx, ny)) return;
-    const d = Math.abs(pt.x - nx) + Math.abs(pt.y - ny);
+    const d = Math.abs(pt.x - nx) + Math.abs(pt.y - ny) + bossBackCost(e, nx, ny, T);
     if (d < bestD) { bestD = d; best = { x: nx, y: ny }; }
   });
   return best;
@@ -12357,6 +12387,8 @@ function updateBoss(e, dt) {
   enemyAngerTick(e, dt, !!enemyAggro(e) || !!guardTaunt(e), false);
   const p = Game.players[0];
   const cx = Math.floor(e.x / T), cy = Math.floor(e.y / T);
+  // v5.68：跨格時記下上一格；centered＝已經站在格心（這時候才准換主意）
+  const centered = bossCellMemory(e, cx, cy, T);
   // 血量剩 40% 以下就爆走：更快、火力更長、丟彈更兇
   const rage = e.hp <= Math.max(3, Math.ceil((e.maxHp || 10) * .4));
   // v5.38：再乘上分階段倍率（破防期變慢、狂暴每層加快）
@@ -12367,32 +12399,49 @@ function updateBoss(e, dt) {
 
   // ---- 1. 腳下危險就先跑（這是「會躲炸彈」的關鍵） ----
   let target = null;
-  if (dangerAtBoss(cx, cy)) {
+  function pickEscape(skipPrev) {
     let best = null, bestD = -1;
     DIRS4.forEach(function (v) {
       const nx = cx + v[0], ny = cy + v[1];
       if (!canGo(nx, ny) || dangerAtBoss(nx, ny)) return;
+      if (skipPrev && e.prevC && nx === e.prevC.x && ny === e.prevC.y) return;
       const d = p && p.alive ? Math.hypot(p.x - (nx * T + T / 2), p.y - (ny * T + T / 2)) : 0;
       const sc = 999 - d;
       if (sc > bestD) { bestD = sc; best = { x: nx, y: ny }; }
     });
-    target = best;
-    if (!best) e.bombT = Math.max(e.bombT, .35);   // 沒路可逃 → 硬吃一下後再放
+    return best;
   }
+  if (dangerAtBoss(cx, cy)) {
+    e.step = null; e.stepT = 0;                        // 命要緊，承諾作廢
+    target = pickEscape(true) || pickEscape(false);     // 先試「不回頭」，真的沒路才折返
+    if (!target) e.bombT = Math.max(e.bombT, .35);      // 沒路可逃 → 硬吃一下後再放
+  }
+  // v5.68：沒踩在火線上就把承諾中的那一格走完 → 杜絕格線上的左右橫跳
+  if (!target) target = bossStepHold(e, dt, centered, canGo, dangerAtBoss);
 
   // ---- 2. 有仇恨 → 追玩家；沒仇恨 → 只在自己的地盤踱步（只走安全格） ----
   if (!target && e.aggro && p && p.alive) {
+    /* v5.68：主軸優先 + 回頭重罰。以前純曼哈頓貪心，玩家在同一列／同一行時
+       「左」與「右」永遠同分，一走過格線就換邊 → 魔王看起來像黏在線上來回震動。 */
+    const horiz = Math.abs(p.x - e.x) >= Math.abs(p.y - e.y);
     let best = null, bestD = Infinity;
     DIRS4.forEach(function (v) {
       const nx = cx + v[0], ny = cy + v[1];
       if (!canGo(nx, ny) || dangerAtBoss(nx, ny)) return;
-      const d = Math.abs(p.x - (nx * T + T / 2)) + Math.abs(p.y - (ny * T + T / 2));
+      let d = Math.abs(p.x - (nx * T + T / 2)) + Math.abs(p.y - (ny * T + T / 2));
+      if (horiz ? v[0] !== 0 : v[1] !== 0) d -= T * .3;   // 和玩家主要偏移同軸的方向，同分時勝出
+      d += bossBackCost(e, nx, ny, T);
       if (d < bestD) { bestD = d; best = { x: nx, y: ny }; }
     });
     target = best;
   }
   if (!target && !e.aggro) target = bossPatrolStep(e, cx, cy, T, dt);
   if (casting) target = null;                     // v5.0b：集氣時站定
+  // v5.68：把這一格記成承諾，走到格心之前不再改主意
+  if (!e.step || target !== e.step) {
+    e.step = target ? { x: target.x, y: target.y } : null;
+    e.stepT = 0;
+  }
   if (target) {
     const sp = speed * dt;
     const tx = target.x * T + T / 2, ty = target.y * T + T / 2;
@@ -12401,8 +12450,10 @@ function updateBoss(e, dt) {
     e.y += clamp(dy, -sp, sp);
     e.walkT += dt;
     e.moving = true;                              // v5.0b：給美術挑跑動幀
-    if (Math.abs(dx) > Math.abs(dy)) e.dirName = dx > 0 ? 'right' : 'left';
-    else e.dirName = dy > 0 ? 'down' : 'up';
+    // v5.68：朝向遲滯 —— 兩軸位移接近（斜著趕路）時沿用上一幀的朝向，不要每幀翻面
+    const ax2 = Math.abs(dx), ay2 = Math.abs(dy);
+    if (ax2 > ay2 * 1.15) e.dirName = dx > 0 ? 'right' : 'left';
+    else if (ay2 > ax2 * 1.15) e.dirName = dy > 0 ? 'down' : 'up';
   }
 
   // ---- 3. 放炸彈＋丟炸彈（彈量多、火力長） ----
@@ -13644,6 +13695,8 @@ function updateBRBoss(e, dt) {
   if (e.bombT > 0) e.bombT -= dt;
   if (e.dizzy > 0) e.dizzy -= dt;
   const cx = Math.floor(e.x / T), cy = Math.floor(e.y / T);
+  // v5.68：跨格記憶＋格心判定（防左右橫跳，跟單人 BOSS 同一套）
+  const centered = bossCellMemory(e, cx, cy, T);
   const D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   function canGo(x2, y2) { return cellAt(x2, y2) === 0 && !bombAt(x2, y2); }
 
@@ -13662,23 +13715,36 @@ function updateBRBoss(e, dt) {
   // 2) 腳下有火 → 先跑（跑的同時還是會挑離人最遠的方向）
   let target = null;
   if (dangerAtBoss(cx, cy)) {
-    let bs = null, bsD = -1;
-    D4.forEach(function (v) {
-      const nx = cx + v[0], ny = cy + v[1];
-      if (!canGo(nx, ny) || dangerAtBoss(nx, ny)) return;
-      const d = best ? dist2(best.x, best.y, nx * T + T / 2, ny * T + T / 2) : 0;
-      if (999999 - d > bsD) { bsD = 999999 - d; bs = { x: nx, y: ny }; }
-    });
+    e.step = null; e.stepT = 0;
+    let bs = null;
+    function esc(skipPrev) {
+      let b2 = null, b2D = -1;
+      D4.forEach(function (v) {
+        const nx = cx + v[0], ny = cy + v[1];
+        if (!canGo(nx, ny) || dangerAtBoss(nx, ny)) return;
+        if (skipPrev && e.prevC && nx === e.prevC.x && ny === e.prevC.y) return;
+        const d = best ? dist2(best.x, best.y, nx * T + T / 2, ny * T + T / 2) : 0;
+        if (999999 - d > b2D) { b2D = 999999 - d; b2 = { x: nx, y: ny }; }
+      });
+      return b2;
+    }
+    bs = esc(true) || esc(false);
     if (bs) target = bs;
   }
+  // v5.68：沒踩在火線上 → 把承諾中的那一格走完（不然會在格線上左右震）
+  if (!target) target = bossStepHold(e, dt, centered, canGo, dangerAtBoss);
 
   // 3) 有仇恨 → 追人；沒仇恨 → 全場亂走（出圈會自己往中心走）
   if (!target && e.aggro && best) {
+    // v5.68：主軸優先 + 回頭重罰（同一列／同一行時左右永遠同分，舊版會一路橫跳）
+    const horiz = Math.abs(best.x - e.x) >= Math.abs(best.y - e.y);
     let bs = null, bsD = Infinity;
     D4.forEach(function (v) {
       const nx = cx + v[0], ny = cy + v[1];
       if (!canGo(nx, ny) || dangerAtBoss(nx, ny)) return;
-      const d = Math.abs(best.x - (nx * T + T / 2)) + Math.abs(best.y - (ny * T + T / 2));
+      let d = Math.abs(best.x - (nx * T + T / 2)) + Math.abs(best.y - (ny * T + T / 2));
+      if (horiz ? v[0] !== 0 : v[1] !== 0) d -= T * .3;
+      d += bossBackCost(e, nx, ny, T);
       if (d < bsD) { bsD = d; bs = { x: nx, y: ny }; }
     });
     if (bs) target = bs;
@@ -13699,14 +13765,21 @@ function updateBRBoss(e, dt) {
     if (canGo(nx, ny) && !dangerAtBoss(nx, ny)) target = { x: nx, y: ny };
     else e.roamT = 0;
   }
+  // v5.68：承諾這一格，走到格心才准換方向
+  if (!e.step || target !== e.step) {
+    e.step = target ? { x: target.x, y: target.y } : null;
+    e.stepT = 0;
+  }
   if (target) {
     const sp = 46 * (e.speedMul || 1) * (Game.spdK || 1) * dt;
     const tx = target.x * T + T / 2, ty = target.y * T + T / 2;
     const dx = tx - e.x, dy = ty - e.y;
     e.x += clamp(dx, -sp, sp); e.y += clamp(dy, -sp, sp);
     e.walkT += dt;
-    if (Math.abs(dx) > Math.abs(dy)) e.dirName = dx > 0 ? 'right' : 'left';
-    else e.dirName = dy > 0 ? 'down' : 'up';
+    // v5.68：朝向遲滯，斜著趕路時不要每幀翻面
+    const ax2 = Math.abs(dx), ay2 = Math.abs(dy);
+    if (ax2 > ay2 * 1.15) e.dirName = dx > 0 ? 'right' : 'left';
+    else if (ay2 > ax2 * 1.15) e.dirName = dy > 0 ? 'down' : 'up';
   }
 
   // 4) 開打：近距離放彈、遠一點直接丟過去（跟單人 BOSS 一樣的手感）
@@ -16903,12 +16976,20 @@ function aiBrCrowd(p, x, y) {
   return n;
 }
 /* 只挑「最不擠」的方向（落石／逃命時用：大家才不會全往同一格擠） */
+/* v5.68：座標雜湊噪聲（-0.25 ~ 0.25）—— 同一個格子永遠同一個值。
+   以前是每個方向各自 Math.random()，兩格評分打平時就會一翻一翻地換邊，
+   畫面看起來就是 AI 在原地左右震動。 */
+function aiCellNoise(x, y) {
+  return ((((x | 0) * 73856093) ^ ((y | 0) * 19349663)) % 100) / 400;
+}
 function aiBrLeastCrowded(p, opts, cx, cy) {
   if (!opts || !opts.length) return null;
   let best = null, bestV = 1e9;
   for (let i = 0; i < opts.length; i++) {
     const d = DIRS[opts[i]];
-    const v = aiBrCrowd(p, cx + d.x, cy + d.y) + Math.random() * .4;
+    const nx = cx + d.x, ny = cy + d.y;
+    let v = aiBrCrowd(p, nx, ny) + aiCellNoise(nx, ny);
+    if (p.prevC && nx === p.prevC.x && ny === p.prevC.y) v += 2.2;   // v5.68：禁止立刻回頭
     if (v < bestV) { bestV = v; best = opts[i]; }
   }
   return best;
@@ -16934,8 +17015,13 @@ function aiBrChoose(p, opts, cx, cy, tgt, tgtD2) {
   for (let i = 0; i < opts.length; i++) {
     const dn = opts[i], d = DIRS[dn];
     const nx = cx + d.x, ny = cy + d.y;
-    let v = Math.random() * .5 - .25;
+    /* v5.68：噪聲改成「座標雜湊」——同一個決策點永遠得到同一個值。
+       舊版是每個方向各自 Math.random()，分數很接近時一翻面就換邊，
+       於是 AI 在兩格之間左右抖；雜湊噪聲保留不確定性但不會自我打架。 */
+    let v = aiCellNoise(nx, ny);
     v -= aiBrCrowd(p, nx, ny) * 1.5;
+    // v5.68：剛走過的那格回頭重罰（切斷 A↔B 的 2 循環）
+    if (p.prevC && nx === p.prevC.x && ny === p.prevC.y) v -= 2.4;
     // v5.0：道具引力 —— 愈走愈近加分；骷髏頭（詛咒）扣分
     if (item) {
       const nd2 = Math.abs(item.cx - nx) + Math.abs(item.cy - ny);
@@ -17039,6 +17125,10 @@ function controlAI(p, dt) {
   if (p.aiDashGap > 0) p.aiDashGap -= dt;   // v5.11：趕路衝刺的間隔
   p.moving = false;
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
+  // v5.68：跨格時記下上一格 —— 用來阻止「A↔B 兩格無限橫跳」的那種抖動
+  if (!p.lastC || p.lastC.x !== cx || p.lastC.y !== cy) {
+    p.prevC = p.lastC; p.lastC = { x: cx, y: cy };
+  }
   const atCenter = Math.abs(p.x - (cx * T + T / 2)) < 3 && Math.abs(p.y - (cy * T + T / 2)) < 3;
   function passable(x, y) { return cellAt(x, y) === 0 && !bombAt(x, y); }
   function neighborOk(dn) { const d = DIRS[dn]; return passable(cx + d.x, cy + d.y); }
@@ -17048,7 +17138,18 @@ function controlAI(p, dt) {
   const sdAhead = sdSoon(cx + aiD.x, cy + aiD.y, 12);
   if (atCenter || !p.aiDir || !neighborOk(p.aiDir) || p.aiT <= 0 || sdHere || sdAhead) {
     p.aiT = lv.think[0] + Math.random() * (lv.think[1] - lv.think[0]);
-    const opts = ['up', 'down', 'left', 'right'].filter(neighborOk);
+    const optsAll = ['up', 'down', 'left', 'right'].filter(neighborOk);
+    /* v5.68：只要還有別的路，就不要「立刻走回上一格」。
+       AI 看起來在原地左右抖，九成是 A↔B 兩格的 2 循環 —— 兩邊分數永遠打平，
+       走到哪一格都覺得另一格更好。禁一步回頭就能徹底斷開。 */
+    let opts = optsAll;
+    if (p.prevC && optsAll.length > 1) {
+      const f = optsAll.filter(function (dn) {
+        const d = DIRS[dn];
+        return !(cx + d.x === p.prevC.x && cy + d.y === p.prevC.y);
+      });
+      if (f.length) opts = f;
+    }
     // 落石預告格也算危險格（12 格以內會落 = 牠走到那裏大概就被壓了）
     const safeOpts = opts.filter(function (dn) {
       const d = DIRS[dn];
@@ -38151,6 +38252,9 @@ window.__BH = {
   cellAt: cellAt, beginCountdown: beginCountdown, spawnItem: spawnItem, markWallKinds: markWallKinds, freeRimRocks: freeRimRocks,
   guardTaunt: guardTaunt, petHeroThreat: petHeroThreat, bombUnderFoot: bombUnderFoot, drawOuterWall: drawOuterWall,
   updateEnemy: updateEnemy, updateBoss: updateBoss, buildSdList: buildSdList,
+  // v5.68：防左右抖動的三件套 ＋ 亂入王（測試用）
+  updateBRBoss: updateBRBoss, bossCellMemory: bossCellMemory, bossBackCost: bossBackCost,
+  bossStepHold: bossStepHold, aiCellNoise: aiCellNoise,
   updateFlyer: updateFlyer, aiLevelCfg: aiLevelCfg, AI_LEVELS: AI_LEVELS,
   controlAI: controlAI, aiLobBomb: aiLobBomb, aiThrowLanding: aiThrowLanding,
   // v4.90：大逃殺 AI 的社交距離／分離（測試用）
