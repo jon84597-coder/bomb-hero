@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.76';
+const VERSION = '5.77';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -2114,6 +2114,13 @@ const AudioSys = (function () {
        以前每進一關（或深淵每換一層）都會 stopBGM→從第 0 步重播：
        章節曲在同一個章節裡每關都從頭、深淵曲每層都回到「序」，
        玩家永遠聽不到歌的中後段，再好的段落設計都白做。 */
+    /* v5.77：不變量 —— 深淵曲只能在「真的在深淵」時播放。
+       這條擋的是「旗標沒清乾淨」造成的整類問題（回報：進新手教學聽到深淵曲）。
+       就算呼叫端傳錯名字，也一律換成這一關該有的章節曲，不會整首播錯。 */
+    if (name === 'abyssWar' && !(Game && (Game.abyss || Game.abyssNext))) {
+      try { name = stageBGM(Game && Game.stage); } catch (e) { name = 'stage1'; }
+      if (name === 'abyssWar') name = 'stage1';
+    }
     if (name && lastBGMName === name && song && bgmTimer) return;
     stopBGM();
     lastBGMName = name || '';
@@ -33988,6 +33995,10 @@ const Tut = (function () {
       function startHome() {
         closeCard();
         try { if (Screen.current !== 'title') Screen.show('title'); } catch (e) {}
+        /* v5.77：教學首頁那幾步是在大廳上走的 —— 大廳就該是菜單曲。
+           以前這裡不碰 BGM，從深淵退出來（旗標沒清乾淨）再開教學，
+           連「教學首頁」都在播深淵曲，聽起來就像整個教學壞掉了。 */
+        try { if (AudioSys.lastBGM() !== 'menu') AudioSys.startBGM('menu'); } catch (e) {}
         on = true; part = 'home'; i = 0;
         const c = $id('tutCard'); if (c) c.classList.remove('top');
         showHome(0);
@@ -34058,7 +34069,11 @@ const Tut = (function () {
           flags = {}; goal = 0;
           on = true; part = 'play';
           showPlay(0);
-          try { AudioSys.startBGM(stageBGM(1)); } catch (e) {}
+          /* v5.77：再清一次、而且直接指定 'stage1'。
+             以前這裡走 stageBGM(1) —— 只要 Game.abyss／bossArena 有任何殘留就會算成
+             深淵曲或決戰曲；教學永遠是第 1 章，不需要問任何人。 */
+          try { leaveSpecialRun(); } catch (e) {}
+          try { AudioSys.startBGM('stage1'); } catch (e) {}
           try { enterImmersive(); } catch (e) {}
         } catch (e) {
           on = false; closeCard();
