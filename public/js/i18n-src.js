@@ -2043,6 +2043,9 @@ pc.mn|{n} 個月前|{n} 个月前|{n} months ago|{n} か月前|{n}개월 전
 pc.yn|{n} 年前|{n} 年前|{n} years ago|{n} 年前|{n}년 전
 abyss.layer|第 {n} 層|第 {n} 层|Layer {n}|第 {n} 層|{n}층
 abyss.layerSub|目前最深 {best} 層|目前最深 {best} 层|Deepest so far: {best}|最深記録 {best} 層|최고 기록 {best}층
+abyss.ovTitle|🕳️ 深淵・第 {n} 層|🕳️ 深渊・第 {n} 层|🕳️ The Abyss · Layer {n}|🕳️ 深淵・第 {n} 層|🕳️ 심연 · {n}층
+abyss.ovSub|撐得越深，回報越多 —— 死一次就結束。|撑得越深，回报越多 —— 死一次就结束。|The deeper you dive, the more you earn — one death ends the run.|深く潜るほど報酬が増える ― 一度死んだら終わり。|깊이 내려갈수록 보상이 커집니다 — 한 번 죽으면 끝.
+abyss.ovGo|🕳️ 潛下去|🕳️ 潜下去|🕳️ Dive in|🕳️ 潜る|🕳️ 잠수하기
 abyss.layerShort|{n} 層|{n} 层|Lv.{n}|{n} 層|{n}층
 abyss.bestShort|最深 {n} 層|最深 {n} 层|Best {n}|最深 {n} 層|최고 {n}층
 abyss.newBest|🕳️ 新紀錄！第 {n} 層|🕳️ 新纪录！第 {n} 层|🕳️ New record! Layer {n}|🕳️ 新記録！第 {n} 層|🕳️ 신기록! {n}층

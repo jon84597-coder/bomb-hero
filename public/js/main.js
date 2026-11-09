@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.77';
+const VERSION = '5.78';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -10429,6 +10429,17 @@ const Abyss = (function () {
     Game.abyssNext = info;
     startSolo(layerStage(layer), false, false);
     Game.abyss = info;   // 正常情況 startSolo 已經釘回去了，這裡只是保險
+    /* v5.78：再上一道鎖 —— 玩家回報「進深淵先播地圖曲，暫停→繼續才變深淵曲」。
+       v5.74 的時序是「先播 BGM、後設旗標」，v5.75 用 abyssNext 把旗標提前修掉了，
+       但那種修法靠的是呼叫順序：中間多插一行、或未來有人先播音樂再設旗標，症狀就回來。
+       這裡改成「進場後對答案」：深淵就該是深淵曲，不是就當場換掉。
+       王層（第 5／10／15… 層）除外 —— 那裡刻意播決戰曲，玩家才聽得出「這次不一樣」。 */
+    try {
+      if (!(Game.bossArena || Game.bossRush) && AudioSys.lastBGM() !== 'abyssWar') {
+        AudioSys.startBGM('abyssWar');
+      }
+    } catch (e) {}
+
     try { bump(Game.players[0], layer); } catch (e) {}
     try { extraFoes(layer); } catch (e) {}
     try { applyPerks(Game.players[0], layer); } catch (e) {}
@@ -10701,20 +10712,29 @@ function startSolo(stage, bossRush, daily) {
   if (Game.daily || Game.wchal) { try { Ghost.start(); } catch (e) { Game.ghost = null; } }
   else Game.ghost = null;
   const tSec = soloTimeVal();
-  const ovT = Game.daily
-    ? t('daily.ovTitle', { d: Game.daily.day })
-    : (Game.bossRush ? t('solo.ovBossTitle', { name: mapName(soloInfo(stage)) }) : t('solo.ovTitle', { n: stage, name: mapName(soloInfo(stage)) }));
+  /* v5.78：深淵進場那一張卡以前照抄普通關卡 —— 標題寫「第 9 關・冰柱森林」、
+     副標「殲滅所有敵人後走進傳送門」（深淵根本沒有傳送門，是往下過門）。
+     玩家看到普通關的標題＋聽到普通關的音樂，自然覺得「這不是深淵」。
+     現在深淵有自己的標題／副標／按鈕（「潛下去」）。 */
+  const abyssLv = (Game.abyss && !Game.bossRush) ? (Game.abyss.layer | 0) : 0;
+  const ovT = abyssLv
+    ? t('abyss.ovTitle', { n: abyssLv }) + (soloIsBoss(stage) ? '\u3000\u26A0\uFE0F BOSS' : '')
+    : (Game.daily
+      ? t('daily.ovTitle', { d: Game.daily.day })
+      : (Game.bossRush ? t('solo.ovBossTitle', { name: mapName(soloInfo(stage)) }) : t('solo.ovTitle', { n: stage, name: mapName(soloInfo(stage)) })));
   const ovS = Game.daily
     ? t('daily.ovSub', { n: stage, name: mapName(soloInfo(stage)) }) +
       t('daily.ovRule', { t: fmtTime(tSec) }) + '　🔑 ' + seedCodeOf(Game.daily.seed)
-    : (Game.bossRush ? t('solo.ovBossSub') : (soloIsBoss(stage) ? t('solo.ovBossSub2') : t('solo.ovSub'))) +
-      t('solo.ovTime', { d: diffLabel(), t: (tSec ? fmtTime(tSec) : t('time.inf')) }) +
-      seedTag() +
-      (revN > 0 ? '\n💢 ' + t('rev.on', { n: revN }, '復仇 ×' + revN + '：開場多 ' + revN + ' 顆炸彈') : '');
+    : (abyssLv
+      ? t('abyss.ovSub') + t('solo.ovTime', { d: diffLabel(), t: (tSec ? fmtTime(tSec) : t('time.inf')) })
+      : (Game.bossRush ? t('solo.ovBossSub') : (soloIsBoss(stage) ? t('solo.ovBossSub2') : t('solo.ovSub')) +
+        t('solo.ovTime', { d: diffLabel(), t: (tSec ? fmtTime(tSec) : t('time.inf')) }) +
+        seedTag() +
+        (revN > 0 ? '\n💢 ' + t('rev.on', { n: revN }, '復仇 ×' + revN + '：開場多 ' + revN + ' 顆炸彈') : '')));
   showOverlay({
     title: ovT,
     sub: ovS,
-    btn: t('solo.ovGo'),
+    btn: abyssLv ? t('abyss.ovGo') : t('solo.ovGo'),
     tips: ModeTip.tips(Game.rpg ? 'rpg' : 'solo'),
     tipMode: Game.rpg ? 'rpg' : 'solo',
     action: function () {
