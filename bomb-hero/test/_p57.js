@@ -61,7 +61,8 @@ const URL0 = BASE + '/?unlock=all';
   const health = await p.eval(`fetch('/api/health').then(function(r){return r.json();}).then(function(j){return j;}).catch(function(e){return {err:String(e)};})`);
   ok(health && !health.err, '/api/health 有回應', health && (health.ok === undefined ? (health.status || 'ok') : health.ok));
   const swTxt = await p.eval(`fetch('/sw.js').then(function(r){return r.text();}).then(function(t){ var m=t.match(/SW_VERSION\\s*=\\s*'([^']+)'/); return m?m[1]:''; }).catch(function(e){ return 'ERR'; })`);
-  ok(swTxt === 'v5.74.0', '線上 SW_VERSION 是 v5.74.0', swTxt);
+  ok(/^v5\.(7[4-9]|[89]\d?)\./.test(swTxt) || parseFloat(String(swTxt).slice(1)) >= 5.74,
+     '線上 SW_VERSION ≥ v5.74.0', swTxt);
 
   await p.goto(URL0, 4200);
   for (let i = 0; i < 40; i++) {
@@ -76,7 +77,7 @@ const URL0 = BASE + '/?unlock=all';
              hasInstall: typeof P.__installRpg, hasSkill: typeof P.RpgSkill,
              lang: typeof P.LANG, pts: typeof P.RPG_POINTS_TOTAL };
   })()`);
-  ok(boot.ver === '5.74', '線上版本 5.74', boot.ver);
+  ok(parseFloat(boot.ver) >= 5.74, '線上版本 ≥ 5.74', boot.ver);
   ok(boot.hasRpg === 'object' && boot.hasUI === 'object', '__installRpg 已回填 Rpg／RpgUI', [boot.hasRpg, boot.hasUI]);
   ok(boot.hasInstall === 'function', '__installRpg 有匯出（rpg.js 才找得到插槽）');
   ok(boot.lang === 'string' && boot.pts === 'number', 'LANG／RPG_POINTS_TOTAL getter 正常', [boot.lang, boot.pts]);

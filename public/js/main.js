@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.74';
+const VERSION = '5.75';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -1775,7 +1775,15 @@ const AudioSys = (function () {
     { k: 'G', rhy: 4, rest: .05, drum: 'k.k.s.1.k.k.s.2.',
       chord: ['Am', 'F', 'G', 'Am', 'F', 'G', 'E', 'E'] },
     { k: 'H', rhy: 1, rest: .09, drum: 'chk.s.h.k.h.s.hh',
-      chord: ['F', 'G', 'Am', 'Am', 'F', 'G', 'Am', 'Am'] }
+      chord: ['F', 'G', 'Am', 'Am', 'F', 'G', 'Am', 'Am'] },
+    /* v5.75：深淵專用的兩個節奏型（只給深淵曲的後半段用）。
+       I＝「拖著走」：大鼓每兩拍一次、小鼓在後半拍，聽起來像踩在泥裡；
+       J＝「追上來」：大鼓與鼓框交錯，密度介於主體與高潮之間。
+       同一首曲子換一個節奏型，比單純變大聲有效得多。 */
+    { k: 'I', rhy: 2, rest: .11, drum: 'k..k..s.k..k..s.',
+      chord: ['Am', 'Am', 'F', 'F', 'Dm', 'Dm', 'E', 'E'] },
+    { k: 'J', rhy: 5, rest: .06, drum: 'k.rk.r.sk.rk.r.s',
+      chord: ['Am', 'F', 'G', 'E', 'Am', 'F', 'G', 'E'] }
   ];
   // 大逃殺的段落排列：開頭先鋪一句間奏，每 11 句喘一口，喘完再拉緊
   function brPlan(n) {
@@ -1830,17 +1838,41 @@ const AudioSys = (function () {
     /* v5.74：深淵專屬曲 —— 「無盡往下」的壓迫感，不是熱血。
        · BPM 96（慢，心跳感）；melWave 'triangle'（空心、不刺耳，跟其他四首明顯不同）
        · 低音 + sub 幾乎全在根音：不給旋律，只給「地板在震」的感覺
-       · 鼓只用 k...s...（大空間）—— 深淵裡沒有觀眾，越空越可怕 */
+       · 鼓用 k...s...（大空間）—— 深淵裡沒有觀眾，越空越可怕
+       v5.75：原本 16 句、織體全同 → 「聽起來一直在重複」。改成 23 句、五段起伏：
+         序（只有心跳）→ 主體（進 power）→ 展開（arp 進）→ 高潮（arp 高八度）
+         → 掉回呼吸（power 抽掉）→ 再起 → 收。bpm 調 92 讓留白更長。 */
     abyssWar: {
-      bpm: 96, base: 60, melWave: 'triangle', melVol: .090,
-      bassVol: .300, arpVol: .048, powVol: .068, drumVol: .116, seed: 9813,
-      bassWave: 'sawtooth', bassLp: 300,
+      bpm: 92, base: 57, melWave: 'triangle', melVol: .086,
+      bassVol: .300, arpVol: .050, powVol: .070, drumVol: .114, seed: 9813,
+      bassWave: 'sawtooth', bassLp: 280,
       bass: [0, 0, 0, 0, 7, 0, 0, 0],
       subVol: .215,
       sub: [-12, -12, -12, -12, -12, -12, -12, -12],
       arp: [0, 3, 1, 3, 2, 3, 1, 0, 0, 3, 1, 3, 2, 3, 1, 3],
-      plan: ['F', 'C', 'F', 'E', 'F', 'C', 'E', 'F',
-             'F', 'C', 'F', 'E', 'G', 'C', 'E', 'F']
+      /* 每一句自己的織體：F 極簡（arp 與 power 全關、只踩根音）、A 進 power、
+         B/C 進 arp、D 過門（抽掉 power 留洞）、E 高潮（arp 高八度）、H 收束 */
+      dyn: {
+        F: { a: 0, p: 0, bass: [0, 0, 0, 0, 0, 0, 0, 0] },
+        A: { a: 0, p: 1 },
+        B: { a: 1, p: 1 },
+        C: { a: 1, p: 1, bass: [0, 0, 7, 0, 12, 0, 7, 0] },
+        D: { a: 1, p: 0 },
+        E: { a: 2, p: 1, bass: [0, 0, 7, 0, 12, 0, 7, 3] },
+        G: { a: 2, p: 1 },
+        H: { a: 1, p: 1 },
+        I: { a: 2, p: 1, bass: [0, 0, 7, 0, 12, 0, 7, 3] },
+        J: { a: 2, p: 1, bass: [0, 0, 7, 0, 12, 0, 7, 0] }
+      },
+      plan: [
+        'F', 'F',                                   // ① 序：心跳，只有低音
+        'A', 'A', 'B', 'A',                         // ② 主體：進 power
+        'C', 'D', 'C', 'B',                         // ③ 展開：arp 進、過門抽洞
+        'E', 'G', 'E', 'H',                         // ④ 高潮：arp 高八度
+        'F', 'F',                                   // ⑤ 掉回呼吸（最空的一段）
+        'J', 'E', 'I', 'E', 'J', 'D',               // ⑥ 再起：換成新節奏型，跟第一次高潮不一樣
+        'F'                                          // ⑦ 收
+      ]
     },
     // 大逃殺 5 分鐘：23 句 ≈ 5:02
     brWar5: {
@@ -1873,22 +1905,45 @@ const AudioSys = (function () {
     const sub = def.sub ? [] : null;      // v5.37：重低音軌（BOSS 曲用）
     def.plan.forEach(function (k) {
       const P2 = ph[k] || ph.A;
+      /* v5.75：段落動態（dyn）。以前一首曲子每一句的「織體」完全一樣，只有和弦與鼓型在換，
+         所以聽 30 秒就覺得「一直在重複」。dyn 讓每一句可以：
+           a: 0=抽掉琶音、1=正常、2=高八度（高潮）
+           p: 0=抽掉 power chord（留一個洞給下一段）
+           bass: 換一組低音型（極簡段只踩根音）
+         沒有 dyn 的曲子走原本路徑，一個位元都不變 —— 動態是「額外」的，不是改寫。 */
+      const dy = (def.dyn && def.dyn[k]) || null;
+      const aOn = !dy || dy.a === undefined || dy.a > 0;
+      const aOct = (dy && dy.a === 2) ? 12 : 0;
+      const pOn = !dy || dy.p === undefined || dy.p > 0;
+      const bsPat = (dy && dy.bass) || def.bass;
       for (let i = 0; i < P2.chord.length; i++) {
         P2.mel[i].trim().split(/\s+/).forEach(function (tok) {
           const q = tok.split(':');
           mel.push({ midi: degMidi(q[0], def.base), len: q[1] ? parseInt(q[1], 10) : 2 });
         });
         const tones = chordTones(P2.chord[i]);
-        def.bass.forEach(function (v) { bass.push({ midi: v === null ? null : tones[0] + v, len: 2 }); });
+        bsPat.forEach(function (v) { bass.push({ midi: v === null ? null : tones[0] + v, len: 2 }); });
         if (sub) def.sub.forEach(function (v) { sub.push({ midi: v === null ? null : tones[0] + v, len: 2 }); });
-        def.arp.forEach(function (v) {
-          arp.push({ midi: v === null ? null : tones[v % 3] + (v >= 3 ? 24 : 12), len: 1 });
-        });
+        if (aOn) {
+          def.arp.forEach(function (v) {
+            arp.push({ midi: v === null ? null : tones[v % 3] + (v >= 3 ? 24 : 12) + aOct, len: 1 });
+          });
+        } else {
+          /* 靜音也要推向格 —— 軌道是以「音長累加」對時，直接不推會讓後面全部提前 */
+          for (let q2 = 0; q2 < def.arp.length; q2++) arp.push({ midi: null, len: 1 });
+        }
         // power chord：每小節第 1、3 拍各刷一次（根音＋五度＋兩個高八度）
-        pow.push({ midi: tones[0], len: 8 });
-        pow.push({ midi: tones[0] + 7, len: 8 });
-        pow2.push({ midi: tones[0] + 12, len: 8 });
-        pow2.push({ midi: tones[0] + 19, len: 8 });
+        if (pOn) {
+          pow.push({ midi: tones[0], len: 8 });
+          pow.push({ midi: tones[0] + 7, len: 8 });
+          pow2.push({ midi: tones[0] + 12, len: 8 });
+          pow2.push({ midi: tones[0] + 19, len: 8 });
+        } else {
+          pow.push({ midi: null, len: 8 });
+          pow.push({ midi: null, len: 8 });
+          pow2.push({ midi: null, len: 8 });
+          pow2.push({ midi: null, len: 8 });
+        }
       }
       for (let t2 = 0; t2 < 128; t2++) {
         const ch = P2.drum.charAt(t2 % P2.drum.length);
@@ -2020,8 +2075,14 @@ const AudioSys = (function () {
     g.connect(musicGain);
     o.start(t); o.stop(t + dur + .02);
   }
+  /* v5.75：記錄「最後一次被要求播哪一首」——
+     BGM 出錯（例如深淵播成第 1 關）時，這是唯一能直接看出路由結果的欄位，
+     真瀏覽器探針與 bug 回報都靠它。刻意寫在 ensure() 之前：無聲環境也要記到路由。 */
+  let lastBGMName = '';
+  function lastBGM() { return lastBGMName; }
   function startBGM(name) {
     stopBGM();
+    lastBGMName = name || '';
     if (!settings.bgm || !ensure()) return;
     song = WAR_DEFS[name] ? compileWar(name) : compileSong(name);
     if (!song) return;
@@ -2033,6 +2094,7 @@ const AudioSys = (function () {
     schedule();
   }
   function stopBGM() {
+    lastBGMName = '';
     if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = null; }
     song = null; parsed = null; songGrid = null; songSteps = 0; stepPos = 0;
   }
@@ -2146,6 +2208,7 @@ const AudioSys = (function () {
     songSeconds: songSeconds, compileSong: compileSong,
     SONG_DEFS: SONG_DEFS, STAGE_MUSIC: STAGE_MUSIC,
     // v5.34：戰鬥曲（對戰／大逃殺）與新的排程器
+    lastBGM: lastBGM,   // v5.75：最後一次被要求播的曲名（驗 BGM 路由用）
     WAR_DEFS: WAR_DEFS, WAR_PHRASES: WAR_PHRASES, compileWar: compileWar, buildGrid: buildGrid };
       })();
     } catch (__e) {
@@ -10313,9 +10376,14 @@ const Abyss = (function () {
     const at = (Game.abyss && Game.abyss.startAt) || Date.now();
     /* 第 1 層＝新的一輪 → 契約歸零；其餘層沿用 */
     const perks = (layer > 1 && Game.abyss && Game.abyss.perks) ? Game.abyss.perks.slice() : [];
+    /* v5.75：深淵 BGM 一直播成「第 1 關的音樂」就是這裡的坑 ——
+       startSolo 一進場就把 Game.abyss 清掉（普通入口的守衛），等到下面這行把狀態釘回去時，
+       stageBGM() 早就選成章節曲了；只有「暫停→回遊戲」（curBGM() 重新算一次）才會對。
+       修法：先放進 Game.abyssNext，startSolo 在算 BGM 之前就釘回去。 */
+    const info = { layer: layer, startAt: at, perks: perks };
+    Game.abyssNext = info;
     startSolo(layerStage(layer), false, false);
-    /* startSolo 會把 Game.abyss 清掉（普通模式的入口），這裡重新釘回去 */
-    Game.abyss = { layer: layer, startAt: at, perks: perks };
+    Game.abyss = info;   // 正常情況 startSolo 已經釘回去了，這裡只是保險
     try { bump(Game.players[0], layer); } catch (e) {}
     try { extraFoes(layer); } catch (e) {}
     try { applyPerks(Game.players[0], layer); } catch (e) {}
@@ -10496,11 +10564,32 @@ const AbyssPerk = (function () {
   return { open: open, list: function () { return ABYSS_PERKS; }, _take: take };
 })();
 
+/* v5.75：離開「特殊一輪」時把狀態清乾淨。
+   真正的原因是 Game.abyss 只在 startSolo 裡被清掉 —— 新手教學／RPG／對戰／大逃殺
+   各自都會呼叫 startBGM(stageBGM(...))，卻沒有人清這個旗標。所以「打過深淵之後
+   再開新手教學」，stageBGM 仍然看到 Game.abyss → 教學裡播深淵曲（玩家回報的怪象）。
+   一次打過深淵，那個旗標會一直留著，直到下一次 startSolo。 */
+function leaveSpecialRun() {
+  const was = !!Game.abyss;
+  Game.abyss = null;
+  Game.abyssNext = null;
+  Game.wchal = null;
+  /* v5.75：決戰場旗標同樣會決定 BGM（stageBGM 最前面就看 bossArena）——
+     新手教學以前沒清它，打完王關去跑教學就會播成熱血決戰曲。 */
+  Game.bossArena = null;
+  /* 只有「真的在深淵」才需要收徽章。平常也叫 paint() 會白白動一次 DOM，
+     而且會讓沙盒裡的地圖量測多一個節點（測試的地圖比例因此跑掉過）。 */
+  if (was) { try { AbyssHud.paint(); } catch (e) {} }
+}
+
 function startSolo(stage, bossRush, daily) {
   try { DeathCard.reset(); } catch (e) {}
-  /* v5.73：普通入口一律離開深淵（深淵自己會在呼叫後重新釘回去） */
+  /* v5.73：普通入口一律離開深淵（深淵自己會透過 Game.abyssNext 在下面釘回去） */
   Game.abyss = null;
   Game.wchal = null;          // v5.73：普通入口一律離開限制挑戰
+  /* v5.75：深淵專用 —— 呼叫端（Abyss.start）先放在這裡，算 BGM 之前釘回去，
+     否則 stageBGM() 看不到 Game.abyss，深淵會播成章節曲。 */
+  if (Game.abyssNext) { Game.abyss = Game.abyssNext; Game.abyssNext = null; }
   // v5.38：只有「從第 1 關開始」或每日／BOSS 連戰才算新的一輪；
   //   第 N 關死亡重來要保留已經選到的強化，不然每次都歸零根本練不起來。
   if (!Game.buffs || stage === 1 || daily || bossRush) resetBuffs();
@@ -13654,6 +13743,7 @@ function startBattle() {
   Game.startLives = 1;                   // v5.29：回到對戰的 1 條命，別讓單人簡單模式的 5 格殘留
   try { Spec.hide(); Game.specIdx = null; } catch (e) {}
   try { DeathCard.reset(); } catch (e) {}
+  leaveSpecialRun();                     // v5.75：同上，深淵旗標會讓對戰播深淵曲
   Game.mode = 'battle';
   Game.daily = null;                 // v4.80：離開每日挑戰的狀態，免得被殘留旗標影響
   Game.pets = [];                    // v4.17：隨從只在單人／RPG 出場
@@ -14873,6 +14963,7 @@ function startBR() {
   Game.startLives = 1;                   // v5.29：同上（大逃殺也是 1 條命）
   try { Spec.hide(); Game.specIdx = null; } catch (e) {}
   try { DeathCard.reset(); } catch (e) {}
+  leaveSpecialRun();                     // v5.75：同上
   Game.daily = null;                 // v4.80：大逃殺不吃每日挑戰的固定規則
   // 門票：每場消耗一張（開發者帳號不扣）
   //   v4.74：正式測試結束前免費（BR.FREE）—— 只要把 FREE 改回 false 就恢復收票
@@ -33879,6 +33970,9 @@ const Tut = (function () {
         Game.stage = 1; Game.theme = THEMES[0];
         Game.mapInfo = { n: '新手教學', theme: 0 };
         Game.mode = 'solo'; Game.rpg = false; Game.bossRush = false;
+        /* v5.75：教學是最容易踩到「深淵音樂」的入口 —— 它自己攔截按鍵、不走 startSolo，
+           以前完全沒清 Game.abyss，打過深淵的人一進教學就聽到深淵曲。 */
+        leaveSpecialRun();
         const p = Game.players[0];
         p.x = 1 * Game.T + Game.T / 2; p.y = 1 * Game.T + Game.T / 2;
         p.alive = true; p.dead = false; p.invuln = 0; p.lives = 3; p.score = 0;
@@ -36993,6 +37087,7 @@ function applyBand(band, p) {
 
 function startRpg(stage, opt) {
   clearMapTest();            // v4.51：正常入口一律離開測試關
+  leaveSpecialRun();         // v5.75：別讓深淵／限制挑戰的旗標漏進來（BGM 會播錯）
   Game.mode = 'rpg';
   Game.rpg = true;
   Game.bossRush = false;
@@ -39608,6 +39703,7 @@ window.__BH = {
   Abyss: (typeof Abyss !== 'undefined') ? Abyss : null,
   AbyssHud: (typeof AbyssHud !== 'undefined') ? AbyssHud : null,
   AbyssPerk: (typeof AbyssPerk !== 'undefined') ? AbyssPerk : null,
+  leaveSpecialRun: leaveSpecialRun,   // v5.75：離開深淵／限制挑戰的統一出口（測試要驗 BGM 路由）
   ABYSS_PERKS: (typeof ABYSS_PERKS !== 'undefined') ? ABYSS_PERKS : null,
   WeekChal: (typeof WeekChal !== 'undefined') ? WeekChal : null,
   WK_MODS: (typeof WK_MODS !== 'undefined') ? WK_MODS : null,
