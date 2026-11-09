@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.72';
+const VERSION = '5.73';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -1119,6 +1119,55 @@ function saveSettings() {
  *   · 想改名只有一條路：「線上玩家 → 我的資料」花 NICK_PRICE 金幣
  *   · 系統自動取的名字（玩家123）不算定案 → 玩家還能在首頁自己取名，不用付錢
  * ========================================================================== */
+/* ============================================================================
+   v5.73：Starter —— 新帳號的漸進解鎖
+   · 第一次打開的人同時看到 6 張卡＋3 個入口＝選擇過載，最常發生的結果是「先關掉」
+   · 只影響「沒有任何存檔痕跡」的帳號：老玩家一個像素都不會變
+   · 通關 2 / 4 / 6 關各解鎖一批，第 6 關之後完全恢復原本的首頁
+   ========================================================================== */
+const Starter = (function () {
+  function fresh() {
+    try {
+      if (typeof localStorage === 'undefined') return false;
+      const st = parseInt(localStorage.getItem('bombhero-stage'), 10) || 1;
+      if (st > 1) return false;
+      if (settings && settings.nameLock && settings.playerName) return false;
+      let rpgCleared = 0;
+      try { rpgCleared = RPG.cleared | 0; } catch (e) { rpgCleared = 0; }
+      if (rpgCleared > 0) return false;
+      return true;
+    } catch (e) { return false; }
+  }
+  function tier() {
+    let n = 1;
+    try { n = Solo.unlocked | 0; } catch (e) { n = 1; }
+    if (n >= 6) return 3;
+    if (n >= 4) return 2;
+    if (n >= 2) return 1;
+    return 0;
+  }
+  function apply() {
+    const menu = $id('homeMenu');
+    if (!menu || !menu.classList) return;
+    if (!fresh()) {
+      menu.classList.remove('starter');
+      menu.removeAttribute('data-tier');
+      return;
+    }
+    const t0 = tier();
+    menu.classList.add('starter');
+    menu.setAttribute('data-tier', String(t0));
+    const tip = $id('starterTip');
+    if (tip) {
+      const left = t0 === 0 ? 2 : t0 === 1 ? 4 : 6;
+      tip.innerHTML = t0 >= 3 ? '' : t('starter.tip', { n: Math.max(0, left - (function () {
+        try { return Solo.unlocked | 0; } catch (e) { return 1; }
+      })()) });
+    }
+  }
+  return { fresh: fresh, tier: tier, apply: apply };
+})();
+
 const NICK_PRICE = 5000;
 const NICK_MAX = 8;
 const NICK_GREETS = 5;
@@ -1150,6 +1199,22 @@ const Nick = (function () {
   }
   /* 重畫首頁那一列：定案 → 招呼語；還沒定案 → 保留輸入框。
      refresh = true 才換新的一句（每次回首頁換一句，其他重畫沿用同一句）。 */
+  /* v5.73：今日進度 —— 跟招呼語同一行位置，把長期目標切成「今天看得到的數字」 */
+  function todayLine() {
+    const el = $id('todayLine');
+    if (!el) return;
+    let stage = 1, ab = 0, stars = 0, total = 0;
+    try { stage = Solo.unlocked | 0; } catch (e) {}
+    try { ab = Abyss.bestOf() | 0; } catch (e) {}
+    try { stars = Gift.totalStars() | 0; } catch (e) {}
+    try { total = SOLO_STAGES | 0; } catch (e) { total = 40; }
+    const bits = [];
+    bits.push(t('today.stage', { n: stage, m: total }));
+    if (stars > 0) bits.push(t('today.stars', { n: stars, m: total * 3 }));
+    if (ab > 0) bits.push(t('today.abyss', { n: ab }));
+    el.innerHTML = bits.map(function (s) { return '<b>' + esc(s) + '</b>'; }).join('<i>·</i>');
+  }
+
   function render(refresh) {
     const wrap = $id('nickWrap'), box = $id('greetLine'), inp = $id('playerName');
     const n = nm();
@@ -1169,7 +1234,8 @@ const Nick = (function () {
       '<button class="gedit" type="button" title="' + esc(t('nick.editTip')) + '">✏️</button>';
     return box.innerHTML;
   }
-  function greet() { return render(true); }
+  function greet() {
+    try { todayLine(); } catch (e) {} return render(true); }
   /* 定案：離開首頁或開始玩。系統自動取的名字不算定案。 */
   function commit() {
     if (!nm()) return false;
@@ -1230,7 +1296,7 @@ const Nick = (function () {
     } catch (er) {}
   }
   return { nm: nm, locked: locked, render: render, greet: greet, commit: commit, migrate: migrate,
-    rename: rename, wire: wire, goldTxt: goldTxt, PRICE: NICK_PRICE, MAX: NICK_MAX, GREETS: NICK_GREETS };
+    rename: rename, wire: wire, goldTxt: goldTxt, todayLine: todayLine, PRICE: NICK_PRICE, MAX: NICK_MAX, GREETS: NICK_GREETS };
 })();
 
 // ---------- 音效 + 音樂（WebAudio 合成，無外部資源） ----------
@@ -2458,7 +2524,7 @@ const Screen = (function () {
     // v4.87：回到首頁就刷新 🎁 紅點（簽到／任務有沒有東西可領）
     try { if (name === 'title') HomeDot.refresh(); } catch (e) {}   // v5.38：紅點總管
     // v5.71：回首頁換一句招呼語；離開首頁就代表名字定案了（首頁的輸入框從此收起）
-    try { if (name === 'title') Nick.greet(); else Nick.commit(); } catch (e) {}
+    try { if (name === 'title') { try { Starter.apply(); } catch (e) {} Nick.greet(); } else Nick.commit(); } catch (e) {}
     // v5.27：進設定頁就重算畫質說明（畫質可能在別的裝置／別的地方被改過）
     try { if (name === 'settings') updateQualHint(); } catch (e) {}
   }
@@ -4028,6 +4094,7 @@ function hideTileAt(x, y) {
 // 這位玩家現在是不是躲在樹叢／破屋裡（騎著恐龍躲不進去）
 function playerHiding(p) {
   if (!p || !p.alive || p.dino) return false;
+  if ((p.smokeT | 0) > 0) return true;          // v5.73：煙霧彈（怪物完全看不到）
   const T = Game.T || 1;
   return !!hideTileAt(Math.floor(p.x / T), Math.floor(p.y / T));
 }
@@ -6647,8 +6714,105 @@ const Lb = {
       mode: 'weekly', day: week || Gift.weekKey(), name: name || '', ms: Math.round(ms),
       deviceId: Lb.deviceId(), ver: VERSION
     });
+  },
+  /* v5.73：深淵榜 —— 唯一「越大越好」的榜（ms 欄位存層數）。
+     後端 day 固定 all（永久累計），比較方向也相反。 */
+  topAbyss(limit) {
+    return Lb._get(Lb.origin() + '/api/lb/top?mode=abyss&limit=' + (limit || 10))
+      .then(function (j) {
+        if (j && j.ok && j.list) { Lb.writeCache('abyss', j.list); return { list: j.list, online: true }; }
+        const cc = Lb.readCache('abyss');
+        return { list: (cc && cc.list) || [], online: false };
+      }, function () {
+        const cc = Lb.readCache('abyss');
+        return { list: (cc && cc.list) || [], online: false };
+      });
+  },
+  /* v5.73：本週限制挑戰（同週同一張圖＋同一條限制，比秒數） */
+  topChal(week, limit) {
+    const w = week || Gift.weekKey();
+    return Lb._get(Lb.origin() + '/api/lb/top?mode=wchal&day=' + encodeURIComponent(w) +
+                   '&limit=' + (limit || 20))
+      .then(function (j) {
+        if (j && j.ok && j.list) return { list: j.list, online: true };
+        return { list: [], online: false };
+      }, function () { return { list: [], online: false }; });
+  },
+  submitChal(week, name, ms) {
+    return Lb._post(Lb.origin() + '/api/lb/submit', {
+      mode: 'wchal', day: week || Gift.weekKey(), name: name || '', ms: Math.round(ms),
+      deviceId: Lb.deviceId(), ver: VERSION
+    });
+  },
+  submitAbyss(layer, name) {
+    const n = Math.max(1, Math.round(layer || 1));
+    return Lb._post(Lb.origin() + '/api/lb/submit', {
+      mode: 'abyss', day: 'all', name: name || '', ms: n,
+      deviceId: Lb.deviceId(), ver: VERSION
+    });
   }
 };
+
+/* ============================================================================
+   v5.73：本週限制挑戰（Weekly Challenge）
+   · 每週一條限制（按週 key 固定）、同一張圖（Gift.weekStage()）比最快秒數
+   · 與每日／每週榜完全分開（mode=wchal）—— 限制條件下的成績不能跟一般榜混在一起
+   · 三條限制刻意都是「改玩法」而不是「加數值」：
+       長引信 → 逼你算時機；無隨從 → 靠自己走位；無補給 → 不能靠回血硬撐
+   ========================================================================== */
+const WK_MODS = [
+  { id: 'fuse',   ico: '\uD83D\uDD6F\uFE0F', key: 'wk.mod.fuse' },
+  { id: 'nopet',  ico: '\uD83D\uDEAB', key: 'wk.mod.nopet' },
+  { id: 'noitem', ico: '\uD83D\uDD12', key: 'wk.mod.noitem' }
+];
+const WeekChal = (function () {
+  let cachedWk = '', cachedMod = null;
+  function modOf() {
+    const k = Gift.weekKey();
+    if (k === cachedWk && cachedMod) return cachedMod;
+    let h = 0;
+    for (let i = 0; i < k.length; i++) h = (Math.imul(h, 131) + k.charCodeAt(i)) >>> 0;
+    cachedWk = k; cachedMod = WK_MODS[h % WK_MODS.length];
+    return cachedMod;
+  }
+  function stageOf() { return Gift.weekStage(); }
+  function active() { return !!Game.wchal; }
+  function bestKey() { return 'bombhero-wkchal-' + Gift.weekKey(); }
+  function best() { try { return parseInt(localStorage.getItem(bestKey()), 10) || 0; } catch (e) { return 0; } }
+  function setBest(ms) { try { localStorage.setItem(bestKey(), String(Math.round(ms) | 0)); } catch (e) {} }
+  function begin() {
+    const st = stageOf(), mod = modOf().id;
+    Game.wchal = { mod: mod, at: Date.now() };
+    startSolo(st, false, false);
+    Game.wchal = { mod: mod, at: Date.now(), t0: Date.now() };
+    const p = Game.players[0];
+    if (p) {
+      if (mod === 'fuse') p.fuseMul = Math.max(1.6, p.fuseMul || 1);
+      if (mod === 'nopet') { Game.pets = []; p.wkNoPet = 1; }
+      if (mod === 'noitem') { Game.items = []; p.wkNoItem = 1; }
+    }
+    try {
+      doorHintCard(modOf().ico, t('wk.title'), t(modOf().key), 2.8);
+    } catch (e) {}
+  }
+  /* 過關 → 提交；只收「本週指定關卡」且沒用每日挑戰 */
+  function submit(p) {
+    if (!active() || Game.daily) return;
+    const used = Math.round((Game.timerMax - Game.timer) * 1000);
+    if (!(used > 1000)) return;
+    const bk = best();
+    if (!bk || used < bk) {
+      setBest(used);
+      try {
+        Lb.submitChal(Gift.weekKey(), settings.playerName || '', used).then(function (r) {
+          if (r && r.ok && r.rank) toast(t('wk.rank', { r: r.rank, t: fmtMs(used) }), 3);
+          else toast(t('wk.record', { t: fmtMs(used) }), 2.8);
+        }, function () {});
+      } catch (e) {}
+    }
+  }
+  return { modOf: modOf, stageOf: stageOf, begin: begin, submit: submit, best: best, active: active, MODS: WK_MODS };
+})();
 
 /* =====================================================================
  * v5.13：成就系統（Ach）
@@ -9904,8 +10068,172 @@ const GiftUI = (function () {
   }
 })();
 
+/* ============================================================================
+   v5.73：深淵（Endless）—— 40 關全破之後的無限去處
+   · 每一層＝一關：主題在 2~39 之間循環（避開第 1 關，才不會每層都 resetBuffs），
+     第 5 的倍數進 BOSS 決戰場。
+   · 越深越難，但靠「限制」而不是純數值：引信一路縮、血量只給 3 格上限，
+     炸彈與火力慢慢加 —— 玩到後面是「節奏變快」，不是「怪變肉」。
+   · 死亡即結算：最深層數寫進 localStorage＋全服榜（mode=abyss）。
+   ========================================================================== */
+const ABYSS_KEY = 'bombhero-abyss-v1';
+const Abyss = (function () {
+  let best = 0;
+  try { best = Math.max(0, parseInt(localStorage.getItem(ABYSS_KEY), 10) || 0); } catch (e) { best = 0; }
+
+  function bestOf() { return best | 0; }
+  function layerOf() { return (Game.abyss && Game.abyss.layer) | 0; }
+  function active() { return !!Game.abyss; }
+  function unlocked() {
+    try { if ((Solo.unlocked | 0) >= SOLO_STAGES) return true; } catch (e) {}
+    try { if ((RPG.cleared | 0) >= SOLO_STAGES) return true; } catch (e) {}
+    return false;
+  }
+  /* 第 5 的倍數＝BOSS 決戰場（SOLO_STAGES）；其餘在 2~39 循環 */
+  function layerStage(n) {
+    const k = Math.max(1, n | 0);
+    if (k % 5 === 0) return SOLO_STAGES;
+    return 2 + ((k - 1) % (SOLO_STAGES - 2));
+  }
+  /* 這一層的起始加成：炸彈／火力慢慢加，引信一路縮，血量最多 +3 */
+  function bump(p, n) {
+    if (!p) return;
+    p.maxBombs = Math.min(12, (p.maxBombs | 0) + Math.floor(n / 3));
+    p.power = Math.min(12, (p.power | 0) + Math.floor(n / 10));
+    p.fuseMul = Math.max(.42, 1 - n * .012);
+    const hp = Math.min(3, Math.floor(n / 6));
+    p.sHpMax = (p.sHpMax | 0) + hp;
+    p.sHp = p.sHpMax;
+  }
+  /* 追怪：每 4 層 +1 隻，上限 +12 —— 用「同生態表的怪」才不會出現違和組合 */
+  function extraFoes(n) {
+    const add = Math.min(12, Math.floor(n / 4));
+    if (add <= 0) return;
+    const st = layerStage(n);
+    let types = [];
+    try { types = stageTypes(st); } catch (e) { types = []; }
+    if (!types || !types.length) return;
+    let lv = 1;
+    try { lv = Math.min(8, chapterOf(st) + Math.floor(n / 15)); } catch (e) { lv = 1; }
+    let speed = 1;
+    try { speed = soloDiffCfg().speed; } catch (e) {}
+    let guard = 0;
+    for (let i = 0; i < add && guard < 500; i++) {
+      let x = 0, y = 0, ok = false;
+      while (guard++ < 500) {
+        x = 1 + Math.floor(Math.random() * (Game.cols - 2));
+        y = 1 + Math.floor(Math.random() * (Game.rows - 2));
+        if (cellAt(x, y) === 0 && !bombAt(x, y) && !nearSpawn(x, y, 2)) { ok = true; break; }
+      }
+      if (!ok) break;
+      try { Game.enemies.push(makeEnemy(x, y, pick(types), lv, speed)); } catch (e) { break; }
+    }
+  }
+  function start(n) {
+    const layer = Math.max(1, n | 0 || 1);
+    const at = (Game.abyss && Game.abyss.startAt) || Date.now();
+    startSolo(layerStage(layer), false, false);
+    /* startSolo 會把 Game.abyss 清掉（普通模式的入口），這裡重新釘回去 */
+    Game.abyss = { layer: layer, startAt: at };
+    try { bump(Game.players[0], layer); } catch (e) {}
+    try { extraFoes(layer); } catch (e) {}
+    try {
+      if (layer % 5 === 0) {
+        Game.enemies.forEach(function (e) { if (e.boss) { e.hp = (e.hp | 0) + layer; e.maxHp = e.hp; } });
+      }
+    } catch (e) {}
+    try { AbyssHud.paint(); } catch (e) {}
+    try {
+      /* v5.73：提示延後到「真的開始玩」才彈 —— 開場說明面板是全螢幕遮罩，
+         立刻彈會被壓在下面（看起來像一塊灰掉的黑盒子）。 */
+      let ht = 0;
+      const hintTick = function () {
+        const live = Game.state === 'play' || Game.state === 'countdown';
+        if (!live && ht++ < 60) { setTimeout(hintTick, 120); return; }
+        doorHintCard('\uD83D\uDD73\uFE0F', t('abyss.layer', { n: layer }),
+          t('abyss.layerSub', { best: best }), 2.2);
+      };
+      setTimeout(hintTick, 120);
+    } catch (e) {}
+  }
+  /* 過門 → 下一層（不結算、不給星、不記週榜） */
+  function layerClear() {
+    if (!active()) return;
+    const n = layerOf() + 1;
+    Game.abyss.layer = n;
+    Game.state = 'roundover';
+    try { AbyssHud.paint(); } catch (e) {}
+    try { AudioSys.sfx('victory'); } catch (e) {}
+    try {
+      if (n % 5 === 0) { Game.flash = Math.max(Game.flash || 0, .45); Game.shake = Math.max(Game.shake || 0, .4); }
+    } catch (e) {}
+    setTimeout(function () {
+      const go = function () { try { start(n); } catch (e) {} };
+      try { if (buffsOn()) BuffPick.open(go); else go(); } catch (e) { go(); }
+    }, 620);
+  }
+  /* 死亡結算 —— 這才是深淵的「終點」，也是唯一的成績 */
+  function finish() {
+    const n = layerOf();
+    const deeper = n > best;
+    if (deeper) {
+      best = n;
+      try { localStorage.setItem(ABYSS_KEY, String(best)); } catch (e) {}
+    }
+    try { AbyssHud.paint(); } catch (e) {}
+    try { if (Lb && Lb.submitAbyss) Lb.submitAbyss(n, settings.playerName || ''); } catch (e) {}
+    try {
+      Game.shake = Math.max(Game.shake || 0, .55);
+      Game.flash = Math.max(Game.flash || 0, .35);
+    } catch (e) {}
+    try {
+      showOverlay({
+        title: deeper ? t('abyss.newBest', { n: n }) : t('abyss.over', { n: n }),
+        sub: t('abyss.bestLine', { n: best }),
+        btn: t('abyss.retry'),
+        action: function () { try { start(1); } catch (e) {} }
+      });
+    } catch (e) {}
+    try { Cloud.track('abyss', n, '深淵第 ' + n + ' 層'); } catch (e) {}
+  }
+  return {
+    start: start, layerClear: layerClear, finish: finish,
+    bestOf: bestOf, layerOf: layerOf, active: active, unlocked: unlocked, layerStage: layerStage
+  };
+})();
+
+/* 深淵層數顯示（HUD 左上角的小徽章；普通模式完全不存在） */
+const AbyssHud = (function () {
+  let el = null;
+  function ensure() {
+    if (el && el.parentNode) return el;
+    const top = $id('gameTop');
+    if (!top || !top.appendChild) return null;
+    el = document.createElement('div');
+    el.id = 'abyssBadge';
+    el.className = 'abyssBadge hide';
+    top.appendChild(el);
+    return el;
+  }
+  function paint() {
+    const n = Abyss.layerOf();
+    const on = n > 0 && !!Game.abyss;
+    const b = ensure();
+    if (!b) return;
+    b.classList.toggle('hide', !on);
+    if (!on) return;
+    /* v5.73：徽章底色是深紫，🕳️（黑底）幾乎看不見 → 換成對比夠的漩渦 */
+    b.innerHTML = '<b>\uD83C\uDF00 ' + t('abyss.layerShort', { n: n }) + '</b>' +
+      '<i>' + t('abyss.bestShort', { n: Abyss.bestOf() }) + '</i>';
+  }
+  return { paint: paint };
+})();
+
 function startSolo(stage, bossRush, daily) {
   try { DeathCard.reset(); } catch (e) {}
+  /* v5.73：普通入口一律離開深淵（深淵自己會在呼叫後重新釘回去） */
+  Game.abyss = null;
+  Game.wchal = null;          // v5.73：普通入口一律離開限制挑戰
   // v5.38：只有「從第 1 關開始」或每日／BOSS 連戰才算新的一輪；
   //   第 N 關死亡重來要保留已經選到的強化，不然每次都歸零根本練不起來。
   if (!Game.buffs || stage === 1 || daily || bossRush) resetBuffs();
@@ -10883,6 +11211,116 @@ function makeBoss(x, y, hp) {
 }
 
 // ====
+/* ============================================================================
+   v5.73：支線事件 —— 過關後 12% 機率在下一關前遇到一件事
+   · 路邊商人：半價買一件補給（金幣不足就不出現）
+   · 寶箱：直接拿 120~260 金幣
+   · 賭局：押 200，50% 得 500 / 50% 歸零
+   刻意做成「一次按鈕就結束」的小卡：不打斷節奏，但每一次都有一點懸念。
+   ========================================================================== */
+const SideEvent = (function () {
+  function roll() {
+    if (Game.daily || Game.bossRush || Game.abyss || Game.wchal) return false;   // 公平模式不插事件
+    if (Game.mode !== 'solo' && Game.mode !== 'rpg') return false;
+    return Math.random() < .12;
+  }
+  function bagPick() {
+    const all = ['hp1', 'arm1', 'fire1', 'rem1', 'xray', 'smoke', 'warp'];
+    return all[Math.floor(Math.random() * all.length)];
+  }
+  function bagDef(id) {
+    for (let i = 0; i < RPG_BAG.length; i++) if (RPG_BAG[i].id === id) return RPG_BAG[i];
+    return null;
+  }
+  function close(next) {
+    const el = document.getElementById('sideEv');
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+    try { if (typeof next === 'function') next(); } catch (e) {}
+  }
+  function open(next) {
+    if (typeof document === 'undefined' || !document.createElement) { try { next(); } catch (e) {} return; }
+    const kind = Math.random();
+    let gold = 0;
+    try { gold = Shop.gold() | 0; } catch (e) { gold = 0; }
+    const el = document.createElement('div');
+    el.id = 'sideEv';
+    if (kind < .34 && gold >= 300) {
+      /* 商人 */
+      const id = bagPick(), d = bagDef(id);
+      const price = Math.max(120, Math.round((d ? d.price : 600) * .55));
+      el.innerHTML = '<div class="qcard">' +
+          '<div class="sevico">\uD83E\uDDF3\uFE0F</div>' +
+          '<span class="sevtag">SIDE EVENT</span>' +
+          '<h3>路邊商人</h3>' +
+          '<p class="sevmsg">「看你一身煙味，剛打完吧？」<br>他打開木箱，裡面只剩一件東西 —— <b>' +
+            (d ? d.n : '補給') + '</b>，算你 <b>' + price + '</b> 金。</p>' +
+          '<button class="qbtn" data-sev="buy">💰 ' + price + ' 買下</button>' +
+          '<button class="qbtn ghost" data-sev="skip">先不用</button>' +
+        '</div>';
+      document.body.appendChild(el);
+      el.addEventListener('click', function (e) {
+        const b = e.target && e.target.closest ? e.target.closest('[data-sev]') : null;
+        if (!b) { if (e.target === el) close(next); return; }
+        const act = b.getAttribute('data-sev');
+        if (act === 'buy') {
+          const r = (function () { try { return Shop.spend(price); } catch (x) { return null; } })();
+          if (r && r.ok) {
+            try { RPG.bag[id] = (RPG.bag[id] | 0) + 1; RpgUI.saveCamp(); } catch (x) {}
+            try { AudioSys.sfx('item'); toast('🎒 買到 ' + (d ? d.n : '補給'), 2.2); } catch (x) {}
+          } else {
+            try { AudioSys.sfx('hurt'); toast(t('shop.noGold'), 2); } catch (x) {}
+          }
+        }
+        close(next);
+      });
+      try { AudioSys.sfx('coin'); } catch (e) {}
+      return;
+    }
+    if (kind < .68) {
+      /* 寶箱 */
+      const got = 120 + Math.floor(Math.random() * 141);
+      el.innerHTML = '<div class="qcard">' +
+          '<div class="sevico">\uD83D\uDCE6</div>' +
+          '<span class="sevtag">SIDE EVENT</span>' +
+          '<h3>路邊寶箱</h3>' +
+          '<p class="sevmsg">草叢裡有一只沒上鎖的箱子。<br>打開一看，裡面是 <b>' + got + '</b> 枚金幣。</p>' +
+          '<button class="qbtn" data-sev="ok">💰 收下</button>' +
+        '</div>';
+      document.body.appendChild(el);
+      try { Shop.addGold(got); } catch (e) {}
+      el.addEventListener('click', function () { close(next); });
+      try { AudioSys.sfx('coin'); } catch (e) {}
+      return;
+    }
+    /* 賭局 */
+    el.innerHTML = '<div class="qcard">' +
+        '<div class="sevico">\uD83C\uDFB2</div>' +
+        '<span class="sevtag">SIDE EVENT</span>' +
+        '<h3>路邊賭局</h3>' +
+        '<p class="sevmsg">戴眼罩的商人搖了搖骰盅：<br>「押 <b>200</b>，贏了給你 <b>500</b>。敢不敢？」</p>' +
+        '<button class="qbtn" data-sev="bet">🎲 賭一把（200）</button>' +
+        '<button class="qbtn ghost" data-sev="skip">算了</button>' +
+      '</div>';
+    document.body.appendChild(el);
+    el.addEventListener('click', function (e) {
+      const b = e.target && e.target.closest ? e.target.closest('[data-sev]') : null;
+      if (!b) { if (e.target === el) close(next); return; }
+      if (b.getAttribute('data-sev') === 'bet') {
+        const r = (function () { try { return Shop.spend(200); } catch (x) { return null; } })();
+        if (!r || !r.ok) { try { AudioSys.sfx('hurt'); toast(t('shop.noGold'), 2); } catch (x) {} close(next); return; }
+        if (Math.random() < .5) {
+          try { Shop.addGold(500); AudioSys.sfx('victory'); toast('🎉 贏了！+500 金幣', 2.4); } catch (x) {}
+        } else {
+          try { AudioSys.sfx('hurt'); toast('💸 輸了，200 金幣沒了', 2.4); } catch (x) {}
+        }
+      }
+      close(next);
+    });
+    try { AudioSys.sfx('click'); } catch (e) {}
+  }
+  return { roll: roll, open: open };
+})();
+
 //   v4.17：隨從 —— 平常跟在主角旁邊，有怪物靠近（2 格）才會動作
 //     · 刀客：1 格揮刀（冷卻 2 秒，刀光＋音效）
 //     · 投彈：幫你丟炸彈（冷卻 3 秒，一次一顆，火焰不燒主人）
@@ -11564,6 +12002,13 @@ function drawPet(pt, T) {
 function updateSolo(dt) {
   const p = Game.players[0];
   if (Game.state === 'play') {
+    /* v5.73：限制挑戰的條件要「每一幀都成立」——
+       吃到引信強化卡、撿到隨從，都不能讓限制偷偷失效。 */
+    if (Game.wchal && p) {
+      if (Game.wchal.mod === 'fuse') p.fuseMul = Math.max(p.fuseMul || 1, 1.6);
+      if (Game.wchal.mod === 'nopet' && Game.pets && Game.pets.length) Game.pets = [];
+      if (Game.wchal.mod === 'noitem' && Game.items && Game.items.length) Game.items = [];
+    }
     // v4.80：每日挑戰用「實際遊玩時間」計時 —— 暫停、開覆蓋層、看說明都不算，才能公平比快
     if (Game.daily && !Game.daily.done) { Game.daily.ms += dt * 1000; Ghost.tick(dt); }
     // 無限時間：倒數停在 ∞，不會時間到就陣亡
@@ -11628,6 +12073,17 @@ function updateSolo(dt) {
         }
         if (Game.bossRush) AudioSys.stopBGM();
         const cleared = Game.stage;
+        /* v5.73：深淵 —— 過門不是通關，是下一層。金幣照給（不然沒人想玩），
+           但星數／每週榜／關卡解鎖一律不記，否則深淵會直接洗掉 solo 的進度。 */
+        if (Game.abyss) {
+          try {
+            const c0 = Math.max(0, Math.round(p.score || 0) - Math.max(0, Game.paidScore | 0));
+            Game.paidScore = Math.max(0, Math.round(p.score || 0));
+            if (c0 > 0) Shop.addGold(c0);
+          } catch (e) {}
+          try { Abyss.layerClear(); } catch (e) {}
+          return;
+        }
         // v4.17：過關發金幣（單人與 RPG 都給；商店買隨從用）
         //   金額公式與雲端 RPG 一致：40 + 每 4 關 +10
         try {
@@ -11698,6 +12154,8 @@ function updateSolo(dt) {
               }
             }
             GiftUI.alertOn();
+            /* v5.73：本週限制挑戰 —— 只有 solo（不是 RPG／深淵／每日）才收 */
+            if (Game.wchal && solo) { try { WeekChal.submit(p); } catch (e2) {} }
           }
         } catch (e) {}
         // v4.80：每日挑戰 → 到門就結束（不進下一關），結算秒數並送排行榜
@@ -11739,7 +12197,14 @@ function updateSolo(dt) {
                   }
                   beginCountdown('battle');
                 };
-                if (buffsOn()) BuffPick.open(goNext); else goNext();
+                /* v5.73：強化三選一之後，12% 機會插一張支線事件卡 */
+                const afterBuff = function () {
+                  let ev = false;
+                  try { ev = SideEvent.roll(); } catch (e) { ev = false; }
+                  if (ev) { try { SideEvent.open(goNext); return; } catch (e) {} }
+                  goNext();
+                };
+                if (buffsOn()) BuffPick.open(afterBuff); else afterBuff();
               }
             });
             battleEndFx(true, p.x, p.y - Game.T);
@@ -11778,6 +12243,12 @@ function updateSolo(dt) {
           return;
         }
         try { DeathCard.finish(); } catch (e) {}
+        /* v5.73：深淵死亡＝本輪結束（沒有復活、沒有復仇值） */
+        if (Game.abyss) {
+          try { Abyss.finish(); } catch (e) {}
+          battleEndFx(false);
+          return;
+        }
         const rev = revAdd();          // v5.63：死一次 +1，下一局開場多一顆炸彈
         /* 復仇值放最前面 —— 夾在死因後面會被玩家直接略過（這裡是他最需要看到的一句）。 */
         showEnd(t('solo.overTitle'),
@@ -17657,6 +18128,14 @@ function beltGrab(b, T) {
   b.beltAcc = (hz && hz.type === 'convey') ? T * .92 : 0;
 }
 function updateWorld(dt) {
+  /* v5.73：行為型補給的時效（放在最前面，暫停時不會偷跑） */
+  try {
+    const me = Game.players && Game.players[0];
+    if (me) {
+      if ((me.xrayT | 0) > 0) me.xrayT = Math.max(0, me.xrayT - dt);
+      if ((me.smokeT | 0) > 0) me.smokeT = Math.max(0, me.smokeT - dt);
+    }
+  } catch (e) {}
   const T = Game.T;
   // 炸彈（快照迭代：連鎖爆炸會在迴圈中移除其他炸彈）
   const bombSnap = Game.bombs.slice();
@@ -18280,6 +18759,15 @@ const DeathCard = (function () {
     try { tip = FirstRun.missTip(); } catch (e) {}
     if (!tip && (trail.length >> 1) > 1 && (trail.length >> 1) < 14) tip = t('first.stuck');
     info = { who: who, left: left, stage: Game.stage | 0, n: trail.length >> 1, tip: tip };
+    /* v5.73：失敗埋點 —— 只記「哪一關、被什麼弄死」。
+       以前只有 clear/solo 兩種事件，後台看得到「過了幾關」，看不到「卡在哪一關、
+       死在誰手上」→ 所有難度調整都只能憑感覺。這一行讓後台能出一張卡關表。 */
+    try {
+      if (typeof Cloud !== 'undefined' && Cloud.track) {
+        const st = Game.stage | 0;
+        Cloud.track('dead', st, (who || '') + '｜第 ' + st + ' 關・' + stageName(st));
+      }
+    } catch (e) {}
   }
 
   function html() {
@@ -18883,7 +19371,43 @@ function renderDailyScreen() {
   if (go) go.textContent = t('daily.go', { t: fmtTime(DAILY_TIME) });
   set('lbTitle', t('lb.titleToday'));
   set('btnLbReload', t('lb.reload'));
+  renderWkChal();
   renderLbList();
+}
+
+/* v5.73：本週限制挑戰的卡片與榜單 */
+function renderWkChal() {
+  const mod = WeekChal.modOf();
+  const st = WeekChal.stageOf();
+  const set = function (id, v) { const e = $id(id); if (e) e.textContent = v; };
+  set('wkChalTitle', '\u23F1\uFE0F ' + t('wk.title'));
+  set('wkChalWeek', Gift.weekKey());
+  const md = $id('wkChalMod');
+  if (md) md.innerHTML = mod.ico + ' <b>' + escHtml(t('wk.modName.' + mod.id)) + '</b>　' + escHtml(t(mod.key));
+  const sd = $id('wkChalStage');
+  if (sd) sd.innerHTML = '\uD83D\uDFFA <b>' + escHtml(t('wk.stageLine', { n: st, name: mapName(soloInfo(st)) })) + '</b>';
+  const bk = WeekChal.best();
+  const bd = $id('wkChalBest');
+  if (bd) bd.innerHTML = '\uD83C\uDFC6 ' + escHtml(bk ? t('wk.bestHave', { t: fmtMs(bk) }) : t('wk.bestNone'));
+  const go = $id('btnWkChal');
+  if (go) go.textContent = t('wk.go');
+  const box = $id('wkChalList');
+  if (!box) return;
+  box.innerHTML = '<div class="empty">' + t('lb.loading') + '</div>';
+  WeekChalPreview(box);
+}
+function WeekChalPreview(box) {
+  Lb.topChal(Gift.weekKey(), 10).then(function (r) {
+    const list = (r && r.list) || [];
+    if (!list.length) { box.innerHTML = '<div class="empty">' + t('wk.empty') + '</div>'; return; }
+    const me = settings.playerName || '';
+    box.innerHTML = list.map(function (e, i) {
+      const cls = me && e.n === me ? ' me' : '';
+      return '<div class="lbrow' + cls + '"><span class="lbrk">' + (i + 1) + '</span>' +
+        '<span class="lbnm">' + escHtml(e.n || '—') + '</span>' +
+        '<span class="lbms">' + fmtMs(e.ms | 0) + '</span></div>';
+    }).join('');
+  }, function () { box.innerHTML = '<div class="empty">' + t('wk.empty') + '</div>'; });
 }
 function renderLbList(force) {
   const box = $id('lbList');
@@ -22736,6 +23260,75 @@ function floorCellSkip(gx, gy) {
   if (!Game.grid || !Game.grid[gy]) return false;
   return !!(Game.wallKind && Game.wallKind[gy] && Game.wallKind[gy][gx] === 0 && Game.grid[gy][gx] === 1);
 }
+/* ============================================================================
+   v5.73：地板材質層 —— 一張無縫母圖衍生 8 個主題（spr/flr-*.webp）
+   · 只做「微質感」：alpha 0.34 + overlay，不動底色、不蓋光線與接縫 AO
+   · 母圖是手繪石礫／泥土顆粒，四象限鏡像拼接 → 絕對無縫
+   · 載入完成後丟一次地板快取，讓已經畫好的區塊換上材質
+   ========================================================================== */
+const FloorTex = (function () {
+  const IMG = {};
+  /* 靜態列出路徑（不用字串拼接）—— SW 預熱與素材檢查都靠靜態引用才掃得到 */
+  const SRC = {
+    forest: 'spr/flr-forest.webp?v=73',
+    sand:   'spr/flr-sand.webp?v=73',
+    ice:    'spr/flr-ice.webp?v=73',
+    lava:   'spr/flr-lava.webp?v=73',
+    neon:   'spr/flr-neon.webp?v=73',
+    sea:    'spr/flr-sea.webp?v=73',
+    sky:    'spr/flr-sky.webp?v=73',
+    dark:   'spr/flr-dark.webp?v=73'
+  };
+  const STYLES = ['forest', 'sand', 'ice', 'lava', 'neon', 'sea', 'sky', 'dark'];
+  function key(s) {
+    const k = String(s || 'forest');
+    return STYLES.indexOf(k) >= 0 ? k : 'forest';
+  }
+  function get(th) {
+    const k = key(th && th.style);
+    if (k in IMG) return IMG[k];
+    IMG[k] = null;
+    try {
+      if (typeof Image === 'undefined') return null;
+      const im = new Image();
+      im.onload = function () {
+        IMG[k] = im;
+        try { floorChunkDirty(null); } catch (e) {}
+      };
+      im.onerror = function () { IMG[k] = null; };
+      im.src = SRC[k] || SRC.forest;
+    } catch (e) { IMG[k] = null; }
+    return null;
+  }
+  return { get: get, key: key, STYLES: STYLES };
+})();
+let _flrPat = {};
+function paintFloorTex(wx, wy, w, h, th) {
+  const im = FloorTex.get(th);
+  if (!im) return;
+  const k = FloorTex.key(th && th.style);
+  let pat = _flrPat[k];
+  if (!pat || pat.__src !== im) {
+    try { pat = ctx.createPattern(im, 'repeat'); } catch (e) { pat = null; }
+    if (!pat) return;
+    try { pat.__src = im; } catch (e) {}
+    _flrPat[k] = pat;
+  }
+  const T = Game.T || 40;
+  const s = Math.max(.32, T / 56);
+  try {
+    if (pat.setTransform && typeof DOMMatrix !== 'undefined') {
+      pat.setTransform(new DOMMatrix([s, 0, 0, s, (wx * .31) % 256, (wy * .31) % 256]));
+    }
+  } catch (e) {}
+  ctx.save();
+  ctx.globalAlpha = .34;
+  try { ctx.globalCompositeOperation = 'overlay'; } catch (e) {}
+  ctx.fillStyle = pat;
+  ctx.fillRect(wx, wy, w, h);
+  ctx.restore();
+}
+
 function floorChunk(cx, cy) {
   const th0 = Game.theme || THEMES[0];
   const sig = (Game.mapSeq || 0) + '|' + Game.T + '|' + Game.cols + 'x' + Game.rows + '|' + ((th0 && th0.style) || '');
@@ -22766,6 +23359,10 @@ function floorChunk(cx, cy) {
               paintFloorStyle(gx, gy, xx * T, yy * T, T, thc, (thc && thc.style) || 'forest');
             }
           }
+          /* ①-b v5.73：地板材質疊加（整塊一次 fillRect，比逐格便宜） */
+          try {
+            paintFloorTex(cx * FLR_N * T, cy * FLR_N * T, w * T, h * T, th0);
+          } catch (e) {}
           /* ② 牆面／軟磚（靜態：只有軟磚被炸掉才變 → floorChunkDirty 會丟掉那一塊） */
           for (let yy = 0; yy < h; yy++) {
             for (let xx = 0; xx < w; xx++) {
@@ -27452,6 +28049,19 @@ function heroMoodVfx(g, kind, px, py, size, t, hb) {
 
 function drawRigChar(g, key, x, footY, H, a) {
   if (!g || !g.drawImage || typeof IMG_PARTS === 'undefined') return null;
+  /* v5.73：統一落地投影 —— 光源固定在左上，影子一律落在腳下偏右。
+     以前每個分件自己帶陰影，方向不一致；現在底下一律墊一顆橢圓，角色才「站在地上」。 */
+  try {
+    if (g.ellipse) {
+      g.save();
+      g.globalAlpha = .22;
+      g.fillStyle = '#0a0416';
+      g.beginPath();
+      g.ellipse(x + H * .05, footY - H * .02, H * .27, H * .085, 0, 0, 6.2832);
+      g.fill();
+      g.restore();
+    }
+  } catch (e) {}
   const M = IMG_PARTS[key];
   if (!M || !Parts.has(key)) return null;
   a = a || {};
@@ -27598,6 +28208,21 @@ function drawSpriteChar(g, c, x, y, R, a) {
 
 function drawCharBody(g, c, x, y, R, a) {
   a = a || {};
+  /* v5.73：同一套落地投影（見 drawRigChar）。
+     刻意用 arc + scale 而不是 ellipse —— 舊版測試用 ellipse 取樣腳的擺動，不能插隊。 */
+  try {
+    if (g.arc) {
+      g.save();
+      g.translate(x + R * .06, y + R * .92);
+      g.scale(1, .32);
+      g.globalAlpha = .20;
+      g.fillStyle = '#0a0416';
+      g.beginPath();
+      g.arc(0, 0, R * .60, 0, 6.2832);
+      g.fill();
+      g.restore();
+    }
+  } catch (e) {}
   const moving = !!a.moving;
   const walk = a.walk || 0;
   const amp = a.amp != null ? a.amp : 1;         // 步幅係數（選角預覽放大動作，遊戲內維持 1）
@@ -29363,6 +29988,15 @@ $id('btnDaily').addEventListener('click', function () {
   renderDailyScreen();
 });
 $id('btnDailyGo').addEventListener('click', function () { Daily.begin(); });
+/* v5.73：本週限制挑戰 */
+(function () {
+  const b = $id('btnWkChal');
+  if (b && b.addEventListener) b.addEventListener('click', function () {
+    AudioSys.ensure(); AudioSys.sfx('click');
+    if (!ensureNickname()) return;
+    try { WeekChal.begin(); } catch (e) { try { toast('載入失敗，請重新整理', 2.4); } catch (e2) {} }
+  });
+})();
 // v4.80：重新整理榜單 —— 一定要清掉 Lb.last 才會真的重打（不然同一天只會顯示上次結果）
 $id('btnLbReload').addEventListener('click', function () {
   AudioSys.ensure(); AudioSys.sfx('click');
@@ -29458,7 +30092,31 @@ function showAdvPick(on) {
   const s1 = $id('btnSolo'), s2 = $id('btnRpg');
   if (s1) s1.textContent = t('adv.solo');
   if (s2) s2.textContent = t('adv.rpg');
+  /* v5.73：深淵按鈕 —— 鎖住時直接寫「還差幾關」 */
+  const ab = $id('btnAbyss'), at = $id('abyssTip');
+  if (ab) {
+    const ok = Abyss.unlocked();
+    ab.classList.toggle('locked', !ok);
+    const lv = ab.querySelector('b');
+    if (at) {
+      at.textContent = ok
+        ? t('abyss.bestShort', { n: Abyss.bestOf() })
+        : t('abyss.needMore', { n: Math.max(0, SOLO_STAGES - (Solo.unlocked | 0)) });
+    }
+  }
 }
+/* v5.73：深淵入口。40 關全破才開 —— 沒破關的人點下去要知道「還差什麼」，
+   不是按了沒反應。 */
+(function () {
+  const b = $id('btnAbyss');
+  if (b && b.addEventListener) b.addEventListener('click', function () {
+    AudioSys.ensure(); AudioSys.sfx('click');
+    if (!ensureNickname()) return;
+    if (!Abyss.unlocked()) { AudioSys.sfx('hurt'); toast(t('abyss.locked'), 3); return; }
+    showAdvPick(false);
+    try { Abyss.start(1); } catch (e) { try { toast('深淵載入失敗，請重新整理', 2.6); } catch (e2) {} }
+  });
+})();
 (function () {
   const adv = $id('btnAdventure');
   if (adv && adv.addEventListener) adv.addEventListener('click', function () {
@@ -33531,6 +34189,147 @@ const Shop = (function () {
     tickets--; save(); render();
     return true;
   }
+  /* ===== v5.73：每日特惠（Daily Deal）=====================================
+     每天 3 件、按日期種子固定、每件限購一次。
+     目的：① 讓「每天打開商店」有理由 ② 金幣多一個小出口 ③ 折扣是唯一會
+     讓玩家覺得「今天不買就虧了」的機制 —— 比再加一個常駐商品有效得多。
+     ====================================================================== */
+  const DEAL_KEY = 'bombhero-dailydeal-v1';
+  const DailyDeal = (function () {
+    let cache = null;
+    function dkey() {
+      const d = new Date();
+      return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    }
+    function hash(str) {
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return h >>> 0;
+    }
+    /* 同一天所有人看到同一組 —— 可以拿來當「今天商店有狼人半價」的討論話題 */
+    function rnd(seed) {
+      let x = seed | 0;
+      return function () {
+        x = (Math.imul(x ^ (x >>> 15), 2246822507) + 0x9e3779b9) >>> 0;
+        return x / 4294967296;
+      };
+    }
+    function pool() {
+      const out = [];
+      PET_KINDS.forEach(function (k) {
+        if (!has(k.key)) out.push({ kind: 'pet', key: k.key, base: k.price, off: .7 });
+        else if (lvOf(k.key) < 5) out.push({ kind: 'petup', key: k.key, base: (k.ups || [])[lvOf(k.key) - 1] | 0, off: .75 });
+      });
+      out.push({ kind: 'ticket', key: 'ticket', base: TICKET_PRICE, off: .6 });
+      out.push({ kind: 'bag', key: 'bag3', base: 1500, off: .65 });
+      return out;
+    }
+    function build() {
+      const r = rnd(hash(dkey()));
+      const p = pool();
+      for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const v = p[i]; p[i] = p[j]; p[j] = v; }
+      return {
+        day: dkey(),
+        items: p.slice(0, 3).map(function (x) {
+          return { kind: x.kind, key: x.key, base: x.base, off: x.off, bought: 0 };
+        })
+      };
+    }
+    function cur() {
+      let st = cache;
+      if (!st) {
+        try { st = JSON.parse(localStorage.getItem(DEAL_KEY) || 'null'); } catch (e) { st = null; }
+      }
+      if (!st || st.day !== dkey() || !st.items || st.items.length !== 3) st = build();
+      cache = st;
+      try { localStorage.setItem(DEAL_KEY, JSON.stringify(st)); } catch (e) {}
+      return st;
+    }
+    function priceOf(it) { return Math.max(1, Math.round(it.base * it.off)); }
+    function bagIds() { return ['hp1', 'hp2', 'arm1', 'fire1', 'rem1', 'rev1', 'xray', 'decoy', 'warp']; }
+    function buy(i) {
+      const st = cur(), it = st.items[i];
+      if (!it || it.bought) return { ok: false, err: 'BOUGHT' };
+      const price = priceOf(it);
+      if (!dev() && gold < price) return { ok: false, err: 'GOLD', need: price - gold };
+      let msg = '';
+      if (it.kind === 'pet') {
+        if (has(it.key)) return { ok: false, err: 'OWNED' };
+        if (!dev()) gold -= price;
+        owned.push({ kind: it.key, ch: Math.floor(Math.random() * CHARACTERS.length), lv: 1 });
+        msg = t('deal.pet');
+      } else if (it.kind === 'petup') {
+        const lv = lvOf(it.key);
+        if (lv >= 5) return { ok: false, err: 'MAX' };
+        if (!dev()) gold -= price;
+        for (let k = 0; k < owned.length; k++) if (owned[k].kind === it.key) owned[k].lv = lv + 1;
+        msg = t('deal.petup');
+      } else if (it.kind === 'ticket') {
+        if (!dev()) gold -= price;
+        tickets++;
+        msg = t('deal.ticket');
+      } else {
+        if (!dev()) gold -= price;
+        const all = bagIds();
+        for (let k = 0; k < 3; k++) {
+          const id = all[(hash(dkey() + '|bag|' + k) >>> 5) % all.length];
+          RPG.bag[id] = (RPG.bag[id] | 0) + 1;
+        }
+        try { RpgUI.saveCamp(); } catch (e) {}
+        msg = t('deal.bag');
+      }
+      it.bought = 1;
+      cache = st;
+      try { localStorage.setItem(DEAL_KEY, JSON.stringify(st)); } catch (e) {}
+      save();
+      render();
+      return { ok: true, msg: msg };
+    }
+    function html() {
+      const st = cur();
+      const cards = st.items.map(function (it, i) {
+        const p = priceOf(it);
+        const own = it.kind === 'pet' && has(it.key);
+        const max = it.kind === 'petup' && lvOf(it.key) >= 5;
+        const dis = !!it.bought || own || max;
+        let ico = '🎟️', nm = t('deal.ticketN');
+        if (it.kind === 'pet' || it.kind === 'petup') {
+          const k = petKind(it.key);
+          ico = k ? k.ico : '🐾';
+          nm = (k ? k.name.split(' · ')[0] : '') + (it.kind === 'petup' ? ' ' + t('deal.lvup') : '');
+        } else if (it.kind === 'bag') { ico = '🎒'; nm = t('deal.bagN'); }
+        const pct = Math.round((1 - it.off) * 100);
+        return '<div class="dealcard' + (dis ? ' off' : '') + '">' +
+            '<span class="dealico">' + ico + '</span>' +
+            '<span class="dealmeta"><b>' + hesc(nm) + '</b>' +
+              '<i>' + t('deal.off', { n: pct }) + '</i></span>' +
+            '<span class="dealprice"><s>' + it.base + '</s>' +
+              '<b>💰 ' + p + '</b></span>' +
+            '<button class="dealbtn" data-deal="' + i + '"' + (dis ? ' disabled' : '') + '>' +
+              (it.bought ? t('deal.done') : (own || max ? '—' : t('shop.buy'))) + '</button>' +
+          '</div>';
+      }).join('');
+      return '<div id="shopDeal">' +
+          '<div class="dealhd"><b>🔥 ' + t('deal.title') + '</b><i>' + t('deal.sub') + '</i></div>' +
+          cards +
+        '</div>';
+    }
+    function wire(root) {
+      const box = root && root.querySelector ? root.querySelector('#shopDeal') : null;
+      if (!box) return;
+      box.querySelectorAll('[data-deal]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          AudioSys.ensure();
+          const r = buy(parseInt(b.getAttribute('data-deal'), 10) || 0);
+          if (r.ok) { AudioSys.sfx('item'); toast(r.msg, 2.6); }
+          else if (r.err === 'GOLD') { AudioSys.sfx('hurt'); toast('💰 金幣不足，還差 ' + r.need + ' 枚', 2.2); }
+          else if (r.err === 'BOUGHT') toast(t('deal.done'), 1.6);
+        });
+      });
+    }
+    return { cur: cur, buy: buy, html: html, wire: wire, priceOf: priceOf, dkey: dkey };
+  })();
+
   function render() {
     const grid = $id('shopGrid');
     const w = $id('shopWallet');
@@ -33552,7 +34351,7 @@ const Shop = (function () {
       '<div class="shdesc" style="margin-top:6px;color:#d4491f"><b>' + t('shop.hold', { n: tickets }) + '</b>' +
       '<span style="color:#1c7a4a;margin-left:8px">' + t('shop.ticketDaily') + '</span></div>' +
       '</div>';
-    grid.innerHTML = PET_KINDS.map(function (k) {
+    grid.innerHTML = DailyDeal.html() + PET_KINDS.map(function (k) {
       const own = has(k.key);
       const lv = lvOf(k.key);
       const MAXLV = 5;
@@ -33582,6 +34381,7 @@ const Shop = (function () {
         '<div class="shfoot">' + foot + '</div></div>';
     }).join('') + ticketCard;
     try { PetPreview.mount(grid); } catch (e) {}      // v5.17：隨從圖示會走動
+    try { DailyDeal.wire(grid); } catch (e) {}        // v5.73：今日特惠
     grid.querySelectorAll('[data-buy-ticket]').forEach(function (b) {
       b.addEventListener('click', function () {
         AudioSys.ensure();
@@ -33660,7 +34460,7 @@ const Shop = (function () {
       return { ok: true, gold: gold };
     },
     dev: dev,
-    buyTicket: buyTicket, useTicket: useTicket,
+    buyTicket: buyTicket, useTicket: useTicket, DailyDeal: DailyDeal,
     tickets: function () { return tickets; },
     claimDaily: claimDaily, todayKey: todayKey, grantTicket: grantTicket,
     ticketPrice: function () { return TICKET_PRICE; },
@@ -34114,7 +34914,12 @@ const RPG_BAG = [
   { id: 'arm1',  ico: '🛡️', n: '護甲片',   price: 400,  desc: '本關護甲 +1',            buff: { def: 1 } },
   { id: 'fire1', ico: '🔥', n: '火力符',   price: 500,  desc: '本關爆炸範圍 +1',        buff: { fire: 1 } },
   { id: 'rem1',  ico: '📡', n: '遙控器',   price: 700,  desc: '本關可用遙控引爆',        buff: { remote: 1 } },
-  { id: 'rev1',  ico: '💖', n: '復活幣',   price: 1200, desc: '陣亡時原地復活一次（半血）', buff: { revive: 1 } }
+  { id: 'rev1',  ico: '\uD83D\uDC96', n: '復活幣',   price: 1200, desc: '陣亡時原地復活一次（半血）', buff: { revive: 1 } },
+  /* v5.73：行為型補給 —— 前三種補給全是數值（+血 +甲 +火），換了也不會改變打法。
+     這三種改的是「資訊」「資訊不對稱」「退路」，才是真的換一種玩法。 */
+  { id: 'xray',  ico: '\uD83D\uDD0D', n: '透視符',   price: 800,  desc: '本關前 30 秒，牆後的道具與金幣會透出輪廓', buff: { xray: 1 } },
+  { id: 'smoke', ico: '\uD83D\uDCA8', n: '煙霧彈',   price: 600,  desc: '開場 10 秒怪物看不到你 —— 可以大膽衝過怪群', buff: { smoke: 1 } },
+  { id: 'warp',  ico: '\uD83C\uDF00', n: '傳送卷',   price: 900,  desc: '陣亡時自動傳回起點並復活（半血，每張一次）', buff: { warp: 1 } }
 ];
 const RPG_PERM_UP = [
   { id: 'hp',   ico: '❤️', n: '起始生命', unit: '+1', prices: [600, 1200, 2400] },
@@ -35224,6 +36029,20 @@ function rpgHurt(p, silent, killer) {
     try { AudioSys.sfx('heal'); } catch (e) {}
     return;
   }
+  if (p.hpCur <= 0 && (p.warpBack | 0) > 0) {
+    /* v5.73：傳送卷 —— 比復活幣弱（會離開現場），但能救回一條命 */
+    p.warpBack = (p.warpBack | 0) - 1;
+    const sc = Game.spawnCell || { x: 1, y: 1 };
+    p.x = (sc.x + .5) * Game.T; p.y = (sc.y + .5) * Game.T;
+    p.hpCur = Math.max(1, Math.ceil(p.hpMax / 2));
+    p.invuln = 2.5; p.camSnap = true;
+    Game.hurtCount = (Game.hurtCount | 0) + 1;
+    burst(p.x, p.y, '#b9a6ff', 28, 260);
+    Game.flash = Math.max(Game.flash || 0, .3);
+    try { toast('🌀 傳送卷生效 —— 回到起點（半血）', 2.4); } catch (e) {}
+    try { AudioSys.sfx('item'); } catch (e) {}
+    return;
+  }
   if (p.hpCur <= 0) {                                // 生命歸零 → 冒險失敗
     p.alive = false; p.dead = true; p.lives = 0; p.respawnT = 1.2; p.cry = 3.8;   // v5.31：哭臉久一點
     try { if (p === Game.players[0]) Ach.count('death', 1); } catch (e) {}
@@ -35340,13 +36159,211 @@ const RpgSkill = (function () {
   const LEFT = {};                 // id → 剩餘冷卻
   let uiT = 0;
 
+  /* ===== v5.73：角色專屬技 =================================================
+     八個角色本來只差「一行天賦」，換角色沒有感覺。專屬技不進招式池、不佔
+     出戰 4 欄、不花技能點 —— 選了這個角色就天生有這一招，冷卻 14~20 秒。
+     全部做成「炸彈做不到的事」，跟原本的主動招同一條設計原則（0 傷害）。
+     ====================================================================== */
+  const CHAR_SKILLS = [
+    { id: 'gale',    ico: '\uD83D\uDCA8', n: '疾風步', cd: 14, d: '往面向的方向瞬移 2 格，落地 0.8 秒無敵（穿得過火線）。' },
+    { id: 'roll',    ico: '\uD83D\uDF00', n: '滾地閃避', cd: 16, d: '往反方向滾 2 格，翻滾中完全無敵。' },
+    { id: 'quickfuse', ico: '\u26A1', n: '速爆指令', cd: 18, d: '場上自己的炸彈引信立刻縮短一半（一次清場）。' },
+    { id: 'enchant', ico: '\uD83D\uDD25', n: '烈焰灌注', cd: 20, d: '本關爆炸範圍永久 +1（上限 10 格），可疊到極限。' },
+    { id: 'loot',    ico: '\uD83E\uDE99', n: '拾金之手', cd: 15, d: '把 4 格內的所有金幣與道具直接吸到腳下。' },
+    { id: 'bulwark', ico: '\uD83D\uDEE1\uFE0F', n: '鐵壁', cd: 20, d: '護甲回滿並 +2，同時 1.8 秒無敵。' },
+    { id: 'refill',  ico: '\uD83D\uDCE6', n: '軍械補給', cd: 22, d: '本關炸彈上限 +1（上限 8），打得越久越強。' },
+    { id: 'stardust', ico: '\u2728', n: '星塵爆', cd: 17, d: '清掉身邊 3 格內所有敵方投射物，並把怪物震暈 1.6 秒。' }
+  ];
+  let charCd = 0;
+
+  /* ===== v5.73：招式連動（combo）==========================================
+     原本 4 個主動招各自獨立 —— 玩家只會挑「最強那一招」一直按。這裡讓兩招
+     在 4 秒內接續施放時產生第三種效果：先放的招「留下狀態」，後放的招「引爆它」。
+       · 冰霜 → 震地：冰層被震碎 → 範圍更大、暈更久（碎冰）
+       · 護盾 → 遙控引爆：把護盾的能量炸出去 → 震退身邊所有怪
+       · 遙控引爆 → 震地：炸彈殘留的氣浪被二次震開 → 全場炸點暈眩
+     ====================================================================== */
+  const COMBO_WIN = 4.0;
+  let lastSk = '', lastAt = -999;
+  function nowSec() {
+    try { return (typeof performance !== 'undefined' && performance.now) ? performance.now() / 1000 : Date.now() / 1000; }
+    catch (e) { return Date.now() / 1000; }
+  }
+  function comboTry(p, id) {
+    const t = nowSec();
+    const a = lastSk, dt = t - lastAt;
+    lastSk = id; lastAt = t;
+    if (!p || dt > COMBO_WIN) return false;
+    const T = Game.T || 40;
+    let hit = false;
+    if (a === 'frost' && id === 'quake') {
+      /* 碎冰：範圍 5 格、暈 2.8 秒、冰藍爆發 */
+      const r = 5 * T, r2 = r * r;
+      (Game.enemies || []).forEach(function (e) {
+        if (!e || e.dead || e.boss) return;
+        if (dist2(e.x, e.y, p.x, p.y) > r2) return;
+        e.dizzy = Math.max(e.dizzy || 0, 2.8);
+        burst(e.x, e.y, '#bde9ff', 14, 190);
+        hit = true;
+      });
+      for (let k = 0; k < 3; k++) burst(p.x + (Math.random() - .5) * T, p.y + (Math.random() - .5) * T, '#e8f8ff', 18, 300);
+      try { Game.rings.push({ kind: 'ring', x: p.x, y: p.y, born: Game.gameT || 0, dur: .55, r: 5 * T, color: '#bfe9ff', thick: .1 }); } catch (e) {}
+      Game.flash = Math.max(Game.flash || 0, .35);
+      Game.shake = Math.max(Game.shake || 0, .45);
+      try { AudioSys.sfx('explode'); } catch (e) {}
+      try { if (typeof comboToast === 'function') comboToast('碎冰'); } catch (e) {}
+    } else if (a === 'shield' && id === 'det') {
+      /* 盾炸：把身邊 2 格怪往外震 2 格，並補回 1 秒無敵 */
+      const r = 2.5 * T, r2 = r * r;
+      (Game.enemies || []).forEach(function (e) {
+        if (!e || e.dead || e.boss) return;
+        const dx = e.x - p.x, dy = e.y - p.y;
+        if (dx * dx + dy * dy > r2) return;
+        const cn = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+        const d = DIRS[cn];
+        const cx = Math.floor(e.x / T), cy = Math.floor(e.y / T);
+        for (let k = 0; k < 2; k++) {
+          const nx = cx + d.x, ny = cy + d.y;
+          if (cellAt(nx, ny) === 0 && !bombAt(nx, ny)) { e.x = (nx + .5) * T; e.y = (ny + .5) * T; }
+        }
+        e.dizzy = Math.max(e.dizzy || 0, 1.2);
+        hit = true;
+      });
+      p.invuln = Math.max(p.invuln || 0, 1);
+      try { Game.rings.push({ kind: 'ring', x: p.x, y: p.y, born: Game.gameT || 0, dur: .48, r: 2.5 * T, color: '#9fd8ff', thick: .12 }); } catch (e) {}
+      for (let k = 0; k < 26; k++) burst(p.x, p.y, '#bfe4ff', 6, 320);
+      Game.shake = Math.max(Game.shake || 0, .4);
+      try { AudioSys.sfx('explode'); } catch (e) {}
+      try { if (typeof comboToast === 'function') comboToast('盾炸'); } catch (e) {}
+    } else if (a === 'det' && id === 'quake') {
+      /* 氣浪：每一個炸點都變成一個小暈眩圈 */
+      const list = (Game.flames || []).slice(0, 24);
+      list.forEach(function (f) {
+        const r = 1.6 * T, r2 = r * r;
+        (Game.enemies || []).forEach(function (e) {
+          if (!e || e.dead || e.boss) return;
+          if (dist2(e.x, e.y, f.x, f.y) > r2) return;
+          e.dizzy = Math.max(e.dizzy || 0, 1.4);
+          hit = true;
+        });
+        burst(f.x, f.y, '#ffd9a0', 8, 160);
+      });
+      try { Game.rings.push({ kind: 'ring', x: p.x, y: p.y, born: Game.gameT || 0, dur: .55, r: 4 * T, color: '#ffcf8a', thick: .1 }); } catch (e) {}
+      Game.shake = Math.max(Game.shake || 0, .35);
+      try { if (typeof comboToast === 'function') comboToast('氣浪'); } catch (e) {}
+    }
+    return hit;
+  }
+
+  function charIdx() {
+    try { return ((RPG.char | 0) % CHAR_SKILLS.length + CHAR_SKILLS.length) % CHAR_SKILLS.length; }
+    catch (e) { return 0; }
+  }
+  function charDef() { return CHAR_SKILLS[charIdx()]; }
+  function charCdLeft() { return charCd; }
+  function charStep(p, dx, dy, n) {
+    const T = Game.T || 40;
+    for (let k = 0; k < n; k++) {
+      const cx = Math.floor(p.x / T) + dx, cy = Math.floor(p.y / T) + dy;
+      if (cx < 1 || cy < 1 || cx >= Game.cols - 1 || cy >= Game.rows - 1) break;
+      if (cellAt(cx, cy) !== 0 || bombAt(cx, cy)) break;
+      p.x = (cx + .5) * T; p.y = (cy + .5) * T;
+      p.camSnap = true;
+    }
+  }
+  function charCast() {
+    if (!Game.rpg || Game.state !== 'play') return false;
+    const p = Game.players && Game.players[0];
+    if (!p || !p.alive) return false;
+    if (charCd > 0) return false;
+    const def = charDef();
+    const T = Game.T || 40;
+    let ok = false;
+    const f = p.facing || 'down';
+    const dv = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[f] || [0, 1];
+
+    if (def.id === 'gale') {
+      charStep(p, dv[0], dv[1], 2);
+      p.invuln = Math.max(p.invuln || 0, .8);
+      burst(p.x, p.y, '#c9f0ff', 26, 300);
+      AudioSys.sfx('item');
+      ok = true;
+    } else if (def.id === 'roll') {
+      charStep(p, -dv[0], -dv[1], 2);
+      p.invuln = Math.max(p.invuln || 0, 1);
+      burst(p.x, p.y, '#ffe6a8', 22, 260);
+      AudioSys.sfx('place');
+      ok = true;
+    } else if (def.id === 'quickfuse') {
+      let n = 0;
+      Game.bombs.forEach(function (b) {
+        if (b.owner === p && !b.held) { b.timer = Math.max(.05, (b.timer || 0) * .5); n++; }
+      });
+      if (n) { burst(p.x, p.y, '#ffd166', 16, 210); AudioSys.sfx('explode'); ok = true; }
+    } else if (def.id === 'enchant') {
+      if ((p.power | 0) < 10) {
+        p.power = Math.min(10, (p.power | 0) + 1);
+        burst(p.x, p.y, '#ff9a3c', 28, 300);
+        Game.flash = Math.max(Game.flash || 0, .28);
+        AudioSys.sfx('heal');
+        ok = true;
+      }
+    } else if (def.id === 'loot') {
+      const r = 4 * T, r2 = r * r;
+      let n = 0;
+      (Game.items || []).forEach(function (it) {
+        const dx = (it.cx + .5) * T - p.x, dy = (it.cy + .5) * T - p.y;
+        if (dx * dx + dy * dy > r2) return;
+        it.cx = Math.floor(p.x / T); it.cy = Math.floor(p.y / T);
+        n++;
+      });
+      burst(p.x, p.y, '#ffe07a', 20 + Math.min(20, n * 2), 240);
+      AudioSys.sfx('coin');
+      ok = true;
+    } else if (def.id === 'bulwark') {
+      p.armorMax = Math.max(p.armorMax | 0, (p.armorCur | 0) + 2);
+      p.armorCur = p.armorMax;
+      p.invuln = Math.max(p.invuln || 0, 1.8);
+      burst(p.x, p.y, '#9fd8ff', 30, 280);
+      Game.shake = Math.max(Game.shake || 0, .22);
+      AudioSys.sfx('heal');
+      ok = true;
+    } else if (def.id === 'refill') {
+      if ((p.maxBombs | 0) < 8) {
+        p.maxBombs = Math.min(8, (p.maxBombs | 0) + 1);
+        burst(p.x, p.y, '#ffc46b', 22, 250);
+        AudioSys.sfx('item');
+        ok = true;
+      }
+    } else if (def.id === 'stardust') {
+      const r = 3 * T, r2 = r * r;
+      Game.bolts = [];
+      Game.foeAoe = [];
+      Game.foeHaz = [];
+      (Game.enemies || []).forEach(function (e) {
+        if (!e || e.dead || e.boss) return;
+        if (dist2(e.x, e.y, p.x, p.y) > r2) return;
+        e.dizzy = Math.max(e.dizzy || 0, 1.6);
+        burst(e.x, e.y, '#e6d4ff', 10, 150);
+      });
+      burst(p.x, p.y, '#ffffff', 40, 340);
+      Game.flash = Math.max(Game.flash || 0, .3);
+      AudioSys.sfx('item');
+      ok = true;
+    }
+    if (!ok) return false;
+    charCd = def.cd;
+    paint();
+    return true;
+  }
+
   function lv(id) { return rpgSkLv(id); }
   function cdOf(id) {
     const a = CDS[id];
     if (!a) return 0;
     return a[Math.max(0, Math.min(2, lv(id) - 1))];
   }
-  function reset() { for (const k in LEFT) delete LEFT[k]; }
+  function reset() { for (const k in LEFT) delete LEFT[k]; charCd = 0; lastSk = ''; lastAt = -999; }
 
   function syncBar() {
     const bar = $id('skillBar');
@@ -35366,6 +36383,13 @@ const RpgSkill = (function () {
         '<span class="skh">' + keys[i] + '</span>' +
         '</button>';
     }
+    /* v5.73：角色專屬技永遠排在最前面（金色），跟主動招分開辨識 */
+    const cd0 = charDef();
+    html = '<button class="skbtn wsk" data-sk="c" type="button" aria-label="' + escHtml(cd0.n) + '">' +
+        '<span class="ski">' + cd0.ico + '</span>' +
+        '<span class="skc"></span>' +
+        '<span class="skh">T</span>' +
+      '</button>' + html;
     bar.innerHTML = html;
     if (!bar._wired) {
       bar._wired = 1;
@@ -35373,7 +36397,9 @@ const RpgSkill = (function () {
         const b = e.target && e.target.closest ? e.target.closest('.skbtn') : null;
         if (!b) return;
         e.preventDefault();
-        cast(parseInt(b.getAttribute('data-sk'), 10) || 0);
+        const k = b.getAttribute('data-sk');
+        if (k === 'c') { charCast(); return; }
+        cast(parseInt(k, 10) || 0);
       });
     }
     paint();
@@ -35383,9 +36409,19 @@ const RpgSkill = (function () {
     const bar = $id('skillBar');
     if (!bar) return;
     const lo = rpgLoadout();
-    const on = !!(Game.rpg && Screen.current === 'game' && lo.length > 0);
+    const on = !!(Game.rpg && Screen.current === 'game');
     bar.classList.toggle('hide', !on);
     if (!on) return;
+    /* v5.73：專屬技冷卻 */
+    const cb = bar.querySelector('[data-sk="c"]');
+    if (cb) {
+      const cd = charCd;
+      const tot = charDef().cd || 1;
+      const c = cb.querySelector('.skc');
+      if (c) c.textContent = cd > 0 ? (cd >= 1 ? String(Math.ceil(cd)) : cd.toFixed(1)) : '';
+      try { if (cb.classList) cb.classList.toggle('cool', cd > 0); } catch (e) {}
+      try { if (cb.style && cb.style.setProperty) cb.style.setProperty('--p', String(Math.max(0, Math.min(1, cd / tot)))); } catch (e) {}
+    }
     for (let i = 0; i < RPG_SK_SLOTS; i++) {
       const el = bar.querySelector('[data-sk="' + i + '"]');
       if (!el) continue;
@@ -35403,6 +36439,7 @@ const RpgSkill = (function () {
 
   function tick(dt) {
     let any = false;
+    if (charCd > 0) { charCd = Math.max(0, charCd - dt); any = true; }
     for (const k in LEFT) {
       if (LEFT[k] > 0) { LEFT[k] = Math.max(0, LEFT[k] - dt); any = true; }
     }
@@ -35472,6 +36509,7 @@ const RpgSkill = (function () {
     }
 
     if (!ok) return false;
+    try { comboTry(p, id); } catch (e) {}
     LEFT[id] = cdOf(id);
     paint();
     return true;
@@ -35492,6 +36530,7 @@ const RpgSkill = (function () {
       if (!Game.rpg || Screen.current !== 'game') return;
       const t = e.target;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+      if (e.code === 'KeyT') { try { e.preventDefault(); } catch (err) {} charCast(); return; }
       const i = ['KeyQ', 'KeyR', 'KeyF', 'KeyV'].indexOf(e.code);
       if (i < 0) return;
       try { e.preventDefault(); } catch (err) {}
@@ -35500,12 +36539,19 @@ const RpgSkill = (function () {
   }
 
   return { reset: reset, tick: tick, paint: paint, syncBar: syncBar, cast: cast, castById: castById, cdOf: cdOf,
+    charCast: charCast, charDef: charDef, charCdLeft: charCdLeft, CHAR_SKILLS: CHAR_SKILLS,
+    comboTry: comboTry, lastCombo: function () { return lastSk; },
     CDS: CDS, DUR: DUR };   // v5.19：招式師的「下一級」文字由這兩張表生成，不必為每個語言翻譯成長字串
 })();
 
+/* v5.73：combo 提示 —— 用既有的浮動提示，不另外長一個元件 */
+function comboToast(name) {
+  try { brTip('\u2728', 'COMBO！' + name, 'good', 1.6); } catch (e) {}
+}
+
 /* 出發時把背包裡的補給換成這一場的加成（買了才會有） */
 function rpgTakeBag() {
-  const out = { hp: 0, def: 0, fire: 0, bomb: 0, remote: 0, revive: 0, used: {} };
+  const out = { hp: 0, def: 0, fire: 0, bomb: 0, remote: 0, revive: 0, xray: 0, smoke: 0, warp: 0, used: {} };
   const bag = RPG.bag || {};
   RPG_BAG.forEach(function (it) {
     const c = Math.max(0, bag[it.id] | 0);
@@ -35559,6 +36605,10 @@ function startRpg(stage, opt) {
   p.pierce = rpgSkLv('pierce') > 0;                  // 被動：貫穿火焰
   p.remote = !!bf.remote;                            // 補給：遙控器
   p.revive = Math.max(0, bf.revive | 0);             // 補給：復活幣
+  /* v5.73：行為型補給 */
+  p.xrayT = Math.max(0, (bf.xray | 0) * 30);         // 透視符：本關前 30 秒
+  p.smokeT = Math.max(0, (bf.smoke | 0) * 10);       // 煙霧彈：開場 10 秒不會被盯上
+  p.warpBack = Math.max(0, bf.warp | 0);             // 傳送卷：陣亡回起點
   p.fuseMul = tal.fuse || 1;                         // 天賦：引信縮短
   p.shieldCharges = 0;
   p.lives = 1;
@@ -38806,6 +39856,17 @@ window.__BH = {
   RpgUI: RpgUI, RpgSkill: RpgSkill, rpgDerive: rpgDerive, rpgBonus: rpgBonus, rpgLoadout: rpgLoadout,
   rpgSkLv: rpgSkLv, rpgSkPts: rpgSkPts, rpgSkLeft: rpgSkLeft, rpgPowerOf: rpgPowerOf,
   RPG_SKILLS: RPG_SKILLS, RPG_BAG: RPG_BAG, RPG_PERM_UP: RPG_PERM_UP, rpgTakeBag: rpgTakeBag,
+  /* v5.73：深淵／每週挑戰／新手／支線／地板材質／角色專屬技 */
+  Abyss: (typeof Abyss !== 'undefined') ? Abyss : null,
+  AbyssHud: (typeof AbyssHud !== 'undefined') ? AbyssHud : null,
+  WeekChal: (typeof WeekChal !== 'undefined') ? WeekChal : null,
+  WK_MODS: (typeof WK_MODS !== 'undefined') ? WK_MODS : null,
+  Starter: (typeof Starter !== 'undefined') ? Starter : null,
+  SideEvent: (typeof SideEvent !== 'undefined') ? SideEvent : null,
+  FloorTex: (typeof FloorTex !== 'undefined') ? FloorTex : null,
+  RpgSkill: (typeof RpgSkill !== 'undefined') ? RpgSkill : null,
+  paintFloorTex: (typeof paintFloorTex !== 'undefined') ? paintFloorTex : null,
+  DailyDeal: (typeof Shop !== 'undefined' && Shop.DailyDeal) ? Shop.DailyDeal : null,
   RPG_SK_MAX: RPG_SK_MAX, RPG_SK_SLOTS: RPG_SK_SLOTS, RPG_SK_PER: RPG_SK_PER,
   charTalent: charTalent, CHAR_TALENTS: CHAR_TALENTS, rpgApplyCamp: rpgApplyCamp,
   // v5.20：圖鑑

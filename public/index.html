@@ -838,7 +838,92 @@ display: flex; align-items: center; gap: 7px; min-height: 38px;
 .chip .hpicks { font-size: 12px; letter-spacing: -1.6px; line-height: 1; white-space: nowrap; }
 body.touch.in-game .chip .hpicks { font-size: 11px; letter-spacing: -2px; }
 /* v5.31：簡單模式 3 顆心會把頂欄擠成三行（ESC 掉到第三行）—— 頂欄專屬收窄，不動其他面板的 .chip */
-#gameTop { gap: 6px; }
+#gameTop { gap: 6px; position: relative; }
+/* ===== v5.73：深淵 HUD 徽章 / 每日特惠 ===== */
+/* v5.73：貼在頂欄「正下方・靠右」——原本 fixed top:52px 壓到地圖名 chip，
+   靠左又會蓋到小地圖；靠右那一角在遊戲裡永遠是空的。
+   absolute + top:100%：頂欄長高（血格變多換行）也永遠不會撞到。 */
+#abyssBadge { position: absolute; right: 0; top: 100%; margin-top: 5px; z-index: 12; display: flex; flex-direction: column;
+  align-items: flex-end; text-align: right;
+  gap: 1px; padding: 5px 10px 6px; border-radius: 13px; pointer-events: none;
+  background: linear-gradient(180deg, rgba(34,12,52,.88), rgba(10,3,20,.92));
+  border: 1px solid rgba(178,118,255,.55);
+  box-shadow: 0 5px 16px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.16);
+  font-size: 11px; line-height: 1.25; color: #efe4ff; }
+#abyssBadge b { font-size: 12.5px; font-weight: 900; color: #cfadff;
+  text-shadow: 0 0 9px rgba(158,96,255,.8); }
+#abyssBadge i { font-style: normal; font-size: 10px; color: #9d8bb9; letter-spacing: .2px; }
+#abyssBadge.hide { display: none; }
+/* ===== v5.73：新手漸進解鎖 + 今日進度 ===== */
+#scr-title .nickwrap .todayline { display: none; margin-top: 5px; font-size: 11px;
+  color: #6b5a3e; line-height: 1.5; letter-spacing: .2px; }
+#scr-title .nickwrap.lock .todayline { display: block; }
+#scr-title .nickwrap .todayline b { color: #b4500a; font-weight: 900; }
+#scr-title .nickwrap .todayline i { font-style: normal; color: #b9a888; margin: 0 5px; }
+#homeMenu.starter[data-tier="0"] .mgrid .mbtn:not(#btnAdventure),
+#homeMenu.starter[data-tier="1"] .mgrid .mbtn:not(#btnAdventure):not(#btnDaily):not(#btnStore),
+#homeMenu.starter[data-tier="2"] .mgrid .mbtn:not(#btnAdventure):not(#btnDaily):not(#btnStore):not(#btnMulti):not(#btnBR) { display: none; }
+#homeMenu.starter[data-tier="0"] #quickRow,
+#homeMenu.starter[data-tier="1"] #quickRow,
+#homeMenu.starter[data-tier="2"] #quickRow { display: none; }
+#homeMenu.starter[data-tier="0"] .mgrid { grid-template-columns: 1fr; }
+#homeMenu.starter[data-tier="1"] .mgrid,
+#homeMenu.starter[data-tier="2"] .mgrid { grid-template-columns: 1fr 1fr; }
+.startertip { display: none; margin: 8px 0 2px; padding: 8px 11px; border-radius: 12px;
+  font-size: 11.5px; line-height: 1.55; color: #4a3418; text-align: center;
+  background: linear-gradient(180deg, rgba(255,240,206,.9), rgba(255,222,164,.7));
+  border: 1px dashed rgba(196,140,60,.55); }
+#homeMenu.starter .startertip { display: block; }
+/* v5.73：支線事件卡（沿用 .qcard 的奶油木框，只加遮罩與進場動畫） */
+#sideEv { position: fixed; inset: 0; z-index: 78; display: flex; align-items: center;
+  justify-content: center; padding: 18px; background: rgba(12,6,24,.58);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  animation: sevIn .22s ease-out both; }
+@keyframes sevIn { from { opacity: 0 } to { opacity: 1 } }
+#sideEv .qcard { max-width: 360px; width: 100%; animation: sevPop .26s cubic-bezier(.2,.9,.3,1.05) both; }
+@keyframes sevPop { from { transform: scale(.9) translateY(10px) } to { transform: none } }
+#sideEv .sevico { font-size: 42px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,0,0,.35)); }
+#sideEv .sevtag { display: inline-block; margin-top: 6px; padding: 2px 9px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 900; letter-spacing: .5px; color: #7a3d00;
+  background: linear-gradient(180deg, #ffe6a8, #ffc35a); }
+#sideEv .sevmsg { font-size: 12.5px; line-height: 1.6; color: #4a3418; margin: 8px 0 2px; }
+#sideEv .sevmsg b { color: #b4500a; }
+#sideEv .qbtn { width: 100%; margin-top: 8px; }
+.wkchal { margin: 14px 0 12px; padding: 11px 12px; border-radius: 15px;
+  background: linear-gradient(160deg, rgba(255,236,204,.85), rgba(255,214,164,.55));
+  border: 1px solid rgba(210,150,70,.45); box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
+.wkchd { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.wkchd b { font-size: 14px; color: #7a3d00; }
+.wkchd span { font-size: 11px; color: #a1732c; font-weight: 800; }
+.wkchrow { display: flex; gap: 7px; font-size: 12px; color: #4a3418; line-height: 1.55; }
+.wkchrow b { color: #b4500a; }
+.wkchal .rowbtns { margin: 9px 0 6px; }
+.biggo.alt { background: linear-gradient(180deg, #b98cff, #7b4bd6); box-shadow: 0 3px 0 #4e2a92; }
+.wkchal .lblist { max-height: 168px; }
+.qbtn.qbtn-abyss { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.qbtn.qbtn-abyss small { font-size: 10.5px; opacity: .78; font-weight: 700; }
+#shopDeal { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 7px; padding: 11px 12px;
+  border-radius: 16px; background: linear-gradient(155deg, rgba(255,228,156,.26), rgba(255,172,72,.12));
+  border: 1px solid rgba(255,200,90,.45); box-shadow: inset 0 1px 0 rgba(255,255,255,.3); }
+.dealhd { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.dealhd b { font-size: 14px; color: #7a3d00; }
+.dealhd i { font-style: normal; font-size: 11px; color: #9a6a20; }
+.dealcard { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 12px;
+  background: rgba(255,255,255,.62); border: 1px solid rgba(255,190,80,.38); overflow: hidden; }
+.dealcard.off { opacity: .55; }
+.dealico { font-size: 20px; width: 26px; text-align: center; filter: drop-shadow(0 1px 2px rgba(120,70,0,.25)); }
+.dealmeta { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.dealmeta b { font-size: 12.5px; color: #3a2a12; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.dealmeta i { font-style: normal; font-size: 10.5px; color: #c2510c; font-weight: 900; }
+.dealprice { display: flex; flex-direction: column; align-items: flex-end; font-size: 11px; color: #6b5a3a;
+  min-width: 56px; line-height: 1.25; }
+.dealprice s { font-size: 10.5px; color: #a8906c; text-decoration-thickness: 1px; }
+.dealprice b { font-size: 12.5px; color: #b4500a; white-space: nowrap; }
+.dealbtn { flex: 0 0 auto; margin-left: 5px; border: 0; border-radius: 10px; padding: 6px 12px; font-size: 11.5px; font-weight: 900;
+  color: #fff; background: linear-gradient(180deg, #ffc65a, #ef8a1c);
+  box-shadow: 0 2px 0 #b45c08, inset 0 1px 0 rgba(255,255,255,.5); cursor: pointer; }
+.dealbtn[disabled] { opacity: .45; box-shadow: none; cursor: default; }
 #gameTop .chip { padding: 6px 9px; gap: 6px; }
 #gameTop .chip[data-k="hp"] { padding: 6px 7px; }
 #gameTop .chip .hpicks { font-size: 11px; letter-spacing: -2.2px; }
@@ -4691,6 +4776,15 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .skbtn .skc:empty { display: none; }
 body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤，Q/R/F/V 徽章只會擋圖示 */
 .skbtn.cool { filter: grayscale(.35) brightness(.8); }
+/* v5.73：角色專屬技（金色，永遠排第一顆） */
+.skbtn.wsk { background: linear-gradient(180deg, #ffe7a6, #f0a52a 62%, #c9761a);
+  box-shadow: 0 3px 0 #935210, 0 6px 14px rgba(200,120,20,.45), inset 0 1px 0 rgba(255,255,255,.75); }
+.skbtn.wsk .ski { filter: drop-shadow(0 1px 1px rgba(90,40,0,.45)); }
+.skbtn.wsk .skh { color: #6b3a00; }
+.skbtn.wsk.cool { filter: grayscale(.5) brightness(.86); }
+.skbtn.wsk::after { content: ''; position: absolute; inset: -3px; border-radius: 50%;
+  border: 1.5px solid rgba(255,214,120,.65); animation: wskPulse 2.4s ease-in-out infinite; pointer-events: none; }
+@keyframes wskPulse { 0%,100% { opacity: .35; transform: scale(1) } 50% { opacity: .9; transform: scale(1.06) } }
 .skbtn.cool::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; pointer-events: none;
   background: conic-gradient(rgba(8,14,26,.80) calc(var(--p, 0) * 360deg), transparent 0);
   -webkit-mask: radial-gradient(circle, transparent 54%, #000 56%);
@@ -5052,7 +5146,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.72</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.73</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5107,13 +5201,15 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.72</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.73</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" id="nickWrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
         <input class="tinput" id="playerName" maxlength="8" placeholder="可留空，系統自動取名字">
         <!-- v5.71：名字定案後輸入框整列換成招呼語（暱稱走 .gname 金色漸層字） -->
         <div class="greet" id="greetLine" aria-live="polite"></div>
+        <!-- v5.73：今日進度（把長期目標切成看得見的短段） -->
+        <div class="todayline" id="todayLine"></div>
       </div>
       <div class="menu" id="homeMenu">
         <!-- v5.14：好友邀請／私訊通知。有未讀才出現（.hide），不佔遊戲畫面 -->
@@ -5140,6 +5236,8 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
           <button class="drawbtn" id="btnSettings" type="button" data-ico="⚙️">設定</button>
           <button class="drawbtn" id="btnQuit" type="button" data-ico="🚪">離開遊戲</button>
         </div>
+        <!-- v5.73：新手引導（漸進解鎖時顯示「下一顆按鈕怎麼開」） -->
+        <div class="startertip" id="starterTip"></div>
   <!-- v5.13：社群三入口（成就／排名／線上玩家）——刻意放在 .mgrid 外面，
        因為 v4.81 的測試斷言「主玩法剛好 6 張卡」，塞進去會直接弄壞版面規則 -->
   <div class="quickrow" id="quickRow">
@@ -5201,6 +5299,8 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
       <div class="qrows" style="flex-direction:column;gap:8px">
         <button class="qbtn" id="btnSolo" type="button">🎯 單人闖關（40 關）</button>
         <button class="qbtn" id="btnRpg" type="button">🎲 RPG 養成模式</button>
+        <!-- v5.73：深淵（無盡）—— 40 關全破後解鎖 -->
+        <button class="qbtn qbtn-abyss" id="btnAbyss" type="button">🕳️ 深淵（無盡）<small id="abyssTip">40 關全破後解鎖</small></button>
       </div>
       <div class="qtip" id="bhPickTip">單人闖關：炸光小怪、找到出口。RPG：配點養成，怪物有血量與護甲。</div>
       <button class="qbtn ghost" id="bhPickBack" type="button" style="margin-top:10px">← 返回</button>
@@ -5317,6 +5417,15 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
       </div>
       <div class="rowbtns">
         <button class="biggo" id="btnDailyGo" type="button">開始挑戰 →</button>
+      </div>
+      <!-- v5.73：本週限制挑戰 —— 同一張圖、同一條限制，一週內比最快 -->
+      <div class="wkchal" id="wkChal">
+        <div class="wkchd"><b id="wkChalTitle">⏱️ 本週限制挑戰</b><span id="wkChalWeek">—</span></div>
+        <div class="wkchrow"><span id="wkChalMod">—</span></div>
+        <div class="wkchrow"><span id="wkChalStage">—</span></div>
+        <div class="wkchrow"><span id="wkChalBest">—</span></div>
+        <div class="rowbtns"><button class="biggo alt" id="btnWkChal" type="button">挑戰 →</button></div>
+        <div class="lblist" id="wkChalList"></div>
       </div>
       <div class="lbhead">
         <b id="lbTitle">🏆 今日排行榜</b>

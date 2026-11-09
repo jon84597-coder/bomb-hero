@@ -1606,7 +1606,7 @@ function createCloud(options) {
    *   4. 只信合理範圍：3 秒 ~ 60 分鐘。超出視為無效。
    *      真正防作弊要靠伺服器重跑地圖，那是另一個量級的工程；這裡走「信任 + 限流」。
    */
-  const LB_MODES = { daily: 1, weekly: 1 };   // v4.87：weekly = 每週榜（同一週同一關比秒數）
+  const LB_MODES = { daily: 1, weekly: 1, abyss: 1, wchal: 1 };   // v5.73：abyss＝深淵（層數）、wchal＝每週限制挑戰
   const LB_KEEP_DAYS = 21;         // 保留三週（跨月也還看得到舊榜）
   const LB_MAX_DAY = 300;          // 每天最多存 300 筆
   const LB_MAX_MS = 3600000, LB_MIN_MS = 3000;
@@ -1689,14 +1689,16 @@ function createCloud(options) {
     if (!db.lb.days[key] && create) db.lb.days[key] = { list: [] };
     return db.lb.days[key] || null;
   }
-  function lbSort(list) {
+  /* v5.73：深淵是「層數越大越好」，其餘兩種是秒數越小越好 */
+  function lbSort(list, desc) {
     // 注意：at 是 Date.now()（毫秒，13 位），不能寫 e.at | 0 —— 會溢位成負數
-    list.sort(function (a, b) { return (a.ms | 0) - (b.ms | 0) || (Number(a.at) || 0) - (Number(b.at) || 0); });
+    if (desc) list.sort(function (a, b) { return (b.ms | 0) - (a.ms | 0) || (Number(a.at) || 0) - (Number(b.at) || 0); });
+    else list.sort(function (a, b) { return (a.ms | 0) - (b.ms | 0) || (Number(a.at) || 0) - (Number(b.at) || 0); });
     return list;
   }
   function lbList(mode, day, limit, ghosts) {
     const b = lbBucket(mode, day, false);
-    const arr = (b && b.list) ? lbSort(b.list.slice()) : [];
+    const arr = (b && b.list) ? lbSort(b.list.slice(), mode === 'abyss') : [];
     const out = [];
     const gh = Math.max(0, Math.min(LB_GHOST_KEEP, ghosts | 0));
     for (let i = 0; i < arr.length && out.length < (limit || 50); i++) {
@@ -2674,10 +2676,11 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
       if (p === '/api/lb/top' && req.method === 'GET') {
         const mode = String(url.searchParams.get('mode') || 'daily');
         if (!LB_MODES[mode]) return fail(res, 400, 'BAD_MODE', CORS_LB), true;
-        const weekly = mode === 'weekly';
+        const weekly = (mode === 'weekly' || mode === 'wchal');
+        const abyss = mode === 'abyss';
         const qd = String(url.searchParams.get('day') || '');
-        const day = weekly
-          ? (lbWeekOk(qd) ? qd : lbThisWeek())
+        const day = abyss ? 'all'
+          : weekly ? (lbWeekOk(qd) ? qd : lbThisWeek())
           : (lbDayOk(qd) ? qd : lbToday());
         const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get('limit'), 10) || 50));
         /* v5.56：ghosts=N → 順便把前 N 名的殘影軌跡帶回去（0 = 不要，省流量） */
@@ -2696,27 +2699,34 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         if (!body) return fail(res, 400, 'BAD_BODY', CORS_LB), true;
         const mode = String(body.mode || 'daily');
         if (!LB_MODES[mode]) return fail(res, 400, 'BAD_MODE', CORS_LB), true;
-        const weekly = mode === 'weekly';
-        const day = String(body.day || '');
-        const today = weekly ? lbThisWeek() : lbToday();
+        const weekly = (mode === 'weekly' || mode === 'wchal');
+        const abyss = mode === 'abyss';
+        const day = abyss ? 'all' : String(body.day || '');
+        const today = abyss ? 'all' : weekly ? lbThisWeek() : lbToday();
         // 每日榜只收「今天」；每週榜只收「本週」（跨週後舊成績自動失效，不能補交）
-        if (weekly ? !lbWeekOk(day) : !lbDayOk(day)) {
-          return fail(res, 400, 'BAD_DAY', Object.assign({ today: today }, CORS_LB)), true;
-        }
-        if (day !== today) {
-          return fail(res, 409, 'WRONG_DAY', Object.assign({ today: today }, CORS_LB)), true;
+        if (!abyss) {
+          if (weekly ? !lbWeekOk(day) : !lbDayOk(day)) {
+            return fail(res, 400, 'BAD_DAY', Object.assign({ today: today }, CORS_LB)), true;
+          }
+          if (day !== today) {
+            return fail(res, 409, 'WRONG_DAY', Object.assign({ today: today }, CORS_LB)), true;
+          }
         }
         const deviceId = String(body.deviceId || '').slice(0, 128);
         if (deviceId.length < 8) return fail(res, 400, 'BAD_DEVICE', CORS_LB), true;
         const ms = Math.round(Number(body.ms));
-        if (!isFinite(ms) || ms < LB_MIN_MS || ms > LB_MAX_MS) return fail(res, 400, 'BAD_TIME', CORS_LB), true;
+        /* v5.73：深淵存的是「層數」，不是毫秒 —— 上下限另外定 */
+        if (abyss ? (!isFinite(ms) || ms < 1 || ms > 9999)
+                  : (!isFinite(ms) || ms < LB_MIN_MS || ms > LB_MAX_MS)) {
+          return fail(res, 400, abyss ? 'BAD_LAYER' : 'BAD_TIME', CORS_LB), true;
+        }
         const name = lbCleanName(body.name);
         /* v5.59：順便把「社交身分」記進榜單。名字可以改、也可能跟 brName 不一樣，
            只靠名字比對會有一堆人查不到；pid 是穩定的（見 socPublic / pidOf）。 */
         const whoPid = /^p_[0-9a-f]{10}$/.test(String(body.pid || '')) ? String(body.pid) : '';
         const dev = sha256(deviceId + '|lb|' + secret).slice(0, 20);
         /* v5.56：每日榜才收殘影軌跡（每週榜沒有固定地圖，影子沒意義） */
-        const ghostPath = weekly ? '' : lbCleanPath(body.p);
+        const ghostPath = (weekly || abyss) ? '' : lbCleanPath(body.p);
         const wearTT = lbCleanTT(body.tt);
         const wearEq = lbCleanEq(body.eq);
 
@@ -2724,7 +2734,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
         if (!b.list) b.list = [];
         let mine = null;
         for (let i = 0; i < b.list.length; i++) { if (b.list[i].d === dev) { mine = b.list[i]; break; } }
-        const improved = !mine || ms < (mine.ms | 0);
+        const improved = abyss ? (!mine || ms > (mine.ms | 0)) : (!mine || ms < (mine.ms | 0));
         if (improved) {
           if (mine) {
             mine.ms = ms; mine.n = name; mine.at = Date.now();

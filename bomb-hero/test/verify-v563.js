@@ -169,8 +169,8 @@ ok(/hideOverlay\(\);\s*\n\s*try \{ document\.body\.classList\.add\('ovopen'\); \
   '先收掉開場卡再彈（否則兩層字疊在一起，截圖確認過）');
 ok(/const tk = isStart \? 'buff\.startTitle' : 'buff\.title';/.test(mainSrc),
   '起手那次標題換成「起手強化」（不是「過關強化」）');
-ok(/if \(Game\.stage >= maxStage\)/.test(mainSrc) && /BuffPick\.open\(goNext\)/.test(mainSrc),
-  '過關後的三選一保留（原本就有，沒被改壞）');
+ok(/if \(Game\.stage >= maxStage\)/.test(mainSrc) && /BuffPick\.open\(afterBuff\)/.test(mainSrc),
+  '過關後的三選一保留（v5.73 之後接支線事件，改走 afterBuff）');
 
 /* ============================================================
    ⑥ 復仇加成要套在 applyBuffs（resetPlayerStats 之後）

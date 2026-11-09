@@ -187,7 +187,8 @@ ok(P.RPG_SK_MAX === 3 && P.RPG_SK_SLOTS === 4, '每招 3 級、出戰 4 欄');
 head('⑤ 補給與永久強化');
 const BAG = P.RPG_BAG || [];
 const PERM = P.RPG_PERM_UP || [];
-ok(BAG.length === 6, '雜貨商人有 6 件補給（' + BAG.length + '）');
+/* v5.73：新增透視符／煙霧彈／傳送卷 3 件行為型補給 → 9 件 */
+ok(BAG.length >= 9, '雜貨商人有 9 件補給（' + BAG.length + '）');
 ok(BAG.every(function (x) { return x.id && x.n && x.price > 0 && x.desc; }), '每件補給都有名稱、價格、說明');
 ok(BAG.some(function (x) { return x.buff && x.buff.revive; }), '有復活幣（buff.revive）');
 ok(PERM.length === 3, '永久強化 3 項（' + PERM.length + '）');

@@ -488,7 +488,7 @@ verlog.btn|版本更新內容|版本更新内容|Version Log|更新情報|업데
 verlog.title|📜 版本更新內容|📜 版本更新内容|📜 Version Log|📜 更新情報|📜 업데이트 내역
 rpg.mode|RPG 模式|🎲 RPG 模式|🎲 RPG Mode|🎲 RPGモード|🎲 RPG 모드
 rpg.beta|測試版 Beta|测试版 Beta|Beta|ベータ版|베타 버전
-rpg.sub|配點養成 · 血量防禦|四维属性 · 血量防御 · 32 张地图|4 attributes · HP & armor · 32 maps|4つの能力値 · HPと防御 · 32枚のマップ|4대 능력치 · HP와 방어 · 32개 맵
+rpg.sub|四維屬性 · 血量防禦 · 40 關|四维属性 · 血量防御 · 40 关|4 attributes · HP & armor · 40 stages|4つの能力値 · HPと防御 · 全40面|4대 능력치 · HP와 방어 · 40 스테이지
 rpg.desc|跟一般闖關完全不同的養成規則：怪物有血量與防禦，炸一次不會死；你自己也有生命與護甲。先配點、再出發，一路打過 40 個關卡（含 8 場 BOSS 決戰）。|跟一般闯关完全不同的养成规则：怪物有血量与防御，炸一次不会死；你自己也有生命与护甲。先配点、再出发，一路打过 40 个关卡（含 8 场 BOSS 决战）。|A completely different growth system: monsters have HP and armor, so one blast will not kill them; you also have HP and armor yourself. Spend points, then set off and clear all 40 stages (8 of them boss arenas).|通常ステージとは全く違う成長ルール：モンスターにはHPと防御があり、1回の爆発では倒せません。あなた自身にもHPと防御があります。まずポイントを振ってから出発し、40ステージ（うち8つはボス決戦）をクリアしましょう。|일반 스테이지와 완전히 다른 성장 규칙: 몬스터에게 HP와 방어가 있어 한 번의 폭발로 죽지 않습니다. 당신에게도 HP와 방어가 있습니다. 먼저 포인트를 분배하고 40개 스테이지(보스 결전 8개 포함)를 모두 클리어하세요.
 rpg.step1|① 選角色|① 选角色|① Pick a hero|① キャラを選ぶ|① 캐릭터 선택
 rpg.step2|② 能力配點|② 能力配点|② Allocate points|② 能力値に振り分け|② 능력치 분배
@@ -977,7 +977,7 @@ z145|2️⃣ 按 <b>F 鍵</b>（手機按 <b>🔥</b>）吐火：小龍只燒<b>
 z146|3️⃣ 冷卻 <b>3 秒</b>（龍頭上方會顯示倒數），冷卻中按了沒反應，等數字消失再按。|3️⃣ 冷却 <b>3 秒</b>（龙头上方会显示倒数），冷却中按了没反应，等数字消失再按。|3️⃣ Cooldown <b>3s</b> (a countdown shows above its head). Nothing happens while cooling down — wait for the number to vanish.|3️⃣ クールダウン <b>3秒</b>（竜の頭上にカウントダウン表示）。クールダウン中は押しても反応しません。数字が消えてから押してください。|3️⃣ 쿨다운 <b>3초</b>(용 머리 위에 카운트다운 표시). 쿨다운 중에는 눌러도 반응이 없습니다. 숫자가 사라진 뒤 누르세요.
 z147|4️⃣ 火焰會<b>炸掉恐龍蛋、點燃別的炸彈</b>，但<b>不會傷到自己</b> —— 可以放心邊跑邊噴。|4️⃣ 火焰会<b>炸掉恐龙蛋、点燃别的炸弹</b>，但<b>不会伤到自己</b> —— 可以放心边跑边喷。|4️⃣ Flames <b>destroy dino eggs and set off other bombs</b>, but <b>never hurt you</b> — spray while running, no worries.|4️⃣ 炎は<b>恐竜の卵を壊し、他の爆弾に引火</b>しますが、<b>自分は傷つきません</b> —— 走りながら吐いてOK。|4️⃣ 불꽃은 <b>공룡 알을 부수고 다른 폭탄에 불을 붙이지만</b> <b>자신은 다치지 않습니다</b> — 달리면서 마음껏 뿜으세요.
 z148|5️⃣ 龍<b>只能擋一次傷害</b>：被炸到龍就消失（有 1.8 秒無敵），想再騎要再吃一顆蛋。|5️⃣ 龙<b>只能挡一次伤害</b>：被炸到龙就消失（有 1.8 秒无敌），想再骑要再吃一颗蛋。|5️⃣ The dino <b>absorbs one hit only</b>: get blasted and it's gone (you get 1.8s of invincibility). Hatch another egg to ride again.|5️⃣ 竜は<b>ダメージを1回だけ防ぎます</b>：被弾すると竜は消えます（1.8秒無敵）。また乗るには卵を割り直し。|5️⃣ 공룡은 <b>피해를 한 번만 막습니다</b>: 폭발에 맞으면 공룡이 사라집니다(1.8초 무적). 다시 타려면 알을 또 먹어야 합니다.
-z149|單人闖關共 <b>32 張地圖</b>（8 大主題 × 4 張），每一區的第 4 張是魔王關；關卡越後面機關越多、怪物越兇。|单人闯关共 <b>32 张地图</b>（8 大主题 × 4 张），每一区的第 4 张是魔王关；关卡越后面机关越多、怪物越凶。|Solo mode has <b>32 maps</b> (8 chapters × 4); the 4th of each chapter is a boss stage. Later stages bring more hazards and nastier monsters.|ソロは全 <b>32 マップ</b>（8テーマ×4枚）。各エリアの4枚目がボス面。後のステージほどギミックが増え、敵も凶暴になります。|솔로는 총 <b>32개 맵</b>(8테마 × 4장). 각 구역의 4번째가 보스 스테이지입니다. 뒤로 갈수록 장치가 늘고 몬스터가 사나워집니다.
+z149|單人闖關共 <b>40 關</b>：8 大主題各 5 關（4 張手工地圖 ＋ 1 座魔王決戰場），每一章的第 5 關是 BOSS 決戰場；關卡越後面機關越多、怪物越兇。|单人闯关共 <b>40 关</b>：8 大主题各 5 关（4 张手工地图 ＋ 1 座魔王决战場），每一章的第 5 关是 BOSS 决战場；关卡越后面机关越多、怪物越凶。|Solo has <b>40 stages</b>: 8 chapters of 5 (4 hand-made maps + 1 boss arena), and the 5th stage of each chapter is a boss arena. Later stages bring more hazards and nastier monsters.|ソロは全 <b>40 面</b>。8テーマ各5面（手作りマップ4枚＋ボス決戦場1つ）で、各章の5面目がボス決戦場です。後半ほどギミックが増え、敵も凶暴になります。|솔로는 총 <b>40 스테이지</b>. 8테마 각 5스테이지(수작업 맵 4장 + 보스 결전장 1개)이며, 각 장의 5번째가 보스 결전장입니다. 뒤로 갈수록 장치가 늘고 몬스터가 사나워집니다.
 z150|⚙️ 地形機關怎麼運作|⚙️ 地形机关怎么运作|⚙️ How hazards work|⚙️ 地形ギミックの仕組み|⚙️ 지형 장치의 작동 방식
 z151|對戰時間到還沒分出勝負時，<b>外圈開始落石</b>，場地越縮越小 —— 快往中間跑。|对战时间到还没分出胜负时，<b>外圈开始落石</b>，场地越缩越小 —— 快往中间跑。|When time runs out with no winner, <b>rocks start falling on the outer ring</b> and the arena shrinks — run for the middle.|時間切れで決着がつかないと、<b>外周から落石</b>が始まり場が狭くなります —— 中央へ急げ。|시간이 끝나도 승부가 안 나면 <b>바깥쪽에 낙석</b>이 시작되고 무대가 줄어듭니다 — 중앙으로 뛰세요.
 z152|對戰被淘汰後不用乾等：坐上推車沿外圈移動，<b>繼續往場內丟炸彈</b>報仇。|对战被淘汰后不用干等：坐上推车沿外圈移动，<b>继续往场内丢炸弹</b>报仇。|Eliminated? Don't just wait: hop on the cart, ride the outer ring and <b>keep lobbing bombs inside</b> for revenge.|やられても待つだけじゃない：トロッコに乗って外周を移動し、<b>中へ爆弾を投げ続けて</b>仕返し。|탈락해도 그냥 기다리지 마세요: 수레를 타고 바깥을 돌며 <b>안쪽으로 폭탄을 계속 던져</b> 복수하세요.
@@ -1032,7 +1032,7 @@ help.br.lead|🏝️ 大逃殺：最多 50 人的亂鬥，活到最後一個就�
 help.br.goal|🎯 <b>目標</b>：開場有 10 點血，被炸到一次扣 1～2 點；血量歸零就出局。<b>最後活著的人（或隊伍）獲勝</b>，名次越前面獎勵越好。|🎯 <b>目标</b>：开场有 10 点血，被炸到一次扣 1～2 点；血量归零就出局。<b>最后活着的人（或队伍）获胜</b>，名次越前面奖励越好。|🎯 <b>Goal</b>: you start with 10 HP and lose 1–2 per hit; at zero you're out. <b>The last player (or team) standing wins</b> — the higher your place, the bigger the reward.|🎯 <b>目標</b>：開始時10ポイント、被弾ごとに1～2減り、0で脱落。<b>最後に生き残った人（チーム）の勝ち</b>。順位が上ほど報酬が良い。|🎯 <b>목표</b>: 시작 시 10 HP, 피격당 1~2 감소, 0이면 탈락. <b>마지막까지 살아남은 사람(팀)이 승리</b>하며 순위가 높을수록 보상이 좋습니다.
 help.br.team|👥 <b>人數與組隊</b>：可選 30／50／100 人；組隊可開 2／3／4 隊 —— <b>同隊的炸彈與火焰不會傷到自己人</b>，但毒圈和小怪照樣會咬人。|👥 <b>人数与组队</b>：可选 30／50／100 人；组队可开 2／3／4 队 —— <b>同队的炸弹与火焰不会伤到自己人</b>，但毒圈和小怪照样会咬人。|👥 <b>Players & teams</b>: pick 30/50/100 players; teams can be 2/3/4 — <b>your team's bombs and flames never hurt teammates</b>, but the zone and monsters still do.|👥 <b>人数とチーム</b>：30／50／100人。チームは2／3／4から選択 —— <b>同じチームの爆弾と炎では味方を傷つけません</b>。ただし毒エリアと雑魚は容赦なし。|👥 <b>인원과 팀</b>: 30／50／100명, 팀은 2／3／4 —— <b>같은 팀의 폭탄과 불꽃은 아군을 해치지 않습니다</b>. 다만 자기장과 몬스터는 예외.
 help.br.zone|☠️ <b>毒圈</b>：一場 5 分鐘（5 圈）或 10 分鐘（10 圈）。時間到毒圈就往內縮，<b>站在圈外每 1.6 秒掉 1 點血</b> —— 看到圈靠過來就快往中間移動。|☠️ <b>毒圈</b>：一场 5 分钟（5 圈）或 10 分钟（10 圈）。时间到毒圈就往内缩，<b>站在圈外每 1.6 秒掉 1 点血</b> —— 看到圈靠过来就快往中间移动。|☠️ <b>The zone</b>: a match lasts 5 min (5 rings) or 10 min (10 rings). Each phase the ring closes in and <b>outside it you lose 1 HP every 1.6s</b> — when the ring moves, head for the middle.|☠️ <b>毒エリア</b>：1試合5分（5周）or 10分（10周）。時間ごとに円が縮み、<b>外にいると1.6秒ごとに1ポイント減</b> —— 円が来たら中央へ。|☠️ <b>자기장</b>: 한 판 5분(5회) 또는 10분(10회). 시간마다 원이 줄어들고 <b>바깥에 있으면 1.6초마다 1 HP 감소</b> — 원이 다가오면 중앙으로.
-help.br.boss|🦖 <b>亂入 BOSS（v4.77 新）</b>：場上會有 2 隻從 32 關隨機抽來的 BOSS 到處亂走。<b>打死牠最後一下的人直接騎上恐龍</b>（不用撿蛋）—— 多一層護盾，還能吐火，火力立刻翻一倍。|🦖 <b>乱入 BOSS（v4.77 新）</b>：场上会有 2 只从 32 关随机抽来的 BOSS 到处乱走。<b>打死它最后一下的人直接骑上恐龙</b>（不用捡蛋）—— 多一层护盾，还能吐火，火力立刻翻一倍。|🦖 <b>Roaming boss (new in v4.77)</b>: 2 bosses picked at random from the 32 stages wander the map. <b>Whoever lands the last hit mounts the dino right away</b> (no egg needed) — a free shield plus flame breath, so your firepower doubles instantly.|🦖 <b>乱入ボス（v4.77 新）</b>：32面からランダムに選ばれたボスが2体うろつきます。<b>最後の一撃を入れた人がそのまま恐竜に騎乗</b>（卵不要）—— シールド1枚＋火吹きで火力が倍に。|🦖 <b>난입 BOSS (v4.77 신규)</b>: 32개 스테이지에서 무작위로 뽑힌 BOSS 2마리가 돌아다닙니다. <b>마지막 일격을 넣은 사람이 바로 공룡에 탑승</b>(알 필요 없음) — 보호막 하나에 불뿜기까지, 화력이 두 배.
+help.br.boss|🦖 <b>亂入 BOSS（v4.77 新）</b>：場上會有 2 隻從 40 關隨機抽來的 BOSS 到處亂走。<b>打死牠最後一下的人直接騎上恐龍</b>（不用撿蛋）—— 多一層護盾，還能吐火，火力立刻翻一倍。|🦖 <b>乱入 BOSS（v4.77 新）</b>：场上会有 2 只从 40 关随机抽来的 BOSS 到处乱走。<b>打死它最后一下的人直接骑上恐龙</b>（不用捡蛋）—— 多一层护盾，还能吐火，火力立刻翻一倍。|🦖 <b>Roaming boss (new in v4.77)</b>: 2 bosses picked at random from the 40 stages wander the map. <b>Whoever lands the last hit mounts the dino right away</b> (no egg needed) — a free shield plus flame breath, so your firepower doubles instantly.|🦖 <b>乱入ボス（v4.77 新）</b>：40面からランダムに選ばれたボスが2体うろつきます。<b>最後の一撃を入れた人がそのまま恐竜に騎乗</b>（卵不要）—— シールド1枚＋火吹きで火力が倍に。|🦖 <b>난입 BOSS (v4.77 신규)</b>: 40개 스테이지에서 무작위로 뽑힌 BOSS 2마리가 돌아다닙니다. <b>마지막 일격을 넣은 사람이 바로 공룡에 탑승</b>(알 필요 없음) — 보호막 하나에 불뿜기까지, 화력이 두 배.
 help.br.reward|🏆 <b>獎勵</b>：依最後名次發金幣（冠軍最多），前三名再加送票券；現在還在免費測試，入場不扣票。|🏆 <b>奖励</b>：依最后名次发金币（冠军最多），前三名再加送票券；现在还在免费测试，入场不扣票。|🏆 <b>Rewards</b>: coins by final placement (champion gets the most), and the top three also earn tickets. It's still a free test — entering costs no ticket.|🏆 <b>報酬</b>：最終順位に応じてコイン（優勝が最高）、上位3位にはチケットも進呈。現在は無料テスト中で入場にチケットは不要。|🏆 <b>보상</b>: 최종 순위에 따라 코인(우승이 최대), 3위까지는 티켓도 지급. 지금은 무료 테스트라 입장에 티켓이 들지 않습니다.
 help.br.ctrl|🎮 <b>操作</b>：跟一般模式一樣 —— 放彈、吐火、引爆都在右下角，手機用左下搖桿移動；草叢、破屋可以躲人。|🎮 <b>操作</b>：跟一般模式一样 —— 放弹、吐火、引爆都在右下角，手机用左下摇杆移动；草丛、破屋可以躲人。|🎮 <b>Controls</b>: same as always — bomb, flame and detonate sit at the bottom-right, the joystick at the bottom-left on mobile. Bushes and broken huts hide you.|🎮 <b>操作</b>：通常モードと同じ —— 爆弾・火吹き・起爆は右下、スマホの移動は左下スティック。草むらや廃屋に隠れられます。|🎮 <b>조작</b>: 일반 모드와 같습니다 — 폭탄, 불뿜기, 폭파는 오른쪽 아래, 모바일 이동은 왼쪽 아래 조이스틱. 풀숲과 폐가는 숨을 수 있습니다.
 verLog.now|當前版本|当前版本|Current|現在のバージョン|현재 버전
@@ -1066,8 +1066,8 @@ z209|要炸 4 次|要炸 4 次|takes 4 hits|4 回爆発させる必要|4번 터�
 z210|炸開軟磚 → 撿道具 →|炸开软砖 → 捡道具 →|Blow up soft blocks → grab items →|軟らかいブロックを壊す → アイテムを拾う →|부서지는 블록을 터뜨리기 → 아이템 줍기 →
 z211|清光所有怪物|清光所有怪物|clear every monster|敵を全滅させる|모든 몬스터를 처치
 z212|→ 找出傳送門 🚪 → 走進去過關。共|→ 找出传送门 🚪 → 走进去过关。共|→ find the warp gate 🚪 → step in to clear the stage. Total|→ ワープゲート 🚪 を探す → 入ればクリア。全|→ 워프 게이트 🚪 찾기 → 들어가면 클리어. 총
-z213|32 張地圖|32 张地图|32 maps|32 面|32개 맵
-z214|（8 大主題 × 4 張），每一區的第 4 張是魔王關，第 32 關＝最終魔王「魔王之間」。|（8 大主题 × 4 张），每一区的第 4 张是魔王关，第 32 关＝最终魔王「魔王之间」。|(8 themes × 4), the 4th map of each area is a boss stage, and stage 32 is the final boss, the Demon King's chamber.|（8 大テーマ × 4 面）で、各エリアの 4 面目がボス面、32 面が最終ボス「魔王の間」。|(8개 테마 × 4장) 각 구역의 4번째가 보스 스테이지, 32스테이지=최종 보스 «마왕의 방».
+z213|40 關（32 張手工地圖 ＋ 8 座決戰場）|40 关（32 张手工地图 ＋ 8 座决战場）|40 stages (32 maps + 8 boss arenas)|全40面（32枚のマップ＋8つの決戦場）|40 스테이지(32개 맵 + 8개 결전장)
+z214|每一章的第 5 關是魔王決戰場，第 40 關＝最終魔王「魔王之間」。|每一章的第 5 关是魔王决战場，第 40 关＝最终魔王“魔王之间”。|The 5th stage of each chapter is a boss arena; stage 40 is the final boss, the Demon Lord's Chamber.|各章の5面目がボス決戦場、40面が最終ボス「魔王の間」。|각 장의 5번째가 보스 결전장, 40스테이지=최종 보스 «마왕의 방».
 z215|把對手炸光就得分，先拿到|把对手炸光就得分，先拿到|Blow up your rivals to score; the first to reach|相手を全員吹き飛ばすと得点、先に|상대를 다 터뜨리면 득점, 먼저
 z216|指定勝場數|指定胜场数|the set number of wins|指定の勝利数|지정 승수
 z217|的人獲勝；沒人加入的位子由 🤖 AI 補位。|的人获胜；没人加入的位子由 🤖 AI 补位。|wins takes it; empty seats are filled by 🤖 AI.|に到達した人の勝ち。空き枠は 🤖 AI が入ります。|에 도달한 사람이 승리. 빈자리는 🤖 AI가 채운다.
@@ -1399,11 +1399,11 @@ home.multi.sub|本機混戰 · 房號連線|本机混战 · 房号连线|Local m
 home.more|更多|更多|More|その他|더 보기
 home.more.sub|說明 · 設定|说明 · 设置|Help · Settings|遊び方 · 設定|설명 · 설정
 home.adv|冒險模式|冒险模式|Adventure|冒険モード|모험 모드
-home.adv.sub|單人 32 關 · RPG 養成|单人 32 关 · RPG 养成|32 levels · RPG growth|全32面 · RPG育成|32개 · RPG 육성
+home.adv.sub|單人 40 關 · RPG 養成|单人 40 关 · RPG 养成|40 levels · RPG growth|全40面 · RPG育成|40개 · RPG 육성
 home.shop.sub|隨從 · 外觀|随从 · 外观|Followers · Skins|お供 · 見た目|동료 · 외형
 adv.title|冒險模式|冒险模式|Adventure|冒険モード|모험 모드
 adv.desc|想玩哪一種？|想玩哪一种？|Which adventure?|どちらで遊びますか？|어떤 모험을 할까요?
-adv.solo|🎯 單人闖關（32 關）|🎯 单人闯关（32 关）|🎯 Solo Quest (32 levels)|🎯 一人で挑戦（全32面）|🎯 싱글 모험(32 스테이지)
+adv.solo|🎯 單人闖關（40 關）|🎯 单人闯关（40 关）|🎯 Solo Quest (40 levels)|🎯 一人で挑戦（全40面）|🎯 싱글 모험(40 스테이지)
 adv.rpg|🎲 RPG 養成模式|🎲 RPG 养成模式|🎲 RPG Mode|🎲 RPG 育成モード|🎲 RPG 육성 모드
 adv.tip|單人闖關：炸光小怪、找到出口。RPG：配點養成，怪物有血量與護甲。|单人闯关：炸光小怪、找到出口。RPG：配点养成，怪物有血量与护甲。|Solo: clear the foes and reach the exit. RPG: allocate stats, foes have HP and armor.|一人で挑戦：敵を全滅させ出口へ。RPG：ステータス育成、敵にHPと装甲。|싱글: 적을 모두 처치하고 출구로. RPG: 스탯 육성, 적에게 HP와 방어구.
 adv.back|← 返回|← 返回|← Back|← 戻る|← 뒤로
@@ -1439,7 +1439,7 @@ ver.4.82.2|🎨 高光用多層漸層疊在按鈕自己的背景上（不是貼�
 ver.4.82.3|🪟 首頁卡片、抽屜、彈窗、開始遊戲、關卡數字、角色卡、分段鈕、對戰小鈕全部同一套光學，不再有平掉的按鈕|🪟 首页卡片、抽屉、弹窗、开始游戏、关卡数字、角色卡、分段钮、对战小钮全部同一套光学，不再有平掉的按钮|🪟 Home cards, drawer, dialogs, Start Game, stage numbers, character cards, segmented controls and lobby buttons all share the same optics — nothing is flat any more|🪟 ホームのカード、ドロワー、ダイアログ、ゲーム開始、ステージ番号、キャラカード、セグメントボタン、対戦の小ボタンまで全部同じ光沢に — 平らなボタンはもうありません|🪟 홈 카드, 서랍, 대화상자, 게임 시작, 스테이지 번호, 캐릭터 카드, 구간 버튼, 대전 소형 버튼까지 모두 같은 광학 — 이제 평평한 버튼은 없습니다
 ver.4.82.4|⚡ 只多幾層 CSS 漸層，沒有圖片、沒有 backdrop-filter，手機不會掉幀|⚡ 只多几层 CSS 渐变，没有图片、没有 backdrop-filter，手机不会掉帧|⚡ Only a few extra CSS gradients — no images, no backdrop-filter, so phones keep their frame rate|⚡ 増えたのは CSS グラデーション数層だけ。画像も backdrop-filter も使わないので、スマホでもフレームレートが落ちません|⚡ CSS 그라데이션 몇 겹만 추가했습니다. 이미지도 backdrop-filter도 없어 휴대폰 프레임이 떨어지지 않습니다
 home.daily|每日挑戰|每日挑战|Daily Challenge|デイリーチャレンジ|데일리 챌린지
-home.solo.sub|32 關 · 難度自選|32 关 · 难度可选|32 levels · any difficulty|全32面 · 難易度自由|32개 · 난이도 자유
+home.solo.sub|40 關 · 難度自選|40 关 · 难度可选|40 levels · any difficulty|全40面 · 難易度自由|40개 · 난이도 자유
 home.namePh|可留空，系統自動取名字|可留空，系统自动取名字|Optional — we will name you|空でもOK・自動で名前をつけます|비워도 됨 · 자동으로 이름 지어줌
 help.ostrich.lead|🪶 新增<b>鴕鳥神獸</b>：紫色蛋孵化，跑得比恐龍快，還能<b>跳過一格牆</b>，落地震一圈打怪。|🪶 新增<b>鸵鸟神兽</b>：紫色蛋孵化，跑得比恐龙快，还能<b>跳过一格墙</b>，落地震一圈打怪。|🪶 New <b>Wind Ostrich</b>: hatches from the purple egg — faster than the dino, <b>leaps over a wall</b>, and stuns foes with a landing shock.|🪶 新<b>風のダチョウ</b>：紫の卵から孵化。竜より速く、<b>壁 1 枚を飛び越え</b>、着地で衝撃波。|🪶 새 <b>바람 타조</b>: 보라 알에서 부화. 공룡보다 빠르고 <b>벽 한 칸을 뛰어넘으며</b> 착지 충격파를 냅니다.
 help.ostrich.s1|1️⃣ 吃到<b>紫色蛋</b>就騎上鴕鳥：原本的 <b>🔥 鍵</b>（電腦 <b>F</b>）換成<b>爪子鍵</b>，按下去是跳躍。|1️⃣ 吃到<b>紫色蛋</b>就骑上鸵鸟：原本的 <b>🔥 键</b>（电脑 <b>F</b>）换成<b>爪子键</b>，按下去是跳跃。|1️⃣ Eat the <b>purple egg</b> to mount the ostrich: the <b>🔥 button</b> (<b>F</b> on keyboard) turns into a <b>claw</b> that leaps.|1️⃣ <b>紫の卵</b>を食べるとダチョウに騎乗。<b>🔥 ボタン</b>（PC は <b>F</b>）が<b>爪ボタン</b>に変わり、押すとジャンプ。|1️⃣ <b>보라 알</b>을 먹으면 타조 탑승. <b>🔥 버튼</b>(PC는 <b>F</b>)이 <b>발톱 버튼</b>으로 바뀌어 점프합니다.
@@ -1610,7 +1610,7 @@ respec.fail|退回失敗 —— 網路不穩，稍後再試|退回失败 —— 
 respec.confirm2|四項配點全部退回？會退還你花掉的 {refund} 金幣，但要付 {fee} 金幣手續費（實拿 {back}）。|四项配点全部退回？会退还你花掉的 {refund} 金币，但要付 {fee} 金币手续费（实拿 {back}）。|Reset all attributes? You get back the {refund} gold you spent, minus a {fee} gold reset fee ({back} net).|4 項目をすべて戻しますか？使った {refund} ゴールドは戻りますが、手数料 {fee} ゴールドがかかります（受取 {back}）。|능력치를 모두 되돌릴까요? 쓴 {refund} 골드는 돌려받지만 수수료 {fee} 골드가 차감됩니다(실수령 {back}).
 respec.done2|♻️ 配點已全部退回 · 退還 {back} 金幣|♻️ 配点已全部退回 · 退还 {back} 金币|♻️ Points reset · {back} gold refunded|♻️ ポイントを戻しました · {back} ゴールド返還|♻️ 포인트를 되돌렸습니다 · {back} 골드 환급
 end.k|ADVENTURE CLEAR|冒险完成|ADVENTURE CLEAR|ADVENTURE CLEAR|ADVENTURE CLEAR
-end.t|32 關全破！|32 关全破！|All 32 stages cleared!|32 ステージ制覇！|32 스테이지 클리어!
+end.t|40 關全破！|40 关全破！|All 40 stages cleared!|40 ステージ制覇！|40 스테이지 클리어!
 end.sub|你走完了整段冒險。下面是這一輪的成績。|你走完了整段冒险。下面是这一轮的成绩。|You finished the whole run. Here is how it went.|全ステージを踏破しました。今回の記録です。|모험을 모두 마쳤습니다. 이번 기록입니다.
 end.lv|最終等級|最终等级|Final level|最終レベル|최종 레벨
 end.xp|累積經驗|累积经验|Total EXP|累計経験値|누적 경험치
@@ -1638,7 +1638,7 @@ tip.solo.2|火焰是十字型：躲到格子斜角就完全不會被燒到，貼
 tip.solo.3|看不到路就縮小：滾輪或 1／2 鍵（手機兩指捏合），範圍 42%~300%。|看不到路就缩小：滚轮或 1／2 键（手机两指捏合），范围 42%~300%。|Can't see the route? Zoom out with the wheel or 1/2 keys (pinch on mobile): 42%–300%.|道が見えないときは縮小。ホイールか 1／2 キー（スマホはピンチ）、42%〜300%。|길이 안 보이면 축소하세요. 휠 또는 1/2 키(모바일은 핀치), 42%~300%.
 tip.rpg.1|RPG 模式有血條與護甲：被打不會一下倒，護甲會先吸收傷害、每秒回一點。|RPG 模式有血条与护甲：被打不会一下倒，护甲会先吸收伤害、每秒回一点。|RPG mode has HP and armor: hits won't one-shot you, armor soaks damage first and regenerates slowly.|RPG モードは HP とアーマー制。一撃では倒れず、アーマーが先にダメージを吸収して少しずつ回復します。|RPG 모드는 체력과 방어구가 있습니다. 한 방에 죽지 않고 방어구가 먼저 피해를 흡수하며 조금씩 회복됩니다.
 tip.rpg.2|升級會給技能點：右側招式列（電腦 Q／R／F／V、手機直接點）打出爆發傷害。|升级会给技能点：右侧招式列（电脑 Q／R／F／V、手机直接点）打出爆发伤害。|Levelling grants skill points — the skill bar (Q/R/F/V on PC, tap on mobile) is where your burst damage comes from.|レベルアップでスキルポイント获得。右のスキルバー（PC は Q/R/F/V、スマホはタップ）が火力の要です。|레벨업하면 스킬 포인트를 얻습니다. 오른쪽 스킬 바(PC는 Q/R/F/V, 모바일은 터치)가 주력 딜입니다.
-tip.rpg.3|每 4 關一隻章節王，第 32 關是最終魔王——王有專屬招式，看頭上的 💥／⚡ 決定要閃還是打斷。|每 4 关一只章节王，第 32 关是最终魔王——王有专属招式，看头上的 💥／⚡ 决定要闪还是打断。|A chapter boss every 4 stages; stage 32 is the final one. Watch the 💥/⚡ icon above it — dodge or interrupt.|4 ステージごとに章ボス、32 がラスボス。頭上に出る 💥／⚡ で避けるか中断するかを判断。|4스테이지마다 챕터 보스, 32스테이지가 최종 보스입니다. 머리 위 💥／⚡ 표시를 보고 회피할지 끊을지 판단하세요.
+tip.rpg.3|每 5 關一隻章節王，第 40 關是最終魔王——王有專屬招式，看頭上的 💥／⚡ 決定要閃還是打斷。|每 5 关一只章节王，第 40 关是最终魔王——王有专属招式，看头上的 💥／⚡ 决定要闪还是打断。|A chapter boss every 5 stages; stage 40 is the final one. Watch the 💥/⚡ icon above it — dodge or interrupt.|5 ステージごとに章ボス、40 がラスボス。頭上に出る 💥／⚡ で避けるか中断するかを判断。|5스테이지마다 챕터 보스, 40스테이지가 최종 보스입니다. 머리 위 💥／⚡ 표시를 보고 회피할지 끊을지 판단하세요.
 tip.br.1|毒圈會一直縮小：圈外的傷害愈來愈高，往安全區移動永遠是第一優先。|毒圈会一直缩小：圈外的伤害愈来愈高，往安全区移动永远是第一优先。|The ring keeps closing — damage outside grows over time, so moving toward safety always comes first.|毒リングは縮み続け、外はダメージが増えます。安全地帯へ移動が最優先。|독 장판이 계속 좁혀집니다. 바깥 피해가 커지니 안전 지역 이동이 최우선입니다.
 tip.br.2|島上有亂入 BOSS：打贏噴大量資源，但別在毒圈邊緣跟牠糾纏。|岛上有乱入 BOSS：打赢喷大量资源，但别在毒圈边缘跟它纠缠。|Bosses roam the island — killing one drops a pile of loot, but never fight one at the edge of the ring.|島には乱入ボスがいます。倒せば大量の資源が出ますが、リング際での戦闘は危険。|섬에 난입 보스가 있습니다. 잡으면 자원이 쏟아지지만 장판 경계에서 싸우면 위험합니다.
 tip.br.3|組隊時隊友腳下有隊色光環、頭上頂著名字：同隊不會互相傷害，可以放心一起炸。|组队时队友脚下有队色光环、头上顶着名字：同队不会互相伤害，可以放心一起炸。|In a team your mates get a colored ring and a name tag — teammates never damage each other, so blast away.|チーム戦では味方の足元にチーム色のリングと名前が出ます。同士討ちはありません。|팀전에서는 아군 발밑에 팀 색 링과 이름이 표시됩니다. 같은 팀끼리는 피해를 주지 않습니다.
@@ -1914,7 +1914,7 @@ doc.93|只在「隨機生成」的大地圖與組隊對戰出現。牆壁留深�
 doc.94|換手機、清掉瀏覽器資料，或帳號救不回來時，用這串碼把進度搬回來（關卡、金幣、隨從、票券、教學、每日最佳）。|换手机、清掉浏览器数据，或账号救不回来时，用这串码把进度搬回来（关卡、金币、随从、票券、教学、每日最佳）。|When you change phones, clear browser data or cannot recover your account, use this code to move your progress back (stages, coins, followers, tickets, tutorial, daily best).|機種変更、ブラウザデータの削除、アカウントを復旧できない場合に、このコードで進行状況を引き継げます（ステージ、コイン、仲間、チケット、チュートリアル、デイリーベスト）。|휴대폰을 바꾸거나 브라우저 데이터를 지웠거나 계정을 복구할 수 없을 때, 이 코드로 진행 상황을 옮길 수 있습니다(스테이지, 코인, 동료, 티켓, 튜토리얼, 일일 최고 기록).
 doc.95|💡 小提醒：伺服器放在免費託管平台 Render，所以連線品質不會比較順暢　目前當作測試內容而已|💡 小提醒：服务器放在免费托管平台 Render，所以连接品质不会比较顺畅　目前当作测试内容而已|💡 Note: the server runs on the free hosting platform Render, so the connection is not especially smooth　for now this is test content only|💡 ひとこと：サーバーは無料ホスティングの Render 上にあるため、接続品質は特別に快適というわけではありません　現状はテスト用の内容です|💡 참고: 서버가 무료 호스팅 플랫폼 Render에 있어 연결 품질이 더 좋지는 않습니다　현재는 테스트용 콘텐츠입니다
 doc.96|用金幣雇用隨從跟在身邊幫你打怪、撿道具。隨從只在「單人闖關」與「RPG 模式」出場，對戰／線上配對不會出現。三位隨從各有自己的動物造型與招式。|用金币雇佣随从跟在身边帮你打怪、捡道具。随从只在“单人闯关”与“RPG 模式”出场，对战／线上配对不会出现。三位随从各有自己的动物造型与招式。|Spend coins to hire followers that trail you, fight monsters and pick up items. Followers appear only in “Solo Campaign” and “RPG mode”, never in Versus／online matchmaking. Each of the three has its own animal design and moves.|コインで仲間を雇うと、隣について敵と戦い、アイテムを拾ってくれます。仲間が登場するのは「ソロ攻略」と「RPG モード」のみで、対戦／オンラインマッチングには出てきません。3匹それぞれに動物のデザインと技があります。|코인으로 동료를 고용하면 곁을 따라다니며 적과 싸우고 아이템을 주워 줍니다. 동료는 '솔로 스테이지'와 'RPG 모드'에서만 등장하며 대전／온라인 매칭에서는 나오지 않습니다. 세 동료는 각자 동물 디자인과 기술이 있습니다.
-doc.97|跟一般闖關完全不同的養成規則：怪物有血量與防禦，炸一次不會死；你自己也有生命與護甲。先配點、再出發，一路打過 32 張地圖。|跟一般闯关完全不同的养成规则：怪物有血量与防御，炸一次不会死；你自己也有生命与护甲。先配点、再出发，一路打过 32 张地图。|Progression rules completely unlike the normal campaign: monsters have HP and defence, so one blast will not kill them, and you also have HP and armour. Allocate points first, then set out and fight through all 32 maps.|通常の攻略とはまったく違う育成ルールです。敵には HP と防御があり、1回の爆発では倒せません。自分にも HP とアーマーがあります。まずポイントを振ってから出発し、32枚のマップを進んでいきます。|일반 스테이지와 전혀 다른 육성 규칙입니다. 적에게 HP와 방어력이 있어 한 번의 폭발로는 죽지 않으며, 자신도 HP와 방어력을 가집니다. 먼저 포인트를 배분한 뒤 출발해 32장의 맵을 통과합니다.
+doc.97|跟一般闖關完全不同的養成規則：怪物有血量與防禦，炸一次不會死；你自己也有生命與護甲。先配點、再出發，一路打過 40 關。|跟一般闯关完全不同的养成规则：怪物有血量与防御，炸一次不会死；你自己也有生命与护甲。先配点、再出发，一路打过 40 关。|Progression rules completely unlike the normal campaign: monsters have HP and defence, so one blast will not kill them, and you also have HP and armour. Allocate points first, then set out and fight through all 40 stages.|通常の攻略とはまったく違う育成ルールです。敵には HP と防御があり、1回の爆発では倒せません。自分にも HP とアーマーがあります。まずポイントを振ってから出発し、40面を進んでいきます。|일반 스테이지와 전혀 다른 육성 규칙입니다. 적에게 HP와 방어력이 있어 한 번의 폭발로는 죽지 않으며, 자신도 HP와 방어력을 가집니다. 먼저 포인트를 배분한 뒤 출발해 40 스테이지를 통과합니다.
 doc.98|操作、道具、坐騎招式、場景機關、大逃殺、怪物圖鑑一次看懂 —— 點上面的分類切換。|操作、道具、坐骑招式、场景机关、大逃杀、怪物图鉴一次看懂 —— 点上面的分类切换。|Controls, items, mount moves, stage traps, battle royale and the monster codex in one place — switch tabs above.|操作、アイテム、乗り物の技、ステージのギミック、バトロワ、モンスター図鑑をまとめて確認できます。上のカテゴリで切り替えてください。|조작, 아이템, 탑승물 기술, 스테이지 장치, 배틀로얄, 몬스터 도감을 한눈에 볼 수 있습니다. 위의 분류를 눌러 전환하십시오.
 doc.99|炸開軟磚、殲滅所有敵人，走進傳送門過關（每一關都保證有門）。道具與恐龍會跟著你到下一關，陣亡則重新開始該關。|炸开软砖、歼灭所有敌人，走进传送门过关（每一关都保证有门）。道具与恐龙会跟着你到下一关，阵亡则重新开始该关。|Blow open soft bricks, wipe out every enemy and step into the portal to clear the stage (every stage is guaranteed a portal). Items and dinos carry over to the next stage; dying restarts that stage.|軟いレンガを爆破し、すべての敵を倒してポータルに入るとクリアです（どのステージにも必ずポータルがあります）。アイテムと恐竜は次のステージへ持ち越され、倒れるとそのステージをやり直しになります。|부드러운 벽돌을 터뜨리고 모든 적을 처치한 뒤 포털로 들어가면 클리어입니다(모든 스테이지에 포털이 반드시 있습니다). 아이템과 공룡은 다음 스테이지로 이어지고, 사망하면 해당 스테이지를 처음부터 시작합니다.
 doc.100|🔥 沒有手把也能打！每個槽位都能 <b style="color:#c9a8ff">點 🤖 切換人類／AI</b>——直接按「開戰」就開打。支援 <b>2～8 人</b>，也可以開 <b>組隊對戰（紅／藍／綠／黃，最多 4 隊）</b>。手把按 A 可隨時取代 AI。|🔥 没有手柄也能打！每个槽位都能 <b style="color:#c9a8ff">点 🤖 切换人类／AI</b>——直接按“开战”就开打。支持 <b>2～8 人</b>，也可以开 <b>组队对战（红／蓝／绿／黄，最多 4 队）</b>。手柄按 A 可随时取代 AI。|🔥 No gamepad needed! Every slot can <b style="color:#c9a8ff">tap 🤖 to switch between human／AI</b> — just press “Start Battle” and the match begins. Supports <b>2～8 players</b>, and you can also start <b>team battles（red／blue／green／yellow, up to 4 teams）</b>. Pressing A on a gamepad takes over from the AI at any time.|🔥 コントローラーがなくても遊べます！各枠は <b style="color:#c9a8ff">🤖 を押して人間／AI を切り替え</b>でき、「バトル開始」を押せばそのまま始まります。<b>2～8 人</b>に対応し、<b>チーム対戦（赤／青／緑／黄、最大4チーム）</b>も可能です。パッドの A を押せばいつでも AI に代わって操作できます。|🔥 게임패드 없이도 싸울 수 있습니다! 각 칸에서 <b style="color:#c9a8ff">🤖를 눌러 인간／AI를 전환</b>할 수 있고, '전투 시작'을 누르면 바로 시작됩니다. <b>2～8인</b>을 지원하며 <b>팀 대전(빨강／파랑／초록／노랑, 최대 4팀)</b>도 가능합니다. 패드의 A를 누르면 언제든 AI를 대신해 조작할 수 있습니다.
@@ -2041,4 +2041,43 @@ pc.d1|昨天|昨天|yesterday|昨日|어제
 pc.dn|{n} 天前|{n} 天前|{n} days ago|{n} 日前|{n}일 전
 pc.mn|{n} 個月前|{n} 个月前|{n} months ago|{n} か月前|{n}개월 전
 pc.yn|{n} 年前|{n} 年前|{n} years ago|{n} 年前|{n}년 전
+abyss.layer|第 {n} 層|第 {n} 层|Layer {n}|第 {n} 層|{n}층
+abyss.layerSub|目前最深 {best} 層|目前最深 {best} 层|Deepest so far: {best}|最深記録 {best} 層|최고 기록 {best}층
+abyss.layerShort|{n} 層|{n} 层|Lv.{n}|{n} 層|{n}층
+abyss.bestShort|最深 {n} 層|最深 {n} 层|Best {n}|最深 {n} 層|최고 {n}층
+abyss.newBest|🕳️ 新紀錄！第 {n} 層|🕳️ 新纪录！第 {n} 层|🕳️ New record! Layer {n}|🕳️ 新記録！第 {n} 層|🕳️ 신기록! {n}층
+abyss.over|🕳️ 深淵止步第 {n} 層|🕳️ 深渊止步第 {n} 层|🕳️ The abyss stops at layer {n}|🕳️ 深淵は第 {n} 層で終了|🕳️ 심연은 {n}층에서 끝났습니다
+abyss.bestLine|你的最深紀錄：第 {n} 層|你的最深纪录：第 {n} 层|Your deepest run: layer {n}|あなたの最深記録：第 {n} 層|최고 기록: {n}층
+abyss.retry|🕳️ 再挑戰一次|🕳️ 再挑战一次|🕳️ Dive again|🕳️ もう一度挑戦|🕳️ 다시 도전
+abyss.locked|深淵要 40 關全破之後才會開啟|深渊要 40 关全破之后才会开启|The Abyss opens after clearing all 40 stages|深淵は 40 ステージ全クリアで解放|심연은 40 스테이지 완주 후 열립니다
+abyss.needMore|還差 {n} 關全破|还差 {n} 关全破|{n} more stages to go|あと {n} ステージ|{n} 스테이지 남음
+wk.title|本週限制挑戰|本周限制挑战|Weekly Challenge|今週の制限チャレンジ|주간 제한 챌린지
+wk.mod.fuse|引信固定 +60%，不能靠強化縮短|引信固定 +60%，不能靠强化缩短|Fuse is fixed at +60% — upgrades can't shorten it|導火線は固定 +60%（強化で短縮不可）|도화선 고정 +60% (강화로 단축 불가)
+wk.mod.nopet|不能帶隨從上場|不能带随从上场|No companions allowed|仲間は連れて行けません|동료 없이 도전
+wk.mod.noitem|場上沒有補給道具|场上没有补给道具|No items spawn on the map|マップにアイテムが出ません|맵에 아이템이 없습니다
+wk.modName.fuse|長引信|长引信|Long Fuse|長い導火線|긴 도화선
+wk.modName.nopet|孤軍奮戰|孤军奋战|Lone Wolf|単独行|단독 행동
+wk.modName.noitem|空手|空手|Empty Handed|手ぶら|맨손
+wk.stageLine|第 {n} 關・{name}|第 {n} 关・{name}|Stage {n} · {name}|第 {n} ステージ・{name}|{n} 스테이지 · {name}
+wk.bestHave|我的最佳 {t}|我的最佳 {t}|My best: {t}|自己ベスト {t}|내 최고 {t}
+wk.bestNone|本週還沒挑戰|本周还没挑战|Not attempted this week|今週はまだ未挑戦|이번 주 미도전
+wk.go|開始挑戰 →|开始挑战 →|Start challenge →|チャレンジ開始 →|도전 시작 →
+wk.empty|本週還沒有人完成|本周还没有人完成|No one has finished this week|今週のクリア者はいません|이번 주 완료자 없음
+wk.rank|本週第 {r} 名・{t}|本周第 {r} 名・{t}|Weekly #{r} · {t}|今週 {r} 位・{t}|주간 {r}위 · {t}
+wk.record|本週紀錄 {t}|本周纪录 {t}|New weekly record {t}|今週の記録 {t}|주간 기록 {t}
+deal.title|今日特惠|今日特惠|Today's Deals|本日のお買い得|오늘의 특가
+deal.sub|每天換一批・每件限購一次|每天换一批・每件限购一次|Rotates daily · one per item|毎日入れ替え・各1回限り|매일 교체 · 품목당 1회
+deal.off|−{n}%|−{n}%|−{n}%|−{n}%|−{n}%
+deal.done|已購買|已购买|Bought|購入済み|구매 완료
+deal.lvup|升級|升级|Upgrade|強化|업그레이드
+deal.bagN|補給三件組|补给三件组|Supply Bundle ×3|補給3点セット|보급 3종 세트
+deal.ticketN|大逃殺門票|大逃杀门票|Battle Royale ticket|バトロワチケット|배틀로얄 티켓
+deal.pet|🎉 雇用成功！隨從會在關卡裡跟著你|🎉 雇用成功！随从会在关卡里跟着你|🎉 Hired! Your companion joins you in stages|🎉 雇用成功！ステージで一緒に戦います|🎉 고용 완료! 스테이지에서 함께합니다
+deal.petup|🎉 升級完成！|🎉 升级完成！|🎉 Upgrade complete!|🎉 強化完了！|🎉 업그레이드 완료!
+deal.ticket|🎟️ 買到 1 張大逃殺門票|🎟️ 买到 1 张大逃杀门票|🎟️ Got 1 Battle Royale ticket|🎟️ バトロワチケットを1枚獲得|🎟️ 배틀로얄 티켓 1장 획득
+deal.bag|🎒 3 件補給已放進背包|🎒 3 件补给已放进背包|🎒 3 supplies added to your bag|🎒 補給3点をバッグに入れました|🎒 보급 3종을 가방에 넣었습니다
+starter.tip|再通關 {n} 關，會解鎖更多模式|再通关 {n} 关，会解锁更多模式|Clear {n} more stages to unlock more modes|あと {n} ステージで他のモードが解放|{n} 스테이지 더 클리어하면 모드가 열립니다
+today.stage|第 {n}/{m} 關|第 {n}/{m} 关|Stage {n}/{m}|第 {n}/{m} 面|{n}/{m} 스테이지
+today.stars|★ {n}/{m}|★ {n}/{m}|★ {n}/{m}|★ {n}/{m}|★ {n}/{m}
+today.abyss|深淵 {n} 層|深渊 {n} 层|Abyss {n}|深淵 {n} 層|심연 {n}층
 `;
