@@ -4161,6 +4161,9 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .lblist { display: grid; gap: 5px; min-height: 60px; max-width: 620px; width: 100%; margin: 0 auto; }
 #ovBox .lblist { max-height: 26vh; overflow-y: auto; margin-bottom: 6px; padding: 6px; border-radius: 12px; background: rgba(0,0,0,.20); }
 #ovBox .lblist .empty { color: #ffe6c2; }
+/* v5.74：360 窄機的關卡標題（第 1 關 · 微風草原）會從詞中間斷開 → 讓瀏覽器自己配平兩行 */
+#ovBox h3 { text-wrap: balance; }
+#ovBox p { text-wrap: pretty; }
 .lbrow { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px;
   padding: 8px 11px; border-radius: 10px; background: rgba(255,255,255,.6);
   border: 1px solid rgba(140,110,70,.18); font-size: 13.5px; }
