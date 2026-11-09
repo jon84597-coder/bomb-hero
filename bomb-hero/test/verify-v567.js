@@ -69,14 +69,20 @@ ok(/Math\.min\(SOLO_STAGES, parseInt\(q\.get\('stage'\)/.test(mainSrc), '?stage=
 
 /* ---------------------------------------------------------------- ⑥ */
 sec('⑥ 版本戳記');
-ok(String(P.VERSION) === '5.66', 'VERSION = ' + P.VERSION);
-ok(/id="verTxt">5\.66</.test(html) && /id="verLogVer">5\.66</.test(html), '畫面上的版本字樣也是 5.66');
-ok(P.VERSION_LOG[0].v === '5.66' && P.VERSION_LOG[0].now === true, 'VERSION_LOG 首位＝5.66 且 now:true');
+// 版本號不寫死：這支測的是「移除入口」，不該每升一版就回頭改
+const vNum = parseFloat(P.VERSION);
+const vEsc = P.VERSION.replace(/\./g, '\\.');
+ok(vNum >= 5.66, 'VERSION ≥ 5.66（' + P.VERSION + '）');
+ok(new RegExp('id="verTxt">' + vEsc + '<').test(html) &&
+   new RegExp('id="verLogVer">' + vEsc + '<').test(html), '畫面與版本面板的版本字樣跟 VERSION 同步');
+ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 首位＝當前版本 ' + P.VERSION + ' 且 now:true');
 ok(P.VERSION_LOG[1] && P.VERSION_LOG[1].now === false, '上一版 ' + (P.VERSION_LOG[1] || {}).v + ' 已收成 now:false');
+const kept566 = P.VERSION_LOG.filter(function (e) { return e.v === '5.66'; })[0];
+ok(kept566 && kept566.now === false, 'v5.66（移除入口那一版）的紀錄還在');
 ok(P.VERSION_LOG[0].items.length >= 5, '本版至少 5 條更新說明（' + P.VERSION_LOG[0].items.length + ' 條）');
 ok(!/後台|開發者/.test(P.VERSION_LOG[0].items.join('')), '更新內容不出現「後台／開發者」');
 const sw = fs.readFileSync(__dirname + '/../sw.js', 'utf8');
-ok(/SW_VERSION = 'v5\.66\.0'/.test(sw), 'SW 版號 v5.66.0');
+ok(new RegExp("SW_VERSION = 'v" + vEsc + "\\.0'").test(sw), 'SW 版號跟 VERSION 同步（v' + P.VERSION + '.0）');
 
 console.log('\n' + (fail === 0 ? '通過 ' + pass + ' / ' + (pass + fail) : '✗ ' + fail + ' 項失敗（通過 ' + pass + '）'));
 process.exit(fail === 0 ? 0 : 1);

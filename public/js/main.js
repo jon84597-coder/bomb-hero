@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.66';
+const VERSION = '5.67';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -13857,7 +13857,11 @@ function startBR() {
     p.brOut = 0; p.brHp = BR.HP;   // v4.74：30 人同場、10 分鐘一場 → 血量 4→10
     p.label = 'P' + (i + 1);
     p.name = isMe ? (String(settings.brName || '').trim() || settings.playerName || String(settings.names[0] || '').trim() || '我') : ('AI·' + (i + 1));
-    if (!isMe) p.ai = true;
+    if (!isMe) {
+      p.ai = true;
+      // v5.67：AI 變嗜血後，開場仍留 3~7 秒緩衝，不然 100 人一落地就互相絞肉
+      p.brBombCd = 3 + Math.random() * 4;
+    }
     p.team = BR.TEAM >= 2 ? Math.floor(i / BR.TEAM) : -1;
     Game.players.push(p);
   }
@@ -16617,27 +16621,29 @@ const AI_SPEED_CAP = 146 + 2 * 20;
 function aiLevelCfg() {
   return AI_LEVELS[settings.aiLevel] || AI_LEVELS.normal;
 }
-// v4.74：大逃殺 30 人同場 —— 電腦如果照對戰的參數打，開局 60 秒就會互相絞肉到剩 13 人，
-//   10 分鐘的場次 2 分鐘就結束。這裡把「主動開炸」和「追人距離」壓下來（走路速度不動），
-//   讓牠們前期偏向撿東西、繞路，後期被毒圈逼到一起才真的開打。
+// v4.74：大逃殺 100 人同場 —— 電腦如果照對戰的參數打，開局 60 秒就會互相絞肉到剩 13 人。
+// v5.67：使用者要「AI 只要一有機會就拼命攻擊其他玩家跟 AI」→ 從「壓抑」翻成「嗜血」。
+//   舊值（BK 3%、CD 26 秒）讓 AI 前三分鐘幾乎不主動打人，看起來像各走各的。
+//   新版：前期就明確會打，後期貼身追殺；AI 對 AI 與對玩家一視同仁。
 const BR_AI = {
   on: false,
-  // 第 N 段毒圈的「主動開炸」倍率：前期幾乎不炸（各自撿東西、繞路），後期圈小了才真的開打。
-  //   實測照對戰參數打 → 30 人在 120 秒內只剩 8 人，10 分鐘的場次 2.5 分鐘就結束。
-  BK: [.03, .03, .04, .07, .10, .13, .16, .19, .22, .26],
-  // v4.74：真正壓住節奏的是「放彈冷卻」——AI 每 0.2~0.5 秒就想一次，
-  //   就算機率只有 8%，一分鐘也能放掉十幾顆。改成每 N 秒才准放一顆：
-  //   前期 20 秒（各自撿東西、打怪），後期 4 秒（圈小了就是大亂鬥）。
-  CD: [26, 25, 23, 21, 19, 17, 16, 15, 14, 13],
+  /* BK＝第 N 段毒圈的主動開炸「機率倍率」（乘上難度 lv.bomb）。
+     舊版 0.03~0.26，而且 aiBrChoose 裡根本硬寫 .6 → 這個表等於沒生效。
+     v5.67 真的接上線：前期 34%、後期 100%。 */
+  BK: [.34, .40, .48, .56, .64, .72, .79, .86, .92, 1],
+  /* 放彈冷卻（秒）—— 真正主導節奏的是這個。舊版 26~13 秒＝有機會也憋著不放。
+     新版 10~3 秒：一有機會就出手，後期圈小了是連環追殺。 */
+  CD: [10, 9, 8, 7, 6, 5, 5, 4, 3, 3],
   cfg: function (lv, ph) {
     ph = Math.max(0, Math.min(BR_AI.BK.length - 1, ph | 0));
     if (!lv._brCache) lv._brCache = {};
-    const key = 'p' + ph;
+    const key = 'v567p' + ph;
     if (lv._brCache[key]) return lv._brCache[key];
     const c = {
-      think: lv.think, chase: lv.chase * .55, bomb: lv.bomb * BR_AI.BK[ph], flee: lv.flee, spd: lv.spd,
-      foeR: lv.foeR * .55, soft: lv.soft * .70, dinoFire: lv.dinoFire,
-      dinoFireCd: lv.dinoFireCd, lob: (lv.lob || 0) * .45, lobCd: (lv.lobCd || 3) * 1.7,
+      // v5.67：追人／視野幾乎不再打折（.55 → .95）
+      think: lv.think, chase: lv.chase * .95, bomb: lv.bomb * BR_AI.BK[ph], flee: lv.flee, spd: lv.spd,
+      foeR: lv.foeR * .95, soft: lv.soft * .70, dinoFire: lv.dinoFire,
+      dinoFireCd: lv.dinoFireCd, lob: (lv.lob || 0) * .78, lobCd: (lv.lobCd || 3) * 1.2,
       dash: lv.dash || .12,                       // v5.4：大逃殺也一樣會用衝刺趕路／躲火線
     };
     lv._brCache[key] = c;
@@ -16878,8 +16884,11 @@ function sameTeam(a, b) {
      ② 分離：目的地已經有別人 → 大扣分；目的地鄰格擠了兩個人以上 → 再扣
      ③ 太遠的對手（> BR_ENGAGE 格）不主動追，交給巡邏（撿道具、往圈內走）
    另外走到 1.2~3.2 格、彈藥與冷卻都允許時，停下來放一顆再換位。 */
-const BR_STANDOFF = 2.4;     // 格：想貼到比這更近就會被扣分
-const BR_ENGAGE = 8;         // 格：超過這個距離就不主動追
+const BR_STANDOFF = 2.0;     // 格：想貼到比這更近就會被扣分（v5.67：2.4 → 2.0，敢貼身施壓）
+const BR_ENGAGE = 11;        // 格：超過這個距離就不主動追（v5.67：8 → 11）
+/* v5.67：追擊半徑再隨毒圈階段放大 —— 開場 11 格、第 4 圈之後 16 格。
+   舊版固定 8 格，遠一點的對手直接被當成不存在 → AI 整場各走各的、看起來很被動。 */
+function brEngageR(ph) { return 11 + 5 * Math.min(1, Math.max(0, ph | 0) / 4); }
 function aiBrCrowd(p, x, y) {
   const T = Game.T;
   let n = 0;
@@ -16909,6 +16918,9 @@ function aiBrChoose(p, opts, cx, cy, tgt, tgtD2) {
   const T = Game.T;
   const isFoe = !!(tgt && tgt.foe);
   const foeD = isFoe ? Math.sqrt(tgtD2) / T : 99;
+  // v5.67：這裡以前拿不到難度參數（硬寫 .6），現在自己抓一份（cfg 有快取，成本可忽略）
+  const lv = BR_AI.cfg(aiLevelCfg(), Game.brZone ? Game.brZone.phase : 0);
+  const eng = brEngageR(Game.brZone ? Game.brZone.phase : 0);
   // v5.0：AI 也要會「有機會就撿」——先掃 7 格內最近的地面道具
   let item = null, itemD = 99;
   for (let k = 0; k < (Game.items || []).length; k++) {
@@ -16936,11 +16948,11 @@ function aiBrChoose(p, opts, cx, cy, tgt, tgtD2) {
     if (isFoe) {
       const nd = Math.sqrt(dist2(tgt.x, tgt.y, (nx + .5) * T, (ny + .5) * T)) / T;
       if (foeD < BR_STANDOFF) {
-        v += (nd - foeD) * 2.4;                    // 太近 → 往後／側移
+        v += (nd - foeD) * 1.8;                    // 太近 → 側移／微退（v5.67：2.4 → 1.8，更敢貼）
       } else {
-        // 還遠 → 靠到交戰距離；超過交戰半徑權重降低（先撿東西、往圈內走，不要全場追人）
-        v += Math.max(0, foeD - nd) * (foeD > BR_ENGAGE ? .35 : .8);
-        if (nd < BR_STANDOFF) v -= 1.8;
+        // 還遠 → 靠到交戰距離；超出追擊半徑才降低權重（v5.67：.35/.8 → .55/1.2，追得更狠）
+        v += Math.max(0, foeD - nd) * (foeD > eng ? .55 : 1.2);
+        if (nd < BR_STANDOFF) v -= 1.2;
         // v5.0：殘血又有人在 3.8 格內 → 反向逃（跑得掉就跑，不硬換）
         if (lowHp && foeD < 3.8 && nd > foeD) v += 1.5;
       }
@@ -16949,7 +16961,10 @@ function aiBrChoose(p, opts, cx, cy, tgt, tgtD2) {
   }
   if (!best) return null;
   let bomb = false;
-  if (isFoe && foeD >= 1.2 && foeD <= 3.2 && !p.carry && !bombAt(cx, cy) && Math.random() < .6) {
+  /* v5.67：放彈窗口 1.2~3.2 格 → 1.0~4.4 格（火焰射程吃得到就打），
+     機率從硬寫的 .6 改成真的看難度×毒圈階段（前期 29%～後期 85%）。
+     aiPlaceBomb 之後會蓋上 BR_AI.CD 冷卻，所以不會變成無限量產。 */
+  if (isFoe && foeD >= 1 && foeD <= 4.4 && !p.carry && !bombAt(cx, cy) && Math.random() < (lv.bomb || .6)) {
     const mine = Game.bombs.filter(function (b) { return b.owner === p && !b.held; }).length;
     if (mine < p.maxBombs && aiBombOk(p)) bomb = true;
   }
@@ -38140,6 +38155,7 @@ window.__BH = {
   controlAI: controlAI, aiLobBomb: aiLobBomb, aiThrowLanding: aiThrowLanding,
   // v4.90：大逃殺 AI 的社交距離／分離（測試用）
   aiBrChoose: aiBrChoose, aiBrCrowd: aiBrCrowd, aiBrLeastCrowded: aiBrLeastCrowded,
+  brEngageR: brEngageR, BR_AI: BR_AI, BR_STANDOFF: BR_STANDOFF,
   BR_STANDOFF: BR_STANDOFF, BR_ENGAGE: BR_ENGAGE,
   aiGrabOwnBomb: aiGrabOwnBomb, aiDropCarry: aiDropCarry, dangerAt: dangerAt, findLanding: findLanding, playerAtCell: playerAtCell, playerAhead: playerAhead,
   enemySkillTick: enemySkillTick, ENEMY_SPECIES: ENEMY_SPECIES,

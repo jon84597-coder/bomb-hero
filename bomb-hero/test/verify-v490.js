@@ -94,8 +94,11 @@ ok(info.slots[0] === 0 && info.slots[1] === 1, '清除指派後重新自動排 1
 
 /* ================= ③ 大逃殺 AI ================= */
 console.log('=== ③ 大逃殺 AI：社交距離 ＋ 群體分離 ===');
-ok(B.BR_STANDOFF === 2.4, '交戰距離 2.4 格');
-ok(B.BR_ENGAGE === 8, '超過 8 格就不主動追');
+/* v5.67：使用者要 AI「一有機會就攻擊」→ 交戰距離收窄、追擊半徑放大 */
+ok(B.BR_STANDOFF === 2.0, '交戰距離 2.0 格（v5.67：更敢貼身）');
+ok(B.BR_ENGAGE === 11, '基礎追擊半徑 11 格（v5.67：8 → 11）');
+ok(B.brEngageR(0) === 11 && B.brEngageR(4) === 16 && B.brEngageR(9) === 16,
+  '追擊半徑隨毒圈放大到 16 格', [B.brEngageR(0), B.brEngageR(4), B.brEngageR(9)]);
 ok(typeof B.aiBrChoose === 'function' && typeof B.aiBrCrowd === 'function' &&
   typeof B.aiBrLeastCrowded === 'function', '三個新函式都有匯出');
 
