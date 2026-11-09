@@ -72,7 +72,9 @@ ok(/let iconT = 0;/.test(html) && /Game\.gameT = iconT;/.test(html),
   '圖示有自己的時鐘（選單裡火苗也會抖）');
 ok(/finally \{ Game\.gameT = saved; \}/.test(html), '畫完一定把 gameT 還回去（不污染遊戲時間）');
 ok(/drawBombOn\(g, r, it\.kind === 'bomb' \? 3 : 7/.test(html), '炸彈圖示走 drawBombOn（跟場上同一套畫法）');
-ok(/drawFlameOn\(g, \{ cx: 0, cy: 0, t: \.30, dir: null, owner: 0 \}, T\)/.test(html),
+/* v5.74：v5.34 重畫火焰、v5.69 又加了 mine（只套自己人的外觀）→ 參數多一個 mine: true，
+   所以這裡改成「財產不變、允許額外屬性」的寬鬆比對（原本寫死整串，一加參數就誤紅）。 */
+ok(/drawFlameOn\(g, \{ cx: 0, cy: 0, t: \.30, dir: null, owner: 0[^}]*\}, T\)/.test(html),
   '火焰圖示走 drawFlameOn（四層水滴火舌）');
 ok(/it\.kind === 'bomb', it\.kind === 'remote'/.test(html),
   'armed / remote 參數正確（放彈鈕已點燃、遙控鈕插 LED）');

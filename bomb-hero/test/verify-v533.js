@@ -185,7 +185,8 @@ head('6. 隊友／隨從的炸彈是白的、爆炸是藍的');
      '白彈是同一個模子、白色漸層');
   ok(/'rgba\(150,206,255,A\)', 'rgba\(64,146,255,A\)', 'rgba\(26,92,238,A\)'/.test(src),
      '藍色火焰色階存在');
-  ok(/drawBombArt\(r, b\.seed, hot, armed, !!b\.remoteArmed, danger, bombIsAlly\(b\)\)/.test(src),
+  /* v5.74：v5.69「外觀只套在自己身上」在尾巴多傳了 mineBomb → 允許額外參數。 */
+  ok(/drawBombArt\(r, b\.seed, hot, armed, !!b\.remoteArmed, danger, bombIsAlly\(b\)[,)]/.test(src),
      'drawBomb 會把「是不是自己人」傳進美術層');
 }
 

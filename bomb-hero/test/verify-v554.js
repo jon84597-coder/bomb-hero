@@ -14,6 +14,9 @@ const env = SB.makeEnv();
 const P = env.BH;
 const rawIndex = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const mainJs = fs.readFileSync(path.join(ROOT, 'js', 'main.js'), 'utf8');
+/* v5.74：RPG 介面（配點／營地／招式頁）搬到 js/rpg.js 了 —— 找 RPG 文案要兩份一起看。 */
+const rpgJs = fs.readFileSync(path.join(ROOT, 'js', 'rpg.js'), 'utf8');
+const gameSrc = mainJs + '\n' + rpgJs;
 const dictSrc = fs.readFileSync(path.join(ROOT, 'js', 'i18n-src.js'), 'utf8');
 const kxSrc = fs.readFileSync(path.join(ROOT, 'js', 'keys-ui.js'), 'utf8');
 const vlog = fs.readFileSync(path.join(ROOT, 'js', 'version-log.js'), 'utf8');
@@ -137,10 +140,10 @@ ok(/sb\.querySelector\('span:not\(\.ki\)'\)/.test(kxSrc), 'keys-ui 重新貼「�
 console.log('\n=== ④ 提示改走模板 key ===');
 // ================================================================
 ok(/el\.innerHTML = t\('cmd\.hint', \{/.test(mainJs), '按鍵摘要走 t(\'cmd.hint\')');
-ok(/return t\('rpg\.sum', \{/.test(mainJs), 'RPG 能力總結走 t(\'rpg.sum\')');
-ok(/t\('rpg\.leftRow', \{ n: left \}\)/.test(mainJs), '剩餘配點走 t(\'rpg.leftRow\')');
-ok(/t\('rpg\.ptHint'\)/.test(mainJs), '配點說明走 t(\'rpg.ptHint\')');
-ok(/t\('rpg\.lvhint', \{ nx: nx/.test(mainJs), '升級提示走 t(\'rpg.lvhint\')');
+ok(/return t\('rpg\.sum', \{/.test(gameSrc), 'RPG 能力總結走 t(\'rpg.sum\')');
+ok(/t\('rpg\.leftRow', \{ n: left \}\)/.test(gameSrc), '剩餘配點走 t(\'rpg.leftRow\')');
+ok(/t\('rpg\.ptHint'\)/.test(gameSrc), '配點說明走 t(\'rpg.ptHint\')');
+ok(/t\('rpg\.lvhint', \{ nx: nx/.test(gameSrc), '升級提示走 t(\'rpg.lvhint\')');
 ok(rawIndex.indexOf('id="rpgLeft"') > 0, 'index.html 仍有 #rpgLeft（舊測試與程式都靠它）');
 ok(rawIndex.indexOf('id="rpgPtHint"') > 0, 'index.html 有 #rpgPtHint（後半句）');
 ok(!/剩餘 <b id="rpgLeft"/.test(rawIndex), '不再是「剩餘 <b>N</b> 點」被數字切開的結構');

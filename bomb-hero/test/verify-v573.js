@@ -128,7 +128,11 @@ ok(!threw, 'mapIntroCard 在沒有 doorHint 元素時也不會拋錯', threw);
 /* ---------------- ⑤ 版本與字典 ---------------- */
 sec('⑤ 版本戳記與字典');
 ok(parseFloat(P.VERSION) >= 5.72, 'VERSION ≥ 5.72（' + P.VERSION + '）');
-ok(/SW_VERSION = 'v5\.72\.0'/.test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'SW v5.72.0');
+/* v5.74：版本斷言不再寫死。舊寫法 `SW_VERSION = 'v5.68.0'` 每升一版就變紅一次
+   （而且被舊的 _runall 解析漏洞蓋住，紅了好幾版沒人發現）。改成「≥ 這個版本」。 */
+function swNum(t) { const m = /SW_VERSION = 'v(\d+)\.(\d+)\.(\d+)'/.exec(t); return m ? (+m[1]) * 1e6 + (+m[2]) * 1e3 + (+m[3]) : 0; }
+ok(swNum(fs.readFileSync(__dirname + '/../sw.js', 'utf8')) >= 5072000,
+  'SW ≥ v5.72.0（實際 ' + swNum(fs.readFileSync(__dirname + '/../sw.js', 'utf8')) + '）');
 ['bt.theme|', 'bt.themeRandom|', 'bt.round|', 'bt.themeHint|'].forEach(function (k) {
   ok(I18N.indexOf('\n' + k) >= 0, '字典有 ' + k.replace('|', ''));
 });

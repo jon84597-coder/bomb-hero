@@ -42,6 +42,9 @@ const SETUP = `(function(){
                  x:Math.round(q.left), y:Math.round(q.top), w:Math.round(q.width), h:Math.round(q.height) }; };
   }
   window.__setPad(0);
+  /* v5.74：v5.73 的 Starter（新帳號漸進解鎖）會在全新瀏覽器上只留「冒險模式」一顆，
+     於是「走得到每日挑戰／商店」永遠紅。這裡先把進度推到全解鎖再量導覽。 */
+  try { window.__BH.Solo.unlocked = 10; window.__BH.Starter.apply(); } catch(e){}
   window.__BH.PadUI.armed = true;
   return 1; })()`;
 

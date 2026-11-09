@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.73';
+const VERSION = '5.74';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -1827,6 +1827,21 @@ const AudioSys = (function () {
       arp: [0, 2, 1, 2, 0, 2, 3, 2, 1, 2, 0, 2, 3, 2, 1, 0],
       plan: ['A', 'B', 'C', 'A', 'D', 'E', 'B', 'F', 'C', 'D', 'E', 'G', 'H', 'A']
     },
+    /* v5.74：深淵專屬曲 —— 「無盡往下」的壓迫感，不是熱血。
+       · BPM 96（慢，心跳感）；melWave 'triangle'（空心、不刺耳，跟其他四首明顯不同）
+       · 低音 + sub 幾乎全在根音：不給旋律，只給「地板在震」的感覺
+       · 鼓只用 k...s...（大空間）—— 深淵裡沒有觀眾，越空越可怕 */
+    abyssWar: {
+      bpm: 96, base: 60, melWave: 'triangle', melVol: .090,
+      bassVol: .300, arpVol: .048, powVol: .068, drumVol: .116, seed: 9813,
+      bassWave: 'sawtooth', bassLp: 300,
+      bass: [0, 0, 0, 0, 7, 0, 0, 0],
+      subVol: .215,
+      sub: [-12, -12, -12, -12, -12, -12, -12, -12],
+      arp: [0, 3, 1, 3, 2, 3, 1, 0, 0, 3, 1, 3, 2, 3, 1, 3],
+      plan: ['F', 'C', 'F', 'E', 'F', 'C', 'E', 'F',
+             'F', 'C', 'F', 'E', 'G', 'C', 'E', 'F']
+    },
     // 大逃殺 5 分鐘：23 句 ≈ 5:02
     brWar5: {
       bpm: 146, base: 72, melWave: 'sawtooth', melVol: .100,
@@ -2151,9 +2166,14 @@ function stageBGM(stage) {
   if (Game && (Game.bossArena || Game.bossRush)) return 'bossWar';
   if (Game && Game.mode === 'battle') return 'battle';     // 對戰：2:45 戰鬥曲
   if (Game && Game.mode === 'br') return brSongId();       // 大逃殺：10:00／5:00 戰鬥曲
-  // v4.14：關卡 8 → 32（每 4 張地圖＝一個大主題，共用同一首主題曲）
+  /* v5.74：深淵有自己的曲子（慢、低、空）。深淵王那一層走決戰場 → 上面已經先回 bossWar。
+     使用者原話：「往下潛要越聽越毛，不是越聽越熱血」。 */
+  if (Game && Game.abyss) return 'abyssWar';
+  /* v5.74：這裡原本還是 32 關制的算式 Math.floor((raw - 1) / 4) + 1 ——
+     40 關制是「每章 5 關」，所以第 10／15／20／25／30／35 關會播到下一章的主題曲。
+     一律走 chapterOf()，跟關卡名／地圖／王血用同一個來源。 */
   const raw = Math.max(1, stage || (Game && Game.stage) || 1);
-  const st = Math.max(1, Math.min(8, Math.floor((raw - 1) / 4) + 1));
+  const st = Math.max(1, Math.min(8, chapterOf(raw)));
   return 'stage' + st;
 }
 // 依主題挑曲（對戰隨機地圖時用）
@@ -6803,6 +6823,7 @@ const WeekChal = (function () {
     const bk = best();
     if (!bk || used < bk) {
       setBest(used);
+      try { Ghost.finish(Gift.weekKey(), used); } catch (e) {}
       try {
         Lb.submitChal(Gift.weekKey(), settings.playerName || '', used).then(function (r) {
           if (r && r.ok && r.rank) toast(t('wk.rank', { r: r.rank, t: fmtMs(used) }), 3);
@@ -9467,6 +9488,62 @@ const CodexUI = (function () {
     { id: 's', ico: '📚', n: 'codex.tabSkill' }
   ];
   let tab = 'f', wired = false;
+  /* v5.74：圖鑑集滿獎勵 —— 圖鑑本來是「只收集、零回報」，點亮一整頁沒有任何事發生。
+     現在每個分頁集滿可領 1200 金幣，四個分頁全滿再追加 6000＋2 張大逃殺門票。
+     （刻意做成「要自己按領取」：收藏的成就感來自按下那一刻，不是自動跳通知。） */
+  const RW_KEY = 'bombhero-codex-rw-v1';
+  const RW_GOLD = 1200, RW_ALL = 6000, RW_TK = 2;
+  function rwGot() {
+    try { const a = JSON.parse(localStorage.getItem(RW_KEY) || '[]'); return Array.isArray(a) ? a : []; }
+    catch (e) { return []; }
+  }
+  function rwSave(a) { try { localStorage.setItem(RW_KEY, JSON.stringify(a)); } catch (e) {} }
+  function tabDone(id) {
+    const l = listOf(id);
+    if (!l.length) return false;
+    for (let i = 0; i < l.length; i++) if (!l[i].got) return false;
+    return true;
+  }
+  function allDone() {
+    for (let i = 0; i < TABS.length; i++) if (!tabDone(TABS[i].id)) return false;
+    return true;
+  }
+  function claimReady() {
+    const got = rwGot();
+    let g = 0, tk = 0, n = 0;
+    for (let i = 0; i < TABS.length; i++) {
+      const id = TABS[i].id;
+      if (got.indexOf(id) >= 0 || !tabDone(id)) continue;
+      got.push(id); g += RW_GOLD; n++;
+    }
+    if (allDone() && got.indexOf('all') < 0) { got.push('all'); g += RW_ALL; tk += RW_TK; }
+    if (!n && !tk) return false;
+    rwSave(got);
+    try { Shop.addGold(g); } catch (e) {}
+    if (tk) { try { Shop.grantTicket(tk); } catch (e) {} }
+    try { AudioSys.sfx('win'); } catch (e) {}
+    try { toast(t('codex.rwGot', { g: g }) + (tk ? ' ＋ 🎟️×' + tk : ''), 3.2); } catch (e) {}
+    render();
+    return true;
+  }
+  function renderRew() {
+    const box = $id('codexRew');
+    if (!box) return;
+    const got = rwGot();
+    let ready = 0;
+    for (let i = 0; i < TABS.length; i++) {
+      const id = TABS[i].id;
+      if (tabDone(id) && got.indexOf(id) < 0) ready++;
+    }
+    if (allDone() && got.indexOf('all') < 0) ready++;
+    if (ready) {
+      /* v5.74b：文案本身已帶 🎁，這裡別再補一顆（會變成「🎁 🎁 領取…」） */
+      box.innerHTML = '<button class="cdxrw" type="button" data-cdxrw="1">' +
+        escHtml(t('codex.rwBtn', { n: ready })) + '</button>';
+    } else if (got.indexOf('all') >= 0) {
+      box.innerHTML = '<span class="cdxrw done">🏅 ' + escHtml(t('codex.rwAll')) + '</span>';
+    } else box.innerHTML = '';
+  }
 
   function foeList() {
     return ENEMY_SPECIES.map(function (sp) {
@@ -9520,6 +9597,7 @@ const CodexUI = (function () {
     const list = listOf(tab);
     const gotN = list.filter(function (x) { return x.got; }).length;
     if ($id('codexCount')) $id('codexCount').textContent = gotN + ' / ' + list.length;
+    try { renderRew(); } catch (e) {}
     const hintKey = tab === 'f' ? 'codex.hintFoe' : tab === 'b' ? 'codex.hintBoss'
       : tab === 'i' ? 'codex.hintItem' : 'codex.hintSkill';
     if ($id('codexHint')) $id('codexHint').textContent = t(hintKey);
@@ -9570,6 +9648,12 @@ const CodexUI = (function () {
     if (btn) btn.addEventListener('click', function () { open(); });
     const x = $id('codexX');
     if (x) x.addEventListener('click', function () { try { AudioSys.sfx('click'); } catch (e) {} close(); });
+    const rw = $id('codexRew');
+    if (rw) rw.addEventListener('click', function (ev) {
+      const b = ev.target && ev.target.closest ? ev.target.closest('[data-cdxrw]') : null;
+      if (!b) return;
+      try { claimReady(); } catch (e) {}
+    });
     const bk = $id('codexBk');
     if (bk) bk.addEventListener('click', close);
     const tb = $id('codexTabs');
@@ -9581,7 +9665,11 @@ const CodexUI = (function () {
       render();
     });
   }
-  return { open: open, close: close, render: render, wire: wire };
+  /* v5.74：集滿獎勵是「收集 → 領獎」的閉環，沒有把狀態露出來就只能掃原始碼驗。
+     把 TABS／listOf／tabDone／renderRew／claimReady 開給 __BH，測試才能真的走一遍。 */
+  return { open: open, close: close, render: render, wire: wire,
+    TABS: TABS, listOf: listOf, tabDone: tabDone, allDone: allDone,
+    renderRew: renderRew, claimReady: claimReady, rwGot: rwGot };
 })();
 
 /* ===== v5.27：四週賽季 =====
@@ -10077,6 +10165,29 @@ const GiftUI = (function () {
    · 死亡即結算：最深層數寫進 localStorage＋全服榜（mode=abyss）。
    ========================================================================== */
 const ABYSS_KEY = 'bombhero-abyss-v1';
+/* ============================================================================
+   v5.74：深淵契約 —— 風險回報型的三選一
+   · 深淵以前只有「層數」：bump() 自動加數值、玩家沒得選，越往下只是重複同一件事。
+   · 每打完一隻深淵王（第 5／10／15…層）進下一層前，抽三張契約，每張都是
+     「拿一個好處、付一個代價」。選什麼＝這一輪的玩法，而不是系統給的。
+   · 代價一律作用在同一條軸線的另一端（火力↔引信、炸彈↔怪速、金幣↔怪量），
+     所以不存在「純賺」的組合，也不會出現選了就直接死的死局。
+   ========================================================================== */
+const ABYSS_PERKS = [
+  { id: 'power',   ico: '\uD83D\uDD25', g: { power: 1 },     b: { fuse: -.12 } },
+  { id: 'arsenal', ico: '\uD83D\uDCA3', g: { bombs: 1 },     b: { foeSpd: .08 } },
+  { id: 'flesh',   ico: '\u2764\uFE0F', g: { hp: 1 },        b: { bombs: -1 } },
+  { id: 'greed',   ico: '\uD83D\uDCB0', g: { gold: 150 },    b: { foes: 3 } },
+  { id: 'swift',   ico: '\u23F1\uFE0F', g: { fuse: .18 },    b: { bossHp: .30 } },
+  { id: 'furor',   ico: '\uD83C\uDF0B', g: { power: 2 },     b: { hp: -1 } },
+  { id: 'stone',   ico: '\uD83D\uDEE1\uFE0F', g: { guard: 3 }, b: { foes: 2 } },
+  { id: 'golden',  ico: '\uD83D\uDC8E', g: { goldPct: .60 }, b: { fuse: -.10 } }
+];
+function abyssPerkDef(id) {
+  for (let i = 0; i < ABYSS_PERKS.length; i++) if (ABYSS_PERKS[i].id === id) return ABYSS_PERKS[i];
+  return null;
+}
+
 const Abyss = (function () {
   let best = 0;
   try { best = Math.max(0, parseInt(localStorage.getItem(ABYSS_KEY), 10) || 0); } catch (e) { best = 0; }
@@ -10106,8 +10217,8 @@ const Abyss = (function () {
     p.sHp = p.sHpMax;
   }
   /* 追怪：每 4 層 +1 隻，上限 +12 —— 用「同生態表的怪」才不會出現違和組合 */
-  function extraFoes(n) {
-    const add = Math.min(12, Math.floor(n / 4));
+  function extraFoes(n, addN) {
+    const add = (addN != null) ? Math.max(0, addN | 0) : Math.min(12, Math.floor(n / 4));
     if (add <= 0) return;
     const st = layerStage(n);
     let types = [];
@@ -10129,14 +10240,85 @@ const Abyss = (function () {
       try { Game.enemies.push(makeEnemy(x, y, pick(types), lv, speed)); } catch (e) { break; }
     }
   }
+  /* v5.74：這一輪選到的契約 → 一次加總。每層都要重算，
+     因為 startSolo 會重建玩家物件（不重算＝只有第一層吃得到）。 */
+  function perkSum() {
+    const sum = { power: 0, bombs: 0, hp: 0, fuse: 0, foeSpd: 0, foes: 0, bossHp: 0, gold: 0, goldPct: 0, guard: 0 };
+    const list = (Game.abyss && Game.abyss.perks) || [];
+    for (let i = 0; i < list.length; i++) {
+      const d = abyssPerkDef(list[i]);
+      if (!d) continue;
+      for (const k in d.g) sum[k] = (sum[k] || 0) + d.g[k];
+      for (const k in d.b) sum[k] = (sum[k] || 0) + d.b[k];
+    }
+    return sum;
+  }
+  function applyPerks(p, layer) {
+    const A = Game.abyss;
+    if (!A) return;
+    const sum = perkSum();
+    /* 先補怪、再套速度：反過來的話新補的怪會漏掉速度加成 */
+    if (sum.foes > 0) { try { extraFoes(layer, sum.foes); } catch (e) {} }
+    if (p) {
+      if (sum.power) p.power = Math.max(1, Math.min(12, (p.power | 0) + sum.power));
+      if (sum.bombs) p.maxBombs = Math.max(1, Math.min(12, (p.maxBombs | 0) + sum.bombs));
+      if (sum.hp) { p.sHpMax = Math.max(1, Math.min(9, (p.sHpMax | 0) + sum.hp)); p.sHp = p.sHpMax; }
+      if (sum.fuse) p.fuseMul = Math.max(.3, Math.min(2, (p.fuseMul || 1) * (1 + sum.fuse)));
+      if (sum.guard > 0) p.invuln = Math.max(p.invuln || 0, sum.guard);
+    }
+    if (sum.foeSpd) {
+      const mul = 1 + sum.foeSpd;
+      Game.enemies.forEach(function (e) { if (!e.boss) e.speed = Math.max(8, (e.speed || 30) * mul); });
+    }
+    if (sum.bossHp) {
+      Game.enemies.forEach(function (e) {
+        if (e.boss) { e.hp = Math.max(1, Math.round((e.hp | 0) * (1 + sum.bossHp))); e.maxHp = e.hp; }
+      });
+    }
+  }
+  function layerGold(n) {
+    const sum = perkSum();
+    let g = 15 + (n > best ? 45 : 0) + (sum.gold || 0);
+    g = Math.round(g * (1 + (sum.goldPct || 0)));
+    return Math.max(0, g);
+  }
+  /* 里程碑：每 10 層一次。領過就不再給 —— 存檔跟最深層數同一套（本機） */
+  const MS_LIST = [10, 20, 30, 50, 75, 100];
+  const MS_KEY = 'bombhero-abyss-ms-v1';
+  function msDone() {
+    try { const a = JSON.parse(localStorage.getItem(MS_KEY) || '[]'); return Array.isArray(a) ? a : []; }
+    catch (e) { return []; }
+  }
+  function msCheck(n) {
+    const got = msDone();
+    let last = null;
+    for (let i = 0; i < MS_LIST.length; i++) {
+      const m = MS_LIST[i];
+      if (n < m || got.indexOf(m) >= 0) continue;
+      got.push(m);
+      const gold = 600 + i * 500;
+      const tk = m >= 30 ? 1 : 0;
+      try { Shop.addGold(gold); } catch (e) {}
+      if (tk) { try { Shop.grantTicket(tk); } catch (e) {} }
+      /* 一次跨過好幾階（例如從第 9 層直上第 21 層）→ 金幣要合併回報，
+         不然提示只會顯示最後一階，玩家以為少給了。 */
+      last = last ? { m: m, gold: last.gold + gold, tk: last.tk + tk, many: true }
+                  : { m: m, gold: gold, tk: tk };
+    }
+    if (last) { try { localStorage.setItem(MS_KEY, JSON.stringify(got)); } catch (e) {} }
+    return last;
+  }
   function start(n) {
     const layer = Math.max(1, n | 0 || 1);
     const at = (Game.abyss && Game.abyss.startAt) || Date.now();
+    /* 第 1 層＝新的一輪 → 契約歸零；其餘層沿用 */
+    const perks = (layer > 1 && Game.abyss && Game.abyss.perks) ? Game.abyss.perks.slice() : [];
     startSolo(layerStage(layer), false, false);
     /* startSolo 會把 Game.abyss 清掉（普通模式的入口），這裡重新釘回去 */
-    Game.abyss = { layer: layer, startAt: at };
+    Game.abyss = { layer: layer, startAt: at, perks: perks };
     try { bump(Game.players[0], layer); } catch (e) {}
     try { extraFoes(layer); } catch (e) {}
+    try { applyPerks(Game.players[0], layer); } catch (e) {}
     try {
       if (layer % 5 === 0) {
         Game.enemies.forEach(function (e) { if (e.boss) { e.hp = (e.hp | 0) + layer; e.maxHp = e.hp; } });
@@ -10162,13 +10344,26 @@ const Abyss = (function () {
     const n = layerOf() + 1;
     Game.abyss.layer = n;
     Game.state = 'roundover';
+    /* v5.74：每層給金幣。以前深淵一毛錢都不給（只記層數），玩一整晚沒有任何回報，
+       等於「無限、但沒有意義」。破紀錄的層給三倍（45+15 vs 15），自殺重刷划不來。 */
+    let gold = 0;
+    try { gold = layerGold(n); if (gold > 0) Shop.addGold(gold); } catch (e) {}
+    let ms = null;
+    try { ms = msCheck(n); } catch (e) {}
     try { AbyssHud.paint(); } catch (e) {}
     try { AudioSys.sfx('victory'); } catch (e) {}
     try {
       if (n % 5 === 0) { Game.flash = Math.max(Game.flash || 0, .45); Game.shake = Math.max(Game.shake || 0, .4); }
     } catch (e) {}
+    try {
+      if (ms) toast(t('ms.got', { m: ms.m, g: ms.gold }) + (ms.tk ? ' ＋ 🎟️×' + ms.tk : ''), 3.4);
+      else if (gold > 0) toast('💰 +' + gold, 1.5);
+    } catch (e) {}
+    /* 打完王（第 5／10／15…層）→ 進下一層前抽契約；其餘層維持原本的強化三選一 */
+    const pick = (n > 1 && (n - 1) % 5 === 0);
     setTimeout(function () {
       const go = function () { try { start(n); } catch (e) {} };
+      if (pick) { try { AbyssPerk.open(go); return; } catch (e) {} }
       try { if (buffsOn()) BuffPick.open(go); else go(); } catch (e) { go(); }
     }, 620);
   }
@@ -10189,7 +10384,9 @@ const Abyss = (function () {
     try {
       showOverlay({
         title: deeper ? t('abyss.newBest', { n: n }) : t('abyss.over', { n: n }),
-        sub: t('abyss.bestLine', { n: best }),
+        sub: t('abyss.bestLine', { n: best }) +
+          ((Game.abyss && Game.abyss.perks && Game.abyss.perks.length)
+            ? '　·　' + t('abyss.perkShort', { n: Game.abyss.perks.length }) : ''),
         btn: t('abyss.retry'),
         action: function () { try { start(1); } catch (e) {} }
       });
@@ -10198,7 +10395,10 @@ const Abyss = (function () {
   }
   return {
     start: start, layerClear: layerClear, finish: finish,
-    bestOf: bestOf, layerOf: layerOf, active: active, unlocked: unlocked, layerStage: layerStage
+    bestOf: bestOf, layerOf: layerOf, active: active, unlocked: unlocked, layerStage: layerStage,
+    perkSum: perkSum, layerGold: layerGold, msCheck: msCheck,
+    msList: function () { return MS_LIST.slice(); },
+    perks: function () { return (Game.abyss && Game.abyss.perks) || []; }
   };
 })();
 
@@ -10223,10 +10423,77 @@ const AbyssHud = (function () {
     b.classList.toggle('hide', !on);
     if (!on) return;
     /* v5.73：徽章底色是深紫，🕳️（黑底）幾乎看不見 → 換成對比夠的漩渦 */
+    const pc = (Game.abyss && Game.abyss.perks) ? Game.abyss.perks.length : 0;
     b.innerHTML = '<b>\uD83C\uDF00 ' + t('abyss.layerShort', { n: n }) + '</b>' +
-      '<i>' + t('abyss.bestShort', { n: Abyss.bestOf() }) + '</i>';
+      '<i>' + t('abyss.bestShort', { n: Abyss.bestOf() }) + '</i>' +
+      (pc ? '<i class="apc">' + t('abyss.perkShort', { n: pc }) + '</i>' : '');
   }
   return { paint: paint };
+})();
+
+/* ============================================================================
+   v5.74：深淵契約三選一 —— 跟過關強化同一套視覺語言，但卡片一定要同時看到
+   「好處」與「代價」，否則玩家只會挑看起來最爽的那張，選擇就沒有重量。
+   ========================================================================== */
+const AbyssPerk = (function () {
+  let cb = null, picks = [], wired = false;
+  function el(id) { return document.getElementById(id); }
+  function roll() {
+    const pool = ABYSS_PERKS.slice(), out = [];
+    while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    return out;
+  }
+  function render() {
+    const row = el('apRow');
+    if (!row) return;
+    row.innerHTML = picks.map(function (d, i) {
+      return '<button class="apcard" type="button" data-ap="' + i + '">' +
+        '<span class="apico">' + d.ico + '</span>' +
+        '<div class="apname">' + escHtml(t('perk.' + d.id)) + '</div>' +
+        '<div class="apgood">▲ ' + escHtml(t('perk.' + d.id + '.g')) + '</div>' +
+        '<div class="apbad">▼ ' + escHtml(t('perk.' + d.id + '.b')) + '</div>' +
+        '</button>';
+    }).join('');
+  }
+  function wire() {
+    if (wired) return;
+    wired = true;
+    const row = el('apRow');
+    if (!row || !row.addEventListener) return;
+    row.addEventListener('click', function (ev) {
+      const b = ev.target && ev.target.closest ? ev.target.closest('[data-ap]') : null;
+      if (!b) return;
+      take(parseInt(b.getAttribute('data-ap'), 10) | 0);
+    });
+  }
+  function take(i) {
+    const d = picks[i];
+    const box = el('abyssPerk');
+    if (box) box.classList.remove('on');
+    if (d) {
+      if (!Game.abyss) Game.abyss = { layer: 1, perks: [] };
+      if (!Game.abyss.perks) Game.abyss.perks = [];
+      Game.abyss.perks.push(d.id);
+      try { AudioSys.sfx('item'); } catch (e) {}
+      try { toast(t('perk.' + d.id), 1.8); } catch (e) {}
+    }
+    const f = cb; cb = null;
+    if (f) { try { f(); } catch (e) {} }
+  }
+  function open(next) {
+    picks = roll();
+    if (!picks.length) { if (next) next(); return; }
+    cb = next;
+    wire();
+    const ttl = el('apTitle'), sub = el('apSub');
+    if (ttl) ttl.textContent = t('ap.title');
+    if (sub) sub.textContent = t('ap.sub');
+    render();
+    const box = el('abyssPerk');
+    if (box) box.classList.add('on');
+    try { AudioSys.sfx('levelup'); } catch (e) {}
+  }
+  return { open: open, list: function () { return ABYSS_PERKS; }, _take: take };
 })();
 
 function startSolo(stage, bossRush, daily) {
@@ -10297,7 +10564,7 @@ function startSolo(stage, bossRush, daily) {
   buildSoloStage(stage, true);
   weekBanner();                 // v5.38：進場先告訴你這週是什麼變異
   // v5.38：每日挑戰才有殘影；其他模式一律清掉
-  if (Game.daily) { try { Ghost.start(); } catch (e) { Game.ghost = null; } }
+  if (Game.daily || Game.wchal) { try { Ghost.start(); } catch (e) { Game.ghost = null; } }
   else Game.ghost = null;
   const tSec = soloTimeVal();
   const ovT = Game.daily
@@ -12011,6 +12278,8 @@ function updateSolo(dt) {
     }
     // v4.80：每日挑戰用「實際遊玩時間」計時 —— 暫停、開覆蓋層、看說明都不算，才能公平比快
     if (Game.daily && !Game.daily.done) { Game.daily.ms += dt * 1000; Ghost.tick(dt); }
+    /* v5.74：每週限制挑戰也錄幽靈（計時用「已經花掉的秒數」，跟榜上的成績同一個來源） */
+    if (Game.wchal) Ghost.tick(dt);
     // 無限時間：倒數停在 ∞，不會時間到就陣亡
     if (isFinite(Game.timer)) {
       Game.timer -= dt;
@@ -19008,6 +19277,11 @@ const Ghost = {
   GAP: .5,
   MAXN: 400,
   data: null,
+  /* v5.74：每週限制挑戰也有幽靈（存的是「這一週的最快一次」）——
+     幽靈的意義是「有參照物」，每週榜只有秒數沒有畫面，追分時完全沒有臨場感。
+     用同一套 0.5 秒一格的格式，只是換一個 key、換一個週次比對。 */
+  WKKEY: 'bombhero-wkchal-ghost-v1',
+  wkData: null,
   load() {
     try {
       const o = JSON.parse(localStorage.getItem(Ghost.KEY) || 'null');
@@ -19015,12 +19289,34 @@ const Ghost = {
     } catch (e) { Ghost.data = null; }
     return Ghost.data;
   },
+  wkLoad() {
+    try {
+      const o = JSON.parse(localStorage.getItem(Ghost.WKKEY) || 'null');
+      Ghost.wkData = (o && o.wk && Array.isArray(o.path) && o.path.length > 1) ? o : null;
+    } catch (e) { Ghost.wkData = null; }
+    return Ghost.wkData;
+  },
+  wkToday() {
+    let wk = '';
+    try { wk = Gift.weekKey(); } catch (e) { wk = ''; }
+    if (!wk) return null;
+    if (Ghost.wkData && Ghost.wkData.wk === wk) return Ghost.wkData;
+    const g = Ghost.wkLoad();
+    return (g && g.wk === wk) ? g : null;
+  },
   today() {
+    if (Game && Game.wchal) return Ghost.wkToday();
     const g = Ghost.data || Ghost.load();
     return (g && g.day === dailyDayKey()) ? g : null;
   },
   save(day, ms, path) {
     if (!path || path.length < 2) return;
+    if (Game && Game.wchal) {
+      const rec = { wk: day, ms: ms | 0, path: path };
+      try { localStorage.setItem(Ghost.WKKEY, JSON.stringify(rec)); } catch (e) {}
+      Ghost.wkData = rec;
+      return;
+    }
     try { localStorage.setItem(Ghost.KEY, JSON.stringify({ day: day, ms: ms | 0, path: path })); } catch (e) {}
     Ghost.data = { day: day, ms: ms | 0, path: path };
   },
@@ -19033,7 +19329,7 @@ const Ghost = {
   },
   tick(dt) {
     const q = Game.ghost;
-    if (!q || !Game.daily) return;
+    if (!q || (!Game.daily && !Game.wchal)) return;
     q.t += dt;
     q.acc += dt;
     if (q.acc < Ghost.GAP) return;
@@ -19388,7 +19684,13 @@ function renderWkChal() {
   if (sd) sd.innerHTML = '\uD83D\uDFFA <b>' + escHtml(t('wk.stageLine', { n: st, name: mapName(soloInfo(st)) })) + '</b>';
   const bk = WeekChal.best();
   const bd = $id('wkChalBest');
-  if (bd) bd.innerHTML = '\uD83C\uDFC6 ' + escHtml(bk ? t('wk.bestHave', { t: fmtMs(bk) }) : t('wk.bestNone'));
+  if (bd) {
+    /* v5.74：本週的幽靈（上一趟最快的自己）—— 有影子可以追，計時賽才不是純數字 */
+    let gh = null;
+    try { gh = Ghost.wkToday(); } catch (e) { gh = null; }
+    bd.innerHTML = '\uD83C\uDFC6 ' + escHtml(bk ? t('wk.bestHave', { t: fmtMs(bk) }) : t('wk.bestNone')) +
+      (gh ? '<span class="wkghost">👻 ' + escHtml(t('wk.ghost', { t: fmtMs(gh.ms) })) + '</span>' : '');
+  }
   const go = $id('btnWkChal');
   if (go) go.textContent = t('wk.go');
   const box = $id('wkChalList');
@@ -23252,6 +23554,62 @@ function vignetteCanvas() {
   _vigCv = cv; _vigKey = key;
   return cv;
 }
+/* ============================================================================
+   v5.74：螢幕空間「調色」層 —— 美術統一的最後一道手續
+   · 八個主題各自一層極淡的色偏（overlay）：沙岩暖、冰原冷、深海青、霓虹紫…
+     不碰任何素材，但地板／牆／角色三套素材會被同一層顏色綁在一起，
+     這就是「看起來像同一個世界」最便宜的做法。
+   · 深淵再疊一層「越深越暗」的乘法紫 + 呼吸的紫霧：每一層都像不同的地方。
+   · 兩層都只是一次 fillRect，手機上量不到差異。
+   ========================================================================== */
+const GRADE_TINT = {
+  forest: '255,214,150', sand: '255,206,140', ice: '168,224,255',
+  lava: '255,150,110', neon: '190,140,255', sea: '140,220,235',
+  sky: '185,215,255', dark: '180,120,210'
+};
+function drawGrade() {
+  if (!ctx || !VIEW_W || !VIEW_H) return;
+  try {
+    if (Game.abyss) {
+      const L = Math.max(1, Game.abyss.layer | 0);
+      const k = Math.min(.30, .04 + L * .011);
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = 'rgba(28,10,46,' + k.toFixed(3) + ')';
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      const br = .030 + .026 * (Math.sin((Game.gameT || 0) * .7) * .5 + .5);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = 'rgba(70,30,120,' + br.toFixed(3) + ')';
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      ctx.restore();
+      return;
+    }
+    const st = Game.theme && Game.theme.style;
+    const c = GRADE_TINT[st];
+    if (!c) return;
+    ctx.save();
+    /* v5.74：①統一光源 —— 八張主題圖各自打光（有的左上、有的正面），拼在同一個遊戲裡
+       「光從哪來」就不一致。這裡蓋一層極淡的左上暖光→右下冷影（overlay，alpha ≤.06），
+       只做「同一顆太陽」，不動任何一張素材本身。 */
+    const _gk = VIEW_W + 'x' + VIEW_H;   // 視窗一變寬高，漸層座標就對不上了
+    if (!drawGrade._lg || drawGrade._lgk !== _gk) {
+      drawGrade._lgk = _gk;
+      const g = ctx.createLinearGradient(0, 0, VIEW_W, VIEW_H);
+      g.addColorStop(0, 'rgba(255,246,232,.060)');
+      g.addColorStop(.42, 'rgba(255,255,255,0)');
+      g.addColorStop(1, 'rgba(8,12,28,.065)');
+      drawGrade._lg = g;
+    }
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.fillStyle = drawGrade._lg;
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    // ②主題色調（飽和度／色相的統一）
+    ctx.fillStyle = 'rgba(' + c + ',.055)';
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    ctx.restore();
+  } catch (e) {}
+}
+
 function drawVignette() {
   const cv = vignetteCanvas();
   if (!cv) return;
@@ -23947,7 +24305,7 @@ function render() {
   // v1.7：大哭中的人即使已經倒下也要畫出來（才看得到哭臉）
   // v4.16：躲在樹叢／破屋裡的「別人」完全不畫（連頭上的名字都沒有 → 真的看不到）；
   //        自己照畫，靠上面那層半透明的葉子讓你知道自己在裡面
-  if (Game.daily && Game.daily.ms) { try { drawDailyGhost(T); } catch (e) {} }
+  if ((Game.daily && Game.daily.ms) || Game.wchal) { try { drawDailyGhost(T); } catch (e) {} }
   Game.players.forEach(function (p) {
     if (playerHiding(p) && !isMyPlayer(p)) return;
     if (!onScreen(p.x, p.y, T * 1.6)) return;      // v4.77：鏡頭外不畫（大步跳過）
@@ -23985,6 +24343,7 @@ function render() {
   try { Tut.drawWorld(ctx); } catch (e) {}
   // v4.5：邊緣紅光貼在畫布四周，中央完全透明（不受 shake 位移影響，所以先還原座標）
   ctx.setTransform(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0);
+  try { drawGrade(); } catch (e) {}      // v5.74：調色層（主題色偏／深淵越深越暗）
   try { drawVignette(); } catch (e) {}   // v5.21：螢幕空間暗角（貼著視窗邊緣，不隨鏡頭跑）
   drawHurtEdge();
   // v4.70：小地圖與隊色 HUD 都是「畫面座標」，畫在所有世界物件之上（此時 transform = CSS 像素）
@@ -28687,7 +29046,10 @@ function drawGhostFigure(at, T, hex, alpha, emoji) {
 }
 
 function drawDailyGhost(T) {
-  const sec = (Game.daily.ms || 0) / 1000;
+  /* v5.74：每週挑戰的計時是「這一場已經用掉幾秒」（倒數制），每日是累加毫秒 */
+  const sec = Game.wchal
+    ? Math.max(0, (Game.timerMax || 0) - (Game.timer || 0))
+    : (Game.daily.ms || 0) / 1000;
   /* 自己（👻）：上一次最快的那條 */
   const at = Ghost.at(sec);
   if (at && !(typeof onScreen === 'function' && !onScreen(at.x, at.y, T * 1.6))) {
@@ -28695,7 +29057,7 @@ function drawDailyGhost(T) {
   }
   /* v5.56：榜上前三名的影子 —— 三種顏色 + 頭上名字，追得到、看得出來是誰 */
   let rs = [];
-  try { rs = Ghost.rivals() || []; } catch (e) { rs = []; }
+  if (!Game.wchal) { try { rs = Ghost.rivals() || []; } catch (e) { rs = []; } }
   for (let i = 0; i < rs.length; i++) {
     const p = Ghost.atPath(rs[i].arr, sec, Ghost.GAP2);
     if (!p) continue;                                   // 他已經跑完了 → 影子消失
@@ -36214,7 +36576,7 @@ const RpgSkill = (function () {
       Game.flash = Math.max(Game.flash || 0, .35);
       Game.shake = Math.max(Game.shake || 0, .45);
       try { AudioSys.sfx('explode'); } catch (e) {}
-      try { if (typeof comboToast === 'function') comboToast('碎冰'); } catch (e) {}
+      try { if (typeof comboToast === 'function') comboToast(t('combo.freeze')); } catch (e) {}
     } else if (a === 'shield' && id === 'det') {
       /* 盾炸：把身邊 2 格怪往外震 2 格，並補回 1 秒無敵 */
       const r = 2.5 * T, r2 = r * r;
@@ -36237,7 +36599,7 @@ const RpgSkill = (function () {
       for (let k = 0; k < 26; k++) burst(p.x, p.y, '#bfe4ff', 6, 320);
       Game.shake = Math.max(Game.shake || 0, .4);
       try { AudioSys.sfx('explode'); } catch (e) {}
-      try { if (typeof comboToast === 'function') comboToast('盾炸'); } catch (e) {}
+      try { if (typeof comboToast === 'function') comboToast(t('combo.shield')); } catch (e) {}
     } else if (a === 'det' && id === 'quake') {
       /* 氣浪：每一個炸點都變成一個小暈眩圈 */
       const list = (Game.flames || []).slice(0, 24);
@@ -36253,7 +36615,7 @@ const RpgSkill = (function () {
       });
       try { Game.rings.push({ kind: 'ring', x: p.x, y: p.y, born: Game.gameT || 0, dur: .55, r: 4 * T, color: '#ffcf8a', thick: .1 }); } catch (e) {}
       Game.shake = Math.max(Game.shake || 0, .35);
-      try { if (typeof comboToast === 'function') comboToast('氣浪'); } catch (e) {}
+      try { if (typeof comboToast === 'function') comboToast(t('combo.gust')); } catch (e) {}
     }
     return hit;
   }
@@ -36566,6 +36928,69 @@ function rpgTakeBag() {
   return out;
 }
 
+/* ============================================================================
+   v5.74：RPG 關卡分帶變體（C4）
+   · 以前 40 關的差別只有「怪種 / 血量 / 數量」，後 20 關打起來跟第 1 關是同一個節奏。
+   · 每 8 關一帶、每帶一條場地規則，而且一進場就寫在開場面板上（玩家要看得到才知道
+     自己面對什麼）。BOSS 決戰場一律不吃這些規則 —— 王的機制已經夠複雜了。
+   · 刻意只用「參數」而不是改地圖生成：地圖是隨機的，規則一改連通性就可能崩。
+   ========================================================================== */
+const RPG_BANDS = [
+  { from: 9,  to: 16, id: 'swarm' },
+  { from: 17, to: 24, id: 'fuse' },
+  { from: 25, to: 32, id: 'scarce' },
+  { from: 33, to: 40, id: 'hunt' }
+];
+function rpgBand(stage) {
+  const s0 = stage | 0;
+  if (!s0 || s0 < 1) return null;
+  for (let i = 0; i < RPG_BANDS.length; i++) {
+    const b = RPG_BANDS[i];
+    if (s0 >= b.from && s0 <= b.to) return { n: i + 2, id: b.id, from: b.from, to: b.to };
+  }
+  return null;
+}
+function bandFoes(n) {
+  if (!(n > 0)) return;
+  let types = [];
+  try { types = rpgFoePool(Game.stage) || []; } catch (e) { types = []; }
+  if (!types.length) return;
+  let lv = 1;
+  try { lv = rpgFoeLv(Game.stage); } catch (e) { lv = 1; }
+  let guard = 0;
+  for (let i = 0; i < n && guard < 400; i++) {
+    let x = 0, y = 0, ok = false;
+    while (guard++ < 400) {
+      x = 1 + Math.floor(Math.random() * (Math.max(3, Game.cols) - 2));
+      y = 1 + Math.floor(Math.random() * (Math.max(3, Game.rows) - 2));
+      if (cellAt(x, y) === 0 && !bombAt(x, y) && !nearSpawn(x, y, 2)) { ok = true; break; }
+    }
+    if (!ok) break;
+    try { Game.enemies.push(makeEnemy(x, y, pick(types), lv, 1)); } catch (e) { break; }
+  }
+}
+function applyBand(band, p) {
+  if (!band) return;
+  if (band.id === 'swarm') {
+    try { bandFoes(2); } catch (e) {}
+  } else if (band.id === 'fuse') {
+    if (p) p.fuseMul = Math.max(.45, (p.fuseMul || 1) * .8);
+  } else if (band.id === 'scarce') {
+    try {
+      const its = Game.items || [];
+      const rm = Math.floor(its.length * .4);
+      for (let i = 0; i < rm; i++) its.splice(Math.floor(Math.random() * its.length), 1);
+    } catch (e) {}
+  } else if (band.id === 'hunt') {
+    try { bandFoes(3); } catch (e) {}
+    try {
+      Game.enemies.forEach(function (e) {
+        if (!e.boss) e.speed = Math.max(8, (e.speed || 30) * 1.1);
+      });
+    } catch (e) {}
+  }
+}
+
 function startRpg(stage, opt) {
   clearMapTest();            // v4.51：正常入口一律離開測試關
   Game.mode = 'rpg';
@@ -36620,9 +37045,13 @@ function startRpg(stage, opt) {
   Screen.show('game');
   resizeView();
   buildRpgStage(Game.stage, true);
+  /* v5.74：分帶規則（BOSS 決戰場不吃） */
+  const band = isBossStage(Game.stage) ? null : rpgBand(Game.stage);
+  if (band) { try { applyBand(band, p); } catch (e) {} }
   showOverlay({
     title: t('rpg.ovTitle', { n: Game.stage }),
-    sub: stageName(Game.stage) + '\n' +
+    sub: stageName(Game.stage) +
+      (band ? '\n\uD83C\uDF00 ' + t('band.line', { n: band.n, x: t('band.' + band.id) }) : '') + '\n' +
       t('rpg.ovSub', { hp: p.hpMax, ar: p.armorMax, sp: Math.round((d.spdMul - 1) * 100), rg: d.range, dm: d.dmg }) +
       '\n⭐ Lv.' + rpgLvOf(RPG.xp).lv + '　EXP ' + rpgLvOf(RPG.xp).cur + '/' + (rpgLvOf(RPG.xp).need || 'MAX') +
       '　👾 怪物 Lv.' + rpgFoeLv(Game.stage),
@@ -36689,203 +37118,6 @@ function drawRpgHud(T) {
 }
 
 // ---------- RPG 創角畫面 ----------
-const Rpg = (function () {
-    try {
-      return (function () {
-  let inited = false;
-  function sumHtml() {
-    const d = rpgDerive(RPG.alloc);
-    /* v5.54：原本是「中文碎片 + <b>數字</b>」串出來的，換語言只會翻到一半 → 走模板 key。 */
-    return t('rpg.sum', {
-      hp: d.maxHp, arm: d.armor,
-      spd: Math.round((d.spdMul - 1) * 100),
-      rg: d.range, dmg: d.dmg
-    });
-  }
-  function renderStats() {
-    const box = $id('rpgRows');
-    if (!box) return;
-    // v5.18：等級／經驗（每 2 級 1 點）
-    const lb = $id('rpgLvBar');
-    if (lb) {
-      const L = rpgLvOf(RPG.xp);
-      const nx = L.lv < RPG_LV_MAX ? (2 - (L.lv % 2)) : 0;
-      lb.innerHTML = '<div class="lvrow"><span class="lvtag">⭐ Lv.' + L.lv + '</span>' +
-        '<span class="lvxp"><i style="width:' + L.pct + '%"></i></span>' +
-        '<span class="lvnum">' + (L.need ? L.cur + ' / ' + L.need : 'MAX') + '</span></div>' +
-        '<div class="lvhint">' + (L.lv >= RPG_LV_MAX
-          ? t('rpg.lvmax', { max: RPG_LV_MAX, n: RPG_POINTS_TOTAL })
-          : t('rpg.lvhint', { nx: nx, n: RPG_POINTS_TOTAL })) + '</div>';
-    }
-    const left = rpgLeft();
-    box.innerHTML = RPG_ATTRS.map(function (a) {
-      const v = RPG.alloc[a.k] || 0;
-      let pips = '';
-      for (let i = 0; i < RPG_CAP; i++) pips += '<i class="' + (i < v ? 'on' : '') + '"></i>';
-      // v5.48：第 4 格起＝1 點 ＋ 金幣 → 按鈕直接寫這一格的價錢；沒點數就整排鎖住
-      const pay = rpgPrice(a.k);
-      const buy = v < RPG_CAP && v >= RPG_FREE_PER;
-      const noPt = left <= 0;
-      const tip = v >= RPG_CAP ? '這一項已經滿了'
-        : (buy ? '1 點 ＋ ' + pay + ' 金幣（金幣 ' + (Shop.gold() | 0) + '）' : '1 點（前 3 格免金幣）');
-      return '<div class="rpgrow" data-k="' + a.k + '">' +
-        '<div class="rpgname">' + a.ico + ' ' + a.n + '</div>' +
-        '<div class="rpgpips">' + pips + '</div>' +
-        '<div class="rpgstep">' +
-        '<button type="button" data-d="-1"' + (v <= 0 ? ' disabled' : '') + '>−</button>' +
-        '<b>' + v + '</b>' +
-        '<button type="button" data-d="1"' + (buy ? ' class="buypt"' : '') + ' title="' + tip + '"' +
-        ((v >= RPG_CAP || noPt) ? ' disabled' : '') + '>' + (buy ? '💰' + pay : '＋') + '</button>' +
-        '</div>' +
-        '<div class="rpgdesc">' + a.desc + '</div>' +
-        '</div>';
-    }).join('');
-    /* v5.54：原本是「剩餘 <b>N</b> 點 · …」，數字夾在中間讓日／韓文語序翻不動 →
-       整句走模板（#rpgLeft 仍在，只是從 <b> 變成 <span>，整句照原色顯示）。 */
-    const lf = $id('rpgLeft');
-    if (lf) lf.textContent = t('rpg.leftRow', { n: left });
-    const ph = $id('rpgPtHint');
-    if (ph) ph.textContent = ' · ' + t('rpg.ptHint');
-    const sm = $id('rpgSum');
-    if (sm) sm.innerHTML = sumHtml();
-  }
-  function renderChar() {
-    const grid = $id('rpgCharRow');
-    if (!grid) return;
-    grid.innerHTML = CHARACTERS.map(function (c, i) {
-      return '<button class="chcard' + (i === RPG.char ? ' sel' : '') + '" data-i="' + i + '" ' +
-        'title="' + charName(c) + '（' + c.en + '）· ' + charTag(c) + '">' +
-        '<canvas class="chpv" width="220" height="200" data-ch="' + i + '"></canvas>' +
-        '<span class="ck">✓</span>' +
-        '<span class="cn" style="color:' + shadeHex(c.color, .52) + '">' + charName(c) + '</span>' +
-        '<span class="ct">' + charTag(c) + '</span></button>';
-    }).join('');
-    grid.querySelectorAll('.chcard').forEach(function (b) {
-      b.addEventListener('click', function () {
-        AudioSys.sfx('click');
-        RPG.char = parseInt(b.getAttribute('data-i'), 10) % CHARACTERS.length;
-        grid.querySelectorAll('.chcard').forEach(function (x) {
-          x.classList.toggle('sel', parseInt(x.getAttribute('data-i'), 10) === RPG.char);
-        });
-        CharPreview.hop(RPG.char);
-        try { RpgUI.openChar(); } catch (e) { console.error('[char]', e); }   // v5.19：選完先看角色畫面
-      });
-    });
-    CharPreview.mount(grid);
-  }
-  function renderMaps() {
-    const th = $id('segRpgTheme'), sb = $id('segRpgMap');
-    if (!th || !sb) return;
-    th.innerHTML = THEMES.map(function (x, i) {
-      return '<button type="button" data-v="' + i + '" class="' + (i === RPG.theme ? 'sel' : '') + '">' + themeName(i) + '</button>';
-    }).join('');
-    const gate = Cloud.online() ? RPG.unlocked : SOLO_STAGES;
-    sb.innerHTML = [0, 1, 2, 3, 4].map(function (i) {
-      const st = RPG.theme * BOSS_SLOT + i + 1;
-      const boss = i === BOSS_SLOT - 1;
-      const m = soloInfo(st);
-      const lock = st > gate;
-      return '<button type="button" data-v="' + i + '" class="' +
-        (i === RPG.sub ? 'sel' : '') + (lock ? ' lock' : '') + (boss ? ' boss' : '') + '"' + (lock ? ' disabled' : '') + '>' +
-        (RPG.theme + 1) + '-' + (i + 1) + '　' + (boss ? '👑 ' + t('stage.bossName') : mapName(m)) + (lock ? ' 🔒' : '') + '</button>';
-    }).join('');
-  }
-  function wire() {
-    if (inited) return;
-    inited = true;
-    const rows = $id('rpgRows');
-    if (rows) rows.addEventListener('click', function (e) {
-      const b = e.target && e.target.closest ? e.target.closest('button') : null;
-      if (!b || b.disabled) return;
-      const row = b.closest('.rpgrow');
-      if (!row) return;
-      const k = row.getAttribute('data-k');
-      const d = parseInt(b.getAttribute('data-d'), 10);
-      // v4.1：真正扣點在後端（/api/rpg/spend），前端只送「哪一項、加或減」
-      rpgAdjust(k, d);
-    });
-    const th = $id('segRpgTheme'), sb = $id('segRpgMap');
-    if (th) th.addEventListener('click', function (e) {
-      const b = e.target && e.target.closest ? e.target.closest('button') : null;
-      if (!b) return;
-      RPG.theme = parseInt(b.getAttribute('data-v'), 10) || 0;
-      RPG.sub = 0;
-      AudioSys.sfx('click');
-      renderMaps();
-    });
-    if (sb) sb.addEventListener('click', function (e) {
-      const b = e.target && e.target.closest ? e.target.closest('button') : null;
-      if (!b) return;
-      RPG.sub = parseInt(b.getAttribute('data-v'), 10) || 0;
-      AudioSys.sfx('click');
-      renderMaps();
-    });
-    // v5.20：全部退回（洗點）· v5.46：退還花掉的金幣（扣 1000 手續費）
-    const rsBtn = $id('btnRpgRespec');
-    if (rsBtn) rsBtn.addEventListener('click', function () {
-      AudioSys.ensure(); AudioSys.sfx('click');
-      if (rpgSum(RPG.alloc) <= 0) { toast(t('respec.none'), 1.8); return; }
-      const info = rpgRespecInfo();
-      const ask = info.fee > 0
-        ? t('respec.confirm2', { refund: info.refund, fee: info.fee, back: info.back })
-        : t('respec.confirm');
-      if (typeof confirm === 'function' && !confirm(ask)) return;
-      const done = function () {
-        const r = rpgRespecApply(info);   // v5.46：用「問雲端之前」就算好的金額，雲端回來 paid 已歸零
-        renderStats();
-        toast(r.back > 0 ? t('respec.done2', { back: r.back }) : t('respec.done'), 2.4);
-      };
-      if (Cloud.online()) {
-        Cloud.respec().then(function (r) { if (r) done(); else toast(t('respec.fail'), 2.4); });
-      } else done();
-    });
-    const rndBtn = $id('btnRpgRandom');
-    if (rndBtn) rndBtn.addEventListener('click', function () {
-      AudioSys.ensure(); AudioSys.sfx('click');
-      rpgRandomAlloc();
-      renderStats();
-      if (Cloud.online()) Cloud.setAlloc(RPG.alloc);   // 由後端驗證點數上限
-    });
-    const go = $id('btnRpgStart');
-    if (go) go.addEventListener('click', function () {
-      AudioSys.ensure(); AudioSys.sfx('click');
-      if (Cloud.online()) Cloud.setAlloc(RPG.alloc);
-      RpgUI.openCamp();          // v5.19：配完點 → 營地（買補給、學招式、選關）
-    });
-  }
-  function render() {
-    wire();
-    renderChar();
-    renderStats();
-    renderMaps();
-  }
-  return { render: render, renderStats: renderStats, renderMaps: renderMaps, renderChar: renderChar };
-      })();
-    } catch (__e) {
-      __bootFail('Rpg', __e);
-      return (typeof __stubModule === 'function') ? __stubModule('Rpg') : {};
-    }
-  })();
-// 首頁的「RPG 模式」鈕：先建表單再切畫面（事件只在這裡綁，避免雞生蛋）
-  try {
-(function () {
-  const btn = $id('btnRpg');
-  if (!btn) return;
-  btn.addEventListener('click', function () {
-    AudioSys.ensure(); AudioSys.sfx('click');
-    if (!ensureNickname()) return;
-    // v4.21：先切畫面再畫表單 —— 舊版 render() 一丟例外，畫面就完全不會切
-    Screen.show('rpg');
-    try { Rpg.render(); }
-    catch (e) {
-      console.error('[rpg]', e);
-      try { toast('⚠️ RPG 表單載入失敗：' + ((e && e.message) || e), 3.4); } catch (e2) {}
-    }
-  });
-})();
-  } catch (__e) { __bootFail('wire', __e); }
-
-
 /* ============================================================================
    v5.19：角色畫面 / 營地 / 商店 / 招式師
    ========================================================================== */
@@ -36923,506 +37155,17 @@ function rpgApplyCamp(r) {
   }
 }
 
-const RpgUI = (function () {
-  let shopTab = 'bag', skTab = 'learn';
-
-  /* ---------------- v5.20：演出卡（升級／全破共用） ---------------- */
-  const END_KEY = 'bombhero-rpg-end';
-  const RpgPop = (function () {
-    let timer = 0;
-    function hide() {
-      const p = $id('rpgPop');
-      if (p) p.classList.remove('on');
-      if (timer) { clearTimeout(timer); timer = 0; }
-    }
-    function show(html, opt) {
-      opt = opt || {};
-      const p = $id('rpgPop'), c = $id('rpgPopCard');
-      if (!p || !c) return;
-      c.innerHTML = html;
-      p.classList.add('on');
-      if (timer) clearTimeout(timer);
-      timer = 0;
-      if (opt.auto !== false) timer = setTimeout(hide, opt.ms || 2600);
-      try { AudioSys.sfx(opt.sfx || 'win'); } catch (e) {}
-      const b = c.querySelector('.rgo');
-      if (b) b.addEventListener('click', function () {
-        try { AudioSys.sfx('click'); } catch (e) {}
-        hide();
-        if (opt.onGo) { try { opt.onGo(); } catch (e) {} }
-      });
-      // 點卡片以外的暗處也可以關（pointer-events 在容器上是 none，這裡只是保險）
-      p.addEventListener('click', function (e) { if (e.target === p) hide(); });
-    }
-    return { show: show, hide: hide };
-  })();
-
-  /* 升級：把「升了幾級、多了幾點」講清楚 —— 這一代的成長感有一半在這裡 */
-  function levelUp(lvUp, lvNow) {
-    const up = (lvUp && lvUp.up) | 0;
-    if (up <= 0) return;
-    const pts = Math.floor(up / 2);
-    const skBefore = rpgSkPts() - Math.floor(lvNow / RPG_SK_PER);
-    const skGain = Math.max(0, rpgSkPts() - Math.max(0, skBefore + Math.floor((lvNow - up) / RPG_SK_PER)));
-    RpgPop.show(
-      '<div class="rk">LEVEL UP</div>' +
-      '<div class="rt">Lv.' + lvNow + '</div>' +
-      '<div class="rs">' + t('lvl.sub', { n: up }) + '</div>' +
-      '<div class="rgrid">' +
-      '<div><b>+' + pts + '</b><span>' + t('lvl.pts') + '</span></div>' +
-      '<div><b>+' + skGain + '</b><span>' + t('lvl.sk') + '</span></div>' +
-      '</div>' +
-      '<button class="rgo" type="button">' + t('lvl.ok') + '</button>',
-      { ms: 2800, sfx: 'victory' }
-    );
-  }
-
-  /* 全破：32 關走完給一張成績單。只彈一次（之後重打就用 toast）。 */
-  function finish() {
-    let seen = 0;
-    try { seen = localStorage.getItem(END_KEY) | 0; } catch (e) {}
-    const L = rpgLvOf(RPG.xp);
-    let skN = 0;
-    const sk = RPG.sk || {};
-    for (const k in sk) if (sk[k] > 0) skN++;
-    const pm = rpgPerm();
-    const permN = (pm.hp | 0) + (pm.bomb | 0) + (pm.fire | 0);
-    const body =
-      '<div class="rk">' + (seen ? t('end.replayK') : t('end.k')) + '</div>' +
-      '<div class="rt">' + (seen ? t('end.replayT') : t('end.t')) + '</div>' +
-      '<div class="rs">' + t('end.sub') + '</div>' +
-      '<div class="rgrid">' +
-      '<div><b>Lv.' + L.lv + '</b><span>' + t('end.lv') + '</span></div>' +
-      '<div><b>' + String(RPG.xp | 0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</b><span>' + t('end.xp') + '</span></div>' +
-      '<div><b>' + skN + ' / 10</b><span>' + t('end.sk') + '</span></div>' +
-      '<div><b>' + permN + ' / 9</b><span>' + t('end.perm') + '</span></div>' +
-      '</div>' +
-      '<button class="rgo" type="button">' + t('end.ok') + '</button>';
-    RpgPop.show(body, { ms: seen ? 4200 : 0, auto: !seen, sfx: 'victory', onGo: function () { openChar(); } });
-    try { localStorage.setItem(END_KEY, '1'); } catch (e) {}
-  }
-
-  /* v5.20：營地樂觀鎖 —— 兩台裝置的購買紀錄取聯集，不是「後寫的贏」 */
-  function campMerge(local, remote) {
-    const a = local || {}, b = remote || {};
-    const out = { perm: {}, sk: {}, skLoad: [], bag: {} };
-    ['hp', 'bomb', 'fire'].forEach(function (k) {
-      out.perm[k] = Math.max((a.perm && a.perm[k]) | 0, (b.perm && b.perm[k]) | 0);
-    });
-    const keys = {};
-    [a.sk || {}, b.sk || {}].forEach(function (o) { for (const k in o) keys[k] = 1; });
-    for (const k in keys) out.sk[k] = Math.max((a.sk && a.sk[k]) | 0, (b.sk && b.sk[k]) | 0);
-    // 出戰欄：先看本地（玩家剛編排的），再補遠端學過的主動招
-    const lo = (a.skLoad || []).filter(function (id) { return out.sk[id] > 0; });
-    (b.skLoad || []).forEach(function (id) {
-      if (lo.length < RPG_SK_SLOTS && out.sk[id] > 0 && lo.indexOf(id) < 0) lo.push(id);
-    });
-    out.skLoad = lo.slice(0, RPG_SK_SLOTS);
-    const bk = {};
-    [a.bag || {}, b.bag || {}].forEach(function (o) { for (const k in o) bk[k] = 1; });
-    for (const k in bk) out.bag[k] = Math.max((a.bag && a.bag[k]) | 0, (b.bag && b.bag[k]) | 0);
-    return out;
-  }
-
-  function saveCamp() {
-    const st = { perm: rpgPerm(), sk: RPG.sk || {}, skLoad: rpgLoadout(), bag: RPG.bag || {} };
-    try { localStorage.setItem('bombhero-rpg-camp', JSON.stringify(st)); } catch (e) {}
-    /* v5.19：在線時推給伺服器（離線只寫 localStorage，不擋操作） */
-    try { if (typeof Cloud !== 'undefined' && Cloud.campSave) Cloud.campSave(st); } catch (e) {}
-  }
-
-  function titleBadge() {
-    let tt = null;
-    try { tt = Ach.titleOf(); } catch (e) { tt = null; }
-    if (!tt || !tt.name) return '';
-    const bg = tt.bg || (tt.canvasFill ? 'linear-gradient(135deg,#2b1650,#7b4bd4)' : '#243252');
-    const fg = tt.color || tt.canvasText || '#eaf2ff';
-    const line = tt.frame ? ';border:2px solid transparent;background-clip:padding-box' : '';
-    return '<span class="ttbadge" style="background:' + bg + ';color:' + fg + line + '">' +
-      (tt.ico || '🏷️') + ' ' + tt.name + '</span>';
-  }
-
-  function clearedCount() {
-    const c = (RPG.cleared | 0) || Math.max(0, (RPG.unlocked | 0) - 1);
-    return Math.max(0, Math.min(SOLO_STAGES, c));
-  }
-
-  /* ---------------- 角色畫面 ---------------- */
-  function renderChar() {
-    const i = rpgCharIdx(), c = CHARACTERS[i];
-    const cv = $id('charPv');
-    if (cv && cv.setAttribute) cv.setAttribute('data-ch', String(i));
-    try { CharPreview.mount($id('scr-char')); } catch (e) {}
-
-    const L = rpgLvOf(RPG.xp);
-    const d = rpgDerive(RPG.alloc, { lv: L.lv });
-    const tal = rpgTalent();
-    const bn = rpgBonus();
-
-    if ($id('charLv')) $id('charLv').textContent = 'Lv.' + L.lv;
-    if ($id('charName')) {
-      // 中文語系顯示「中文名 英文名」，其他語言只顯示譯名（否則會變成 BIBI the Rabbit Rabbit）
-      const nm = charName(c);
-      $id('charName').textContent = (LANG === 'zh-TW' || LANG === 'zh-CN') ? (nm + ' ' + (c.en || '')) : nm;
-    }
-    if ($id('charTag')) $id('charTag').textContent = charTag(c);
-    if ($id('charTalent')) $id('charTalent').textContent = '✦ ' + tr(tal.n);
-    if ($id('charTalentTxt')) $id('charTalentTxt').textContent = tr(tal.d);
-    if ($id('charTitle')) $id('charTitle').innerHTML = titleBadge();
-    if ($id('charXpFill')) $id('charXpFill').style.width = L.pct + '%';
-    if ($id('charXpNum')) $id('charXpNum').textContent = L.need ? (L.cur + ' / ' + L.need) : 'MAX';
-
-    const bombs = Math.min(8, 1 + bn.bomb + (tal.bomb | 0));
-    const rows = [
-      ['❤️', t('d.attr.hp'), d.maxHp, t('d.u.pt')],
-      ['🛡️', t('d.attr.def'), d.armor, t('d.u.pt')],
-      ['👟', t('d.attr.spd'), '+' + Math.round((d.spdMul - 1) * 100) + '%', ''],
-      ['💥', t('d.attr.atk'), d.dmg, t('d.u.pt')],
-      ['🔥', t('d.attr.range'), d.range, t('d.u.tile')],
-      ['💣', t('d.attr.bomb'), bombs, t('d.u.bomb')]
-    ];
-    if ($id('charStats')) {
-      $id('charStats').innerHTML = rows.map(function (r) {
-        return '<div class="chstat"><span class="i">' + r[0] + '</span><span class="l">' + r[1] + '</span>' +
-          '<span class="v">' + r[2] + '<small>' + r[3] + '</small></span></div>';
-      }).join('');
-    }
-
-    const lo = rpgLoadout();
-    if ($id('charSk')) {
-      let h = '';
-      for (let k = 0; k < RPG_SK_SLOTS; k++) {
-        const id = lo[k], def = id ? rpgSkDef(id) : null, lv = id ? rpgSkLv(id) : 0;
-        h += '<div class="chslot' + (def ? '' : ' off') + '" title="' + (def ? def.n + ' Lv.' + lv : '尚未學習') + '">' +
-          (def ? def.ico : '＋') + (lv ? '<em>' + lv + '</em>' : '') + '</div>';
-      }
-      $id('charSk').innerHTML = h;
-    }
-    if ($id('charSkHint')) {
-      $id('charSkHint').textContent = rpgSkLeft() > 0
-        ? t('skill.ptsLeft', { n: rpgSkLeft() }) : t('char.skHint');
-    }
-
-    const cr = clearedCount();
-    if ($id('charProgTxt')) $id('charProgTxt').textContent = cr + ' / ' + SOLO_STAGES;
-    if ($id('charProg')) {
-      let h = '';
-      for (let g = 0; g < 8; g++) {
-        h += '<div class="chgrp">';
-        for (let k = 0; k < BOSS_SLOT; k++) h += '<i class="' + (g * BOSS_SLOT + k + 1 <= cr ? 'on' : '') + '"></i>';
-        h += '<span>' + (g + 1) + '</span></div>';
-      }
-      $id('charProg').innerHTML = h;
-    }
-  }
-
-  function openChar() {
-    Screen.show('char');            // v5.19：先顯示，canvas 才有版面尺寸可以掛
-    try { renderChar(); } catch (e) { console.error('[char]', e); }
-  }
-
-  /* ---------------- 營地 ---------------- */
-  function renderCamp() {
-    if ($id('campGold')) $id('campGold').textContent = String(Shop.gold() | 0);
-    if ($id('campSkPts')) $id('campSkPts').textContent = t('skill.ptsLeft', { n: rpgSkLeft() });
-    try { Rpg.renderMaps(); } catch (e) {}
-    const st = RPG.theme * BOSS_SLOT + RPG.sub + 1;   /* v5.39：每章 5 關（含 BOSS），原本 ×4 會整章錯位 */
-    if ($id('campStageNow')) {
-      $id('campStageNow').textContent = t('camp.stageNow', { n: st }) + '・' + stageName(st);
-    }
-    const bag = RPG.bag || {};
-    let h = '';
-    RPG_BAG.forEach(function (it) {
-      const c = bag[it.id] | 0;
-      if (c > 0) h += '<span class="bagit">' + it.ico + ' ' + it.n + ' <b>×' + c + '</b></span>';
-    });
-    if ($id('campBag')) {
-      $id('campBag').innerHTML = h
-        ? t('camp.bagHave') + h
-        : t('camp.bagNone');
-    }
-  }
-
-  function openCamp() {
-    try { renderCamp(); } catch (e) { console.error('[camp]', e); }
-    Screen.show('camp');
-  }
-
-  /* ---------------- 商店 ---------------- */
-  function renderShop() {
-    const modal = $id('rpgShopModal');
-    if (!modal) return;
-    if ($id('shopRGold')) $id('shopRGold').textContent = '💰 ' + (Shop.gold() | 0);
-    modal.querySelectorAll('#shopRTabs button').forEach(function (b) {
-      b.classList.toggle('on', b.getAttribute('data-shtab') === shopTab);
-    });
-    const body = $id('shopRBody');
-    if (!body) return;
-
-    if (shopTab === 'bag') {
-      body.innerHTML = RPG_BAG.map(function (it) {
-        const own = rpgBagCount(it.id);
-        const can = Shop.gold() >= it.price;
-        return '<div class="shopitem">' +
-          '<div class="si">' + it.ico + '</div>' +
-          '<div class="sm"><div class="sn">' + tr(it.n) + (own ? '<span style="color:#b9641c;font-size:11px"> ×' + own + '</span>' : '') + '</div>' +
-          '<div class="sd">' + tr(it.desc) + '</div></div>' +
-          '<div class="sp">💰 ' + it.price + '</div>' +
-          '<button class="buy" data-buybag="' + it.id + '"' + (can && own < 9 ? '' : ' disabled') + '>' +
-          (can ? t('shop.buy') : t('shop.noGold')) + '</button></div>';
-      }).join('');
-    } else {
-      body.innerHTML = RPG_PERM_UP.map(function (up) {
-        const lv = rpgPerm()[up.id] | 0;
-        const price = lv < 3 ? up.prices[lv] : 0;
-        let pips = '';
-        for (let i = 0; i < 3; i++) pips += '<i class="' + (i < lv ? 'on' : '') + '"></i>';
-        return '<div class="shopitem">' +
-          '<div class="si">' + up.ico + '</div>' +
-          '<div class="sm"><div class="sn">' + tr(up.n) + ' <span style="color:#a0805c;font-size:11px">Lv.' + lv + ' / 3</span></div>' +
-          '<div class="sd">' + t('shop.permLine', { u: up.unit }) + '</div>' +
-          '<div class="pips" style="display:flex;gap:3px;margin-top:5px">' + pips.replace(/<i/g, '<i style="width:13px;height:5px;border-radius:3px;display:inline-block"') + '</div></div>' +
-          '<div class="sp">' + (lv >= 3 ? t('shop.full') : '💰 ' + price) + '</div>' +
-          '<button class="buy' + (lv >= 3 ? ' max' : '') + '" data-buyperm="' + up.id + '"' +
-          (lv >= 3 || Shop.gold() < price ? ' disabled' : '') + '>' + (lv >= 3 ? 'MAX' : t('shop.upgrade')) + '</button></div>';
-      }).join('');
-    }
-    if ($id('shopRNote')) {
-      $id('shopRNote').textContent = shopTab === 'bag' ? t('shop.note') : t('shop.notePerm');
-    }
-  }
-
-  function openShop(tab) {
-    shopTab = tab || 'bag';
-    renderShop();
-    $id('rpgShopModal').classList.add('on');
-    AudioSys.sfx('click');
-  }
-
-  function buyBag(id) {
-    let it = null;
-    RPG_BAG.forEach(function (x) { if (x.id === id) it = x; });
-    if (!it) return;
-    if (rpgBagCount(id) >= 9) return;
-    const r = Shop.spend(it.price);
-    if (!r.ok) { toast('💰 金幣不足（還差 ' + Math.max(0, it.price - Shop.gold()) + '）', 2); AudioSys.sfx('hurt'); return; }
-    RPG.bag = RPG.bag || {};
-    RPG.bag[id] = Math.min(9, (RPG.bag[id] | 0) + 1);
-    AudioSys.sfx('item');
-    saveCamp(); renderShop(); renderCamp();
-  }
-
-  function buyPerm(id) {
-    let up = null;
-    RPG_PERM_UP.forEach(function (x) { if (x.id === id) up = x; });
-    if (!up) return;
-    const lv = rpgPerm()[id] | 0;
-    if (lv >= 3) return;
-    const price = up.prices[lv];
-    const r = Shop.spend(price);
-    if (!r.ok) { toast('💰 金幣不足（還差 ' + Math.max(0, price - Shop.gold()) + '）', 2); AudioSys.sfx('hurt'); return; }
-    rpgPerm()[id] = lv + 1;
-    AudioSys.sfx('item');
-    toast('⬆️ ' + up.n + ' 升到 Lv.' + (lv + 1), 1.8);
-    saveCamp(); renderShop(); renderCamp(); renderChar();
-  }
-
-  /* ---------------- 招式師 ---------------- */
-  function renderSkill() {
-    if ($id('skillRPts')) {
-      $id('skillRPts').textContent = t('skill.pts', { a: rpgSkLeft(), b: rpgSkPts() });
-    }
-    document.querySelectorAll('#skillTabs button').forEach(function (b) {
-      b.classList.toggle('on', b.getAttribute('data-sktab') === skTab);
-    });
-    const body = $id('skillRBody');
-    if (!body) return;
-    const lvNow = rpgLvOf(RPG.xp).lv;
-
-    if (skTab === 'learn') {
-      /* 依等級升冪 —— 列表就是玩家的學習路徑，一眼看得出「下一招在哪」 */
-      const list = RPG_SKILLS.slice().sort(function (a, b) {
-        return (a.lv - b.lv) || (a.kind === b.kind ? 0 : (a.kind === 'act' ? -1 : 1));
-      });
-      body.innerHTML = list.map(function (sk) {
-        const cur = rpgSkLv(sk.id), maxed = cur >= sk.max;
-        const lock = lvNow < sk.lv;
-        let pips = '';
-        for (let i = 0; i < sk.max; i++) pips += '<i class="' + (i < cur ? 'on' : '') + '"></i>';
-        /* 下一級的文字直接由 CDS／DUR 兩張表生成（單一來源，不必再為每個語言翻譯 12 條成長字串） */
-        let nextDesc;
-        if (sk.kind !== 'act') {
-          nextDesc = 'Lv.' + Math.min(sk.max, cur + 1);
-        } else {
-          const i2 = Math.min(cur, sk.max - 1);
-          const cd = (RpgSkill.CDS[sk.id] || [0, 0, 0])[i2] || 0;
-          const du = (RpgSkill.DUR[sk.id] || null);
-          nextDesc = du ? t('skill.durCd', { d: du[i2], c: cd }) : t('skill.cdOnly', { s: cd });
-        }
-        return '<div class="skrow ' + (sk.kind === 'act' ? 'act' : '') + (lock ? ' lock' : '') + '">' +
-          '<div class="si">' + sk.ico + '</div>' +
-          '<div class="sm"><div class="sn">' + tr(sk.n) +
-          '<span class="stag' + (sk.kind === 'act' ? '' : ' p') + '">' +
-          (sk.kind === 'act' ? t('skill.act') : t('skill.pas')) + ' ' + cur + '/' + sk.max + '</span></div>' +
-          '<div class="sd">' + tr(sk.desc) + '</div>' +
-          (maxed ? '' : '<div class="sdn">' + t('skill.next', { v: nextDesc }) + '</div>') +
-          '<div class="pips">' + pips + '</div></div>' +
-          '<button class="buy' + (maxed ? ' max' : lock ? ' lk' : '') + '" data-learn="' + sk.id + '"' +
-          (maxed || lock || rpgSkLeft() <= 0 ? ' disabled' : '') + '>' +
-          (maxed ? t('skill.max') : lock ? '🔒 Lv.' + sk.lv : t('skill.onePt')) + '</button></div>';
-      }).join('');
-    } else {
-      const lo = rpgLoadout();
-      let h = '';
-      for (let i = 0; i < RPG_SK_SLOTS; i++) {
-        const id = lo[i], def = id ? rpgSkDef(id) : null;
-        h += '<div class="loadslot"><div class="pin">' + (def ? def.ico : '＋') + '</div>' +
-          '<div class="n">' + (def ? tr(def.n) : t('skill.empty')) +
-          '<small>' + (def ? t('skill.hotkey', { k: ['Q', 'R', 'F', 'V'][i] }) : t('skill.pickBelow')) + '</small></div>' +
-          (def ? '<button data-unslot="' + id + '">' + t('skill.remove') + '</button>' : '') + '</div>';
-      }
-      h += '<div class="chsec-t" style="margin:14px 0 8px">' + t('skill.ownActives') + '</div>';
-      const own = rpgSkActives().filter(function (x) { return rpgSkLv(x.id) > 0; });
-      if (!own.length) h += '<div class="sd" style="color:#a0805c">' + t('skill.noneYet') + '</div>';
-      own.forEach(function (sk) {
-        const inSlot = lo.indexOf(sk.id) >= 0;
-        h += '<div class="loadslot"><div class="pin">' + sk.ico + '</div>' +
-          '<div class="n">' + tr(sk.n) + ' <small>Lv.' + rpgSkLv(sk.id) + '</small></div>' +
-          '<button data-slot="' + sk.id + '" class="' + (inSlot ? 'on' : '') + '">' + (inSlot ? t('skill.equipped') : t('skill.equip')) + '</button></div>';
-      });
-      body.innerHTML = h;
-    }
-    if ($id('skillRNote')) {
-      $id('skillRNote').textContent = t('skill.note', { a: lvNow, b: rpgSkPts(), c: rpgSkSpent() });
-    }
-  }
-
-  function openSkill(tab) {
-    skTab = tab || 'learn';
-    renderSkill();
-    $id('rpgSkillModal').classList.add('on');
-    AudioSys.sfx('click');
-  }
-
-  function learn(id) {
-    const sk = rpgSkDef(id);
-    if (!sk) return;
-    const cur = rpgSkLv(id);
-    if (cur >= sk.max) return;
-    if (rpgLvOf(RPG.xp).lv < sk.lv) { toast('🔒 需要 Lv.' + sk.lv + ' 才能學', 2); return; }
-    if (rpgSkLeft() <= 0) { toast('技能點不夠 —— 每 5 級 +1 點', 2); return; }
-    RPG.sk[id] = cur + 1;
-    if (sk.kind === 'act') {
-      const lo = rpgLoadout();
-      if (lo.indexOf(id) < 0 && lo.length < RPG_SK_SLOTS) lo.push(id);
-      RPG.skLoad = lo.slice(0, RPG_SK_SLOTS);
-    }
-    AudioSys.sfx('item');
-    toast('📖 學會 ' + sk.n + ' Lv.' + (cur + 1), 1.8);
-    saveCamp(); renderSkill(); renderChar(); renderCamp();
-    try { RpgSkill.syncBar(); } catch (e) {}
-  }
-
-  function toggleSlot(id) {
-    const lo = rpgLoadout();
-    const at = lo.indexOf(id);
-    if (at >= 0) lo.splice(at, 1);
-    else if (lo.length < RPG_SK_SLOTS) lo.push(id);
-    else { toast('4 個欄位都滿了 —— 先移除一個', 2); return; }
-    RPG.skLoad = lo.slice(0, RPG_SK_SLOTS);
-    AudioSys.sfx('click');
-    saveCamp(); renderSkill(); renderChar();
-    try { RpgSkill.syncBar(); } catch (e) {}
-  }
-
-  /* ---------------- 出發 ---------------- */
-  function depart() {
-    const st = RPG.theme * BOSS_SLOT + RPG.sub + 1;   /* v5.39：每章 5 關（含 BOSS），原本 ×4 會整章錯位 */
-    if (Cloud.online() && st > RPG.unlocked) { toast(t('acct.stageLocked')); return; }
-    AudioSys.ensure(); AudioSys.sfx('click');
-    if (Cloud.online()) Cloud.setAlloc(RPG.alloc);
-    const buffs = rpgTakeBag();
-    saveCamp();
-    startRpg(st, { buffs: buffs });
-  }
-
-  /* ---------------- 事件 ---------------- */
-  function wire() {
-    const on = function (id, ev, fn) {
-      const el = $id(id);
-      if (el) el.addEventListener(ev, fn);
-    };
-    on('charGo', 'click', function () { AudioSys.sfx('click'); openCamp(); });
-    on('charAlloc', 'click', function () {
-      AudioSys.sfx('click');
-      Screen.show('rpg');
-      try { Rpg.render(); } catch (e) {}
-    });
-    on('charSwap', 'click', function () {
-      AudioSys.sfx('click');
-      Screen.show('rpg');
-      try { Rpg.render(); } catch (e) {}
-      try { toast('👇 選一張角色卡就換人', 1.8); } catch (e) {}
-    });
-    on('campBack', 'click', function () { AudioSys.sfx('click'); openChar(); });
-    on('campGo', 'click', depart);
-    on('npcShop', 'click', function () { openShop('bag'); });
-    on('npcSkill', 'click', function () { openSkill('learn'); });
-    on('btnChar', 'click', function () {
-      AudioSys.ensure(); AudioSys.sfx('click');
-      if (!ensureNickname()) return;
-      openChar();
-    });
-
-    on('shopRX', 'click', function () { $id('rpgShopModal').classList.remove('on'); renderCamp(); });
-    on('shopRDone', 'click', function () { $id('rpgShopModal').classList.remove('on'); renderCamp(); });
-    on('skillRX', 'click', function () { $id('rpgSkillModal').classList.remove('on'); renderChar(); });
-    on('skillRDone', 'click', function () { $id('rpgSkillModal').classList.remove('on'); renderChar(); });
-
-    const st = $id('shopRTabs');
-    if (st) st.addEventListener('click', function (e) {
-      const b = e.target.closest('button'); if (!b) return;
-      shopTab = b.getAttribute('data-shtab') || 'bag';
-      AudioSys.sfx('click'); renderShop();
-    });
-    const kt = $id('skillTabs');
-    if (kt) kt.addEventListener('click', function (e) {
-      const b = e.target.closest('button'); if (!b) return;
-      skTab = b.getAttribute('data-sktab') || 'learn';
-      AudioSys.sfx('click'); renderSkill();
-    });
-    const sb = $id('shopRBody');
-    if (sb) sb.addEventListener('click', function (e) {
-      const b = e.target.closest('button'); if (!b) return;
-      if (b.getAttribute('data-buybag')) buyBag(b.getAttribute('data-buybag'));
-      else if (b.getAttribute('data-buyperm')) buyPerm(b.getAttribute('data-buyperm'));
-    });
-    const kb = $id('skillRBody');
-    if (kb) kb.addEventListener('click', function (e) {
-      const b = e.target.closest('button'); if (!b) return;
-      if (b.getAttribute('data-learn')) learn(b.getAttribute('data-learn'));
-      else if (b.getAttribute('data-slot')) toggleSlot(b.getAttribute('data-slot'));
-      else if (b.getAttribute('data-unslot')) toggleSlot(b.getAttribute('data-unslot'));
-    });
-
-    // 首次載入本機快取（雲端回來時 adopt 會再覆蓋一次）
-    try {
-      const raw = localStorage.getItem('bombhero-rpg-camp');
-      if (raw) rpgApplyCamp(JSON.parse(raw));
-    } catch (e) {}
-  }
-
-  return {
-    wire: wire, openChar: openChar, renderChar: renderChar,
-    openCamp: openCamp, renderCamp: renderCamp,
-    openShop: openShop, renderShop: renderShop,
-    openSkill: openSkill, renderSkill: renderSkill,
-    buyBag: buyBag, buyPerm: buyPerm, learn: learn, toggleSlot: toggleSlot,
-    saveCamp: saveCamp, applyCamp: rpgApplyCamp, depart: depart,
-    levelUp: levelUp, finish: finish, pop: RpgPop, campMerge: campMerge
-  };
-})();
-try { RpgUI.wire(); } catch (e) { __bootFail('RpgUI', e); }
+/* v5.74：Rpg／RpgUI（角色頁、營地、商店、招式、地圖選擇）搬到 js/rpg.js 了。
+   這裡只留兩個「插槽」：rpg.js 載入後會呼叫 __installRpg() 把它們填進來，
+   主檔裡所有 Rpg.xxx／RpgUI.xxx 呼叫完全不用改。 */
+let Rpg = null, RpgUI = null;
+function __installRpg(m) {
+  Rpg = m.Rpg; RpgUI = m.RpgUI;
+  try { window.__BH.Rpg = Rpg; window.__BH.RpgUI = RpgUI; } catch (e) {}
+  try { if (RpgUI && RpgUI.wire) RpgUI.wire(); } catch (e) { __bootFail('RpgUI', e); }
+}
+/* v5.74：RpgUI.wire() 改由 js/rpg.js 載入後呼叫（見上面的 __installRpg）——
+   那時 RpgUI 才真的存在，這裡再叫一次只會拿到 null。 */
 try { CodexUI.wire(); } catch (e) { __bootFail('CodexUI', e); }   // v5.20：圖鑑的浮動鈕要先接線
 
 /* ============================================================================
@@ -39725,6 +39468,7 @@ window.__BH = {
   MAP32: MAP32, SOLO_STAGES: SOLO_STAGES, soloInfo: soloInfo, tryGlovePickup: tryGlovePickup,
   // v5.36：40 關制／BOSS 決戰場（測試用）
   chapterOf: chapterOf, stageSlot: stageSlot, isBossStage: isBossStage, isChapterFinal: isChapterFinal,
+  rpgBand: rpgBand, RPG_BANDS: RPG_BANDS, bandFoes: bandFoes,   // v5.74：關卡分帶（測試要逐帶驗）
   stageName: stageName, mapIdxOfStage: mapIdxOfStage, buildBossArenaStage: buildBossArenaStage,
   seasonChapterMap: seasonChapterMap, seasonMapShift: seasonMapShift,   // v5.56：賽季重排（測試用）
   arenaFreeCell: arenaFreeCell, updateBossArena: updateBossArena, BOSS_SLOT: BOSS_SLOT,
@@ -39751,6 +39495,7 @@ window.__BH = {
   flameHitDamage: flameHitDamage, drawRpgHud: drawRpgHud, rngFrom: rngFrom, map32Name: map32Name,
   hitStop: hitStop, dmgPop: dmgPop, foeHitFx: foeHitFx, drawFloorAO: drawFloorAO,
   drawVignette: drawVignette, vignetteCanvas: vignetteCanvas,
+  drawGrade: drawGrade, GRADE_TINT: GRADE_TINT,
   aoSolid: aoSolid, floorAOBands: floorAOBands, drawAOCell: drawAOCell, floorChunk: floorChunk, floorCellSkip: floorCellSkip, floorChunkDirty: floorChunkDirty,
   drawFloorLight: drawFloorLight, drawFloorDapple: drawFloorDapple, DAPPLE_A: DAPPLE_A,
   // v4.1 帳號 / 雲端存檔
@@ -39862,6 +39607,8 @@ window.__BH = {
   /* v5.73：深淵／每週挑戰／新手／支線／地板材質／角色專屬技 */
   Abyss: (typeof Abyss !== 'undefined') ? Abyss : null,
   AbyssHud: (typeof AbyssHud !== 'undefined') ? AbyssHud : null,
+  AbyssPerk: (typeof AbyssPerk !== 'undefined') ? AbyssPerk : null,
+  ABYSS_PERKS: (typeof ABYSS_PERKS !== 'undefined') ? ABYSS_PERKS : null,
   WeekChal: (typeof WeekChal !== 'undefined') ? WeekChal : null,
   WK_MODS: (typeof WK_MODS !== 'undefined') ? WK_MODS : null,
   Starter: (typeof Starter !== 'undefined') ? Starter : null,
@@ -39943,6 +39690,25 @@ window.__BH = {
   P2P: (typeof P2P !== 'undefined' ? P2P : null),   // v5.37：WebRTC 直連（測試用）
   BuffPick: BuffPick, buffsOn: buffsOn, BUFF_DEFS: BUFF_DEFS, resetBuffs: resetBuffs,   // v5.38：三選一
 };
+/* v5.74：內部共用（給 js/rpg.js 用）
+   Rpg／RpgUI 搬出去之後，那一邊只能透過 __BH 拿東西 —— 這裡補上它需要的 15 個符號，
+   外加 __installRpg（rpg.js 載入後把兩個模組交回來）。
+   LANG／RPG_POINTS_TOTAL 是「會變的 let」（切語言、雲端覆寫點數），
+   直接當值匯出會在載入瞬間就過期 → 用 getter 讓外部永遠讀到最新的。 */
+try {
+  const __x = window.__BH;
+  __x.$id = $id; __x.__bootFail = __bootFail; __x.__stubModule = __stubModule;
+  __x.escHtml = escHtml; __x.mapName = mapName; __x.shadeHex = shadeHex;
+  __x.rpgBagCount = rpgBagCount; __x.rpgCharIdx = rpgCharIdx;
+  __x.rpgApplyCamp = rpgApplyCamp;
+  __x.rpgPerm = rpgPerm; __x.rpgSkActives = rpgSkActives; __x.rpgSkDef = rpgSkDef;
+  __x.rpgSkSpent = rpgSkSpent; __x.rpgTalent = rpgTalent;
+  __x.__installRpg = __installRpg;
+  Object.defineProperty(__x, 'LANG', { get: function () { return LANG; }, configurable: true });
+  Object.defineProperty(__x, 'RPG_POINTS_TOTAL',
+    { get: function () { return RPG_POINTS_TOTAL; }, configurable: true });
+} catch (e) { if (typeof __bootFail === 'function') __bootFail('bhShare', e); if (typeof console !== 'undefined') console.error('[bhShare]', e); }
+
 
 // v5.5：累計遊玩時間 ＋ 拜訪紀錄 的計時器（一定要等 __BH 建好，Cloud 才查得到）
 try { PlayStat.boot(); } catch (e) {}

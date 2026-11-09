@@ -43,17 +43,21 @@ function mkPlayer(cx, cy) {
     buffs: {}, skullT: 0, beltMul: 1
   };
 }
-// 跑 N 幀，回傳水平方向翻面次數與總位移
+/* 跑 N 幀，回傳水平方向翻面次數與總位移（路徑長度）。
+   v5.74：moved 原本只累加 |dx| —— 那是在 v5.68 之前「王會左右抽筋」的年代才成立：
+   橫向抖動本身就會灌大這個數字。防抖動修好之後，王追正下方的玩家可以幾乎不橫移，
+   8 秒只量到 80px 就被判「卡住不動」（十次紅兩次）。
+   這裡改成量二維路徑長度（|dx| + |dy|）；翻面次數仍然只看 dx，語意不變。 */
 function runBoss(boss, frames) {
   let flips = 0, lastVx = 0, moved = 0;
   for (let i = 0; i < frames; i++) {
-    const ox = boss.x;
+    const ox = boss.x, oy = boss.y;
     try { P.updateBoss(boss, 1 / 60); } catch (e) { return { flips: flips, moved: moved, err: e.message }; }
     G.bombs.length = 0; G.flames.length = 0;
     boss.bombT = 1e9; boss.skillCd = 1e9;
-    const vx = boss.x - ox;
+    const vx = boss.x - ox, vy = boss.y - oy;
+    moved += Math.abs(vx) + Math.abs(vy);
     if (Math.abs(vx) > .01) {
-      moved += Math.abs(vx);
       if (lastVx !== 0 && Math.sign(vx) !== Math.sign(lastVx)) flips++;
       lastVx = vx;
     }
@@ -117,8 +121,10 @@ for (let i = 0; i < 30; i++) {
   if (bp.step && stepA && (bp.step.x !== stepA.x || bp.step.y !== stepA.y)) changedMid++;
 }
 ok(changedMid === 0, '半路上不會突然改成反方向（0 次中途改口）', changedMid);
-// 一格 40px、速度 54px/s → 約 0.75 秒走完；跑 1.5 秒後一定走過不只一格
-for (let i = 0; i < 60; i++) {
+/* 一格 40px、速度 54px/s → 約 0.75 秒走完。
+   v5.74：v5.69 加了 bossStepHold（1.4 秒內不重新決策），跑 1.5 秒剛好在邊界上 →
+   五次會紅一次。改成 3 秒（180 幀）：1.4 秒承諾 + 下一格，一定走過兩格以上。 */
+for (let i = 0; i < 180; i++) {
   P.updateBoss(bp, 1 / 60);
   G.bombs.length = 0; G.flames.length = 0;
   bp.bombT = 1e9; bp.skillCd = 1e9;
@@ -229,7 +235,10 @@ const logSrc = fs.readFileSync(__dirname + '/../js/version-log.js', 'utf8');
 ok(/v: '5\.68'/.test(logSrc), '更新紀錄有 5.68 條目');
 ok(/v: '5\.67'[^]*?now: false/.test(logSrc), '上一版 5.67 已標成 now:false');
 const sw = fs.readFileSync(__dirname + '/../sw.js', 'utf8');
-ok(/SW_VERSION = 'v5\.68\.0'/.test(sw), 'SW 版號 v5.68.0');
+/* v5.74：版本斷言不再寫死。舊寫法 `SW_VERSION = 'v5.68.0'` 每升一版就變紅一次
+   （而且被舊的 _runall 解析漏洞蓋住，紅了好幾版沒人發現）。改成「≥ 這個版本」。 */
+function swNum(t) { const m = /SW_VERSION = 'v(\d+)\.(\d+)\.(\d+)'/.exec(t); return m ? (+m[1]) * 1e6 + (+m[2]) * 1e3 + (+m[3]) : 0; }
+ok(swNum(sw) >= 5068000, 'SW 版號 ≥ v5.68.0（實際 ' + swNum(sw) + '）');
 
 console.log('\n========================================');
 console.log('v5.68 BOSS／AI 防抖動：' + pass + ' 通過 / ' + fail + ' 失敗');

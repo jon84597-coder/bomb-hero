@@ -9,23 +9,48 @@ const HTML_PATH = (function () {
   const b = __dirname + '/../public/index.html';
   return fs.existsSync(a) ? a : b;
 })();
-/* v5.53：主程式（1.62M 字元）從 index.html 抽到 js/main.js 了 —— index.html 只剩
-   HTML＋CSS（328K）。這裡把 <script src="js/main.js"></script>「內聯回填」成
-   <script>…</script>，所以：
-     • makeEnv 照舊抓得到那段主邏輯（它的正則 /<script>([\s\S]*?)<\/script>/）
-     • rawHtml / html 仍然是「i18n 字典 ＋ HTML ＋ 主邏輯」的全文
-       → 25 支靠 rawHtml 找文案／量體積的舊測試完全不用改。
-   若 js/main.js 不存在（例如只複製了 index.html 的舊備份），就退回讀原始 HTML。 */
-const MAINJS = (function () {
-  const q = __dirname + '/../js/main.js';
-  return fs.existsSync(q) ? fs.readFileSync(q, 'utf8') : '';
+const JS_DIR = __dirname + '/../js/';
+const RAW = fs.readFileSync(HTML_PATH, 'utf8');
+
+function readJs(name) {
+  try { return fs.readFileSync(JS_DIR + name, 'utf8'); } catch (e) { return ''; }
+}
+
+/* v5.74：拆檔（js/rpg.js）之後，沙盒不能只認 js/main.js。
+   這裡改成「照 index.html 的文件順序，逐支外部檔執行」，跟瀏覽器完全一致：
+     1. i18n 字典（js/i18n-src.js）→ 當成 pre（舊測試靠 html 裡找文案）
+     2. 版本紀錄（js/version-log.js）→ 瀏覽器是動態載入，沙盒一律預先載入
+     3. <script src="js/*.js"> 依序：main.js → keys-ui.js → onboard.js → …
+   之後再拆引擎段（js/*.js）不必再改沙盒，只要在 index.html 加一行 script。
+
+   兩個細節：
+   • 只有 main 那支「失敗＝整支測試該紅」，其餘外部 UI 模組（鍵盤面板／引導／外觀…）
+     在無頭環境本來就可能摸不到真實 DOM —— 失敗只記在 env.extErrors，不拖垮全部 170 支。
+     verify-v574 會斷言 extErrors 是空的，所以「真的壞掉」還是會被發現。
+   • rawHtml／html 只內聯「核心檔」（main.js ＋ 之後拆出去的 rpg.js 等），
+     不含 keys-ui 這一類純 UI 檔 —— 體積斷言（v484／v556）才不會被連帶打歪。 */
+const EXT_FILES = (function () {
+  const list = [];
+  const re = /<script src="(?:\.\/)?js\/([\w.\-]+\.js)"><\/script>/g;
+  let m;
+  while ((m = re.exec(RAW))) if (list.indexOf(m[1]) < 0) list.push(m[1]);
+  return list;
 })();
+// 內聯進 html 文字版的核心檔（純 UI 檔不列入，見上面說明）
+const CORE_INLINE = ['main.js', 'rpg.js'];
+
+const MAINJS = readJs('main.js');
 const html = (function () {
-  const raw = fs.readFileSync(HTML_PATH, 'utf8');
-  if (!MAINJS) return raw;
-  return raw.replace(/<script src="\.?\/?js\/main\.js"><\/script>/, function () {
-    return '<script>\n' + MAINJS + '</script>';
+  if (!MAINJS) return RAW;
+  let out = RAW;
+  CORE_INLINE.forEach(function (f) {
+    const body = readJs(f);
+    if (!body) return;
+    const esc = f.replace(/\./g, '\\.');
+    const re = new RegExp('<script src="\\.?\\/?js\\/' + esc + '"><\\/script>');
+    out = out.replace(re, function () { return '<script>\n' + body + '</script>'; });
   });
+  return out;
 })();
 // v5.20：i18n 字典抽成外部檔 —— 對外仍然提供「邏輯全文」（字典 + 主檔），
 // 這樣所有「在原始碼裡找文案」的舊測試都不用改。
@@ -43,11 +68,16 @@ function makeEnv(opts) {
   opts = opts || {};
   // v4.68：可指定其他檔案（A/B 對照舊版行為用；不給就讀 index.html）
   const src = opts.file ? fs.readFileSync(opts.file, 'utf8') : html;
-  const m = src.match(/<script>([\s\S]*?)<\/script>/);
-  if (!m) throw new Error('no script');
-  const code = m[1];
+  // v5.74：要執行的外部檔（照文件順序；字典本身走 pre，不重複跑）
+  const runList = (opts.core || EXT_FILES).filter(function (f) { return f !== 'i18n-src.js'; });
+  let legacyCode = '';
+  if (opts.file) {
+    // 舊備份檔：字典還內嵌、主邏輯是唯一的無屬性 script
+    const m = src.match(/<script>([\s\S]*?)<\/script>/);
+    if (!m) throw new Error('no script');
+    legacyCode = m[1];
+  }
   // v5.20：i18n 字典抽成外部檔（js/i18n-src.js）—— 沙盒比照瀏覽器，先載入再跑主程式。
-  // 舊版備份檔（opts.file）字典還內嵌，重複載入也無害（後面的 const 會蓋掉 window 變數）。
   const pre = I18N_PRE + VLOG_PRE;
 
   // calls = 方法呼叫；sets = 屬性指派（fillStyle / strokeStyle …）
@@ -187,7 +217,23 @@ function makeEnv(opts) {
   sandbox.globalThis = sandbox;
   sandbox.window.window = sandbox;
   vm.createContext(sandbox);
-  vm.runInContext(pre + code, sandbox, { filename: 'index.html' });
+  // pre（字典 ＋ 版本紀錄）先跑；字典裡只是資料，不會失敗
+  vm.runInContext(pre, sandbox, { filename: 'pre' });
+  const extErrors = [];
+  if (opts.file && legacyCode) {
+    vm.runInContext(legacyCode, sandbox, { filename: opts.file });
+  } else {
+    runList.forEach(function (f) {
+      const body = readJs(f);
+      if (!body) { extErrors.push([f, 'missing']); return; }
+      try {
+        vm.runInContext(body, sandbox, { filename: f });
+      } catch (e) {
+        if (f === 'main.js') throw e;           // 主程式壞掉＝測試該紅
+        extErrors.push([f, String(e && e.message || e)]);
+      }
+    });
+  }
 
   const BH = sandbox.window.__BH;
   if (!BH) throw new Error('no __BH');
@@ -199,6 +245,7 @@ function makeEnv(opts) {
   if (!opts.realMapDefault) { try { BH.settings.mapMode = 'classic'; } catch (e) {} }
   // v5.20：html 回傳「邏輯全文」（外部字典 + 主檔）—— 舊測試會直接在裡面找中文文案
   return { html: pre + src, sandbox, BH, rec, mkCtx2D, getId, listeners, storage, els,
+           extErrors, extFiles: EXT_FILES,
            G: BH.Game, P: BH, fakeImg: (w, h) => ({ naturalWidth: w, naturalHeight: h, __fake: true }) };
 }
 
@@ -207,4 +254,4 @@ function makeEnv(opts) {
 /* v5.38：html 維持「字典＋主檔」（掃 UI 文案的測試不該被歷史更新紀錄干擾）；
    要驗版本紀錄的測試請用 vlog（純資料檔）或 htmlAll。 */
 module.exports = { makeEnv, html: I18N_PRE + html, rawHtml: html, i18nPre: I18N_PRE,
-  vlog: VLOG_PRE, htmlAll: I18N_PRE + VLOG_PRE + html };
+  vlog: VLOG_PRE, htmlAll: I18N_PRE + VLOG_PRE + html, extFiles: EXT_FILES };

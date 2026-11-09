@@ -140,7 +140,8 @@ KEYS.forEach(function (k) {
   const re = new RegExp('^' + k.replace(/\./g, '\\.') + '\\|[^\\n]*\\|[^\\n]*\\|[^\\n]*\\|[^\\n]*\\|[^\\n]*$', 'm');
   ok(re.test(I18N), k + ' 五欄齊全');
 });
-ok(/VERSION = '5\.73'/.test(SRC), '主檔版本 5.73');
+/* v5.74：版本不要寫死（每升一版就要回頭改舊測試）。 */
+ok(/VERSION = '5\.(7[3-9]|[89]\d)'/.test(SRC), '主檔版本 ≥ 5.73');
 ok(/v: '5\.73'/.test(fs.readFileSync(path.join(__dirname, '..', 'js', 'version-log.js'), 'utf8')), '版本紀錄有 5.73');
 
 console.log('\n' + (fail ? '❌' : '✅') + ' v5.73：' + pass + ' 通過 / ' + fail + ' 失敗');

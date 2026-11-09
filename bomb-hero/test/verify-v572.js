@@ -109,7 +109,8 @@ ok(N.migrate() === false && S.nameAuto === 1, '舊存檔：看起來是自動取
 reset('小明', 1, 0);
 ok(N.migrate() === false && S.nameLock === 1, '已經定案過的不會被重複遷移');
 
-ok(/if \(name === 'title'\) Nick\.greet\(\); else Nick\.commit\(\);/.test(SRC), 'Screen 換頁：回首頁換招呼語、離開就定案');
+/* v5.74：中間插了 Starter.apply()（新手起手禮），改成「先 greet 後 commit」的寬鬆比對。 */
+ok(/if \(name === 'title'\)[\s\S]{0,90}Nick\.greet\(\)[\s\S]{0,40}else Nick\.commit\(\)/.test(SRC), 'Screen 換頁：回首頁換招呼語、離開就定案');
 ok(/settings\.nameAuto = 0;[^]*?\n    \}\);/.test(SRC), '首頁手動打字 → 取消 nameAuto');
 ok(/settings\.nameAuto = 1;/.test(SRC), 'autoNickname() 會標記 nameAuto');
 
@@ -161,8 +162,14 @@ ok(/nickRowHTML\(\) \+/.test(SRC), 'renderMe() 有把暱稱區塊插進去');
 
 ok(String(P.VERSION) >= '5.71', 'VERSION ≥ 5.71（' + P.VERSION + '）');
 const vl = (P.VERSION_LOG || [])[0] || {};
-ok(vl.v === '5.71' && vl.now === true, 'VERSION_LOG 第一筆是 5.71 且 now:true');
-ok((P.VERSION_LOG || [])[1] && P.VERSION_LOG[1].v === '5.70' && P.VERSION_LOG[1].now === false, '上一版 5.70 已收成 now:false');
+/* v5.74：版本斷言改成「不寫死」—— VERSION_LOG[0] 永遠是當前版本，
+   5.71／5.70 這種歷史條目只要「還在表裡、且已收成 now:false」就算過。 */
+ok(vl.v === String(P.VERSION) && vl.now === true, 'VERSION_LOG 第一筆＝當前版本且 now:true（' + vl.v + '）');
+const vlLog = P.VERSION_LOG || [];
+const e571 = vlLog.filter(function (x) { return x.v === '5.71'; })[0];
+const e570 = vlLog.filter(function (x) { return x.v === '5.70'; })[0];
+ok(!!e571 && e571.now === false, '5.71 那筆還在表裡、已收成 now:false');
+ok(!!e570 && e570.now === false, '5.70 那筆還在表裡、已收成 now:false');
 
 console.log('\n========================================');
 console.log('v5.71 首頁招呼語／暱稱定案：' + pass + ' 通過 / ' + fail + ' 失敗');

@@ -132,7 +132,10 @@ const logSrc = fs.readFileSync(__dirname + '/../js/version-log.js', 'utf8');
 ok(/v: '5\.69'/.test(logSrc), '更新紀錄有 5.69 條目');
 ok(/v: '5\.68'[^]*?now: false/.test(logSrc), '上一版 5.68 已標成 now:false');
 const sw = fs.readFileSync(__dirname + '/../sw.js', 'utf8');
-ok(/SW_VERSION = 'v5\.69\.0'/.test(sw), 'SW 版號 v5.69.0');
+/* v5.74：版本斷言不再寫死。舊寫法 `SW_VERSION = 'v5.68.0'` 每升一版就變紅一次
+   （而且被舊的 _runall 解析漏洞蓋住，紅了好幾版沒人發現）。改成「≥ 這個版本」。 */
+function swNum(t) { const m = /SW_VERSION = 'v(\d+)\.(\d+)\.(\d+)'/.exec(t); return m ? (+m[1]) * 1e6 + (+m[2]) * 1e3 + (+m[3]) : 0; }
+ok(swNum(sw) >= 5069000, 'SW 版號 ≥ v5.69.0（實際 ' + swNum(sw) + '）');
 
 console.log('\n========================================');
 console.log('v5.69 外觀只套在自己身上：' + pass + ' 通過 / ' + fail + ' 失敗');

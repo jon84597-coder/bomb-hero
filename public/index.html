@@ -852,7 +852,17 @@ body.touch.in-game .chip .hpicks { font-size: 11px; letter-spacing: -2px; }
 #abyssBadge b { font-size: 12.5px; font-weight: 900; color: #cfadff;
   text-shadow: 0 0 9px rgba(158,96,255,.8); }
 #abyssBadge i { font-style: normal; font-size: 10px; color: #9d8bb9; letter-spacing: .2px; }
+#abyssBadge i.apc { color: #ffd88a; }
 #abyssBadge.hide { display: none; }
+/* v5.74：窄機（≤380px）頂欄間距收一點 —— 實測 360px 已可單列排完，
+   這裡只是留安全邊際，避免多一顆 chip（契約數）時把暫停鈕擠出畫面。 */
+@media (max-width:380px){
+  #gameTop { gap: 4px; }
+  #abyssBadge { padding: 3px 8px 4px; }
+  #abyssBadge b { font-size: 11.5px; }
+  #abyssBadge i { font-size: 9.5px; }
+}
+#pauseBtn { flex: 0 0 auto; }
 /* ===== v5.73：新手漸進解鎖 + 今日進度 ===== */
 #scr-title .nickwrap .todayline { display: none; margin-top: 5px; font-size: 11px;
   color: #6b5a3e; line-height: 1.5; letter-spacing: .2px; }
@@ -888,6 +898,9 @@ body.touch.in-game .chip .hpicks { font-size: 11px; letter-spacing: -2px; }
 #sideEv .sevmsg { font-size: 12.5px; line-height: 1.6; color: #4a3418; margin: 8px 0 2px; }
 #sideEv .sevmsg b { color: #b4500a; }
 #sideEv .qbtn { width: 100%; margin-top: 8px; }
+.wkghost { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 9px;
+  font-size: 10.5px; font-weight: 800; color: #2b6ea8; background: rgba(120,190,255,.18);
+  border: 1px solid rgba(120,190,255,.42); vertical-align: 1px; }
 .wkchal { margin: 14px 0 12px; padding: 11px 12px; border-radius: 15px;
   background: linear-gradient(160deg, rgba(255,236,204,.85), rgba(255,214,164,.55));
   border: 1px solid rgba(210,150,70,.45); box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
@@ -4665,6 +4678,16 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .chsec-t b { margin-left: auto; color: #c0741f; font-size: 11.5px; }
 .chsec-s { color: #b08a5e; font-weight: 700; font-size: 11px; }
 .chsk { display: flex; gap: 9px; flex-wrap: wrap; }
+/* v5.74：專屬技小卡（金色，跟出戰招式區隔）—— 角色頁原本完全看不到專屬技說明 */
+.chskone { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 14px;
+  background: linear-gradient(180deg, #fff8e4, #ffeec4);
+  border: 1px solid #eccb86; box-shadow: inset 0 2px 0 rgba(255,255,255,.9); }
+.chskone .icsk { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 11px; display: flex;
+  align-items: center; justify-content: center; font-size: 19px;
+  background: linear-gradient(180deg, #ffe7a6, #f0a52a); box-shadow: 0 2px 0 #c9761a; }
+.chskone .txsk { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.chskone .txsk b { font-size: 13px; font-weight: 900; color: #8a4b06; }
+.chskone .txsk i { font-style: normal; font-size: 11px; line-height: 1.45; color: #7c6338; }
 .chslot { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 21px; background: #fffaf0; border: 2px solid #e2c39c;
   box-shadow: inset 0 2px 0 #fff, 0 3px 0 #e6cba2; position: relative; }
@@ -4901,6 +4924,16 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
 }
 #codexTabs button.sel { background: linear-gradient(180deg,#ffd27a,#f7a94a); border-color: #e0a862; color: #5c3410; }
 #codexHint { padding: 8px 16px 2px; font-size: 11px; color: #a0805c; line-height: 1.6; }
+/* v5.74：圖鑑集滿獎勵（分頁全滿可領金幣，四分頁全滿再追加） */
+#codexRew { padding: 7px 16px 0; }
+#codexRew:empty { display: none; }
+.cdxrw { display: inline-flex; align-items: center; gap: 5px; border: 1px solid #e9b45c;
+  border-radius: 11px; padding: 6px 13px; font-size: 12px; font-weight: 900; color: #7a4408;
+  font-family: inherit; cursor: pointer;
+  background: linear-gradient(180deg, #ffeec4, #f7c765); box-shadow: 0 3px 0 #c98a24; }
+.cdxrw:active { transform: translateY(2px); box-shadow: 0 1px 0 #c98a24; }
+.cdxrw.done { cursor: default; color: #2f6a3c; border-color: #9fd6ae;
+  background: linear-gradient(180deg, #e4fbe9, #bfe9cb); box-shadow: 0 3px 0 #8ec9a0; }
 #codexBody {
   padding: 10px 14px 16px; overflow: auto; -webkit-overflow-scrolling: touch;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px;
@@ -4963,6 +4996,51 @@ body.touch .skbtn .skh { display: none; }   /* v5.19：手機沒有實體鍵盤�
   cursor:pointer;padding:3px 4px;border-radius:8px;}
 #buffPick .bplock:hover{opacity:.9;background:rgba(255,255,255,.10);}
 #buffPick .bplock.on{opacity:1;background:rgba(255,215,120,.20);}
+/* v5.74：深淵契約三選一 —— 深紫底、每張卡同時列出「▲好處／▼代價」 */
+#abyssPerk{position:fixed;inset:0;z-index:9410;display:none;align-items:center;justify-content:center;
+  padding:18px;background:radial-gradient(circle at 50% 38%,rgba(52,18,84,.90),rgba(6,3,12,.95));}
+#abyssPerk.on{display:flex;}
+/* v5.74b：原本卡片是「直接浮在標題畫面上」—— 說明文字換行時會壓到卡片上緣，
+   背景又透著首頁的大 LOGO，看起來像沒做完。補一塊真正的面板把內容包起來。 */
+#abyssPerk .apwrap{width:100%;max-width:560px;text-align:center;
+  padding:20px 18px 18px;border-radius:22px;
+  background:linear-gradient(170deg,rgba(34,16,58,.94),rgba(12,5,22,.96));
+  border:1px solid rgba(160,110,240,.34);
+  box-shadow:0 18px 48px -18px rgba(90,40,170,.85),inset 0 1px 0 rgba(255,255,255,.06);}
+#abyssPerk .aptitle{color:#f2e6ff;font-size:19px;font-weight:900;letter-spacing:.4px;
+  text-shadow:0 0 18px rgba(178,118,255,.55);}
+#abyssPerk .apsub{color:#bda9dc;font-size:12.5px;line-height:1.55;margin:7px 0 16px;
+  text-wrap:pretty;}
+#abyssPerk .aprow{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+#abyssPerk .apcard{position:relative;border-radius:16px;padding:14px 10px 11px;cursor:pointer;color:#efe6ff;
+  font-family:inherit;text-align:center;
+  background:linear-gradient(165deg,rgba(58,30,92,.96),rgba(24,11,42,.96));
+  border:1px solid rgba(178,118,255,.42);box-shadow:0 6px 18px rgba(0,0,0,.42);
+  transition:transform .12s,border-color .12s,box-shadow .12s;}
+#abyssPerk .apcard:hover,#abyssPerk .apcard:focus{transform:translateY(-3px);
+  border-color:rgba(216,172,255,.9);box-shadow:0 10px 24px rgba(124,60,205,.42);}
+#abyssPerk .apico{font-size:28px;line-height:1.1;display:block;}
+#abyssPerk .apname{font-size:14px;font-weight:900;margin-top:5px;}
+#abyssPerk .apgood,#abyssPerk .apbad{font-size:11.5px;line-height:1.42;margin-top:6px;
+  border-radius:8px;padding:4px 6px;text-align:left;}
+#abyssPerk .apgood{color:#b8ffd0;background:rgba(58,214,126,.14);}
+#abyssPerk .apbad{color:#ffb9b9;background:rgba(255,92,92,.13);}
+@media (max-width:430px){
+  #abyssPerk{padding:14px 10px;}
+  #abyssPerk .apwrap{padding:16px 12px 14px;border-radius:18px;}
+  #abyssPerk .apsub{font-size:12px;margin:6px 0 12px;}
+  #abyssPerk .aprow{gap:6px;}
+  #abyssPerk .apcard{padding:11px 6px 9px;border-radius:13px;}
+  #abyssPerk .apico{font-size:22px;}
+  #abyssPerk .apname{font-size:12px;}
+  #abyssPerk .apgood,#abyssPerk .apbad{font-size:10px;padding:3px 4px;}
+}
+@media (max-height:430px){
+  #abyssPerk{padding:10px;}
+  #abyssPerk .apsub{margin-bottom:9px;font-size:11.5px;}
+  #abyssPerk .apcard{padding:9px 8px 8px;}
+  #abyssPerk .apico{font-size:20px;}
+}
 @media (max-width:520px){
   #buffPick .bprow{gap:7px;}
   #buffPick .bpcard{padding:12px 8px 11px;border-radius:13px;}
@@ -5145,7 +5223,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.73</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.74</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5178,6 +5256,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
       </div>
       <div id="codexTabs"></div>
       <div id="codexHint"></div>
+      <div id="codexRew"></div>
       <div id="codexBody"></div>
     </div>
     <div class="bootdiag hide" id="bootDiag">
@@ -5200,7 +5279,7 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.73</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.74</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" id="nickWrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5865,6 +5944,11 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
           <div class="chsec-t">🎯 出戰招式<span class="chsec-s" id="charSkHint"></span></div>
           <div class="chsk" id="charSk"></div>
         </div>
+        <!-- v5.74：角色專屬技（選了這隻就天生有，不佔出戰 4 欄） -->
+        <div class="chsec">
+          <div class="chsec-t">✨ 角色專屬技<span class="chsec-s" id="charSkC"></span></div>
+          <div class="chskone" id="charSkBody"></div>
+        </div>
         <div class="chsec">
           <div class="chsec-t">🗺️ 冒險進度<b id="charProgTxt">0 / 40</b></div>
           <div class="chprog" id="charProg"></div>
@@ -6129,9 +6213,21 @@ body.touch.home-wide #scr-title .menu .qchip .qico2 { font-size: 12px; }
   </div>
 </div>
 
+<!-- v5.74：深淵契約（每打完一隻深淵王抽三張，好處與代價同時攤開） -->
+<div id="abyssPerk" role="dialog" aria-modal="true" aria-labelledby="apTitle">
+  <div class="apwrap">
+    <div class="aptitle" id="apTitle"></div>
+    <div class="apsub" id="apSub"></div>
+    <div class="aprow" id="apRow"></div>
+  </div>
+</div>
+
 <script src="js/i18n-src.js"></script>
 <!-- v5.63：版本紀錄（181 KB 純字串）改成點開面板才動態載入，不再擋在首屏 -->
 <script src="js/main.js"></script>
+<!-- v5.74：RPG 模組（角色頁／營地／商店／招式／地圖選擇）—— 主檔瘦身 31,658 字元。
+     一定要緊接在 main.js 之後：它讀 window.__BH，並用 __installRpg() 把 Rpg／RpgUI 交回去。 -->
+<script src="js/rpg.js"></script>
 <!-- v5.52：按鍵控制面板（外部檔；主檔預算已滿，UI 一律放 js/keys-ui.js） -->
 <script src="js/keys-ui.js"></script>
 <!-- v5.53：新手任務引導（外部檔；只讀存檔＋發獎，不碰遊戲邏輯） -->

@@ -50,10 +50,18 @@ function audit() {
 head('1. 換地圖一定會重算牆分類（源碼）');
 {
   const bm = src.slice(src.indexOf('function buildMap(cols, rows, theme, opts)'), src.indexOf('function buildMap(cols, rows, theme, opts)') + 2400);
-  ok(/Game\.grid = \[\];[\s\S]{0,420}Game\.wallKind = null;[\s\S]{0,120}Game\.wallSize = null;/.test(bm),
-    'buildMap 重建地圖時清掉 wallKind / wallSize（對戰每回合都走這裡）');
-  ok(/Game\.sdRock = null;/.test(bm) && /Game\.sdActive = false;/.test(bm),
-    'buildMap 也清掉縮圈落石表與縮圈旗標（不會把上一局的狀態帶過來）');
+  /* v5.74：v5.3 把「換地圖要清的狀態」全部收進 resetMapCellState() 了，
+     所以「buildMap 這段文字裡要出現 Game.wallKind = null」這種寫法會誤紅。
+     改成驗真正的不變式：①buildMap 一定呼叫 resetMapCellState()；
+     ②resetMapCellState() 本身清掉 wallKind / wallSize / sdRock / sdActive。 */
+  const rmc = src.slice(src.indexOf('function resetMapCellState()'),
+    src.indexOf('function resetMapCellState()') + 900);
+  ok(/resetMapCellState\(\);/.test(bm),
+    'buildMap 重建地圖時走 resetMapCellState（對戰每回合都走這裡）');
+  ok(/Game\.wallKind = null;/.test(rmc) && /Game\.wallSize = null;/.test(rmc),
+    'resetMapCellState 清掉 wallKind / wallSize');
+  ok(/Game\.sdRock = null;/.test(rmc) && /Game\.sdActive = false;/.test(rmc),
+    'resetMapCellState 也清掉縮圈落石表與縮圈旗標（不會把上一局的狀態帶過來）');
   ok(/!Game\.wallKind \|\| Game\.wallSize !== \(Game\.cols \+ 'x' \+ Game\.rows\)/.test(src),
     'render 除了「沒算過」，尺寸對不上也會重算（換圖忘記清也不會掉圖）');
   ok(/Game\.wallSize = cols \+ 'x' \+ rows;/.test(src), 'markWallKinds 會記下自己是給多大的圖算的');

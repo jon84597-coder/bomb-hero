@@ -81,8 +81,9 @@ if (beltCell) {
 // ================================================================
 console.log('=== 2. 每一張地圖一首專屬 BGM ===');
 const names = [];
-// v4.14：32 關 → 每 4 張地圖共用一個大主題的曲子（取每區的第 1 張來驗）
-for (let i = 1; i <= 8; i++) names.push(P.stageBGM(i * 4 - 3));
+// v5.74：40 關制是「每章 5 關」→ 取每章第 1 關（1, 6, 11, 16, 21, 26, 31, 36）來驗。
+//   舊版是 32 關制的 i*4-3，40 關制下第 2 章之後會少取一關（21→5 章、26→6 章）。
+for (let i = 1; i <= 8; i++) names.push(P.stageBGM((i - 1) * 5 + 1));
 ok(names.join(',') === 'stage1,stage2,stage3,stage4,stage5,stage6,stage7,stage8',
   '八大主題對應八首曲子（' + names.join('/') + '）');
 const bpms = [], sigs = [], wavs = [], drums = [];

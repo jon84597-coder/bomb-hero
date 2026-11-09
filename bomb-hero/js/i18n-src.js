@@ -56,7 +56,6 @@ acct.adminFail|後台開不起來：請確認已用開發者帳號登入|后台�
 acct.adminErr|後台開啟失敗：|后台开启失败：|Dashboard failed to open: |管理画面の起動に失敗：|관리 화면 열기 실패: 
 nick.need|請先輸入你的暱稱（最多 8 字）|请先输入你的昵称（最多 8 字）|Please enter your nickname first (max 8 chars)|ニックネームを入力してください（最大8文字）|닉네임을 먼저 입력하세요 (최대 8자)
 nick.auto|🦸 沒填暱稱，先用「{n}」開始（回上一頁可以自己取名）|🦸 没填昵称，先用「{n}」开始（回上一页可以自己取名）|🦸 No nickname — starting as “{n}” (go back and type your own)|🦸 ニックネーム未入力。「{n}」で開始します（戻れば自分で入力できます）|🦸 닉네임이 없어 「{n}」(으)로 시작합니다 (뒤로 가서 직접 정할 수 있어요)
-/* v5.71：首頁招呼語（五組，每次回來抽一句）＋改名介面 */
 nick.greet.1|歡迎回來，{n}！炸彈都幫你暖好了。|欢迎回来，{n}！炸弹都帮你暖好了。|Welcome back, {n}! Your bombs are already warmed up.|おかえりなさい、{n}！爆弾はもう準備できてるよ。|다시 오셨네요, {n}! 폭탄은 이미 준비됐어요.
 nick.greet.2|又見面了，{n}。今天想炸掉幾個？|又见面了，{n}。今天想炸掉几个？|Good to see you again, {n}. How many are we blowing up today?|また会えたね、{n}。今日はいくつ爆破する？|또 만났네요, {n}. 오늘은 몇 개 터뜨릴까요?
 nick.greet.3|{n} 上線啦，大家都在等你。|{n} 上线啦，大家都在等你。|{n} is online — everyone has been waiting.|{n} が来たよ、みんな待ってた。|{n} 님이 접속했어요. 다들 기다리고 있었어요.
@@ -2080,4 +2079,67 @@ starter.tip|再通關 {n} 關，會解鎖更多模式|再通关 {n} 关，会解
 today.stage|第 {n}/{m} 關|第 {n}/{m} 关|Stage {n}/{m}|第 {n}/{m} 面|{n}/{m} 스테이지
 today.stars|★ {n}/{m}|★ {n}/{m}|★ {n}/{m}|★ {n}/{m}|★ {n}/{m}
 today.abyss|深淵 {n} 層|深渊 {n} 层|Abyss {n}|深淵 {n} 層|심연 {n}층
+char.skTitle|✨ 角色專屬技|✨ 角色专属技|✨ Signature skill|✨ 専用スキル|✨ 전용 스킬
+csk.gale|疾風步|疾风步|Gale Step|疾風歩き|질풍보
+csk.gale.d|往面向的方向瞬移 2 格，落地 0.8 秒無敵（穿得過火線）。|往面向的方向瞬移 2 格，落地 0.8 秒无敌（穿得过火线）。|Blink 2 tiles forward; 0.8s invincible on landing (passes through fire).|向いている方向へ2マス瞬移。着地後0.8秒無敵（炎も抜けられる）。|바라보는 방향으로 2칸 순간이동, 착지 후 0.8초 무적(불길 통과 가능).
+csk.roll|滾地閃避|滚地闪避|Dodge Roll|転がり回避|구르기 회피
+csk.roll.d|往反方向滾 2 格，翻滾中完全無敵。|往反方向滚 2 格，翻滚中完全无敌。|Roll 2 tiles backwards; fully invincible while rolling.|逆方向へ2マス転がる。転がっている間は完全無敵。|반대 방향으로 2칸 구른다. 구르는 동안 완전 무적.
+csk.quickfuse|速爆指令|速爆指令|Quick Fuse|即爆指令|속폭 명령
+csk.quickfuse.d|場上自己的炸彈引信立刻縮短一半（一次清場）。|场上自己的炸弹引信立刻缩短一半（一次清场）。|Halve the fuse on all your bombs on the field (instant clear).|場の自分の爆弾の導火線を半分に（一気に片付く）。|필드의 내 폭탄 도화선을 절반으로(단번에 정리).
+csk.enchant|烈焰灌注|烈焰灌注|Flame Infusion|烈火注入|화염 주입
+csk.enchant.d|本關爆炸範圍永久 +1（上限 10 格），可疊到極限。|本关爆炸范围永久 +1（上限 10 格），可叠到极限。|+1 blast range for the rest of the stage (max 10), stacks to the cap.|このステージの爆風範囲が永続+1（上限10）。上限まで重ねられる。|이번 스테이지 폭발 범위 영구 +1(최대 10), 한계까지 중첩.
+csk.loot|拾金之手|拾金之手|Gilded Hand|拾い手|금손
+csk.loot.d|把 4 格內的所有金幣與道具直接吸到腳下。|把 4 格内的所有金币与道具直接吸到脚下。|Pull every coin and item within 4 tiles straight to your feet.|4マス以内のコインとアイテムを全部足元へ引き寄せる。|4칸 안의 코인과 아이템을 전부 발밑으로 끌어온다.
+csk.bulwark|鐵壁|铁壁|Bulwark|鉄壁|철벽
+csk.bulwark.d|護甲回滿並 +2，同時 1.8 秒無敵。|护甲回满并 +2，同时 1.8 秒无敌。|Refill armor +2 and gain 1.8s of invincibility.|装甲を全回復し+2、さらに1.8秒無敵。|방어도를 가득 채우고 +2, 1.8초 무적.
+csk.refill|軍械補給|军械补给|Resupply|武器補給|무기 보급
+csk.refill.d|本關炸彈上限 +1（上限 8），打得越久越強。|本关炸弹上限 +1（上限 8），打得越久越强。|+1 bomb capacity for this stage (max 8). The longer you fight, the stronger.|このステージの爆弾上限+1（最大8）。長く戦うほど強くなる。|이번 스테이지 폭탄 상한 +1(최대 8). 오래 싸울수록 강해진다.
+csk.stardust|星塵爆|星尘爆|Stardust Burst|星屑爆|별가루 폭발
+csk.stardust.d|清掉身邊 3 格內所有敵方投射物，並把怪物震暈 1.6 秒。|清掉身边 3 格内所有敌方投射物，并把怪物震晕 1.6 秒。|Wipe enemy projectiles within 3 tiles and stun monsters for 1.6s.|3マス以内の敵弾を消し、モンスターを1.6秒スタン。|3칸 안의 적 탄을 지우고 몬스터를 1.6초 기절.
+combo.freeze|碎冰|碎冰|Shatter|砕氷|빙파
+combo.shield|盾炸|盾炸|Shield Burst|盾爆|방패 폭발
+combo.gust|氣浪|气浪|Shockwave|気浪|기세
+d.bag.xray|透視符|透视符|X-ray charm|透視のお守り|투시 부적
+d.bag.xrayd|本關前 30 秒，牆後的道具與金幣會透出輪廓|本关前 30 秒，墙后的道具与金币会透出轮廓|For the first 30s, items and coins behind walls show their outline|このステージ最初の30秒、壁の向こうのアイテムとコインが透けて見える|이번 스테이지 30초 동안 벽 뒤 아이템과 코인이 비쳐 보인다
+d.bag.smoke|煙霧彈|烟雾弹|Smoke bomb|煙玉|연막탄
+d.bag.smoked|開場 10 秒怪物看不到你 —— 可以大膽衝過怪群|开场 10 秒怪物看不到你 —— 可以大胆冲过怪群|Monsters can't see you for the first 10s — charge right through them|開始10秒モンスターから見えない — 群れを突っ切れる|시작 10초 몬스터가 너를 못 본다 — 무리를 돌파하라
+d.bag.warp|傳送卷|传送卷|Warp scroll|転送の巻物|전송 두루마리
+d.bag.warpd|陣亡時自動傳回起點並復活（半血，每張一次）|阵亡时自动传回起点并复活（半血，每张一次）|On death, warp back to the start and revive at half HP (once per scroll)|死亡時に開始地点へ戻って半血で復活（1枚1回）|사망 시 시작점으로 돌아가 반피로 부활(1장 1회)
+ap.title|深淵契約|深渊契约|Abyss Pact|深淵の契約|심연 계약
+ap.sub|每打完一隻深淵王，選一張契約帶進下一層 —— 好處與代價會跟你到這一輪結束。|每打完一只深渊王，选一张契约带进下一层 —— 好处与代价会跟你到这一轮结束。|After each Abyss lord, take one pact into the next layer. Its boon and price stay with you until the run ends.|深淵の王を倒すたびに契約を1枚選んで次の層へ。効能と代償はこの挑戦が終わるまで続く。|심연의 왕을 쓰러뜨릴 때마다 계약 1장을 골라 다음 층으로. 효과와 대가는 이번 도전이 끝날 때까지 이어진다.
+perk.power|烈焰契約|烈焰契约|Inferno Pact|烈火の契約|화염 계약
+perk.power.g|火力 +1|火力 +1|+1 blast|火力 +1|화력 +1
+perk.power.b|引信 −12%|引信 −12%|−12% fuse|導火線 −12%|도화선 −12%
+perk.arsenal|軍火契約|军火契约|Arsenal Pact|軍火の契約|병기 계약
+perk.arsenal.g|炸彈 +1|炸弹 +1|+1 bomb|爆弾 +1|폭탄 +1
+perk.arsenal.b|怪物速度 +8%|怪物速度 +8%|Monsters +8% speed|モンスター速度 +8%|몬스터 속도 +8%
+perk.flesh|血肉契約|血肉契约|Flesh Pact|血肉の契約|육체 계약
+perk.flesh.g|生命 +1|生命 +1|+1 max HP|最大HP +1|생명 +1
+perk.flesh.b|炸彈 −1|炸弹 −1|−1 bomb|爆弾 −1|폭탄 −1
+perk.greed|貪婪契約|贪婪契约|Greed Pact|強欲の契約|탐욕 계약
+perk.greed.g|每層多 150 金幣|每层多 150 金币|+150 gold per layer|1層ごとに金貨 +150|층마다 금화 +150
+perk.greed.b|怪物 +3|怪物 +3|+3 monsters|モンスター +3|몬스터 +3
+perk.swift|疾風契約|疾风契约|Swift Pact|疾風の契約|질풍 계약
+perk.swift.g|引信 +18%（更從容）|引信 +18%（更从容）|+18% fuse (more time)|導火線 +18%（余裕が増える）|도화선 +18%(여유)
+perk.swift.b|魔王血量 +30%|魔王血量 +30%|Boss HP +30%|魔王HP +30%|보스 체력 +30%
+perk.furor|狂怒契約|狂怒契约|Fury Pact|狂怒の契約|격노 계약
+perk.furor.g|火力 +2|火力 +2|+2 blast|火力 +2|화력 +2
+perk.furor.b|生命 −1|生命 −1|−1 max HP|最大HP −1|생명 −1
+perk.stone|磐石契約|磐石契约|Stone Pact|磐石の契約|반석 계약
+perk.stone.g|每層開場 3 秒無敵|每层开场 3 秒无敌|3s invincibility each layer|各層の開始3秒無敵|층 시작 3초 무적
+perk.stone.b|怪物 +2|怪物 +2|+2 monsters|モンスター +2|몬스터 +2
+perk.golden|黃金契約|黄金契约|Golden Pact|黄金の契約|황금 계약
+perk.golden.g|通關金幣 +60%|通关金币 +60%|+60% layer gold|クリア金貨 +60%|클리어 금화 +60%
+perk.golden.b|引信 −10%|引信 −10%|−10% fuse|導火線 −10%|도화선 −10%
+abyss.perkShort|契約 ×{n}|契约 ×{n}|Pacts ×{n}|契約 ×{n}|계약 ×{n}
+ms.got|第 {m} 層里程碑：💰 {g}|第 {m} 层里程碑：💰 {g}|Layer {m} milestone: 💰 {g}|第{m}層マイルストーン：💰 {g}|{m}층 마일스톤: 💰 {g}
+wk.ghost|👻 本週幽靈 {t}|👻 本周幽灵 {t}|👻 Weekly ghost {t}|👻 今週のゴースト {t}|👻 이번 주 고스트 {t}
+codex.rwBtn|🎁 領取收藏獎勵 ×{n}|🎁 领取收藏奖励 ×{n}|🎁 Claim {n} reward(s)|🎁 コレクション報酬 ×{n}|🎁 수집 보상 ×{n}
+codex.rwGot|圖鑑收藏獎勵：💰 {g}|图鉴收藏奖励：💰 {g}|Codex reward: 💰 {g}|図鑑コレクション報酬：💰 {g}|도감 수집 보상: 💰 {g}
+codex.rwAll|全圖鑑達成|全图鉴达成|Full codex complete|全図鑑コンプリート|전체 도감 달성
+band.line|第 {n} 帶規則：{x}|第 {n} 带规则：{x}|Band {n} rule: {x}|第{n}帯のルール：{x}|{n}구간 규칙: {x}
+band.swarm|怪物多 2 隻|怪物多 2 只|+2 monsters|モンスター +2|몬스터 +2
+band.fuse|引信 −20%|引信 −20%|−20% fuse|導火線 −20%|도화선 −20%
+band.scarce|場地道具 −40%|场地道具 −40%|−40% items|アイテム −40%|아이템 −40%
+band.hunt|怪物多 3 隻且更快|怪物多 3 只且更快|+3 monsters, faster|モンスター +3・速度上昇|몬스터 +3, 더 빠름
 `;

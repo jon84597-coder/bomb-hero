@@ -198,7 +198,10 @@ const used = new Set();
 const missing = [...used].filter(k => !gRows.some(r => r.split('|')[0] === k));
 ok(missing.length === 0, '程式用到的 gift.* 都有翻譯（' + used.size + ' 個）', missing);
 
-ok(/LB_MODES = \{ daily: 1, weekly: 1 \}/.test(CLOUD), '後端 LB_MODES 多了 weekly');
+/* v5.74：v5.73 又加了 abyss／wchal 兩個榜（深淵層數、每週限制挑戰），
+   寫死整串 `{ daily: 1, weekly: 1 }` 會被誤紅 → 改成只驗這兩個模式有在表裡。 */
+ok(/LB_MODES = \{[^}]*daily: 1/.test(CLOUD) && /LB_MODES = \{[^}]*weekly: 1/.test(CLOUD),
+  '後端 LB_MODES 多了 weekly');
 ok(/function lbWeekOk/.test(CLOUD) && /function lbThisWeek/.test(CLOUD), '後端認得 YYYY-Www 週 key');
 ok(/out\.gift = \{ streak: 0/.test(CLOUD), '後端 sanitizeSave() 會清洗 gift');
 ok(/mode: 'weekly'/.test(SRC) && /mode=daily/.test(SRC), '前端每週榜跟每日榜分開打');

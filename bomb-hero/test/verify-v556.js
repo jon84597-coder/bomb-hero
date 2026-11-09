@@ -289,7 +289,8 @@ ok(/lbDailyGap|LB_GHOST_GAP/.test(cloudSrc), '後端有 LB_GHOST_GAP');
 ok(/LB_GHOST_KEEP = 3/.test(cloudSrc), '後端只留前三名的軌跡');
 ok(/lbCleanPath/.test(cloudSrc), '後端有軌跡白名單（只收 x,y|… 格式）');
 ok(/ghosts\.\.\. *parseInt|const ghosts = Math\.max\(0, Math\.min\(LB_GHOST_KEEP/.test(cloudSrc), 'top 端點支援 ghosts 參數');
-ok(/const ghostPath = weekly \? '' : lbCleanPath\(body\.p\)/.test(cloudSrc), '只有每日榜收軌跡（每週榜沒固定地圖）');
+/* v5.74：v5.73 深淵榜上線後寫成 `(weekly || abyss) ? '' : …` —— 只要「非每日榜就不收軌跡」這個規則還在就算過。 */
+ok(/const ghostPath = [^;\n]*weekly[^;\n]*\? '' : lbCleanPath\(body\.p\)/.test(cloudSrc), '只有每日榜收軌跡（每週榜沒固定地圖）');
 ok(/for \(let i = LB_GHOST_KEEP; i < b\.list\.length; i\+\+\)/.test(cloudSrc), '前三名之外會清掉軌跡（省空間）');
 ok(/function drawGhostFigure/.test(mainSrc), '抽出單一殘影的畫法（自己與對手共用）');
 ok(/Ghost\.rivals\(\)/.test(mainSrc), '繪製時會讀對手殘影');
