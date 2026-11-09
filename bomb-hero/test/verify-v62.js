@@ -356,7 +356,9 @@ ok(/function drawCart\(p, T\)/.test(css), '有 drawCart');
 {
   const start = css.indexOf('function drawCart(p, T)');
   const end = css.indexOf('// 回傳 { topY', start);
-  const body = css.slice(start, end > start ? end : start + 9000);
+  /* v5.79：推車的畫法長大了（四輪＋木紋＋塗鴉＋前板）→ 抓 26000 字才涵蓋到集氣條那一段。
+     這裡只驗「有沒有這些畫法」，不是驗長度。 */
+  const body = css.slice(start, end > start ? end : start + 26000);
   ok(/drawBombArt\(holdR, 2\.4, hotHold, true, false/.test(body), '車上的人手上拿著炸彈（沿用地上那顆的畫法）');
   ok(/const holdR = T \* \.23/.test(body), '手上炸彈大小固定');
   ok(/集氣 ' \+ Math\.round\(q \* 100\)/.test(body), '集氣條顯示百分比');

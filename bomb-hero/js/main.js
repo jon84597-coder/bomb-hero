@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.78';
+const VERSION = '5.79';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -29403,37 +29403,280 @@ function drawPlayer(p, T) {
   }
 }
 
+// ===== v5.79：木箱推車（復仇推車）=====
+//   玩家指定：四輪要大而明顯、箱子要有木紋細節、箱上有彩色塗鴉，
+//   而且「坐在箱上的任何角色，下半身都要在箱子裡面，不可以露出來」。
+//   做法：箱口先畫出深色內腔 → 角色「裁到箱口上緣」再畫（下半身自然被切掉）
+//        → 最後把前板壓在角色前面（連切邊一起蓋住）→ 前輪站在最外層。
+//   這樣不論角色換什麼造型（外觀、坐騎、寵物），腿都不會跑到箱外。
+function cartWheel(wx, wy, r, spin, back) {
+  /* 木輻條＋鐵箍的車輪：四顆都看得出來，跑起來會轉 */
+  const a = back ? .62 : 1;                       // 後輪調暗（在箱子後面）
+  ctx.fillStyle = back ? '#2c2013' : '#3a2a19';   // 外胎（深棕，跟木頭同一家族）
+  ctx.beginPath(); ctx.arc(wx, wy, r, 0, 6.283); ctx.fill();
+  ctx.strokeStyle = 'rgba(14,9,4,.9)';
+  ctx.lineWidth = Math.max(1.2, r * .14);
+  ctx.stroke();
+  // 木輪圈
+  ctx.fillStyle = back ? '#7d5729' : '#c0894a';
+  ctx.beginPath(); ctx.arc(wx, wy, r * .74, 0, 6.283); ctx.fill();
+  ctx.fillStyle = back ? '#5f3f1d' : '#9a6631';
+  ctx.beginPath(); ctx.arc(wx, wy, r * .52, 0, 6.283); ctx.fill();
+  // 輻條（跟著走動轉）
+  ctx.save();
+  ctx.translate(wx, wy);
+  ctx.rotate(spin);
+  ctx.strokeStyle = 'rgba(255,232,190,' + (.30 * a + .12) + ')';
+  ctx.lineWidth = Math.max(1, r * .13);
+  for (let i = 0; i < 6; i++) {
+    const ang = (i / 6) * 6.283;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(ang) * r * .16, Math.sin(ang) * r * .16);
+    ctx.lineTo(Math.cos(ang) * r * .70, Math.sin(ang) * r * .70);
+    ctx.stroke();
+  }
+  ctx.restore();
+  // 鐵箍反光（上半圈）
+  ctx.strokeStyle = 'rgba(255,240,206,' + (.16 + .26 * a) + ')';
+  ctx.lineWidth = Math.max(1, r * .10);
+  ctx.beginPath(); ctx.arc(wx, wy, r * .85, Math.PI * 1.10, Math.PI * 1.90); ctx.stroke();
+  // 軸心
+  ctx.fillStyle = back ? '#5d6a80' : '#98a8c2';
+  ctx.beginPath(); ctx.arc(wx, wy, r * .27, 0, 6.283); ctx.fill();
+  ctx.fillStyle = '#38414f';
+  ctx.beginPath(); ctx.arc(wx, wy, r * .13, 0, 6.283); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.6)';
+  ctx.beginPath(); ctx.arc(wx - r * .10, wy - r * .12, r * .07, 0, 6.283); ctx.fill();
+}
+
 // 復仇推車：小推車沿外圈牆軌道移動，車上坐著淘汰的玩家
 function drawCart(p, T) {
   const x = p.x, y = p.y;
   const R = T * .40;
-  const wob = p.moving ? Math.sin(p.walkT * 15) * 1.2 : 0;
-  // 影子
-  softShadow(x, y + T * .30, T * .32, T * .11, .36);
-  // 車身（梯形礦車）
-  ctx.fillStyle = '#5a6a8e';
+  const wob = p.moving ? Math.sin(p.walkT * 15) * 1.4 : 0;
+  const spin = (p.walkT || 0) * 2.2;
+  // 影子（整台車）
+  softShadow(x, y + T * .33, T * .44, T * .15, .40);
+
+  /* 箱體幾何（3/4 俯視：後緣窄、前緣寬） */
+  const backTop = y - T * .38;      // 箱口後緣
+  const frontTop = y - T * .06;     // 箱口前緣（角色從這裡以上才看得到）
+  const bottom = y + T * .33;       // 箱底
+  const hwF = T * .42;              // 前緣半寬
+  const hwB = T * .350;             // 後緣半寬
+
+  /* 後輪：先畫，上半會被箱身蓋住 → 一眼就看得出「四輪」 */
+  cartWheel(x - T * .378, y - T * .340, T * .150, spin + .5, 1);
+  cartWheel(x + T * .378, y - T * .340, T * .150, spin + .5, 1);
+
+  /* 後軸：一條深色橫樑把後輪連起來（沒有它，四顆輪子會像貼紙） */
+  ctx.fillStyle = '#4d2f13';
+  ctx.fillRect(x - T * .380, y - T * .385, T * .760, Math.max(2, T * .055));
+  ctx.fillStyle = 'rgba(255,226,180,.16)';
+  ctx.fillRect(x - T * .380, y - T * .385, T * .760, Math.max(1, T * .018));
+
+  /* 箱身外殼（深木色，會從前板邊緣露出一圈） */
+  ctx.fillStyle = '#6d431d';
   ctx.beginPath();
-  ctx.moveTo(x - T * .34, y - T * .10);
-  ctx.lineTo(x + T * .34, y - T * .10);
-  ctx.lineTo(x + T * .26, y + T * .18);
-  ctx.lineTo(x - T * .26, y + T * .18);
+  ctx.moveTo(x - hwB, backTop);
+  ctx.lineTo(x + hwB, backTop);
+  ctx.lineTo(x + hwF, bottom);
+  ctx.lineTo(x - hwF, bottom);
   ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#3d4a68';
-  ctx.fillRect(x - T * .34, y - T * .14, T * .68, T * .09);
-  ctx.fillStyle = 'rgba(255,255,255,.25)';
-  ctx.fillRect(x - T * .28, y - T * .06, T * .12, T * .16);
-  // 車輪
-  ctx.fillStyle = '#20283c';
-  ctx.beginPath(); ctx.arc(x - T * .20, y + T * .24, T * .09, 0, 6.283); ctx.fill();
-  ctx.beginPath(); ctx.arc(x + T * .20, y + T * .24, T * .09, 0, 6.283); ctx.fill();
-  ctx.fillStyle = '#8a97b8';
-  ctx.beginPath(); ctx.arc(x - T * .20, y + T * .24, T * .035, 0, 6.283); ctx.fill();
-  ctx.beginPath(); ctx.arc(x + T * .20, y + T * .24, T * .035, 0, 6.283); ctx.fill();
-  // 車上的玩家（稍微抬高＋小幅搖晃）
-  const savedY = p.y;
-  p.y = y - T * .18 + wob * .4;
+
+  /* 箱口內腔：深色，看得出「裡面是空的、人坐在裡面」 */
+  ctx.fillStyle = '#3a2311';
+  ctx.beginPath();
+  ctx.moveTo(x - hwB + T * .022, backTop + T * .010);
+  ctx.lineTo(x + hwB - T * .022, backTop + T * .010);
+  ctx.lineTo(x + hwF - T * .030, frontTop);
+  ctx.lineTo(x - hwF + T * .030, frontTop);
+  ctx.closePath(); ctx.fill();
+  // 內壁：後方一點點木色（有厚度感）
+  ctx.fillStyle = 'rgba(196,140,80,.30)';
+  ctx.beginPath();
+  ctx.moveTo(x - hwB + T * .022, backTop + T * .010);
+  ctx.lineTo(x + hwB - T * .022, backTop + T * .010);
+  ctx.lineTo(x + hwB - T * .060, backTop + T * .075);
+  ctx.lineTo(x - hwB + T * .060, backTop + T * .075);
+  ctx.closePath(); ctx.fill();
+
+  /* 車上的玩家：裁到箱口上緣 → 下半身自然在箱子裡（不會露出來） */
+  const savedY = p.y, savedInv = p.invuln;
+  p.y = y - T * .10 + wob * .4;
+  /* v5.79：車上的人不再跟著「受傷閃爍」——以前剛上車會有一半的帧整台車看不到人，
+     看起來像推車自己跑。這裡暫時把無敵時間歸零，畫完還原。 */
+  p.invuln = 0;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x - T * 2.4, y - T * 3.2, T * 4.8, (frontTop - (y - T * 3.2)) + 1);
+  ctx.clip();
   drawPlayer(p, T);
-  p.y = savedY;
+  ctx.restore();
+  p.y = savedY; p.invuln = savedInv;
+
+  /* ===== 前板：壓在角色前面（連「裁切邊」一起蓋掉）===== */
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x - hwF, frontTop);
+  ctx.lineTo(x + hwF, frontTop);
+  ctx.lineTo(x + hwF - T * .022, bottom);
+  ctx.lineTo(x - hwF + T * .022, bottom);
+  ctx.closePath();
+  ctx.fillStyle = '#a56b31';
+  ctx.fill();
+  ctx.clip();                                    // 之後的木紋／塗鴉都只在前板內
+
+  /* 木紋：三段橫板 ＋ 每段兩三條彎曲紋路 ＋ 一顆節疤 */
+  const ph = (bottom - frontTop) / 3;
+  for (let i = 0; i < 3; i++) {
+    const y0 = frontTop + ph * i;
+    // 板面色差（上亮下暗，木頭才有厚度）
+    ctx.fillStyle = i === 0 ? 'rgba(255,224,178,.16)'
+      : (i === 1 ? 'rgba(0,0,0,.05)' : 'rgba(0,0,0,.12)');
+    ctx.fillRect(x - hwF - 2, y0, hwF * 2 + 4, ph);
+    // 板縫
+    ctx.strokeStyle = 'rgba(66,34,12,.55)';
+    ctx.lineWidth = Math.max(1, T * .018);
+    ctx.beginPath();
+    ctx.moveTo(x - hwF, y0 + ph * .02);
+    ctx.lineTo(x + hwF, y0 + ph * .02);
+    ctx.stroke();
+    // 紋路（兩條深、一條淺）
+    ctx.strokeStyle = 'rgba(92,52,18,.42)';
+    ctx.lineWidth = Math.max(.8, T * .013);
+    for (let k = 0; k < 2; k++) {
+      const yy = y0 + ph * (.34 + k * .34);
+      ctx.beginPath();
+      ctx.moveTo(x - hwF + T * .03, yy);
+      ctx.bezierCurveTo(x - hwF * .4, yy - ph * .10, x + hwF * .35, yy + ph * .10, x + hwF - T * .03, yy - ph * .03);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(255,236,200,.14)';
+    ctx.beginPath();
+    ctx.moveTo(x - hwF + T * .05, y0 + ph * .62);
+    ctx.bezierCurveTo(x - hwF * .3, y0 + ph * .54, x + hwF * .3, y0 + ph * .70, x + hwF - T * .05, y0 + ph * .60);
+    ctx.stroke();
+    // 節疤（第 1、3 段各一顆）
+    if (i !== 1) {
+      const kx = x + (i ? -1 : 1) * T * .155, ky = y0 + ph * .52;
+      ctx.fillStyle = 'rgba(84,46,16,.62)';
+      ctx.beginPath(); ctx.ellipse(kx, ky, T * .040, T * .026, .3, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = 'rgba(52,26,8,.55)';
+      ctx.lineWidth = Math.max(.8, T * .012);
+      ctx.beginPath(); ctx.ellipse(kx, ky, T * .062, T * .040, .3, 0, 6.283); ctx.stroke();
+    }
+  }
+
+  /* 塗鴉：噴漆色塊 ＋ 一筆簽名 ＋ 滴痕（依車號固定，不會每幀亂跳） */
+  let cgi = 0;
+  try { cgi = Game.players.indexOf(p); } catch (e) { cgi = 0; }
+  if (cgi < 0) cgi = 0;
+  const GP = [['#ff4f86', '#ffd166'], ['#2fc7e8', '#b6e34a'],
+    ['#ff8a3d', '#a06bff'], ['#7bd45c', '#ff5c8a']];
+  const gp = GP[cgi % GP.length];
+  const faceH = bottom - frontTop;               // 前板總高
+  const fy = function (k) { return frontTop + faceH * k; };
+  ctx.globalAlpha = .38;
+  ctx.fillStyle = gp[0];
+  ctx.beginPath(); ctx.ellipse(x - T * .105, fy(.46), T * .175, faceH * .30, -.20, 0, 6.283); ctx.fill();
+  ctx.globalAlpha = .30;
+  ctx.fillStyle = gp[1];
+  ctx.beginPath(); ctx.ellipse(x + T * .125, fy(.62), T * .125, faceH * .24, .18, 0, 6.283); ctx.fill();
+  ctx.globalAlpha = 1;
+  // 簽名（一筆畫到底的波浪）
+  ctx.strokeStyle = gp[0];
+  ctx.lineWidth = Math.max(1.8, T * .052);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x - T * .235, fy(.44));
+  ctx.bezierCurveTo(x - T * .105, fy(.14), x - T * .020, fy(.86), x + T * .070, fy(.48));
+  ctx.bezierCurveTo(x + T * .135, fy(.18), x + T * .180, fy(.78), x + T * .235, fy(.50));
+  ctx.stroke();
+  // 四角星（第二色）—— 塗鴉常見的星星，比十字更像「畫上去的」
+  ctx.fillStyle = gp[1];
+  (function () {
+    const sx = x + T * .045, sy = fy(.26), sr = Math.max(3, T * .075);
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - sr);
+    ctx.quadraticCurveTo(sx + sr * .24, sy - sr * .24, sx + sr, sy);
+    ctx.quadraticCurveTo(sx + sr * .24, sy + sr * .24, sx, sy + sr);
+    ctx.quadraticCurveTo(sx - sr * .24, sy + sr * .24, sx - sr, sy);
+    ctx.quadraticCurveTo(sx - sr * .24, sy - sr * .24, sx, sy - sr);
+    ctx.closePath(); ctx.fill();
+  })();
+  // 滴痕
+  ctx.globalAlpha = .6;
+  ctx.lineWidth = Math.max(1, T * .028);
+  ctx.beginPath();
+  ctx.moveTo(x - T * .150, fy(.56)); ctx.lineTo(x - T * .150, fy(.90));
+  ctx.moveTo(x + T * .072, fy(.52)); ctx.lineTo(x + T * .072, fy(.80));
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.lineCap = 'butt';
+
+  /* 左右兩根角柱（木箱的框），順便壓住塗鴉的邊 */
+  [-1, 1].forEach(function (sd) {
+    const px0 = x + sd * (hwF - T * .058);
+    ctx.fillStyle = 'rgba(120,76,34,.85)';
+    ctx.fillRect(px0 - T * .026, frontTop, T * .052, faceH);
+    ctx.fillStyle = 'rgba(255,226,180,.14)';
+    ctx.fillRect(px0 - T * .026, frontTop, T * .014, faceH);
+  });
+  ctx.restore();
+
+  /* 前板外框 ＋ 四顆釘頭 ＋ 鐵角片（箱子看起來才會「釘過」） */
+  ctx.strokeStyle = 'rgba(56,28,10,.9)';
+  ctx.lineWidth = Math.max(1.4, T * .030);
+  ctx.beginPath();
+  ctx.moveTo(x - hwF, frontTop);
+  ctx.lineTo(x + hwF, frontTop);
+  ctx.lineTo(x + hwF - T * .022, bottom);
+  ctx.lineTo(x - hwF + T * .022, bottom);
+  ctx.closePath();
+  ctx.stroke();
+  const nails = [[-.34, .06], [.34, .06], [-.34, .52], [.34, .52], [-.20, .86], [.20, .86]];
+  nails.forEach(function (n) {
+    const nx = x + T * n[0] * .95, ny = frontTop + (bottom - frontTop) * n[1];
+    ctx.fillStyle = 'rgba(58,34,14,.85)';
+    ctx.beginPath(); ctx.arc(nx, ny, Math.max(1.3, T * .020), 0, 6.283); ctx.fill();
+    ctx.fillStyle = 'rgba(255,226,178,.45)';
+    ctx.beginPath(); ctx.arc(nx - T * .006, ny - T * .007, Math.max(.8, T * .009), 0, 6.283); ctx.fill();
+  });
+  // 鐵角片（左右下角）
+  ctx.fillStyle = 'rgba(150,163,185,.92)';
+  ctx.beginPath();
+  ctx.moveTo(x - hwF, bottom - T * .10);
+  ctx.lineTo(x - hwF + T * .085, bottom - T * .10);
+  ctx.lineTo(x - hwF + T * .075, bottom - T * .012);
+  ctx.lineTo(x - hwF + T * .028, bottom - T * .012);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x + hwF, bottom - T * .10);
+  ctx.lineTo(x + hwF - T * .085, bottom - T * .10);
+  ctx.lineTo(x + hwF - T * .075, bottom - T * .012);
+  ctx.lineTo(x + hwF - T * .028, bottom - T * .012);
+  ctx.closePath(); ctx.fill();
+
+  /* 箱口前緣（薄薄一片亮木，順便把角色的裁切邊藏起來） */
+  ctx.fillStyle = '#c98c4a';
+  ctx.beginPath();
+  ctx.moveTo(x - hwF, frontTop);
+  ctx.lineTo(x + hwF, frontTop);
+  ctx.lineTo(x + hwF, frontTop + T * .045);
+  ctx.lineTo(x - hwF, frontTop + T * .045);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,236,198,.35)';
+  ctx.fillRect(x - hwF, frontTop, hwF * 2, Math.max(1, T * .012));
+  // 角色跟箱口接觸的暗影（看起來是「陷進去」而不是「站在前面」）
+  ctx.fillStyle = 'rgba(20,10,2,.30)';
+  ctx.fillRect(x - hwF + T * .02, frontTop + T * .045, hwF * 2 - T * .04, Math.max(1.5, T * .030));
+
+  /* 前輪：站在最外層，最大最明顯 */
+  cartWheel(x - T * .290, y + T * .300, T * .180, spin, 0);
+  cartWheel(x + T * .290, y + T * .300, T * .180, spin, 0);
+
   // v4.11：推車上的「我」也用頭上圖示徽章（跟場內活著時一致），不再用名牌文字
   if (Game.mode === 'battle' && isMyPlayer(p)) drawMeBadge(x, y - T * .30 + wob * .4, R * .9, T);
   // v4.17：車上的人「手上一定拿著一顆炸彈」，而且長得跟放在地上一模一樣
