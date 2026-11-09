@@ -36,16 +36,25 @@ if (miss.length) fail('public/ 缺少必要檔案：' + miss.join('、'));
 const idx = fs.statSync(path.join(SRC, 'index.html')).size;
 if (idx < 200 * 1024) fail('public/index.html 只有 ' + kb(idx) + '，看起來是空檔或同步不完整');
 
-// 版本號交叉檢查：index.html 的 VERSION 要和 sw.js 的 SW_VERSION 對得上
+/* 版本號交叉檢查。
+   v5.74 起主程式搬到 js/main.js（index.html 只剩 HTML+CSS），所以 VERSION 要在
+   js/main.js 裡找；index.html 只留顯示用的 <span id="verTxt">。
+   這裡兩邊都驗 —— 顯示的版號跟程式的版號不同步，玩家看到的更新說明就會錯一版。 */
 const htmlTxt = fs.readFileSync(path.join(SRC, 'index.html'), 'utf8');
+const mainPath = path.join(SRC, 'js', 'main.js');
+const mainTxt = fs.existsSync(mainPath) ? fs.readFileSync(mainPath, 'utf8') : '';
 const swTxt = fs.readFileSync(path.join(SRC, 'sw.js'), 'utf8');
-const vm = htmlTxt.match(/const VERSION = '([\d.]+)'/);
+const vm = mainTxt.match(/const VERSION = '([\d.]+)'/) || htmlTxt.match(/const VERSION = '([\d.]+)'/);
 const sm = swTxt.match(/SW_VERSION = 'v([\d.]+)'/);
-if (!vm) fail('index.html 找不到 const VERSION');
+const vt = htmlTxt.match(/id="verTxt"[^>]*>\s*v?([\d.]+)/);
+if (!vm) fail(mainTxt ? 'js/main.js 找不到 const VERSION' : '找不到 js/main.js，index.html 也沒有 const VERSION');
 if (!sm) fail('sw.js 找不到 SW_VERSION');
-// index.html 的 VERSION 是 4.25，sw.js 的 SW_VERSION 是 v4.25.0 → 後者＝前者 + '.0'
+// 主程式的 VERSION 是 5.75，sw.js 的 SW_VERSION 是 v5.75.0 → 後者＝前者 + '.0'
 if (sm[1] !== vm[1] + '.0') {
-  fail('版本不一致：index.html ' + vm[1] + ' vs sw.js ' + sm[1] + '（三份 sw.js 要一起升）');
+  fail('版本不一致：VERSION ' + vm[1] + ' vs sw.js ' + sm[1] + '（三份 sw.js 要一起升）');
+}
+if (vt && vt[1] !== vm[1]) {
+  fail('版本不一致：index.html 顯示 ' + vt[1] + ' vs VERSION ' + vm[1] + '（#verTxt 忘了改）');
 }
 
 // ---- 2. 複製到 dist/site ----
@@ -72,4 +81,5 @@ console.log('✓ 靜態建置完成');
 console.log('  版本      v' + vm[1] + '（sw.js v' + sm[1] + ' 對得上）');
 console.log('  來源      public/ → dist/site/');
 console.log('  檔案      ' + count + ' 個，共 ' + kb(bytes));
-console.log('  主檔      index.html ' + kb(idx) + '（單檔，零依賴，不需要打包）');
+console.log('  主檔      js/main.js ' + kb(fs.statSync(mainPath).size) + '＋ index.html ' + kb(idx)
+  + '（零依賴，不需要轉譯）');

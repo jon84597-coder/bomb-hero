@@ -1864,6 +1864,24 @@ const AudioSys = (function () {
         I: { a: 2, p: 1, bass: [0, 0, 7, 0, 12, 0, 7, 3] },
         J: { a: 2, p: 1, bass: [0, 0, 7, 0, 12, 0, 7, 0] }
       },
+      /* v5.75：逐位置的鼓型（疊在 dyn 之上）。同一個 F 在五個位置打法都不同 ——
+         序的 F 只有大鼓、呼吸的 F 多一顆小鼓、收尾的 F 是銅鈸落地。
+         只寫 drum 的項目會自動繼承字母層的 a／p／bass。 */
+      dynAt: {
+        0:  { drum: 'k...............' },   // 序①：純心跳，小鼓還沒進來
+        3:  { drum: 'k.h.s.h.k.1.2.hh' },   // 主體末：tom 過門，暗示要換段
+        9:  { a: 0, p: 0, drum: 'k...s...k...s...' },
+        /* ↑ 展開末的「大洞」。原本這句是全曲最吵（441），下一句才是高潮 414 ——
+           最吵的地方在高潮前面，聽起來就沒有高潮。抽掉琶音與 power 只剩腳，
+           把音量先挖掉一半，第 10 句的 E 才有「衝上來」的感覺。 */
+        12: { drum: 'k.hsk.h.k.hsk.hs' },   // 高潮③：尾端多補一下，越收越緊
+        13: { drum: 'c.......k...s...' },   // 崩落：只剩銅鈸與稀疏的腳 → 掉進呼吸
+        15: { drum: 'k...............' },   // 呼吸末：真空（全曲最空）
+        16: { drum: 'k.h.r.s.k.h.r.s.' },   // 再起①：16 分 hi-hat＋鼓框，換一條腿走路
+        17: { p: 0, drum: 'k.hsk.h.k.h.....' },  // 再起②退一步，讓第 19 句的雙擊有意義
+        19: { drum: 'k.hsk.hsk.hsk.hs' },   // 再起④：雙擊，全曲最密
+        22: { drum: 'c.......k.......' }    // 收：銅鈸落地
+      },
       plan: [
         'F', 'F',                                   // ① 序：心跳，只有低音
         'A', 'A', 'B', 'A',                         // ② 主體：進 power
@@ -1903,15 +1921,23 @@ const AudioSys = (function () {
     const ph = warPhrases(def);
     const mel = [], bass = [], arp = [], pow = [], pow2 = [], drums = [];
     const sub = def.sub ? [] : null;      // v5.37：重低音軌（BOSS 曲用）
-    def.plan.forEach(function (k) {
+    def.plan.forEach(function (k, pi) {
       const P2 = ph[k] || ph.A;
       /* v5.75：段落動態（dyn）。以前一首曲子每一句的「織體」完全一樣，只有和弦與鼓型在換，
          所以聽 30 秒就覺得「一直在重複」。dyn 讓每一句可以：
            a: 0=抽掉琶音、1=正常、2=高八度（高潮）
            p: 0=抽掉 power chord（留一個洞給下一段）
            bass: 換一組低音型（極簡段只踩根音）
+           drum: 換一組鼓型（節奏本身的變化 —— 崩落／雙擊／只剩心跳）
          沒有 dyn 的曲子走原本路徑，一個位元都不變 —— 動態是「額外」的，不是改寫。 */
-      const dy = (def.dyn && def.dyn[k]) || null;
+      /* v5.75：dyn 是「按句庫字母」的 —— 同一個 F 出現五次就五個 F 全一樣。
+         但起伏要的是「同一個 F 第一次是心跳、第二次多一顆小鼓」。
+         所以再加一層 dynAt（0 起算的 plan 位置），優先於字母層。 */
+      const dyAt = (def.dynAt && def.dynAt[pi]) || null;
+      const dyKey = (def.dyn && def.dyn[k]) || null;
+      /* 兩層要「疊」不能「取代」：dynAt 只寫 drum 時，字母層的 a/p/bass 仍要生效，
+         否則呼吸段的 F 會因為 dynAt 只有鼓而被還原成滿編制。 */
+      const dy = (dyAt || dyKey) ? Object.assign({}, dyKey, dyAt) : null;
       const aOn = !dy || dy.a === undefined || dy.a > 0;
       const aOct = (dy && dy.a === 2) ? 12 : 0;
       const pOn = !dy || dy.p === undefined || dy.p > 0;
@@ -1945,8 +1971,11 @@ const AudioSys = (function () {
           pow2.push({ midi: null, len: 8 });
         }
       }
+      // v5.75：鼓型也可逐句換（dy.drum）。長度不必是 128 的因數 —— 用取模平鋪，
+      //   13／15 步的型自然會跟小節錯位，聽起來像 polyrhythm，比死板對齊更有生命。
+      const drPat = (dy && dy.drum) || P2.drum;
       for (let t2 = 0; t2 < 128; t2++) {
-        const ch = P2.drum.charAt(t2 % P2.drum.length);
+        const ch = drPat.charAt(t2 % drPat.length);
         drums.push({ kind: ch === '.' ? null : ch, len: 1 });
       }
     });

@@ -1,6 +1,7 @@
 // test/verify-v576.js —— v5.75
 //   ① 深淵曲重做：23 句、五段起伏、每軌等長、長度 4~9 分鐘
 //   ② 段落動態（dyn）真的生效：F 句抽掉 arp 與 power、D 句抽掉 power（留洞）、E 句 arp 高八度
+//   ②b 鼓型逐句變化（dynAt）：展開末挖洞、呼吸末真空、再起雙擊，且是疊在 dyn 上不是取代
 //   ③ dyn 是「額外」的：其他四首戰鬥曲一個音都沒變（沒有整句靜音）
 //   ④ 深淵 BGM 路由修正：Game.abyssNext 讓 startSolo 算 BGM 之前就釘回狀態
 //   ⑤ 打過深淵之後，教學／RPG／對戰／大逃殺都不會再播深淵曲（leaveSpecialRun）
@@ -80,6 +81,39 @@ head('2. 段落動態真的生效');
   ok(new Set(sig).size >= 3, '整首至少三種織體在輪替（不是一路同一種）', sig);
   ok(sig.indexOf('222') >= 0 && sig.slice(0, 2) === '00',
      '開頭是極簡、中段有連續三句以上的厚織體（有起伏）', sig);
+}
+
+head('2b. 鼓型逐句變化（dynAt）：節奏本身的起伏');
+{
+  const def = A.WAR_DEFS.abyssWar;
+  const s = A.compileWar('abyssWar');
+  const dh = [];
+  for (let i = 0; i < def.plan.length; i++) {
+    let n = 0;
+    for (let j = i * 128; j < (i + 1) * 128; j++) if (s.drums[j] && s.drums[j].kind) n++;
+    dh.push(n);
+  }
+  ok(!!def.dynAt && Object.keys(def.dynAt).length >= 6, '有逐位置鼓型表（dynAt）',
+     def.dynAt && Object.keys(def.dynAt).length);
+  ok(dh[0] < dh[1], '序第 1 句只有大鼓、第 2 句才進小鼓（開頭就有變化）', { p1: dh[0], p2: dh[1] });
+  ok(dh[9] < dh[8] * .7, '展開末（第 10 句）鼓砍到前一句七成以下 → 高潮前挖一個大洞',
+     { prev: dh[8], hole: dh[9] });
+  ok(dh[10] > dh[9] * 1.9, '第 11 句衝回兩倍以上（聽得出「衝上來」）', { hole: dh[9], peak: dh[10] });
+  ok(dh[15] < dh[14], '呼吸末（第 16 句）比前一句更空 → 進再起前真空', { p15: dh[14], p16: dh[15] });
+  ok(dh[17] < dh[16], '再起第 2 句退一步（不然第 4 句的雙擊就沒有意義）', { p17: dh[16], p18: dh[17] });
+  ok(Math.max.apply(null, dh) === dh[19], '全曲最密的一句在第 20 句（再起的雙擊）',
+     { peak: dh[19], max: Math.max.apply(null, dh) });
+  /* dynAt 是「疊」在 dyn 上，不是取代：只寫 drum 的項目要繼承 a/p/bass */
+  const st = phraseStats(s, def.plan.length, 128);
+  ok(st[15].a === 0 && st[15].p === 0,
+     'dynAt 只寫鼓時，字母層的 a／p 仍然生效（疊加不是取代）', st[15]);
+  const bad = Array.from(new Set(s.drums.map(d => d.kind).filter(Boolean)))
+    .filter(c => 'kshocr123'.indexOf(c) < 0);
+  ok(bad.length === 0, '鼓型只用合法鼓件（k/s/h/o/c/r/1/2/3）', bad);
+  ok(dh.filter(n => n === 0).length === 0, '沒有任何一句完全沒鼓（會變成斷掉）');
+  /* 節奏型本身的字串也要不同 —— 只改音量不算「節奏變化」 */
+  const pats = new Set(Object.keys(def.dynAt).map(k2 => def.dynAt[k2].drum || '').filter(Boolean));
+  ok(pats.size >= 7, '至少七種不同的鼓型在輪替', pats.size);
 }
 
 head('3. dyn 是額外的：其他曲子一個音都沒變');
