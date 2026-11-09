@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.68';
+const VERSION = '5.69';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4971,7 +4971,8 @@ function explodeBomb(b) {
 //       自己的坐騎火焰（src==='dino'）不會傷到自己，只會燒到別人
 function addFlame(cx, cy, type, dir, owner, src) {
   Game.flames.push({ cx: cx, cy: cy, type: type, dir: dir, t: .46, owner: owner || null, src: src || null,
-    ally: isAllyOwner(owner || null) });      // v5.33：自己人的火是藍色的
+    ally: isAllyOwner(owner || null),      // v5.33：自己人的火是藍色的
+    mine: isMyPlayer(owner || null) && !(owner && owner.__pet) });   // v5.69：外觀只給自己的火
   // v4.16：火焰會把樹叢／破屋燒掉（躲點是消耗品，炸過就沒了）
   const hzF = (Game.hazards && Game.hazards[cy]) ? Game.hazards[cy][cx] : null;
   if (hzF && hzF.type === 'hide') {
@@ -23545,7 +23546,9 @@ function drawRemoteChip(r) {
   ctx.lineWidth = 1;
 }
 // v3.8：黑亮圓球炸彈本體（畫在 translate 之後的原點，半徑 r）
-function drawBombArt(r, seed, hot, armed, remote, danger, ally) {
+//   v5.69：第 8 個參數 mine ＝ 這顆彈是不是玩家自己的。省略代表「是」
+//          （手上的彈、說明頁預覽、腳下警示圖都只有玩家會看到）。
+function drawBombArt(r, seed, hot, armed, remote, danger, ally, mine) {
   // ---- 球體：黑曜質感（原色黑）；v5.33 自己人的彈是同一個模子、白色漸層 ----
   const g = ctx.createRadialGradient(-r * .40, -r * .44, r * .10, 0, 0, r * 1.18);
   if (ally) {
@@ -23554,8 +23557,9 @@ function drawBombArt(r, seed, hot, armed, remote, danger, ally) {
     g.addColorStop(.60, '#d3dded');
     g.addColorStop(1, '#8d99b0');
   } else {
-    /* v5.56：炸彈外殼外觀 —— 染色後仍是「上亮下暗」的黑曜質感 */
-    const bs = skinBombStops();
+    /* v5.56：炸彈外殼外觀 —— 染色後仍是「上亮下暗」的黑曜質感
+       v5.69：只有自己的彈吃外觀，AI／怪物一律原色 */
+    const bs = (mine !== false) ? skinBombStops() : null;
     g.addColorStop(0, bs ? bs[0] : '#5b6172');
     g.addColorStop(.22, bs ? bs[1] : '#34384a');
     g.addColorStop(.60, bs ? bs[2] : '#15171f');
@@ -23681,7 +23685,9 @@ function drawBomb(b, T) {
   ctx.save();
   ctx.translate(x + sx, y + sy - lift);
   ctx.scale(scale, scale);
-  drawBombArt(r, b.seed, hot, armed, !!b.remoteArmed, danger, bombIsAlly(b));
+  // v5.69：外殼外觀只給自己放的彈（AI／怪物／BOSS 一律原色黑曜彈）
+  const mineBomb = !!(b.owner && !b.petOwner && isMyPlayer(b.owner));
+  drawBombArt(r, b.seed, hot, armed, !!b.remoteArmed, danger, bombIsAlly(b), mineBomb);
   ctx.restore();
 }
 // v3.8：水滴形火焰（下面圓、上面尖，比三顆圓更像真的火）
@@ -23711,10 +23717,18 @@ function skinAuraHex() {
   const c = skinCache();
   return (c && c.aura) ? c.aura : '';
 }
-function skinBombStops() {
+/* v5.69：外觀只套在「自己的」炸彈與爆風上。
+   舊版 skinFlamePal()／skinBombStops() 是全域的 —— AI 跟怪物放出來的彈、炸開的火
+   也跟著染成玩家選的顏色：整場都是玩家的皮膚，而且分不出那顆是誰放的。
+   現在兩個都吃一個「mine」，只有 isMyPlayer(owner) 才吃外觀，其餘一律原本的
+   黑曜彈體與橙火（BOSS 紫焰、隊友藍焰本來就有專屬配色，也不受外觀影響）。 */
+function skinBombStops(mine) {
+  if (mine === false) return null;
   const c = skinCache();
   return (c && c.bombStops && c.bombStops.length === 4) ? c.bombStops : null;
 }
+// 原本的橙火色停（沒有外觀時、以及 AI／怪物的火都用這一組）
+const FIRE_PAL_DEF = [ 'rgba(255,255,255,A)', 'rgba(255,246,214,A)', 'rgba(255,214,130,A)', 'rgba(255,150,50,A)', 'rgba(214,60,16,0)' ];
 
 function drawFlameBlob(cx, cy, r, cols, a) {
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
@@ -23737,6 +23751,10 @@ function drawFlame(f, T) {
   // BOSS 自己放的炸彈 → 紫色魔焰（owner 為 null 就是 BOSS）
   const bossFire = f.owner == null;
   const allyFire = !bossFire && (f.ally != null ? !!f.ally : isAllyOwner(f.owner));   // v5.33
+  // v5.69：爆風外觀只給自己的火。f.mine 是「入陣當下」的快照（owner 之後可能被清掉）
+  const mineFire = !bossFire && !allyFire && (f.mine != null ? !!f.mine : isMyPlayer(f.owner));
+  // 外觀色停在這裡先取一次（AI／怪物不走這條，維持原本的橙火）
+  const skinPal = mineFire ? skinFlamePal() : null;
   // v4.11：type = 'center'（爆心）／'mid'（臂中段）／'end'（臂末端）
   //   mid 段往「內側」伸、end 段往「內側」伸 → 上下左右四臂會連成一條粗管
   const isMid = f.type === 'mid', isEnd = f.type === 'end';
@@ -23766,7 +23784,7 @@ function drawFlame(f, T) {
     ? [ 'rgba(255,255,255,A)', 'rgba(246,214,255,A)', 'rgba(210,120,255,A)', 'rgba(150,40,230,A)', 'rgba(110,20,170,0)' ]
     : allyFire
     ? [ 'rgba(248,252,255,A)', 'rgba(150,206,255,A)', 'rgba(64,146,255,A)', 'rgba(26,92,238,A)', 'rgba(8,36,150,0)' ]
-    : (skinFlamePal() || [ 'rgba(255,255,255,A)', 'rgba(255,246,214,A)', 'rgba(255,214,130,A)', 'rgba(255,150,50,A)', 'rgba(214,60,16,0)' ]);
+    : (skinPal || FIRE_PAL_DEF);
   // 主體：一整團白熱火（不是小圓球，是塞滿整格）
   drawFlameBlob(cx, cy, s * .82, cols, k);
   // 翻滾的雲團：8 顆沿著「臂的垂直方向」左右鋪開 + 沿臂方向往前推
@@ -28497,7 +28515,7 @@ function paintTouchIcons(dt) {
         const T = cssW * .76;
         g.save();
         g.translate(cssW / 2 - T / 2, cssW / 2 - T / 2 + T * .05);
-        drawFlameOn(g, { cx: 0, cy: 0, t: .30, dir: null, owner: 0 }, T);
+        drawFlameOn(g, { cx: 0, cy: 0, t: .30, dir: null, owner: 0, mine: true }, T);
         g.restore();
         // v4.11：吐火冷卻倒數（灰罩 ＋ 秒數）；冷卻完發亮提示可用
         const me = (Game.players.filter(function (q) { return !q.ai; })[0]) || Game.players[0];
@@ -32858,9 +32876,9 @@ Screen.show('title');
 
 // 測試介面（不影響遊戲）
 // v3.8：在指定的畫布上畫炸彈／火焰（說明頁與目檢腳本共用；暫時把 ctx 換過去再還原）
-function drawBombOn(g, r, seed, hot, armed, remote) {
+function drawBombOn(g, r, seed, hot, armed, remote, mine) {
   const old = ctx; ctx = g;
-  try { drawBombArt(r, seed, hot, armed, remote); } finally { ctx = old; }
+  try { drawBombArt(r, seed, hot, armed, remote, 0, false, mine); } finally { ctx = old; }
 }
 function drawFlameOn(g, f, T) {
   const old = ctx; ctx = g;

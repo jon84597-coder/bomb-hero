@@ -46,8 +46,11 @@ ok(/bombStops/.test(skinsSrc) && /mix\(BOMB_BASE/.test(skinsSrc), '炸彈外殼�
 /* 主檔端：熱路徑只讀快取，且一律有回退原色 */
 ok(/function skinCache\(\)/.test(mainSrc), '主檔有 skinCache()');
 ok(/function skinFlamePal\(\)/.test(mainSrc) && /function skinAuraHex\(\)/.test(mainSrc), '有火焰與光環的讀取函式');
-ok(/skinFlamePal\(\) \|\| \[ 'rgba\(255,255,255,A\)'/.test(mainSrc), '火焰取不到外觀時回退原本的橙色');
-ok(/const bs = skinBombStops\(\);/.test(mainSrc), '炸彈球體使用外觀色停');
+/* v5.69：外觀只給「自己的」彈與火 —— 原本的橙火抽成 FIRE_PAL_DEF，
+   AI／怪物／隊友一律吃預設或專屬配色，skinBombStops 也多一個 mine 參數。 */
+ok(/const FIRE_PAL_DEF = \[ 'rgba\(255,255,255,A\)'/.test(mainSrc) && /skinPal \|\| FIRE_PAL_DEF/.test(mainSrc),
+  '火焰取不到外觀時回退原本的橙色');
+ok(/const bs = \(mine !== false\) \? skinBombStops\(\) : null;/.test(mainSrc), '炸彈球體使用外觀色停（只有自己的彈）');
 ok(/ctx\.globalCompositeOperation = 'lighter'/.test(mainSrc) && /auraHex/.test(mainSrc), '光環用 lighter 疊色（不會變成灰圈）');
 
 /* 行為：模組真的能載入並算出快取 */

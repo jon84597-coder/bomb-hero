@@ -38,7 +38,7 @@ sec('② 字典與說明');
 ok(dict.indexOf('solo.bossgo|') < 0, '字典沒有 solo.bossgo 這一列');
 const rows = dict.split('\n').filter(function (l) { return /^[a-z0-9][a-zA-Z0-9._]*\|/.test(l); });
 ok(rows.every(function (r) { return r.split('|').length === 6; }), '字典每列仍是 6 欄（共 ' + rows.length + ' 列）');
-ok(rows.length === 2013, '字典 2,013 條（移除 2 條死文案後）');
+ok(rows.length === 2014, '字典 2,014 條（v5.69 加 1 條「外觀只套在自己身上」）');
 
 /* ---------------------------------------------------------------- ③ */
 sec('③ 正常路線：第 40 關＝最終魔王關');

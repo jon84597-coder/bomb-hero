@@ -1923,6 +1923,7 @@ rpg.ptHint|前 3 格純點數，第 4 格起「1 點 ＋ 金幣」|前 3 格纯�
 sk.title|外觀收藏|外观收藏|Appearance|外見コレクション|외형 컬렉션
 sk.close|關閉|关闭|Close|閉じる|닫기
 sk.tip|這些外觀不能用金幣買 —— 只能靠玩遊戲拿到。|这些外观不能用金币买 —— 只能靠玩游戏拿到。|These can't be bought with coins — you earn them by playing.|これらはコインで買えません —— プレイして獲得するだけです。|이 외형은 코인으로 살 수 없습니다 — 플레이로만 얻습니다.
+sk.mineOnly|只套用在你自己放的炸彈與爆風 —— AI 與怪物一律維持原本顏色。|只套用在你自己放的炸弹与爆风 —— AI 与怪物一律维持原本颜色。|Applies only to your own bombs and blasts — AI and monsters always keep their default colors.|自分が置いた爆弾と爆風にだけ適用 —— AI とモンスターは常に元の色のまま。|내가 놓은 폭탄과 폭발에만 적용 — AI와 몬스터는 항상 원래 색을 유지합니다.
 sk.count|已收集 {a} / {b}|已收集 {a} / {b}|Collected {a} / {b}|{a} / {b} 収集済み|{a} / {b} 수집
 sk.on|使用中|使用中|In use|使用中|사용 중
 sk.tapUse|點一下換上|点一下换上|Tap to wear|タップで装着|탭하여 착용

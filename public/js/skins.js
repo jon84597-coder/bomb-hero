@@ -485,6 +485,8 @@
       if (c) c.textContent = T('sk.close', null, '關閉');
       var tip = root.querySelector('.sktip');
       if (tip) tip.textContent = T('sk.tip', null, '這些外觀不能用金幣買 —— 只能靠玩遊戲拿到。');
+      var mo = root.querySelector('.skmine');
+      if (mo) mo.textContent = T('sk.mineOnly', null, '只套用在你自己放的炸彈與爆風 —— AI 與怪物一律維持原本顏色。');
     } else root.classList.remove('on');
   }
 
@@ -501,6 +503,8 @@
       + '#skinPanel .skttl{font:700 17px/1.3 inherit;color:#3a2c18;flex:1}'
       + '#skinPanel .skcnt{font:600 12px/1 inherit;color:#8a7a5c}'
       + '#skinPanel .sktip{font-size:12px;color:#8a7a5c;margin:0 0 10px;line-height:1.5}'
+      /* v5.69：外觀只影響自己 —— 講清楚，免得玩家以為 AI 的彈也會變色 */
+      + '#skinPanel .skmine{font-size:11px;color:#9b8c70;margin:-4px 0 10px;line-height:1.5}'
       + '#skinPanel .sktabs{display:flex;gap:8px;margin-bottom:12px}'
       + '#skinPanel .sktab{flex:1;border:1px solid rgba(120,96,60,.24);background:#fff;border-radius:12px;'
       + 'padding:8px 6px;cursor:pointer;display:flex;flex-direction:column;gap:2px;align-items:center}'
@@ -568,6 +572,7 @@
     d.innerHTML = '<div class="skbox">' +
       '<div class="skhd"><span class="skttl">外觀收藏</span><span class="skcnt"></span></div>' +
       '<p class="sktip"></p>' +
+      '<p class="skmine"></p>' +
       '<div class="sktabs"></div>' +
       '<div class="skbody"></div>' +
       '<div class="skfoot"><button class="skclose">關閉</button></div>' +
