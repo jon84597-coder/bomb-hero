@@ -2080,6 +2080,19 @@ deal.petup|🎉 升級完成！|🎉 升级完成！|🎉 Upgrade complete!|🎉
 deal.ticket|🎟️ 買到 1 張大逃殺門票|🎟️ 买到 1 张大逃杀门票|🎟️ Got 1 Battle Royale ticket|🎟️ バトロワチケットを1枚獲得|🎟️ 배틀로얄 티켓 1장 획득
 deal.bag|🎒 3 件補給已放進背包|🎒 3 件补给已放进背包|🎒 3 supplies added to your bag|🎒 補給3点をバッグに入れました|🎒 보급 3종을 가방에 넣었습니다
 starter.tip|再通關 {n} 關，會解鎖更多模式|再通关 {n} 关，会解锁更多模式|Clear {n} more stages to unlock more modes|あと {n} ステージで他のモードが解放|{n} 스테이지 더 클리어하면 모드가 열립니다
+gate.tag|通關 {n} 關解鎖|通关 {n} 关解锁|Clear {n} stages|{n} ステージで解放|{n} 스테이지 클리어 시 해제
+gate.badge|🔒 通關 {n} 關解鎖|🔒 通关 {n} 关解锁|🔒 Clear {n} stages|🔒 {n} ステージで解放|🔒 {n} 스테이지 클리어
+gate.rpgTitle|RPG 養成還沒開放|RPG 养成还没开放|RPG Mode isn't open yet|RPG モードはまだ解放されていません|RPG 모드는 아직 열리지 않았습니다
+gate.rpgBody|RPG 養成是一整條成長線：升級、學技能、帶隨從、打章節王，比冒險模式複雜得多。先通關 {n} 關把放彈和走位練熟，這裡就會自動打開。|RPG 养成是一整条成长线：升级、学技能、带随从、打章节王，比冒险模式复杂得多。先通关 {n} 关把放弹和走位练熟，这里就会自动打开。|RPG Mode is a full progression layer - levels, skills, companions and chapter bosses. Clear {n} stages first, then it opens automatically.|RPG モードはレベル・スキル・仲間・章ボスまで含む成長要素です。まず {n} ステージクリアすると自動で解放されます。|RPG 모드는 레벨업, 스킬, 동료, 챕터 보스까지 포함한 성장 시스템입니다. 먼저 {n} 스테이지를 클리어하면 자동으로 열립니다.
+gate.brTitle|大逃殺還沒開放|大逃杀还没开放|Battle Royale isn't open yet|バトロワはまだ解放されていません|배틀로얄은 아직 열리지 않았습니다
+gate.brBody|大逃殺是 100 人同時混戰、毒圈一路縮小，節奏比冒險模式快很多 —— 還不會放彈、不會躲，進去只會一直被追著跑。先到「冒險模式 → 單人闖關」通關 {n} 關，這裡就會自動打開。|大逃杀是 100 人同时混战、毒圈一路缩小，节奏比冒险模式快很多 —— 还不会放弹、不会躲，进去只会一直被追着跑。先到「冒险模式 → 单人闯关」通关 {n} 关，这里就会自动打开。|Battle Royale throws 100 players into one shrinking arena - far faster than Adventure. Clear {n} stages in Adventure then Solo and it opens automatically.|バトロワは 100 人が同時に戦い、毒サークルが縮小し続けるので冒険モードよりずっと速いです。冒険モード → ソロで {n} ステージクリアすると自動で解放されます。|배틀로얄은 100명이 동시에 싸우고 자기장이 계속 좁혀져 모험 모드보다 훨씬 빠릅니다. 모험 모드 → 싱글에서 {n} 스테이지 클리어하면 자동으로 열립니다.
+gate.battleTitle|多人對戰還沒開放|多人对战还没开放|Multiplayer isn't open yet|対戦モードはまだ解放されていません|멀티플레이는 아직 열리지 않았습니다
+gate.battleBody|多人對戰 2～8 人、每人一條命，比的是放彈時機和走位。先通關 {n} 關把基本操作練熟，這裡就會自動打開。|多人对战 2～8 人、每人一条命，比的是放弹时机和走位。先通关 {n} 关把基本操作练熟，这里就会自动打开。|Multiplayer pits 2-8 players against each other with one life each. Clear {n} stages to get the basics down, then it opens automatically.|対戦は 2〜8 人・残機 1 で、置き方と立ち回りが勝負です。{n} ステージクリアして基本を覚えると自動で解放されます。|대전은 2~8명, 각 1목숨으로 폭탄 타이밍과 위치 선정이 핵심입니다. {n} 스테이지를 클리어해 기본을 익히면 자동으로 열립니다.
+gate.prog|已通關 {a} / {b} 關|已通关 {a} / {b} 关|Cleared {a} / {b}|クリア {a} / {b}|클리어 {a} / {b}
+gate.why|解鎖條件|解锁条件|How to unlock|解放条件|해제 조건
+gate.notBroken|不是壞掉 —— 只是要先把冒險模式玩到這裡。|不是坏掉 —— 只是要先把冒险模式玩到这里。|Not a bug - just a gate. Clear a few stages first.|不具合ではありません。冒険モードを先に進めてください。|오류가 아닙니다. 모험 모드를 먼저 진행해 주세요.
+gate.go|去冒險模式通關|去冒险模式通关|Go clear stages|冒険モードへ|모험 모드로 이동
+gate.back|知道了|知道了|Got it|わかった|알겠습니다
 today.stage|第 {n}/{m} 關|第 {n}/{m} 关|Stage {n}/{m}|第 {n}/{m} 面|{n}/{m} 스테이지
 today.stars|★ {n}/{m}|★ {n}/{m}|★ {n}/{m}|★ {n}/{m}|★ {n}/{m}
 today.abyss|深淵 {n} 層|深渊 {n} 层|Abyss {n}|深淵 {n} 層|심연 {n}층

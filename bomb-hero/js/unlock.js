@@ -65,9 +65,9 @@
      包含「老玩家 = 已走完最後一階」的判定，所以只改數字就整體生效。
      ------------------------------------------- */
   var GATES = [
-    { id: 'rpg', sel: 'btnRpg', need: 3, ico: '🎲', n: 'RPG 養成' },
-    { id: 'br', sel: 'btnBR', need: 6, ico: '🏝️', n: '大逃殺' },
-    { id: 'multi', sel: 'btnMulti', need: 9, ico: '⚔️', n: '多人對戰' }
+    { id: 'rpg', sel: 'btnRpg', need: 3, ico: '🎲', n: 'RPG 養成', tk: 'rpg' },
+    { id: 'br', sel: 'btnBR', need: 6, ico: '🏝️', n: '大逃殺', tk: 'br' },
+    { id: 'multi', sel: 'btnMulti', need: 9, ico: '⚔️', n: '多人對戰', tk: 'battle' }
   ];
 
   /* ---------------- 進度 ---------------- */
@@ -156,7 +156,12 @@
       /* class 不會被 innerHTML 重寫沖掉，所以每輪都重新確認一次即可 */
       if (open) el.classList.remove('locked');
       else el.classList.add('locked');
-      el.setAttribute('data-aigain', open ? '' : String(g.need));
+      /* v5.80：徽章直接寫「🔒 通關 N 關解鎖」—— 以前只有一個鎖頭圖示，
+         新手看不出「到底要幹嘛」，只覺得點不動。 */
+      el.setAttribute('data-aigain', open ? '' : T('gate.badge', { n: g.need }, '🔒 通關 {n} 關解鎖'));
+      el.setAttribute('data-needn', String(g.need));
+      el.setAttribute('data-gk', g.tk || g.id);
+      el.setAttribute('data-gn', g.n);
       if (!open) {
         el.setAttribute('title', T('ul.need', { n: g.need }, '通關第 {n} 關解鎖'));
         /* 刻意「不」設 aria-disabled：主檔的手把／鍵盤導航會跳過
@@ -189,6 +194,76 @@
     } catch (e3) {}
   }
 
+  /* ---------------- 說明卡（v5.80） ----------------
+     以前點到鎖住的卡只有一句 2.8 秒的 toast，玩家常常整段漏看，回頭還是
+     「點了沒反應，是不是壞了」。現在開一張卡：為什麼鎖、已通關幾關、還差幾關、
+     一顆「去冒險模式通關」直接把玩家帶到該去的地方。
+     ------------------------------------------- */
+  var CARD_ID = 'gateOv';
+
+  function closeCard() {
+    var ov = document.getElementById(CARD_ID);
+    if (ov) ov.classList.remove('on');
+  }
+
+  function ensureCard() {
+    var ov = document.getElementById(CARD_ID);
+    if (ov) return ov;
+    ov = document.createElement('div');
+    ov.id = CARD_ID;
+    ov.className = 'bhgate';
+    ov.innerHTML =
+      '<div class="bhgbox" role="dialog" aria-modal="true" aria-labelledby="bhgT">' +
+        '<div class="bhgico">🔒</div>' +
+        '<h3 id="bhgT"></h3>' +
+        '<p id="bhgB"></p>' +
+        '<div class="bhgline"><span id="bhgL"></span><b id="bhgN"></b></div>' +
+        '<div class="bhgtrack"><i id="bhgF"></i></div>' +
+        '<p class="bhgnote" id="bhgNote"></p>' +
+        '<button type="button" class="bhgbtn" id="bhgGo"></button>' +
+        '<button type="button" class="bhgbtn ghost" id="bhgBack" data-close="1"></button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', function (e) { if (e.target === ov) closeCard(); });
+    var bk = document.getElementById('bhgBack');
+    if (bk) bk.addEventListener('click', function () {
+      try { var A = api('AudioSys'); if (A && A.sfx) A.sfx('click'); } catch (e) {}
+      closeCard();
+    });
+    var go = document.getElementById('bhgGo');
+    if (go) go.addEventListener('click', function () {
+      try { var A = api('AudioSys'); if (A && A.sfx) A.sfx('click'); } catch (e) {}
+      closeCard();
+      /* 直接按首頁那顆「冒險模式」—— 走原本的入口，不另外拼一套流程 */
+      var adv = document.getElementById('btnAdventure');
+      if (adv) { try { adv.click(); } catch (e2) {} }
+    });
+    return ov;
+  }
+
+  function openCard(tk, need, name) {
+    try {
+      var ov = ensureCard();
+      var cur = Math.min(cleared(), need);
+      var set = function (id, txt) {
+        var e = document.getElementById(id);
+        if (e) e.textContent = txt;
+      };
+      set('bhgT', T('gate.' + tk + 'Title', null, '🔒 ' + (name || '')));
+      set('bhgB', T('gate.' + tk + 'Body', { n: need }, ''));
+      set('bhgL', T('gate.why', null, '解鎖條件'));
+      set('bhgN', T('gate.prog', { a: cur, b: need }, ''));
+      set('bhgNote', T('gate.notBroken', null, ''));
+      set('bhgGo', T('gate.go', null, '去冒險模式通關'));
+      set('bhgBack', T('gate.back', null, '知道了'));
+      var f = document.getElementById('bhgF');
+      if (f && f.style) f.style.width = Math.max(4, Math.round(cur / Math.max(1, need) * 100)) + '%';
+      ov.classList.add('on');
+      try { var A = api('AudioSys'); if (A && A.sfx) A.sfx('hurt'); } catch (e) {}
+      return true;
+    } catch (e) { return false; }
+  }
+
   /* ---------------- 點擊攔截 ----------------
      捕獲階段攔下來，主檔的監聽就不會跑 —— 不用改任何既有 handler。
      ------------------------------------------- */
@@ -199,15 +274,19 @@
     e.preventDefault();
     e.stopPropagation();
     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-    var need = el.getAttribute('data-aigain') || '';
-    var msg = '';
+    var need = parseInt(el.getAttribute('data-needn') || '0', 10) || 0;
+    var tk = el.getAttribute('data-gk') || '';
+    var gn = el.getAttribute('data-gn') || '';
     try {
       var A = api('AudioSys'); if (A && A.sfx) A.sfx('click');
     } catch (x) {}
-    msg = T('ul.need', { n: need }, '通關第 {n} 關解鎖');
+    /* v5.80：不再只丟一句 2.8 秒的 toast（玩家常整段漏看，回頭還是「點了沒反應」），
+       改成開一張說明卡：為什麼鎖、已通關幾關、還差幾關、一顆按鈕直接帶去冒險模式。 */
+    if (tk && openCard(tk, need, gn)) return;
     try {
       var b = BH();
-      if (b && b.toast) b.toast('🔒 ' + msg + '（' + T('ul.now', { n: cleared() }, '現在 {n} 關') + '）', 2.8);
+      if (b && b.toast) b.toast('🔒 ' + T('ul.need', { n: need }, '通關第 {n} 關解鎖') +
+        '（' + T('ul.now', { n: cleared() }, '現在 {n} 關') + '）', 2.8);
     } catch (x2) {}
   }
 
@@ -244,13 +323,64 @@
 
       /* 樣式：用 ::before 畫鎖角標（.mbtn 的 ::after 已經被果凍效果佔用） */
       if (!document.getElementById('ulStyle')) {
+        /* v5.80：鎖標從「一顆鎖頭」改成寫著「🔒 通關 N 關解鎖」的小膠囊 ——
+           新手要的是「還要做什麼」，不是一個看得懂但沒資訊的圖示。 */
         var css = ''
-          + '#homeMenu .mbtn.locked,#bhPick .qbtn.locked{opacity:.60;filter:grayscale(.42) brightness(.96)}'
-          + '#homeMenu .mbtn.locked::before,#bhPick .qbtn.locked::before{'
-          + 'content:"🔒";position:absolute;top:5px;right:7px;font-size:12px;line-height:1;'
-          + 'opacity:.92;z-index:6;pointer-events:none}'
-          + '#bhPick .qbtn.locked::before{top:50%;right:12px;transform:translateY(-50%)}'
-          + '#homeMenu .mbtn.locked:active,#bhPick .qbtn.locked:active{transform:none}';
+          + '#homeMenu .mbtn.locked,#bhPick .qbtn.locked{opacity:.66;filter:grayscale(.38) brightness(.98)}'
+          /* 素材區的卡片圖示是「流式」排在標題上方（.mgrid 那條規則），鎖標也照這個位置走，
+             不要絕對定位 —— 絕對定位會壓到下面那行說明文字。選擇器刻意掛兩個 id，
+             才壓得過 body.touch.home-wide 那條 (1,5,1) 的窄卡規則。 */
+          + '#scr-title #homeMenu .mgrid .mbtn.locked::before{'
+          + 'content:attr(data-aigain);position:static;left:auto;top:auto;right:auto;bottom:auto;'
+          + 'transform:none;display:block;width:max-content;max-width:100%;height:auto;'
+          + 'margin:0 auto 4px;padding:2px 9px;border-radius:999px;'
+          + 'font-size:10px;font-weight:900;line-height:1.7;letter-spacing:0;white-space:nowrap;'
+          + 'color:#4a3208;text-shadow:none;text-align:center;'
+          + 'background:linear-gradient(180deg,#ffeab5,#ffc861);'
+          + 'box-shadow:0 2px 6px -2px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.8);'
+          + 'pointer-events:none}'
+          + 'body.touch #scr-title #homeMenu .mgrid .mbtn.locked::before{'
+          + 'font-size:8.5px;padding:1px 7px;margin:0 auto 3px;line-height:1.6}'
+          /* 冒險模式面板裡的 RPG 按鈕是橫排小按鈕，鎖標疊在文字上居中 */
+          + '#bhPick .qbtn.locked::before{content:attr(data-aigain);position:absolute;'
+          + 'left:50%;top:50%;transform:translate(-50%,-50%);padding:2px 9px;border-radius:999px;'
+          + 'font-size:10px;font-weight:900;line-height:1.7;letter-spacing:0;white-space:nowrap;'
+          + 'color:#4a3208;text-shadow:none;background:linear-gradient(180deg,#ffeab5,#ffc861);'
+          + 'box-shadow:0 2px 6px -2px rgba(0,0,0,.45);pointer-events:none;z-index:6}'
+          /* 鎖住的卡不該還掛著「HOT 推薦」—— 一邊推薦一邊鎖住，玩家只會更困惑 */
+          + '#scr-title #homeMenu .mbtn.locked .hotTag,'
+          + '#scr-title #homeMenu .mbtn.locked .betaTag{display:none!important}'
+          + '#homeMenu .mbtn.locked:active,#bhPick .qbtn.locked:active{transform:none}'
+          + '#gateOv.bhgate{position:fixed;inset:0;z-index:96;display:none;align-items:center;'
+          + 'justify-content:center;padding:18px;background:rgba(12,6,24,.62);'
+          + '-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}'
+          + '#gateOv.bhgate.on{display:flex;animation:bhgIn .2s ease-out both}'
+          + '@keyframes bhgIn{from{opacity:0}to{opacity:1}}'
+          + '#gateOv .bhgbox{width:100%;max-width:340px;padding:15px 15px 11px;border-radius:18px;'
+          + 'text-align:center;border:2px solid #e5b978;'
+          + 'background:linear-gradient(180deg,#fffdf6,#fff3d8);'
+          + 'box-shadow:0 18px 40px -14px rgba(0,0,0,.72),inset 0 2px 0 #fff;'
+          + 'animation:bhgPop .24s cubic-bezier(.2,.9,.3,1.05) both}'
+          + '@keyframes bhgPop{from{transform:scale(.92) translateY(10px)}to{transform:none}}'
+          + '#gateOv .bhgico{font-size:32px;line-height:1}'
+          + '#gateOv h3{margin:5px 0 0;font-size:16.5px;font-weight:900;color:#7a3d00;letter-spacing:.02em}'
+          + '#gateOv p{margin:8px 0 10px;font-size:12.5px;line-height:1.72;color:#4a3418;text-align:left}'
+          + '#gateOv .bhgline{display:flex;justify-content:space-between;align-items:baseline;'
+          + 'font-size:11.5px;font-weight:800;color:#8a6a2a}'
+          + '#gateOv .bhgline b{font-size:12.5px;color:#b4500a}'
+          + '#gateOv .bhgtrack{height:8px;margin-top:5px;border-radius:999px;overflow:hidden;'
+          + 'background:rgba(120,90,40,.2);box-shadow:inset 0 1px 2px rgba(0,0,0,.18)}'
+          + '#gateOv .bhgtrack i{display:block;height:100%;width:0;border-radius:999px;'
+          + 'background:linear-gradient(90deg,#ffd166,#f0932b);transition:width .3s ease}'
+          + '#gateOv .bhgnote{margin:8px 0 1px;font-size:10.5px;line-height:1.6;color:#8a7350}'
+          + '#gateOv .bhgbtn{display:block;width:100%;margin-top:8px;padding:11px 14px;border:0;'
+          + 'border-radius:12px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;'
+          + 'color:#fff;letter-spacing:.04em;background:linear-gradient(180deg,#ffa161,#e8622b);'
+          + 'box-shadow:0 4px 0 #a8411a,0 10px 18px -10px rgba(200,80,20,.8),inset 0 2px 0 rgba(255,255,255,.35)}'
+          + '#gateOv .bhgbtn:active{transform:translateY(2px);'
+          + 'box-shadow:0 2px 0 #a8411a,inset 0 2px 0 rgba(255,255,255,.35)}'
+          + '#gateOv .bhgbtn.ghost{background:linear-gradient(180deg,#f6f1e4,#e5dbc6);color:#6a5426;'
+          + 'box-shadow:0 3px 0 #c3b795,inset 0 2px 0 rgba(255,255,255,.85)}';
         var st = document.createElement('style');
         st.id = 'ulStyle';
         st.textContent = css;

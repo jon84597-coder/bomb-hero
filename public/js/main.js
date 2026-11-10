@@ -160,7 +160,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.79';
+const VERSION = '5.80';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -39840,7 +39840,7 @@ function bhDialogVisible(el) {
   return true;
 }
 const BH_DIALOG_IDS = ['codexModal', 'achModal', 'rankModal', 'onModal', 'avModal',
-  'multiPick', 'giftPanel', 'verLog', 'skinPanel'];
+  'multiPick', 'giftPanel', 'verLog', 'skinPanel', 'gateOv'];
 function bhOpenDialogs() {
   const out = [];
   BH_DIALOG_IDS.forEach(function (id) {
