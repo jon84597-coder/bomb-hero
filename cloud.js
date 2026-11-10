@@ -291,6 +291,11 @@ function pointsTotalFor(rpgOrCleared) {
   return Math.min(MAX_POINTS, BASE_POINTS + Math.floor(lv / 2));
 }
 /* 每關金幣獎勵（每 4 關一個主題，越後面越多） */
+/* ⚠️ v5.87：以下兩個函式是 v4.x 的「過關獎勵」舊公式，**目前沒有任何地方呼叫**。
+   金幣已經在 v5.86 改成前端 p.coin 通道（過關基數 75＋每 4 關 +5），
+   這裡留在 40＋每 4 關 +10。若哪天有人把 goldFor() 接回去算金幣，
+   玩家會拿到一份「舊公式」的獎勵、而且跟畫面上的數字不一致。
+   要復活之前，先把公式改成跟 main.js 一致，或直接刪掉這兩個函式（與它們的導出）。 */
 function stageReward(stage) {
   const s = clampInt(stage, 1, MAX_STAGE, 1);
   return 40 + Math.floor((s - 1) / 4) * 10;
@@ -520,6 +525,36 @@ function applyClear(rpg, stage, meta, opts) {
 const SAVE_MAX_GOLD = 100000000;
 const SAVE_MAX_TICKET = 9999;
 
+/* v5.87：外觀（含花金幣買的）要能跨裝置 —— id 只有三類，用樣式擋掉任何怪字串。
+   注意：這裡**不驗證「怎麼拿到的」**，前端才是權威；伺服器只負責格式與長度。 */
+const SKIN_ID_RE = /^(flame|aura|bomb)\.[a-z]{2,16}$/;
+function sanitizeSkins(v) {
+  if (!v || typeof v !== 'object') return null;
+  const own = {};
+  const src = (v.own && typeof v.own === 'object') ? v.own : {};
+  let n = 0;
+  for (const k in src) {
+    if (n >= 48) break;
+    if (!Object.prototype.hasOwnProperty.call(src, k) || !SKIN_ID_RE.test(k) || !src[k]) continue;
+    own[k] = 1;
+    n++;
+  }
+  const eq = {};
+  const E = (v.eq && typeof v.eq === 'object') ? v.eq : {};
+  const slots = ['flame', 'aura', 'bomb'];
+  for (let i = 0; i < slots.length; i++) {
+    const id = String(E[slots[i]] || '');
+    if (id === 'custom' || SKIN_ID_RE.test(id)) eq[slots[i]] = id.slice(0, 24);
+  }
+  const custom = {};
+  const C = (v.custom && typeof v.custom === 'object') ? v.custom : {};
+  for (let i = 0; i < slots.length; i++) {
+    const h = String(C[slots[i]] || '').toLowerCase();
+    if (/^#[0-9a-f]{6}$/.test(h)) custom[slots[i]] = h;
+  }
+  return { own: own, eq: eq, custom: custom };
+}
+
 function sanitizeSave(obj) {
   const o = (obj && typeof obj === 'object') ? obj : {};
   const out = { v: 1, ts: Date.now() };
@@ -537,10 +572,13 @@ function sanitizeSave(obj) {
       const kind = p.kind.slice(0, 12).replace(/[^a-z]/g, '');
       if (!kind || !PET_KINDS[kind] || seen[kind]) continue;
       seen[kind] = 1;
-      pets.push({ kind: kind, ch: clampInt(p.ch, 0, 99, 0) });
+      /* v5.87：以前這裡把 lv 丟掉 —— 本機修好了合併邏輯，但雲端存檔本身沒等級，
+         換一台裝置還原時又退回 Lv.1。伺服器這一份必須留住。 */
+      pets.push({ kind: kind, ch: clampInt(p.ch, 0, 99, 0), lv: clampInt(p.lv, 1, 5, 1) });
     }
   }
   out.pets = pets;
+  out.skins = sanitizeSkins(o.skins);
 
   const tut = (o.tut && typeof o.tut === 'object') ? o.tut : {};
   out.tut = { home: !!tut.home, play: !!tut.play };
@@ -3354,7 +3392,12 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           if (!gate(req, res, 'saveput', 20, 4)) return true;
           const body = await readJson(req, 65536);
           if (!body || !body.save || typeof body.save !== 'object') return fail(res, 400, 'BAD_BODY'), true;
-          acc.save = sanitizeSave(body.save);
+          /* v5.87：舊版前端送來的存檔沒有 skins 欄位 —— 若直接覆蓋，
+             玩家花金幣買的外觀會在「還沒更新的分頁」存一次檔之後全部消失。
+             缺欄位 = 這台裝置還不知道有這回事，沿用伺服器上既有的那一份。 */
+          const fresh = sanitizeSave(body.save);
+          if (fresh.skins == null && acc.save && acc.save.skins) fresh.skins = acc.save.skins;
+          acc.save = fresh;
           acc.saveRev = (acc.saveRev || 0) + 1;
           acc.saveTs = Date.now();
           /* v5.14：存檔只記時間對客服沒有用。記下「第幾次、多大、目前進度多少」，
@@ -3724,6 +3767,7 @@ module.exports = {
   paidRefund: paidRefund, RESPEC_FEE: RESPEC_FEE,   // v5.46
   pointsTotalFor: pointsTotalFor, goldFor: goldFor, stageReward: stageReward,
   applyClear: applyClear, spendPoint: spendPoint,
+  sanitizeSave: sanitizeSave, sanitizeSkins: sanitizeSkins,   // v5.87：給測試直接驗清洗規則
   LV_MAX: LV_MAX, XP_MAX: XP_MAX, xpNeed: xpNeed, lvOfXp: lvOfXp, xpTotalOfLv: xpTotalOfLv,
   foeLvOfStage: foeLvOfStage, foeXpOf: foeXpOf, stageXpOf: stageXpOf, ensureXp: ensureXp,
   defaultRpg: defaultRpg, validateAlloc: validateAlloc, spendPoint: spendPoint,

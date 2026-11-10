@@ -1950,7 +1950,7 @@ rpg.leftRow|剩餘 {n} 點|剩余 {n} 点|Points left: {n}|残り {n} ポイン�
 rpg.ptHint|前 3 格純點數，第 4 格起「1 點 ＋ 金幣」|前 3 格纯点数，第 4 格起「1 点 ＋ 金币」|the first 3 slots cost points only; from the 4th each slot costs points plus coins|最初の3マスはポイントのみ、4マス目からは「1ポイント＋コイン」|처음 3칸은 포인트만, 4번째 칸부터는 「1포인트 ＋ 코인」
 sk.title|外觀收藏|外观收藏|Appearance|外見コレクション|외형 컬렉션
 sk.close|關閉|关闭|Close|閉じる|닫기
-sk.tip|這些外觀不能用金幣買 —— 只能靠玩遊戲拿到。|这些外观不能用金币买 —— 只能靠玩游戏拿到。|These can't be bought with coins — you earn them by playing.|これらはコインで買えません —— プレイして獲得するだけです。|이 외형은 코인으로 살 수 없습니다 — 플레이로만 얻습니다.
+sk.tip|大部分外觀要靠玩遊戲解鎖；💰 金色邊框的那幾件可以用金幣買。|大部分外观要靠玩游戏解锁；💰 金色边框的那几件可以用金币买。|Most skins are earned by playing; the 💰 gold-framed ones can be bought.|ほとんどの外観はプレイで解放；💰 金枠のものはゴールドで購入できます。|대부분의 외형은 플레이로 해금되고, 💰 금색 테두리만 골드로 구매할 수 있습니다.
 sk.mineOnly|只套用在你自己放的炸彈與爆風 —— AI 與怪物一律維持原本顏色。|只套用在你自己放的炸弹与爆风 —— AI 与怪物一律维持原本颜色。|Applies only to your own bombs and blasts — AI and monsters always keep their default colors.|自分が置いた爆弾と爆風にだけ適用 —— AI とモンスターは常に元の色のまま。|내가 놓은 폭탄과 폭발에만 적용 — AI와 몬스터는 항상 원래 색을 유지합니다.
 sk.count|已收集 {a} / {b}|已收集 {a} / {b}|Collected {a} / {b}|{a} / {b} 収集済み|{a} / {b} 수집
 sk.on|使用中|使用中|In use|使用中|사용 중
@@ -2060,6 +2060,11 @@ abyss.bestLine|你的最深紀錄：第 {n} 層|你的最深纪录：第 {n} 层
 abyss.retry|🕳️ 再挑戰一次|🕳️ 再挑战一次|🕳️ Dive again|🕳️ もう一度挑戦|🕳️ 다시 도전
 abyss.locked|深淵要 40 關全破之後才會開啟|深渊要 40 关全破之后才会开启|The Abyss opens after clearing all 40 stages|深淵は 40 ステージ全クリアで解放|심연은 40 스테이지 완주 후 열립니다
 abyss.needMore|還差 {n} 關全破|还差 {n} 关全破|{n} more stages to go|あと {n} ステージ|{n} 스테이지 남음
+sk.how.gold|💰 {n} 金幣|💰 {n} 金币|💰 {n} gold|💰 {n} ゴールド|💰 {n} 골드
+sk.askBuy|💰 再點一次購買（{n} 金幣）|💰 再点一次购买（{n} 金币）|💰 Tap again to buy ({n} gold)|💰 もう一度タップで購入（{n}）|💰 한 번 더 탭하면 구매 ({n})
+sk.noGold|金幣不足，還差 {n}|金币不足，还差 {n}|Not enough gold — {n} short|ゴールド不足（あと {n}）|골드 부족 (부족분 {n})
+sk.bought|✨ 已解鎖「{n}」|✨ 已解锁「{n}」|✨ Unlocked "{n}"|✨ 「{n}」を解放|✨ 「{n}」해금
+abyss.needGold|深淵入場要 300 金幣，還差 {n}|深渊入场要 300 金币，还差 {n}|The Abyss entry costs 300 gold — {n} short|深淵の入場料は 300 ゴールド（あと {n}）|심연 입장료 300 골드 (부족분 {n})
 wk.title|本週限制挑戰|本周限制挑战|Weekly Challenge|今週の制限チャレンジ|주간 제한 챌린지
 wk.mod.fuse|引信固定 +60%，不能靠強化縮短|引信固定 +60%，不能靠强化缩短|Fuse is fixed at +60% — upgrades can't shorten it|導火線は固定 +60%（強化で短縮不可）|도화선 고정 +60% (강화로 단축 불가)
 wk.mod.nopet|不能帶隨從上場|不能带随从上场|No companions allowed|仲間は連れて行けません|동료 없이 도전

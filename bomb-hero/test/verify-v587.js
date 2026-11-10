@@ -1,7 +1,7 @@
 // test/verify-v587.js —— v5.86：金幣經濟重構 ＋ 兩個線上問題
 //   ① addScore：分數與金幣分流（p.score 不動、p.coin 才是錢）
 //   ② 關卡內：磚 10/2、小怪 3~7、BOSS 30~45、擊殺 8/15/30/60
-//   ③ 過關：65＋每 4 關 +5；前 3 關首通 +100；結算看 p.coin
+//   ③ 過關：75＋每 4 關 +5（v5.87 抬基數）；前 3 關首通 +100；結算看 p.coin
 //   ④ 外圍：分享／簽到／任務／週榜／BR／門票／改名／深淵 全部下修
 //   ⑤ 商品：消耗品降到「一局一瓶」；隨從維持 8,000
 //   ⑥ 存檔：Save.merge 不再吃掉隨從等級（Lv.5 上線後退回 1 的元兇）
@@ -45,7 +45,7 @@ head('① addScore：分數歸排行榜、金幣歸商店');
 head('② 八個計分點都走 addScore');
 {
   const spots = [
-    [/addScore\(p, 10, 2\)/, '炸軟磚'],
+    [/addScore\(p, 10, brickCoinOf\(p, 2\)\)/, '炸軟磚（v5.87 起走封頂）'],
     [/addScore\(q, 500, 30\)/, '踢炸彈擊殺'],
     [/addScore\(q, 1000, 60\)/, '坐騎踩殺'],
     [/addScore\(p, 200, 15\)/, '技能擊殺'],
@@ -106,11 +106,11 @@ head('④ 過關獎勵與結算');
   const before = B3.Shop.gold();
   B3.updateSolo(1 / 60);
   const gain = B3.Shop.gold() - before;
-  const base = 65 + Math.floor((4 - 1) / 4) * 5;
-  ok(gain === 120 + base, '第 4 關：本關金幣 120 ＋ 過關 65 = 185（實得 ' + gain + '）');
+  const base = 75 + Math.floor((4 - 1) / 4) * 5;
+  ok(gain === 120 + base, '第 4 關：本關金幣 120 ＋ 過關 75 = 195（實得 ' + gain + '）');
   ok(gain < 300, '★ 999 分的排行榜分數沒有被換成金幣（舊版會給 1,000+）', gain);
-  ok(/const base = 65 \+ Math\.floor\(\(cleared - 1\) \/ 4\) \* 5;|let base = 65 \+ Math\.floor\(\(cleared - 1\) \/ 4\) \* 5;/.test(src),
-    '過關公式 65＋每 4 關 +5');
+  ok(/base = 75 \+ Math\.floor\(\(cleared - 1\) \/ 4\) \* 5;/.test(src),
+    '過關公式 75＋每 4 關 +5');
 }
 
 head('⑤ 前 3 關首通 +100（起手保護）');
@@ -132,7 +132,7 @@ head('⑤ 前 3 關首通 +100（起手保護）');
   const before = B4.Shop.gold();
   B4.updateSolo(1 / 60);
   const gain = B4.Shop.gold() - before;
-  ok(gain === 65 + 100, '第 3 關首通 = 65 ＋ 100 起手金 = 165（實得 ' + gain + '）');
+  ok(gain === 75 + 100, '第 3 關首通 = 75 ＋ 100 起手金 = 175（實得 ' + gain + '）');
 }
 
 head('⑥ 陣亡也把本關金幣帶走');

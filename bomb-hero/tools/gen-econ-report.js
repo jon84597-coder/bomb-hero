@@ -123,13 +123,13 @@ const html = `<!DOCTYPE html>
 <style>${CSS}</style></head><body><div class="wrap">
 
 <h1>金幣經濟評估與定價方案</h1>
-<div class="sub">爆爆英雄 BOMB HERO ｜ 評估對象 v5.85 ｜ <b style="color:#4fd8c8">已實裝於 v5.86</b> ｜ 2026-11-11</div>
+<div class="sub">爆爆英雄 BOMB HERO ｜ 評估對象 v5.85 ｜ <b style="color:#4fd8c8">已實裝於 v5.86，v5.87 補上消耗端</b> ｜ 2026-11-11</div>
 
 <div class="kpi">
-  <div class="k"><div class="t">單局金幣產出</div><div class="v red">541</div><div class="d">→ 提案 <b class="teal">198</b>（−63.4%）</div></div>
-  <div class="k"><div class="t">每小時產出 GPH</div><div class="v red">12,984</div><div class="d">→ 提案 <b class="teal">4,752</b></div></div>
-  <div class="k"><div class="t">清空商店所需</div><div class="v red">25.8 h</div><div class="d">→ 提案 <b class="teal">70.6 h</b>（×2.7）</div></div>
-  <div class="k"><div class="t">關內分數佔比</div><div class="v red">84%</div><div class="d">→ 提案 <b class="teal">55%</b>（其餘轉為過關獎勵）</div></div>
+  <div class="k"><div class="t">單局金幣產出</div><div class="v red">541</div><div class="d">→ 實裝 <b class="teal">183</b>（−66%，v5.87 實測）</div></div>
+  <div class="k"><div class="t">每小時產出 GPH</div><div class="v red">12,984</div><div class="d">→ 實裝 <b class="teal">4,392</b></div></div>
+  <div class="k"><div class="t">清空功能內容</div><div class="v red">25.8 h</div><div class="d">→ 實裝 <b class="teal">76.3 h</b>（含外觀 86.4 h）</div></div>
+  <div class="k"><div class="t">關內金幣佔比</div><div class="v red">84%</div><div class="d">→ 實裝 <b class="teal">47%</b>（打贏正式過半）</div></div>
 </div>
 
 <div class="sec">
@@ -200,8 +200,8 @@ const html = `<!DOCTYPE html>
 <tbody>
 <tr><td class="nm">永久內容總價</td><td class="num">335,300</td><td class="dim">三隻隨從 24,000 ＋ 滿級 180,000 ＋ RPG 永久 16,800 ＋ 屬性點 114,500</td></tr>
 <tr><td class="nm">目標清空時間</td><td class="num">70 h</td><td class="dim">三個月 × 每天 45 分鐘</td></tr>
-<tr><td class="nm">目標 GPH</td><td class="num gold">4,752</td><td class="dim">335,300 ÷ 70</td></tr>
-<tr><td class="nm">單局目標產出</td><td class="num gold">198</td><td class="dim">4,752 ×（2.5 分鐘 ÷ 60）</td></tr>
+<tr><td class="nm">目標 GPH</td><td class="num gold">4,752</td><td class="dim">335,300 ÷ 70 ｜ <b>實測 4,392</b></td></tr>
+<tr><td class="nm">單局目標產出</td><td class="num gold">198</td><td class="dim">4,752 ×（2.5 分鐘 ÷ 60）｜ <b>實測 183</b></td></tr>
 </tbody></table>
 <h3>消耗品定價錨：一局 = 一瓶</h3>
 <p>小藥水應略低於單局產出（<b>0.9 局</b>），復活幣對應一次「值得救回來的失誤」（<b>4 局</b>）。這兩個錨定住，其餘商品按層級等比展開即可。</p>
@@ -226,7 +226,7 @@ const html = `<!DOCTYPE html>
 <table>
 <thead><tr><th>項目</th><th class="num">現行</th><th class="num">提案</th><th>效果</th></tr></thead>
 <tbody>
-<tr><td class="nm">單關公式</td><td class="num">40＋⌊(關−1)/4⌋×10</td><td class="num hi">65＋⌊(關−1)/4⌋×5</td><td class="dim">40～130 → 65～113</td></tr>
+<tr><td class="nm">單關公式</td><td class="num">40＋⌊(關−1)/4⌋×10</td><td class="num hi">75＋⌊(關−1)/4⌋×5</td><td class="dim">40～130 → 75～123（v5.87 抬基數）</td></tr>
 <tr><td class="nm">章節 BOSS 首通</td><td class="num">—</td><td class="num hi">＋80</td><td class="dim">新增；只給首次，重刷不給</td></tr>
 <tr><td class="nm">關內分數佔比</td><td class="num">84%</td><td class="num hi">55%</td><td class="dim">「打贏」從配角變成主收入</td></tr>
 </tbody></table>
@@ -284,10 +284,11 @@ const html = `<!DOCTYPE html>
 <h3>① 存量補償：不要動老玩家的錢包</h3>
 <p>老玩家已經有 3～10 萬金幣。若按新價格，他們一次就能掃空商店。這是<b>無法避免也應該接受</b>的歷史存量 —— 強行削減會造成信任傷害。正確做法是提供「回收池」讓存量有出口：</p>
 <ul>
-<li><b>外觀輪盤</b>（2,000／次，只出外觀不出數值）—— 吸收存量最有效</li>
-<li><b>深淵門票</b>（500／次，可重複）—— 高難度內容的入場費</li>
-<li><b>每日限購補給</b>（打折但限量）—— 讓日常有固定消耗</li>
+<li><b>外觀</b>—— 最後做成「直接定價」而不是抽獎：5 件金幣收藏共 <b>44,000</b>（5,000～15,000），玩家可以指定想要哪一個</li>
+<li><b>深淵入場費</b>（<b>300</b>／次，可重複）—— 唯一「每天都能付」的出口</li>
+<li><b>每日限購補給</b>（6～7 折、每天 3 件）—— v5.73 就有，是唯一「今天不買就虧」的機制</li>
 </ul>
+<div class="note"><b>✅ 已於 v5.87 實裝</b>（見第 11 節）。原本建議的「外觀輪盤 2,000／次」改成直接定價 —— 同一個目的，但少一層隨機、玩家更願意付。</div>
 <h3>② 前 3 關起手保護</h3>
 <p>新玩家第 1 關只有 133 金幣，買不起任何東西會挫敗。建議<b>前 3 關首通各 +100</b>，讓他打完教學就能買第一瓶藥水 —— 第一次消費體驗必須在 10 分鐘內發生。</p>
 </div>
@@ -307,7 +308,46 @@ const html = `<!DOCTYPE html>
 </tbody></table>
 </div>
 
-<footer>爆爆英雄 · 經濟評估 v5.86-econ ｜ 數據由 <code>test/_econ_audit.js</code> 逐關重建產生</footer>
+<div class="sec">
+<h2><span class="n">11</span>實裝結果（v5.86 產出端 ＋ v5.87 消耗端）</h2>
+<p>v5.86 只做完「產出端」—— 錢變少了，但<b>錢還是沒地方花</b>。v5.87 補的是另一半：<b>磚幣封頂、王關首通、深淵入場費、五件金幣外觀</b>。以下數字全部由 <code>test/_econ_audit.js</code> 從程式讀出（公式抓原始碼、掉幣直接抽樣 <code>foeDrop</code>）。</p>
+<table>
+<thead><tr><th>指標</th><th class="num">目標</th><th class="num">實測</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td class="nm">單局均值</td><td class="num">160 ～ 220</td><td class="num hi">183</td><td class="dim">✓</td></tr>
+<tr><td class="nm">一輪 40 關（穩態）</td><td class="num">7,000 ～ 8,500</td><td class="num hi">7,319</td><td class="dim">✓ 首通那一輪 8,259</td></tr>
+<tr><td class="nm">關內金幣佔比</td><td class="num">≤ 60%</td><td class="num hi">47%</td><td class="dim">✓ 從 84% 一路降到 47%</td></tr>
+<tr><td class="nm">曲線單調性</td><td class="num">後段 &gt; 前段 20%+</td><td class="num hi">+32.1%</td><td class="dim">✓ 147 → 165 → 183 → 198</td></tr>
+<tr><td class="nm">單關極差</td><td class="num">≤ 2 倍</td><td class="num hi">143 ～ 217</td><td class="dim">✓ 原本 133 ～ 278</td></tr>
+<tr><td class="nm">清空功能內容</td><td class="num">60 ～ 80 h</td><td class="num hi">76.3 h</td><td class="dim">✓ 含外觀收藏 44,000 → 86.4 h</td></tr>
+</tbody></table>
+
+<h3>11-1 磚幣封頂 60：把「地圖大小」從收入公式裡拿掉</h3>
+<p>v5.86 之後最大的殘留問題是：<b>收入仍由「這張地圖剛好有多大」決定</b>。第 12 關 71 塊磚給 142 幣（佔該關 60%），第 37 關只有 20 塊給 40 幣。同一章節內差到 3 倍，玩家的體感是「這關比較肥」而不是「這關比較難」。封頂之後單關區間從 <b>133～278 壓到 143～217</b>。</p>
+<p style="margin-top:8px">副作用：總量掉到 6,931（低於 7,000 下限），所以過關基數從 65 抬到 <b>75</b>。結果是關內佔比進一步降到 47% —— <b>「打贏」第一次真正過半</b>。</p>
+
+<h3>11-2 消耗端：錢要有地方去</h3>
+<p>功能內容（隨從＋滿級＋永久強化＋配點）共 335,300，以 4,392 GPH 計約 <b>76 小時</b> 清空。之後如果沒有出口，金幣就只是數字 —— 這正是 v5.85 之前「貶值」的真正原因。v5.87 補上三個出口：</p>
+<table>
+<thead><tr><th>出口</th><th class="num">金額</th><th>可重複</th><th>說明</th></tr></thead>
+<tbody>
+<tr><td class="nm">外觀收藏（5 件）</td><td class="num hi">44,000</td><td class="dim">否</td><td class="dim">5,000／6,000／8,000／10,000／15,000。唯一「用金幣買」的外觀；行為解鎖的 19 件維持不變</td></tr>
+<tr><td class="nm">深淵入場費</td><td class="num hi">300／次</td><td class="dim">是</td><td class="dim">要 40 關全破才開，不影響新手；每層給 60、破紀錄 +40，仍淨賺</td></tr>
+<tr><td class="nm">每日特惠（3 件）</td><td class="num hi">6～7 折</td><td class="dim">每日</td><td class="dim">v5.73 就有；是唯一「今天不買就虧」的機制</td></tr>
+</tbody></table>
+<p style="margin-top:12px">老玩家手上的 3～10 萬存量<b>沒有被削減</b>（那是信任問題，不是數值問題），改由這三個出口慢慢吸收。44,000 的外觀大約等於再玩 9 小時 —— 正好接在功能內容清空之後。</p>
+
+<h3>11-3 過程中修掉的兩個真 bug</h3>
+<ul>
+<li><b>隨從等級被伺服器吃掉</b>：v5.86 修好了前端合併，但 <code>cloud.js</code> 的存檔清洗仍只留 <code>kind／ch</code> —— 換裝置還原時又退回 Lv.1。現在雲端那一份也保留 <code>lv</code>，並夾在 1～5。</li>
+<li><b>買來的外觀會消失</b>：外觀原本只存在本機，換裝置就重來。現在跟著雲端存檔走，「已擁有」合併時取聯集；舊版前端送來的檔案（沒有外觀欄位）<b>不會洗掉</b>已買的東西。</li>
+</ul>
+
+<h3>11-4 驗收腳本重寫</h3>
+<p>舊的 <code>_econ_audit.js</code> 把係數寫死在裡面（<code>soft × 10</code>、簽到 1,640、分享 3,000），改完經濟它照樣印出舊數字 —— 拿它驗收只會得到錯的結論。現在：公式用原始碼抓（抓不到就退出）、掉幣直接抽樣 <code>foeDrop</code>、外圍讀模組真表，最後對照本節門檻，<b>超出範圍以非 0 結束</b>。</p>
+</div>
+
+<footer>爆爆英雄 · 經濟評估 v5.86-econ（v5.87 結算）｜ 數據由 <code>test/_econ_audit.js</code> 逐關重建產生</footer>
 </div></body></html>`;
 
 const out = path.join(__dirname, '..', '..', 'docs', 'econ-v586.html');

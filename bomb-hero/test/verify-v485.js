@@ -46,7 +46,7 @@ head('③ 整包存檔 API');
 ok(/p === '\/api\/save\/get'/.test(cloud), '有 /api/save/get');
 ok(/p === '\/api\/save\/put'/.test(cloud), '有 /api/save/put');
 ok(/p\.indexOf\('\/api\/save\/'\) === 0/.test(cloud), '/api/save/* 併進需登入的分支');
-ok(/acc\.save = sanitizeSave\(body\.save\)/.test(cloud), '寫入前一定過 sanitizeSave');
+ok(/const fresh = sanitizeSave\(body\.save\);/.test(cloud) && /acc\.save = fresh;/.test(cloud), '寫入前一定過 sanitizeSave（v5.87 起先清洗再保留舊外觀）');
 ok(/acc\.saveRev = \(acc\.saveRev \|\| 0\) \+ 1/.test(cloud), '每次寫入遞增 rev');
 
 head('④ 伺服器端清洗（防改前端刷數值）');

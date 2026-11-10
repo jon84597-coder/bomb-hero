@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.86';
+const VERSION = '5.87';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6231,7 +6231,7 @@ function destroySoft(x, y) {
       spawnItem(x, y, h);
     }
   }
-  Game.players.forEach(function (p) { addScore(p, 10, 2); });   // v5.86：磚只給 2 幣
+  Game.players.forEach(function (p) { addScore(p, 10, brickCoinOf(p, 2)); });   // v5.87：磚 2 幣，每關封頂 60
   const T = Game.T;
   burst(x * T + T / 2, y * T + T / 2, '#c98d4b', 8, 130);
   try { Tut.hit('soft'); } catch (e) {}
@@ -6254,6 +6254,18 @@ const DROP_ITEMS = ['fire', 'fire', 'bomb', 'bomb', 'speed', 'speed',
 /* v5.86：分數與金幣分流 —— p.score 是排行榜／星級／成就的依據，一個字都不動；
    p.coin 才是商店金幣。以前兩者 1:1，炸一塊磚給 10 分就等於 10 金幣，
    結果 74% 的金幣產出來自「開路」這種必然行為，金幣因此失去稀缺性。 */
+/* v5.87：磚金幣每關封頂 —— 收入不該由「這張地圖剛好很大」決定。
+   實測第 12 關 71 塊磚＝142 幣（佔該關收入 60%），第 37 關只有 20 塊＝40 幣，
+   同一章節內差到 3 倍。封頂 60 之後，普通關的鋸齒被壓平，
+   「後段比前段肥」才真的來自難度而不是地圖尺寸。 */
+const BRICK_COIN_CAP = 60;
+function brickCoinOf(p, unit) {
+  if (!p) return 0;
+  const left = Math.max(0, BRICK_COIN_CAP - (p.brickCoin | 0));
+  const give = Math.min(unit, left);
+  p.brickCoin = (p.brickCoin | 0) + give;
+  return give;
+}
 function addScore(p, n, coin) {
   if (!p) return;
   p.score = (p.score | 0) + n;
@@ -11167,6 +11179,10 @@ function abyssPerkDef(id) {
 }
 
 const Abyss = (function () {
+  /* v5.87：深淵入場費 —— 這是目前唯一「可以重複付」的金幣出口。
+     老玩家手上 3~10 萬金幣，光靠一次性商品吸不完；深淵要 40 關全破才開，
+     收這筆不會影響新手，而且每層給 20 幣、破紀錄 +40，實際上仍是淨賺。 */
+  const ABYSS_ENTRY = 300;
   let best = 0;
   try { best = Math.max(0, parseInt(localStorage.getItem(ABYSS_KEY), 10) || 0); } catch (e) { best = 0; }
 
@@ -11391,6 +11407,7 @@ const Abyss = (function () {
     start: start, layerClear: layerClear, finish: finish,
     bestOf: bestOf, layerOf: layerOf, active: active, unlocked: unlocked, layerStage: layerStage,
     perkSum: perkSum, layerGold: layerGold, msCheck: msCheck,
+    entryFee: function () { return ABYSS_ENTRY; },
     msList: function () { return MS_LIST.slice(); },
     perks: function () { return (Game.abyss && Game.abyss.perks) || []; }
   };
@@ -11592,6 +11609,7 @@ function startSolo(stage, bossRush, daily) {
   Game.startLives = p.lives;             // ❤️ 的補命上限跟著這一關的初始生命走
   p.score = 0;
   p.coin = 0;                   // v5.86：本關金幣（與排行分數脫鉤）
+  p.brickCoin = 0;              // v5.87：本關磚幣計數（封頂 60 用）
   Game.players.push(p);
   p.name = settings.playerName || '';   // v4.8：固定暱稱
   Screen.show('game');
@@ -13492,11 +13510,15 @@ function updateSolo(dt) {
         try {
           // v4.21：關卡裡賺到的金幣（HUD 上那顆 💰）就是你的商城金幣 ——
           //   過關時「本關金幣 + 過關獎勵」一起進商店錢包
-          /* v5.86：過關獎勵拉到 65~113（原本 40~130），讓「打贏」成為主要收入；
-             關內金幣只佔 55%，不再由「炸了幾塊磚」決定這一關賺多少。 */
-          let base = 65 + Math.floor((cleared - 1) / 4) * 5;
+          /* v5.86：過關獎勵拉到 65~113（原本 40~130），讓「打贏」成為主要收入。
+             v5.87：磚幣封頂 60 之後總量掉到 6,931（低於 7,000 的目標下限），
+             把基數再抬到 75 —— 關內佔比因此降到 47%，「打贏」正式過半。 */
+          let base = 75 + Math.floor((cleared - 1) / 4) * 5;
           // v5.86：前 3 關首通各 +100 —— 第一次消費體驗必須在 10 分鐘內發生
           try { if (cleared <= 3 && cleared >= (Solo.unlocked | 0)) base += 100; } catch (e2) {}
+          /* v5.87：章節王關首通再 +80 —— 王本來就是單局最肥的一筆，首通給一筆大的，
+             讓「推到王關」有明確期待；重刷不給，避免刷王洗幣。 */
+          try { if (isBossStage(cleared) && cleared >= (Solo.unlocked | 0)) base += 80; } catch (e2) {}
           /* v5.64：復活過的話，陣亡當下已經先結算過一段 —— 這裡只補差額。 */
           const coins = Math.max(0, Math.round(p.coin || 0) - Math.max(0, Game.paidCoin | 0));
           Game.paidCoin = Math.max(0, Math.round(p.coin || 0));
@@ -32690,6 +32712,18 @@ function showAdvPick(on) {
     AudioSys.ensure(); AudioSys.sfx('click');
     if (!ensureNickname()) return;
     if (!Abyss.unlocked()) { AudioSys.sfx('hurt'); toast(t('abyss.locked'), 3); return; }
+    /* v5.87：入場費在這裡收 —— 在 showAdvPick(false) 之前，
+       付不起就留在原地，不會出現「選單關了、遊戲沒開」的懸空狀態。 */
+    const fee = Abyss.entryFee ? Abyss.entryFee() : 0;
+    if (fee > 0) {
+      const r = Shop.spend(fee);
+      if (!r || !r.ok) {
+        AudioSys.sfx('nope');
+        const need = Math.max(0, fee - (Shop.gold ? Shop.gold() : 0));
+        toast(t('abyss.needGold', { n: need }), 3);
+        return;
+      }
+    }
     showAdvPick(false);
     try { Abyss.start(1); } catch (e) { try { toast('深淵載入失敗，請重新整理', 2.6); } catch (e2) {} }
   });
@@ -39423,6 +39457,7 @@ function startRpg(stage, opt) {
   p.lives = 1;
   p.score = 0;
   p.coin = 0;                   // v5.86：本關金幣（與排行分數脫鉤）
+  p.brickCoin = 0;              // v5.87：本關磚幣計數（封頂 60 用）
   Game.players.push(p);
   Screen.show('game');
   resizeView();
@@ -41343,7 +41378,7 @@ function rpgAdjust(k, d) {
 
     function snapshot() {
       const st = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {}, gift: null,
-        ach: null, rank: null, soc: null };
+        ach: null, rank: null, soc: null, skins: null };
       try { st.stage = num(Solo.unlocked, 1, 1, SOLO_STAGES); } catch (e) {}
       try {
         const s = Shop.state ? Shop.state() : null;
@@ -41360,6 +41395,9 @@ function rpgAdjust(k, d) {
       try { st.ach = (typeof Ach !== 'undefined' && Ach.state) ? Ach.state() : null; } catch (e) {}
       try { st.rank = (typeof Rank !== 'undefined' && Rank.state) ? Rank.state() : null; } catch (e) {}
       try { st.soc = (typeof Social !== 'undefined' && Social.state) ? Social.state() : null; } catch (e) {}
+      /* v5.87：外觀（含花金幣買的）跟著帳號走。以前只在 localStorage，
+         換一台裝置就全部重來 —— 花 15,000 幣買的極光消失，玩家只會覺得被吃掉。 */
+      try { st.skins = (window.__BHSkins && window.__BHSkins.state) ? window.__BHSkins.state() : null; } catch (e) {}
       return st;
     }
 
@@ -41415,7 +41453,7 @@ function rpgAdjust(k, d) {
       if (!remote) return local;
       if (!local) return remote;
       const out = { v: 1, stage: 1, gold: 0, tickets: 0, pets: [], tut: {}, daily: {}, stars: {}, gift: null,
-        ach: null, rank: null, soc: null };
+        ach: null, rank: null, soc: null, skins: null };
       // 進度只前進不後退
       out.stage = Math.max(num(remote.stage, 1, 1, SOLO_STAGES), num(local.stage, 1, 1, SOLO_STAGES));
       // 金幣／票券會花掉，不能取大 → 以「本地非空就用本地」為準（本地才是玩家眼前看到的）
@@ -41458,6 +41496,20 @@ function rpgAdjust(k, d) {
       try { out.ach = (typeof Ach !== 'undefined' && Ach.merge) ? Ach.merge(remote.ach, local.ach) : null; } catch (e) {}
       try { out.rank = (typeof Rank !== 'undefined' && Rank.merge) ? Rank.merge(remote.rank, local.rank) : null; } catch (e) {}
       out.soc = (local.soc && typeof local.soc === 'object') ? local.soc : ((remote.soc && typeof remote.soc === 'object') ? remote.soc : null);
+      /* v5.87：外觀 —— 「已擁有」取聯集（買過就永久、不會被另一台裝置蓋掉），
+         裝備與自訂色以本地為準（那是「這台機器現在的樣子」）。 */
+      try {
+        const SL = local.skins, SR = remote.skins;
+        if (SL || SR) {
+          const own = {};
+          [SR, SL].forEach(function (k) {
+            if (!k || !k.own || typeof k.own !== 'object') return;
+            for (const id in k.own) if (k.own[id]) own[id] = 1;
+          });
+          const pick = (SL && (SL.eq || SL.custom)) ? SL : (SR || {});
+          out.skins = { own: own, eq: (pick && pick.eq) || {}, custom: (pick && pick.custom) || {} };
+        }
+      } catch (e) {}
       return out;
     }
 
@@ -41481,6 +41533,7 @@ function rpgAdjust(k, d) {
       try { if (st.ach && typeof Ach !== 'undefined') Ach.setState(st.ach); } catch (e) {}
       try { if (st.rank && typeof Rank !== 'undefined') Rank.setState(st.rank); } catch (e) {}
       try { if (st.soc && typeof Social !== 'undefined') Social.setState(st.soc); } catch (e) {}
+      try { if (st.skins && window.__BHSkins && window.__BHSkins.setState) window.__BHSkins.setState(st.skins); } catch (e) {}
       return true;
     }
 
@@ -42135,7 +42188,7 @@ window.__BH = {
   bombIsAlly: bombIsAlly, isAllyOwner: isAllyOwner, NUKE_R: NUKE_R, NUKE_DMG: NUKE_DMG, NUKE_BURN_SEC: NUKE_BURN_SEC,
   // v5.35：隨機縮圈、核彈打怪、掉落物
   brZoneNext: brZoneNext, brNukeHurtFoe: brNukeHurtFoe, foeDrop: foeDrop, foeOnDeath: foeOnDeath, coinTo: coinTo,
-  addScore: addScore,
+  addScore: addScore, brickCoinOf: brickCoinOf, BRICK_COIN_CAP: BRICK_COIN_CAP,
   drawBRTitanWall: drawBRTitanWall, drawOuterWall: drawOuterWall,   // v5.36：鈦合金外牆（測試用）
   showBRDeath: showBRDeath, aiEscape: aiEscape, placeHideTiles: placeHideTiles,
   seedCode: seedCode, seedTag: seedTag,

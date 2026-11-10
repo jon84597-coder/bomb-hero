@@ -5,7 +5,8 @@
      「簽到／成就／賽季全部給金幣，但金幣買不到任何真正想要的東西。」
      貨幣沒有稀缺目標，就不構成期待 —— 玩家拿到 200 金幣沒有任何情緒。
 
-   做法：一批「不能用金幣買」的外觀，只能靠行為解鎖。
+   做法：一批靠行為解鎖的外觀（v5.87 起另有 5 件「金幣收藏」，
+     金色邊框、價格 5,000~15,000，是功能內容買齊後唯一的長期消耗池）。
      · 爆風顏色（打起來整片都是你的顏色，視覺最強）
      · 腳下光環（別人一眼看到你）
      · 炸彈外殼
@@ -102,7 +103,22 @@
     { id: 'bomb.navy', slot: 'bomb', n: '深海藍', how: { kind: 'stage', v: 7 }, hex: '#33508c' },
     { id: 'bomb.emerald', slot: 'bomb', n: '翡翠綠', how: { kind: 'ach', v: 45 }, hex: '#2f8a5a' },
     { id: 'bomb.crimson', slot: 'bomb', n: '血櫻紅', how: { kind: 'boss', v: 2 }, hex: '#a02838' },
-    { id: 'bomb.sun', slot: 'bomb', n: '烈日金', how: { kind: 'season', v: 20 }, hex: '#c9922a' }
+    { id: 'bomb.sun', slot: 'bomb', n: '烈日金', how: { kind: 'season', v: 20 }, hex: '#c9922a' },
+
+    /* --- 金幣收藏（v5.87）-----------------------------------------------
+       這是唯一「用金幣買」的一批，價格刻意拉高。
+       原因：功能內容（隨從＋滿級＋永久強化＋配點）全部買齊約 70 小時，
+       之後金幣就完全沒有出口 —— 老玩家手上 3~10 萬只能看著它變數字。
+       外觀是唯一「不破壞平衡、又能一直加」的消耗池，而這批總價 44,000
+       大約等於再玩 9 小時，正好接在功能內容清空之後。
+       注意：行為解鎖的那 19 件維持不變 —— 能買到的永遠比不上打出來的。 */
+    { id: 'flame.plasma', slot: 'flame', n: '電漿熾白', how: { kind: 'gold', v: 6000 },
+      pal: ['rgba(255,255,255,A)', 'rgba(238,247,255,A)', 'rgba(186,214,255,A)', 'rgba(110,150,255,A)', 'rgba(40,60,160,0)'] },
+    { id: 'flame.aurora', slot: 'flame', n: '極光幻彩', how: { kind: 'gold', v: 15000 },
+      pal: ['rgba(255,255,255,A)', 'rgba(196,255,238,A)', 'rgba(140,220,255,A)', 'rgba(172,140,255,A)', 'rgba(60,30,120,0)'] },
+    { id: 'aura.mint', slot: 'aura', n: '薄荷', how: { kind: 'gold', v: 5000 }, hex: '#7dffd4' },
+    { id: 'aura.void', slot: 'aura', n: '虛空紫', how: { kind: 'gold', v: 8000 }, hex: '#a06cff' },
+    { id: 'bomb.jade', slot: 'bomb', n: '青玉', how: { kind: 'gold', v: 10000 }, hex: '#2fa88c' }
   ];
 
   /* ---------------- 進度讀取 ---------------- */
@@ -143,6 +159,8 @@
       case 'season': { var s = seasonTier(); return { cur: s, need: how.v, ok: s >= how.v }; }
       case 'br': { var b = statNum('brWin'); return { cur: b, need: how.v, ok: b >= how.v }; }
       case 'boss': { var o = statNum('soloBoss'); return { cur: o, need: how.v, ok: o >= how.v }; }
+      /* v5.87：買來的永遠「還沒達成」—— 否則 syncOwn 會把它當成條件解鎖，白送。 */
+      case 'gold': return { cur: 0, need: 1, ok: false };
       default: return { cur: 0, need: 1, ok: false };
     }
   }
@@ -155,6 +173,7 @@
       case 'season': return T('sk.how.season', { n: how.v }, '賽季達到 {n} 級');
       case 'br': return T('sk.how.br', { n: how.v }, '大逃殺奪冠 {n} 次');
       case 'boss': return T('sk.how.boss', { n: how.v }, '戰勝 BOSS {n} 次');
+      case 'gold': return T('sk.how.gold', { n: fmtGold(how.v) }, '💰 {n} 金幣');
       default: return '';
     }
   }
@@ -171,6 +190,49 @@
      v5.60：多了「自訂顏色」—— 玩家自己挑的色碼。eq 存 'custom' 當作一項虛擬外觀，
      真的顏色在 custom[slot]，所以不用把色碼塞進 ITEMS（清單仍然是固定的收藏品）。 */
   var ST = { own: {}, eq: {}, custom: { flame: '', aura: '', bomb: '' } };
+
+  /* ---------------- 金幣購買（v5.87） ----------------
+     兩段式確認：第一次點只是「問」，4 秒內再點一次才真的扣錢。
+     15,000 不是小數目，手機上一滑就誤觸扣掉會非常痛。 */
+  var _buyAsk = { id: '', t: 0 };
+
+  function fmtGold(n) { return String(Math.max(0, n | 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function goldNow() {
+    try { var S = api('Shop'); return (S && S.gold) ? (S.gold() | 0) : 0; } catch (e) { return 0; }
+  }
+  function say(msg, sec) {
+    try { var b = BH(); if (b && b.toast) b.toast(msg, sec || 2.6); } catch (e) {}
+  }
+  function buy(id) {
+    var it = byId(id);
+    if (!it || it.how.kind !== 'gold' || ST.own[id]) return false;
+    var price = it.how.v | 0;
+    var now = Date.now();
+    if (_buyAsk.id !== id || now - _buyAsk.t > 4000) {
+      _buyAsk = { id: id, t: now };
+      say(T('sk.askBuy', { n: fmtGold(price) }, '💰 再點一次購買（{n} 金幣）'), 3.2);
+      try { api('AudioSys').sfx('click'); } catch (e) {}
+      render();
+      return false;
+    }
+    _buyAsk = { id: '', t: 0 };
+    var S = api('Shop');
+    var r = (S && S.spend) ? S.spend(price) : null;
+    if (!r || !r.ok) {
+      try { api('AudioSys').sfx('nope'); } catch (e) {}
+      say(T('sk.noGold', { n: fmtGold(Math.max(0, price - goldNow())) }, '金幣不足，還差 {n}'), 2.8);
+      render();
+      return false;
+    }
+    ST.own[id] = 1;
+    ST.eq[it.slot] = id;        // 買了直接換上 —— 花錢買了還要再點一次很氣
+    save();
+    rebuild();
+    render();
+    try { api('AudioSys').sfx('levelup'); } catch (e) {}
+    say(T('sk.bought', { n: T('sk.n.' + id, null, it.n) }, '✨ 已解鎖「{n}」'), 3);
+    return true;
+  }
 
   function _hexOk(h) { return /^#[0-9a-f]{6}$/.test(String(h || '').toLowerCase()); }
 
@@ -395,11 +457,17 @@
       var pr = progress(it.how);
       var own = !!ST.own[it.id];
       var on = ST.eq[curSlot] === it.id;
-      var lock = !own;
-      h += '<button class="skitem' + (on ? ' on' : '') + (lock ? ' lock' : '') + '" data-id="' + it.id + '">' +
+      var isGold = it.how.kind === 'gold';
+      var asking = isGold && _buyAsk.id === it.id && (Date.now() - _buyAsk.t <= 4000);
+      var lock = !own && !isGold;
+      var cls = 'skitem' + (on ? ' on' : '') + (lock ? ' lock' : '') +
+        (isGold && !own ? ' buy' + (asking ? ' ask' : '') : '');
+      h += '<button class="' + cls + '" data-id="' + it.id + '">' +
         swatch(it) +
         '<b>' + T('sk.n.' + it.id, null, it.n) + '</b>' +
-        '<small>' + (lock ? ('🔒 ' + howText(it.how)) : (on ? T('sk.on', null, '使用中') : T('sk.tapUse', null, '點一下換上'))) + '</small>' +
+        '<small>' + (own
+          ? (on ? T('sk.on', null, '使用中') : T('sk.tapUse', null, '點一下換上'))
+          : (isGold ? howText(it.how) : ('🔒 ' + howText(it.how)))) + '</small>' +
         (lock && pr.need > 1 ? '<em>' + Math.min(pr.cur, pr.need) + '/' + pr.need + '</em>' : '') +
         '</button>';
     }
@@ -455,6 +523,7 @@
     if (!it) return;
     try { api('AudioSys').sfx('click'); } catch (e) {}
     if (!ST.own[id]) {
+      if (it.how.kind === 'gold') { buy(id); return; }
       var pr = progress(it.how);
       try {
         var b = BH();
@@ -484,7 +553,7 @@
       var c = root.querySelector('.skclose');
       if (c) c.textContent = T('sk.close', null, '關閉');
       var tip = root.querySelector('.sktip');
-      if (tip) tip.textContent = T('sk.tip', null, '這些外觀不能用金幣買 —— 只能靠玩遊戲拿到。');
+      if (tip) tip.textContent = T('sk.tip', null, '大部分外觀要靠玩遊戲解鎖；💰 金色邊框的那幾件可以用金幣買。');
       var mo = root.querySelector('.skmine');
       if (mo) mo.textContent = T('sk.mineOnly', null, '只套用在你自己放的炸彈與爆風 —— AI 與怪物一律維持原本顏色。');
     } else root.classList.remove('on');
@@ -521,6 +590,9 @@
       + '#skinPanel .skitem small{font-size:10px;color:#9b8c70;text-align:center;line-height:1.3}'
       + '#skinPanel .skitem.on{border-color:#c9922a;background:#fffaf0;box-shadow:0 0 0 2px rgba(201,146,42,.22)}'
       + '#skinPanel .skitem.lock{opacity:.62;background:#f7f4ee}'
+      + '#skinPanel .skitem.buy{border-color:rgba(201,146,42,.5);background:#fffdf4}'
+      + '#skinPanel .skitem.buy.ask{border-color:#c9922a;background:#fff4d6;box-shadow:0 0 0 2px rgba(201,146,42,.45)}'
+      + '#skinPanel .skitem.buy.ask small{color:#8a5c10;font-weight:700}'
       /* 鎖在左上、進度在右上 —— 兩個放同一角會互相蓋住（實測鎖圖示整顆消失） */
       + '#skinPanel .skitem.lock::before{content:"🔒";position:absolute;top:5px;left:7px;'
       + 'font-size:11px;line-height:1;opacity:.8;pointer-events:none}'
@@ -590,6 +662,37 @@
     ITEMS: ITEMS, SLOTS: SLOTS,
     open: open,
     state: function () { return { own: ST.own, eq: ST.eq, custom: ST.custom }; },
+    /* v5.87：雲端存檔回寫 —— 「已擁有」只取聯集，裝備與自訂色跟著存檔走。
+       花金幣買的項目沒有條件可以重算，所以一定要有這條，不然換裝置就消失。 */
+    setState: function (v) {
+      if (!v || typeof v !== 'object') return;
+      var o = (v.own && typeof v.own === 'object') ? v.own : null;
+      if (o) {
+        for (var k in o) {
+          if (Object.prototype.hasOwnProperty.call(o, k) && o[k] && byId(k)) ST.own[k] = 1;
+        }
+      }
+      var E = (v.eq && typeof v.eq === 'object') ? v.eq : null;
+      if (E) {
+        for (var s in ST.eq) {
+          if (!Object.prototype.hasOwnProperty.call(E, s)) continue;
+          var id = String(E[s] || '');
+          if (id === 'custom') { ST.eq[s] = 'custom'; continue; }
+          var it = byId(id);
+          if (it && it.slot === s && ST.own[id]) ST.eq[s] = id;
+        }
+      }
+      var C = (v.custom && typeof v.custom === 'object') ? v.custom : null;
+      if (C) {
+        for (var c in ST.custom) {
+          if (Object.prototype.hasOwnProperty.call(C, c) && _hexOk(C[c])) ST.custom[c] = String(C[c]).toLowerCase();
+        }
+      }
+      save();
+      rebuild();
+      render();
+    },
+    buy: buy, goldOf: goldNow,
     of: byId, progress: progress, howText: howText,
     color: function (slot) { return CACHE[slot] || (slot === 'flame' ? null : ''); },
     /* v5.60：自訂顏色（面板用，也給測試直接驗） */

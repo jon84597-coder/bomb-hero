@@ -112,7 +112,7 @@ head('6. 關卡裡賺到的金幣會進商店錢包');
   G.door = { x: 2, y: 2, open: true, revealed: true };
   me.x = 2 * G.T + G.T / 2; me.y = 2 * G.T + G.T / 2;
   const before = P.Shop.gold();
-  const base = 65 + Math.floor((G.stage - 1) / 4) * 5;   // v5.86：65＋每 4 關 +5
+  const base = 75 + Math.floor((G.stage - 1) / 4) * 5;   // v5.87：75＋每 4 關 +5（磚幣封頂後抬基數）
   P.updateSolo(DT);
   const after = P.Shop.gold();
   ok(after - before === 250 + base, '過關金幣 = 本關金幣 250 + 過關獎勵 ' + base + '（實得 ' + (after - before) + '）');
