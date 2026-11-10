@@ -38,7 +38,7 @@ ok(/const isD = \(e\.code === 'KeyD'\) \|\| e\.key === 'd' \|\| e\.key === 'D'/.
    '用 e.code === KeyD 判斷（不受鍵盤佈局／大小寫影響）');
 ok(/const combo = \(e\.altKey && \(e\.ctrlKey \|\| e\.shiftKey\)\) \|\| \(e\.ctrlKey && e\.shiftKey\)/.test(SRC),
    'Ctrl+Alt+D 與 Ctrl+Shift+D 都能觸發');
-ok(/, true\);\s*\n\s*\n\s*\/\/ ① 版本號連點 3 下/.test(SRC),
+ok(/if \(e\.stopPropagation\) e\.stopPropagation\(\);\s*\n\s*toggle\(\);\s*\n\s*\}, true\);/.test(SRC),
    'keydown 用 capture 階段攔（避免被其他模組吃掉）');
 
 // 組合鍵真值表（照抄實際條件）
@@ -49,15 +49,17 @@ ok(hotkey(true, false, true) === true, 'Ctrl+Shift+D → 觸發（非 Chrome 或
 ok(hotkey(true, false, false) === false, '只有 Ctrl+D → 不觸發（那是瀏覽器加書籤）');
 ok(hotkey(false, false, false) === false, '單按 D → 不觸發');
 
-/* ================= ③ 版本號連點 3 下（手機也能用） ================= */
-console.log('=== ③ 版本號連點 ===');
-ok(/const vt = \$id\('verTxt'\);\s*\n\s*const v = vt && vt\.parentNode \? vt\.parentNode : null;/.test(SRC),
-   '綁在版本標籤（#verTxt 的父節點）上');
-ok(/if \(now - t0 > 1200\) n = 0;/.test(SRC), '1.2 秒內連點才算一組（誤觸不會開）');
-ok(/if \(n >= 3\) \{/.test(SRC), '連 3 下才開');
-ok(/v\.addEventListener\('click', function \(e\) \{/.test(SRC),
-   '用 click 事件（滑鼠與觸控都會產生，手機可用）');
-ok(/v\.style\.cursor = 'pointer';/.test(SRC), '可點的外觀（游標變手指）');
+/* ================= ③ 版本號連點 3 下（v5.81 已移除） =================
+   這一節原本驗「連點版本號開後台」還在。玩家回報新手誤觸連點就跳出面板、
+   以為遊戲壞了，所以整條入口移除 —— 斷言改成「確認它真的不在了」，
+   避免哪天有人手滑把它加回來。 */
+console.log('=== ③ 版本號連點（已移除） ===');
+ok(!/vt\.parentNode \? vt\.parentNode : null/.test(SRC), '不再去抓版本標籤的父節點當點擊區');
+ok(!/if \(now - t0 > 1200\) n = 0;/.test(SRC), '連點計時器已移除');
+ok(!/if \(n >= 3\) \{/.test(SRC), '「連 3 下才開」的判斷已移除');
+ok(!/vt\.parentNode[\s\S]{0,240}addEventListener\('click'/.test(SRC), '版本號上沒有任何 click 監聽');
+ok(!/v\.style\.cursor = 'pointer';/.test(SRC), '不再把游標改成手指（不會看起來像按鈕）');
+ok(/v5\.81：移除「版本號連點 3 下開後台」/.test(SRC), '原地留了說明（不是憑空消失，避免又被人加回去）');
 
 /* ================= ④ 網址入口 ================= */
 console.log('=== ④ 網址參數 ===');

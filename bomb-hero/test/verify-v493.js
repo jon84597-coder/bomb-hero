@@ -61,7 +61,9 @@ console.log('=== ④ 舊入口沒有被改壞 ===');
 ok(/e\.altKey && \(e\.ctrlKey \|\| e\.shiftKey\)/.test(SRC), 'Ctrl+Alt+D 仍在');
 ok(/indexOf\('admin=1'\)/.test(SRC), '?admin=1 仍在');
 ok(/h\.indexOf\('admin'\) >= 0/.test(SRC), '#admin 仍在');
-ok(/v\.addEventListener\('click'/.test(wireBody), '版本號連點 3 下仍在');
+/* v5.81：連點版本號開後台已移除（新手誤觸），改成守「它不會被加回來」 */
+ok(!/v\.addEventListener\('click'/.test(wireBody), '版本號連點 3 下已移除（不再綁 click）');
+ok(!/if \(n >= 3\) \{/.test(wireBody), '「連 3 下」的判斷也一起拿掉了');
 
 /* ================= ⑤ 版本一致性 ================= */
 console.log('=== ⑤ 版本一致性 ===');

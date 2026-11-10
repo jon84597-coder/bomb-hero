@@ -143,9 +143,26 @@ function togglePwEye(btn) {
 
 const $id = function (id) { return document.getElementById(id); };
 const clamp = function (v, a, b) { return v < a ? a : v > b ? b : v };
-// v4.75：這份 index.html 就是開發者版本 —— 預設全部關卡解鎖、金幣無限（錢包顯示 ∞、買東西不扣錢）。
-//   要驗一般玩家的流程，把 DEV_BUILD 改成 false 就好。
-let DEV_BUILD = true;
+/* v5.81：發佈版＝正常玩家。金幣照賺照扣、關卡照進度解鎖、後台不對外開放。
+   ───────────────────────────────────────────────────────────────────────────
+   以前這裡寫死 `true`（「這份 index.html 就是開發者版本」），於是每個玩家的錢包
+   都顯示 ∞、買東西不扣錢、40 關全開 —— 玩家回報「為什麼我的金幣是無限的」。
+   開發者自己要全開／進後台：網址加 `?dev=1`（記在本機，之後一直有效），
+   要恢復正常玩家：`?dev=0`。判斷刻意放在啟動時一次，不在每幀做。 */
+let DEV_BUILD = (function () {
+  try {
+    const q = String((location && location.search) || '');
+    if (/(?:^|[?&])dev=1(?:&|$)/.test(q)) {
+      try { localStorage.setItem('bh_dev', '1'); } catch (e) {}
+      return true;
+    }
+    if (/(?:^|[?&])dev=0(?:&|$)/.test(q)) {
+      try { localStorage.removeItem('bh_dev'); } catch (e) {}
+      return false;
+    }
+    try { return localStorage.getItem('bh_dev') === '1'; } catch (e) { return false; }
+  } catch (e) { return false; }
+})();
 const rand = function (n) { return Math.floor(Math.random() * n); };
 const pick = function (a) { return a[rand(a.length)]; };
 const DIRS = {
@@ -160,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.80';
+const VERSION = '5.81';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -7183,7 +7200,7 @@ const Ach = (function () {
       /* 這個帳號有沒有資格戴「遊戲開發者」：
          · 已登入 → 只看伺服器給的 dev 旗標（DEV_EMAILS 白名單）
          · 沒登入（file:// 或離線開發）→ 退回開發版旗標
-         刻意不看 DEV_BUILD 本身，否則正式版（DEV_BUILD=true）每個玩家頭上都掛開發者。 */
+         刻意不看 DEV_BUILD 本身，否則開發模式（?dev=1）每個玩家頭上都掛開發者。 */
       function canDev() {
         try {
           const a = (typeof Cloud !== 'undefined' && Cloud && Cloud.acc) ? Cloud.acc() : null;
@@ -39035,7 +39052,7 @@ const Admin = (function () {
     const toggle = function () { if (A.open) close(); else open(); };
 
     // ⓪ v5.5：原本還有一顆首頁 🛠 按鈕，依使用者要求移除（太顯眼）。
-    //   入口剩下三條（連點版本號／Ctrl+Alt+D／#admin），功能完全不受影響。
+    //   v5.81：連點版本號那條也拿掉了（新手誤觸）。入口剩兩條：Ctrl+Alt+D／?admin=1、#admin。
 
     document.addEventListener('keydown', function (e) {
       const isD = (e.code === 'KeyD') || e.key === 'd' || e.key === 'D';
@@ -39048,25 +39065,10 @@ const Admin = (function () {
       toggle();
     }, true);
 
-    // ① 版本號連點 3 下（1.2 秒內算一組）
-    (function () {
-      const vt = $id('verTxt');
-      const v = vt && vt.parentNode ? vt.parentNode : null;
-      if (!v) return;
-      let n = 0, t0 = 0;
-      v.style.cursor = 'pointer';
-      v.title = 'v' + (typeof VERSION !== 'undefined' ? VERSION : '');
-      v.addEventListener('click', function (e) {
-        const now = Date.now();
-        if (now - t0 > 1200) n = 0;
-        t0 = now; n++;
-        if (n >= 3) {
-          n = 0;
-          if (e && e.preventDefault) e.preventDefault();
-          toggle();
-        }
-      });
-    })();
+    /* ① v5.81：移除「版本號連點 3 下開後台」。
+       玩家回報：新手不知道那是什麼，誤觸連點就跳出後台面板，以為遊戲壞了；
+       而且它讓版本號帶著 pointer 游標＋tooltip，看起來像一顆按鈕。
+       開發者入口保留 ?admin=1／#admin 與 Ctrl+Alt+D（都不會誤觸）。 */
 
     // ③ 網址參數：#admin 或 ?admin=1
     (function () {

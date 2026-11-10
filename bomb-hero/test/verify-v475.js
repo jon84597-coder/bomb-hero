@@ -11,18 +11,25 @@ let pass = 0, fail = 0;
 function ok(c, m) { if (c) { pass++; console.log('  ✓ ' + m); } else { fail++; console.log('  ✗ FAIL: ' + m); } }
 function head(t) { console.log('\n=== ' + t + ' ==='); }
 
-head('1. 開發者預設（這份 index.html）');
-ok(P.DEV_BUILD !== undefined || /let DEV_BUILD = true;/.test(src), '主檔標了 DEV_BUILD = true');
-ok(P.Solo.maxUnlocked() === P.SOLO_STAGES, '預設全 32 關解鎖（' + P.Solo.maxUnlocked() + '）');
-ok(P.Shop.dev() === true, '預設視為開發者');
+/* v5.81：這一節原本驗的是「v4.75 開發者版本預設全開」—— 那個預設後來變成問題
+   （每個玩家的錢包都顯示 ∞、40 關全解鎖，玩家回報「為什麼金幣無限」），
+   所以規格反轉成「預設一般玩家，開發模式要明確開啟」。斷言跟著反過來寫，
+   而不是把測試刪掉 —— 反轉本身就是這一版要守住的行為。 */
+head('1. 預設一般玩家（開發模式改為明確開啟）');
+ok(/let DEV_BUILD = \(function \(\) \{/.test(src), 'DEV_BUILD 改成啟動時解析（不再寫死 true）');
+ok(P.Solo.maxUnlocked() === P.Solo.unlocked, '預設只開到真實進度（' + P.Solo.maxUnlocked() + '）');
+ok(P.Shop.dev() === false, '預設不視為開發者');
 P.Shop.reset(); P.Shop.render();
-ok(env.els.shopWallet.textContent === '∞', '錢包顯示 ∞');
-P.Shop.addGold(100); const g0 = P.Shop.gold();
+ok(env.els.shopWallet.textContent === '0', '錢包顯示真實金幣（0）');
+P.Shop.addGold(100000); const g0 = P.Shop.gold();
 P.Shop.buy('blade');
-ok(P.Shop.gold() === g0, '開發者買東西不扣錢');
-P.setDevBuild(false);
-ok(P.Shop.dev() === false && P.Solo.maxUnlocked() === P.Solo.unlocked, '關掉 DEV_BUILD 就回到一般玩家');
+ok(P.Shop.gold() < g0, '一般玩家買東西會扣錢');
 P.setDevBuild(true);
+ok(P.Shop.dev() === true && P.Solo.maxUnlocked() === P.SOLO_STAGES, '開啟開發模式 → 全關卡解鎖＋視為開發者');
+P.Shop.reset(); P.Shop.render();
+ok(env.els.shopWallet.textContent === '∞', '開發模式下錢包才顯示 ∞');
+P.setDevBuild(false);
+ok(P.Shop.dev() === false && P.Solo.maxUnlocked() === P.Solo.unlocked, '再關掉就回到一般玩家');
 
 head('2. 八大關卡氛圍底圖');
 const BGS = ['forest', 'sand', 'ice', 'lava', 'neon', 'sea', 'sky', 'dark'];

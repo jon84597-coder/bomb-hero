@@ -30,14 +30,17 @@ head('1. 版本七處一致（>= 5.80）');
 {
   const ver = (mainJs.match(/const VERSION = '([\d.]+)'/) || [])[1];
   ok(parseFloat(ver) >= 5.80, '主檔 VERSION >= 5.80', ver);
-  ok(/<span id="verTxt">5\.80<\/span>/.test(idx), '首頁 verTxt = 5.80');
-  ok(/<span id="verLogVer">5\.80<\/span>/.test(idx), '版本面板 verLogVer = 5.80');
-  ok(/"version":\s*"5\.80\.0"/.test(pkg), 'package.json 5.80.0');
+  /* v5.81：版本號不再寫死 5.80 —— 以後每升一版就會整批紅。
+     教訓跟 verify-v576 一樣：斷言要認「當版」，不是認「寫這支測試時的版本」。 */
+  const vre = String(ver || '5.80').replace(/\./g, '\\.');
+  ok(new RegExp('<span id="verTxt">' + vre + '<\\/span>').test(idx), '首頁 verTxt = 當版（' + ver + '）');
+  ok(new RegExp('<span id="verLogVer">' + vre + '<\\/span>').test(idx), '版本面板 verLogVer = 當版（' + ver + '）');
+  ok(new RegExp('"version":\\s*"' + vre + '\\.0"').test(pkg), 'package.json = 當版（' + ver + '.0）');
   const sws = ['sw.js', '../public/sw.js', '../bomberman-online/public/sw.js', '../dist/site/sw.js']
     .map(f => { try { return (read(f).match(/SW_VERSION = '(v[\d.]+)'/) || [])[1]; } catch (e) { return null; } })
     .filter(Boolean);
-  ok(sws.length >= 3 && sws.every(v => v === 'v5.80.0'), '四份 sw.js 都是 v5.80.0', sws);
-  ok(/v: '5\.80'[\s\S]{0,80}now: true/.test(vlog), 'VERSION_LOG[0] 是 5.80 且 now:true');
+  ok(sws.length >= 3 && sws.every(v => v === 'v' + ver + '.0'), '四份 sw.js 都是當版（v' + ver + '.0）', sws);
+  ok(new RegExp("v: '" + vre + "'[\\s\\S]{0,80}now: true").test(vlog), 'VERSION_LOG[0] 是當版且 now:true');
   ok(/v: '5\.79'[\s\S]{0,80}now: false/.test(vlog), '上一版 5.79 已收成 now:false');
   const items = (vlog.match(/v: '5\.80'[\s\S]*?items: \[([\s\S]*?)\]\s*\}/) || [])[1] || '';
   ok((items.match(/'/g) || []).length >= 12, '本版至少 6 條說明');
