@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.83';
+const VERSION = '5.84';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -1747,8 +1747,328 @@ const AudioSys = (function () {
     }
   };
 
+  /* ══════════════════════════════════════════════════════════════
+     v5.84：主角群專屬音效（30 支）
+     v5.83 把怪物那 59 支做到「每招都有自己的聲音」，主角卻還是草稿 ——
+     放炸彈只有一顆 220Hz 方波、踢彈只有一顆 500Hz、升級甚至完全沒有聲音。
+     這裡照同一套規格重做：低頻 body ＋ 撞擊層 ＋ 掃頻 ＋ 金屬泛音 ＋ 尾巴，
+     每一支都當成「電影預告裡的一擊」在做，不是電子錶的嗶嗶聲。
+     ══════════════════════════════════════════════════════════════ */
+  // 氣流掃頻（寬 Q）：衝刺、疾風、火焰呼嘯用。跟 hiss 的差別是尾巴更長更「厚」
+  function whoosh(dur, vol, f0, f1, delay) {
+    if (!ensure()) return;
+    const t0 = ctx.currentTime + (delay || 0);
+    const src = ctx.createBufferSource(); src.buffer = nbuf(dur);
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = .7;
+    f.frequency.setValueAtTime(Math.max(60, f0), t0);
+    if (f1 && f1 !== f0) f.frequency.exponentialRampToValueAtTime(Math.max(60, f1), t0 + dur * .85);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.linearRampToValueAtTime(Math.max(.001, vol), t0 + dur * .22);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    src.connect(f); f.connect(g); g.connect(sfxGain);
+    src.start(t0); src.stop(t0 + dur + .02);
+  }
+  // 脆裂：一連串極短噪音脈衝（冰裂、玻璃碎、骨頭斷）
+  function crack(dur, vol, delay, n) {
+    if (!ensure()) return;
+    const k = n || 5;
+    for (let i = 0; i < k; i++) {
+      const d0 = (delay || 0) + Math.random() * dur * .42;
+      const dd = .014 + Math.random() * .05;
+      const src = ctx.createBufferSource(); src.buffer = nbuf(dd);
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass';
+      hp.frequency.value = 1400 + Math.random() * 3600;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(Math.max(.001, vol * (.35 + Math.random() * .65)), ctx.currentTime + d0);
+      g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + d0 + dd);
+      src.connect(hp); hp.connect(g); g.connect(sfxGain);
+      src.start(ctx.currentTime + d0);
+    }
+  }
+  // 上漲音（蓄力／光柱／灌注）：漸強 ＋ 掃頻，比 tone 更像「能量在聚集」
+  function swell(f0, f1, dur, vol, delay, wave) {
+    if (!ensure()) return;
+    const t0 = ctx.currentTime + (delay || 0);
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = wave || 'sawtooth';
+    o.frequency.setValueAtTime(Math.max(30, f0), t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(.001, vol), t0 + dur * .82);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur + .03);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(700, t0);
+    lp.frequency.linearRampToValueAtTime(5200, t0 + dur);
+    o.connect(g); g.connect(lp); lp.connect(sfxGain);
+    o.start(t0); o.stop(t0 + dur + .05);
+  }
+
+  const HERO_SFX = {
+    /* ── 一、基本動作（12）──────────────────────────────────── */
+    // 放炸彈：掌心聚氣 → 卡榫扣上 → 塞進地面的低頻。全場最常聽的一支，做得最厚
+    place() {
+      hiss(.10, .09, 2600, 900, 1.6);
+      metal(430, .11, .11);
+      sub(155, 60, .18, .28);
+      tone(184, .05, 'square', .10, 120, .02);
+      grit(.06, .10, 4, 3200, .01);
+    },
+    // 踢彈：皮革撞擊 ＋ 氣浪 ＋ 金屬滾遠
+    kick() {
+      grit(.07, .24, 4, 3400);
+      sub(215, 68, .14, .30);
+      whoosh(.26, .10, 1900, 400, .02);
+      metal(880, .16, .08, .03);
+    },
+    // 出拳打彈：拳風 → 撞擊 → 金屬震顫
+    punch() {
+      whoosh(.10, .13, 1500, 3900);
+      grit(.09, .21, 5, 2600, .01);
+      sub(190, 56, .17, .31, .01);
+      metal(640, .13, .09, .02);
+      tone(360, .07, 'square', .07, 120, .01);
+    },
+    // 衝刺：氣爆推力 ＋ 掃上去的風 ＋ 短促閃音
+    dash() {
+      whoosh(.30, .15, 380, 3400);
+      sub(110, 250, .13, .20);
+      tone(520, .10, 'triangle', .11, 1450);
+      metal(1200, .10, .05, .02);
+      grit(.05, .10, 4, 2800);
+    },
+    // 跳躍：起跳氣音（短、輕，但要有「蹬地」的低頻）
+    hop() {
+      whoosh(.15, .11, 700, 2500);
+      tone(420, .10, 'sine', .16, 900);
+      tone(700, .07, 'triangle', .09, 1200, .02);
+      sub(165, 92, .10, .13);
+    },
+    // 落地：悶響 ＋ 土屑 ＋ 短尾巴
+    land() {
+      boom(.23, .42);
+      sub(122, 46, .21, .31);
+      grit(.12, .13, 3, 1400, .02);
+      hiss(.18, .06, 900, 250, .8, .03);
+    },
+    // 重砸（坐騎／隕石落點）：電影感重製 —— 兩段低頻 ＋ 碎土 ＋ 高頻撕裂
+    slam() {
+      boom(.46, .80);
+      sub(64, 23, .44, .48);
+      grit(.22, .28, 7, 2200);
+      tone(148, .16, 'square', .16, 46, .01);
+      metal(1500, .14, .06, .01);
+      hiss(.32, .08, 2600, 300, .7, .05);
+    },
+    // 受傷：短、痛、不能刺耳（護甲被打掉時聽起來是「悶」的）
+    hurt() {
+      grit(.10, .19, 5, 1800);
+      sub(245, 58, .21, .35);
+      tone(300, .13, 'square', .14, 120);
+      hiss(.17, .11, 900, 300, 1.2, .01);
+      tone(150, .19, 'sawtooth', .11, 62, .03);
+    },
+    // 倒下：拔高 → 長哀號 ＋ 沙啞撕裂 ＋ 低頻塌陷
+    die() {
+      tone(520, .14, 'square', .30, 980);
+      tone(980, .20, 'square', .28, 700, .13);
+      tone(700, .34, 'square', .28, 95, .30);
+      tone(990, .50, 'triangle', .18, 110, .13);
+      grit(.55, .13, 4, 1200, .30);
+      sub(140, 38, .62, .27, .34);
+      hiss(.50, .07, 1400, 220, .8, .40);
+    },
+    // 撿道具：亮叮 ＋ 上升 ＋ 一點金屬甜味
+    item() {
+      tone(760, .07, 'square', .13, 1120);
+      tone(1120, .09, 'triangle', .11, 0, .05);
+      metal(1520, .17, .06, .05);
+      hiss(.12, .05, 2600, 4200, 1.4, .03);
+    },
+    // 金幣：三層叮 ＋ 極淡金屬尾（比舊版多一層「錢的重量」）
+    coin() {
+      tone(1180, .07, 'triangle', .14);
+      tone(1560, .09, 'triangle', .12, 0, .05);
+      tone(2100, .12, 'sine', .06, 0, .09);
+      metal(2360, .19, .04, .07);
+      sub(520, 700, .05, .05, .02);
+    },
+    // 升級：上行琶音 ＋ 光柱上升 ＋ 低頻推力（舊版整支是空的）
+    levelup() {
+      [523, 659, 784, 1047].forEach(function (f, i) { tone(f, .12, 'square', .18, 0, i * .075); });
+      tone(1047, .55, 'triangle', .16, 1568, .30);
+      tone(1568, .62, 'sine', .10, 2093, .34);
+      whoosh(.60, .09, 700, 3800, .05);
+      sub(88, 155, .36, .24, .30);
+      boom(.22, .24, .02);
+    },
+    // 過關：原本的旋律 ＋ 弦墊 ＋ 長尾，聽起來像「結束了一場硬仗」
+    win() {
+      [523, 659, 784, 1047].forEach(function (f, i) { tone(f, .16, 'square', .18, 0, i * .12); });
+      [1047, 1319, 1568].forEach(function (f, i) { tone(f, .32, 'triangle', .12, 0, .50 + i * .10); });
+      boom(.32, .28);
+      whoosh(.65, .07, 600, 3000, .10);
+      sub(110, 150, .30, .16, .50);
+    },
+
+    /* ── 二、主動技（4）────────────────────────────────────── */
+    // 遙控引爆：電子計時歸零 → 三連爆（玩家按下去的「咔」很清楚）
+    sk_det() {
+      tone(1750, .04, 'square', .12);
+      tone(1750, .04, 'square', .12, 0, .07);
+      tone(2400, .08, 'square', .15, 0, .14);
+      metal(2600, .16, .07, .14);
+      boom(.36, .64, .20);
+      sub(112, 32, .36, .35, .20);
+      grit(.22, .17, 6, 2600, .20);
+    },
+    // 守護護盾：罩子成形（噪音拉長）＋ 玻璃張力 ＋ 低頻充盈
+    sk_shield() {
+      whoosh(.44, .11, 300, 2800);
+      metal(760, .48, .11);
+      fm(300, 220, 2.4, .42, .10);
+      sub(120, 76, .42, .25);
+      tone(1047, .36, 'sine', .10, 1319, .06);
+    },
+    // 冰霜新星：冰裂 → 凍氣擴散 → 高頻結晶
+    sk_frost() {
+      crack(.34, .17);
+      whoosh(.40, .13, 3600, 900);
+      metal(1860, .36, .08);
+      sub(142, 58, .32, .21, .04);
+      tone(1568, .32, 'sine', .09, 2093, .08);
+      hiss(.30, .07, 5200, 2600, 2.6, .10);
+    },
+    // 震地波：地層斷裂 → 低頻推送 → 碎石滾動
+    sk_quake() {
+      boom(.42, .72);
+      sub(56, 25, .42, .45);
+      grit(.28, .21, 6, 900);
+      hiss(.36, .09, 520, 150, 1.0, .03);
+      metal(280, .24, .07, .02);
+      tone(96, .30, 'sawtooth', .12, 44, .04);
+    },
+
+    /* ── 三、連招（3）—— 三招聽起來必須完全不像 ────────────── */
+    // 碎冰（冰霜→震地）：冰爆 ＋ 滿地碎裂
+    cb_freeze() {
+      crack(.46, .23, 0, 8);
+      metal(2200, .42, .10);
+      whoosh(.46, .15, 4400, 1200);
+      sub(150, 52, .36, .27, .02);
+      tone(1760, .30, 'triangle', .10, 2637, .06);
+      boom(.22, .36, .05);
+    },
+    // 盾炸（護盾→引爆）：能量宣洩 ＋ 金屬爆 ＋ 反向掃頻
+    cb_shield() {
+      metal(920, .42, .13);
+      boom(.36, .62);
+      sub(120, 34, .38, .35, .02);
+      whoosh(.42, .14, 3000, 380);
+      tone(1319, .32, 'square', .10, 523, .06);
+      fm(420, 310, 3.4, .30, .12);
+    },
+    // 氣浪（引爆→震地）：雙重低頻 ＋ 空氣爆（最「悶」的一招）
+    cb_wave() {
+      boom(.32, .60);
+      boom(.19, .42, .09);
+      sub(70, 28, .44, .42);
+      whoosh(.50, .15, 1500, 240);
+      tone(200, .32, 'sawtooth', .10, 58, .02);
+      grit(.16, .14, 5, 700, .06);
+    },
+
+    /* ── 四、8 個角色專屬技（各自主題音色）─────────────────── */
+    // 疾風步：氣流掃頻（高→超高）＋ 瞬移閃音
+    ch_gale() {
+      whoosh(.36, .15, 300, 4200);
+      tone(620, .12, 'triangle', .12, 1800);
+      metal(1400, .18, .07, .04);
+      sub(150, 68, .19, .16);
+      hiss(.24, .06, 5600, 2200, 2.4, .06);
+    },
+    // 滾地閃避：布料摩擦 ＋ 滾動低頻 ＋ 刹住的短音
+    ch_roll() {
+      grit(.30, .13, 3, 1200);
+      whoosh(.32, .10, 900, 320, .01);
+      sub(132, 58, .23, .22);
+      tone(240, .18, 'square', .08, 118, .04);
+      hiss(.16, .05, 1600, 700, 1.2, .22);
+    },
+    // 速爆指令：三聲電子嗶（倒數）→ 引爆
+    ch_fuse() {
+      [1200, 1200, 1600].forEach(function (f, i) { tone(f, .05, 'square', .13, 0, i * .06); });
+      tone(2200, .09, 'square', .15, 0, .18);
+      metal(1800, .22, .08, .18);
+      sub(142, 48, .24, .27, .20);
+      grit(.14, .14, 6, 2400, .20);
+    },
+    // 烈焰灌注：火焰呼嘯 ＋ 能量上漲 ＋ 末端爆燃
+    ch_enchant() {
+      whoosh(.48, .15, 240, 2000);
+      sub(110, 210, .36, .26);
+      swell(320, 540, .34, .10, .04);
+      metal(680, .32, .06, .10);
+      boom(.24, .28, .30);
+      hiss(.30, .09, 1800, 4200, .9, .14);
+    },
+    // 拾金之手：磁吸掃頻（由高往低收）＋ 金幣連響
+    ch_loot() {
+      whoosh(.36, .11, 2800, 700);
+      sub(165, 330, .26, .14);
+      for (let i = 0; i < 4; i++) tone(1400 + i * 220, .07, 'triangle', .09, 0, .08 + i * .06);
+      metal(2100, .28, .05, .10);
+      hiss(.22, .05, 3600, 1400, 1.8, .04);
+    },
+    // 鐵壁：金屬鐘（長尾）＋ 護甲扣合 ＋ 低頻撐起
+    ch_bulwark() {
+      metal(320, .60, .15);
+      fm(220, 180, 3.2, .44, .19);
+      sub(90, 58, .38, .32);
+      grit(.15, .17, 5, 1600);
+      tone(880, .22, 'sine', .08, 660, .06);
+      hiss(.30, .06, 3000, 900, 1.6, .10);
+    },
+    // 軍械補給：兩聲上膛 → 彈藥落袋 → 亮音收尾
+    ch_refill() {
+      metal(620, .10, .12);
+      metal(820, .11, .10, .07);
+      grit(.11, .19, 5, 2400, .14);
+      sub(142, 68, .15, .23, .14);
+      tone(1047, .17, 'triangle', .09, 1319, .20);
+    },
+    // 星塵爆：玻璃碎 ＋ 高頻星光擴散 ＋ 低頻推開
+    ch_stardust() {
+      crack(.38, .19, 0, 7);
+      whoosh(.50, .14, 5200, 1400);
+      metal(2600, .42, .08);
+      sub(162, 58, .30, .23);
+      tone(2093, .36, 'sine', .09, 3136, .04);
+      hiss(.34, .06, 6400, 3200, 3.0, .08);
+    },
+
+    /* ── 五、核心打擊重製（2）—— 覆蓋 v5.83 的 CORE 版 ─────── */
+    // 自己的炸彈：全遊戲最常聽的一聲，做成「有重量的電影爆」
+    explode() {
+      boom(.52, .80);
+      sub(122, 28, .52, .46);
+      grit(.36, .25, 7, 2600);
+      whoosh(.42, .14, 2200, 300, .02);
+      tone(74, .40, 'sine', .30, 26);
+      metal(180, .28, .06, .03);
+      hiss(.30, .07, 4200, 1600, 2.0, .06);
+    },
+    // 撿東西（舊的 pick 太單薄，補一層厚度但保持輕）
+    pick() {
+      tone(760, .07, 'square', .12, 1120);
+      tone(1120, .09, 'triangle', .10, 0, .05);
+      metal(1700, .13, .05, .04);
+      sub(400, 620, .06, .06);
+    }
+  };
+
   const SFX_MAP = {};
-  [CORE_SFX, SKILL_SFX, CHARGE_SFX].forEach(function (m) {
+  [CORE_SFX, SKILL_SFX, CHARGE_SFX, HERO_SFX].forEach(function (m) {
     Object.keys(m).forEach(function (k) { SFX_MAP[k] = m[k]; });
   });
 
@@ -5515,6 +5835,16 @@ function placeBomb(p) {
   };
   Game.bombs.push(b);
   AudioSys.sfx('place');
+  // v5.84：放彈 —— 掌心一顆小金核 ＋ 兩顆火星。放彈頻率太高，這裡刻意做小：
+  //   真的大環留給技能，否則連放 8 顆會把畫面蓋滿（而且看不出哪一顆才是重點）
+  try {
+    if (isMyPlayer(p)) {
+      const _T = Game.T || 40;
+      Game.rings.push({ kind: 'core', x: b.cx * _T + _T * .5, y: b.cy * _T + _T * .5,
+                        born: Game.gameT || 0, dur: .18, r: _T * .58 });
+      burst(b.cx * _T + _T * .5, b.cy * _T + _T * .5, '#ffe6a8', 4, 70);
+    }
+  } catch (ePl) {}
   try { Tut.hit('bomb'); } catch (e) {}
   try { FirstRun.hit('b'); } catch (e) {}
   return true;
@@ -5545,6 +5875,12 @@ function kickBomb(p, dirName) {
   b.moving = { dx: d.x, dy: d.y, speed: T * 5.5 };
   b.cx = bx; b.cy = by;
   AudioSys.sfx('kick');
+  // v5.84：踢彈 —— 朝踢出去的方向拉一束速度線（看得出「往哪邊踢」）
+  try {
+    const _ang = Math.atan2(d.y, d.x);
+    heroImpact(cx * T + T * .5 + d.x * T * .5, cy * T + T * .5 + d.y * T * .5,
+               { power: .95, col: '#ffd48a', bit: 'sq', dir: _ang, stop: .016, cam: false });
+  } catch (eK) {}
   try { Tut.hit('kick'); } catch (e) {}
   return true;
 }
@@ -5673,6 +6009,12 @@ function punchBomb(p, dirName) {
     dur: Math.min(1.2, .10 + (path.length - 1) * .05), path: path };
   b.cx = land.x; b.cy = land.y;
   AudioSys.sfx('punch');
+  // v5.84：打飛炸彈 —— 朝飛行方向拉速度線（看得出球往哪飛）
+  try {
+    const _ang2 = Math.atan2(land.y - by, land.x - bx);
+    heroImpact(bx * Game.T + Game.T * .5, by * Game.T + Game.T * .5,
+               { power: 1.0, col: '#ffe6a8', bit: 'sq', dir: _ang2, cam: false });
+  } catch (ePc) {}
   return true;
 }
 function throwCarried(p, opts) {
@@ -5924,6 +6266,22 @@ function applyItem(p, type, item) {
   }
   const T = Game.T;
   burst(p.x, p.y, type === 'skull' ? '#b06ef7' : '#8ff0ff', 10, 130);
+  // v5.84：撿到道具 —— 好東西是青色星芒往上飄，負面道具是紫色碎片往下沉（一眼分好壞）
+  try {
+    const _col = type === 'skull' ? '#b06ef7' : '#8ff0ff';
+    heroImpact(p.x, p.y - T * .12, {
+      power: .80, col: _col, bit: type === 'skull' ? 'sq' : 'star',
+      stop: .010, shake: 1, cam: false
+    });
+    for (let _i = 0; _i < 5; _i++) {
+      const _good = type !== 'skull';
+      bitsAdd({ type: _good ? 'star' : 'sq',
+                x: p.x + (Math.random() - .5) * T * .8, y: p.y - T * .2 + (Math.random() - .5) * T * .4,
+                vx: (Math.random() - .5) * 40, vy: _good ? (-70 - Math.random() * 70) : (40 + Math.random() * 60),
+                t: .46, max: .46, r: T * (.040 + Math.random() * .028),
+                rot: Math.random() * 6.28, spin: 5, col: _col, g: _good ? 40 : 180 });
+    }
+  } catch (eIt) {}
   try { Tut.hit('item'); } catch (e) {}
   try { FirstRun.hit('i'); } catch (e) {}
 }
@@ -6262,7 +6620,16 @@ function mountJump(p) {
   p.moving = false;
   p.fireCd = OSTRICH_JUMP_CD;
   p.invuln = Math.max(p.invuln || 0, OSTRICH_JUMP_T + .1);
-  if (isMyPlayer(p)) { AudioSys.sfx('hop'); try { Gift.add('jump', 1); } catch (e) {} }
+  if (isMyPlayer(p)) {
+    AudioSys.sfx('hop');
+    try { Gift.add('jump', 1); } catch (e) {}
+    // v5.84：起跳 —— 腳下一小圈氣流（不震屏、不定格，避免跳一下就卡）
+    try {
+      Game.rings.push({ kind: 'ring', x: p.x, y: p.y + (Game.T || 40) * .30,
+                        born: Game.gameT || 0, dur: .26, r: (Game.T || 40) * .80,
+                        color: '#dff6ff', thick: .045 });
+    } catch (eH) {}
+  }
   burst(p.x, p.y + T * .34, p.storm ? '#c9b0ff' : '#e6dcff', 10, 130);
   return true;
 }
@@ -11019,6 +11386,24 @@ const AbyssPerk = (function () {
     const box = el('abyssPerk');
     if (box) box.classList.add('on');
     try { AudioSys.sfx('levelup'); } catch (e) {}
+    // v5.84：升級 —— 金色光柱 ＋ 星芒往上飄（這一支以前完全沒有聲音，也沒有特效）
+    try {
+      const _me = (Game.players && Game.players[0]) || null;
+      const _px = _me ? _me.x : 0;
+      const _py = _me ? _me.y : 0;
+      if (_px || _py) {
+        heroRune(_px, _py, '#ffd166', .70);
+        for (let _i = 0; _i < 14; _i++) {
+          const _T2 = Game.T || 40;
+          bitsAdd({ type: 'star', x: _px + (Math.random() - .5) * _T2 * .9,
+                    y: _py + (Math.random() - .5) * _T2 * .5,
+                    vx: (Math.random() - .5) * 40, vy: -90 - Math.random() * 120,
+                    t: .70, max: .70, r: _T2 * (.040 + Math.random() * .030),
+                    rot: Math.random() * 6.28, spin: 4, col: '#ffe9a8', g: 30 });
+        }
+        heroImpact(_px, _py, { power: 1.8, col: '#ffd166', bit: 'star', shake: 2, cam: false });
+      }
+    } catch (eLv) {}
   }
   return { open: open, list: function () { return ABYSS_PERKS; }, _take: take };
 })();
@@ -11367,7 +11752,7 @@ function buildBossArenaStage(stage, fresh, rpg) {
   Game.hurtCount = 0;
   Game.bombs = []; Game.flames = []; Game.items = []; Game.particles = [];
   Game.bolts = []; Game.foeAoe = []; Game.foeHaz = []; Game.rollers = []; Game.orbs = [];
-  Game.pops = []; Game.edgeFx = 0; Game.rings = []; Game.flash = 0;
+  Game.pops = []; Game.edgeFx = 0; Game.rings = []; Game.flash = 0; Game.ghosts = []; Game.camKickX = 0; Game.camKickY = 0;
   Game.sdIndex = 0; Game.sdList = [];
   hideOverlay();
   buildSdList();
@@ -13244,6 +13629,13 @@ function killPlayer(p, silent, killer) {
   p.cry = 3.8;                    // v5.31：被炸到要亮相大哭臉（2.8 → 3.8 秒，看得清楚）
   AudioSys.sfx('die');
   burst(p.x, p.y, p.ch.color, 22, 220);
+  // v5.84：倒下 —— 角色主色炸開 ＋ 90ms 定格 ＋ 三級震屏（這一刻要「重」）
+  try {
+    heroGhost(p, p.ch.color, 2);
+    heroImpact(p.x, p.y, { power: 2.0, col: p.ch.color, bit: 'circ',
+                           stop: .09, shake: 3, cam: false });
+    Game.flash = Math.max(Game.flash || 0, .18);
+  } catch (eD) {}
   startGloat(killer, p);
   bubbleDeathPair(p, killer, Game.T * 1.98, (killer && killer.r) ? killer.r + 18 : Game.T * 1.98);
 }
@@ -14620,6 +15012,13 @@ function killBattlePlayer(p, killer) {
   if (Game.mode === 'br') brOnDeath(p);      // v4.72：大逃殺記名次（不會復活、不坐推車）
   AudioSys.sfx('die');
   burst(p.x, p.y, p.ch.color, 22, 220);
+  // v5.84：倒下 —— 角色主色炸開 ＋ 90ms 定格 ＋ 三級震屏（這一刻要「重」）
+  try {
+    heroGhost(p, p.ch.color, 2);
+    heroImpact(p.x, p.y, { power: 2.0, col: p.ch.color, bit: 'circ',
+                           stop: .09, shake: 3, cam: false });
+    Game.flash = Math.max(Game.flash || 0, .18);
+  } catch (eD) {}
   startGloat(killer, p);
   bubbleDeathPair(p, killer, Game.T * 1.98, (killer && killer.r) ? killer.r + 18 : Game.T * 1.98);
   // 掉落裝備（SBR 玩法：死亡掉道具）
@@ -16043,6 +16442,11 @@ function updateBRDrop(dt) {
       if (d.t <= 0) {
         d.st = 'land'; d.h = 0; d.glow = 1.5;
         try { AudioSys.sfx('land'); } catch (e) {}
+        // v5.84：落地 —— 一圈貼地揚塵（跳躍落點要看得出「著地了」）
+        try {
+          Game.rings.push({ kind: 'dust', x: d.x, y: d.y + (Game.T || 40) * .26,
+                            born: Game.gameT || 0, dur: .34, r: (Game.T || 40) * 1.35 });
+        } catch (eLd) {}
         try { burst((d.x + .5) * T, (d.y + .5) * T, '#ffe9a8', 14, 130); } catch (e) {}
       }
       continue;
@@ -17459,6 +17863,9 @@ function startDash(p, dirs) {
   try { AudioSys.sfx('dash'); } catch (e) {}
   try { burst(p.x, p.y, '#9fe8ff', 12, 190); } catch (e) {}
   try { burst(p.x, p.y + (p.r || 14) * .5, '#dff6ff', 6, 90); } catch (e) {}
+  // v5.84：衝刺起手 —— 兩個殘影 ＋ 腳下氣爆（用「人形剪影」而不是一團粒子）
+  try { heroGhost(p, p.dashColor || '#9fe8ff', 1); } catch (e) {}
+  try { heroImpact(p.x, p.y + (p.r || 14) * .5, { power: .80, col: '#9fe8ff', bit: 'circ', stop: .010, shake: 0, cam: false }); } catch (e) {}
 }
 function dashStep(p, dt) {
   const T = Game.T;
@@ -17471,6 +17878,10 @@ function dashStep(p, dt) {
   // 殘影：每幀掉 2 顆，看得出「瞬間位移」
   if (Math.random() < .85) {
     try { burst((p.x + ox) / 2, (p.y + oy) / 2, p.dashColor || '#8fd9ff', 2, 70); } catch (e) {}
+  }
+  // v5.84：沿路補人形殘影（每兩幀一個）→ 衝刺看起來是「一串人過去」而不是「一坨光」
+  if (Math.random() < .55) {
+    try { heroGhost(p, p.dashColor || '#8fd9ff', 1); } catch (e) {}
   }
   if (p.dashT > 0) p.dashT -= dt;
   if (p.dashT <= 0) {
@@ -17862,6 +18273,190 @@ function bitsAdd(b) {
   Game.bits.push(b);
 }
 /* 命中特效。power：0.6＝小招、1＝一般、1.6＝大招（王） */
+/* ══════════════════════════════════════════════════════════════════
+   v5.84：主角特效層
+   怪物那邊（v5.83）已經是「白核＋衝擊環＋元素碎片＋粒子」四層，
+   主角卻還停在「一坨 burst 粒子」。這裡把主角拉到同一個規格，再往上加
+   三件怪物沒有的東西：
+     · 白金核心（命中的第一瞬是白裡透金，不是純白）
+     · 方向性衝擊（主角是「打出去」，所以除了圓環還會朝面向炸出速度線）
+     · 二段餘韻（60ms 後再彈一圈，聽起來、看起來都像「回音」）
+   另外補上蓄力法陣（往內收，跟衝擊波相反）與殘影，讓每個動作都有起手。
+   ══════════════════════════════════════════════════════════════════ */
+// 8 個角色專屬技的視覺主題（顏色 ＋ 碎片形狀）—— 換角色真的看得出不同
+const CH_THEME = {
+  gale:      { col: '#7fe3ff', bit: 'circ' },
+  roll:      { col: '#ffd48a', bit: 'sq' },
+  quickfuse: { col: '#ffb020', bit: 'arc' },
+  enchant:   { col: '#ff7a3d', bit: 'ember' },
+  loot:      { col: '#ffd166', bit: 'star' },
+  bulwark:   { col: '#9fd8ff', bit: 'sq' },
+  refill:    { col: '#ffc46b', bit: 'sq' },
+  stardust:  { col: '#e6d4ff', bit: 'star' }
+};
+// 4 個主動技的主題
+const SK_THEME = {
+  det:    { col: '#ffb347', bit: 'sq' },
+  shield: { col: '#7fd0ff', bit: 'circ' },
+  frost:  { col: '#9fe8ff', bit: 'tri' },
+  quake:  { col: '#ffcf8a', bit: 'sq' }
+};
+
+// 分層震屏：1 小（放彈命中）／2 中（技能）／3 大（連招、大絕）
+function shakeLv(lv) {
+  if (typeof Game === 'undefined' || !Game) return;
+  const amp = lv >= 3 ? .58 : lv === 2 ? .34 : .17;
+  Game.shake = Math.max(Game.shake || 0, amp);
+}
+
+// 鏡頭微推：朝命中的「反方向」踢一下，像攝影師被氣浪推開。
+//   只在玩家自己開了「畫面震動」時才動作（暈動症友善），幅度也壓在 9px 內。
+function camKick(ang, p) {
+  if (typeof Game === 'undefined' || !Game) return;
+  if (!settings.shake) return;
+  const amt = Math.min(7.5, 2.0 + 2.6 * (p == null ? 1 : p));
+  const ax = (ang == null) ? 0 : Math.cos(ang);
+  const ay = (ang == null) ? 0 : Math.sin(ang) * .55;
+  Game.camKickX = clamp((Game.camKickX || 0) - ax * amt, -9, 9);
+  Game.camKickY = clamp((Game.camKickY || 0) - ay * amt, -9, 9);
+}
+
+// 速度線：命中方向的細長條（走 bits 管線，所以畫質分級、清場都會自動吃到）
+function speedLines(x, y, ang, n, len, col) {
+  const T = Game.T || 40;
+  const calmK = settings.calm ? .5 : 1;
+  const nn = Math.max(0, Math.round(n * qualPart() * calmK));
+  for (let i = 0; i < nn; i++) {
+    // v5.84b：角度從 ±1.05 收到 ±.42 —— 散太開會變成「放射雜訊」，收窄才像「打出去」
+    const a = ang + (Math.random() - .5) * .84;
+    const d0 = T * (.22 + Math.random() * .34);
+    bitsAdd({
+      type: 'line',
+      x: x + Math.cos(a) * d0, y: y + Math.sin(a) * d0 * .58,
+      vx: Math.cos(a) * (260 + Math.random() * 220),
+      vy: Math.sin(a) * (260 + Math.random() * 220) * .58,
+      t: .15 + Math.random() * .13, max: .28,
+      r: len * (.55 + Math.random() * .75),
+      rot: a, spin: 0, col: col, g: 0
+    });
+  }
+}
+
+/**
+ * 主角命中／施放特效的統一入口。
+ * opt = { power, col, dir, bit, stop, shake, cam, flash }
+ *   power 1＝普通、1.5＝技能、2.2＝連招
+ *   dir   面向角度（弧度）；有給就多一層方向性速度線
+ */
+function heroImpact(x, y, opt) {
+  opt = opt || {};
+  const T = Game.T || 40;
+  const p = opt.power == null ? 1 : opt.power;
+  const col = opt.col || '#ffe6a8';
+  const bit = opt.bit || 'circ';
+  const gt = Game.gameT || 0;
+  if (!Game.rings) Game.rings = [];
+
+  // ① 白金核心（撞擊的第一瞬）
+  // v5.84b：核心刻意比彩色環小一圈、亮度壓到 70% —— 第一版兩者一樣大，
+  //   結果白核把彩色環整個吃掉，遠看只是一顆白球（沒有層次）。
+  Game.rings.push({ kind: 'core', x: x, y: y - T * .04, born: gt, weak: true, color: col,
+                    dur: .26 + .10 * p, r: T * (.78 + .36 * p) });
+  // ② 主題色衝擊環（加粗，讓「環」在亮核旁邊仍然看得見）
+  Game.rings.push({ kind: 'ring', x: x, y: y - T * .02, born: gt, glow: true,
+                    dur: .36 + .15 * p, r: T * (1.16 + .72 * p),
+                    color: col, thick: .100 + .038 * p });
+  // ③ 二段餘韻：60ms 後再彈一圈（比第一圈大、比第一圈淡）
+  Game.rings.push({ kind: 'ring', x: x, y: y - T * .02, born: gt + .06,
+                    dur: .34 + .14 * p, r: T * (1.62 + .96 * p),
+                    color: '#ffffff', thick: .048 + .022 * p });
+  // ④ 方向性速度線
+  if (opt.dir != null) speedLines(x, y, opt.dir, Math.round(4 + 3 * p), T * (.50 + .26 * p), col);
+  // ⑤ 粒子
+  burst(x, y, col, Math.round(10 + 8 * p), 150 + 70 * p);
+  burst(x, y, '#ffffff', Math.round(3 + 2 * p), 90 + 40 * p);
+  // ⑥ 碎片（走畫質分級）
+  if (qualLevel() > 0) {
+    const calmK = settings.calm ? .45 : 1;
+    const n = Math.max(2, Math.round((3 + 2 * p) * calmK));
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.2832, sp = (70 + Math.random() * 160) * (.8 + p * .4);
+      const b = {
+        x: x + (Math.random() - .5) * T * .34, y: y + (Math.random() - .5) * T * .26,
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * .62,
+        t: .32 + Math.random() * .26, max: .58,
+        r: T * (.075 + Math.random() * .055),
+        rot: Math.random() * 6.28, spin: (Math.random() - .5) * 10,
+        col: col, kind: bit, type: bit, g: 150
+      };
+      if (bit === 'ember') { b.vy = -Math.abs(b.vy) * .9 - 40; b.g = 120; }
+      else if (bit === 'star') { b.g = 90; b.type = 'star'; }
+      else if (bit === 'tri') { b.g = 240; }
+      bitsAdd(b);
+    }
+  }
+  // ⑦ 打擊回饋：定格 ＋ 分層震屏 ＋ 鏡頭微推
+  hitStop(opt.stop == null ? (.024 + .010 * p) : opt.stop);
+  shakeLv(opt.shake == null ? (p >= 1.8 ? 3 : p >= 1.3 ? 2 : 1) : opt.shake);
+  if (opt.cam !== false) camKick(opt.dir, p);
+  if (p >= 1.8) Game.flash = Math.max(Game.flash || 0, .10 + .05 * (p - 1.8));
+}
+
+/** 蓄力法陣：往「內」收的雙圈 ＋ 四道跑動刻痕（跟衝擊波方向相反 → 一眼看出在集氣） */
+function heroRune(x, y, col, dur) {
+  const T = Game.T || 40;
+  const gt = Game.gameT || 0;
+  if (!Game.rings) Game.rings = [];
+  const d0 = dur || .46;
+  Game.rings.push({ kind: 'gather', x: x, y: y + T * .30, born: gt, dur: d0,
+                    r: T * (1.15 + (col === '#7fd0ff' ? .35 : 0)), color: col,
+                    thick: .062, spin: Math.random() * 6.28 });
+  Game.rings.push({ kind: 'gather', x: x, y: y + T * .30, born: gt + .05, dur: d0 * .92,
+                    r: T * 1.78, color: '#ffffff', thick: .034, spin: Math.random() * 6.28 });
+}
+
+/** 殘影：衝刺跳躍技能用，留在原地快速淡出（不是粒子，是「看得出是一個人」的剪影） */
+function heroGhost(p, col, n) {
+  if (!p || !Game) return;
+  if (!Game.ghosts) Game.ghosts = [];
+  const T = Game.T || 40;
+  const cnt = Math.max(1, Math.round((n || 1) * (settings.calm ? .4 : 1) * qualPart()));
+  for (let i = 0; i < cnt; i++) {
+    Game.ghosts.push({
+      x: p.x + (Math.random() - .5) * T * .10,
+      y: p.y + (Math.random() - .5) * T * .06,
+      T: T, col: col || '#9fe8ff',
+      t: 0, life: .36 + Math.random() * .10,
+      seed: Math.random() * 6.28
+    });
+  }
+  while (Game.ghosts.length > 26) Game.ghosts.shift();
+}
+
+function drawHeroGhosts(T) {
+  const list = Game.ghosts || [];
+  if (!list.length) return;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const g = list[i];
+    g.t += .016;
+    if (g.t >= g.life) { list.splice(i, 1); continue; }
+    const k = 1 - g.t / g.life;
+    const R = T * .34 * (.72 + .28 * k);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    // 地面投影（最淡）
+    ctx.globalAlpha = k * .18;
+    ctx.fillStyle = g.col;
+    ctx.beginPath(); ctx.ellipse(g.x, g.y + T * .30, R * 1.02, R * .40, 0, 0, 6.283); ctx.fill();
+    // 身體（窄長橢圓）＋ 頭（小圓）→ 兩個連在一起才像「人」，分太開就變兩顆球
+    ctx.globalAlpha = k * .34;
+    ctx.beginPath(); ctx.ellipse(g.x, g.y + R * .18, R * .58, R * .80, 0, 0, 6.283); ctx.fill();
+    ctx.globalAlpha = k * .42;
+    ctx.beginPath(); ctx.arc(g.x, g.y - R * .88, R * .40, 0, 6.283); ctx.fill();
+    ctx.restore();
+  }
+}
+
 function spellImpact(x, y, kind, power) {
   const T = Game.T || 40;
   const p = power == null ? 1 : power;
@@ -17950,6 +18545,29 @@ function drawBits(T) {
       ctx.globalAlpha = k * .55;
       ctx.fillStyle = '#fff3c4';
       ctx.beginPath(); ctx.arc(0, 0, b.r * .38, 0, 6.2832); ctx.fill();
+    } else if (b.type === 'line') {
+      // 速度線：沿 rot 方向的細長亮條（主角招式命中時往外炸）
+      ctx.globalAlpha = k * .80;
+      ctx.globalCompositeOperation = 'lighter';
+      const lw = Math.max(1.8, T * .030);
+      ctx.fillRect(-b.r * .5, -lw, b.r, lw * 2);
+      ctx.globalAlpha = k * .34;
+      ctx.fillRect(-b.r * .5, -lw * 2.4, b.r * .80, lw * 4.8);
+    } else if (b.type === 'star') {
+      // 四芒星：兩條拉長的菱形交叉 —— 比圓點更像「星」，縮到 8px 也認得出
+      ctx.globalAlpha = .28 + k * .62;
+      ctx.globalCompositeOperation = 'lighter';
+      const R1 = b.r * (2.8 + (1 - k) * 1.1), R2 = b.r * .40;
+      ctx.beginPath();
+      ctx.moveTo(0, -R1);
+      ctx.quadraticCurveTo(R2, -R2, R1, 0);
+      ctx.quadraticCurveTo(R2, R2, 0, R1);
+      ctx.quadraticCurveTo(-R2, R2, -R1, 0);
+      ctx.quadraticCurveTo(-R2, -R2, 0, -R1);
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = k * .75;
+      ctx.fillStyle = '#fffdf4';
+      ctx.beginPath(); ctx.arc(0, 0, R2 * .62, 0, 6.2832); ctx.fill();
     } else if (b.type === 'bubble') {
       ctx.globalAlpha = k * .55;
       ctx.lineWidth = Math.max(1, b.r * .30);
@@ -24902,7 +25520,9 @@ function render() {
     ctx.translate(-VIEW_W / 2, -VIEW_H / 2);
   }
   // 相機：地圖大於畫面時，把世界平移成「角色置中」
-  ctx.translate(Math.round(Game.camX), Math.round(Game.camY));
+  // v5.84：鏡頭微推（只在玩家開了「畫面震動」時才會有值 → 暈動症友善）
+  ctx.translate(Math.round(Game.camX) + Math.round(Game.camKickX || 0),
+                Math.round(Game.camY) + Math.round(Game.camKickY || 0));
 
   // 地板（SBR 風：深縫 + 棋盤瓷磚）
   //   v4.72：只跑鏡頭看得到的格子；大逃殺的島嶼各自一種地形（themeAt）。
@@ -25018,26 +25638,31 @@ function render() {
         const pk = k < .34 ? k / .34 : 1;
         const rr = Math.max(4, rg.r * (.55 + .45 * Math.sqrt(pk)));
         const gg = ctx.createRadialGradient(rg.x, rg.y, 1, rg.x, rg.y, rr);
-        gg.addColorStop(0, 'rgba(255,255,255,' + (.62 * (1 - k) * (1 - k)).toFixed(3) + ')');
-        gg.addColorStop(.38, 'rgba(255,250,232,' + (.34 * (1 - k) * (1 - k)).toFixed(3) + ')');
+        // v5.84b：weak 的核心（主角用）亮度只給 70%，彩色衝擊環才不會被洗成白的
+        const wa = rg.weak ? .70 : 1;
+        gg.addColorStop(0, 'rgba(255,255,255,' + (.62 * wa * (1 - k) * (1 - k)).toFixed(3) + ')');
+        gg.addColorStop(.38, 'rgba(255,250,232,' + (.34 * wa * (1 - k) * (1 - k)).toFixed(3) + ')');
         gg.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.fillStyle = gg;
         ctx.beginPath(); ctx.ellipse(rg.x, rg.y, rr, rr * .52, 0, 0, 6.283); ctx.fill();
         // 硬邊白心：前 45% 畫一顆實心橢圓 —— 只有漸層會太柔，看不出「撞到了」
         if (k < .45) {
           ctx.globalCompositeOperation = 'lighter';
-          ctx.globalAlpha = (1 - k / .45) * .55;
+          ctx.globalAlpha = (1 - k / .45) * (rg.weak ? .40 : .55);
           ctx.fillStyle = '#fffdf4';
           ctx.beginPath(); ctx.ellipse(rg.x, rg.y, rr * .34, rr * .18, 0, 0, 6.283); ctx.fill();
           // 放射線：往外炸的短刺（讓它像「撞擊」而不是「光暈」）
-          ctx.globalAlpha = (1 - k / .45) * .70;
-          ctx.strokeStyle = '#fff6dd';
+          ctx.globalAlpha = (1 - k / .45) * (rg.weak ? .58 : .70);
+          // v5.84b：主角的刺用主題色（不是白色）—— 白刺 + 白核 + 白餘韻三層白疊起來
+          //   會變成一顆「白光球」，看不出是哪一招；換成主題色之後紫就是紫、橙就是橙
+          ctx.strokeStyle = rg.weak ? (rg.color || '#fff6dd') : '#fff6dd';
           ctx.lineWidth = Math.max(1.2, T * .035);
+          const _sp = rg.weak ? .72 : 1;
           for (let s = 0; s < 8; s++) {
             const a = s * .785 + .39;
             ctx.beginPath();
             ctx.moveTo(rg.x + Math.cos(a) * rr * .34, rg.y + Math.sin(a) * rr * .18);
-            ctx.lineTo(rg.x + Math.cos(a) * rr * 1.02, rg.y + Math.sin(a) * rr * .54);
+            ctx.lineTo(rg.x + Math.cos(a) * rr * 1.02 * _sp, rg.y + Math.sin(a) * rr * .54 * _sp);
             ctx.stroke();
           }
         }
@@ -25069,6 +25694,29 @@ function render() {
         gg.addColorStop(1, 'rgba(200,186,158,0)');
         ctx.fillStyle = gg;
         ctx.beginPath(); ctx.ellipse(rg.x, rg.y, rr, rr * .50, 0, 0, 6.283); ctx.fill();
+      } else if (rg.kind === 'gather') {
+        // 蓄力環：從外圍往中心收（衝擊波是往外炸，這個是往內聚）→ 一眼看出「在集氣」
+        const th = rg.thick == null ? .07 : rg.thick;
+        const rr = Math.max(3, rg.r * (.30 + .70 * (1 - k)));
+        // v5.84b：加亮混合 —— 第一版用一般混合，金色疊在草地上幾乎看不見（實測截圖只剩一條淡影）
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = .40 + k * .55;
+        ctx.strokeStyle = rg.color;
+        ctx.lineWidth = Math.max(2.2, T * th * (1 - k * .35));
+        ctx.shadowColor = rg.color; ctx.shadowBlur = T * .24;
+        ctx.beginPath(); ctx.ellipse(rg.x, rg.y, rr, rr * .44, 0, 0, 6.283); ctx.stroke();
+        // 四道刻痕往內跑（順便轉，看得出在轉）
+        ctx.globalAlpha = .46 + k * .50;
+        ctx.lineWidth = Math.max(1.8, T * .036);
+        for (let m = 0; m < 4; m++) {
+          const a = m * 1.5708 + (rg.spin || 0) + k * 1.1;
+          const r0 = rr * 1.24, r1 = rr * .78;
+          ctx.beginPath();
+          ctx.moveTo(rg.x + Math.cos(a) * r0, rg.y + Math.sin(a) * r0 * .44);
+          ctx.lineTo(rg.x + Math.cos(a) * r1, rg.y + Math.sin(a) * r1 * .44);
+          ctx.stroke();
+        }
+        ctx.shadowBlur = 0;
       } else {
         const th = rg.thick == null ? .10 : rg.thick;
         const rr = rg.r * Math.pow(k, .45);        // 前半段就衝到接近最大 → 才看得見
@@ -25232,6 +25880,7 @@ function render() {
   // v4.16：躲在樹叢／破屋裡的「別人」完全不畫（連頭上的名字都沒有 → 真的看不到）；
   //        自己照畫，靠上面那層半透明的葉子讓你知道自己在裡面
   if ((Game.daily && Game.daily.ms) || Game.wchal) { try { drawDailyGhost(T); } catch (e) {} }
+  drawHeroGhosts(T);          // v5.84：主角殘影（畫在角色之前，才不會蓋住本人）
   Game.players.forEach(function (p) {
     if (playerHiding(p) && !isMyPlayer(p)) return;
     if (!onScreen(p.x, p.y, T * 1.6)) return;      // v4.77：鏡頭外不畫（大步跳過）
@@ -30939,6 +31588,14 @@ function loop(ts) {
      只影響模擬（updateSolo/updateBR/updateBattle），不影響相機與選單。 */
   let gdt = dt;
   if (Game.stopT > 0) { Game.stopT = Math.max(0, Game.stopT - dt); gdt = dt * .08; }
+  // v5.84：鏡頭微推的回彈（約 80ms 收回，比震屏慢一點 → 感覺是「被推」不是「在抖」）
+  if (Game.camKickX || Game.camKickY) {
+    const dk = Math.min(1, dt * 11);
+    Game.camKickX = (Game.camKickX || 0) * (1 - dk);
+    Game.camKickY = (Game.camKickY || 0) * (1 - dk);
+    if (Math.abs(Game.camKickX) < .12) Game.camKickX = 0;
+    if (Math.abs(Game.camKickY) < .12) Game.camKickY = 0;
+  }
   Input.framePads();                       // 手把整幀快照（遊戲與選單共用）
   // v3.9：手機按鈕圖示（炸彈火苗／遙控 LED）跟著時間動；20fps 就夠，省電
   if (document.body && document.body.classList.contains('touch')) {
@@ -37699,6 +38356,17 @@ function hurtFeedback(p, dh, da) {
   }
   hurtEdge(dh ? 'hp' : 'armor');
   hudFlash(dh ? 'hp' : 'armor', 900, dh ? 'hurt' : 'armor');
+  // v5.84：被打到的那一下也升到主角規格 —— 生命掉＝紅色爆（燙），護甲掉＝藍色（金屬）
+  //   cam:false 是不推鏡：受傷已經有紅邊＋震屏，再推鏡會暈
+  try {
+    heroImpact(p.x, p.y, {
+      power: dh ? 1.25 : .95,
+      col: dh ? '#ff4d5e' : '#5fb6ff',
+      bit: dh ? 'ember' : 'sq',
+      stop: dh ? .045 : .028,
+      shake: 2, cam: false
+    });
+  } catch (eHf) {}
 }
 
 function drawPops(T) {
@@ -37861,6 +38529,13 @@ function rpgHurt(p, silent, killer) {
     try { if (p === Game.players[0]) Ach.count('death', 1); } catch (e) {}
     AudioSys.sfx('die');
     burst(p.x, p.y, p.ch.color, 22, 220);
+    // v5.84：倒下（冒險模式生命歸零）—— 同一個重擊規格
+    try {
+      heroGhost(p, p.ch.color, 2);
+      heroImpact(p.x, p.y, { power: 2.0, col: p.ch.color, bit: 'circ',
+                             stop: .09, shake: 3, cam: false });
+      Game.flash = Math.max(Game.flash || 0, .18);
+    } catch (eD) {}
     startGloat(killer, p);
     bubbleDeathPair(p, killer, Game.T * 1.98, (killer && killer.r) ? killer.r + 18 : Game.T * 1.98);
   }
@@ -38023,7 +38698,20 @@ const RpgSkill = (function () {
       try { Game.rings.push({ kind: 'ring', x: p.x, y: p.y, born: Game.gameT || 0, dur: .55, r: 5 * T, color: '#bfe9ff', thick: .1 }); } catch (e) {}
       Game.flash = Math.max(Game.flash || 0, .35);
       Game.shake = Math.max(Game.shake || 0, .45);
-      try { AudioSys.sfx('explode'); } catch (e) {}
+      // v5.84：碎冰 —— 連招第一段一定要跟單招聽起來不同（冰爆 + 滿地碎晶）
+      try { heroRune(p.x, p.y, '#bfe9ff', .55); } catch (e) {}
+      try { heroImpact(p.x, p.y, { power: 2.2, col: '#bfe9ff', bit: 'tri', shake: 3 }); } catch (e) {}
+      try {
+        for (let _i = 0; _i < 16; _i++) {
+          const _a = Math.random() * 6.2832, _sp = 200 + Math.random() * 300;
+          bitsAdd({ type: 'tri', x: p.x + Math.cos(_a) * (Game.T || 40) * .4,
+                    y: p.y + Math.sin(_a) * (Game.T || 40) * .4,
+                    vx: Math.cos(_a) * _sp, vy: Math.sin(_a) * _sp * .6,
+                    t: .52, max: .52, r: (Game.T || 40) * .065,
+                    rot: _a, spin: (Math.random() - .5) * 11, col: '#e8f8ff', g: 260 });
+        }
+      } catch (e) {}
+      try { AudioSys.sfx('cb_freeze'); } catch (e) {}
       try { if (typeof comboToast === 'function') comboToast(t('combo.freeze')); } catch (e) {}
     } else if (a === 'shield' && id === 'det') {
       /* 盾炸：把身邊 2 格怪往外震 2 格，並補回 1 秒無敵 */
@@ -38046,7 +38734,18 @@ const RpgSkill = (function () {
       try { Game.rings.push({ kind: 'ring', x: p.x, y: p.y, born: Game.gameT || 0, dur: .48, r: 2.5 * T, color: '#9fd8ff', thick: .12 }); } catch (e) {}
       for (let k = 0; k < 26; k++) burst(p.x, p.y, '#bfe4ff', 6, 320);
       Game.shake = Math.max(Game.shake || 0, .4);
-      try { AudioSys.sfx('explode'); } catch (e) {}
+      // v5.84：盾炸 —— 能量宣洩（金屬聲 + 反向掃頻）
+      try { heroRune(p.x, p.y, '#9fd8ff', .60); } catch (e) {}
+      try { heroImpact(p.x, p.y, { power: 2.1, col: '#9fd8ff', bit: 'circ', shake: 3 }); } catch (e) {}
+      try {
+        for (let _i = 0; _i < 6; _i++) {
+          Game.rings.push({ kind: 'ring', x: p.x, y: p.y - (Game.T || 40) * .04,
+                            born: (Game.gameT || 0) + _i * .04, dur: .44,
+                            r: (Game.T || 40) * (1.0 + _i * .42), color: '#dff4ff',
+                            thick: .06, glow: true });
+        }
+      } catch (e) {}
+      try { AudioSys.sfx('cb_shield'); } catch (e) {}
       try { if (typeof comboToast === 'function') comboToast(t('combo.shield')); } catch (e) {}
     } else if (a === 'det' && id === 'quake') {
       /* 氣浪：每一個炸點都變成一個小暈眩圈 */
@@ -38063,6 +38762,20 @@ const RpgSkill = (function () {
       });
       try { Game.rings.push({ kind: 'ring', x: p.x, y: p.y, born: Game.gameT || 0, dur: .55, r: 4 * T, color: '#ffcf8a', thick: .1 }); } catch (e) {}
       Game.shake = Math.max(Game.shake || 0, .35);
+      // v5.84：氣浪 —— 這一招原本完全沒有聲音（只跳提示），補上最「悶」的一支
+      try { heroRune(p.x, p.y, '#ffcf8a', .52); } catch (e) {}
+      try { heroImpact(p.x, p.y, { power: 2.0, col: '#ffcf8a', bit: 'sq', shake: 3 }); } catch (e) {}
+      try {
+        for (let _i = 0; _i < 12; _i++) {
+          const _a = Math.random() * 6.2832, _sp = 240 + Math.random() * 260;
+          bitsAdd({ type: 'sq', x: p.x + Math.cos(_a) * (Game.T || 40) * .35,
+                    y: p.y + Math.sin(_a) * (Game.T || 40) * .35,
+                    vx: Math.cos(_a) * _sp, vy: Math.sin(_a) * _sp * .6,
+                    t: .46, max: .46, r: (Game.T || 40) * .05,
+                    rot: _a, spin: (Math.random() - .5) * 7, col: '#ffe6c0', g: 280 });
+        }
+      } catch (e) {}
+      try { AudioSys.sfx('cb_wave'); } catch (e) {}
       try { if (typeof comboToast === 'function') comboToast(t('combo.gust')); } catch (e) {}
     }
     return hit;
@@ -38096,29 +38809,57 @@ const RpgSkill = (function () {
     const dv = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[f] || [0, 1];
 
     if (def.id === 'gale') {
+      const _gx = p.x, _gy = p.y;
       charStep(p, dv[0], dv[1], 2);
       p.invuln = Math.max(p.invuln || 0, .8);
+      // v5.84：疾風步 —— 起點沿路留三個殘影（看得出「瞬間位移」），落點氣爆＋法陣
+      try { heroGhost({ x: _gx, y: _gy }, CH_THEME.gale.col, 4); } catch (eG) {}
+      try { heroGhost({ x: (_gx + p.x) / 2, y: (_gy + p.y) / 2 }, CH_THEME.gale.col, 3); } catch (eG) {}
       burst(p.x, p.y, '#c9f0ff', 26, 300);
-      AudioSys.sfx('item');
+      try { heroRune(p.x, p.y, CH_THEME.gale.col, .40); } catch (eG) {}
+      try {
+        heroImpact(p.x, p.y, { power: 1.3, col: CH_THEME.gale.col, bit: 'circ',
+                               dir: Math.atan2(dv[1], dv[0]), cam: false });
+      } catch (eG) {}
+      AudioSys.sfx('ch_gale');
       ok = true;
     } else if (def.id === 'roll') {
+      const _rx = p.x, _ry = p.y;
       charStep(p, -dv[0], -dv[1], 2);
       p.invuln = Math.max(p.invuln || 0, 1);
+      // v5.84：滾地閃避 —— 原地留塵影，落點揚起一圈土黃
+      try { heroGhost({ x: _rx, y: _ry }, CH_THEME.roll.col, 4); } catch (eR) {}
+      burst(_rx, _ry, '#d8c9a8', 14, 130);
       burst(p.x, p.y, '#ffe6a8', 22, 260);
-      AudioSys.sfx('place');
+      try { heroRune(p.x, p.y, CH_THEME.roll.col, .36); } catch (eR) {}
+      try {
+        heroImpact(p.x, p.y, { power: 1.15, col: CH_THEME.roll.col, bit: 'sq',
+                               dir: Math.atan2(-dv[1], -dv[0]), cam: false });
+      } catch (eR) {}
+      AudioSys.sfx('ch_roll');
       ok = true;
     } else if (def.id === 'quickfuse') {
       let n = 0;
       Game.bombs.forEach(function (b) {
         if (b.owner === p && !b.held) { b.timer = Math.max(.05, (b.timer || 0) * .5); n++; }
       });
-      if (n) { burst(p.x, p.y, '#ffd166', 16, 210); AudioSys.sfx('explode'); ok = true; }
+      if (n) {
+        burst(p.x, p.y, '#ffd166', 16, 210);
+        // v5.84：速爆指令 —— 所有引信同時縮短的「集體倒數」感
+        try { heroRune(p.x, p.y, CH_THEME.quickfuse.col, .30); } catch (eQ) {}
+        try { heroImpact(p.x, p.y, { power: 1.25, col: CH_THEME.quickfuse.col, bit: 'arc', cam: false }); } catch (eQ) {}
+        AudioSys.sfx('ch_fuse');
+        ok = true;
+      }
     } else if (def.id === 'enchant') {
       if ((p.power | 0) < 10) {
         p.power = Math.min(10, (p.power | 0) + 1);
         burst(p.x, p.y, '#ff9a3c', 28, 300);
         Game.flash = Math.max(Game.flash || 0, .28);
-        AudioSys.sfx('heal');
+        // v5.84：烈焰灌注 —— 腳下火環往內收，身上爆一圈火星
+        try { heroRune(p.x, p.y, CH_THEME.enchant.col, .52); } catch (eE) {}
+        try { heroImpact(p.x, p.y, { power: 1.6, col: CH_THEME.enchant.col, bit: 'ember', shake: 2 }); } catch (eE) {}
+        AudioSys.sfx('ch_enchant');
         ok = true;
       }
     } else if (def.id === 'loot') {
@@ -38131,7 +38872,19 @@ const RpgSkill = (function () {
         n++;
       });
       burst(p.x, p.y, '#ffe07a', 20 + Math.min(20, n * 2), 240);
-      AudioSys.sfx('coin');
+      // v5.84：拾金之手 —— 星芒往身上收（不是往外炸，才像「吸」）
+      try { heroRune(p.x, p.y, CH_THEME.loot.col, .42); } catch (eL) {}
+      try {
+        for (let _i = 0; _i < Math.min(10, 3 + n); _i++) {
+          const _a = Math.random() * 6.2832, _d = (Game.T || 40) * (1.4 + Math.random() * 1.4);
+          bitsAdd({ type: 'star', x: p.x + Math.cos(_a) * _d, y: p.y + Math.sin(_a) * _d * .55,
+                    vx: -Math.cos(_a) * 210, vy: -Math.sin(_a) * 210 * .55,
+                    t: .30, max: .30, r: (Game.T || 40) * .05, rot: _a, spin: 6,
+                    col: CH_THEME.loot.col, g: 0 });
+        }
+      } catch (eL) {}
+      try { heroImpact(p.x, p.y, { power: 1.1, col: CH_THEME.loot.col, bit: 'star', cam: false }); } catch (eL) {}
+      AudioSys.sfx('ch_loot');
       ok = true;
     } else if (def.id === 'bulwark') {
       p.armorMax = Math.max(p.armorMax | 0, (p.armorCur | 0) + 2);
@@ -38139,13 +38892,27 @@ const RpgSkill = (function () {
       p.invuln = Math.max(p.invuln || 0, 1.8);
       burst(p.x, p.y, '#9fd8ff', 30, 280);
       Game.shake = Math.max(Game.shake || 0, .22);
-      AudioSys.sfx('heal');
+      // v5.84：鐵壁 —— 六角護罩成形（環 ＋ 金屬碎）
+      try { heroRune(p.x, p.y, CH_THEME.bulwark.col, .55); } catch (eB) {}
+      try {
+        for (let _i = 0; _i < 6; _i++) {
+          Game.rings.push({ kind: 'ring', x: p.x, y: p.y - (Game.T || 40) * .05,
+                            born: (Game.gameT || 0) + _i * .035, dur: .42,
+                            r: (Game.T || 40) * (1.05 + _i * .10), color: CH_THEME.bulwark.col,
+                            thick: .05, glow: true });
+        }
+      } catch (eB) {}
+      try { heroImpact(p.x, p.y, { power: 1.5, col: CH_THEME.bulwark.col, bit: 'sq', shake: 2, cam: false }); } catch (eB) {}
+      AudioSys.sfx('ch_bulwark');
       ok = true;
     } else if (def.id === 'refill') {
       if ((p.maxBombs | 0) < 8) {
         p.maxBombs = Math.min(8, (p.maxBombs | 0) + 1);
         burst(p.x, p.y, '#ffc46b', 22, 250);
-        AudioSys.sfx('item');
+        // v5.84：軍械補給 —— 補給箱落地的兩段式衝擊
+        try { heroRune(p.x, p.y, CH_THEME.refill.col, .34); } catch (eF) {}
+        try { heroImpact(p.x, p.y, { power: 1.1, col: CH_THEME.refill.col, bit: 'sq', cam: false }); } catch (eF) {}
+        AudioSys.sfx('ch_refill');
         ok = true;
       }
     } else if (def.id === 'stardust') {
@@ -38161,7 +38928,20 @@ const RpgSkill = (function () {
       });
       burst(p.x, p.y, '#ffffff', 40, 340);
       Game.flash = Math.max(Game.flash || 0, .3);
-      AudioSys.sfx('item');
+      // v5.84：星塵爆 —— 白核 ＋ 星芒四散 ＋ 兩段環
+      try { heroRune(p.x, p.y, CH_THEME.stardust.col, .48); } catch (eS) {}
+      try {
+        heroImpact(p.x, p.y, { power: 1.9, col: CH_THEME.stardust.col, bit: 'star', shake: 3 });
+        for (let _i = 0; _i < 12; _i++) {
+          const _a = Math.random() * 6.2832, _sp = 180 + Math.random() * 260;
+          bitsAdd({ type: 'star', x: p.x + (Math.random() - .5) * (Game.T || 40) * .5,
+                    y: p.y + (Math.random() - .5) * (Game.T || 40) * .5,
+                    vx: Math.cos(_a) * _sp, vy: Math.sin(_a) * _sp * .6,
+                    t: .44, max: .44, r: (Game.T || 40) * (.045 + Math.random() * .035),
+                    rot: _a, spin: (Math.random() - .5) * 8, col: '#ffffff', g: 30 });
+        }
+      } catch (eS) {}
+      AudioSys.sfx('ch_stardust');
       ok = true;
     }
     if (!ok) return false;
@@ -38278,13 +39058,27 @@ const RpgSkill = (function () {
       ok = n > 0;
       if (ok) {
         burst(p.x, p.y, '#ffd166', 12, 170);
-        AudioSys.sfx('explode');
+        // v5.84：遙控引爆 —— 手上的「咔」＋ 腳下紅橙法陣（真的炸的是那些炸彈）
+        try { heroRune(p.x, p.y, SK_THEME.det.col, .34); } catch (eD) {}
+        try { heroImpact(p.x, p.y, { power: 1.15, col: SK_THEME.det.col, bit: 'sq', cam: false }); } catch (eD) {}
+        AudioSys.sfx('sk_det');
       }
     } else if (id === 'shield') {
       p.invuln = Math.max(p.invuln || 0, DUR.shield[l - 1]);
       p.shieldGlow = DUR.shield[l - 1];
       burst(p.x, p.y, '#7fd0ff', 20, 230);
-      AudioSys.sfx('heal');
+      // v5.84：守護護盾 —— 收束法陣 ＋ 三層罩子（越裡面越亮）
+      try { heroRune(p.x, p.y, SK_THEME.shield.col, .50); } catch (eSh) {}
+      try {
+        for (let _i = 0; _i < 3; _i++) {
+          Game.rings.push({ kind: 'ring', x: p.x, y: p.y - (Game.T || 40) * .05,
+                            born: (Game.gameT || 0) + _i * .06, dur: .48,
+                            r: (Game.T || 40) * (1.10 - _i * .12), color: SK_THEME.shield.col,
+                            thick: .055, glow: true });
+        }
+      } catch (eSh) {}
+      try { heroImpact(p.x, p.y, { power: 1.45, col: SK_THEME.shield.col, bit: 'circ', shake: 1, cam: false }); } catch (eSh) {}
+      AudioSys.sfx('sk_shield');
       ok = true;
     } else if (id === 'frost') {
       const dur = DUR.frost[l - 1];
@@ -38296,7 +39090,20 @@ const RpgSkill = (function () {
         burst(e.x, e.y, '#8fe3ff', 10, 150);
       });
       burst(p.x, p.y, '#d8f6ff', 24, 260);
-      AudioSys.sfx('item');
+      // v5.84：冰霜新星 —— 冰晶三角往外炸 ＋ 兩段凍氣環
+      try { heroRune(p.x, p.y, SK_THEME.frost.col, .46); } catch (eFr) {}
+      try { heroImpact(p.x, p.y, { power: 1.7, col: SK_THEME.frost.col, bit: 'tri', shake: 2 }); } catch (eFr) {}
+      try {
+        for (let _i = 0; _i < 10; _i++) {
+          const _a = Math.random() * 6.2832, _sp = 150 + Math.random() * 220;
+          bitsAdd({ type: 'tri', x: p.x + Math.cos(_a) * (Game.T || 40) * .3,
+                    y: p.y + Math.sin(_a) * (Game.T || 40) * .3,
+                    vx: Math.cos(_a) * _sp, vy: Math.sin(_a) * _sp * .6,
+                    t: .46, max: .46, r: (Game.T || 40) * .06,
+                    rot: _a, spin: (Math.random() - .5) * 9, col: '#d8f6ff', g: 220 });
+        }
+      } catch (eFr) {}
+      AudioSys.sfx('sk_frost');
       ok = true;
     } else if (id === 'quake') {
       const dur = DUR.quake[l - 1];
@@ -38317,7 +39124,14 @@ const RpgSkill = (function () {
       });
       Game.shake = Math.max(Game.shake || 0, .5);
       burst(p.x, p.y, '#ffcf8a', 22, 240);
-      AudioSys.sfx('place');
+      // v5.84：震地波 —— 貼地大環 ＋ 土黃碎石（往外推，跟法陣相反）
+      try { heroRune(p.x, p.y, SK_THEME.quake.col, .38); } catch (eQk) {}
+      try {
+        heroImpact(p.x, p.y, { power: 1.75, col: SK_THEME.quake.col, bit: 'sq', shake: 3 });
+        Game.rings.push({ kind: 'dust', x: p.x, y: p.y + (Game.T || 40) * .26,
+                          born: Game.gameT || 0, dur: .52, r: (Game.T || 40) * 3.4 });
+      } catch (eQk) {}
+      AudioSys.sfx('sk_quake');
       ok = true;
     }
 
@@ -41001,6 +41815,8 @@ window.__BH = {
   buildRpgStage: buildRpgStage, startRpg: startRpg, rpgHurt: rpgHurt,
   flameHitDamage: flameHitDamage, drawRpgHud: drawRpgHud, rngFrom: rngFrom, map32Name: map32Name,
   hitStop: hitStop, dmgPop: dmgPop, foeHitFx: foeHitFx, drawFloorAO: drawFloorAO,
+  heroImpact: heroImpact, heroRune: heroRune, heroGhost: heroGhost, shakeLv: shakeLv, camKick: camKick,
+  CH_THEME: CH_THEME, SK_THEME: SK_THEME,
   drawVignette: drawVignette, vignetteCanvas: vignetteCanvas,
   drawGrade: drawGrade, GRADE_TINT: GRADE_TINT,
   aoSolid: aoSolid, floorAOBands: floorAOBands, drawAOCell: drawAOCell, floorChunk: floorChunk, floorCellSkip: floorCellSkip, floorChunkDirty: floorChunkDirty,

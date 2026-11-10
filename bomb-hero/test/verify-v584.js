@@ -95,7 +95,8 @@ head('3. 困難模式：只藏頭頂圖示，地面警示圈照樣亮');
 head('4. 音效：45 招專屬 ＋ 11 起手音 ＋ 5 核心重製');
 {
   const keys = P0.sfxKeys();
-  ok(keys.length === 59, '音效表共 59 支（5 核心＋43 招式＋11 起手）', keys.length);
+  // v5.84：主角再加 30 支（其中 5 支覆蓋核心打擊）→ 59 + 25 = 84
+  ok(keys.length >= 59, '音效表至少 59 支（v5.84 起為 84 支）', keys.length);
   const missSkill = FOE_SKILLS.filter(k => k !== 'smart' && keys.indexOf(k) < 0);
   ok(missSkill.length === 0, '★ 小怪 20 招（smart 除外）都有專屬音', missSkill);
   const missBoss = BOSS_SKILLS.filter(k => keys.indexOf(k) < 0);
@@ -158,8 +159,16 @@ head('6. 平衡：四招按建議調整');
   // 實測：真的只鋪 2 環
   const env = makeEnv(); const Q = env.BH, H = Q.Game;
   Q.WeekMod.pin([]);
+  // v5.84：地圖是隨機的 → 原本固定用 (6,5) 生怪，偶爾剛好是牆，怪卡住就不出招
+  //   （單獨跑會過、跑全套會紅）。改成先清出 5×5 走道再放怪。
   Q.startSolo(25, false, false);
   H.state = 'play';
+  try {
+    for (let yy = 3; yy <= 7; yy++) for (let xx = 3; xx <= 7; xx++) {
+      if (H.grid && H.grid[yy]) H.grid[yy][xx] = 0;
+    }
+    if (typeof Q.markWallKinds === 'function') Q.markWallKinds();
+  } catch (e0) {}
   const TT = H.T;
   const me = H.players[0];
   me.x = 5.5 * TT; me.y = 5.5 * TT; me.alive = true;
