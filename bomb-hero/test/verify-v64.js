@@ -29,6 +29,8 @@ function soloStage(stage) {
   P.settings.soloDiff = 'normal';
   P.startSolo(stage || 1, false);
   G.state = 'play';
+  G.stage = 9;                          // v5.82：招式只在前 3 關關閉；這支測的是技能 AI 本身
+
   // 躲藏地形（樹叢／破屋）會讓人「看不到」→ 這裡全部清掉，只量測距離
   G.hazards = [];
   T = G.T;

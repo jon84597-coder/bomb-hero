@@ -23,19 +23,21 @@ function ok(c, m, x) {
 function head(t) { console.log('\n=== ' + t + ' ==='); }
 
 /* ================================================================ */
-head('1. 版本七處一致（>= 5.81）');
+head('1. 版本七處一致（>= 5.81，認當版）');
 {
   const ver = (mainJs.match(/const VERSION = '([\d.]+)'/) || [])[1];
   ok(parseFloat(ver) >= 5.81, '主檔 VERSION >= 5.81', ver);
-  ok(/<span id="verTxt">5\.81<\/span>/.test(idx), '首頁 verTxt = 5.81');
-  ok(/<span id="verLogVer">5\.81<\/span>/.test(idx), '版本面板 verLogVer = 5.81');
-  ok(/"version":\s*"5\.81\.0"/.test(pkg), 'package.json 5.81.0');
+  /* v5.82：跟 verify-v581 一樣認「當版」，否則每升一版這支就整批紅 */
+  const vre = String(ver || '5.82').replace(/\./g, '\\.');
+  ok(new RegExp('<span id="verTxt">' + vre + '<\\/span>').test(idx), '首頁 verTxt = 當版（' + ver + '）');
+  ok(new RegExp('<span id="verLogVer">' + vre + '<\\/span>').test(idx), '版本面板 verLogVer = 當版（' + ver + '）');
+  ok(new RegExp('"version":\\s*"' + vre + '\\.0"').test(pkg), 'package.json = 當版（' + ver + '.0）');
   const sws = ['sw.js', '../public/sw.js', '../bomberman-online/public/sw.js', '../dist/site/sw.js']
     .map(f => { try { return (read(f).match(/SW_VERSION = '(v[\d.]+)'/) || [])[1]; } catch (e) { return null; } })
     .filter(Boolean);
-  ok(sws.length >= 3 && sws.every(v => v === 'v5.81.0'), '四份 sw.js 都是 v5.81.0', sws);
-  ok(/v: '5\.81'[\s\S]{0,80}now: true/.test(vlog), 'VERSION_LOG[0] 是 5.81 且 now:true');
-  ok(!/v: '5\.80'[\s\S]{0,60}now: true/.test(vlog), '5.80 已改成 now:false（不會兩條同時亮）');
+  ok(sws.length >= 3 && sws.every(v => v === 'v' + ver + '.0'), '四份 sw.js 都是當版（v' + ver + '.0）', sws);
+  ok(new RegExp("v: '" + vre + "'[\\s\\S]{0,80}now: true").test(vlog), 'VERSION_LOG[0] 是當版且 now:true');
+  ok(!/v: '5\.81'[\s\S]{0,60}now: true/.test(vlog), '5.81 已改成 now:false（不會兩條同時亮）');
 }
 
 /* ================================================================ */

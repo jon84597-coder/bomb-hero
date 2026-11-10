@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.81';
+const VERSION = '5.82';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -10750,9 +10750,10 @@ function startSolo(stage, bossRush, daily) {
         (revN > 0 ? '\n💢 ' + t('rev.on', { n: revN }, '復仇 ×' + revN + '：開場多 ' + revN + ' 顆炸彈') : '')));
   showOverlay({
     title: ovT,
-    sub: ovS,
+    sub: ovS + foeSkillIntroSub(),
     btn: abyssLv ? t('abyss.ovGo') : t('solo.ovGo'),
-    tips: ModeTip.tips(Game.rpg ? 'rpg' : 'solo'),
+    /* v5.82：第 3 關（示範關）改放「小怪會出招」的三條教學，蓋掉一般模式提示 */
+    tips: foeSkillIntroTips() || ModeTip.tips(Game.rpg ? 'rpg' : 'solo'),
     tipMode: Game.rpg ? 'rpg' : 'solo',
     action: function () {
       /* v5.63：第一關開場先給一次「起手三選一」。
@@ -11186,6 +11187,14 @@ function buildSoloStageInner(stage, fresh) {
     const types = stageTypes(stage);
     Game.roster = stageRoster(stage).slice();
     const pool = types.slice();     // 先輪流出一輪，保證每種都登場
+    /* v5.82：示範關（第 3 關）把「會出招」的三種排到最前面 —— 前 3 隻一定看得到示範，
+       後面的同名怪會因為 foeSkillOn 的「場上最多 3 隻」而拿不到招式。 */
+    if (foeSkillStageMode(stage) === 'demo') {
+      const first = FOE_SKILL_DEMO_TYPES.filter(function (id) { return types.indexOf(id) >= 0; });
+      const rest = types.filter(function (id) { return first.indexOf(id) < 0; });
+      pool.length = 0;
+      first.concat(rest).forEach(function (id) { pool.push(id); });
+    }
     // 怪的成長等級封頂在 8（原本只有 8 關，現在 32 關不能讓速度一路漲到追不到）
     const lv = chapterOf(stage);                 // v5.38：40 關制 = 每章一階（原本 /4 是 32 關的寫法）
     // v4.67：改成「先把合法格全部列出來再抽」。舊版是隨機射 200 次、抽不到就硬塞最後那一格 ——
@@ -11586,6 +11595,81 @@ function foeTouchR(e) {
   //   上限 (e.r + 14) 是舊版手感（e.r + 12），避免 BOSS 這種超大身體變成隱形大手
   return Math.max(T * .18, Math.min(enemyArtR(e) * .75, (e.r || 14) + 14));
 }
+// ====
+//   v5.82：小怪招式「開放階梯」
+//   玩家回報：新手第 1 關就被吐彈／鑽地追著打，難度一下跳太高，還以為遊戲壞了。
+//   原因很具體 —— 第 1 章 6 隻小怪<b>每一隻都有招式</b>（史萊姆分裂、蹦蹦兔衝撞、
+//   小青蛙吐彈、毛毛蟲鑽地、毒菇怪毒地板、鐵甲蟲躲炸彈），等於一開場招式全開。
+//   現在：
+//     · 第 1~2 關：完全不放招（連鑽地／吐彈／躲炸彈都關掉，只剩「會走、會撞」）
+//     · 第 3 關　：示範關 —— 全場只留 3 隻會出招（吐彈／鑽地／衝撞各一隻），
+//                  開場跳教學卡，教玩家看警示圈、往左右閃
+//     · 第 4 關起：照舊全部開放
+//   只影響「單人闖關」；對戰／大逃殺／RPG／深淵／魔王連戰／限制挑戰一律維持原樣。
+//   ※ 看的是 Game.stage（這一輪的第幾關），不是 makeEnemy 的 stage 參數
+//     （那個是成長等級＝章節 1~8，兩者不能混用）。
+// ====
+const FOE_SKILL_DEMO_TYPES = ['frog', 'cater', 'bunny'];   // 示範關：吐彈／鑽地／衝撞各一隻
+const FOE_SKILL_DEMO_MAX = 3;                             // 示範關最多幾隻會出招
+function foeSkillStageMode(stage) {
+  const s = (stage | 0) || 1;
+  if (s <= 2) return 'none';
+  if (s === 3) return 'demo';
+  return 'all';
+}
+// 這一輪的關號；不是「單人闖關」就回 0（＝不限制）
+function foeSkillRunStage() {
+  if (typeof Game === 'undefined' || !Game) return 0;
+  if (Game.mode !== 'solo') return 0;
+  if (Game.rpg || Game.bossRush || Game.abyss || Game.wchal || Game.mapTest) return 0;
+  return Game.stage | 0;
+}
+// 這一隻小怪現在能不能有招式
+function foeSkillOn(type) {
+  const st = foeSkillRunStage();
+  if (!st) return true;                          // 其他模式：照舊
+  const m = foeSkillStageMode(st);
+  if (m === 'all') return true;
+  if (m === 'none') return false;                // 第 1~2 關：一律不放招
+  if (FOE_SKILL_DEMO_TYPES.indexOf(type) < 0) return false;
+  // 示範關：場上最多 3 隻（含已經生出來的），多的同名怪不會再拿到招式
+  let n = 0;
+  const list = (Game && Game.enemies) || [];
+  for (let i = 0; i < list.length; i++) {
+    const o = list[i];
+    if (o && o.demoSkill && !o.dead) n++;
+  }
+  return n < FOE_SKILL_DEMO_MAX;
+}
+function foeSkillTeachStage() { return foeSkillRunStage() === 3; }
+// 開場卡多一行「這一關開始小怪會出招」
+function foeSkillIntroSub() {
+  if (!foeSkillTeachStage()) return '';
+  return '\n' + t('foe.teachSub');   // 圖示在文案裡（五語都帶），這裡只補換行
+}
+// 開場卡的三條教學（吐彈／鑽地／衝撞各一條）
+function foeSkillIntroTips() {
+  if (!foeSkillTeachStage()) return null;
+  const out = [];
+  for (let i = 1; i <= 3; i++) {
+    const k = 'foe.teach' + i;
+    const v = t(k);
+    if (v && v !== k) out.push(v);
+  }
+  return out.length ? out : null;
+}
+// 倒數結束、真的能動之後才跳（開場說明是全螢幕遮罩，太早跳會被蓋掉）
+function foeSkillIntroBanner() {
+  if (!foeSkillTeachStage()) return;
+  if (Game._foeSkillHinted === Game.stage) return;   // 同一關重試不重複講
+  Game._foeSkillHinted = Game.stage;
+  setTimeout(function () {
+    try {
+      if (Game.mode !== 'solo' || (Game.stage | 0) !== 3 || Game.state !== 'play') return;
+      doorHintCard('⚠️', t('foe.teachCard'), t('foe.teachCardSub'), 4.2);
+    } catch (e) {}
+  }, 900);
+}
 function makeEnemy(x, y, type, stage, spdMul) {
   const M = spdMul || 1;
   const sp = speciesOf(type);
@@ -11604,17 +11688,23 @@ function makeEnemy(x, y, type, stage, spdMul) {
     castT: 0, castX: 0, castY: 0,       // v4.40：吐彈集氣計時／落點格
     fleeT: 0                 // v4.13：v4.8 忘了初始化 → undefined <= 0 是 false，聰明怪從來沒真的躲過炸彈
   };
+  // v5.82：招式開放階梯 —— 前兩關連「躲炸彈」都不給，第 3 關只留示範用的 3 隻
+  const skOn = foeSkillOn(sp.id);
   // v4.17：疾風蜥也會躲炸彈（跑最快的那隻不該傻傻撞火）
-  if (sp.id === 'skull' || sp.id === 'crab' || sp.id === 'beetle' || sp.id === 'eye' ||
-      sp.id === 'lizard') e.smart = true;   // v4.8：聰明小怪會找掩體躲炸彈
+  if (skOn) {
+    if (sp.id === 'skull' || sp.id === 'crab' || sp.id === 'beetle' || sp.id === 'eye' ||
+        sp.id === 'lizard') e.smart = true;   // v4.8：聰明小怪會找掩體躲炸彈
+  }
   // v4.13：技能（C 聰明躲炸彈 / A 撿彈 / B 拆彈 / D 放彈）
-  if (sp.skill) e.skill = sp.skill;
-  if (sp.skill === 'smart') e.smart = true;
+  if (skOn && sp.skill) e.skill = sp.skill;
+  if (skOn && sp.skill === 'smart') e.smart = true;
   const kit = foeKit(sp.id);
   e.fx = kit.fx || '';
   e.habit = kit.habit || '';
-  if (kit.skill) e.skill = kit.skill;
-  if (kit.smart) e.smart = true;
+  if (skOn && kit.skill) e.skill = kit.skill;
+  if (skOn && kit.smart) e.smart = true;
+  // 示範關的那 3 隻 → 頭上一直掛 ❗，玩家才知道要盯哪幾隻（見 updateEnemy）
+  if (skOn && e.skill && foeSkillStageMode(foeSkillRunStage()) === 'demo') e.demoSkill = true;
   e.skCd = .9 + Math.random() * 1.6;        // 技能冷卻（各技能自己重設）
   e.blinkT = 0;                             // 鑽地／瞬移的消失計時
   e.emergeT = 0;                            // v4.67：剛冒出地面的保護時間（0.6 秒不傷人）
@@ -13010,6 +13100,15 @@ function enemyFlameDamage(e, dt) {
 }
 
 function updateEnemy(e, dt) {
+  /* v5.82：示範關那 3 隻會出招的小怪，頭上一直掛著 ❗（每 2.6 秒續一次）。
+     不這樣做的話玩家根本不知道「哪幾隻特別」—— 教學卡寫了也對不上。 */
+  if (e.demoSkill && !e.dead) {
+    e.markT = (e.markT || 0) - dt;
+    if (e.markT <= 0) {
+      e.markT = 2.6;
+      try { bubbleSay(e, '\u2757', 'dead', (e.r || 14) * 2 + 16); } catch (x) {}
+    }
+  }
   // v5.21：受擊白閃的計時（頓幀時 dt≈0 → 閃光會跟著凍住，看起來才「卡」得住）
   if (e.flashT > 0) e.flashT = Math.max(0, e.flashT - dt);
   // v4.76：大逃殺的亂入 BOSS 走自己的一套（沒有地盤、追 4 格內最近的活人）
@@ -17239,6 +17338,7 @@ function foeOnDeath(e) {
   if (!e || !e.spec) return;
   const kit = foeKit(e.spec);
   if (kit.skill !== 'split' || e.isSplit) return;
+  if (!foeSkillOn(e.spec)) return;      // v5.82：前兩關不放招 → 史萊姆也不分裂
   const T = Game.T;
   if (Game.enemies.length >= (Game.foeCap || FOE_MAX_LIVE)) return;   // 場上上限，避免爆量
   const cx = Math.floor(e.x / T), cy = Math.floor(e.y / T);
@@ -18832,6 +18932,7 @@ function updateCountdown(dt) {
     Game.state = 'play';
     banner('GO!', .7);
     AudioSys.sfx('go');
+    try { foeSkillIntroBanner(); } catch (e) {}
   }
 }
 
@@ -39950,6 +40051,9 @@ window.__BH = {
   BR_STANDOFF: BR_STANDOFF, BR_ENGAGE: BR_ENGAGE,
   aiGrabOwnBomb: aiGrabOwnBomb, aiDropCarry: aiDropCarry, dangerAt: dangerAt, findLanding: findLanding, playerAtCell: playerAtCell, playerAhead: playerAhead,
   enemySkillTick: enemySkillTick, ENEMY_SPECIES: ENEMY_SPECIES,
+  /* v5.82：招式開放階梯（前兩關不放招／第 3 關示範）—— 測試要直接驗這三支 */
+  foeSkillOn: foeSkillOn, foeSkillStageMode: foeSkillStageMode, foeSkillIntroTips: foeSkillIntroTips,
+  foeSkillIntroSub: foeSkillIntroSub, FOE_SKILL_DEMO_TYPES: FOE_SKILL_DEMO_TYPES, FOE_SKILL_DEMO_MAX: FOE_SKILL_DEMO_MAX,
   STAGE_ROSTER: STAGE_ROSTER, blockOf: blockOf, stageRoster: stageRoster, stageTypes: stageTypes,
   lineBomb: lineBomb, applySkull: applySkull, transferSkull: transferSkull,
   drawAvatarOn: drawAvatarOn, drawEnemy: drawEnemy, drawPlayer: drawPlayer, drawBomb: drawBomb,

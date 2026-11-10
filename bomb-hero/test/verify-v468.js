@@ -25,6 +25,8 @@ function arena() {
   P.settings.size = 'M';
   P.startSolo(1, false);
   G.state = 'play';
+  G.stage = 9;                          // v5.82：招式只在前 3 關關閉；這支測的是技能 AI 本身
+
   G.hides = [];
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) G.grid[y][x] = (y === 0 || x === 0) ? 1 : 0;
   G.enemies.length = 0;

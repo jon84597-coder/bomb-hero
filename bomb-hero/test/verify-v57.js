@@ -19,6 +19,8 @@ P.settings.size = 'M'; P.settings.hazards = 'off'; P.settings.sd = 'off';
 P.settings.ctrl = 'kb'; P.settings.soloDiff = 'normal'; P.settings.soloTime = 300;
 P.startSolo(1, false);
 G.state = 'play';
+  G.stage = 9;                          // v5.82：招式只在前 3 關關閉；這支測的是技能 AI 本身
+
 
 // ================================================================
 head('① 小怪 10 隻 → 20 隻');

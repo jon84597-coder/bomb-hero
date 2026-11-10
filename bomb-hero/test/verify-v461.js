@@ -27,6 +27,8 @@ function soloStage(st) {
   P.settings.soloTime = 300;
   P.startSolo(st || 1, false);
   G.state = 'play';
+  G.stage = 9;                          // v5.82：招式只在前 3 關關閉；這支測的是技能 AI 本身
+
   G.countdown = 0;
   if (G.players[0]) { G.players[0].invuln = 0; G.players[0].alive = true; }
   return G.players[0];

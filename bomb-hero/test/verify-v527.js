@@ -177,7 +177,8 @@ head('5. 五模式新手提示');
   P.ModeTip.reset();
   ok(P.ModeTip.tips('solo').length === 3, 'reset 之後會再顯示（測試用）');
   // 真的送到覆蓋層
-  ok((src.match(/tips: ModeTip\.tips\(/g) || []).length === 4, '四個開場覆蓋層都接了提示');
+  /* v5.82：單人開場那一處改成「招式教學優先、沒有就退回模式提示」→ 一樣算接上了 */
+  ok((src.match(/tips: (?:foeSkillIntroTips\(\) \|\| )?ModeTip\.tips\(/g) || []).length === 4, '四個開場覆蓋層都接了提示');
   ok(/if \(o\.tipMode\) ModeTip\.mark\(o\.tipMode\);/.test(src), '按掉才記住（不是一開就記）');
   // 沙盒沒有真的 DOM，也不能炸
   let threw = false;

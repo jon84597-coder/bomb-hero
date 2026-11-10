@@ -30,6 +30,8 @@ function soloStage(stage) {
   P.settings.soloDiff = 'normal';
   P.startSolo(stage || 1, false);
   G.state = 'play';
+  G.stage = 9;                          // v5.82：招式只在前 3 關關閉；這支測的是技能 AI 本身
+
   T = G.T;                       // 格子大小依裝置而變，量到再用
   return G.players[0];
 }

@@ -785,6 +785,12 @@ foe.habit| <b>習性</b>：{x}。| <b>习性</b>：{x}。| <b>Habit</b>: {x}.| <
 foe.skill| <b>特殊技能</b>：{x}。| <b>特殊技能</b>：{x}。| <b>Special</b>: {x}.| <b>特殊技能</b>：{x}。| <b>특수 능력</b>: {x}.
 foe.aura| 身上纏著<b>{x}</b>。| 身上缠着<b>{x}</b>。| Wreathed in <b>{x}</b>.| 身に<b>{x}</b>をまとっている。| <b>{x}</b>이 감싸고 있다.
 foe.skillName| <b>招式</b>：{x}。| <b>招式</b>：{x}。| <b>Move</b>: {x}.| <b>技</b>：{x}。| <b>기술</b>: {x}.
+foe.teachSub|⚠️ 這一關開始，小怪會使出招式（場上 3 隻，頭上有 ❗）|⚠️ 这一关开始，小怪会使出招式（场上 3 只，头上有 ❗）|⚠️ From this stage on, minions use moves (3 of them here, marked ❗)|⚠️ このステージから敵が技を使います（場に3体、頭上に ❗）|⚠️ 이 스테이지부터 잡몹이 기술을 씁니다 (3마리, 머리 위 ❗)
+foe.teach1|🎯 吐彈：地上會先亮一個圈，圈鎖定後就不會再動 —— 走開就好|🎯 吐弹：地上会先亮一个圈，圈锁定后就不会再动 —— 走开就好|🎯 Spit shot: a ring lights up on the floor, then locks — just step away|🎯 弾吐き：床に輪が光り、止まったら動かない — 離れれば当たらない|🎯 탄 뱉기: 바닥에 원이 먼저 뜨고 고정됩니다 — 그냥 피하면 됩니다
+foe.teach2|🌀 鑽地：小怪消失時地上會冒沙，0.5 秒後從你旁邊冒出來 —— 別站在沙圈上|🌀 钻地：小怪消失时地上会冒沙，0.5 秒后从你旁边冒出来 —— 别站在沙圈上|🌀 Burrow: it sinks in a puff of sand and pops out beside you 0.5s later — don't stand on the sand ring|🌀 潜り：砂を立てて消え、0.5秒後に近くから出てくる — 砂の輪に立たない|🌀 잠복: 모래를 일으키며 사라졌다가 0.5초 뒤 옆에서 나옵니다 — 모래 원 위에 서지 마세요
+foe.teach3|💥 衝撞：身體一縮就往你的方向直線衝 —— 往左右閃，不要往後退|💥 冲撞：身体一缩就往你的方向直线冲 —— 往左右闪，不要往后退|💥 Charge: it crouches and rushes straight at you — dodge sideways, not backwards|💥 突進：身を縮めて直線的に突っ込む — 左右に避ける（後退は×）|💥 돌진: 몸을 움츠린 뒤 직선으로 돌진 — 옆으로 피하세요(뒤로는 X)
+foe.teachCard|⚠️ 小怪開始會出招了|⚠️ 小怪开始会出招了|⚠️ Minions start using moves|⚠️ 敵が技を使い始めます|⚠️ 잡몹이 기술을 쓰기 시작합니다
+foe.teachCardSub|看到地上的警示圈先走開；頭上有 ❗ 的 3 隻就是會出招的|看到地上的警示圈先走开；头上有 ❗ 的 3 只就是会出招的|Step off any warning ring; the 3 with ❗ above them are the casters|床の警告サークルから離れる。頭上に ❗ の3体が技を使う敵|바닥 경고 원에서 먼저 벗어나세요. 머리 위 ❗ 3마리가 기술을 씁니다
 sk.split|分裂|分裂|Split|分裂|분열
 sk.charge|衝撞|冲撞|Charge|突進|돌진
 sk.spit|吐彈|吐弹|Spit shot|弾吐き|탄 뱉기
