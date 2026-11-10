@@ -330,7 +330,7 @@
           /* 素材區的卡片圖示是「流式」排在標題上方（.mgrid 那條規則），鎖標也照這個位置走，
              不要絕對定位 —— 絕對定位會壓到下面那行說明文字。選擇器刻意掛兩個 id，
              才壓得過 body.touch.home-wide 那條 (1,5,1) 的窄卡規則。 */
-          + '#scr-title #homeMenu .mgrid .mbtn.locked::before{'
+          + '#scr-title #homeMenu .mgrid .mbtn.locked[data-aigain]::before{'
           + 'content:attr(data-aigain);position:static;left:auto;top:auto;right:auto;bottom:auto;'
           + 'transform:none;display:block;width:max-content;max-width:100%;height:auto;'
           + 'margin:0 auto 4px;padding:2px 9px;border-radius:999px;'
@@ -339,12 +339,15 @@
           + 'background:linear-gradient(180deg,#ffeab5,#ffc861);'
           + 'box-shadow:0 2px 6px -2px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.8);'
           + 'pointer-events:none}'
-          + 'body.touch #scr-title #homeMenu .mgrid .mbtn.locked::before{'
+          + 'body.touch #scr-title #homeMenu .mgrid .mbtn.locked[data-aigain]::before{'
           + 'font-size:8.5px;padding:1px 7px;margin:0 auto 3px;line-height:1.6}'
-          /* 冒險模式面板裡的 RPG 按鈕是橫排小按鈕，鎖標疊在文字上居中 */
-          + '#bhPick .qbtn.locked::before{content:attr(data-aigain);position:absolute;'
-          + 'left:50%;top:50%;transform:translate(-50%,-50%);padding:2px 9px;border-radius:999px;'
-          + 'font-size:10px;font-weight:900;line-height:1.7;letter-spacing:0;white-space:nowrap;'
+          /* 冒險模式面板裡的 RPG 按鈕是橫排長條 —— 鎖標擺右上角「外掛」，
+             壓在文字上會把「RPG 養成」整個蓋掉（實測截圖抓到）。
+             只認有 data-aigain 的（＝unlock 管的），深淵按鈕自己有一套「還差 N 關全破」小字。 */
+          + '#bhPick .qbtn.locked[data-aigain]{position:relative}'
+          + '#bhPick .qbtn.locked[data-aigain]::before{content:attr(data-aigain);position:absolute;'
+          + 'right:4px;top:-7px;left:auto;bottom:auto;transform:none;padding:1px 7px;border-radius:999px;'
+          + 'font-size:9px;font-weight:900;line-height:1.6;letter-spacing:0;white-space:nowrap;'
           + 'color:#4a3208;text-shadow:none;background:linear-gradient(180deg,#ffeab5,#ffc861);'
           + 'box-shadow:0 2px 6px -2px rgba(0,0,0,.45);pointer-events:none;z-index:6}'
           /* 鎖住的卡不該還掛著「HOT 推薦」—— 一邊推薦一邊鎖住，玩家只會更困惑 */

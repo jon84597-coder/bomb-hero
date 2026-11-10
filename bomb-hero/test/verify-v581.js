@@ -63,14 +63,18 @@ head('3. 鎖標排版：流式、不壓到卡片說明、鎖定時收角標');
 {
   ok(/position:static;left:auto;top:auto;right:auto;bottom:auto/.test(unlock),
     '鎖標是流式（static）—— 跟原本的卡片圖示同一格，不會蓋住下面的說明');
-  ok(/#scr-title #homeMenu \.mgrid \.mbtn\.locked::before/.test(unlock),
+  ok(/#scr-title #homeMenu \.mgrid \.mbtn\.locked\[data-aigain\]::before/.test(unlock),
     '選擇器掛兩個 id → 壓得過 home-wide 窄卡規則');
   ok(/display:block;width:max-content/.test(unlock), '膠囊自己決定寬度並置中');
   ok(/\.locked \.hotTag[\s\S]{0,80}display:none!important/.test(unlock), '鎖住的卡收掉 HOT 角標');
   ok(/\.locked \.betaTag/.test(unlock), '鎖住的卡也收掉 BETA 角標');
   ok(/font-size:10px/.test(unlock), '桌機鎖標字級 10px');
-  ok(/body\.touch #scr-title #homeMenu \.mgrid \.mbtn\.locked::before\{[\s\S]{0,60}font-size:8\.5px/.test(unlock),
+  ok(/body\.touch #scr-title #homeMenu \.mgrid \.mbtn\.locked\[data-aigain\]::before\{[\s\S]{0,60}font-size:8\.5px/.test(unlock),
     '手機鎖標縮到 8.5px');
+  ok(/locked\[data-aigain\]::before/.test(unlock),
+    '鎖標只畫在 data-aigain 的卡上（深淵按鈕自己那套小字不會被蓋）');
+  ok(/#bhPick \.qbtn\.locked\[data-aigain\]::before\{[\s\S]{0,90}right:4px;top:-7px/.test(unlock),
+    '冒險面板的鎖標是「外掛角標」—— 不壓住 RPG 養成那行字');
 }
 
 /* ================================================================ */
