@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.84';
+const VERSION = '5.85';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -2072,8 +2072,87 @@ const AudioSys = (function () {
     Object.keys(m).forEach(function (k) { SFX_MAP[k] = m[k]; });
   });
 
-  const sfx = function (name) {
+  /* ══════════════════════════════════════════════════════════════
+     v5.85：六格可聽半徑
+     大逃殺一場上百人，每個人都在放彈、踢彈、被打、倒下 —— 以前每一顆
+     炸彈、每一次受傷都會直接打進玩家的耳朵，遠處的聲音跟眼前的一樣大。
+     現在的規則只有一條：
+       ① 有座標的發聲源 → 只有「離本地玩家 6 格（歐氏距離）以內」才播。
+       ② 沒有座標的（介面點擊、過場、玩家自己身上的動作）→ 照舊播。
+       ③ 幾支全場廣播型的（縮圈警報、核彈警報、勝負）→ 不受距離限制。
+     座標怎麼傳進來：
+       · sfx(name, x, y)                 直接給世界座標（px）
+       · sndScope(x, y, fn) / sndSet()   實體更新時標記「現在是誰在發聲」
+     ══════════════════════════════════════════════════════════════ */
+  const SND_RADIUS_CELLS = 6;
+  // 全場廣播：不套距離（縮圈／核彈警報／勝負／介面）
+  const SND_GLOBAL = {
+    click: 1, victory: 1, win: 1, lose: 1, finish: 1, finishLose: 1,
+    count: 1, go: 1, nope: 1, levelup: 1, doorOpen: 1,
+    nukeAlarm: 1, warn: 1, sd: 1     // 縮圈／突死／核彈：全場都要聽到的廣播
+  };
+  // 同一幀的重複音（十幾顆連鎖炸彈）只留第一顆 → 不吵，也不會糊成一團
+  const SND_GAP = { explode: .018, hurt: .018, die: .022 };
+  let sndEmit = null;            // { x, y }：目前正在發聲的實體（世界座標 px）
+  const sndGapT = {};            // 同名音效上次播放的時間
+  const sndStat = { played: 0, dropped: 0, lastDrop: '' };
+
+  function sndMe() {
+    try {
+      const ps = Game && Game.players;
+      if (!ps || !ps.length) return null;
+      const me = ps[0];
+      return (me && me.x != null && me.y != null) ? me : null;
+    } catch (e) { return null; }
+  }
+  function sndTile() {
+    try { return (Game && Game.T) || 40; } catch (e) { return 40; }
+  }
+  function sndHearable(x, y, cells) {
+    const me = sndMe();
+    if (!me) return true;                     // 還沒有玩家（選單／載入）→ 不擋
+    const R = (cells || SND_RADIUS_CELLS) * sndTile();
+    const dx = x - me.x, dy = y - me.y;
+    return dx * dx + dy * dy <= R * R;
+  }
+  function sndSet(x, y) {
+    sndEmit = (x == null || y == null) ? null : { x: x, y: y };
+    return sndEmit;
+  }
+  function sndSave() { return sndEmit; }
+  function sndRestore(v) { sndEmit = v || null; }
+  function sndScope(x, y, fn) {
+    const old = sndEmit;
+    sndSet(x, y);
+    try { return fn(); } finally { sndEmit = old; }
+  }
+  function sndGap(name) {
+    const g = SND_GAP[name];
+    if (!g) return false;
+    const now = (typeof performance !== 'undefined' && performance.now)
+      ? performance.now() : Date.now();
+    if (sndGapT[name] && now - sndGapT[name] < g * 1000) return true;
+    sndGapT[name] = now;
+    return false;
+  }
+  function sndStats() { return { played: sndStat.played, dropped: sndStat.dropped, lastDrop: sndStat.lastDrop }; }
+  function sndReset() {
+    sndStat.played = 0; sndStat.dropped = 0; sndStat.lastDrop = ''; sndEmit = null;
+    for (const k in sndGapT) delete sndGapT[k];
+  }
+
+  const sfx = function (name, sx, sy, cells) {
     if (!settings.sfx) return;
+    /* v5.85：六格以外不播。座標優先用參數，其次用目前標記的發聲實體。 */
+    if (!SND_GLOBAL[name]) {
+      let ex = (sx == null) ? null : sx, ey = (sy == null) ? null : sy;
+      if (ex == null && sndEmit) { ex = sndEmit.x; ey = sndEmit.y; }
+      if (ex != null && ey != null) {
+        if (!sndHearable(ex, ey, cells)) { sndStat.dropped++; sndStat.lastDrop = name; return; }
+        if (sndGap(name)) { sndStat.dropped++; sndStat.lastDrop = name; return; }
+      }
+    }
+    sndStat.played++;
     // v5.83：新／重製的音效先查表，命中就結束（下面 switch 保留舊行為相容）
     const S = SFX_MAP[name];
     if (S) { try { S(); } catch (eS) {} return; }
@@ -2973,6 +3052,10 @@ const AudioSys = (function () {
     // v5.34：戰鬥曲（對戰／大逃殺）與新的排程器
     lastBGM: lastBGM,   // v5.75：最後一次被要求播的曲名（驗 BGM 路由用）
     sfxKeys: function () { return Object.keys(SFX_MAP); },   // v5.83：招式音效表（測試用）
+    // v5.85：六格可聽半徑
+    SND_RADIUS_CELLS: SND_RADIUS_CELLS, sndHearable: sndHearable, sndSet: sndSet,
+    sndScope: sndScope, sndSave: sndSave, sndRestore: sndRestore,
+    sndStats: sndStats, sndReset: sndReset, sndMe: sndMe,
     WAR_DEFS: WAR_DEFS, WAR_PHRASES: WAR_PHRASES, compileWar: compileWar, buildGrid: buildGrid };
       })();
     } catch (__e) {
@@ -6069,6 +6152,13 @@ function findThrowLanding(cx, cy, dx, dy, maxStep) {
   return null;
 }
 function explodeBomb(b) {
+  /* v5.85：爆炸音以「爆點」為發聲座標 —— 大逃殺裡 30 格外的炸彈不該跟
+     眼前這顆一樣大聲。連鎖引爆時每一顆各自蓋掉前一顆，播完就還原上一層。 */
+  const _sT = (Game && Game.T) || 40;
+  return AudioSys.sndScope((b.cx + .5) * _sT, (b.cy + .5) * _sT,
+    function () { return explodeBombRaw(b); });
+}
+function explodeBombRaw(b) {
   const idx = Game.bombs.indexOf(b);
   if (idx >= 0) Game.bombs.splice(idx, 1);
   const T = Game.T;
@@ -6167,7 +6257,7 @@ function coinTo(p, n) {
   p.score = (p.score | 0) + n;
   if (Game.mode === 'br') Game.brLootGold = (Game.brLootGold | 0) + n;
   try { pushPop(p.x, p.y - (Game.T || 20) * .55, '🪙 +' + n, { color: '#ffd766', size: .95, life: 1.0 }); } catch (e) {}
-  try { AudioSys.sfx('coin'); } catch (e) {}
+  try { AudioSys.sfx('coin', p.x, p.y); } catch (e) {}   // v5.85：六格可聽半徑
 }
 // 掉在怪物死掉那一格；那一格變成牆／水就往外找一格空地
 function dropSpotNear(x, y) {
@@ -6257,9 +6347,11 @@ function applyItem(p, type, item) {
     }
     case 'skull': applySkull(p); break;
   }
-  if (type === 'skull') { AudioSys.sfx('hurt'); }
+  /* v5.85：撿東西的音效以「撿的人」為座標 —— 大逃殺裡別人在地圖另一頭
+     撿到道具，不該在玩家耳邊響一聲。 */
+  if (type === 'skull') { AudioSys.sfx('hurt', p.x, p.y); }
   else {
-    AudioSys.sfx('item');
+    AudioSys.sfx('item', p.x, p.y);
     const info = ITEMS[type];
     // v4.4：輕量橫幅（不再是左上角大方塊）＋ 對應圖示彈一下
     if (isMyPlayer(p)) toast(info.icon + ' ' + itemName(type) + '：' + itemHint(type), 2, HUD_OF_ITEM[type] || 'gear');
@@ -6441,7 +6533,7 @@ function revealEgg(x, y) {
   const T = Game.T;
   Game.eggs.push({ x: x, y: y, bob: Math.random() * 6.28, wob: 0, born: .5, safeT: .8, kind: kind || 'dino' });
   burst(x * T + T / 2, y * T + T / 2, kind === 'ostrich' ? '#c9a7f2' : '#ffe9a8', 16, 170);
-  AudioSys.sfx('item');
+  AudioSys.sfx('item', (x + .5) * T, (y + .5) * T);   // v5.85：六格可聽半徑
 }
 function eggAt(x, y) {
   if (!Game.eggs) return null;
@@ -12852,11 +12944,11 @@ function petHurt(pt, dmg) {
   pt.hp -= (dmg || 1);
   pt.hitT = .9;
   burst(pt.x, pt.y, '#ffd166', 10, 170);
-  AudioSys.sfx('hurt');
+  AudioSys.sfx('hurt', pt.x, pt.y);   // v5.85：六格可聽半徑
   if (pt.hp <= 0) {
     pt.hp = 0; pt.down = true; pt.downT = 0; pt.rescueT = 0; pt.moving = false;
     pt.atkCd = 0; pt.restT = 0; pt.slashT = 0; pt.throwT = 0; pt.blockT = 0; pt.healT = 0;
-    AudioSys.sfx('die');
+    AudioSys.sfx('die', pt.x, pt.y);   // v5.85：六格可聽半徑
     toast('😢 ' + petKind(pt.kind).name + ' 被打倒了！靠近牠 ' + PET_HELP_SEC + ' 秒就能救回來', 3);
   }
 }
@@ -13627,7 +13719,7 @@ function killPlayer(p, silent, killer) {
   p.lives -= 1;
   p.respawnT = 1.6;
   p.cry = 3.8;                    // v5.31：被炸到要亮相大哭臉（2.8 → 3.8 秒，看得清楚）
-  AudioSys.sfx('die');
+  AudioSys.sfx('die', p.x, p.y);   // v5.85：六格可聽半徑（別人的英雄倒下不再全場都聽見）
   burst(p.x, p.y, p.ch.color, 22, 220);
   // v5.84：倒下 —— 角色主色炸開 ＋ 90ms 定格 ＋ 三級震屏（這一刻要「重」）
   try {
@@ -13878,6 +13970,14 @@ function enemyFlameDamage(e, dt) {
 }
 
 function updateEnemy(e, dt) {
+  /* v5.85：這隻怪物現在是「發聲源」。牠的起手音、招式音、倒下音全部
+     以牠的座標判定六格可聽半徑；離玩家太遠時整段靜音（畫面照樣演）。 */
+  const _sndSv = AudioSys.sndSave();
+  AudioSys.sndSet(e ? e.x : null, e ? e.y : null);
+  try { return updateEnemyRaw(e, dt); }
+  finally { AudioSys.sndRestore(_sndSv); }
+}
+function updateEnemyRaw(e, dt) {
   /* v5.82：示範關那 3 隻會出招的小怪，頭上一直掛著 ❗（每 2.6 秒續一次）。
      不這樣做的話玩家根本不知道「哪幾隻特別」—— 教學卡寫了也對不上。 */
   if (e.demoSkill && !e.dead) {
@@ -14922,10 +15022,12 @@ function updateBattle(dt) {
       }
     }
     Game.players.forEach(function (p) {
+      AudioSys.sndSet(p.x, p.y);     // v5.85：同場的 AI 玩家也按距離判定
       if (p.cart) { updateCart(p, dt); }
       else if (p.ai) { if (p.alive) controlAI(p, dt); }
       else if (p.alive) controlHuman(p, dt);
     });
+    AudioSys.sndSet(null);
     // 骷髏詛咒觸碰傳染
     transferSkull();
     // 勝負判定
@@ -15010,7 +15112,7 @@ function killBattlePlayer(p, killer) {
   try { AchPvp(p, killer); } catch (e) {}
   p.cry = 3.8;                    // v5.31：被炸到要亮相大哭臉（2.8 → 3.8 秒，看得清楚）
   if (Game.mode === 'br') brOnDeath(p);      // v4.72：大逃殺記名次（不會復活、不坐推車）
-  AudioSys.sfx('die');
+  AudioSys.sfx('die', p.x, p.y);   // v5.85：六格可聽半徑
   burst(p.x, p.y, p.ch.color, 22, 220);
   // v5.84：倒下 —— 角色主色炸開 ＋ 90ms 定格 ＋ 三級震屏（這一刻要「重」）
   try {
@@ -17432,6 +17534,7 @@ function updateBR(dt) {
     }
     Game.players.forEach(function (p) {
       if (!p.alive) return;
+      AudioSys.sndSet(p.x, p.y);     // v5.85：這個人的音效以他的座標判定 6 格半徑
       let outside = false, edge = false;
       if (z) {
         const dx = p.x / T - (z.cx + .5), dy = p.y / T - (z.cy + .5);
@@ -17463,6 +17566,7 @@ function updateBR(dt) {
         else if (!((outside || edge) && brSteer(p, adt))) controlAI(p, adt);
       } else controlHuman(p, dt);
     });
+    AudioSys.sndSet(null);           // v5.85：離開玩家迴圈就清掉，別讓後面的音效誤判
     if (Game.state === 'play') {
       Game.enemies.forEach(function (e) { updateEnemy(e, dt); });
       Game.players.forEach(function (p) {
@@ -38527,7 +38631,7 @@ function rpgHurt(p, silent, killer) {
   if (p.hpCur <= 0) {                                // 生命歸零 → 冒險失敗
     p.alive = false; p.dead = true; p.lives = 0; p.respawnT = 1.2; p.cry = 3.8;   // v5.31：哭臉久一點
     try { if (p === Game.players[0]) Ach.count('death', 1); } catch (e) {}
-    AudioSys.sfx('die');
+    AudioSys.sfx('die', p.x, p.y);   // v5.85：六格可聽半徑
     burst(p.x, p.y, p.ch.color, 22, 220);
     // v5.84：倒下（冒險模式生命歸零）—— 同一個重擊規格
     try {
@@ -41874,6 +41978,13 @@ window.__BH = {
   ANGER_WINDUP: ANGER_WINDUP, ANGER_DASH_T: ANGER_DASH_T,
   BOLT_TRAVEL: BOLT_TRAVEL, FOE_CAST_WINDUP: FOE_CAST_WINDUP,
   sfxKeys: function () { return AudioSys.sfxKeys(); },
+  // v5.85：六格可聽半徑
+  SND_RADIUS_CELLS: AudioSys.SND_RADIUS_CELLS,
+  sndHearable: function (x, y, c) { return AudioSys.sndHearable(x, y, c); },
+  sndStats: function () { return AudioSys.sndStats(); },
+  sndReset: function () { return AudioSys.sndReset(); },
+  sndSet: function (x, y) { return AudioSys.sndSet(x, y); },
+  sndScope: function (x, y, fn) { return AudioSys.sndScope(x, y, fn); },
   foeCastBolt: foeCastBolt, drawFoeCastGround: drawFoeCastGround, drawFoeCastFx: drawFoeCastFx,
   drawCastIcons: drawCastIcons, CAST_ICONS: CAST_ICONS, castIconOn: castIconOn,
   spellImpact: spellImpact, bitsTick: bitsTick, drawCastRunes: drawCastRunes,
