@@ -1482,7 +1482,7 @@ function createCloud(options) {
        ③ 每個平台終身只能領一次，每天最多 3 次（記錄在帳號資料裡，重新部署也在）
      ================================================================ */
   const SHARE_PLATFORMS = ['line', 'fb', 'x', 'wa', 'copy'];
-  const SHARE_REWARD = 1000;
+  const SHARE_REWARD = 150;   // v5.86：1,000→150（3 次/日曾是 5.5 局關卡，等於掛機送錢）
   const SHARE_TTL = 5 * 60 * 1000;
   const SHARE_DAILY_MAX = 3;
   function shareState(a) {
@@ -1889,7 +1889,7 @@ function createCloud(options) {
    * 線上：150 秒內有動靜＝在線；好友／邀請／封鎖都存在 player 物件裡。
    * ================================================================ */
   const RANK_CATS = { soloKill: 1, soloBoss: 1, rpgKill: 1, rpgBoss: 1, brKill: 1, brWin: 1, btKill: 1, btWin: 1, onKill: 1, onWin: 1 };
-  const RANK_REWARD = [1000, 700, 500, 350, 350, 200, 200, 200, 200, 200];
+  const RANK_REWARD = [400, 280, 200, 130, 130, 80, 80, 80, 80, 80];   // v5.86：冠軍 1,000→400
   const RANK_MAX = 4000;
   const SOC_TTL = 150000;              // 在線判定：150 秒
   const SOC_KEEP = 7 * 86400000;       // 七天沒來就清掉

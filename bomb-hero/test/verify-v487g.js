@@ -32,7 +32,7 @@ console.log('=== ① 獎勵表與任務池 ===');
 ok(Gift.REWARDS.length === 7, '簽到 7 天（' + Gift.REWARDS.length + ' 格）');
 ok(Gift.REWARDS.every(r => r.g > 0), '每天都有金幣獎勵');
 ok(Gift.REWARDS[2].t === 1 && Gift.REWARDS[4].t === 1, '第 3／5 天各給 1 張票券');
-ok(Gift.REWARDS[6].t === 2 && Gift.REWARDS[6].g >= 400, '第 7 天是大獎（雙票券＋大金幣）');
+ok(Gift.REWARDS[6].t === 2 && Gift.REWARDS[6].g >= 250, '第 7 天是大獎（雙票券＋大金幣）');
 ok(Gift.POOL.length >= 5, '每日任務池 ' + Gift.POOL.length + ' 種');
 ok(Gift.POOL.every(m => m.id && m.n > 0 && m.g > 0), '任務池每項都有 id／目標數／獎金');
 

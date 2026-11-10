@@ -250,7 +250,7 @@ head('⑧ 排名：前端');
   ['單人殺怪', '單人 BOSS', 'RPG 殺怪', 'RPG BOSS', '大逃殺擊殺', '大逃殺冠軍', '對戰擊殺', '對戰冠軍', '線上擊殺', '線上冠軍']
     .forEach(function (l) { ok(labs.indexOf(l) >= 0, '有「' + l + '」榜'); });
   ok(/^\d{4}-W\d{2}$/.test(Rank.weekKey()), '週 key 格式正確（' + Rank.weekKey() + '）');
-  ok(Rank.REWARD.length === 10 && Rank.REWARD[0] === 1000, '週榜前 10 名都有獎金（冠軍 1000）');
+  ok(Rank.REWARD.length === 10 && Rank.REWARD[0] === 400, '週榜前 10 名都有獎金（冠軍 400）');
   ok(src.indexOf('/api/rank/submit') > 0 && src.indexOf('/api/rank/top') > 0 && src.indexOf('/api/rank/claim') > 0, '前端會打三個排名端點');
   ok(src.indexOf('rkbar') > 0 && src.indexOf('data-rkscope') > 0, '面板有「歷史總榜／本週活動」切換');
 
@@ -342,7 +342,7 @@ function makeFetch() {
   // 讓乙的本週成績衝到第一（週榜看的是本週新增量，不是生涯總數）
   await call('POST', '/api/rank/submit', { deviceId: Bb, name: '乙', ch: 2, week: { soloKill: 7 } });
   r = await call('POST', '/api/rank/claim', { deviceId: Bb, name: '乙', cats: { soloKill: 1 }, wk: r.j.week });
-  ok(r.j.ok && r.j.rank === 1 && r.j.gold === 1000, '週榜第 1 名領 1000');
+  ok(r.j.ok && r.j.rank === 1 && r.j.gold === 400, '週榜第 1 名領 400');
   r = await call('POST', '/api/rank/claim', { deviceId: Bb, name: '乙', cats: { soloKill: 1 }, wk: r.j.week });
   ok(r.j.ok && r.j.gold === 0 && r.j.claimed === true, '同一週不能重複領');
 

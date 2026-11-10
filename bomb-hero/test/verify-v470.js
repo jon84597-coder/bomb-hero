@@ -170,7 +170,7 @@ head('5. 大逃殺門票：每天免費 1 張');
   env.storage['bombhero-br-free'] = '2000-01-01';
   Shop.claimDaily();
   ok(Shop.tickets() === t0 + 1, '換一天會再送 1 張', Shop.tickets());
-  ok(Shop.ticketPrice() === 2000, '額外購買仍是 2000 金幣');
+  ok(Shop.ticketPrice() === 900, '額外購買仍是 900 金幣');
 }
 
 // ================================================================

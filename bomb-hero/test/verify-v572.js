@@ -34,11 +34,11 @@ function reset(name, lock, auto) {
 
 /* ---------------------------------------------------------------- ① */
 sec('① 模組與常數');
-ok(P.NICK_PRICE === 5000, '改名價格＝5,000 金幣', P.NICK_PRICE);
+ok(P.NICK_PRICE === 3000, '改名價格＝3,000 金幣', P.NICK_PRICE);
 ok(P.NICK_GREETS === 5, '招呼語共 5 組', P.NICK_GREETS);
 ok(!!N && typeof N.rename === 'function' && typeof N.greet === 'function', 'Nick 已匯出並有 greet／rename');
 ok(N.MAX === 8 && S.nameLock === 0 && S.nameAuto === 0, '暱稱上限 8 字、兩個新欄位預設 0');
-ok(/const NICK_PRICE = 5000;/.test(SRC), '原始碼：NICK_PRICE 常數寫死 5000');
+ok(/const NICK_PRICE = 3000;/.test(SRC), '原始碼：NICK_PRICE 常數寫死 3000');
 
 /* ---------------------------------------------------------------- ② */
 sec('② 招呼語字典（5 語言 × 5 組）');
@@ -126,13 +126,13 @@ r = N.rename('小明');
 ok(r.ok === false && r.err === 'SAME', '同名被擋下', r);
 r = N.rename('阿呆');
 ok(r.ok === false && r.err === 'GOLD', '金幣不足被擋下', r);
-ok(r.need === 5000 && P.Shop.gold() === g0, '金幣不足時一毛都沒扣', { need: r.need, gold: P.Shop.gold() });
+ok(r.need === 3000 && P.Shop.gold() === g0, '金幣不足時一毛都沒扣', { need: r.need, gold: P.Shop.gold() });
 
 P.Shop.addGold(6000);
 S.brName = '小明';                        // 大逃殺用的是同一組名字
 r = N.rename('阿呆');
-ok(r.ok === true && r.price === 5000, '金幣夠就改名成功', r);
-ok(P.Shop.gold() === 1000, '確實扣了 5,000 金幣', P.Shop.gold());
+ok(r.ok === true && r.price === 3000, '金幣夠就改名成功', r);
+ok(P.Shop.gold() === 3000, '確實扣了 3,000 金幣', P.Shop.gold());
 ok(S.playerName === '阿呆' && S.nameLock === 1, '暱稱與定案狀態都更新');
 ok(S.brName === '', '大逃殺用的名字跟著換（清掉舊的 brName）');
 ok(inp.value === '阿呆', '首頁那格 input 同步成新名字', inp.value);
@@ -157,7 +157,7 @@ S.playerName = '小明';
 P.Social.open('me');
 const meHtml = env.getId('onBody').innerHTML;
 ok(meHtml.indexOf('id="socNickEdit"') > 0, '我的資料裡有「更改暱稱」按鈕');
-ok(meHtml.indexOf('5000') > 0 || meHtml.indexOf('5,000') > 0, '按鈕上直接寫出價格', /💰\s*5000/.test(meHtml));
+ok(meHtml.indexOf('3000') > 0 || meHtml.indexOf('3,000') > 0, '按鈕上直接寫出價格', /💰\s*3000/.test(meHtml));
 ok(/nickRowHTML\(\) \+/.test(SRC), 'renderMe() 有把暱稱區塊插進去');
 
 ok(String(P.VERSION) >= '5.71', 'VERSION ≥ 5.71（' + P.VERSION + '）');

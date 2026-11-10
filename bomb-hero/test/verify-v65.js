@@ -107,12 +107,12 @@ head('6. 關卡裡賺到的金幣會進商店錢包');
   const me = G.players[0];
   G.enemies.length = 0;
   me.alive = true; me.invuln = 0; me.dead = false;
-  me.score = 250;
+  me.score = 250; me.coin = 250;      // v5.86：結算看 p.coin（分數只進排行榜）
   // 把門打開、玩家站到門上
   G.door = { x: 2, y: 2, open: true, revealed: true };
   me.x = 2 * G.T + G.T / 2; me.y = 2 * G.T + G.T / 2;
   const before = P.Shop.gold();
-  const base = 40 + Math.floor((G.stage - 1) / 4) * 10;
+  const base = 65 + Math.floor((G.stage - 1) / 4) * 5;   // v5.86：65＋每 4 關 +5
   P.updateSolo(DT);
   const after = P.Shop.gold();
   ok(after - before === 250 + base, '過關金幣 = 本關金幣 250 + 過關獎勵 ' + base + '（實得 ' + (after - before) + '）');
@@ -128,7 +128,7 @@ head('6. 關卡裡賺到的金幣會進商店錢包');
   G.hazards = [];
   const me2 = G.players[0];
   G.enemies.length = 0;
-  me2.score = 90;
+  me2.score = 90; me2.coin = 90;
   me2.alive = false; me2.dead = true; me2.lives = 0; me2.respawnT = 0;
   const b2 = P.Shop.gold();
   P.updateSolo(DT);

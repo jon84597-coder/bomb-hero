@@ -177,7 +177,7 @@ head('6. 掉落：金幣／道具／恐龍蛋');
   P.coinTo(p, 7);
   ok((p.score | 0) - sc0 === 7, 'coinTo 直接把金幣加進分數（+7）');
   ok(G.brLootGold >= 7, '大逃殺另外累計到 brLootGold（' + G.brLootGold + '）');
-  ok(/const loot = Math\.max\(0, Game\.brLootGold \| 0\)/.test(src), '結算時把掉落金幣加進獎金');
+  ok(/const loot = Math\.min\(300, Math\.max\(0, Game\.brLootGold \| 0\)\)/.test(src), '結算時把掉落金幣加進獎金（且封頂 300）');
   // BOSS 掉比較多
   let bossCoins = 0;
   for (let i = 0; i < 60; i++) {

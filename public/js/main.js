@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.85';
+const VERSION = '5.86';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -1185,7 +1185,7 @@ const Starter = (function () {
   return { fresh: fresh, tier: tier, apply: apply };
 })();
 
-const NICK_PRICE = 5000;
+const NICK_PRICE = 3000;   // v5.86：5,000→3,000（改一次名 29 局太貴）
 const NICK_MAX = 8;
 const NICK_GREETS = 5;
 const Nick = (function () {
@@ -6231,7 +6231,7 @@ function destroySoft(x, y) {
       spawnItem(x, y, h);
     }
   }
-  Game.players.forEach(function (p) { p.score += 10; });
+  Game.players.forEach(function (p) { addScore(p, 10, 2); });   // v5.86：磚只給 2 幣
   const T = Game.T;
   burst(x * T + T / 2, y * T + T / 2, '#c98d4b', 8, 130);
   try { Tut.hit('soft'); } catch (e) {}
@@ -6251,10 +6251,18 @@ function spawnItem(x, y, type) {
    ==== */
 const DROP_ITEMS = ['fire', 'fire', 'bomb', 'bomb', 'speed', 'speed',
   'kick', 'glove', 'punch', 'remote', 'pierce', 'line', 'heart'];
+/* v5.86：分數與金幣分流 —— p.score 是排行榜／星級／成就的依據，一個字都不動；
+   p.coin 才是商店金幣。以前兩者 1:1，炸一塊磚給 10 分就等於 10 金幣，
+   結果 74% 的金幣產出來自「開路」這種必然行為，金幣因此失去稀缺性。 */
+function addScore(p, n, coin) {
+  if (!p) return;
+  p.score = (p.score | 0) + n;
+  p.coin = (p.coin | 0) + (coin == null ? n : coin);
+}
 function coinTo(p, n) {
   if (!p) return;
   n = Math.max(1, Math.round(n || 1));
-  p.score = (p.score | 0) + n;
+  addScore(p, n, n);
   if (Game.mode === 'br') Game.brLootGold = (Game.brLootGold | 0) + n;
   try { pushPop(p.x, p.y - (Game.T || 20) * .55, '🪙 +' + n, { color: '#ffd766', size: .95, life: 1.0 }); } catch (e) {}
   try { AudioSys.sfx('coin', p.x, p.y); } catch (e) {}   // v5.85：六格可聽半徑
@@ -6289,14 +6297,14 @@ function foeDrop(e) {
     Game.eggs.push({ x: spot.x, y: spot.y, bob: Math.random() * 6.28, wob: 0, born: .5, safeT: .8, kind: rollEggKind() });
   }
   if (big) {                                        // BOSS：一次掉 2~3 樣
-    coin(26 + rand(20));
+    coin(30 + rand(15));
     if (Math.random() < .85) gear();
     if (Math.random() < .55) egg();
   } else {
     const r = Math.random();
     if (r < .07) egg();
     else if (r < .40) gear();
-    else coin(5 + rand(10));
+    else coin(3 + rand(5));
   }
   try { burst(spot.x * T + T / 2, spot.y * T + T / 2, '#ffe9a8', 8, 120); } catch (x) {}
 }
@@ -6600,7 +6608,7 @@ function swapMountBurst(p) {
     e.hp = (e.hp || 1) - 2;
     e.hitT = Math.max(e.hitT || 0, .4);
     burst(e.x, e.y, '#fff', 8, 160);
-    if (e.hp <= 0) { e.dead = true; try { AchFoe(e); } catch (x) {} Game.players.forEach(function (q) { q.score += 500; }); burst(e.x, e.y, e.color || '#fff', 16, 200); }
+    if (e.hp <= 0) { e.dead = true; try { AchFoe(e); } catch (x) {} Game.players.forEach(function (q) { addScore(q, 500, 30); }); burst(e.x, e.y, e.color || '#fff', 16, 200); }
   });
 }
 // 吃到蛋（人類與 AI 共用）：沒坐騎 → 依蛋種上坐騎；已有坐騎 → 升級成紅龍
@@ -6857,7 +6865,7 @@ function ostrichLand(p) {
       try { AchFoe(e); } catch (x) {}
       try { Gift.add('kill', 1); } catch (err) {}
       burst(e.x, e.y, '#c9a7f2', 34, 290);
-      Game.players.forEach(function (q) { q.score += 1000; });
+      Game.players.forEach(function (q) { addScore(q, 1000, 60); });
       AudioSys.sfx('punch');
       if (e.brBoss && typeof brBossDown === 'function') brBossDown(e, p);
       return;
@@ -8367,7 +8375,7 @@ const Rank = (function () {
         { k: 'onWin', lab: '線上冠軍', ico: '🛰️', unit: '次' }
       ];
       /* 週榜獎金（第 1~10 名） */
-      const REWARD = [1000, 700, 500, 350, 350, 200, 200, 200, 200, 200];
+      const REWARD = [400, 280, 200, 130, 130, 80, 80, 80, 80, 80];   // v5.86：原冠軍 1,000 已近一輪關卡
 
       const S = { v: 1, week: '', base: {}, claimed: '', lb: {}, at: 0 };
       let busy = false, subT = 0;
@@ -10138,23 +10146,23 @@ const Gift = (function () {
       const KEY = 'bombhero-gift-v1';
       // 7 天簽到獎勵（第 3／5 天給票券，第 7 天雙票券＋大金幣）
       const REWARDS = [
-        { g: 120, t: 0 }, { g: 180, t: 0 }, { g: 100, t: 1 },
-        { g: 260, t: 0 }, { g: 160, t: 1 }, { g: 320, t: 0 }, { g: 500, t: 2 }
+        { g: 70, t: 0 }, { g: 100, t: 0 }, { g: 60, t: 1 },
+        { g: 140, t: 0 }, { g: 90, t: 1 }, { g: 180, t: 0 }, { g: 260, t: 2 }
       ];
       // 每日任務池（每天抽 3 個）
       const POOL = [
-        { id: 'kill', n: 20, g: 120 },
-        { id: 'brick', n: 40, g: 100 },
-        { id: 'item', n: 8, g: 100 },
-        { id: 'clear', n: 2, g: 150 },
-        { id: 'jump', n: 12, g: 110 },
-        { id: 'perfect', n: 1, g: 180 },
+        { id: 'kill', n: 20, g: 75 },
+        { id: 'brick', n: 40, g: 70 },
+        { id: 'item', n: 8, g: 70 },
+        { id: 'clear', n: 2, g: 95 },
+        { id: 'jump', n: 12, g: 75 },
+        { id: 'perfect', n: 1, g: 105 },
         /* v5.20：RPG 專屬（r: 1 標記）。以前六個任務全是「炸彈超人通用事件」，
            結果 RPG 玩家打一小時只推動 kill／clear，投入與回報完全不成比例。
            現在每天固定保底一個 RPG 目標，深的那個模式才接得上每日循環。 */
-        { id: 'rpgBoss', n: 1, g: 220, r: 1 },
-        { id: 'rpgLv', n: 1, g: 180, r: 1 },
-        { id: 'rpgClear', n: 2, g: 160, r: 1 }
+        { id: 'rpgBoss', n: 1, g: 125, r: 1 },
+        { id: 'rpgLv', n: 1, g: 105, r: 1 },
+        { id: 'rpgClear', n: 2, g: 95, r: 1 }
       ];
       const MISSION_KINDS = {};
       POOL.forEach(function (m) { MISSION_KINDS[m.id] = 1; });
@@ -11248,7 +11256,7 @@ const Abyss = (function () {
   }
   function layerGold(n) {
     const sum = perkSum();
-    let g = 15 + (n > best ? 45 : 0) + (sum.gold || 0);
+    let g = 20 + (n > best ? 40 : 0) + (sum.gold || 0);
     g = Math.round(g * (1 + (sum.goldPct || 0)));
     return Math.max(0, g);
   }
@@ -11567,6 +11575,7 @@ function startSolo(stage, bossRush, daily) {
   Game.endShown = false;        // 重新開始 → 結束畫面標記歸零
   Game.revived = false;         // v5.64：每局只能金幣復活一次
   Game.paidScore = 0;           // v5.64：已經結算進錢包的分數（復活後不重複給）
+  Game.paidCoin = 0;            // v5.86：已結算的金幣（分數與金幣分流後各自記帳）
   Game.state = 'idle';          // 清掉上一場的 'over' / 'roundover'，避免卡住不更新
   paused = false;
   const soloScheme = settings.ctrl === 'auto' ? Input.schemes.auto
@@ -11582,6 +11591,7 @@ function startSolo(stage, bossRush, daily) {
   p.sHp = p.sHpMax;
   Game.startLives = p.lives;             // ❤️ 的補命上限跟著這一關的初始生命走
   p.score = 0;
+  p.coin = 0;                   // v5.86：本關金幣（與排行分數脫鉤）
   Game.players.push(p);
   p.name = settings.playerName || '';   // v4.8：固定暱稱
   Screen.show('game');
@@ -12931,7 +12941,7 @@ function petHitEnemy(e, dmg) {
   if (e.hp <= 0) {
     e.dead = true;
     try { AchFoe(e); } catch (x) {}
-    Game.players.forEach(function (p) { p.score += 200; });
+    Game.players.forEach(function (p) { addScore(p, 200, 15); });
     burst(e.x, e.y, e.color || '#fff', 18, 210);
     AudioSys.sfx('hurt');
     return true;
@@ -13470,8 +13480,8 @@ function updateSolo(dt) {
            但星數／每週榜／關卡解鎖一律不記，否則深淵會直接洗掉 solo 的進度。 */
         if (Game.abyss) {
           try {
-            const c0 = Math.max(0, Math.round(p.score || 0) - Math.max(0, Game.paidScore | 0));
-            Game.paidScore = Math.max(0, Math.round(p.score || 0));
+            const c0 = Math.max(0, Math.round(p.coin || 0) - Math.max(0, Game.paidCoin | 0));
+            Game.paidCoin = Math.max(0, Math.round(p.coin || 0));
             if (c0 > 0) Shop.addGold(c0);
           } catch (e) {}
           try { Abyss.layerClear(); } catch (e) {}
@@ -13482,10 +13492,14 @@ function updateSolo(dt) {
         try {
           // v4.21：關卡裡賺到的金幣（HUD 上那顆 💰）就是你的商城金幣 ——
           //   過關時「本關金幣 + 過關獎勵」一起進商店錢包
-          const base = 40 + Math.floor((cleared - 1) / 4) * 10;
+          /* v5.86：過關獎勵拉到 65~113（原本 40~130），讓「打贏」成為主要收入；
+             關內金幣只佔 55%，不再由「炸了幾塊磚」決定這一關賺多少。 */
+          let base = 65 + Math.floor((cleared - 1) / 4) * 5;
+          // v5.86：前 3 關首通各 +100 —— 第一次消費體驗必須在 10 分鐘內發生
+          try { if (cleared <= 3 && cleared >= (Solo.unlocked | 0)) base += 100; } catch (e2) {}
           /* v5.64：復活過的話，陣亡當下已經先結算過一段 —— 這裡只補差額。 */
-          const coins = Math.max(0, Math.round(p.score || 0) - Math.max(0, Game.paidScore | 0));
-          Game.paidScore = Math.max(0, Math.round(p.score || 0));
+          const coins = Math.max(0, Math.round(p.coin || 0) - Math.max(0, Game.paidCoin | 0));
+          Game.paidCoin = Math.max(0, Math.round(p.coin || 0));
           Shop.addGold(base + coins);
           toast('💰 本關金幣 ' + coins + ' ＋ 過關獎勵 ' + base + '　→　商店金幣 ' + Shop.gold(), 3);
         } catch (e) {}
@@ -13619,12 +13633,12 @@ function updateSolo(dt) {
         try {
           /* v5.64：只結算「還沒付過的」那一部分 —— 復活後再死一次不會重複領。
              沒有這個，策略就變成「一直死、一直復活、一直領同一筆」。 */
-          const all = Math.max(0, Math.round(p.score || 0));
-          const paid = Math.max(0, Game.paidScore | 0);
+          const all = Math.max(0, Math.round(p.coin || 0));
+          const paid = Math.max(0, Game.paidCoin | 0);
           const coins = Math.max(0, all - paid);
           if (coins > 0) {
             Shop.addGold(coins);
-            Game.paidScore = all;
+            Game.paidCoin = all;
             toast('💰 本關賺到的 ' + coins + ' 金幣已放進商店錢包', 2.8);
           }
         } catch (e) {}
@@ -13958,7 +13972,7 @@ function enemyFlameDamage(e, dt) {
         }
         e.dead = true;
         try { AchFoe(e); } catch (x) {}
-        Game.players.forEach(function (p) { p.score += 100; });
+        Game.players.forEach(function (p) { addScore(p, 100, 8); });
         burst(e.x, e.y, e.color, 14, 180);
         bubbleDeathPair(e, f.owner, e.r * 2 + 14, Game.T * 1.98);
         AudioSys.sfx('hurt');
@@ -14098,7 +14112,7 @@ function updateEnemyRaw(e, dt) {
         }
         e.dead = true;
         try { AchFoe(e); } catch (x) {}
-        Game.players.forEach(function (p) { p.score += 100; });
+        Game.players.forEach(function (p) { addScore(p, 100, 8); });
         burst(e.x, e.y, e.color, 14, 180);
         bubbleDeathPair(e, f.owner, e.r * 2 + 14, Game.T * 1.98);
         AudioSys.sfx('hurt');
@@ -14648,7 +14662,7 @@ function updateBoss(e, dt) {
         e.dead = true;
         try { AchFoe(e); } catch (x) {}
         try { Gift.add('kill', 1); } catch (err2) {}      // v4.87：每日任務「擊殺」
-        Game.players.forEach(function (p2) { p2.score += 1000; });
+        Game.players.forEach(function (p2) { addScore(p2, 1000, 60); });
         burst(e.x, e.y, '#c93aff', 40, 300);
         Game.shake = 1;
         bubbleDeathPair(e, f.owner, e.r * 2 + 14, Game.T * 1.98);
@@ -15196,7 +15210,7 @@ const BR = {
   PH5S: [[60, 27], [60, 20], [60, 14], [60, 8.5], [60, 3.2]],
   PH: [],
   // 名次獎勵（第 9 名以後一律拿最後一級 80）
-  GOLD: [1200, 700, 450, 300, 200, 150, 100, 80],
+  GOLD: [420, 300, 240, 180, 150, 120, 95, 75],   // v5.86：冠軍 1,200→420（一場 4 分鐘）
   HIDE: 46,            // 可以躲人的物件（草叢／破屋／陶甕…）
   on: function () { return Game.mode === 'br'; }
 };
@@ -16451,7 +16465,7 @@ function brNukeImpact(n) {
     });
   }
   try { burst(px, py, '#ffb347', 40, 340); } catch (e) {}
-  try { AudioSys.sfx('nukeBoom'); } catch (e) {}
+  try { AudioSys.sfx('nukeBoom', px, py); } catch (e) {}   // v5.86：爆炸聲也要吃六格半徑
 }
 
 /* ============================================================================
@@ -17447,7 +17461,7 @@ function brFinish(winner) {
   const me = Game.players[0];
   const win = !!(winner && winner === me);
   const place = win ? 1 : Math.min(BR.N, me.brPlace || (Game.brAlive + 1));
-  const loot = Math.max(0, Game.brLootGold | 0);        // v5.35：戰場上撿到的金幣
+  const loot = Math.min(300, Math.max(0, Game.brLootGold | 0));   // v5.86：百人地圖撿幣量不可控 → 封頂 300
   const gold = (BR.GOLD[Math.max(1, Math.min(BR.GOLD.length, place)) - 1] || 80) + loot;
   /* v5.64：押注賠付。倍率 1.6／1.2／1.0，期望值 < 1 ——
      所以它是「長期回收金幣」的機制，不是送錢。沒進前三名就是 -100%。 */
@@ -21469,7 +21483,7 @@ function updateHud() {
     })() : '';
     html = '<div class="chip" data-k="stage"><span class="ic">🗺️</span><b>' + Game.stage + '</b>' +
       '<i class="thn">' + ((typeof Tut !== 'undefined' && Tut.on && Tut.part === 'play') ? t('learn.tag') : themeName(thIdx)) + '</i></div>' +
-      '<div class="chip" data-k="score" title="本關金幣 · 過關（或陣亡）後會放進商店錢包"><span class="ic">💰</span><b>' + p.score + '</b></div>' +
+      '<div class="chip" data-k="score" title="本關金幣 · 過關（或陣亡）後會放進商店錢包"><span class="ic">💰</span><b>' + (p.coin | 0) + '</b></div>' +
       lvChip +
       hpChip +
       '<div class="chip" data-k="pow"><span class="ic">🔥</span><b>' + p.power + '</b></div>' +
@@ -36630,7 +36644,7 @@ const Shop = (function () {
   const KEY = 'bombhero-pets', GKEY = 'bombhero-gold', SKEY = 'bombhero-gold-synced';
   // v4.69：大逃殺門票（每場消耗一張，可重複購買）
   // v4.70：每天第一次登入自動送 1 張（新手也摸得到大逃殺）
-  const TK = 'bombhero-br-ticket', TICKET_PRICE = 2000;
+  const TK = 'bombhero-br-ticket', TICKET_PRICE = 900;   // v5.86：2,000→900（應低於一場期望產出）
   const FK = 'bombhero-br-free';
   let owned = [], gold = 0, tickets = 0, freeJust = 0;
 
@@ -37222,7 +37236,7 @@ const SHARE_PLATFORMS = [
 const Share = (function () {
     try {
       return (function () {
-  const REWARD = 1000, DAILY_MAX = 3;
+  const REWARD = 150, DAILY_MAX = 3;    // v5.86：分享 1,000→150（3 次/日曾是 5.5 局關卡）
   const LOGIN_TIP = '🔐 分享金幣要先用右上角「帳號」登入，而且不能是遊客';
   let claimed = {}, dayN = 0, busy = false, note = '', wd = null;
   // v4.21：統一的「解除忙碌」——順便清掉 watchdog，避免按鈕卡在 disabled
@@ -37483,17 +37497,17 @@ const RPG_SKILLS = [
   { id: 'def',    ico: '🪖', n: '護甲強化', kind: 'pas', lv: 24, max: 3, desc: '起始護甲 +1／級。' }
 ];
 const RPG_BAG = [
-  { id: 'hp1',   ico: '🧪', n: '小藥水',   price: 250,  desc: '本關最大生命 +1',        buff: { hp: 1 } },
-  { id: 'hp2',   ico: '🧴', n: '大藥水',   price: 600,  desc: '本關最大生命 +2',        buff: { hp: 2 } },
-  { id: 'arm1',  ico: '🛡️', n: '護甲片',   price: 400,  desc: '本關護甲 +1',            buff: { def: 1 } },
-  { id: 'fire1', ico: '🔥', n: '火力符',   price: 500,  desc: '本關爆炸範圍 +1',        buff: { fire: 1 } },
-  { id: 'rem1',  ico: '📡', n: '遙控器',   price: 700,  desc: '本關可用遙控引爆',        buff: { remote: 1 } },
-  { id: 'rev1',  ico: '\uD83D\uDC96', n: '復活幣',   price: 1200, desc: '陣亡時原地復活一次（半血）', buff: { revive: 1 } },
+  { id: 'hp1',   ico: '🧪', n: '小藥水',   price: 180,  desc: '本關最大生命 +1',        buff: { hp: 1 } },
+  { id: 'hp2',   ico: '🧴', n: '大藥水',   price: 420,  desc: '本關最大生命 +2',        buff: { hp: 2 } },
+  { id: 'arm1',  ico: '🛡️', n: '護甲片',   price: 280,  desc: '本關護甲 +1',            buff: { def: 1 } },
+  { id: 'fire1', ico: '🔥', n: '火力符',   price: 350,  desc: '本關爆炸範圍 +1',        buff: { fire: 1 } },
+  { id: 'rem1',  ico: '📡', n: '遙控器',   price: 480,  desc: '本關可用遙控引爆',        buff: { remote: 1 } },
+  { id: 'rev1',  ico: '\uD83D\uDC96', n: '復活幣',   price: 800, desc: '陣亡時原地復活一次（半血）', buff: { revive: 1 } },
   /* v5.73：行為型補給 —— 前三種補給全是數值（+血 +甲 +火），換了也不會改變打法。
      這三種改的是「資訊」「資訊不對稱」「退路」，才是真的換一種玩法。 */
-  { id: 'xray',  ico: '\uD83D\uDD0D', n: '透視符',   price: 800,  desc: '本關前 30 秒，牆後的道具與金幣會透出輪廓', buff: { xray: 1 } },
-  { id: 'smoke', ico: '\uD83D\uDCA8', n: '煙霧彈',   price: 600,  desc: '開場 10 秒怪物看不到你 —— 可以大膽衝過怪群', buff: { smoke: 1 } },
-  { id: 'warp',  ico: '\uD83C\uDF00', n: '傳送卷',   price: 900,  desc: '陣亡時自動傳回起點並復活（半血，每張一次）', buff: { warp: 1 } }
+  { id: 'xray',  ico: '\uD83D\uDD0D', n: '透視符',   price: 520,  desc: '本關前 30 秒，牆後的道具與金幣會透出輪廓', buff: { xray: 1 } },
+  { id: 'smoke', ico: '\uD83D\uDCA8', n: '煙霧彈',   price: 400,  desc: '開場 10 秒怪物看不到你 —— 可以大膽衝過怪群', buff: { smoke: 1 } },
+  { id: 'warp',  ico: '\uD83C\uDF00', n: '傳送卷',   price: 600,  desc: '陣亡時自動傳回起點並復活（半血，每張一次）', buff: { warp: 1 } }
 ];
 const RPG_PERM_UP = [
   { id: 'hp',   ico: '❤️', n: '起始生命', unit: '+1', prices: [600, 1200, 2400] },
@@ -39408,6 +39422,7 @@ function startRpg(stage, opt) {
   p.shieldCharges = 0;
   p.lives = 1;
   p.score = 0;
+  p.coin = 0;                   // v5.86：本關金幣（與排行分數脫鉤）
   Game.players.push(p);
   Screen.show('game');
   resizeView();
@@ -41408,11 +41423,21 @@ function rpgAdjust(k, d) {
       out.gold = num(src.gold, 0, 0, 100000000);
       out.tickets = num(src.tickets, 0, 0, 9999);
       // 隨從買了就永久 → 取聯集
-      const seen = {};
+      /* v5.86：以前這裡只搬 kind／ch，把 lv 丟掉 —— 隨從升到 Lv.5，
+         下次上線雲端合併一次就退回 Lv.1（玩家看到的是「升級被吃掉」）。
+         改成整併時保留等級，同一種取兩邊較高的那一份。 */
+      const seen = {}, idx = {};
       [].concat(remote.pets || [], local.pets || []).forEach(function (p) {
-        if (!p || !p.kind || seen[p.kind]) return;
-        seen[p.kind] = 1;
-        out.pets.push({ kind: String(p.kind), ch: num(p.ch, 0, 0, 99) });
+        if (!p || !p.kind) return;
+        const k = String(p.kind);
+        const lv = Math.max(1, Math.min(5, num(p.lv, 1, 1, 5)));
+        if (seen[k]) {
+          const cur = out.pets[idx[k]];
+          if (cur && lv > cur.lv) cur.lv = lv;
+          return;
+        }
+        seen[k] = 1; idx[k] = out.pets.length;
+        out.pets.push({ kind: k, ch: num(p.ch, 0, 0, 99), lv: lv });
       });
       // 教學：任一邊看過就算看過
       out.tut = {
@@ -42110,6 +42135,7 @@ window.__BH = {
   bombIsAlly: bombIsAlly, isAllyOwner: isAllyOwner, NUKE_R: NUKE_R, NUKE_DMG: NUKE_DMG, NUKE_BURN_SEC: NUKE_BURN_SEC,
   // v5.35：隨機縮圈、核彈打怪、掉落物
   brZoneNext: brZoneNext, brNukeHurtFoe: brNukeHurtFoe, foeDrop: foeDrop, foeOnDeath: foeOnDeath, coinTo: coinTo,
+  addScore: addScore,
   drawBRTitanWall: drawBRTitanWall, drawOuterWall: drawOuterWall,   // v5.36：鈦合金外牆（測試用）
   showBRDeath: showBRDeath, aiEscape: aiEscape, placeHideTiles: placeHideTiles,
   seedCode: seedCode, seedTag: seedTag,

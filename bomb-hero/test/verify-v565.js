@@ -90,8 +90,8 @@ ok(!/resetPlayerStats\(p\);\s*\n\s*Game\.revived/.test(mainSrc), '復活不會�
 ok(/if \(reviveCanOffer\(\)\)|reviveCanOffer\(\) \? revivePrice\(\) : 0/.test(mainSrc), '死亡時才判斷要不要給');
 ok(/Game\.paidScore/.test(mainSrc), '★ 已結算的分數有記帳（復活後不重複發金幣）');
 ok(/const coins = Math\.max\(0, all - paid\);/.test(mainSrc), '死亡時只發差額');
-ok(/Math\.round\(p\.score \|\| 0\) - Math\.max\(0, Game\.paidScore \| 0\)/.test(mainSrc),
-  '過關時也只發差額');
+ok(/Math\.round\(p\.coin \|\| 0\) - Math\.max\(0, Game\.paidCoin \| 0\)/.test(mainSrc),
+  '過關時也只發差額（v5.86：改看 p.coin）');
 ok(/id="btnRevive"/.test(mainSrc), '結算畫面有復活按鈕');
 ok(/Shop\.spend\(reviveCost\)/.test(mainSrc), '復活真的扣金幣');
 

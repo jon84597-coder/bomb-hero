@@ -1,0 +1,315 @@
+// tools/gen-econ-report.js —— 產生 docs/econ-v586.html（經濟評估報告）
+const fs = require('fs');
+const path = require('path');
+
+const OLD = [343, 649, 339, 349, 726, 394, 544, 334, 534, 766, 400, 810, 400, 396, 726, 356, 396, 551, 481, 856, 371, 617, 487, 677, 786, 493, 413, 583, 423, 726, 638, 618, 588, 498, 796, 428, 398, 408, 528, 816];
+const NEW = [133, 196, 134, 136, 236, 150, 180, 138, 181, 247, 156, 238, 159, 160, 242, 152, 163, 196, 182, 271, 163, 214, 188, 226, 263, 194, 178, 212, 183, 254, 228, 224, 221, 203, 271, 189, 186, 188, 212, 278];
+
+const W = 920, H = 300, PL = 52, PR = 18, PT = 24, PB = 34;
+const MAXY = 900;
+function pts(arr) {
+  return arr.map((v, i) => {
+    const x = PL + (W - PL - PR) * (i / (arr.length - 1));
+    const y = PT + (H - PT - PB) * (1 - v / MAXY);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+}
+function area(arr) {
+  const p = pts(arr);
+  const x0 = PL, x1 = W - PR, yb = H - PB;
+  return 'M' + x0 + ',' + yb + ' L' + p.split(' ').join(' L') + ' L' + x1 + ',' + yb + ' Z';
+}
+function grid() {
+  let s = '';
+  [0, 300, 600, 900].forEach(v => {
+    const y = PT + (H - PT - PB) * (1 - v / MAXY);
+    s += `<line x1="${PL}" y1="${y.toFixed(1)}" x2="${W - PR}" y2="${y.toFixed(1)}" stroke="#22304a" stroke-width="1"/>`;
+    s += `<text x="${PL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" fill="#7f92b0" font-size="11">${v}</text>`;
+  });
+  for (let i = 1; i <= 40; i += 5) {
+    const x = PL + (W - PL - PR) * ((i - 1) / 39);
+    s += `<text x="${x.toFixed(1)}" y="${H - 12}" text-anchor="middle" fill="#7f92b0" font-size="11">${i}</text>`;
+  }
+  s += `<text x="${W - PR}" y="${H - 12}" text-anchor="end" fill="#7f92b0" font-size="11">關卡</text>`;
+  return s;
+}
+
+const rowsGoods = [
+  ['小藥水 · 本關 +1 血', 250, 180],
+  ['大藥水 · 本關 +2 血', 600, 420],
+  ['護甲片 · 本關 +1 甲', 400, 280],
+  ['火力符 · 本關 +1 範圍', 500, 350],
+  ['遙控器 · 本關遙控引爆', 700, 480],
+  ['復活幣 · 原地復活一次', 1200, 800],
+  ['透視符 · 牆後顯形 30 秒', 800, 520],
+  ['煙霧彈 · 開場 10 秒匿蹤', 600, 400],
+  ['傳送卷 · 陣亡傳回起點', 900, 600],
+  ['隨從（三隻任一）', 8000, 8000],
+  ['隨從升級 Lv.2／3／4／5', 0, 0],
+  ['大逃殺門票（每場）', 2000, 900],
+  ['RPG 屬性點（第 1 格）', 2000, 2000],
+  ['RPG 永久強化（三項滿）', 16800, 16800],
+  ['改名', 5000, 3000]
+];
+function goodsTable() {
+  return rowsGoods.map(r => {
+    const [n, o, nw] = r;
+    if (o === 0) {
+      return `<tr><td class="nm">${n}</td><td class="num dim">4,000／8,000／16,000／32,000</td><td class="num dim">不變</td><td class="num dim">—</td><td class="num good">維持</td></tr>`;
+    }
+    const oq = (o / 541).toFixed(1), nq = (nw / 198).toFixed(1);
+    const chg = oq > 0 ? (nq / oq) : 1;
+    const cls = chg > 3 ? 'hot' : (chg > 1.3 ? 'good' : 'dim');
+    return `<tr><td class="nm">${n}</td><td class="num">${o.toLocaleString()}</td><td class="num hi">${nw.toLocaleString()}</td><td class="num">${oq} → <b>${nq}</b></td><td class="num ${cls}">×${chg.toFixed(1)}</td></tr>`;
+  }).join('');
+}
+
+const CSS = `
+:root{--bg:#080d18;--panel:#0f1728;--panel2:#131d31;--line:#1f2c44;--txt:#e9effb;--dim:#8b9cb9;--gold:#ffcf5c;--teal:#4fd8c8;--red:#ff7052;--blue:#6fa8ff;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:15px/1.75 "Microsoft JhengHei","PingFang TC",system-ui,sans-serif;padding:48px 20px 80px;
+ background-image:radial-gradient(1200px 600px at 50% -10%,rgba(255,207,92,.07),transparent 70%);}
+.wrap{max-width:1000px;margin:0 auto}
+h1{font-size:30px;letter-spacing:.5px;font-weight:800}
+h2{font-size:20px;margin:0 0 14px;display:flex;align-items:center;gap:10px}
+h2 .n{width:26px;height:26px;border-radius:8px;background:linear-gradient(150deg,#2a3a5c,#141e33);border:1px solid #2c3d5c;color:var(--gold);font-size:13px;display:grid;place-items:center;font-weight:700}
+h3{font-size:15px;margin:22px 0 10px;color:var(--teal);font-weight:700}
+p{color:#c3cfe4}
+.sub{color:var(--dim);font-size:13px;margin-top:8px;letter-spacing:.3px}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px 28px;margin-top:22px}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+.k{background:linear-gradient(160deg,#16223a,#0d1425);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.k .t{font-size:12px;color:var(--dim);letter-spacing:.6px}
+.k .v{font-size:26px;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums}
+.k .d{font-size:12px;margin-top:4px;color:var(--dim)}
+.gold{color:var(--gold)}.teal{color:var(--teal)}.red{color:var(--red)}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
+th{text-align:left;color:var(--dim);font-weight:600;font-size:12px;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid rgba(31,44,68,.55)}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(79,216,200,.04)}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nm{color:#dbe5f6}
+.hi{color:var(--teal);font-weight:700}
+.dim{color:var(--dim)}
+.hot{color:var(--gold);font-weight:700}
+.good{color:var(--teal);font-weight:700}
+.bad{color:var(--red);font-weight:700}
+.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;border:1px solid;margin-left:8px;vertical-align:2px}
+.tag.o{border-color:#54303a;color:#ff9d87;background:rgba(255,112,82,.08)}
+.tag.n{border-color:#24504a;color:#7fe8da;background:rgba(79,216,200,.08)}
+.legend{display:flex;gap:20px;font-size:12.5px;color:var(--dim);margin:4px 0 6px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:1px}
+.bars{margin-top:6px}
+.bar{display:flex;align-items:center;gap:12px;margin:10px 0}
+.bar .lab{width:120px;font-size:13px;color:#c3cfe4;flex:none}
+.bar .track{flex:1;height:16px;background:#0a1220;border-radius:8px;overflow:hidden;border:1px solid #1a2740}
+.bar .fill{height:100%;border-radius:8px}
+.bar .val{width:92px;text-align:right;font-size:12.5px;color:var(--dim);font-variant-numeric:tabular-nums;flex:none}
+ul{padding-left:20px;color:#c3cfe4}
+li{margin:7px 0}
+li b{color:#fff}
+code{background:#0a1220;border:1px solid #1a2740;border-radius:5px;padding:1px 6px;font-size:12.5px;color:#9fd8ff;font-family:ui-monospace,Consolas,monospace}
+.note{background:rgba(255,207,92,.05);border:1px solid rgba(255,207,92,.22);border-radius:12px;padding:14px 18px;margin-top:16px;font-size:13.5px;color:#e6dcc0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:820px){.kpi{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}
+footer{text-align:center;color:#5d6d88;font-size:12px;margin-top:34px}
+`;
+
+const html = `<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>爆爆英雄 · 金幣經濟評估與定價方案</title>
+<style>${CSS}</style></head><body><div class="wrap">
+
+<h1>金幣經濟評估與定價方案</h1>
+<div class="sub">爆爆英雄 BOMB HERO ｜ 評估對象 v5.85 ｜ <b style="color:#4fd8c8">已實裝於 v5.86</b> ｜ 2026-11-11</div>
+
+<div class="kpi">
+  <div class="k"><div class="t">單局金幣產出</div><div class="v red">541</div><div class="d">→ 提案 <b class="teal">198</b>（−63.4%）</div></div>
+  <div class="k"><div class="t">每小時產出 GPH</div><div class="v red">12,984</div><div class="d">→ 提案 <b class="teal">4,752</b></div></div>
+  <div class="k"><div class="t">清空商店所需</div><div class="v red">25.8 h</div><div class="d">→ 提案 <b class="teal">70.6 h</b>（×2.7）</div></div>
+  <div class="k"><div class="t">關內分數佔比</div><div class="v red">84%</div><div class="d">→ 提案 <b class="teal">55%</b>（其餘轉為過關獎勵）</div></div>
+</div>
+
+<div class="sec">
+<h2><span class="n">1</span>結論先講</h2>
+<p>目前不是「某一個獎勵給太多」，而是<b>三個結構性問題同時發生</b>：金幣與排行榜分數 1:1 綁死、產出 84% 來自「炸磚」這種必然行為、外圍（分享／週榜）零成本產出失控。三者疊加的結果是：<b>前 2 小時就能買齊三隻隨從，之後金幣再也沒有用途</b>。</p>
+<p style="margin-top:10px">提案不改動任何排行榜分數（<code>p.score</code> 完全保留），只新增一條獨立的金幣通道 <code>p.coin</code>，把「打贏」的權重從 16% 提到 45%，並把單局產出壓到 <b>198</b>。商品價格只做小幅結構修正（消耗品下調、隨從微漲），<b>難度幾乎全部由產出端承擔</b>。</p>
+</div>
+
+<div class="sec">
+<h2><span class="n">2</span>現況盤點（實測，非估算）</h2>
+<p>以下數字由沙盒逐關重建 40 張地圖後統計：軟磚數、小怪數、BOSS 數，再套用目前的掉落機率與計分公式。</p>
+<table>
+<thead><tr><th>產出來源</th><th class="num">單局期望</th><th class="num">一輪 40 關</th><th class="num">佔比</th><th>說明</th></tr></thead>
+<tbody>
+<tr><td class="nm">炸軟磚（10 分／塊）</td><td class="num">400</td><td class="num">15,980</td><td class="num bad">74%</td><td class="dim">平均 40 塊／關，必然行為</td></tr>
+<tr><td class="nm">小怪掉幣（60% 掉 5~14）</td><td class="num">46</td><td class="num">1,830</td><td class="num">8%</td><td class="dim">8 隻 × 60% × 均 9.5</td></tr>
+<tr><td class="nm">BOSS 掉幣（26~46）</td><td class="num">—</td><td class="num">1,420</td><td class="num">7%</td><td class="dim">每 5 關一隻</td></tr>
+<tr><td class="nm">過關獎勵（40＋每 4 關 +10）</td><td class="num">85</td><td class="num">3,400</td><td class="num">16%</td><td class="dim">與難度掛鉤，但佔比最低</td></tr>
+<tr style="border-top:1px solid #2c3d5c"><td class="nm"><b>合計</b></td><td class="num"><b class="red">541</b></td><td class="num"><b class="red">21,642</b></td><td class="num">100%</td><td class="dim">以每局 2.5 分鐘計 → 12,984 GPH</td></tr>
+</tbody></table>
+<div class="note">單局時長假設 2.5 分鐘（含開場、走位、結算）。一輪 40 關約 100 分鐘，即 <b>一晚就能賺到 21,642 金幣</b> —— 這相當於 2.7 隻隨從、或 18 瓶復活幣。</div>
+</div>
+
+<div class="sec">
+<h2><span class="n">3</span>六個病灶</h2>
+<div class="two">
+<div>
+<h3>① 分數即金幣，1:1 綁死</h3>
+<p>排行榜分數與錢包金幣是同一條管線。<b>任何一次計分改動都會同時改寫歷史排行</b>，所以數值不敢調、調不動，只能一路膨脹。</p>
+<h3>② 產出與「努力」脫鉤</h3>
+<p>74% 來自炸磚 —— 這是開路、找門的必然行為，不需要技巧。真正需要操作的「打贏」只佔 16%。</p>
+<h3>③ 產出曲線倒掛</h3>
+<p>地圖大小決定收入，不是難度。第 12 關（71 塊磚）810 金幣，第 37 關（20 塊磚）只有 398 —— 後期反而更窮。</p>
+</div>
+<div>
+<h3>④ 外圍零成本產出失控</h3>
+<p>分享 3 次／日 = 3,000，等於 <b>5.5 局完整關卡</b>，卻只要點三下。週榜 3,900＝一整輪 40 關。</p>
+<h3>⑤ 消耗品價格錨錯位</h3>
+<p>小藥水 250 vs 單局 541 —— 一關能買兩瓶。<b>當補給便宜到不用思考，關卡內的取捨設計就整體失效。</b></p>
+<h3>⑥ 沒有回收池</h3>
+<p>金幣只進不出。隨從買完、RPG 升滿之後，錢包數字持續上漲但沒有出口，貨幣的「價值感」歸零。</p>
+</div>
+</div>
+</div>
+
+<div class="sec">
+<h2><span class="n">4</span>產出曲線：現行 vs 提案</h2>
+<div class="legend"><span><i class="dot" style="background:#ff7052"></i>現行（v5.85）</span><span><i class="dot" style="background:#4fd8c8"></i>提案（v5.86）</span></div>
+<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">
+  <defs>
+    <linearGradient id="gOld" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7052" stop-opacity=".22"/><stop offset="1" stop-color="#ff7052" stop-opacity="0"/></linearGradient>
+    <linearGradient id="gNew" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fd8c8" stop-opacity=".20"/><stop offset="1" stop-color="#4fd8c8" stop-opacity="0"/></linearGradient>
+  </defs>
+  ${grid()}
+  <path d="${area(OLD)}" fill="url(#gOld)"/>
+  <polyline points="${pts(OLD)}" fill="none" stroke="#ff7052" stroke-width="2" stroke-linejoin="round"/>
+  <path d="${area(NEW)}" fill="url(#gNew)"/>
+  <polyline points="${pts(NEW)}" fill="none" stroke="#4fd8c8" stroke-width="2.4" stroke-linejoin="round"/>
+</svg>
+<p style="margin-top:8px">現行曲線鋸齒劇烈（334～856），提案後落在 <b>133～278</b> 的平滑上升帶。穩定曲線的意義不只是好看 —— 玩家不會因為「剛好打到一張大地圖」而暴賺，也不會在後期關卡感覺變窮。</p>
+</div>
+
+<div class="sec">
+<h2><span class="n">5</span>目標模型：怎麼算出「剛好」</h2>
+<p>合理的產出不是憑感覺訂的，而是從<b>「清空內容需要多久」</b>倒推。休閒向遊戲的健康區間是 60～80 小時把永久內容收完，對應三個月、每天 45 分鐘。</p>
+<table>
+<thead><tr><th>錨點</th><th class="num">數值</th><th>來源</th></tr></thead>
+<tbody>
+<tr><td class="nm">永久內容總價</td><td class="num">335,300</td><td class="dim">三隻隨從 24,000 ＋ 滿級 180,000 ＋ RPG 永久 16,800 ＋ 屬性點 114,500</td></tr>
+<tr><td class="nm">目標清空時間</td><td class="num">70 h</td><td class="dim">三個月 × 每天 45 分鐘</td></tr>
+<tr><td class="nm">目標 GPH</td><td class="num gold">4,752</td><td class="dim">335,300 ÷ 70</td></tr>
+<tr><td class="nm">單局目標產出</td><td class="num gold">198</td><td class="dim">4,752 ×（2.5 分鐘 ÷ 60）</td></tr>
+</tbody></table>
+<h3>消耗品定價錨：一局 = 一瓶</h3>
+<p>小藥水應略低於單局產出（<b>0.9 局</b>），復活幣對應一次「值得救回來的失誤」（<b>4 局</b>）。這兩個錨定住，其餘商品按層級等比展開即可。</p>
+</div>
+
+<div class="sec">
+<h2><span class="n">6</span>新數值方案（產出端）</h2>
+<h3>6-1 關卡內</h3>
+<table>
+<thead><tr><th>來源</th><th class="num">現行</th><th class="num">提案</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td class="nm">炸軟磚（金幣）</td><td class="num">10</td><td class="num hi">2</td><td class="dim">降 80%，回到「開路的副產品」定位；分數仍記 10，排行不變</td></tr>
+<tr><td class="nm">小怪掉幣</td><td class="num">5～14</td><td class="num hi">3～7</td><td class="dim">均 9.5 → 5，掉落率 60% 不變</td></tr>
+<tr><td class="nm">BOSS 掉幣</td><td class="num">26～46</td><td class="num hi">30～45</td><td class="dim">基本持平 —— BOSS 就該是單局最肥的一筆</td></tr>
+<tr><td class="nm">踢炸彈擊殺</td><td class="num">500</td><td class="num hi">30</td><td class="dim">技巧獎勵保留，但不參與通膨</td></tr>
+<tr><td class="nm">坐騎踩殺</td><td class="num">1,000</td><td class="num hi">60</td><td class="dim">同上；坐騎本身的價值在「能踩」不在「給錢」</td></tr>
+<tr><td class="nm">技能擊殺／大招擊殺</td><td class="num">100／200／1,000</td><td class="num hi">8／15／60</td><td class="dim">改為金幣端的固定值（分數端不動）</td></tr>
+<tr><td class="nm">道具格／蛋格</td><td class="num">100／200</td><td class="num hi">10／20</td><td class="dim">發現寶物的獎勵象徵化</td></tr>
+</tbody></table>
+
+<h3>6-2 過關獎勵（提高權重，這是本次的核心）</h3>
+<table>
+<thead><tr><th>項目</th><th class="num">現行</th><th class="num">提案</th><th>效果</th></tr></thead>
+<tbody>
+<tr><td class="nm">單關公式</td><td class="num">40＋⌊(關−1)/4⌋×10</td><td class="num hi">65＋⌊(關−1)/4⌋×5</td><td class="dim">40～130 → 65～113</td></tr>
+<tr><td class="nm">章節 BOSS 首通</td><td class="num">—</td><td class="num hi">＋80</td><td class="dim">新增；只給首次，重刷不給</td></tr>
+<tr><td class="nm">關內分數佔比</td><td class="num">84%</td><td class="num hi">55%</td><td class="dim">「打贏」從配角變成主收入</td></tr>
+</tbody></table>
+
+<h3>6-3 外圍產出（零成本的部分要最狠）</h3>
+<table>
+<thead><tr><th>途徑</th><th class="num">現行</th><th class="num">提案</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td class="nm">分享（每日 3 次）</td><td class="num">1,000 ×3</td><td class="num hi">150 ×3</td><td class="dim">3,000／日 = 5.5 局，點三下就有了，這是最大的漏洞</td></tr>
+<tr><td class="nm">簽到 7 天</td><td class="num">1,640</td><td class="num hi">900</td><td class="dim">日均 234 → 129</td></tr>
+<tr><td class="nm">每日任務（3 個）</td><td class="num">100～220</td><td class="num hi">70～125</td><td class="dim">日均 440 → 272（≈1.4 局）</td></tr>
+<tr><td class="nm">週榜獎金</td><td class="num">3,900</td><td class="num hi">1,540</td><td class="dim">冠軍 1,000→400；原冠軍已近一輪關卡</td></tr>
+<tr><td class="nm">大逃殺名次</td><td class="num">1,200→80</td><td class="num hi">420→75</td><td class="dim">一場 4 分鐘，冠軍 420 ≈ 2 局單人</td></tr>
+<tr><td class="nm">大逃殺門票</td><td class="num">2,000</td><td class="num hi">900</td><td class="dim">入場費應低於「一場的期望產出」</td></tr>
+<tr><td class="nm">大逃殺戰場掉落</td><td class="num">無上限</td><td class="num hi">上限 300／場</td><td class="dim">百人地圖的撿幣量不可控，需封頂</td></tr>
+<tr><td class="nm">深淵每層</td><td class="num">15（破紀錄 +45）</td><td class="num hi">20（破紀錄 +40）</td><td class="dim">略微上調，深淵本來就偏低</td></tr>
+<tr><td class="nm">成就 192 個</td><td class="num">80,675</td><td class="num hi">不變</td><td class="dim">一次性里程碑，是「驚喜」不是「收入」</td></tr>
+<tr><td class="nm">圖鑑全滿</td><td class="num">10,800</td><td class="num hi">不變</td><td class="dim">同上</td></tr>
+<tr><td class="nm">賽季 30 級＋四目標</td><td class="num">9,080</td><td class="num hi">不變</td><td class="dim">28 天一季，日均僅 324</td></tr>
+</tbody></table>
+<div class="note"><b>每日總產出對比（假設每天玩 30 分鐘）：</b>現行 10,190 → 提案 3,215（−68%）。其中「遊玩所得」佔比從 64% 提升到 73%，社交與掛機類從 36% 壓到 27%。</div>
+</div>
+
+<div class="sec">
+<h2><span class="n">7</span>商品定價方案</h2>
+<p>價格只做<b>結構修正</b>：消耗品下調讓「一局買得起一瓶」，永久解鎖微調，難度提升由產出端承擔。這樣錢包數字不會膨脹成六位數，玩家不會覺得「什麼都買不起」。</p>
+<table>
+<thead><tr><th>商品</th><th class="num">現價</th><th class="num">提案</th><th class="num">購買局數</th><th class="num">難度變化</th></tr></thead>
+<tbody>${goodsTable()}</tbody>
+</table>
+<p style="margin-top:14px;color:var(--dim);font-size:13px">「購買局數」= 價格 ÷ 單局產出（現行 541／提案 198）。這一欄才是真正的平衡指標 —— 價格數字本身沒有意義。</p>
+</div>
+
+<div class="sec">
+<h2><span class="n">8</span>實作方式：不動排行榜，只加一條金幣通道</h2>
+<p>這是整份方案能安全落地的關鍵。<code>p.score</code> 是排行榜、星級、成就的依據，<b>一個字都不改</b>；新增 <code>p.coin</code> 專管金幣，兩者在同一個計分點分別給值。</p>
+<table>
+<thead><tr><th>位置</th><th>改動</th></tr></thead>
+<tbody>
+<tr><td class="nm"><code>addScore(p, n, coin)</code> 新增</td><td class="dim">score 與 coin 分流；所有計分點改呼叫它</td></tr>
+<tr><td class="nm">炸磚 <span class="dim">L6234</span></td><td class="dim"><code>addScore(p, 10, 2)</code></td></tr>
+<tr><td class="nm">踢殺／踩殺／技能擊殺 <span class="dim">L6603 / 6860 / 12934 / 13961 / 14101 / 14651</span></td><td class="dim">coin 分別 30／60／15／8／8／60</td></tr>
+<tr><td class="nm"><code>coinTo</code> <span class="dim">L6254</span></td><td class="dim">掉落金幣同時進 score 與 coin（1:1）</td></tr>
+<tr><td class="nm">過關結算 <span class="dim">L13473 / 13487 / 13622</span></td><td class="dim">改用 <code>p.coin − Game.paidCoin</code></td></tr>
+<tr><td class="nm">HUD 💰 <span class="dim">L21472</span></td><td class="dim">顯示 <code>p.coin</code>（顯示語意本來就是「本關金幣」）</td></tr>
+<tr><td class="nm">重開關卡 <span class="dim">L11584 / 39410</span></td><td class="dim"><code>p.coin = 0; Game.paidCoin = 0</code></td></tr>
+<tr><td class="nm">掉落量 <span class="dim">L6285 ~ 6295</span></td><td class="dim">coin(5+rand(10)) → coin(3+rand(5))；BOSS 26+rand(20) → 30+rand(15)</td></tr>
+<tr><td class="nm">外圍常數</td><td class="dim">Share.REWARD／BR.GOLD／TICKET_PRICE／DREWARDS／POOL／RW 各表</td></tr>
+</tbody></table>
+<div class="note"><b>風險控制：</b>因為不碰 <code>p.score</code>，<code>verify-v583/v584</code> 的星級、排行、成就斷言全部不受影響。預期需要調整的只有「金幣總額」相關的少數斷言（v484 的字元數上限與幾支金幣數值檢查）。</div>
+</div>
+
+<div class="sec">
+<h2><span class="n">9</span>兩個必須一起做的事</h2>
+<h3>① 存量補償：不要動老玩家的錢包</h3>
+<p>老玩家已經有 3～10 萬金幣。若按新價格，他們一次就能掃空商店。這是<b>無法避免也應該接受</b>的歷史存量 —— 強行削減會造成信任傷害。正確做法是提供「回收池」讓存量有出口：</p>
+<ul>
+<li><b>外觀輪盤</b>（2,000／次，只出外觀不出數值）—— 吸收存量最有效</li>
+<li><b>深淵門票</b>（500／次，可重複）—— 高難度內容的入場費</li>
+<li><b>每日限購補給</b>（打折但限量）—— 讓日常有固定消耗</li>
+</ul>
+<h3>② 前 3 關起手保護</h3>
+<p>新玩家第 1 關只有 133 金幣，買不起任何東西會挫敗。建議<b>前 3 關首通各 +100</b>，讓他打完教學就能買第一瓶藥水 —— 第一次消費體驗必須在 10 分鐘內發生。</p>
+</div>
+
+<div class="sec">
+<h2><span class="n">10</span>驗收標準</h2>
+<table>
+<thead><tr><th>指標</th><th class="num">目標值</th><th>量測方式</th></tr></thead>
+<tbody>
+<tr><td class="nm">單局均值</td><td class="num hi">160 ～ 220</td><td class="dim">沙盒重建 40 關套公式</td></tr>
+<tr><td class="nm">一輪 40 關</td><td class="num hi">7,000 ～ 8,500</td><td class="dim">同上</td></tr>
+<tr><td class="nm">曲線單調性</td><td class="num hi">後段 &gt; 前段 20%+</td><td class="dim">第 4 章均值 ÷ 第 1 章均值</td></tr>
+<tr><td class="nm">關內分數佔比</td><td class="num hi">≤ 60%</td><td class="dim">關內合計 ÷ 總計</td></tr>
+<tr><td class="nm">每日總產出</td><td class="num hi">2,800 ～ 3,600</td><td class="dim">30 分鐘遊玩 ＋ 全部日常</td></tr>
+<tr><td class="nm">清空永久內容</td><td class="num hi">60 ～ 80 h</td><td class="dim">335,300 ÷ GPH</td></tr>
+<tr><td class="nm">單瓶藥水</td><td class="num hi">0.8 ～ 1.2 局</td><td class="dim">價格 ÷ 單局產出</td></tr>
+</tbody></table>
+</div>
+
+<footer>爆爆英雄 · 經濟評估 v5.86-econ ｜ 數據由 <code>test/_econ_audit.js</code> 逐關重建產生</footer>
+</div></body></html>`;
+
+const out = path.join(__dirname, '..', '..', 'docs', 'econ-v586.html');
+fs.writeFileSync(out, html.replace(/\r\n/g, '\n'), 'utf8');
+console.log('寫出', out, html.length, '字元');

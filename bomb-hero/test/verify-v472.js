@@ -176,7 +176,7 @@ console.log('\n=== 5. 免費入場與名次獎勵 ===');
   const goldBefore = env.BH.Shop.gold();
   const tkBefore = env.BH.Shop.tickets();
   env.BH.brFinish(me);
-  ok(env.BH.Shop.gold() === goldBefore + 1200, '冠軍 +1200 金幣（' + (env.BH.Shop.gold() - goldBefore) + '）');
+  ok(env.BH.Shop.gold() === goldBefore + 420, '冠軍 +420 金幣（' + (env.BH.Shop.gold() - goldBefore) + '）');
   ok(env.BH.Shop.tickets() === tkBefore + 1, '前三名再送一張門票');
   ok(G.endShown === true, '冠軍開全螢幕結算');
   const env3 = makeEnv();
@@ -190,7 +190,7 @@ console.log('\n=== 5. 免費入場與名次獎勵 ===');
   me3.brPlace = 12;
   const g3 = env3.BH.Shop.gold();
   env3.BH.brFinish(null);
-  ok(env3.BH.Shop.gold() - g3 === 80, '第 9 名以後一律 80 金幣（+' + (env3.BH.Shop.gold() - g3) + '）');
+  ok(env3.BH.Shop.gold() - g3 === 75, '第 9 名以後一律 75 金幣（+' + (env3.BH.Shop.gold() - g3) + '）');
 })();
 
 console.log('\n=== 6. AI 不會站在自己的炸彈上 ===');

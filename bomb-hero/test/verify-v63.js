@@ -56,7 +56,7 @@ head('2. 分享拿金幣：五個平台、每個 1000');
   ok(P.SHARE_PLATFORMS.length === 5, '五個平台（' + P.SHARE_PLATFORMS.length + '）');
   const kinds = P.SHARE_PLATFORMS.map(function (p) { return p.k; }).sort().join(',');
   ok(kinds === 'copy,fb,line,wa,x', '平台代號齊全（' + kinds + '）');
-  ok(P.Share.reward === 1000, '每個平台 1000 金幣');
+  ok(P.Share.reward === 150, '每個平台 150 金幣');
   ok(css.indexOf('id="shareGrid"') > 0 && css.indexOf('id="sharesec"') < 0, '商店有分享區節點');
   ok(css.indexOf('分享拿金幣') > 0, '分享區有標題');
   ok(css.indexOf('每天最多領 3 次') > 0, '說明寫了每日上限');
@@ -67,7 +67,7 @@ head('2. 分享拿金幣：五個平台、每個 1000');
   P.Share.render();
   const grid = els.shareGrid.innerHTML;
   ok((grid.match(/data-share=/g) || []).length === 5, '畫出五個分享按鈕');
-  ok((grid.match(/\+1000/g) || []).length === 5, '五個都標「+1000」');
+  ok((grid.match(/\+150/g) || []).length === 5, '五個都標「+150」');
   ['LINE', 'Facebook', 'X', 'WhatsApp', '複製連結'].forEach(function (n) {
     ok(grid.indexOf(n) >= 0, '有 ' + n + ' 按鈕');
   });
@@ -86,7 +86,7 @@ head('3. 分享防作假機制');
 
   // 伺服器：真正有權威
   const cloud = fs.readFileSync(__dirname + '/../../cloud.js', 'utf8').replace(/\r/g, '');
-  ok(/const SHARE_REWARD = 1000;/.test(cloud), '伺服器端獎勵 = 1000');
+  ok(/const SHARE_REWARD = 150;/.test(cloud), '伺服器端獎勵 = 150');
   ok(/const SHARE_TTL = 5 \* 60 \* 1000;/.test(cloud), '驗證碼 5 分鐘過期');
   ok(/const SHARE_DAILY_MAX = 3;/.test(cloud), '每天上限 3 次');
   ok(/createHmac\('sha256', secret\)/.test(cloud), '驗證碼用 HMAC 簽（改不動）');
