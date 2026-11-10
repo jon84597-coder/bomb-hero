@@ -76,7 +76,7 @@ head('1. 怪物發招預告（v5.27 修的 bug）');
   // 頭上的元素球也一樣：只有吐彈與鑽地在集氣
   const fx = (src.match(/function drawFoeCastFx\(T\) \{[\s\S]*?\n\}\n/) || [''])[0];
   ok(/e\.skill !== 'spit' && e\.skill !== 'blink'\) continue;/.test(fx), '元素球只給吐彈／鑽地');
-  ok(/clamp\(1 - e\.castT \/ FOE_CAST_WINDUP, 0, 1\)/.test(fx), '集氣進度夾在 0~1（僵直招不會算出負值）');
+  ok(/clamp\(1 - e\.castT \/ \(e\.castMax \|\| FOE_CAST_WINDUP\), 0, 1\)/.test(fx), '集氣進度夾在 0~1（僵直招不會算出負值）');
 }
 
 // ================================================================

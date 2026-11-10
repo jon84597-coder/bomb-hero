@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.82';
+const VERSION = '5.83';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -1370,8 +1370,393 @@ const AudioSys = (function () {
     src.connect(f); f.connect(g); g.connect(sfxGain);
     src.start(t0);
   }
+
+  /* ══════════════════════════════════════════════════════════════
+     v5.83：高階合成工具箱
+     以前一個招式只有一個 tone()，聽起來像電子錶。現在每一招都是
+     「低頻 body ＋ 噪音撞擊 ＋ 掃頻 riser ＋ 泛音層」疊出來的，
+     才有份量。全部即時合成，沒有任何音檔要下載。
+     ══════════════════════════════════════════════════════════════ */
+  // 軟削波曲線（drive 越大越兇）：給「撕裂感」用
+  function wayCurve(k) {
+    const n = 1024, c = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const x = i / (n - 1) * 2 - 1;
+      c[i] = (1 + k) * x / (1 + k * Math.abs(x));
+    }
+    return c;
+  }
+  function nbuf(dur) {
+    const n = Math.max(1, Math.floor(ctx.sampleRate * Math.max(.02, dur)));
+    const b = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    return b;
+  }
+  // 帶通噪音：f0 → f1 掃頻。招式音裡的「嘶／唰／轟」全靠它
+  function hiss(dur, vol, f0, f1, q, delay) {
+    if (!ensure()) return;
+    const t0 = ctx.currentTime + (delay || 0);
+    const src = ctx.createBufferSource(); src.buffer = nbuf(dur);
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass';
+    f.Q.value = q == null ? 1.2 : q;
+    f.frequency.setValueAtTime(Math.max(40, f0), t0);
+    if (f1 && f1 !== f0) f.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t0 + dur);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(.001, vol), t0 + Math.min(.05, dur * .35));
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    src.connect(f); f.connect(g); g.connect(sfxGain);
+    src.start(t0); src.stop(t0 + dur + .02);
+  }
+  // 低頻 body（sine 下潛）：所有「重量感」的來源
+  function sub(f0, f1, dur, vol, delay) { tone(f0, dur, 'sine', vol, f1, delay); }
+  // 三支微走音的鋸齒疊在一起 → 厚實的和弦感（王的招式用）
+  function stack(f, dur, vol, det, delay) {
+    if (!ensure()) return;
+    const t0 = ctx.currentTime + (delay || 0);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(.001, vol || .12), t0 + .025);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass';
+    lp.frequency.value = Math.max(700, f * 7);
+    g.connect(lp); lp.connect(sfxGain);
+    const d = det == null ? 9 : det;
+    for (let i = -1; i <= 1; i++) {
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(Math.max(20, f * (1 + i * d / 1200)), t0);
+      o.connect(g); o.start(t0); o.stop(t0 + dur + .02);
+    }
+  }
+  // FM：金屬敲擊／野獸低吼都靠它（idx 越大越刺）
+  function fm(car, mod, idx, dur, vol, delay) {
+    if (!ensure()) return;
+    const t0 = ctx.currentTime + (delay || 0);
+    const c = ctx.createOscillator(), m = ctx.createOscillator();
+    const mg = ctx.createGain(), g = ctx.createGain();
+    c.type = 'sine'; m.type = 'sine';
+    c.frequency.setValueAtTime(car, t0);
+    m.frequency.setValueAtTime(mod, t0);
+    mg.gain.setValueAtTime(car * (idx == null ? 2 : idx), t0);
+    m.connect(mg); mg.connect(c.frequency);
+    g.gain.setValueAtTime(Math.max(.001, vol || .16), t0);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    c.connect(g); g.connect(sfxGain);
+    m.start(t0); c.start(t0);
+    m.stop(t0 + dur + .02); c.stop(t0 + dur + .02);
+  }
+  // 失真噪音：電流／撕裂／爆炸的「髒」那一層
+  function grit(dur, vol, drive, fc, delay) {
+    if (!ensure()) return;
+    const t0 = ctx.currentTime + (delay || 0);
+    const src = ctx.createBufferSource(); src.buffer = nbuf(dur);
+    const ws = ctx.createWaveShaper(); ws.curve = wayCurve(drive || 8);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass';
+    lp.frequency.value = fc || 1800;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(.001, vol || .2), t0 + .008);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    src.connect(ws); ws.connect(lp); lp.connect(g); g.connect(sfxGain);
+    src.start(t0);
+  }
+  // 金屬鐘／雷射的泛音（非整數倍調變 → 聽起來是「金屬」而不是「音階」）
+  function metal(f, dur, vol, delay) {
+    if (!ensure()) return;
+    const t0 = ctx.currentTime + (delay || 0);
+    const c = ctx.createOscillator(), m = ctx.createOscillator();
+    const mg = ctx.createGain(), g = ctx.createGain();
+    c.type = 'square'; c.frequency.setValueAtTime(f, t0);
+    m.type = 'sine'; m.frequency.setValueAtTime(f * 2.71, t0);
+    mg.gain.setValueAtTime(f * 1.8, t0);
+    m.connect(mg); mg.connect(c.frequency);
+    g.gain.setValueAtTime(Math.max(.001, vol || .12), t0);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    c.connect(g); g.connect(sfxGain);
+    c.start(t0); m.start(t0);
+    c.stop(t0 + dur + .02); m.stop(t0 + dur + .02);
+  }
+
+  /* ── 45 招專屬音 ──
+     命名＝招式 id（小怪 21 招 ＋ 王 24 招，dive 共用）。
+     每招的設計邏輯：起音（辨識）→ body（份量）→ 尾韻（空間感）。 */
+  const SKILL_SFX = {
+    // ═══ 小怪 21 招 ═══
+    split() {                       // 黏液炸開、分裂成兩隻
+      hiss(.14, .16, 1100, 220, 1.6);
+      tone(420, .12, 'sine', .14, 170);
+      tone(300, .09, 'square', .09, 150, .10);
+    },
+    charge() {                      // 蓄力後直線撲撞
+      tone(180, .22, 'sawtooth', .15, 780);
+      hiss(.18, .11, 600, 2500, 1.2, .09);
+      boom(.16, .26, .22);
+    },
+    spit() {                        // 吐元素彈
+      hiss(.10, .15, 3400, 700, 1.8);
+      tone(880, .11, 'square', .10, 300);
+    },
+    blink() {                       // 鑽地／瞬移
+      hiss(.26, .15, 2400, 300, 1.4);
+      tone(900, .20, 'sine', .12, 140);
+      tone(300, .16, 'triangle', .07, 900, .12);
+    },
+    hazard() {                      // 毒霧／岩漿殘留
+      hiss(.50, .11, 520, 180, .9);
+      tone(180, .09, 'sine', .10, 130);
+      tone(240, .09, 'sine', .09, 150, .12);
+      tone(160, .11, 'sine', .08, 110, .27);
+    },
+    pull() {                        // 鉗子把你勾近一格
+      tone(120, .36, 'sawtooth', .14, 430);
+      hiss(.36, .10, 300, 1500, 1.1);
+      boom(.14, .20, .30);
+    },
+    stun() {                        // 目光催眠
+      tone(520, .40, 'sine', .11, 380);
+      tone(548, .40, 'sine', .10, 404, .02);
+      metal(760, .30, .05, .05);
+    },
+    roller() {                      // 滾石／滾成球
+      boom(.40, .34);
+      hiss(.45, .11, 760, 180, .8);
+      tone(90, .40, 'sawtooth', .14, 58);
+    },
+    gust() {                        // 吹風把人往後推
+      hiss(.42, .16, 420, 2700, 1.0);
+      hiss(.30, .10, 2700, 620, 1.6, .06);
+    },
+    dive() {                        // 俯衝（飛行怪／鴕鳥共用）
+      tone(1500, .22, 'sine', .16, 300);
+      hiss(.22, .11, 1800, 400, 1.2, .15);
+      boom(.22, .30, .19);
+    },
+    bomber() {                      // 自己放炸彈
+      tone(520, .05, 'square', .10, 400);
+      hiss(.20, .07, 1400, 3200, 2, .04);
+      tone(300, .10, 'square', .08, 170, .03);
+    },
+    curse() {                       // 詛咒（降火力）
+      tone(320, .50, 'sawtooth', .13, 120);
+      tone(151, .50, 'sawtooth', .10, 62, .03);
+      fm(220, 110, 3, .40, .08);
+    },
+    homing() {                      // 慢速追蹤彈
+      tone(300, .30, 'sine', .14, 900);
+      tone(900, .26, 'triangle', .08, 1200, .09);
+      hiss(.25, .06, 1200, 2700, 2);
+    },
+    swoop() {                       // 高速飛掠
+      hiss(.24, .18, 900, 3400, .9);
+      tone(620, .16, 'triangle', .08, 1800);
+    },
+    summon() {                      // 召喚同伴
+      [262, 330, 392].forEach(function (f, i) { tone(f, .14, 'square', .10, null, i * .07); });
+      hiss(.30, .08, 400, 1400, 1.4);
+    },
+    sapper() {                      // 拆掉你的炸彈
+      tone(1400, .05, 'square', .10);
+      tone(900, .05, 'square', .09, null, .05);
+      hiss(.12, .09, 2400, 600, 2);
+    },
+    scavenger() {                   // 撿起來丟回去
+      tone(420, .06, 'square', .10);
+      tone(500, .14, 'square', .12, 900, .08);
+    },
+    pulse() {                       // 震波（鬼火／海膽）—— 全遊戲最重的一擊
+      boom(.50, .60);
+      sub(120, 40, .60, .40);
+      hiss(.50, .14, 320, 90, .7);
+      tone(70, .50, 'sine', .28, 36);
+    },
+    beam() {                        // 十字雷射
+      tone(1800, .16, 'sawtooth', .12, 2600);
+      metal(1200, .30, .10, .10);
+      hiss(.16, .14, 4200, 1200, 2.4, .09);
+      boom(.20, .24, .12);
+    },
+    chain() {                       // 連鎖落雷（三發）
+      [0, .13, .26].forEach(function (d) {
+        grit(.16, .16, 6, 2600, d);
+        sub(90, 50, .20, .16, d);
+      });
+      hiss(.40, .08, 3000, 800, 1.6);
+    },
+
+    // ═══ 王 24 招 ═══
+    woolWave() {                    // 咩霸：羊毛衝擊波
+      boom(.45, .52);
+      sub(110, 44, .45, .34);
+      hiss(.40, .10, 620, 200, .8);
+    },
+    lambCall() {                    // 咩霸：叫小羊
+      tone(520, .20, 'sine', .14, 760);
+      [392, 523, 659].forEach(function (f, i) { tone(f, .12, 'square', .09, null, .13 + i * .08); });
+    },
+    graze() {                       // 咩霸：吃草回血
+      tone(660, .12, 'sine', .12, 990);
+      tone(990, .16, 'sine', .10, 1320, .08);
+      tone(1320, .30, 'triangle', .07, null, .18);
+    },
+    burrow() {                      // 妮芙：鑽沙
+      hiss(.45, .15, 420, 110, .7);
+      boom(.35, .34, .10);
+      sub(80, 40, .40, .30);
+    },
+    sandStorm() {                   // 妮芙：沙暴
+      hiss(.70, .15, 1900, 600, .8);
+      grit(.60, .10, 3, 900);
+      hiss(.50, .10, 600, 1700, 1.1, .18);
+    },
+    drag() {                        // 妮芙：拖拽
+      tone(140, .40, 'sawtooth', .16, 500);
+      hiss(.30, .09, 300, 1200, 1.2);
+      boom(.20, .30, .36);
+    },
+    iceFloor() {                    // 咕嘰：冰地板
+      tone(1800, .18, 'triangle', .12, 2600);
+      [0, .08, .16].forEach(function (d) { tone(2400, .12, 'sine', .07, 3000, d); });
+      hiss(.40, .08, 3000, 1200, 2);
+    },
+    snowball() {                    // 咕嘰：滾雪球
+      boom(.30, .30);
+      hiss(.50, .11, 900, 300, .8);
+      tone(220, .20, 'triangle', .10, 90);
+    },
+    iceShell() {                    // 咕嘰：冰甲
+      [880, 1174, 1480].forEach(function (f, i) { tone(f, .18, 'sine', .10, null, i * .06); });
+      metal(1000, .40, .08);
+    },
+    lavaTide() {                    // 赫菲：岩漿潮
+      boom(.50, .52);
+      sub(70, 34, .60, .40);
+      hiss(.55, .12, 520, 150, .7);
+    },
+    firePillar() {                  // 赫菲：火柱
+      hiss(.35, .18, 300, 2600, 1.0);
+      boom(.30, .38, .12);
+      tone(140, .30, 'sawtooth', .14, 58);
+    },
+    meteor() {                      // 赫菲：隕石群
+      [0, .12, .24].forEach(function (d, i) { tone(1200 - i * 180, .30, 'sine', .09, 280, d); });
+      boom(.60, .60, .44);
+      sub(90, 34, .70, .42, .42);
+    },
+    beatBlast() {                   // BPM-9：節拍爆破
+      [0, .12, .24, .36].forEach(function (d) {
+        sub(110, 50, .20, .30, d);
+        hiss(.06, .12, 2000, 620, 1.5, d);
+      });
+      tone(880, .10, 'square', .10);
+    },
+    laserSweep() {                  // BPM-9：雷射橫掃
+      tone(2600, .50, 'sawtooth', .13, 700);
+      metal(1600, .50, .10);
+      hiss(.50, .14, 5000, 900, 2.4);
+    },
+    drone() {                       // BPM-9：放無人機
+      hiss(.50, .12, 820, 1450, 3);
+      [0, .10, .20].forEach(function (d) { tone(1200, .06, 'square', .08, null, d); });
+    },
+    lureOrbs() {                    // 露米：誘餌水球
+      [0, .09, .18, .27].forEach(function (d, i) { tone(400 + i * 90, .10, 'sine', .10, 620 + i * 120, d); });
+    },
+    tentacle() {                    // 露米：觸手
+      hiss(.25, .16, 1200, 300, 1.2);
+      tone(180, .30, 'sawtooth', .14, 68);
+      boom(.20, .26, .12);
+    },
+    current() {                     // 露米：水流沖刷
+      hiss(.60, .14, 600, 2200, .9);
+      hiss(.50, .10, 2200, 700, 1.4, .10);
+    },
+    tornado() {                     // 疾風：龍捲風
+      hiss(.80, .14, 300, 3000, .8);
+      tone(160, .80, 'sawtooth', .10, 420);
+    },
+    gustBurst() {                   // 疾風：陣風爆發
+      hiss(.30, .18, 700, 2800, .9);
+      boom(.14, .22, .06);
+    },
+    curseCard() {                   // 黯：詛咒卡
+      tone(220, .60, 'sawtooth', .14, 88);
+      tone(311, .60, 'sawtooth', .10, 120, .02);
+      hiss(.50, .08, 1200, 300, 1.4);
+    },
+    shadowClones() {                // 黯：分身
+      [0, .08, .16].forEach(function (d, i) { fm(300 - i * 40, 140, 3, .30, .08, d); });
+    },
+    shadowRing() {                  // 黯：暗影環
+      boom(.60, .60);
+      sub(65, 30, .70, .44);
+      tone(110, .60, 'sawtooth', .18, 48);
+      hiss(.60, .10, 200, 60, .6);
+    }
+  };
+
+  // ── 起手音（依屬性 10 種 ＋ 王專用）：招式「要來了」的聽覺預警 ──
+  const CHARGE_SFX = {
+    charge_fire() { tone(160, .50, 'sawtooth', .10, 430); hiss(.50, .08, 300, 1700, 1.0); },
+    charge_ice() { tone(900, .50, 'triangle', .09, 1800); hiss(.45, .06, 2200, 4300, 2); },
+    charge_thunder() { grit(.40, .09, 4, 3000); tone(220, .40, 'square', .08, 900); },
+    charge_dark() { tone(120, .60, 'sawtooth', .10, 240); fm(180, 90, 2, .50, .06); },
+    charge_water() { tone(300, .50, 'sine', .09, 720); hiss(.40, .06, 600, 1800, 1.2); },
+    charge_wind() { hiss(.50, .11, 400, 2200, .9); },
+    charge_neon() { tone(700, .40, 'square', .08, 1500); tone(1050, .40, 'square', .05, 2200, .04); },
+    charge_poison() { hiss(.50, .08, 520, 240, .8); tone(200, .40, 'sawtooth', .07, 140); },
+    charge_earth() { hiss(.50, .10, 260, 120, .7); tone(90, .40, 'sawtooth', .10, 58); },
+    charge_nature() { hiss(.40, .07, 1200, 2600, 1.2); tone(420, .35, 'triangle', .06, 620); },
+    charge_boss() {
+      tone(90, .70, 'sawtooth', .13, 180);
+      hiss(.60, .09, 200, 900, .8);
+      fm(140, 70, 3, .60, .07);
+    }
+  };
+
+  // ── 核心打擊音重製（爆炸／受傷／死亡／拾取）──
+  const CORE_SFX = {
+    explode() {                     // 有厚度的爆破：body ＋ 撕裂 ＋ 碎片
+      boom(.50, .70);
+      sub(110, 32, .45, .44);
+      grit(.30, .20, 6, 2400);
+      hiss(.35, .12, 1800, 300, 1.1, .02);
+      tone(70, .35, 'sine', .28, 30);
+    },
+    hurt() {                        // 被打到：短、痛、不刺耳
+      tone(300, .13, 'square', .16, 120);
+      hiss(.14, .10, 900, 300, 1.2);
+      tone(180, .20, 'sawtooth', .13, 70, .02);
+    },
+    die() {                         // 倒下：拔高 → 長哀號 ＋ 沙啞撕裂
+      tone(520, .14, 'square', .34, 980);
+      tone(980, .20, 'square', .32, 700, .13);
+      tone(700, .34, 'square', .32, 95, .30);
+      tone(990, .50, 'triangle', .20, 110, .13);
+      grit(.55, .12, 4, 1200, .30);
+    },
+    pick() {                        // 撿起東西（比以前亮一階）
+      tone(760, .07, 'square', .12, 1120);
+      tone(1120, .09, 'triangle', .10, null, .05);
+    },
+    coin() {                        // 金幣：三層叮
+      tone(1180, .07, 'triangle', .14);
+      tone(1560, .09, 'triangle', .12, null, .05);
+      tone(2100, .12, 'sine', .06, null, .09);
+    }
+  };
+
+  const SFX_MAP = {};
+  [CORE_SFX, SKILL_SFX, CHARGE_SFX].forEach(function (m) {
+    Object.keys(m).forEach(function (k) { SFX_MAP[k] = m[k]; });
+  });
+
   const sfx = function (name) {
     if (!settings.sfx) return;
+    // v5.83：新／重製的音效先查表，命中就結束（下面 switch 保留舊行為相容）
+    const S = SFX_MAP[name];
+    if (S) { try { S(); } catch (eS) {} return; }
     switch (name) {
       case 'place': tone(220, .09, 'square', .15, 160); break;
       case 'kick': tone(500, .1, 'square', .14, 900); break;
@@ -2267,6 +2652,7 @@ const AudioSys = (function () {
     SONG_DEFS: SONG_DEFS, STAGE_MUSIC: STAGE_MUSIC,
     // v5.34：戰鬥曲（對戰／大逃殺）與新的排程器
     lastBGM: lastBGM,   // v5.75：最後一次被要求播的曲名（驗 BGM 路由用）
+    sfxKeys: function () { return Object.keys(SFX_MAP); },   // v5.83：招式音效表（測試用）
     WAR_DEFS: WAR_DEFS, WAR_PHRASES: WAR_PHRASES, compileWar: compileWar, buildGrid: buildGrid };
       })();
     } catch (__e) {
@@ -13415,8 +13801,16 @@ function bossPushAway(e, p, n) {
   }
   burst(p.x, p.y, '#bfe8ff', 10, 130);
 }
+// 王的屬性（決定命中特效的顏色與碎片）
+const BOSS_FX = { 1: 'nature', 2: 'earth', 3: 'ice', 4: 'fire', 5: 'neon', 6: 'water', 7: 'wind', 8: 'dark' };
+function bossKindOf(e) {
+  try { return e.fx || BOSS_FX[blockOf(Game.stage || 1)] || 'fire'; } catch (x) { return 'fire'; }
+}
 function bossFire(e, name) {
   const T = Game.T;
+  // v5.83：王的每一招都有自己的音效（name 就是音效 id）＋ 統一的壓迫感特效層
+  try { AudioSys.sfx(name); } catch (err) {}
+  try { spellImpact(e.x, e.y - e.r * .25, bossKindOf(e), 1.45); } catch (e1) {}
   const p = Game.players[0];
   const cx = Math.floor(e.x / T), cy = Math.floor(e.y / T);
   const pcx = (p && p.alive) ? Math.floor(p.x / T) : cx;
@@ -13425,20 +13819,17 @@ function bossFire(e, name) {
     // ---- 1 咩霸 ----
     case 'woolWave':
       bossRing(e, 2, .45, 'grass', .09);
-      try { AudioSys.sfx('gust'); } catch (err) {}
       Game.shake = Math.max(Game.shake || 0, .55);
       burst(e.x, e.y, '#bff08a', 24, 210);
       break;
     case 'lambCall':
       bossSummon(e, 2);
-      try { AudioSys.sfx('spawn'); } catch (err) {}
       break;
     case 'graze': {
       const add = Math.min(2, e.maxHp - e.hp);
       e.hp += add;
       burst(e.x, e.y, '#7ef0b4', 26, 190);
       burst(e.x, e.y, '#d9ffcf', 12, 120);
-      try { AudioSys.sfx('heal'); } catch (err) {}
       break;
     }
     // ---- 2 妮芙 ----
@@ -13458,7 +13849,6 @@ function bossFire(e, name) {
         Game.shake = Math.max(Game.shake || 0, .5);
       }
       bossRing(e, 1, .30, 'earth', .05);
-      try { AudioSys.sfx('roll'); } catch (err) {}
       break;
     }
     case 'sandStorm':
@@ -13470,13 +13860,11 @@ function bossFire(e, name) {
           foeHazAdd(pcx + dx, pcy + dy, 3.2, 'poison');
         }
       }
-      try { AudioSys.sfx('gust'); } catch (err) {}
       break;
     case 'drag':
       for (let i = 0; i < 2; i++) { if (!foePull(e, p)) break; }
       if (p && p.alive && Math.abs(p.x - e.x) < T * 1.4 && Math.abs(p.y - e.y) < T * 1.4) p.dizzy = 1.0;
       Game.shake = Math.max(Game.shake || 0, .45);
-      try { AudioSys.sfx('roll'); } catch (err) {}
       break;
     // ---- 3 咕嘰 ----
     case 'iceFloor': {
@@ -13489,14 +13877,12 @@ function bossFire(e, name) {
           foeHazAdd(x, y, 4.5, 'ice');
         }
       });
-      try { AudioSys.sfx('cast'); } catch (err) {}
       break;
     }
     case 'snowball': {
       const dx = Math.abs(pcx - cx) >= Math.abs(pcy - cy);
       foeRollerAdd(e, dx ? (pcx >= cx ? 'right' : 'left') : (pcy >= cy ? 'down' : 'up'), 'ice');
       foeRollerAdd(e, dx ? (pcx >= cx ? 'left' : 'right') : (pcy >= cy ? 'up' : 'down'), 'ice');
-      try { AudioSys.sfx('roll'); } catch (err) {}
       break;
     }
     case 'iceShell': {
@@ -13506,7 +13892,6 @@ function bossFire(e, name) {
         for (let dy = -1; dy <= 1; dy++) foeHazAdd(cx + dx, cy + dy, 2.4, 'ice');
       }
       burst(e.x, e.y, '#8fe4ff', 30, 200);
-      try { AudioSys.sfx('heal'); } catch (err) {}
       break;
     }
     // ---- 4 赫菲 ----
@@ -13521,13 +13906,11 @@ function bossFire(e, name) {
         }
       }
       Game.shake = Math.max(Game.shake || 0, .5);
-      try { AudioSys.sfx('land'); } catch (err) {}
       break;
     }
     case 'firePillar':
       bossLine(e, (Math.abs(pcx - cx) >= Math.abs(pcy - cy)), .45, 'fire', .055);
       Game.shake = Math.max(Game.shake || 0, .6);
-      try { AudioSys.sfx('land'); } catch (err) {}
       break;
     case 'meteor': {
       for (let i = 0; i < 7; i++) {
@@ -13535,7 +13918,6 @@ function bossFire(e, name) {
         const ry = pcy + Math.floor(Math.random() * 5) - 2;
         foeAoeAdd(rx, ry, .55 + i * .11, 'fire');
       }
-      try { AudioSys.sfx('cast'); } catch (err) {}
       break;
     }
     // ---- 5 BPM-9 ----
@@ -13544,27 +13926,22 @@ function bossFire(e, name) {
       bossRing(e, 2, .68, 'neon', 0);
       bossRing(e, 3, 1.00, 'neon', 0);
       Game.shake = Math.max(Game.shake || 0, .5);
-      try { AudioSys.sfx('dash'); } catch (err) {}
       break;
     case 'laserSweep':
       bossLine(e, (Math.abs(pcx - cx) >= Math.abs(pcy - cy)), .45, 'neon', .035);
-      try { AudioSys.sfx('beam'); } catch (err) {}
       break;
     case 'drone':
       bossSummon(e, 2);
-      try { AudioSys.sfx('spawn'); } catch (err) {}
       break;
     // ---- 6 露米 ----
     case 'lureOrbs':
       if (foeOrbAdd(e, 'water')) foeOrbAdd(e, 'water');
       e.hp = Math.min(e.maxHp, e.hp + 1);
       burst(e.x, e.y, '#7fd8ff', 20, 160);
-      try { AudioSys.sfx('heal'); } catch (err) {}
       break;
     case 'tentacle':
       for (let i = 0; i < 2; i++) { if (!foePull(e, p)) break; }
       if (p && p.alive) p.dizzy = Math.max(p.dizzy || 0, .9);
-      try { AudioSys.sfx('roll'); } catch (err) {}
       break;
     case 'current':
       bossPushAway(e, p, 2);
@@ -13572,24 +13949,20 @@ function bossFire(e, name) {
         const tx = Math.floor(p.x / T), ty = Math.floor(p.y / T);
         for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) foeHazAdd(tx + dx, ty + dy, 2.2, 'water');
       }
-      try { AudioSys.sfx('gust'); } catch (err) {}
       break;
     // ---- 7 疾空 ----
     case 'tornado':
       foeRollerAdd(e, 'left', 'wind');
       foeRollerAdd(e, 'right', 'wind');
-      try { AudioSys.sfx('gust'); } catch (err) {}
       break;
     case 'dive': {
       const offs = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
       offs.forEach(function (o, i) { foeAoeAdd(pcx + o[0], pcy + o[1], .70 + i * .05, 'wind'); });
-      try { AudioSys.sfx('dive'); } catch (err) {}
       break;
     }
     case 'gustBurst':
       bossRing(e, 1, .25, 'wind', .03);
       bossPushAway(e, p, 1);
-      try { AudioSys.sfx('gust'); } catch (err) {}
       break;
     // ---- 8 黯 ----
     case 'curseCard':
@@ -13597,17 +13970,14 @@ function bossFire(e, name) {
         applySkull(p);
         burst(p.x, p.y, '#b46bff', 24, 180);
       }
-      try { AudioSys.sfx('curse'); } catch (err) {}
       break;
     case 'shadowClones':
       bossSummon(e, 2);
       burst(e.x, e.y, '#b46bff', 26, 190);
-      try { AudioSys.sfx('curse'); } catch (err) {}
       break;
     case 'shadowRing':
       bossRing(e, 3, .55, 'dark', .10);
       Game.shake = Math.max(Game.shake || 0, .55);
-      try { AudioSys.sfx('curse'); } catch (err) {}
       break;
   }
 }
@@ -13644,8 +14014,8 @@ function bossCastTick(e, dt) {
   e.castT = K.wind;
   e.castMax = K.wind;
   e.castCol = K.col;
-  try { AudioSys.sfx('cast'); } catch (err) {}
-  burst(e.x, e.y - e.r * .3, K.col, 10, 120);
+  foeChargeSfx(e);                       // v5.83：王也有起手音（低沉版）
+  burst(e.x, e.y - e.r * .3, K.col, 14, 140);
   return true;
 }
 
@@ -17208,6 +17578,43 @@ const FOE_BLINK_T = .5;          // v4.61：鑽地／隱形的消失時間（= �
 //   玩家在五格外的空地都會被點名 → 現在一律 3.2 格，跟仇恨範圍（2 格）接得起來。
 const FOE_SIGHT_TILES = 3.2;
 const FOE_CAST_LOCK_K = .55;     // v4.68：集氣到 55% 就鎖死落點（看得見、走得掉）
+/* v5.83：每一招的「起手時間」（秒）—— 這段時間牠會站定不動、頭頂亮出招式圖示。
+   玩家的反應時間就是這一段：看到圖示＋聽到起手音，就知道該往哪閃。
+   困難模式不顯示頭頂圖示（地面警示圈仍會亮，見 castIconOn()）。 */
+const FOE_WINDUP = {
+  spit: 1.05, blink: 1.15, charge: .80,
+  beam: 1.15, pulse: 1.30, chain: 1.10, dive: .95,
+  hazard: .90, roller: .90, homing: .85,
+  pull: .65, curse: .80, gust: .60, stun: .80,
+  summon: .90, swoop: .55, bomber: .70, sapper: .45, scavenger: .40
+};
+// 這幾個屬性有專屬起手音（沒有的退回 earth）
+const CHARGE_KINDS = { fire: 1, ice: 1, thunder: 1, dark: 1, water: 1, wind: 1, neon: 1, poison: 1, earth: 1, nature: 1 };
+function foeChargeSfx(e) {
+  try {
+    const k = e.boss ? 'charge_boss' : (CHARGE_KINDS[e.fx] ? 'charge_' + e.fx : 'charge_earth');
+    AudioSys.sfx(k);
+  } catch (err) {}
+}
+/* 起手閘門：回傳 true ＝「還在起手，這一幀不要出手」。
+   第一次呼叫（沒有 castSkill）→ 站定、亮圖示、播起手音；時間到再呼叫一次就放行。
+   用 castT 當計時器，是因為 updateEnemy 本來就會在 castT>0 時凍住牠。 */
+function foeWindup(e, sk, dt) {
+  if (!FOE_WINDUP[sk]) return false;
+  if (e.castSkill === sk) {
+    if (e.castT > 0) { e.castT -= dt; return true; }
+    e.castSkill = '';
+    e.castMax = FOE_CAST_WINDUP;
+    return false;
+  }
+  if (e.castSkill) return true;              // 正在起手別的招（正常不會發生）
+  const w = FOE_WINDUP[sk];
+  e.castSkill = sk;
+  e.castT = w;
+  e.castMax = w;
+  foeChargeSfx(e);
+  return true;
+}
 const BOLT_COLOR = {
   fire: '#ff9a3c', ice: '#a8ecff', thunder: '#fff28a', dark: '#b06ef7',
   water: '#7fd0ff', wind: '#d8fff4', neon: '#58f0d8', poison: '#b6f06a',
@@ -17225,7 +17632,7 @@ function foeCastBolt(e, tcx, tcy) {
     tx: tcx * T + T / 2, ty: tcy * T + T / 2,
     cx: tcx, cy: tcy, t: 0, dur: BOLT_TRAVEL, kind: kind, owner: e
   });
-  AudioSys.sfx('throw');
+  AudioSys.sfx('spit');
   return true;
 }
 function updateBolts(dt) {
@@ -17236,8 +17643,7 @@ function updateBolts(dt) {
     b.t += dt;
     if (b.t < b.dur) continue;
     Game.bolts.splice(i, 1);
-    const col = BOLT_COLOR[b.kind] || '#ffb347';
-    burst(b.tx, b.ty, col, 14, 175);
+    spellImpact(b.tx, b.ty + T * .06, b.kind, .85);
     // 軟磚被打碎
     if (cellAt(b.cx, b.cy) === 2) { destroySoft(b.cx, b.cy); continue; }
     // 站在落點上的人受傷
@@ -17293,7 +17699,7 @@ function foeBlinkMark(e) {
   e.bx = tx; e.by = ty;
   burst(e.x, e.y, e.fx === 'earth' ? '#d9b077' : '#c79bff', 12, 140);
   e.blinkT = FOE_BLINK_T;
-  AudioSys.sfx('warp');
+  AudioSys.sfx('blink');
 }
 // 時間到 → 從鎖定的落點冒出來（落點被牆或炸彈佔住就留在原地 → 玩家可以用炸彈封門）
 function foeBlinkTo(e) {
@@ -17439,6 +17845,192 @@ function hurtPlayerAt(p, owner) {
   if (Game.mode === 'battle' || Game.mode === 'br') killBattlePlayer(p, owner || null);
   else killPlayer(p, false, owner || null);
 }
+/* ══════════════════════════════════════════════════════════════
+   v5.83：招式特效層
+   以前招式的「命中」只有一坨 burst() 粒子 → 看起來像打翻亮片。
+   現在每一次命中都是四層疊起來：
+     ① 白色撞擊核心（Game.rings 的 core：短刺 ＋ 白心）
+     ② 元素色衝擊環（往外擴的橢圓環，貼地）
+     ③ 元素碎片（火→火星、冰→冰晶、雷→電弧、毒→氣泡、暗→虛空、
+                 霓虹→雜訊方塊、土→碎石、水→水滴、風→氣旋）
+     ④ 大招式才給的螢幕白閃與震動
+   全部走既有的畫質分級（qualPart）與 calm 模式，低階機不會被拖垮。
+   ══════════════════════════════════════════════════════════════ */
+function bitsAdd(b) {
+  if (!Game.bits) Game.bits = [];
+  if (Game.bits.length >= 140) Game.bits.shift();
+  Game.bits.push(b);
+}
+/* 命中特效。power：0.6＝小招、1＝一般、1.6＝大招（王） */
+function spellImpact(x, y, kind, power) {
+  const T = Game.T || 40;
+  const p = power == null ? 1 : power;
+  const col = BOLT_COLOR[kind] || '#ffb347';
+  const gt = Game.gameT || 0;
+  if (!Game.rings) Game.rings = [];
+  // ① 撞擊核心
+  Game.rings.push({ kind: 'core', x: x, y: y - T * .04, born: gt, dur: .24 + .10 * p, r: T * (.85 + .35 * p) });
+  // ② 衝擊環（貼地橢圓）
+  Game.rings.push({ kind: 'ring', x: x, y: y - T * .02, born: gt, dur: .34 + .14 * p,
+                    r: T * (.95 + .55 * p), color: col, thick: .085 + .030 * p });
+  // ③ 粒子（比舊版多，但走畫質倍率）
+  burst(x, y, col, Math.round(12 + 9 * p), 150 + 70 * p);
+  burst(x, y, '#ffffff', Math.round(3 + 3 * p), 80 + 40 * p);
+  // ④ 元素碎片
+  const lv = qualLevel();
+  if (lv > 0) {
+    const calmK = settings.calm ? .45 : 1;
+    const n = Math.max(2, Math.round((3 + 2 * p) * calmK));
+    const rnd = function (a) { return (Math.random() - .5) * 2 * a; };
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.2832, sp = (60 + Math.random() * 150) * (0.8 + p * .4);
+      const base = { x: x + rnd(T * .18), y: y + rnd(T * .14),
+                     vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * .62,
+                     t: .34 + Math.random() * .26, max: .60, r: T * (.055 + Math.random() * .045),
+                     rot: Math.random() * 6.28, spin: rnd(9), col: col, kind: kind };
+      if (kind === 'fire') { base.type = 'ember'; base.vy = -Math.abs(base.vy) * .9 - 40; base.g = 120; }
+      else if (kind === 'ice') { base.type = 'tri'; base.g = 260; }
+      else if (kind === 'thunder') { base.type = (i === 0) ? 'arc' : 'sq'; base.g = 180; }
+      else if (kind === 'poison') { base.type = 'bubble'; base.vy = -30 - Math.random() * 40; base.g = -18; }
+      else if (kind === 'dark') { base.type = 'sq'; base.g = 40; base.spin = rnd(3); }
+      else if (kind === 'neon') { base.type = 'glitch'; base.g = 0; }
+      else if (kind === 'earth') { base.type = 'sq'; base.g = 300; }
+      else if (kind === 'water') { base.type = 'circ'; base.g = 200; }
+      else { base.type = 'circ'; base.g = 120; }
+      bitsAdd(base);
+    }
+  }
+  // ⑤ 大招才給的螢幕白閃／震動
+  if (p >= 1.4) {
+    Game.flash = Math.max(Game.flash || 0, .16 + .10 * (p - 1.4));
+    Game.shake = Math.max(Game.shake || 0, .18 + .22 * (p - 1.4));
+  }
+}
+function bitsTick(dt) {
+  if (!Game.bits || !Game.bits.length) return;
+  for (let i = Game.bits.length - 1; i >= 0; i--) {
+    const b = Game.bits[i];
+    b.t -= dt;
+    if (b.t <= 0) { Game.bits.splice(i, 1); continue; }
+    b.vy += (b.g || 0) * dt;
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    b.vx *= (1 - 1.2 * dt);
+    b.rot += (b.spin || 0) * dt;
+  }
+}
+function drawBits(T) {
+  const list = Game.bits || [];
+  if (!list.length) return;
+  ctx.save();
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    const k = clamp(b.t / (b.max || .5), 0, 1);
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.rot || 0);
+    ctx.fillStyle = b.col;
+    ctx.strokeStyle = b.col;
+    if (b.type === 'tri') {
+      ctx.globalAlpha = .30 + k * .65;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.beginPath();
+      ctx.moveTo(0, -b.r * 1.5); ctx.lineTo(b.r * 1.1, b.r * 1.1); ctx.lineTo(-b.r * 1.1, b.r * .7);
+      ctx.closePath(); ctx.fill();
+    } else if (b.type === 'sq') {
+      ctx.globalAlpha = .30 + k * .60;
+      ctx.fillRect(-b.r * .8, -b.r * .8, b.r * 1.6, b.r * 1.6);
+    } else if (b.type === 'glitch') {
+      // 霓虹雜訊：橫向拉長的方塊，像訊號壞掉
+      ctx.globalAlpha = (k > .55 ? .85 : .25) * k;
+      ctx.fillRect(-b.r * 2.2, -b.r * .35, b.r * 4.4, b.r * .7);
+    } else if (b.type === 'ember') {
+      ctx.globalAlpha = k * .9;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.beginPath(); ctx.arc(0, 0, b.r * (.6 + (1 - k) * .9), 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = k * .55;
+      ctx.fillStyle = '#fff3c4';
+      ctx.beginPath(); ctx.arc(0, 0, b.r * .38, 0, 6.2832); ctx.fill();
+    } else if (b.type === 'bubble') {
+      ctx.globalAlpha = k * .55;
+      ctx.lineWidth = Math.max(1, b.r * .30);
+      ctx.beginPath(); ctx.arc(0, 0, b.r, 0, 6.2832); ctx.stroke();
+    } else if (b.type === 'arc') {
+      // 閃電：三段折線，每幀重算抖動
+      ctx.globalAlpha = k * .95;
+      ctx.lineWidth = Math.max(1.3, T * .038 * k);
+      ctx.shadowColor = b.col; ctx.shadowBlur = T * .30;
+      ctx.beginPath();
+      let px = 0, py = 0;
+      ctx.moveTo(px, py);
+      for (let s = 1; s <= 3; s++) {
+        px += b.r * (2.4 + Math.random() * 1.6) * (s % 2 ? 1 : .55);
+        py += (Math.random() - .5) * b.r * 2.6;
+        ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.globalAlpha = .35 + k * .60;
+      ctx.beginPath(); ctx.arc(0, 0, b.r * (.8 + (1 - k) * .7), 0, 6.2832); ctx.fill();
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+/* 起手法陣：在地面轉的兩圈符文環 ＋ 集氣到後半段再收一圈。
+   這是「牠正在出招」的地面層提示，跟頭頂圖示一上一下互相補位。 */
+function drawCastRunes(T) {
+  const list = Game.enemies;
+  if (!list || !list.length) return;
+  const gt = Game.gameT || 0;
+  const lv = qualLevel();
+  ctx.save();
+  for (let i = 0; i < list.length; i++) {
+    const e = list[i];
+    if (!e || e.dead || !(e.castT > 0)) continue;
+    const prog = castIconProg(e);
+    if (prog < 0) continue;
+    if (!castIconKey(e)) continue;          // 出手後的僵直沒有圖示
+    if (!onScreen(e.x, e.y, T * 1.7)) continue;
+    const col = BOLT_COLOR[e.fx] || (e.castCol || '#ffd166');
+    const R = e.boss ? T * 1.10 : T * .54;
+    const cy = e.y + (e.boss ? T * .18 : T * .16);
+    ctx.globalAlpha = .10 + prog * .26;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = Math.max(1.3, T * (.028 + prog * .022));
+    // 外圈（順時針）＋ 內圈（逆時針）
+    ctx.beginPath();
+    ctx.ellipse(e.x, cy, R, R * .46, 0, 0, 6.2832);
+    ctx.stroke();
+    ctx.globalAlpha = (.10 + prog * .30) * .9;
+    ctx.beginPath();
+    ctx.ellipse(e.x, cy, R * .62, R * .28, 0, 0, 6.2832);
+    ctx.stroke();
+    // 跑動的刻痕（低畫質只畫 3 條）
+    const ticks = lv > 0 ? 6 : 3;
+    ctx.globalAlpha = .20 + prog * .55;
+    for (let t = 0; t < ticks; t++) {
+      const a = gt * (1.6 + prog * 1.4) + t * (6.2832 / ticks);
+      const x0 = e.x + Math.cos(a) * R, y0 = cy + Math.sin(a) * R * .46;
+      const x1 = e.x + Math.cos(a) * R * 1.16, y1 = cy + Math.sin(a) * R * .46 * 1.16;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    }
+    // 集氣光：貼在身體上的暖光。
+    //   v5.83e：以前這裡是一顆「白心紅邊」的實心球，結果在頭頂圖示旁邊又多一顆像圖示的東西，
+    //   玩家會分不清哪個是招式預告 → 改成沒有白心的身體光暈，只留「快打出來了」的亮度。
+    const ccx = e.x, ccy = e.y - (e.boss ? e.r * .8 : (e.r || T * .3) * .8);
+    const cr = (e.boss ? T * .30 : T * .17) * (.70 + prog * .80);
+    const gg = ctx.createRadialGradient(ccx, ccy, cr * .08, ccx, ccy, cr * 1.6);
+    if (gg && gg.addColorStop) {
+      gg.addColorStop(0, col);
+      gg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = .10 + prog * .30;
+      ctx.fillStyle = gg;
+      ctx.beginPath(); ctx.arc(ccx, ccy, cr * 1.6, 0, 6.2832); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
 function foeAoeTick(dt) {
   if (!Game.foeAoe || !Game.foeAoe.length) return;
   const T = Game.T;
@@ -17447,8 +18039,8 @@ function foeAoeTick(dt) {
     a.t -= dt;
     if (a.t > 0) continue;
     Game.foeAoe.splice(i, 1);
-    const col = BOLT_COLOR[a.kind] || '#ffb347';
-    burst(a.cx * T + T / 2, a.cy * T + T / 2, col, 16, 190);
+    // v5.83：命中改成四層特效（核心＋衝擊環＋元素碎片＋粒子）
+    spellImpact(a.cx * T + T / 2, a.cy * T + T / 2 + T * .06, a.kind, 1);
     if (cellAt(a.cx, a.cy) === 2) destroySoft(a.cx, a.cy);
     if (a.haz) foeHazAdd(a.cx, a.cy, a.haz, a.kind);
     Game.players.forEach(function (p) {
@@ -17488,8 +18080,10 @@ function foeRollerAdd(e, dirName, kind) {
   const cx = Math.floor(e.x / T), cy = Math.floor(e.y / T);
   const d = DIRS[dirName] || DIRS.down;
   if (Game.rollers.length > 10) Game.rollers.shift();
+  // v5.83 平衡：每個 0.085 秒走一格（≈11.8 格/秒）→ 0.11 秒（≈9.1 格/秒），
+  //   最遠 14 格 → 10 格。走廊裡不會再「看到就必中」。
   Game.rollers.push({ x: cx * T + T / 2, y: cy * T + T / 2, dx: d.x, dy: d.y,
-                      t: 0, step: .085, cells: 0, kind: kind || 'earth', alive: true });
+                      t: 0, step: .11, cells: 0, kind: kind || 'earth', alive: true });
 }
 function foeRollerTick(dt) {
   if (!Game.rollers || !Game.rollers.length) return;
@@ -17500,11 +18094,16 @@ function foeRollerTick(dt) {
     if (r.t < r.step) continue;
     r.t -= r.step;
     const nx = Math.floor(r.x / T) + r.dx, ny = Math.floor(r.y / T) + r.dy;
-    if (cellAt(nx, ny) === 1 || bombAt(nx, ny)) { Game.rollers.splice(i, 1); continue; }
+    if (cellAt(nx, ny) === 1 || bombAt(nx, ny)) {
+      // v5.83：撞牆也要有「砰」的視覺（以前整顆球默默消失）
+      spellImpact(r.x, r.y, r.kind, .7);
+      Game.rollers.splice(i, 1);
+      continue;
+    }
     if (cellAt(nx, ny) === 2) destroySoft(nx, ny);
     r.x = nx * T + T / 2; r.y = ny * T + T / 2;
     r.cells++;
-    if (r.cells > 14) { Game.rollers.splice(i, 1); continue; }
+    if (r.cells > 10) { Game.rollers.splice(i, 1); continue; }
     Game.players.forEach(function (p) {
       if (!p || !p.alive) return;
       if (p.invuln > 0 || p.slamGuard > 0) return;
@@ -17592,12 +18191,13 @@ function enemySkillTick(e, dt) {
       // v4.68：① 追丟（跑出射程 +1.2 格／躲進樹叢）就收手，不再隔著半張地圖狙你
       //        ② 集氣前 55% 落點還跟著你，之後鎖死 —— 圈圈就定在那格，走開就不會被砸到
       const tgt2 = nearestPlayerTo(e, T * (FOE_SIGHT_TILES + 1.2));
-      if (!tgt2) { e.castT = 0; e.skCd = 1.5; return; }
-      if (1 - e.castT / FOE_CAST_WINDUP < FOE_CAST_LOCK_K) {
+      if (!tgt2) { e.castT = 0; e.castSkill = ''; e.skCd = 1.5; return; }
+      if (1 - e.castT / (e.castMax || FOE_CAST_WINDUP) < FOE_CAST_LOCK_K) {
         e.castX = Math.floor(tgt2.x / T); e.castY = Math.floor(tgt2.y / T);
       }
       if (e.castT > 0) return;
       e.castT = 0;
+      e.castSkill = '';
       if (foeCastBolt(e, e.castX, e.castY)) {
         e.skCd = 2.6 + Math.random() * 1.8;
         burst(e.x, e.y - (e.r || 12) * .4, BOLT_COLOR[e.fx] || '#ffb347', 8, 150);
@@ -17614,12 +18214,14 @@ function enemySkillTick(e, dt) {
     const tgt = nearestPlayerTo(e, T * FOE_SIGHT_TILES);
     if (!tgt) return;
     // 先集氣（不再「看到你就直接射」）
-    e.castT = FOE_CAST_WINDUP;
+    e.castT = FOE_WINDUP.spit;
+    e.castMax = FOE_WINDUP.spit;
+    e.castSkill = 'spit';
     e.castX = Math.floor(tgt.x / T);
     e.castY = Math.floor(tgt.y / T);
     e.dirName = Math.abs(tgt.x - e.x) > Math.abs(tgt.y - e.y)
       ? (tgt.x > e.x ? 'right' : 'left') : (tgt.y > e.y ? 'down' : 'up');
-    AudioSys.sfx('anger');
+    foeChargeSfx(e);
     return;
   }
 
@@ -17635,11 +18237,13 @@ function enemySkillTick(e, dt) {
     if (Math.abs(dx) > Math.abs(dy)) { if (Math.abs(dy) < T * .62) dn = dx > 0 ? 'right' : 'left'; }
     else if (Math.abs(dx) < T * .62) dn = dy > 0 ? 'down' : 'up';
     if (!dn) return;
+    if (foeWindup(e, 'charge', dt)) { e.dirName = dn; return; }
     e.dirName = dn;
     e.dashT = .95;
     e.skCd = 2.4 + Math.random() * 1.4;
     e.windT = 0;
     burst(e.x, e.y, e.color, 6, 90);
+    try { AudioSys.sfx('charge'); } catch (er) {}
     return;
   }
 
@@ -17651,14 +18255,17 @@ function enemySkillTick(e, dt) {
       e.castT -= dt;
       if (e.castT > 0) return;
       e.castT = 0;
+      e.castSkill = '';
       e.skCd = 4.2 + Math.random() * 2.2;
       foeBlinkMark(e);                // 落點此刻鎖定，地面亮警示圈
       return;
     }
     e.skCd = (e.skCd || 0) - dt;
     if (!e.aggro || e.blinkT > 0 || e.skCd > 0) return;
-    e.castT = FOE_CAST_WINDUP;
-    AudioSys.sfx('anger');
+    e.castT = FOE_WINDUP.blink;
+    e.castMax = FOE_WINDUP.blink;
+    e.castSkill = 'blink';
+    foeChargeSfx(e);
     return;
   }
 
@@ -17668,6 +18275,7 @@ function enemySkillTick(e, dt) {
     if (!e.aggro || e.skCd > 0) return;
     const tgt = nearestPlayerTo(e, T * 2.6);
     if (!tgt) return;
+    if (foeWindup(e, 'gust', dt)) return;
     e.skCd = 2.8 + Math.random() * 1.2;
     foeGust(e, tgt);
     return;
@@ -17679,11 +18287,13 @@ function enemySkillTick(e, dt) {
     if (!e.aggro || e.skCd > 0) return;
     const tgt = nearestPlayerTo(e, T * 2.4);
     if (!tgt) return;
+    if (foeWindup(e, 'stun', dt)) return;
     e.skCd = 4.5 + Math.random() * 1.5;
     tgt.dizzy = Math.max(tgt.dizzy || 0, .85);
     burst(tgt.x, tgt.y - T * .3, '#c79bff', 12, 130);
+    spellImpact(tgt.x, tgt.y - T * .2, 'dark', .8);
     bubbleSay(tgt, '😵', 'dead', T * 1.9);
-    AudioSys.sfx('warp');
+    try { AudioSys.sfx('stun'); } catch (er) {}
     return;
   }
 
@@ -17692,12 +18302,13 @@ function enemySkillTick(e, dt) {
     e.skCd = (e.skCd || 0) - dt;
     if (!e.aggro || e.skCd > 0) return;
     if (Game.enemies.length >= (Game.foeCap || FOE_MAX_LIVE)) { e.skCd = 2; return; }
-    e.skCd = 7 + Math.random() * 3;
     const opts = ['up', 'down', 'left', 'right'].filter(function (dn) {
       const d = DIRS[dn];
       return cellAt(cx + d.x, cy + d.y) === 0 && !bombAt(cx + d.x, cy + d.y);
     });
     if (!opts.length) return;
+    if (foeWindup(e, 'summon', dt)) return;
+    e.skCd = 7 + Math.random() * 3;
     const d = DIRS[pick(opts)];
     const kid = makeEnemy(cx + d.x, cy + d.y, e.type, 1, 1);
     kid.summoned = true;
@@ -17715,12 +18326,13 @@ function enemySkillTick(e, dt) {
     if (!e.aggro || e.skCd > 0 || e.swoopT > 0) return;
     const tgt = nearestPlayerTo(e, T * 4.4);
     if (!tgt) return;
+    if (foeWindup(e, 'swoop', dt)) return;
     const a = Math.atan2(tgt.y - e.y, tgt.x - e.x);
     const sp = Math.hypot(e.vx, e.vy) || e.speed;
     e.vx = Math.cos(a) * sp; e.vy = Math.sin(a) * sp;
     e.swoopT = .55; e.skCd = 3.4;
     burst(e.x, e.y, '#d8fff4', 12, 150);
-    try { AudioSys.sfx('dash'); } catch (er) {}
+    try { AudioSys.sfx('swoop'); } catch (er) {}
     return;
   }
 
@@ -17733,27 +18345,32 @@ function enemySkillTick(e, dt) {
     const rng = e.skill === 'beam' ? 5.4 : e.skill === 'pulse' ? 2.4 : 4.6;
     const tgt = nearestPlayerTo(e, T * rng);
     if (!tgt) return;
+    // v5.83：先起手（站定＋頭頂圖示＋起手音），時間到才真的鋪落點
+    if (foeWindup(e, e.skill, dt)) return;
     const tx = Math.floor(tgt.x / T), ty = Math.floor(tgt.y / T);
     const kind = e.fx || 'fire';
     if (e.skill === 'beam') {
-      for (let k = 1; k <= 4; k++) { foeAoeAdd(cx + k, cy, 1.05, kind); foeAoeAdd(cx - k, cy, 1.05, kind); }
-      for (let k = 1; k <= 4; k++) { foeAoeAdd(cx, cy + k, 1.05, kind); foeAoeAdd(cx, cy - k, 1.05, kind); }
+      // v5.83 平衡：每向 4 格 → 3 格（十字 9 格 → 7 格）。站斜角就安全
+      for (let k = 1; k <= 3; k++) { foeAoeAdd(cx + k, cy, 1.05, kind); foeAoeAdd(cx - k, cy, 1.05, kind); }
+      for (let k = 1; k <= 3; k++) { foeAoeAdd(cx, cy + k, 1.05, kind); foeAoeAdd(cx, cy - k, 1.05, kind); }
       e.skCd = 5.2;
     } else if (e.skill === 'pulse') {
-      for (let r = 1; r <= 3; r++) {
+      // v5.83 平衡：3 環 → 2 環（48 格 → 24 格），最短預告 1.04 → 1.35 秒
+      for (let r = 1; r <= 2; r++) {
         for (let ax = -r; ax <= r; ax++) for (let ay = -r; ay <= r; ay++) {
           if (Math.max(Math.abs(ax), Math.abs(ay)) !== r) continue;
-          foeAoeAdd(cx + ax, cy + ay, .80 + r * .24, kind);
+          foeAoeAdd(cx + ax, cy + ay, 1.35 + (r - 1) * .26, kind);
         }
       }
       e.skCd = 4.6;
     } else if (e.skill === 'chain') {
-      for (let i = 0; i < 3; i++) {
+      // v5.83 平衡：3 發 → 2 發、cd 3.4 → 4.6 秒（靠運氣的招式不能再連發）
+      for (let i = 0; i < 2; i++) {
         const ox = clamp(tx + rand(5) - 2, 1, Game.cols - 2);
         const oy = clamp(ty + rand(5) - 2, 1, Game.rows - 2);
-        foeAoeAdd(ox, oy, .85 + i * .26, kind);
+        foeAoeAdd(ox, oy, .95 + i * .30, kind);
       }
-      e.skCd = 3.4;
+      e.skCd = 4.6;
     } else {
       const adx = Math.abs(tx - cx) >= Math.abs(ty - cy);
       const sgn = adx ? Math.sign(tx - cx) : Math.sign(ty - cy);
@@ -17764,9 +18381,11 @@ function enemySkillTick(e, dt) {
       }
       e.skCd = 3.6;
     }
-    e.castT = .55;                        // 出手前的僵直（看得出來牠在發功）
-    burst(e.x, e.y - (e.r || 12) * .4, BOLT_COLOR[kind] || '#ffb347', 10, 130);
-    try { AudioSys.sfx('cast'); } catch (er) {}
+    // 出手後的短僵直（castSkill 已清空 → 圖示會消失，只剩身上的抖動）
+    e.castT = .35;
+    e.castMax = .35;
+    burst(e.x, e.y - (e.r || 12) * .4, BOLT_COLOR[kind] || '#ffb347', 14, 150);
+    try { AudioSys.sfx(e.skill); } catch (er) {}
     return;
   }
 
@@ -17777,10 +18396,11 @@ function enemySkillTick(e, dt) {
     if (!e.aggro || e.skCd > 0) return;
     const tgt = nearestPlayerTo(e, T * 3.4);
     if (!tgt) return;
+    if (foeWindup(e, 'hazard', dt)) return;
     const tx = Math.floor(tgt.x / T), ty = Math.floor(tgt.y / T);
-    foeAoeAdd(tx, ty, .75, e.fx || 'poison', 3.2);
-    e.castT = .5; e.skCd = 3.6;
-    try { AudioSys.sfx('cast'); } catch (er) {}
+    foeAoeAdd(tx, ty, .85, e.fx || 'poison', 3.2);
+    e.castT = .35; e.castMax = .35; e.skCd = 3.6;
+    try { AudioSys.sfx('hazard'); } catch (er) {}
     return;
   }
 
@@ -17792,10 +18412,11 @@ function enemySkillTick(e, dt) {
     if (!tgt) return;
     const adx = Math.abs(tgt.x - e.x) >= Math.abs(tgt.y - e.y);
     const dn = adx ? (tgt.x > e.x ? 'right' : 'left') : (tgt.y > e.y ? 'down' : 'up');
+    if (foeWindup(e, 'roller', dt)) { e.dirName = dn; return; }
     e.dirName = dn;
     foeRollerAdd(e, dn, e.fx || 'earth');
-    e.skCd = 4.4; e.castT = .45;
-    try { AudioSys.sfx('roll'); } catch (er) {}
+    e.skCd = 4.4;
+    try { AudioSys.sfx('roller'); } catch (er) {}
     return;
   }
 
@@ -17803,9 +18424,10 @@ function enemySkillTick(e, dt) {
   if (e.skill === 'homing') {
     e.skCd = (e.skCd || 0) - dt;
     if (!e.aggro || e.skCd > 0) return;
+    if (foeWindup(e, 'homing', dt)) return;
     if (foeOrbAdd(e, e.fx || 'water')) {
-      e.skCd = 4.2; e.castT = .45;
-      try { AudioSys.sfx('cast'); } catch (er) {}
+      e.skCd = 4.2;
+      try { AudioSys.sfx('homing'); } catch (er) {}
     }
     return;
   }
@@ -17816,7 +18438,8 @@ function enemySkillTick(e, dt) {
     if (!e.aggro || e.skCd > 0) return;
     const tgt = nearestPlayerTo(e, T * 3.0);
     if (!tgt) return;
-    if (foePull(e, tgt)) { e.skCd = 3.6; try { AudioSys.sfx('gust'); } catch (er) {} }
+    if (foeWindup(e, 'pull', dt)) return;
+    if (foePull(e, tgt)) { e.skCd = 3.6; try { AudioSys.sfx('pull'); } catch (er) {} }
     else e.skCd = .9;
     return;
   }
@@ -17827,10 +18450,12 @@ function enemySkillTick(e, dt) {
     if (!e.aggro || e.skCd > 0) return;
     const tgt = nearestPlayerTo(e, T * 2.2);
     if (!tgt) return;
-    e.skCd = 6.0;
     if (tgt.curseT > 0) return;
+    if (foeWindup(e, 'curse', dt)) return;
+    e.skCd = 6.0;
     tgt.curseT = 6;
     burst(tgt.x, tgt.y - T * .3, '#c79bff', 16, 150);
+    spellImpact(tgt.x, tgt.y - T * .2, 'dark', .9);
     bubbleSay(tgt, '💀', 'dead', T * 1.9);
     try { AudioSys.sfx('curse'); } catch (er) {}
     return;
@@ -17852,8 +18477,10 @@ function enemySkillTick(e, dt) {
         if (d <= 3 && d < bestD) { bestD = d; best = b; }
       }
       if (best) {
+        if (foeWindup(e, 'scavenger', dt)) return;
         // 撿起來（從場上移除，放進小怪手上）
         const idx = Game.bombs.indexOf(best);
+        try { AudioSys.sfx('scavenger'); } catch (er) {}
         if (idx >= 0) Game.bombs.splice(idx, 1);
         e.carryBomb = { cx: best.cx, cy: best.cy, power: best.power || 2, timer: 2.4,
                         owner: e, passers: [], remoteArmed: false, mine: false, mineLife: 10,
@@ -17908,8 +18535,10 @@ function enemySkillTick(e, dt) {
         if (d <= 1 && d < bestD) { bestD = d; target = b; }
       }
       if (target) {
+        if (foeWindup(e, 'sapper', dt)) return;
         const idx = Game.bombs.indexOf(target);
         if (idx >= 0) Game.bombs.splice(idx, 1);   // 直接消失 → 不會爆炸
+        try { AudioSys.sfx('sapper'); } catch (er) {}
         burst(target.cx * T + T / 2, target.cy * T + T / 2, '#7ee0a5', 10, 120);
         e.defuseT = 2.4;
       }
@@ -17922,6 +18551,7 @@ function enemySkillTick(e, dt) {
     if (!e.aggro) return;               // v4.19：沒被惹到就不亂丟炸彈
     e.bombT = (e.bombT || 0) - dt;
     if (e.bombT <= 0) {
+      if (foeWindup(e, 'bomber', dt)) return;
       // 找身邊一個空格放彈
       const opts = [];
       ['up', 'down', 'left', 'right'].forEach(function (dn) {
@@ -18836,6 +19466,7 @@ function updateWorld(dt) {
   });
   updateBolts(dt);
   foeAoeTick(dt);
+  bitsTick(dt);            // v5.83：元素碎片
   foeHazTick(dt);
   foeRollerTick(dt);
   foeOrbTick(dt);
@@ -24579,9 +25210,12 @@ function render() {
   drawFoeRollerOrb(T);
   drawBlinkMarks(T);
   drawFoeCastGround(T);
+  drawCastRunes(T);          // v5.83：起手法陣（地面層）
+  drawBits(T);               // v5.83：元素碎片
   // 敵人
   Game.enemies.forEach(function (e) { if (!onScreen(e.x, e.y, T * 1.6)) return; drawEnemy(e, T); });
   drawFoeCastFx(T);
+  drawCastIcons(T);          // v5.83：招前頭頂圖示
   // v4.17：隨從（畫在敵人之後、玩家之前 → 不會蓋住主角）
   if (Game.pets && Game.pets.length) Game.pets.forEach(function (pt) { drawPet(pt, T); });
   // 玩家
@@ -25692,6 +26326,271 @@ function drawBlinkMarks(T) {
     ctx.restore();
   }
 }
+/* ===== v5.83：招式「起手圖示」 =====
+   目的只有一個：在招式真的打出來之前，讓玩家一眼看出「牠要出哪一招」。
+   45 個招式各一張手繪風圖示（21 小怪 ＋ 24 王），全部用 canvas 路徑即時畫，
+   不佔任何圖檔、也不會有額外下載。
+   座標系一律 24×24，繪製時等比縮放到徽章上。
+   操作碼：c=實心圓 C=空心圓 l=直線 z=折線 t=三角形(描邊) a=圓弧 r=方框
+           s=雪花(6 向) k=閃電 x=星芒 */
+const CAST_ICONS = {
+  // ── 小怪 21 招 ──
+  split:      [['c', 12, 6, 4], ['l', 7, 12.6, 17, 12.6], ['c', 7, 18, 3.4], ['c', 17, 18, 3.4]],
+  charge:     [['z', 5, 12, 17, 12], ['z', 13, 7, 19, 12, 13, 17], ['l', 4, 8, 8, 8], ['l', 4, 16, 8, 16]],
+  spit:       [['c', 12, 14, 5], ['t', 12, 3, 8.5, 11, 15.5, 11], ['l', 20, 8, 22, 8], ['l', 20, 14, 22, 14]],
+  blink:      [['C', 12, 12, 7.4], ['c', 12, 12, 2.6], ['l', 12, 2, 12, 5], ['l', 12, 19, 12, 22]],
+  hazard:     [['t', 12, 3, 6, 14, 18, 14], ['l', 4, 19, 20, 19], ['c', 12, 10, 1.8]],
+  smart:      [['l', 4, 8.4, 4, 4], ['l', 4, 4, 8.4, 4], ['l', 15.6, 4, 20, 4], ['l', 20, 4, 20, 8.4], ['l', 4, 15.6, 4, 20], ['l', 4, 20, 8.4, 20], ['l', 15.6, 20, 20, 20], ['l', 20, 15.6, 20, 20], ['c', 12, 12, 3]],
+  pull:       [['C', 12, 12, 8.4], ['z', 3.4, 9, 8.4, 12, 3.4, 15], ['z', 20.6, 9, 15.6, 12, 20.6, 15], ['c', 12, 12, 2.2]],
+  stun:       [['a', 12, 12, 8.4, .3, 4.9], ['a', 12, 12, 5, 3.4, 1.8], ['c', 12, 12, 1.9]],
+  roller:     [['C', 12, 12, 7], ['a', 12, 12, 4, .4, 2.2], ['a', 12, 12, 4, 3.5, 5.3]],
+  gust:       [['l', 3, 7, 13, 7], ['l', 5, 12, 16, 12], ['l', 3, 17, 13, 17], ['z', 15.6, 9, 19.4, 12, 15.6, 15]],
+  dive:       [['l', 12, 3, 12, 15], ['z', 7, 12, 12, 18, 17, 12], ['l', 4, 21, 9, 21], ['l', 15, 21, 20, 21]],
+  bomber:     [['c', 13, 14, 6], ['l', 13, 8, 16, 5], ['c', 17, 4, 1.7], ['l', 8, 11, 10, 9]],
+  curse:      [['c', 12, 10, 6.2], ['r', 9, 16, 6, 4], ['c', 10, 9, 1.3], ['c', 14, 9, 1.3]],
+  homing:     [['c', 12, 12, 2.8], ['z', 3, 3.4, 10.6, 8.6, 6.4, 11], ['z', 21, 3.4, 13.4, 8.6, 17.6, 11], ['z', 12, 21.6, 8.8, 14.4, 15.2, 14.4]],
+  swoop:      [['z', 5, 8, 12, 13, 19, 8], ['z', 5, 14, 12, 19, 19, 14]],
+  summon:     [['C', 12, 12, 8], ['l', 12, 6.5, 12, 17.5], ['l', 6.5, 12, 17.5, 12]],
+  sapper:     [['C', 12, 12, 8], ['l', 6, 6, 18, 18], ['l', 18, 6, 6, 18]],
+  scavenger:  [['l', 4, 7, 4, 17], ['l', 4, 17, 20, 17], ['c', 14, 10, 3.4], ['l', 20, 6, 20, 13]],
+  pulse:      [['c', 12, 12, 2.6], ['a', 12, 12, 6.2, 0, 6.283], ['a', 12, 12, 10.2, 0, 6.283]],
+  beam:       [['l', 12, 2, 12, 22], ['l', 2, 12, 22, 12], ['c', 12, 12, 2.6]],
+  chain:      [['k', 7, 3, 15], ['k', 15, 8, 21], ['c', 6, 18, 2], ['c', 12, 18, 2], ['c', 18, 18, 2]],
+  // ── 王 24 招 ──
+  woolWave:   [['a', 8.6, 12, 4.3, 3.1416, 6.2832], ['a', 17.2, 12, 4.3, 0, 3.1416], ['l', 2, 12, 4.4, 12], ['l', 21.4, 12, 23, 12]],
+  lambCall:   [['l', 9, 18, 9, 7], ['l', 9, 7, 17, 5], ['c', 7, 19, 2.8], ['c', 15, 17, 2.8]],
+  graze:      [['a', 9, 9, 4.2, 0, 6.283], ['a', 15, 9, 4.2, 0, 6.283], ['z', 4.4, 11, 12, 21, 19.6, 11]],
+  burrow:     [['l', 12, 3, 12, 13], ['z', 7.6, 9.4, 12, 14.8, 16.4, 9.4], ['a', 12, 24.4, 9, 3.34, 5.95]],
+  sandStorm:  [['a', 12, 12.6, 9.2, 3.35, 5.95], ['a', 12, 12.6, 6.2, 3.35, 5.95], ['a', 12, 12.6, 3.2, 3.35, 5.95], ['c', 5, 6.6, 1.2], ['c', 19, 6.6, 1.2]],
+  drag:       [['l', 2.4, 12, 8.6, 12], ['l', 15.4, 12, 21.6, 12], ['z', 5.6, 8.6, 1.2, 12, 5.6, 15.4], ['z', 18.4, 8.6, 22.8, 12, 18.4, 15.4], ['c', 12, 12, 1.8]],
+  iceFloor:   [['s', 12, 12, 9]],
+  snowball:   [['C', 13, 13, 7], ['l', 2, 6, 7, 6], ['l', 2, 12, 5, 12], ['l', 4, 18, 7, 18]],
+  iceShell:   [['z', 12, 3, 20, 6.5, 20, 13, 12, 21, 4, 13, 4, 6.5], ['l', 12, 7, 12, 15]],
+  lavaTide:   [['z', 2, 17, 6, 12, 10, 17, 14, 12, 18, 17, 22, 12], ['c', 12, 6, 2.6], ['l', 12, 9, 12, 12]],
+  firePillar: [['r', 9, 6, 6, 15], ['t', 12, 1.5, 8, 8, 16, 8], ['l', 4, 21, 20, 21]],
+  meteor:     [['c', 15, 9, 4.8], ['l', 3, 21, 9, 15], ['l', 7, 21, 12, 14], ['l', 11, 21, 14, 16]],
+  beatBlast:  [['r', 3, 11, 3, 9], ['r', 8, 6, 3, 14], ['r', 13, 9, 3, 11], ['r', 18, 5, 3, 15]],
+  laserSweep: [['l', 2, 12, 22, 12], ['l', 2, 7, 5, 7], ['l', 2, 17, 5, 17], ['l', 19, 7, 22, 7], ['l', 19, 17, 22, 17]],
+  drone:      [['l', 4.4, 9, 19.6, 9], ['C', 7, 9, 3.2], ['C', 17, 9, 3.2], ['l', 12, 9, 12, 12.6], ['c', 12, 16.4, 3.6]],
+  lureOrbs:   [['c', 10, 10.4, 3.2], ['c', 16.6, 16, 2.3], ['a', 12.4, 12.6, 8.6, .5, 3.1]],
+  tentacle:   [['a', 8, 9, 6, .2, 2.7], ['a', 16, 9, 6, .4, 2.9], ['c', 12, 18, 3]],
+  current:    [['z', 2, 9, 7, 12, 2, 15], ['l', 9, 12, 20, 12], ['z', 16, 9, 21, 12, 16, 15]],
+  tornado:    [['l', 3, 4, 21, 4], ['a', 12, 8, 5.4, .3, 2.9], ['l', 8, 15, 16, 15], ['l', 10, 20, 14, 20]],
+  gustBurst:  [['x', 12, 12, 9.5], ['c', 12, 12, 3.4]],
+  curseCard:  [['r', 5, 3, 14, 18], ['c', 9, 9, 1.5], ['c', 15, 9, 1.5], ['l', 9, 16, 15, 16]],
+  shadowClones:[['c', 9, 9, 4.6], ['c', 15, 15, 4.6], ['a', 9, 9, 7, 0, 6.283]],
+  shadowRing: [['a', 12, 12, 8.8, 0, .95], ['a', 12, 12, 8.8, 1.62, 2.57], ['a', 12, 12, 8.8, 3.19, 4.14], ['a', 12, 12, 8.8, 4.76, 5.71], ['c', 12, 12, 2.4]]
+};
+// 招式 → 圖示（王的 dive 沿用同一張）
+function castIconKey(e) {
+  const sk = e.castSkill || '';
+  return CAST_ICONS[sk] ? sk : null;
+}
+/* v5.83：困難模式藏圖示 —— 只藏「頭頂圖示」，地面警示圈／雷射線照樣會亮，
+   玩家少了「牠要出招了」的提示，但落點資訊還在（不是無跡可尋）。 */
+function castIconOn() {
+  try {
+    if (Game.daily) return true;                       // 每日挑戰固定普通難度
+    if (Game.mapTest) return true;
+    return settings.soloDiff !== 'hard';
+  } catch (e) { return true; }
+}
+// 圖示的顯示進度 0→1（0＝剛起手，1＝要打出來了）
+function castIconProg(e) {
+  if (!(e.castT > 0)) return -1;
+  const mx = e.castMax || FOE_CAST_WINDUP;
+  return clamp(1 - e.castT / mx, 0, 1);
+}
+function castIconPath(op, a) {
+  switch (op) {
+    case 'c':
+      ctx.beginPath(); ctx.arc(a[1], a[2], a[3], 0, 6.2832); ctx.fill(); break;
+    case 'C':
+      ctx.beginPath(); ctx.arc(a[1], a[2], a[3], 0, 6.2832); ctx.stroke(); break;
+    case 'l':
+      ctx.beginPath(); ctx.moveTo(a[1], a[2]); ctx.lineTo(a[3], a[4]); ctx.stroke(); break;
+    case 'z':
+      ctx.beginPath(); ctx.moveTo(a[1], a[2]);
+      for (let i = 3; i + 1 < a.length; i += 2) ctx.lineTo(a[i], a[i + 1]);
+      ctx.stroke(); break;
+    case 't':
+      ctx.beginPath(); ctx.moveTo(a[1], a[2]); ctx.lineTo(a[3], a[4]); ctx.lineTo(a[5], a[6]);
+      ctx.closePath(); ctx.stroke(); break;
+    case 'a':
+      ctx.beginPath(); ctx.arc(a[1], a[2], a[3], a[4], a[5]); ctx.stroke(); break;
+    case 'r':
+      ctx.beginPath(); ctx.rect(a[1], a[2], a[3], a[4]); ctx.stroke(); break;
+    case 's': {                                     // 雪花（6 向）
+      const cx = a[1], cy = a[2], r = a[3];
+      for (let i = 0; i < 6; i++) {
+        const an = i * 1.0472;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(an) * r, cy + Math.sin(an) * r);
+        ctx.stroke();
+      }
+      break;
+    }
+    case 'k': {                                     // 閃電
+      const x = a[1], y = a[2], len = a[3] || 12;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + len * .34, y + len * .40);
+      ctx.lineTo(x + len * .10, y + len * .40);
+      ctx.lineTo(x + len * .42, y + len);
+      ctx.stroke();
+      break;
+    }
+    case 'x': {                                     // 星芒（8 向爆裂）
+      const cx = a[1], cy = a[2], r = a[3];
+      for (let i = 0; i < 8; i++) {
+        const an = i * .7854;
+        const rr = i % 2 ? r * .52 : r;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(an) * r * .22, cy + Math.sin(an) * r * .22);
+        ctx.lineTo(cx + Math.cos(an) * rr, cy + Math.sin(an) * rr);
+        ctx.stroke();
+      }
+      break;
+    }
+  }
+}
+/* 畫一枚徽章：底牌 ＋ 元素色描邊 ＋ 圖示 ＋ 進度環 ＋ 呼吸脈動 ＋ 指向小三角
+   x,y＝徽章中心；size＝邊長；prog 0→1；boss 決定尺寸加成 */
+function castBadgePath(h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(-h, -h, h * 2, h * 2, r); return; }
+  ctx.moveTo(-h + r, -h);
+  ctx.lineTo(h - r, -h); ctx.quadraticCurveTo(h, -h, h, -h + r);
+  ctx.lineTo(h, h - r); ctx.quadraticCurveTo(h, h, h - r, h);
+  ctx.lineTo(-h + r, h); ctx.quadraticCurveTo(-h, h, -h, h - r);
+  ctx.lineTo(-h, -h + r); ctx.quadraticCurveTo(-h, -h, -h + r, -h);
+}
+function drawCastBadge(x, y, size, key, col, prog, boss, side) {
+  const def = CAST_ICONS[key];
+  if (!def) return;
+  const gt = Game.gameT || 0;
+  const pulse = 1 + Math.sin(gt * (9 + prog * 9)) * .045 + prog * .05;
+  const h = size * .5 * pulse;
+  const r = size * .22;
+  ctx.save();
+  ctx.translate(x, y);
+  // 指向小三角（讓玩家知道這是「這隻」的提示）。掛在左右側時改成朝怪物指
+  ctx.globalAlpha = .82;
+  ctx.fillStyle = 'rgba(6,10,18,.80)';
+  ctx.beginPath();
+  if (side) {
+    const ex = -side * (size * .5 * pulse - 1), tx = -side * size * .66 * pulse;
+    ctx.moveTo(ex, -h * .26); ctx.lineTo(ex, h * .26); ctx.lineTo(tx, 0);
+  } else {
+    ctx.moveTo(-h * .26, size * .5 * pulse - 1);
+    ctx.lineTo(h * .26, size * .5 * pulse - 1);
+    ctx.lineTo(0, size * .66 * pulse);
+  }
+  ctx.closePath(); ctx.fill();
+  // 外光暈（越接近出手越亮）
+  const gg = ctx.createRadialGradient(0, 0, h * .2, 0, 0, h * 1.5);
+  if (gg && gg.addColorStop) {
+    gg.addColorStop(0, col);
+    gg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = .16 + prog * .30;
+    ctx.fillStyle = gg;
+    ctx.beginPath(); ctx.arc(0, 0, h * 1.45, 0, 6.2832); ctx.fill();
+  }
+  // 底牌
+  ctx.globalAlpha = .95;
+  ctx.fillStyle = 'rgba(7,11,20,.92)';
+  castBadgePath(h, r);
+  ctx.fill();
+  // 牌面：從底部往上透出元素色的蓄力光（越接近出手越亮，沒有硬邊）
+  ctx.save();
+  castBadgePath(h, r);
+  ctx.clip();
+  const lg = ctx.createLinearGradient(0, h, 0, -h * .25);
+  if (lg && lg.addColorStop) {
+    lg.addColorStop(0, col);
+    lg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = .10 + clamp(prog, 0, 1) * .34;
+    ctx.fillStyle = lg;
+    ctx.fillRect(-h, -h, h * 2, h * 2);
+  }
+  ctx.restore();
+  // 底部蓄力條：剩下的時間直接畫成一條會長滿的橫條
+  const pw = clamp(prog, 0, 1);
+  const bw = h * .72, bh = Math.max(1.6, size * .055);
+  const by = h * .62;
+  ctx.globalAlpha = .30;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(-bw, by, bw * 2, bh);
+  if (pw > .02) {
+    ctx.globalAlpha = .95;
+    ctx.fillStyle = col;
+    ctx.fillRect(-bw, by, bw * 2 * pw, bh);
+    ctx.globalAlpha = .85;
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.fillRect(-bw, by, bw * 2 * pw, Math.max(1, bh * .34));
+  }
+  // 元素色描邊（boss 加粗）
+  ctx.globalAlpha = .95;
+  ctx.strokeStyle = col;
+  ctx.lineWidth = Math.max(1.4, size * (boss ? .075 : .060));
+  castBadgePath(h, r);
+  ctx.stroke();
+  // 圖示本體：0~24 的方格座標系，先置中再縮放
+  const k = (h * 1.20) / 24;
+  ctx.save();
+  ctx.scale(k, k);
+  ctx.translate(-12, -12);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#ffffff';
+  ctx.fillStyle = 'rgba(255,255,255,.95)';
+  ctx.shadowColor = 'rgba(0,0,0,.55)';
+  ctx.shadowBlur = size * .10;
+  for (let i = 0; i < def.length; i++) castIconPath(def[i][0], def[i]);
+  ctx.restore();
+  ctx.restore();
+}
+/* 掃全部敵人（含王）畫圖示。王的大一號、再多一圈元素色光環 */
+function drawCastIcons(T) {
+  const list = Game.enemies;
+  if (!list || !list.length) return;
+  if (!castIconOn()) return;
+  ctx.save();
+  for (let i = 0; i < list.length; i++) {
+    const e = list[i];
+    if (!e || e.dead) continue;
+    if (!(e.castT > 0)) continue;
+    const key = castIconKey(e);
+    if (!key) continue;
+    if (!onScreen(e.x, e.y, T * 1.6)) continue;
+    const prog = castIconProg(e);
+    const col = BOLT_COLOR[e.fx] || (e.castCol || '#ffd166');
+    /* v5.83b：原本 T*.46 的徽章在手機上只有十幾像素，圖案會糊成一顆球。
+       放大到 T*.70（王一號 T*.92），並夾在看得見的範圍內：
+       貼著畫面邊緣的怪，圖示不會被切掉、也不會鑽到頂欄底下。 */
+    const size = e.boss ? T * 1.12 : T * .95;
+    const vx0 = _vrPx.x0 + size * .75, vx1 = _vrPx.x1 - size * .75;
+    const vy0 = _vrPx.y0 + size * .62, vy1 = _vrPx.y1 - size * .62;
+    // v5.83e：王的圖示原本用 e.r*2.5 往上抬，但王實際畫出來是 r*4.9 高 → 牌子會蓋在臉上。
+    //   改成跟 drawEnemy 同一條算式反推「頭頂」（4.9*BS*AK 身高、腳在 r*1.45*AK）再往上讓開。
+    const _bBS = e.sizeMul || 1, _bAK = tileArtK();
+    const upH = e.boss ? e.r * 4.9 * _bBS * _bAK : enemyArtR(e) * 1.95;   // 中心 → 頭頂
+    const halfW = e.boss ? e.r * 1.55 * _bAK : enemyArtR(e);
+    let bx = clamp(e.x, vx0, vx1);
+    let by = e.y - upH - size * .78;
+    let side = 0;
+    // 貼著畫面上緣（王關的頭頂常常頂到地圖上緣）時，硬往下夾會直接壓在臉上，
+    //   掛到腳下又會蓋到站在前面的玩家 → 改成掛在左／右側，三角形朝怪物指。
+    if (by < vy0) {
+      side = (bx > (_vrPx.x0 + _vrPx.x1) * .5) ? 1 : -1;
+      by = clamp(e.y - upH * .62, vy0, vy1);
+      bx = clamp(e.x + side * (halfW + size * .62), vx0, vx1);
+    }
+    drawCastBadge(bx, by, size, key, col, prog, !!e.boss, side);
+  }
+  ctx.restore();
+}
 // ===== v4.40：小怪吐彈集氣特效 =====
 //   地面層：落點預告（大圈往內縮 ＋ 四角括號 ＋ 十字準心 ＋ 從怪物連過去的瞄準虛線）
 function drawFoeCastGround(T) {
@@ -25711,7 +26610,7 @@ function drawFoeCastGround(T) {
     if (e.skill !== 'spit') continue;
     if (!(e.castX > 0) || !(e.castY > 0) ||
         e.castX >= (Game.cols | 0) || e.castY >= (Game.rows | 0)) continue;
-    const k = 1 - e.castT / FOE_CAST_WINDUP;          // 0 → 1
+    const k = clamp(1 - e.castT / (e.castMax || FOE_CAST_WINDUP), 0, 1);   // 0 → 1
     const col = BOLT_COLOR[e.fx] || '#ffb347';
     const tx = e.castX * T + T / 2, ty = e.castY * T + T / 2 + T * .10;
     const gt = Game.gameT;
@@ -25777,7 +26676,10 @@ function drawFoeCastFx(T) {
     // v5.27：只有「真的在集氣」的吐彈與鑽地才長元素球。beam／pulse／hazard 那幾招
     //   的 castT 只是出手僵直（0.45~0.55 秒），頭上冒一顆愈來愈大的元素球會騙人。
     if (e.skill !== 'spit' && e.skill !== 'blink') continue;
-    const k = clamp(1 - e.castT / FOE_CAST_WINDUP, 0, 1);
+    // v5.83e：這隻已經有頭頂圖示了，舊的「集氣球」就不要再擠在旁邊
+    //   （兩顆亮球疊在一起，反而看不出圖示在畫什麼）。困難模式沒有圖示 → 照畫。
+    if (e.castSkill && castIconOn()) continue;
+    const k = clamp(1 - e.castT / (e.castMax || FOE_CAST_WINDUP), 0, 1);
     const col = BOLT_COLOR[e.fx] || '#ffb347';
     const R = (e.r || T * .32) * (.95 + k * .42);        // 光球半徑（越來越大；不蓋住整隻怪）
     const ox = e.x + (e.dirName === 'left' ? -R * .55 : e.dirName === 'right' ? R * .55 : 0);
@@ -26100,7 +27002,7 @@ function drawBossPhaseFx(e, x, footY, H, T) {
 }
 
 function drawEnemy(e, T) {
-  const castK = (e.castT > 0) ? (1 - e.castT / FOE_CAST_WINDUP) : 0;
+  const castK = (e.castT > 0) ? clamp(1 - e.castT / (e.castMax || FOE_CAST_WINDUP), 0, 1) : 0;
   const shk = castK > 0
     ? Math.sin(Game.gameT * (54 + castK * 46) + e.x * .07) * T * (.020 + castK * .052)
     : 0;
@@ -40155,7 +41057,12 @@ window.__BH = {
   AGGRO_TILES: AGGRO_TILES, BOSS_AGGRO_TILES: BOSS_AGGRO_TILES, aggroTiles: aggroTiles,
   ANGER_WINDUP: ANGER_WINDUP, ANGER_DASH_T: ANGER_DASH_T,
   BOLT_TRAVEL: BOLT_TRAVEL, FOE_CAST_WINDUP: FOE_CAST_WINDUP,
+  sfxKeys: function () { return AudioSys.sfxKeys(); },
   foeCastBolt: foeCastBolt, drawFoeCastGround: drawFoeCastGround, drawFoeCastFx: drawFoeCastFx,
+  drawCastIcons: drawCastIcons, CAST_ICONS: CAST_ICONS, castIconOn: castIconOn,
+  spellImpact: spellImpact, bitsTick: bitsTick, drawCastRunes: drawCastRunes,
+  FOE_WINDUP: FOE_WINDUP, foeWindup: foeWindup, foeChargeSfx: foeChargeSfx,
+  castIconKey: castIconKey, castIconProg: castIconProg,
   FOE_BLINK_T: FOE_BLINK_T, drawBlinkMarks: drawBlinkMarks, foeBlinkMark: foeBlinkMark, foeBlinkTo: foeBlinkTo,
   ANGER_DASH_MUL: ANGER_DASH_MUL, FOE_TIER: FOE_TIER,
   foeTier: foeTier, isAngryFoe: isAngryFoe, foeInRange: foeInRange, enemyAggro: enemyAggro,

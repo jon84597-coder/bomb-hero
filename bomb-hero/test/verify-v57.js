@@ -89,7 +89,8 @@ ok(/e\.carryBomb/.test(html), '撿彈怪會把炸彈拿在手上（carryBomb）'
   sc.grabT = 0;
   // v4.19：技能怪只在「有仇恨（玩家 2 格內）」時才動手 → 這裡直接給仇恨
   sc.aggro = true;
-  P.enemySkillTick(sc, 1 / 60);
+  // v5.83：撿彈也要先起手（0.4 秒）→ 跑到撿起來為止，不再假設一幀完成
+  for (let i = 0; i < 60 && !sc.carryBomb; i++) P.enemySkillTick(sc, 1 / 60);
   ok(sc.carryBomb != null, '撿彈怪把附近的炸彈撿起來了（手上拿著）');
   ok(G.bombs.indexOf(pb) < 0, '被撿的炸彈已從場上移除（不會在玩家腳下爆）');
   // 丟回去 → 場上會重新出現一顆炸彈（帶 flying）
@@ -120,7 +121,7 @@ ok(/e\.defuseT/.test(html), '拆彈怪有拆彈冷卻（defuseT）');
     moving: null, flying: null, held: false, seed: 1, armT: 40 };
   G.bombs.push(pb);
   sp.defuseT = 0;
-  P.enemySkillTick(sp, 1 / 60);
+  for (let i = 0; i < 60 && G.bombs.indexOf(pb) >= 0; i++) P.enemySkillTick(sp, 1 / 60);
   ok(G.bombs.indexOf(pb) < 0, '炸彈被拆掉了');
   ok(G.flames.length === 0, '拆彈不會爆炸（沒有產生火焰）');
   G.enemies.length = 0; G.bombs.length = 0;
@@ -162,7 +163,7 @@ ok(/power: 1,\s*\/\/ v4\.13：放彈怪的火焰只有 1 格/.test(html), '放�
   G.enemies.length = 0; G.enemies.push(bo); G.bombs.length = 0;
   bo.bombT = 0;
   bo.aggro = true;                       // v4.19：要有仇恨才會放彈
-  P.enemySkillTick(bo, 1 / 60);
+  for (let i = 0; i < 90 && !G.bombs.length; i++) P.enemySkillTick(bo, 1 / 60);
   ok(G.bombs.length === 1, '放彈怪自己生了一顆炸彈');
   if (G.bombs.length === 1) {
     ok(G.bombs[0].power === 1, '那顆炸彈的火焰只有 1 格（power=1）');

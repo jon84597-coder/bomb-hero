@@ -59,7 +59,7 @@ head('1. 源碼檢查');
   ok(/nearestPlayerTo\(e, T \* \(FOE_SIGHT_TILES \+ 1\.2\)\)/.test(src), '集氣中追蹤上限 = 射程 +1.2 格');
   ok(/nearestPlayerTo\(e, T \* 3\.6\)/.test(src), '直線衝撞起手 3.6 格');
   ok(/nearestPlayerTo\(e, T \* \(FOE_SIGHT_TILES \+ 1\.0\)\)/.test(src), '鑽地索敵 = 射程 +1 格');
-  ok(/if \(!tgt2\) \{ e\.castT = 0; e\.skCd = 1\.5; return; \}/.test(src), '集氣中追丟 → 收手並進冷卻');
+  ok(/if \(!tgt2\) \{ e\.castT = 0;(?: e\.castSkill = '';)? e\.skCd = 1\.5; return; \}/.test(src), '集氣中追丟 → 收手並進冷卻');
   ok(/const AGGRO_TILES = 2;/.test(src), '一般小怪的仇恨範圍仍是 2 格（移動手感不變）');
 }
 
@@ -146,7 +146,8 @@ head('4. 直線衝撞：6 格 → 3.6 格');
 
   const e2 = foeAt(3 + 3, 3, 'bunny');
   e2.aggro = true; e2.skCd = 0;
-  P.enemySkillTick(e2, 1 / 60);
+  // v5.83：衝撞多了 0.8 秒起手（頭頂圖示）→ 跑到真的撲出去為止
+  for (let i = 0; i < 90 && !(e2.dashT > 0); i++) P.enemySkillTick(e2, 1 / 60);
   ok(e2.dashT > 0, '3 格內同一排會衝撞', { dashT: +(e2.dashT || 0).toFixed(2) });
 }
 

@@ -52,8 +52,9 @@ function tickFoe(e, n) {
 // ================================================================
 head('1. 鑽地／瞬移怪：出手前先集氣');
 {
-  ok(/if \(e\.skill === 'blink'\) \{[\s\S]{0,420}e\.castT = FOE_CAST_WINDUP;/.test(src),
-     'blink 技能改成先集氣（castT = FOE_CAST_WINDUP）再出手');
+  /* v5.83：起手時間改成一張表（FOE_WINDUP.blink = 1.15 秒），語意不變 */
+  ok(/if \(e\.skill === 'blink'\) \{[\s\S]{0,520}e\.castT = (?:FOE_CAST_WINDUP|FOE_WINDUP\.blink);/.test(src),
+     'blink 技能改成先集氣（castT = FOE_WINDUP.blink）再出手');
   ok(!/e\.blinkT = \.5;/.test(src), '不再「看到人就 0.5 秒直接消失」');
   ok(/const FOE_BLINK_T = \.5;/.test(src), '消失時間抽成 FOE_BLINK_T 常數（= 警示圈亮多久）');
   ok(/drawBlinkMarks\(T\);\s*\n\s*drawFoeCastGround\(T\);/.test(src), 'render 有呼叫落點警示圈（畫在敵人之前 → 貼在地上）');
