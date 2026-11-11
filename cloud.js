@@ -1932,6 +1932,8 @@ function createCloud(options) {
   const SOC_TTL = 150000;              // 在線判定：150 秒
   const SOC_KEEP = 7 * 86400000;       // 七天沒來就清掉
   const SOC_MAX = 600;                 // 最多記 600 個玩家
+  const SOC_FRIEND_MAX = 99;           // v5.88：好友上限 99（原本程式寫 100、提示寫「已滿」）
+  const SOC_ST = ['auto', 'busy', 'idle', 'away', 'custom'];   // v5.88：狀態代號
   const DM_MAX = 120, DM_KEEP = 3000;
 /* v5.16：頭貼。128×128 的 WebP/JPEG 大約 3～8 KB（base64 後 4～11 KB）。
    上限刻意壓在 200 人 / 1.3 MB：這個分片只要有人換頭貼就會整份重推，
@@ -2157,7 +2159,17 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
     me.sec = clampInt(body.sec, 0, 1e9, 0);
     me.pts = clampInt(body.pts, 0, 1e6, 0);
     me.wins = clampInt(body.wins, 0, 1e6, 0);
-    me.mode = String(body.mode || '大廳').slice(0, 8);
+    /* v5.88：狀態。以前只有 mode（遊樂區域）可以看，玩家想表達「忙碌／閒置／不在位子上」
+       完全沒有欄位。st 只認五種代號，stx 是自訂文字（最多 20 字，去掉控制字元）。
+       mode 從 8 放寬到 12：「深淵探險」「多人對戰」這種四字以上才不會被切掉。 */
+    me.mode = String(body.mode || '大廳').replace(/[\u0000-\u001f<>]/g, '').slice(0, 12);
+    if (body.st !== undefined) {
+      const k = String(body.st || 'auto');
+      me.st = SOC_ST.indexOf(k) >= 0 ? k : 'auto';
+    }
+    if (body.stx !== undefined) {
+      me.stx = String(body.stx || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 20);
+    }
     if (body.eq !== undefined) me.eq = cleanEq(body.eq);   // v5.16：配戴成就（最多 3 格）
     if (body.tt !== undefined) me.tt = clampInt(body.tt, -1, 8, -1);   // v5.18：戴的稱號代號
     me.seen = Date.now();
@@ -2169,13 +2181,21 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
     keys.forEach(function (k) {
       const p = S.players[k];
       if (!p) return;
-      if (now - (p.seen || 0) > SOC_KEEP && !(p.friends && p.friends.length)) delete S.players[k];
+      const hasLink = (p.friends && p.friends.length) || (p.reqs && p.reqs.length);
+      if (now - (p.seen || 0) > SOC_KEEP && !hasLink) delete S.players[k];
     });
     const left = Object.keys(S.players);
     if (left.length <= SOC_MAX) return;
-    left.sort(function (a, b) { return (S.players[a].seen || 0) - (S.players[b].seen || 0); });
-    const drop = left.length - SOC_MAX;
-    for (let i = 0; i < drop; i++) delete S.players[left[i]];
+    /* v5.88：只有「沒有任何關係」的路人可以被犧牲。
+       以前這裡一律砍最久沒上線的 —— 好友一多、或某天名單爆量，
+       被砍的正好可能是別人的好友 → 對方的好友名單出現一個永遠點不開的空號。 */
+    const free = left.filter(function (k) {
+      const p = S.players[k];
+      return !((p.friends && p.friends.length) || (p.reqs && p.reqs.length));
+    });
+    free.sort(function (a, b) { return (S.players[a].seen || 0) - (S.players[b].seen || 0); });
+    const drop = Math.min(free.length, left.length - SOC_MAX);
+    for (let i = 0; i < drop; i++) delete S.players[free[i]];
   }
   /* v5.17：同一個帳號第一次改用「帳號身分」出現時，把這台裝置原本的遊客紀錄
      （好友／邀請／黑名單）整併過來，然後刪掉舊的裝置紀錄。
@@ -2219,8 +2239,23 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
   function socPublic(pid, me) {
     return { pid: pid, name: me.n, ch: me.ch | 0, kind: me.k, gender: me.g, region: me.r, bio: me.b,
       join: me.join || 0, seen: me.seen || 0, sec: me.sec | 0, pts: me.pts | 0, wins: me.wins | 0, mode: me.mode,
+      /* v5.88：狀態代號＋自訂文字（auto/busy/idle/away/custom） */
+      st: me.st || 'auto', stx: me.stx || '',
       avt: me.avt || 0, eq: Array.isArray(me.eq) ? me.eq : [],
       tt: (me.tt == null ? -1 : me.tt) };   // v5.16 頭貼／配戴成就、v5.18 稱號
+  }
+  /* v5.88：好友的「精簡名片」。
+     以前 socOut 只回一串 pid，前端只能拿線上的 150 秒名單去對照 ——
+     好友一離線就被過濾掉，玩家看到的是「好友名單整個消失」。
+     這裡連離線的人一起回（含最後上線時間），前端才有東西可以畫。 */
+  function socBrief(pid) {
+    const S = socDb();
+    const me = S.players[pid];
+    if (!me) return { pid: pid, gone: 1 };
+    return { pid: pid, name: me.n, ch: me.ch | 0, kind: me.k, gender: me.g, region: me.r,
+      seen: me.seen || 0, sec: me.sec | 0, pts: me.pts | 0, wins: me.wins | 0, mode: me.mode || '大廳',
+      st: me.st || 'auto', stx: me.stx || '', tt: (me.tt == null ? -1 : me.tt),
+      avt: me.avt || 0, eq: [] };
   }
   function socOnline(pid, limit) {
     const S = socDb();
@@ -2303,7 +2338,11 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
     const S = socDb();
     const me = socGet(pid);
     const un = socUnread(pid);
-    return { me: socPublic(pid, me), friends: me.friends.slice(0, 200), blocks: me.blocks.slice(0, 200),
+    /* v5.88：fdata＝好友的完整名單（不管在不在線）。名單上限 99，
+       一筆約 120 bytes，滿載也只有 12 KB，跟原本的線上名單差不多大小。 */
+    const fdata = me.friends.slice(0, SOC_FRIEND_MAX).map(socBrief);
+    return { me: socPublic(pid, me), friends: me.friends.slice(0, SOC_FRIEND_MAX),
+      fdata: fdata, blocks: me.blocks.slice(0, 200),
       reqs: me.reqs.slice(0, 100), list: socOnline(pid, 80), total: socCount(),
       unread: un.n, unreadBy: un.by };
   }
@@ -2543,7 +2582,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           const o = socOut(pid);
           return send(res, 200, {
             ok: true, me: o.me, total: o.total, list: o.list,
-            friends: o.friends, blocks: o.blocks, reqs: o.reqs,
+            friends: o.friends, fdata: o.fdata, blocks: o.blocks, reqs: o.reqs,
             unread: o.unread, unreadBy: o.unreadBy
           }, CORS_X), true;
         }
@@ -2559,7 +2598,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           const o = socOut(pid);
           return send(res, 200, {
             ok: true, me: o.me, total: o.total, list: o.list,
-            friends: o.friends, blocks: o.blocks, reqs: o.reqs,
+            friends: o.friends, fdata: o.fdata, blocks: o.blocks, reqs: o.reqs,
             unread: o.unread, unreadBy: o.unreadBy
           }, CORS_X), true;
         }
@@ -2613,7 +2652,7 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
             note = '已解除封鎖';
           } else if (action === 'friend') {
             if (me.blocks.indexOf(target) >= 0) return fail(res, 403, 'BLOCKED', CORS_X), true;
-            if (me.friends.length >= 100) return fail(res, 400, 'LIMIT', CORS_X), true;
+            if (me.friends.length >= SOC_FRIEND_MAX) return fail(res, 400, 'LIMIT', CORS_X), true;
             if ((him.reqs || []).indexOf(pid) >= 0) {
               add(me.friends, target); add(him.friends, pid);
               rm(me.reqs, target); rm(him.reqs, pid);

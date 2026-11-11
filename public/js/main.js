@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.87';
+const VERSION = '5.88';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -8625,11 +8625,38 @@ const Social = (function () {
         '⭐', '💗', '💔', '💯', '🤝', '👋', '👀', '🎮', '🎁', '☕', '🚀', '🐲', '🐺', '🍀'];
       const HB_MS = 45000, LIST_MS = 20000, DM_MS = 12000;
       const GENDERS = ['不公開', '男', '女', '其他'];
+      /* v5.88：狀態列表。auto＝不自己設，直接顯示「你現在在哪個遊樂區域」；
+         其餘四個是玩家手動選的。custom 可以自己填內容（最多 20 字）。 */
+      const ST_KEYS = ['auto', 'busy', 'idle', 'away', 'custom'];
+      const ST_LIST = [
+        { k: 'auto', i: '🎮', t: '自動（顯示區域）' },
+        { k: 'busy', i: '⛔', t: '忙碌' },
+        { k: 'idle', i: '🌙', t: '閒置' },
+        { k: 'away', i: '🚶', t: '不在位子上' },
+        { k: 'custom', i: '💬', t: '自訂' }
+      ];
+      const ST_META = {
+        busy: { i: '⛔', t: '忙碌', c: '#c0392b' },
+        idle: { i: '🌙', t: '閒置', c: '#6b5bb0' },
+        away: { i: '🚶', t: '不在位子上', c: '#a8792c' }
+      };
+      /* 把任何一筆玩家資料（線上名單／好友名片／我自己）轉成「一個狀態標籤」 */
+      function statusOf(p) {
+        const k = String((p && p.st) || 'auto');
+        if (k === 'custom') {
+          const x = String((p && p.stx) || '').slice(0, 20);
+          if (x) return { i: '💬', t: x, c: '#2f7d5c' };
+        }
+        if (ST_META[k]) return ST_META[k];
+        return { i: '🎮', t: (p && p.mode) || '大廳', c: '#3a5ea8', auto: 1 };
+      }
 
-      const P = { gender: '', region: '', bio: '', av: '' };   // 本機個人資料（只存在這台裝置；av = 自己的頭貼快取）
+      /* v5.88：status＝我的狀態（k 代號 + x 自訂文字）。跟 gender／bio 一樣存在這台裝置，
+         另外每次心跳會送到伺服器，好友才看得到。 */
+      const P = { gender: '', region: '', bio: '', av: '', status: { k: 'auto', x: '' } };
       const S = {
         on: false, list: [], total: 0, at: 0, err: '',
-        me: null, friends: [], blocks: [], reqs: [],
+        me: null, friends: [], fdata: [], blocks: [], reqs: [],
         tab: 'online', view: 'list', sel: null,
         nickEdit: false,                       // v5.71：我的資料裡「改名」小表單是否展開
         chatWith: '', msgs: [], chatAt: 0, chatErr: '', sending: false,
@@ -8648,6 +8675,12 @@ const Social = (function () {
             P.region = String(o.region || '').slice(0, 12);
             P.bio = String(o.bio || '').slice(0, 24);
             if (typeof o.av === 'string' && o.av.length < 24000) P.av = o.av;
+            const st = o.status;
+            if (st && typeof st === 'object') {
+              const k = String(st.k || 'auto');
+              if (ST_KEYS.indexOf(k) >= 0) P.status.k = k;
+              P.status.x = String(st.x || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 20);
+            }
           }
         } catch (e) {}
       }
@@ -8670,13 +8703,16 @@ const Social = (function () {
           return 'guest';
         } catch (e) { return 'guest'; }
       }
+      /* v5.88：自動狀態用的「遊樂區域」。以前只有「單人／對戰」，看不出是哪一種玩法；
+         現在分成大廳／單人模式／多人對戰／大逃殺／深淵探險／RPG 冒險，
+         深淵雖然走 solo 引擎，但要跟普通單人分開講（玩家自己也想被看到在打深淵）。 */
       function myMode() {
         try {
           if (Game.state === 'play') {
             if (Game.mode === 'br') return '大逃殺';
-            if (Game.mode === 'battle') return '對戰';
-            if (Game.mode === 'rpg') return 'RPG';
-            if (Game.mode === 'solo') return '單人';
+            if (Game.mode === 'battle') return '多人對戰';
+            if (Game.mode === 'rpg') return 'RPG 冒險';
+            if (Game.mode === 'solo') return Game.abyss ? '深淵探險' : '單人模式';
           }
         } catch (e) {}
         return '大廳';
@@ -8692,6 +8728,8 @@ const Social = (function () {
           deviceId: Lb.idKey(), dkey: Lb.deviceId(), name: myName(), ch: myChar(), kind: myKind(),
           gender: P.gender, region: P.region, bio: P.bio,
           mode: myMode(), sec: myPlaySec(), pts: myPts(), wins: myWins(),
+          /* v5.88：狀態（custom 才送文字；其他代號伺服器自己有中文） */
+          st: P.status.k, stx: P.status.k === 'custom' ? P.status.x : '',
           eq: (typeof Ach !== 'undefined' && Ach.equippedMini) ? Ach.equippedMini() : [],
           // v5.18：目前戴的稱號（只送代號：-1 沒戴、0~7 成就階級、8 開發者）
           tt: (typeof Ach !== 'undefined' && Ach.wornIdx) ? Ach.wornIdx() : -1,
@@ -8705,9 +8743,18 @@ const Social = (function () {
         return Lb._post(Lb.origin() + '/api/social/hb', body()).then(function (j) {
           if (j && j.ok) {
             S.on = true; S.err = '';
-            if (j.me) S.me = j.me;
+            if (j.me) {
+              S.me = j.me;
+              /* 換裝置時把伺服器記住的狀態接回來（本機還沒設定過才接，不然會蓋掉本機選擇） */
+              if (j.me.st && j.me.st !== 'auto' && P.status.k === 'auto' && !P.status.x) {
+                P.status.k = ST_KEYS.indexOf(j.me.st) >= 0 ? j.me.st : 'auto';
+                P.status.x = String(j.me.stx || '').slice(0, 20);
+                saveP();
+              }
+            }
             S.total = j.total | 0;
             if (Array.isArray(j.friends)) S.friends = j.friends;
+            if (Array.isArray(j.fdata)) S.fdata = j.fdata;
             if (Array.isArray(j.blocks)) S.blocks = j.blocks;
             if (Array.isArray(j.reqs)) S.reqs = j.reqs;
             if (Array.isArray(j.list)) { S.list = j.list; S.at = Date.now(); }
@@ -8735,6 +8782,7 @@ const Social = (function () {
             S.total = j.total | 0;
             S.me = j.me || S.me;
             if (Array.isArray(j.friends)) S.friends = j.friends;
+            if (Array.isArray(j.fdata)) S.fdata = j.fdata;
             if (Array.isArray(j.blocks)) S.blocks = j.blocks;
             if (Array.isArray(j.reqs)) S.reqs = j.reqs;
             S.at = Date.now();
@@ -8768,7 +8816,8 @@ const Social = (function () {
         const M = {
           SELF: '不能對自己做事啦', NO_TARGET: '找不到這位玩家', BLOCKED: '你封鎖了對方',
           BLOCKED_BY: '對方不接受你的訊息', TOO_FAST: '傳太快了，喘口氣',
-          TOO_LONG: '訊息太長（最多 60 字）', OFFLINE: '對方已離線', LIMIT: '好友數量已滿'
+          TOO_LONG: '訊息太長（最多 60 字）', OFFLINE: '對方已離線',
+          LIMIT: '好友已滿（上限 99 位），先移除幾個再加'
         };
         return M[e] || '操作失敗（' + (e || 'ERR') + '）';
       }
@@ -8932,6 +8981,18 @@ const Social = (function () {
       function findPid(pid) {
         for (let i = 0; i < S.list.length; i++) if (S.list[i].pid === pid) return S.list[i];
         if (S.me && S.me.pid === pid) return S.me;
+        /* v5.88：fdata＝伺服器回的好友名片（含離線）。以前只查 150 秒內的線上名單，
+           所以離線好友點不開、也畫不出來 —— 好友名單看起來就像被清空了。 */
+        for (let i = 0; i < S.fdata.length; i++) {
+          const f = S.fdata[i];
+          if (!f || f.pid !== pid) continue;
+          return { pid: f.pid, name: f.name, ch: f.ch | 0, kind: f.kind === 'member' ? 'member' : 'guest',
+            gender: f.gender || '', region: f.region || '', bio: '', join: 0,
+            seen: Number(f.seen) || 0, sec: f.sec | 0, pts: f.pts | 0, wins: f.wins | 0,
+            mode: f.mode || '大廳', st: f.st || 'auto', stx: f.stx || '',
+            tt: (f.tt == null ? -1 : f.tt), avt: Number(f.avt) || 0, eq: [],
+            off: 1, gone: f.gone ? 1 : 0 };
+        }
         return null;
       }
 
@@ -9187,16 +9248,24 @@ const Social = (function () {
         const isF = S.friends.indexOf(p.pid) >= 0;
         const isB = S.blocks.indexOf(p.pid) >= 0;
         const kind = p.kind === 'member' ? '<em>會員</em>' : '<em class="g">遊客</em>';
-        return '<div class="onrow' + (isB ? ' blk' : '') + '" data-pid="' + esc(p.pid) + '">' +
+        const st = statusOf(p);
+        const off = !!p.off || !!p.gone;
+        /* v5.88：右下角那顆標籤＝狀態。auto 顯示遊樂區域（🎮 大逃殺），
+           手動設定就顯示 ⛔ 忙碌／🌙 閒置／🚶 不在位子上／💬 自訂文字。 */
+        return '<div class="onrow' + (isB ? ' blk' : '') + (off ? ' off' : '') + '" data-pid="' + esc(p.pid) + '">' +
           avBox(p, 'onav') +
           '<div class="onmeta"><div class="onname">' + (function () {
             const t = titleByNo(p.tt);
             return t ? '<span class="ttmini" title="' + esc(t.name) + '" style="color:' + t.color + '">' + t.ico + '</span>' : '';
           })() + esc(p.name || '無名玩家') + kind +
           (isF ? '<em>好友</em>' : '') + '</div>' +
-          '<div class="onsub">' + esc(p.gender || '不公開') + ' · ' + esc(p.region || '未知') +
+          '<div class="onsub">' + (off
+            ? (p.gone ? '⚪ 找不到這位玩家的資料' : '⚪ 離線' + (p.seen ? ' · ' + ago(p.seen) : ''))
+            : '🟢 線上') +
+          ' · ' + esc(p.gender || '不公開') + ' · ' + esc(p.region || '未知') +
           ' · 玩 ' + fmtDur(p.sec) + (p.pts ? ' · 成就 ' + p.pts + ' 分' : '') + '</div></div>' +
-          '<div class="onmode">' + esc(p.mode || '大廳') + '</div></div>';
+          '<div class="onmode' + (st.auto ? '' : ' st') + '" style="color:' + st.c + ';border-color:' + st.c +
+          '55;background:' + st.c + '14" title="' + esc(st.t) + '">' + st.i + ' ' + esc(st.t) + '</div></div>';
       }
 
       /* v5.18：稱號。名單只帶代號，顏色／名字由自己的字典解（不用把色碼送來送去） */
@@ -9257,7 +9326,21 @@ const Social = (function () {
 
       function renderList() {
         let arr = S.list.filter(function (p) { return S.blocks.indexOf(p.pid) < 0; });
-        if (S.tab === 'friend') arr = arr.filter(function (p) { return S.friends.indexOf(p.pid) >= 0; });
+        /* v5.88：好友分頁改成「以 friends 清單為準」。
+           以前是拿線上的 150 秒名單去 filter（arr = S.list.filter(...)），
+           好友一離線就整列消失 → 玩家回報「加的好友下次上線就不見了」。
+           實際上伺服器都還留著，只是前端沒東西可以畫。 */
+        if (S.tab === 'friend') {
+          arr = S.friends.map(function (id) {
+            return findPid(id) || { pid: id, name: '好友 ' + pcode(id), gone: 1, off: 1, st: 'auto' };
+          }).filter(function (p) { return S.blocks.indexOf(p.pid) < 0; });
+          /* 在線的排前面，離線的依「最後上線」新到舊 —— 打開名單先看到找得到人的那幾個 */
+          arr.sort(function (a, b) {
+            const ao = (a.off || a.gone) ? 1 : 0, bo = (b.off || b.gone) ? 1 : 0;
+            if (ao !== bo) return ao - bo;
+            return (Number(b.seen) || 0) - (Number(a.seen) || 0);
+          });
+        }
         if (S.tab === 'block') {
           const blocks = S.blocks.map(function (id) { return findPid(id) || { pid: id, name: '（已離線）' + pcode(id) }; });
           if (!blocks.length) return '<div class="rkempty">黑名單是空的。<br>在玩家資料裡按「🚫 封鎖」就會出現在這裡。</div>';
@@ -9285,11 +9368,16 @@ const Social = (function () {
         if (!arr.length) {
           return reqHTML + '<div class="rkempty">' + (S.tab === 'friend'
             ? (S.reqs.length ? '還沒有已接受的好友（上面有 ' + S.reqs.length + ' 個邀請等你處理）。'
-                              : '還沒有好友。<br>在「線上」點一位玩家，再按「➕ 加好友」。')
+                              : '還沒有好友（最多 99 位）。<br>在「線上」點一位玩家，再按「➕ 加好友」。')
             : '目前沒有人在線上。<br>（名單只顯示 150 秒內有動靜的玩家）') + '</div>';
         }
-        return reqHTML + '<div class="onbar"><span class="ondot"></span>線上 ' + S.total +
-          ' 人 · 更新於 ' + ago(S.at) + '</div><div class="onlist">' + arr.map(rowHTML).join('') + '</div>';
+        /* v5.88：好友分頁的抬頭改成「好友 N/99 · 其中 M 人在線上」，
+           不然一進來看到「線上 0 人」會以為好友全沒了。 */
+        const onN = arr.filter(function (p) { return !(p.off || p.gone); }).length;
+        const bar = (S.tab === 'friend')
+          ? '<span class="ondot"></span>好友 ' + S.friends.length + ' / 99 · 其中 ' + onN + ' 人在線上'
+          : '<span class="ondot"></span>線上 ' + S.total + ' 人 · 更新於 ' + ago(S.at);
+        return reqHTML + '<div class="onbar">' + bar + '</div><div class="onlist">' + arr.map(rowHTML).join('') + '</div>';
       }
 
       /* v5.71：onBodyClick 裡有 `const t = e.target`，會蓋掉全域的 t() 翻譯函式
@@ -9318,6 +9406,44 @@ const Social = (function () {
           t('nick.btn', { p: NICK_PRICE }) + '</button></div>';
       }
 
+      /* v5.88：我的狀態。五個選一個，custom 另外填文字（20 字）。
+         選了就立刻送心跳，好友下一次刷新就看得到。 */
+      function statusRowHTML() {
+        const cur = P.status.k, txt = P.status.x;
+        const now = statusOf({ st: cur, stx: txt, mode: myMode() });
+        return '<div class="achgrp" style="margin-top:10px"><i>📣</i>我的狀態</div>' +
+          '<div class="stpicks">' + ST_LIST.map(function (o) {
+            return '<button class="stpick' + (cur === o.k ? ' on' : '') + '" data-stpick="' + o.k +
+              '" type="button">' + o.i + ' ' + esc(o.t) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="odact" style="margin-top:6px">' +
+            '<input class="chatin" id="socStIn" maxlength="20" autocomplete="off" spellcheck="false"' +
+            ' placeholder="自訂狀態（最多 20 字）" value="' + esc(txt) + '" style="flex:1 1 160px">' +
+            '<button class="bhbtn" id="socStOk" type="button">套用自訂</button>' +
+          '</div>' +
+          '<div class="bhnote">目前顯示：' + now.i + ' <b>' + esc(now.t) + '</b>' +
+          (cur === 'auto' ? '（自動跟著你所在的遊樂區域變：大廳／單人模式／多人對戰／大逃殺／深淵探險／RPG 冒險）' : '') +
+          '</div>';
+      }
+
+      function setStatus(k, x) {
+        const key = ST_KEYS.indexOf(String(k)) >= 0 ? String(k) : 'auto';
+        let txt = String(x || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 20);
+        if (key === 'custom' && !txt) {
+          try { toast('自訂狀態不能空白，先打幾個字', 2.4); } catch (e) {}
+          return false;
+        }
+        if (key !== 'custom') txt = '';
+        P.status.k = key;
+        P.status.x = txt;
+        saveP();
+        if (S.me) { S.me.st = key; S.me.stx = txt; }
+        paint();
+        hb();
+        try { toast('狀態已更新：' + statusOf({ st: key, stx: txt, mode: myMode() }).t, 2); } catch (e) {}
+        return true;
+      }
+
       function renderMe() {
         const me = S.me || {};
         const opt = GENDERS.map(function (g) {
@@ -9332,6 +9458,7 @@ const Social = (function () {
           '<div class="bhnote">這些資料會顯示給其他線上玩家看。' +
           (myKind() === 'member' ? '' : '（遊客身分也能用，但換裝置就換一個身分）') + '</div>' +
           nickRowHTML() +
+          statusRowHTML() +
           '<div class="odact" style="margin:8px 0 10px"><button class="bhbtn" id="socAvBtn" type="button">📷 換頭貼</button>' +
           '<span class="bhnote" style="align-self:center">上傳後可以拖曳、縮放，決定要露哪一塊</span></div>' +
           myTitleHTML() +
@@ -9367,7 +9494,8 @@ const Social = (function () {
             '<div class="odcell">累積遊玩<b>' + fmtDur(p.sec) + '</b></div>' +
             '<div class="odcell">成就分<b>' + (p.pts | 0) + '</b></div>' +
             '<div class="odcell">冠軍次數<b>' + (p.wins | 0) + '</b></div>' +
-            '<div class="odcell">目前狀態<b>' + esc(p.mode || '大廳') + '</b></div>' +
+            '<div class="odcell">狀態<b>' + esc(statusOf(p).i + ' ' + statusOf(p).t) + '</b></div>' +
+            '<div class="odcell">遊樂區域<b>' + esc(p.mode || '大廳') + '</b></div>' +
             '<div class="odcell">身分<b>' + (p.kind === 'member' ? '會員' : '遊客') + '</b></div>' +
           '</div>' +
           eqHTML(p) +
@@ -9559,6 +9687,14 @@ const Social = (function () {
           return;
         }
         if (t.closest('#socHb')) { hb().then(fetchList); return; }
+        /* v5.88：狀態 */
+        const sp = t.closest('[data-stpick]');
+        if (sp) { setStatus(sp.getAttribute('data-stpick'), P.status.x); return; }
+        if (t.closest('#socStOk')) {
+          const inp = $id('socStIn');
+          setStatus('custom', inp ? inp.value : '');
+          return;
+        }
         /* v5.71：改名（要花 NICK_PRICE 金幣，扣款走 Shop.spend） */
         if (t.closest('#socNickEdit')) {
           S.nickEdit = true;
@@ -9713,14 +9849,21 @@ const Social = (function () {
         showPlayer: showPlayer,
         pid: function () { return (S.me && S.me.pid) || ''; },   // v5.59：榜單要記「我是誰」
         notice: syncNotice, openNotice: openNotice,
-        state: function () { return { gender: P.gender, region: P.region, bio: P.bio }; },
+        state: function () {
+          return { gender: P.gender, region: P.region, bio: P.bio,
+            st: P.status.k, stx: P.status.x, mode: myMode() };
+        },
         setState: function (o) {
           if (!o) return;
           if (o.gender) P.gender = String(o.gender).slice(0, 8);
           if (o.region) P.region = String(o.region).slice(0, 12);
           if (o.bio) P.bio = String(o.bio).slice(0, 24);
+          if (o.st !== undefined) { setStatus(o.st, o.stx || ''); return; }
           saveP();
         },
+        /* v5.88：狀態列表（面板與測試共用同一份定義） */
+        ST_LIST: ST_LIST, status: function () { return { k: P.status.k, x: P.status.x }; },
+        setStatus: setStatus, statusOf: statusOf, findPid: findPid,
         _s: S, _p: P
       };
       return window.Social;

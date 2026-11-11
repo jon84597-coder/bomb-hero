@@ -4484,6 +4484,17 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .onsub { font-size: 10.5px; color: #a1815a; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .onmode { flex: 0 0 auto; font-size: 10px; font-weight: 900; color: #8a5b2c; background: #fff0d2;
   border: 1px solid #edd0a2; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+/* v5.88：狀態標籤。手動設定的（忙碌／閒置／不在位子上／自訂）可能比較長，
+   給它一個上限＋省略號，不要讓名單列被撐歪。 */
+.onmode.st { max-width: 98px; overflow: hidden; text-overflow: ellipsis; }
+.onrow.off { background: #fbf8f1; }
+.onrow.off .onav { filter: grayscale(.55); opacity: .8; }
+/* v5.88：我的資料 → 狀態選擇 */
+.stpicks { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.stpick { font-family: inherit; font-size: 11px; font-weight: 800; padding: 5px 9px; border-radius: 999px;
+  border: 1.5px solid #eccb95; background: #fff8ea; color: #8a5b2c; cursor: pointer; white-space: nowrap; }
+.stpick.on { background: linear-gradient(180deg, #ffd27a, #f6a63f); border-color: #d98b2c; color: #5a2f00; }
+.stpick:active { transform: translateY(1px); }
 .ondetail { padding: 12px; border-radius: 14px; background: #fffdf7; border: 2px solid #eccb95; margin-bottom: 9px; }
 .odtop { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
 .odav { width: 52px; height: 52px; border-radius: 15px; display: flex; align-items: center; justify-content: center;
@@ -5253,7 +5264,7 @@ background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .18)
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.87</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.88</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5309,7 +5320,7 @@ background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .18)
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.87</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.88</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" id="nickWrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
