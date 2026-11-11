@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.88';
+const VERSION = '5.89';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -9502,6 +9502,18 @@ const Social = (function () {
           (p.bio ? '<div class="bhnote" style="margin-top:8px">💬 ' + esc(p.bio) + '</div>' : '') +
           '<div class="odact">' +
             (isMe ? '<span class="bhnote">這是你自己</span>' :
+              /* v5.89：開發者限定 —— 一般玩家的 DOM 裡根本不會有這顆按鈕。
+                 判定用 Cloud.isDev()（＝ DEV_BUILD 或帳號的 dev 旗標），
+                 跟後台入口、Admin.open() 同一個來源；後端 /api/admin/player
+                 還會再驗一次 session + isDev，前端只是不讓人白點。
+                 注意：不能用 isDevUser()，那個函式在 Shop 的閉包裡、這裡看不到。 */
+              ((function () {
+                try {
+                  return !!(typeof Cloud !== 'undefined' && Cloud && Cloud.isDev && Cloud.isDev());
+                } catch (e) { return false; }
+              })()
+                ? '<button class="bhbtn" id="onDev" type="button" style="background:#2b3a55;color:#e8eefb;' +
+                  'border-color:#3d5273">🛠 後台資料</button>' : '') +
               '<button class="bhbtn warm" id="onFriend" type="button">' + (isF ? '✅ 移除好友' : '➕ 加好友') + '</button>' +
               '<button class="bhbtn" id="onDm" type="button">💬 私訊</button>' +
               '<button class="bhbtn" id="onBlock" type="button">' + (isB ? '↩️ 解除封鎖' : '🚫 封鎖') + '</button>') +
@@ -9733,6 +9745,16 @@ const Social = (function () {
         if (dm && S.sel) { openChat(S.sel.pid); return; }
         const bl = t.closest('#onBlock');
         if (bl && S.sel) { act(S.blocks.indexOf(S.sel.pid) >= 0 ? 'unblock' : 'block', S.sel.pid); return; }
+        /* v5.89：開發者後台資料卡（獨立模組 js/devcard.js） */
+        const dvb = t.closest('#onDev');
+        if (dvb && S.sel) {
+          try {
+            const DC = window.__BHDevCard;
+            if (!DC || typeof DC.open !== 'function') { toast('devcard 模組沒有載入', 2.6); return; }
+            if (!DC.open({ pid: S.sel.pid, name: S.sel.name })) toast('只有開發者可以使用後台資料', 2.4);
+          } catch (e) {}
+          return;
+        }
         const row = t.closest('[data-pid]');
         if (row) {
           const pid = row.getAttribute('data-pid');
@@ -41350,6 +41372,13 @@ const Admin = (function () {
   }
 
   return { open: open, close: close, wire: wire, refresh: refresh, state: A, setTab: setTab,
+    /* v5.89：從遊戲內直接跳到某個玩家的後台詳情（玩家名片 → 完整後台）。
+       先 open() 再 player()，因為 renderDetail 要 #bhModal 已經在畫面上才找得到節點。 */
+    player: function (id) {
+      const w = String(id == null ? '' : id).trim();
+      if (!w) return false;
+      return pick(w);
+    },
     // v5.5：測試接縫（排序／重畫清單／選項表）—— 正式流程完全不會走到這裡
     _sort: sortRows, _render: renderList, _visits: renderVisits, _stats: renderStats,
     SORTS: SORTS, ONLINE_MS: ONLINE_MS };

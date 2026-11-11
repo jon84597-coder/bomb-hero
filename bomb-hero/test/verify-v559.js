@@ -74,7 +74,7 @@ const SEL_NEED = ['[data-pc]', '.lbrow .nm', '.rkname', '.gwrow > span:first-chi
 SEL_NEED.forEach(function (s) {
   ok(pcSrc.indexOf("'" + s + "'") >= 0, '選擇器有 ' + s);
 });
-ok(/'\.onrow,#onBody \.onrow,#specBar,#bhModal,#pcModal,input,textarea,select,button'/.test(pcSrc),
+ok(/'\.onrow,#onBody \.onrow,#specBar,#bhModal,#pcModal,(#dvcModal,)?input,textarea,select,button'/.test(pcSrc),
   'SKIP 名單含 .onrow（那裡本來就會開完整資料頁，不能被搶）與 .specBar（那顆是切鏡頭）');
 ok(/addEventListener\('click', onDocClick, true\)/.test(pcSrc), '用捕獲階段委派（抗主檔重畫）');
 ok(/nm\.textContent = n/.test(pcSrc), '名字用 textContent 塞（暱稱可能含 < > &）');

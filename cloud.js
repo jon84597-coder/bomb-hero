@@ -2348,6 +2348,93 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
   }
 
   /* ============================================================
+     v5.89：開發者後台 —— 玩家「後台詳細資料」
+     ------------------------------------------------------------
+     需求：開發者在遊戲內點到某個玩家，要能直接看他的完整後台資料。
+     只有 isDev 的帳號打得到（沿用 /api/admin/* 的 session + isDev + gate）。
+
+     為什麼需要一個轉換層：遊戲內的玩家名片只有社交編號 p_xxxx
+     （＝ sha256(device|secret) 前 10 碼），帳號是另一套 id，兩邊沒有
+     共同欄位。所以規則跟 pcCard 一樣：用「名字」對應，同名取最近活躍
+     的那一個，並在回應裡標出「同名帳號有幾個」，讓開發者知道有歧義。
+
+     刻意不做的事：不在這裡回密碼雜湊（adminRow 本來就只有 hasPass），
+     也不回完整 base64 存檔信封 —— 後台要看的是數字，不是位元組。
+     ============================================================ */
+  function socDev(pid) {
+    if (!pid) return { found: 0 };
+    const S = socDb();
+    const p = S.players[pid];
+    if (!p) return { found: 0, pid: pid };
+    let dmN = 0;
+    for (const k in S.dm) {
+      const i = k.indexOf('|');
+      if (i < 0) continue;
+      if (k.slice(0, i) !== pid && k.slice(i + 1) !== pid) continue;
+      dmN += (S.dm[k] || []).length;
+    }
+    return {
+      found: 1, pid: pid, name: p.n || '', ch: clampInt(p.ch, 0, 7, 0), kind: p.k || 'guest',
+      gender: String(p.g || '').slice(0, 8), region: String(p.r || '').slice(0, 12),
+      bio: String(p.b || '').slice(0, 24), join: p.join || 0, seen: p.seen || 0,
+      online: (Date.now() - (p.seen || 0)) <= SOC_TTL,
+      sec: clampInt(p.sec, 0, 1e9, 0), pts: clampInt(p.pts, 0, 1e6, 0),
+      wins: clampInt(p.wins, 0, 1e6, 0), mode: String(p.mode || '').slice(0, 12),
+      st: p.st || 'auto', stx: String(p.stx || '').slice(0, 20),
+      tt: (p.tt == null ? -1 : clampInt(p.tt, -1, 8, -1)), avt: p.avt || 0,
+      eq: Array.isArray(p.eq) ? p.eq.slice(0, 3) : [],
+      nFriends: (p.friends || []).length, nReqs: (p.reqs || []).length,
+      nBlocks: (p.blocks || []).length, dm: dmN
+    };
+  }
+
+  /* 由名字找回社交身分（後台先查到帳號、想看它有沒有社交資料時用）。
+     同名取最近活躍的那一個，跟 pcSoc 的規則一致。 */
+  function socDevByName(name) {
+    if (!name) return null;
+    const S = socDb();
+    let hit = null;
+    for (const k in S.players) {
+      const p = S.players[k];
+      if (!p || p.n !== name) continue;
+      if (!hit || (p.seen || 0) > (hit.seen || 0)) hit = { pid: k, seen: p.seen || 0 };
+    }
+    return hit ? socDev(hit.pid) : null;
+  }
+
+  /* 存檔摘要：只取「後台看得懂」的數字，不回整個信封。 */
+  function saveDigest(acc) {
+    const sv = acc && acc.save;
+    if (!sv || typeof sv !== 'object') return null;
+    const out = {
+      stage: clampInt(sv.stage, 1, MAX_STAGE, 1),
+      gold: clampInt(sv.gold, 0, 1e8, 0),
+      tickets: clampInt(sv.tickets, 0, 9999, 0),
+      pets: [], skins: 0, stars: 0, daily: {}, achN: 0, tut: null
+    };
+    (Array.isArray(sv.pets) ? sv.pets : []).slice(0, 12).forEach(function (x) {
+      if (!x || !x.kind) return;
+      out.pets.push({ kind: String(x.kind).slice(0, 16), ch: clampInt(x.ch, 0, 99, 0), lv: clampInt(x.lv, 1, 5, 1) });
+    });
+    if (sv.skins && sv.skins.own) out.skins = Object.keys(sv.skins.own).length;
+    if (sv.stars) for (const k in sv.stars) out.stars += clampInt(sv.stars[k], 0, 3, 0);
+    if (sv.daily) for (const k in sv.daily) out.daily[k] = clampInt(sv.daily[k], 0, 3600000, 0);
+    if (sv.ach && sv.ach.u) out.achN = Object.keys(sv.ach.u).length;
+    if (sv.tut) out.tut = { home: !!sv.tut.home, play: !!sv.tut.play };
+    return out;
+  }
+  /* 同名帳號有幾個 —— 名字是唯一的對應依據，重名時要讓開發者知道。 */
+  function sameNameCount(name) {
+    if (!name) return 0;
+    let n = 0;
+    for (const id in db.accounts) {
+      const a = db.accounts[id];
+      if (a && !a.mergedInto && a.name === name) n++;
+    }
+    return n;
+  }
+
+  /* ============================================================
      v5.59：玩家資訊卡（公開資料）
      ------------------------------------------------------------
      為什麼要有：排行榜、十項排名、私訊標題上的名字以前是「死文字」——
@@ -3293,15 +3380,27 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
           }), true;
         }
 
-        /* 客服查詢：UID / Email / 使用者名稱都可以 */
+        /* 客服查詢：UID / Email / 使用者名稱都可以
+           v5.89：再加兩種 —— 手機端「遊戲內點玩家 → 後台」用的是社交編號，
+           這裡直接接受 pid=p_xxxxxxxxxx，內部再換成名字去對帳號。 */
         if (p === '/api/admin/player' && req.method === 'GET') {
-          const q = String(url.searchParams.get('id') || url.searchParams.get('q') || '').trim();
+          const rawPid = String(url.searchParams.get('pid') || '').trim();
+          const spid = /^p_[0-9a-f]{10}$/.test(rawPid) ? rawPid : '';
+          const sp = spid ? socDev(spid) : null;
+          const q = String(url.searchParams.get('id') || url.searchParams.get('q') || '').trim()
+            || (sp && sp.found ? String(sp.name || '') : '');
           let acc = q ? findById(q) : null;
           if (!acc && q) {
             const idc = validIdent(q);
             if (idc.ok) acc = findByKey(idc.key);
             if (!acc) acc = findByEmail(q);
           }
+          /* v5.89：名字對帳號（pcCard 也是同一條規則：同名取最近活躍的那一個） */
+          if (!acc && q && q.length >= 2) {
+            acc = pcAcc(q);
+            /* 玩家也可能改名過 —— 社交紀錄的名字優先，其次退回 q 本身 */
+          }
+          if (!acc && sp && sp.found && sp.name) acc = pcAcc(sp.name);
           /* v5.11：上面三步都找不到時，再掃一遍 a.id。
              舊資料可能「物件鍵 ≠ a.id」（帳號合併搬移過），後台名單是拿 a.id 當 data-id，
              只查物件鍵就會 404 —— 這正是「後台點人沒顯示資訊」的來源。 */
@@ -3311,7 +3410,17 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
               if (a && !a.mergedInto && String(a.id || '') === q) { acc = a; break; }
             }
           }
-          if (!acc) return fail(res, 404, 'NOT_FOUND', { q: q, total: Object.keys(db.accounts).length }), true;
+          if (!acc) {
+            /* v5.89：只有社交身分、還沒上傳過存檔的人是常態（新玩家／純多人玩家）。
+               以前一律 404，後台就只能說「查不到」—— 但其實社交資料是有的。 */
+            if (sp && sp.found) {
+              return send(res, 200, {
+                ok: true, account: null, soc: sp, save: null,
+                sameName: sameNameCount(sp.name), q: q, pid: spid
+              }), true;
+            }
+            return fail(res, 404, 'NOT_FOUND', { q: q, total: Object.keys(db.accounts).length }), true;
+          }
           const row = adminRow(acc);
           row.alloc = acc.rpg ? Object.assign({}, acc.rpg.alloc) : null;
           row.cleared = acc.rpg ? (acc.rpg.cleared | 0) : 0;
@@ -3329,7 +3438,12 @@ const AV_MAX = 200, AV_KEEP = 45 * 86400000, AV_TOTAL = 1300000, AV_ONE = 24000;
               mode: EVENT_LABEL[e.type] || e.type || ''
             });
           });
-          return send(res, 200, { ok: true, account: row }), true;
+          /* v5.89：後台詳細頁需要的三塊 —— 社交身分、存檔摘要、同名歧義。 */
+          const socHit = sp && sp.found ? sp : (acc.name ? socDevByName(acc.name) : null);
+          return send(res, 200, {
+            ok: true, account: row, soc: socHit, save: saveDigest(acc),
+            sameName: sameNameCount(acc.name), q: q, pid: spid
+          }), true;
         }
 
         /* 停權 / 解除停權（IP 或 UID 對應的帳號） */

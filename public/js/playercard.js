@@ -37,7 +37,7 @@
   var HOT = SEL.join(',');
 
   /* 這些地方不攔：自己有自己的事要做，或根本不是在講玩家 */
-  var SKIP = '.onrow,#onBody .onrow,#specBar,#bhModal,#pcModal,input,textarea,select,button';
+  var SKIP = '.onrow,#onBody .onrow,#specBar,#bhModal,#pcModal,#dvcModal,input,textarea,select,button';
 
   var CACHE = {};                   // key → { t: 時間, d: 資料 }
   var TTL = 60000;                  // 一分鐘內重複點同一個人不再打伺服器
@@ -192,6 +192,9 @@
       + '#pcModal .pcact button.ghost{background:rgba(255,255,255,.86);color:#8a6a45;border:1.5px solid #e8cfa4;'
       + 'box-shadow:none}'
       + '#pcModal .pcact button:active{transform:translateY(1px)}'
+      /* v5.89：開發者限定按鈕 —— 深色，刻意跟暖色遊戲 UI 區隔 */
+      + '#pcModal .pcact button.dev{flex:0 0 auto;min-width:0;padding:10px 11px;background:#2b3a55;'
+      + 'color:#e8eefb;box-shadow:inset 0 -3px 0 rgba(0,0,0,.22)}'
       + '#pcModal .pcnote{margin-top:9px;font-size:11.5px;line-height:1.4;color:#a07a4c;text-align:center}'
       + '#pcModal .pcload{opacity:.72}'
       /* 滑過去的提示：只加 cursor 與虛線，不動版面 */
@@ -225,6 +228,7 @@
       if (!t || !t.closest) return;
       if (t.closest('#pcX')) { sfx('click'); close(); }
       else if (t.closest('#pcMore')) { more(); }
+      else if (t.closest('#pcDev')) { devOpen(); }
       else if (t.closest('#pcCopy')) { copyName(); }
     });
     document.addEventListener('keydown', function (e) {
@@ -345,7 +349,19 @@
 
     if (act) {
       var canMore = !!(d.pid && api('Social') && typeof api('Social').showPlayer === 'function');
-      act.innerHTML = (canMore
+      /* v5.89：開發者才看得到的「後台」入口。
+         一般玩家的 DOM 裡完全不會出現這顆按鈕 —— 不是靠 CSS 藏，
+         而是 isDev() 為假時字串根本沒被組出來。後端 /api/admin/player
+         另外會驗 session + isDev，前端這道只是體貼。 */
+      var devBtn = '';
+      try {
+        var DC = window.__BHDevCard;
+        if (DC && typeof DC.isDev === 'function' && DC.isDev() && (d.pid || n)) {
+          devBtn = '<button id="pcDev" class="dev" type="button" tabindex="-1">' +
+            esc(T('pc.dev', null, '🛠 後台資料')) + '</button>';
+        }
+      } catch (e0) { devBtn = ''; }
+      act.innerHTML = devBtn + (canMore
         ? '<button id="pcMore" type="button" tabindex="-1">' + esc(T('pc.more', null, '看完整資料')) + '</button>' : '') +
         '<button id="pcCopy" class="ghost" type="button" tabindex="-1">' +
         esc(T('pc.copy', null, '複製名字')) + '</button>';
@@ -419,6 +435,19 @@
     var ok = false;
     try { ok = S.showPlayer(cur.d); } catch (e) { ok = false; }
     if (!ok) { toast(T('pc.noMore', null, '這位玩家目前不在線上名單裡'), 2.4); return; }
+    close();
+  }
+
+  /* v5.89：玩家名片 → 開發者後台資料卡。
+     帶 pid（精準）與名字（後端在 pid 對不上帳號時的退路）。
+     成功就關掉名片 —— 兩層彈窗疊在一起會讓人不知道關哪一個。 */
+  function devOpen() {
+    if (!cur) return;
+    var DC = window.__BHDevCard;
+    if (!DC || typeof DC.open !== 'function') { toast('devcard 模組沒有載入', 2.4); return; }
+    var ok = false;
+    try { ok = DC.open({ pid: cur.pid, name: cur.n }); } catch (e) { ok = false; }
+    if (!ok) { toast('只有開發者可以使用後台資料', 2.4); return; }
     close();
   }
 
