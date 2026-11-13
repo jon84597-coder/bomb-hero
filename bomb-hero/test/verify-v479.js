@@ -30,7 +30,7 @@ ok(uniq.length === 227, '227 個不同的貼圖檔名');
 head('2. 貼圖檔案');
 const SPR = path.join(ROOT, 'spr');
 const files = fs.readdirSync(SPR).filter(function (f) { return /\.webp$/.test(f); });
-ok(files.length === 237, 'spr/ 內有 ' + files.length + ' 個 .webp（v5.94：小熊四套動畫 +4）');
+ok(files.length === 238, 'spr/ 內有 ' + files.length + ' 個 .webp（v5.95：小熊 hurt +1）');
 const missing = uniq.filter(function (u) { return !fs.existsSync(path.join(ROOT, u)); });
 ok(missing.length === 0, '每個引用都找得到檔案' + (missing.length ? '（缺 ' + missing.slice(0, 3) + '）' : ''));
 let badMagic = 0, total = 0;
@@ -44,8 +44,9 @@ ok(badMagic === 0, '全部是合法 WEBP（壞檔 ' + badMagic + '）');
 //   （spr/hero-anim-rabbit-{walk,idle,hold,throw,hurt,victory}.webp，合計約 540KB）。
 //   這批圖是「取代原本的零件拼裝」，不是額外堆積，所以預算線由 2.70MB 調到 3.40MB。
 // v5.94：小熊四套＋其 1080 寬格子約 +456KB → 預算線 3.40MB 調到 3.65MB。
+// v5.95：小熊 hurt +102KB → 3.65MB 調到 3.85MB。
 //   同樣是「取代零件拼裝」，不是多餘素材；以後每隻角色大約 +450KB。
-ok(total > 1200000 && total < 3650000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 3.65 MB：v5.94 小熊四套動畫）');
+ok(total > 1200000 && total < 3850000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 3.85 MB：v5.95 小熊五套動畫）');
 
 // ---------- 3. 位元組與原始 base64 完全一致 ----------
 head('3. 抽出過程零損失');
@@ -65,7 +66,7 @@ ok(mismatch === 0, '全部位元組／雜湊與抽取當下一致（不一致 ' 
 // ---------- 4. 清單與檔案一致 ----------
 head('4. 預熱清單');
 const list = JSON.parse(fs.readFileSync(path.join(SPR, '_list.json'), 'utf8'));
-ok(Array.isArray(list) && list.length === 238, '_list.json 有 238 筆（v5.94 多了小熊四套動畫幀＋meta）');
+ok(Array.isArray(list) && list.length === 239, '_list.json 有 239 筆（v5.95 多了小熊 hurt）');
 const notInList = files.filter(function (f) { return list.indexOf(f) < 0; });
 ok(notInList.length === 0, '每個檔案都在清單裡' + (notInList.length ? '（漏 ' + notInList.slice(0, 3) + '）' : ''));
 const missingFile = list.filter(function (f) { return !fs.existsSync(path.join(SPR, f)); });

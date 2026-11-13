@@ -1,5 +1,5 @@
 // test/verify-v594.js —— v5.94 第二支主角色「小熊」（影片生成精靈動作）
-//   ① 四套圖都在、尺寸／格數正確（小熊沒有 throw／hurt）
+//   ① 五套圖都在、尺寸／格數正確（v5.95 補上 hurt；throw 仍從缺）
 //   ② HeroAnim 是多角色表：每隻自己的 cellW／ax（小熊比兔子胖，畫布 1080）
 //   ③ 沒做的動作要退回待機，不能回 null 掉回零件骨架
 //   ④ HOLD_BOMB.bear 逐格高度／水平偏移與 ball-bear-hold.json 一致
@@ -19,8 +19,8 @@ function ok(c, m) { if (c) { pass++; } else { fail++; console.log('  ✗ FAIL: '
 function sec(t) { console.log('\n' + t); }
 
 // ---------- ① 圖集 ----------
-sec('① 小熊四套圖集');
-const ACTS = ['walk', 'idle', 'hold', 'victory'];
+sec('① 小熊五套圖集');
+const ACTS = ['walk', 'idle', 'hold', 'victory', 'hurt'];
 ACTS.forEach(function (a) {
   const f = path.join(SPR, 'hero-anim-bear-' + a + '.webp');
   ok(fs.existsSync(f), '有 hero-anim-bear-' + a + '.webp');
@@ -30,8 +30,8 @@ ok(meta.charHpx === 200, 'charHpx = 200（與兔子同一個量綱）');
 ok(meta.cellW === 202 && meta.cellH === 234, '格子 202x234（兔子 142x234，寬是因為熊胖）');
 ok(Math.abs(meta.ax - 101.03) < 0.05 && Math.abs(meta.ay - 226.38) < 0.05,
   '錨點 (101.03, 226.38)：ax 剛好是格子中線，ay 與兔子相同');
-ok(Object.keys(meta.actions).length === 4, '只有四套（throw／hurt 從缺）');
-ok(!meta.actions.throw && !meta.actions.hurt, '沒有硬塞 throw／hurt 的空殼');
+ok(Object.keys(meta.actions).length === 5, '五套（v5.95 補 hurt；throw 仍從缺）');
+ok(!meta.actions.throw && !!meta.actions.hurt, 'hurt 真的補上了、throw 沒有硬塞空殼');
 
 // 每一張都要真的是 12 格
 ACTS.forEach(function (a) {
@@ -116,7 +116,7 @@ ACTS.forEach(function (a) {
   ok(list.indexOf('hero-anim-bear-' + a + '.webp') >= 0, '_list.json 有小熊 ' + a);
 });
 ok(list.indexOf('hero-anim-bear.json') >= 0, '_list.json 有小熊 meta');
-ok(!list.some(function (f) { return /hero-anim-bear-(throw|hurt)/.test(f); }), '_list.json 沒有小熊的 throw／hurt 空殼');
+ok(!list.some(function (f) { return /hero-anim-bear-throw/.test(f); }) && list.indexOf('hero-anim-bear-hurt.webp') >= 0, '_list.json 有小熊 hurt、沒有 throw 空殼');
 
 console.log('\n' + (fail ? '❌' : '✅') + ' v5.94：' + pass + ' 通過 / ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);

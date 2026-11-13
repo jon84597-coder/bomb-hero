@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.94';
+const VERSION = '5.95';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -30388,7 +30388,7 @@ const HeroAnim = (function () {
   //   ax 是「錨點在格子裡的位置」，畫圖時 -ax*k 就是讓腳底中心落在 (x, footY)。
   const SHEET = {
     rabbit: { pre: 'rabbit', cellW: 142, ax: 71.09, acts: ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'] },
-    bear:   { pre: 'bear',   cellW: 202, ax: 101.03, acts: ['walk', 'idle', 'hold', 'victory'] }
+    bear:   { pre: 'bear',   cellW: 202, ax: 101.03, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] }
   };
   const ACTS = ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'];
   const FPS  = { walk: 15, idle: 7, hold: 9, throw: 20, hurt: 11, victory: 11 };
