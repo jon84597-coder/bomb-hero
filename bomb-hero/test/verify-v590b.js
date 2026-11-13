@@ -66,7 +66,9 @@ if (H && H.pick) {
   ok(H.pick({ moving: true }) === 'walk', '走動 → walk');
   ok(H.pick({ moving: false }) === 'idle', '站著 → idle');
   ok(H.pick({ carry: true, moving: false }) === 'hold', '拿炸彈站著 → hold（雙手舉到頭頂）');
-  ok(H.pick({ carry: true, moving: true }) === 'walk', '拿炸彈走動 → walk（不會滑步）');
+  // v5.91 起：拿炸彈一律舉在頭上（含走動）。walk 的手垂在身側，炸彈卻固定在頭頂高度
+  // → 看起來像「炸彈脫手浮在頭上」，所以走動也走 hold。
+  ok(H.pick({ carry: true, moving: true }) === 'hold', '拿炸彈走動 → hold（炸彈不離手）');
   ok(H.pick({ expr: 'cry' }) === 'hurt', '被炸到 → hurt');
   ok(H.pick({ expr: 'laugh' }) === 'victory', '歡呼 → victory');
   ok(H.pick({ expr: 'cry', carry: true }) === 'hurt', '受傷優先於舉彈');

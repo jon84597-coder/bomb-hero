@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.90';
+const VERSION = '5.91';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -7242,6 +7242,10 @@ const CharPreview = (function () {
     const cx = W / 2 + Math.sin(phase) * W * .062;
     const facing = Math.cos(phase) >= 0 ? 'right' : 'left';
     const walk = now * 4.6;
+    // v5.91：精靈動作（兔兔）的走路是「15fps × 12 格」逐格播，而零件骨架吃的是 walk 相位（4.6 rad/s）。
+    // 同一個 walk 丟給精靈 → 只跑到 4.6fps、一輪 2.6 秒，選角一看就比其他角色慢 1.9 倍。
+    // 這裡補一個倍率把兩邊的節奏對齊（1.37 秒一輪），零件畫法會忽略這個參數。
+    const animSpd = 1.9;
     // 選到時：小小蹲一下再站起來（不是大跳）
     const hp = hops[o.ch] || 0;
     const jump = hp > 0 ? Math.sin((1 - hp) * Math.PI) * H * .075 : 0;
@@ -7253,7 +7257,7 @@ const CharPreview = (function () {
     g.fillStyle = 'rgba(0,0,0,' + Math.max(.08, .30 - jump / H * .8).toFixed(3) + ')';
     g.beginPath(); g.ellipse(cx, footY + H * .015, Math.max(6, R * .92 - jump * .3), Math.max(3, R * .22 - jump * .08), 0, 0, 6.283); g.fill();
     if (hasImg) {
-      drawSpriteChar(g, c, cx, footY - R * .82, R, { walk: walk, moving: true, facing: facing, amp: 1.15, idle: now });
+      drawSpriteChar(g, c, cx, footY - R * .82, R, { walk: walk, moving: true, facing: facing, amp: 1.15, idle: now, animSpd: animSpd });
     } else {
       drawCharBody(g, c, cx, H * .70 + H * .0, R, {
         walk: walk, moving: true, facing: facing, bob: Math.abs(Math.sin(walk)) * W * .018,
@@ -26813,7 +26817,8 @@ function drawBomb(b, T) {
   const scale = b.flying ? 1 + Math.sin(Math.min(1, b.flying.t / b.flying.dur) * Math.PI) * .12 : 1;
   const lift = (b.onWall && !b.flying) ? T * .22 : 0;
   // 影子（飛在空中時變小變淡）
-  softShadow(x, y + r * .9 - lift, r * (b.flying ? .62 : .88), r * (b.flying ? .2 : .3), b.flying ? .2 : .32);
+  // v5.91：拿在手上的彈不投影 —— 它已經貼在手掌上，影子只會蓋在角色臉上
+  if (!b.held) softShadow(x, y + r * .9 - lift, r * (b.flying ? .62 : .88), r * (b.flying ? .2 : .3), b.flying ? .2 : .32);
   // 準備爆炸 → 本體晃動（越接近引爆晃得越凶）
   const armed = !b.remoteArmed && !b.mine;
   const danger = armed ? clamp(1 - b.timer / 1.0, 0, 1) : 0;
@@ -30278,14 +30283,22 @@ const HeroAnim = (function () {
     if (a.act && ACTS.indexOf(a.act) >= 0) return a.act;
     if (a.expr === 'cry') return 'hurt';
     if (a.expr === 'laugh') return 'victory';
-    if (a.carry) return a.moving ? 'walk' : 'hold';
+    // v5.91：拿炸彈時「一律」用舉彈姿勢，走動也一樣。
+    // 舊版走動會切回 walk，而 walk 的手是垂在身體兩側的 —— 炸彈卻固定畫在頭頂那條高度，
+    // 看起來就是「炸彈脫手浮在頭上」。寧可舉著走（hold 的膝蓋起伏仍在動），也不要炸彈離開手。
+    if (a.carry) return 'hold';
     if (a.moving) return 'walk';
     return 'idle';
   }
   function frameOf(act, a) {
     const n = META.frames;
+    // v5.91：a.animSpd 是「播放倍率」，只有選角預覽會給。
+    // 預覽的 walk 相位是 4.6 rad/s（零件骨架的節奏，一輪 1.37 秒），
+    // 精靈的走路卻是 15fps × 12 格（一輪 0.8 秒）—— 直接套會變成 4.6fps、慢 1.9 倍，
+    // 選角一看就比其他角色慢。倍率由呼叫端依畫法給，不在這裡寫死。
+    const spd = (a.animSpd > 0) ? a.animSpd : 1;
     const t = (act === 'walk') ? ((a.walk || 0) / 15) : (a.idle || 0);
-    const f = Math.floor(t * FPS[act]);
+    const f = Math.floor(t * FPS[act] * spd);
     if (LOOP[act]) return ((f % n) + n) % n;
     return Math.max(0, Math.min(n - 1, f));
   }
@@ -30305,7 +30318,8 @@ const HeroAnim = (function () {
     g.drawImage(im, f * META.cellW, 0, META.cellW, META.cellH,
                 -META.ax * k, -META.ay * k, META.cellW * k, META.cellH * k);
     g.restore();
-    return { topY: footY - H * .94, ex: side * H * .04, ey: 0, H: H,
+    return { topY: footY - H * .94, footY: footY - (a.jump || 0),
+             ex: side * H * .04, ey: 0, H: H,
              W: H * META.cellW / META.charHpx };
   }
   function readyCount() { return ACTS.filter(function (k) { return ready[k]; }).length; }
@@ -31305,6 +31319,26 @@ function drawDailyGhost(T) {
   }
 }
 
+/* v5.91：手舉炸彈的位置 —— 每隻角色各自校準（以後換誰的動作，就在這裡加一行）
+   ----------------------------------------------------------------------------
+   兔子的數字不是猜的，是從素材反推回去的：
+   舉彈影片裡模型自己畫了一顆球（已挖掉），圓心 (377.5, 94.7)、半徑 141.7（768px 影片座標），
+   換算到精靈座標是 cell(67.6, 36.3)、r 44.3（角色高 200px）→ 球心距腳底 0.95H。
+   遊戲的炸彈半徑是 0.32T = 0.263H，比素材那顆球大 19%，所以再往上抬 0.04H，
+   讓炸彈的「底緣」剛好落在手掌上 → up = 0.99H。這樣炸彈正好塞進挖掉的那個缺口，
+   連球殼留下的淡色殘影都會被蓋掉。
+   up   = 炸彈圓心距腳底的高度（角色總高 H = 1）
+   side = 水平偏移（+1 = 角色右側，面朝左時自動鏡射）
+   沒列到的角色 → 回傳 null，沿用舊公式 topY - 1.7R，行為完全不變。 */
+const HOLD_BOMB = {
+  rabbit: { up: 0.99, side: 0.00 },
+};
+function holdBombPos(animal, bd) {
+  const cfg = HOLD_BOMB[animal];
+  if (!cfg || !bd || bd.footY == null || !bd.H) return null;
+  return { dx: (cfg.side || 0) * bd.H, y: bd.footY - cfg.up * bd.H };
+}
+
 function drawPlayer(p, T) {
   if (p.dino) drawDino(p, T);
   // 騎乘時坐到坐騎背上的鞍座
@@ -31387,7 +31421,15 @@ function drawPlayer(p, T) {
   // 手上炸彈
   if (p.carry) {
     const b = p.carry;
-    b.px = p.x; b.py = bd.topY - R * 1.7;
+    // v5.91：有校準過的角色 → 炸彈擺在「雙手托舉的缺口」裡；其餘沿用舊公式
+    const hb = holdBombPos(c.animal, bd);
+    if (hb) {
+      const fx2 = DIRS[p.facing] || DIRS.down;
+      b.px = x + hb.dx * (fx2.x < 0 ? -1 : 1);
+      b.py = hb.y;
+    } else {
+      b.px = p.x; b.py = bd.topY - R * 1.7;
+    }
     drawBomb(b, T);
   }
   // 名牌
