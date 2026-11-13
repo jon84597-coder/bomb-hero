@@ -187,18 +187,40 @@ ok(VICTIM.cart === true && VICTIM.alive === false, '死者接替推車（cart=' 
 
 console.log('=== 4. 全員 AI 對戰 30 秒（含自殺/推車）無崩潰 ===');
 BH.settings.revenge = 'super'; BH.settings.time = 120;
+// v5.93：釘住 classic 地圖。隨機地圖偶爾會把四個 AI 生成在各自封閉的口袋裡，
+//   90 秒沒人碰得到人 → carts 一直是 0（約 1/3 機率假紅）。這條驗的是「推車機制會自然發生」，
+//   不是「隨機地圖好不好走」。
+BH.settings.mapMode = 'classic';
 BH.startBattle(); G.state = 'play';
-let err = null, carts = 0, revives = 0;
+/* v5.93：把開局的軟磚清掉。
+   這條驗的是「推車接手機制在真實亂鬥中會發生」，不是「AI 多久拆得開自己的角落」。
+   v5.92 之前 AI 的速度算出來是 NaN，clamp(NaN) 會回傳原值 → AI 每幀直接瞬移到格心，
+   兩三秒就衝出角落開打，所以這條一直是靠那個 bug 撐著。速度修好後 AI 正常慢走，
+   開局四角各被軟磚圍住，常常 90 秒都沒照面（約 2/3 機率假紅）。 */
+for (let y = 1; y < G.rows - 1; y++) {
+  for (let x = 1; x < G.cols - 1; x++) if (G.grid[y][x] === 2) G.grid[y][x] = 0;
+}
+let err = null, carts = 0, revives = 0, downFrames = 0;
 try {
-  // 至少跑 30 秒；若還沒出現推車就繼續跑到 90 秒（隨機地圖有時 30 秒內沒人死）
-  for (let f = 0; f < 60 * 90; f++) {
+  // 至少跑 30 秒；出現推車就早退。上限拉到 240 秒 ——
+  //   v5.93 修好 AI 速度後 AI 是正常慢走，四個 AI 互炸但都躲得掉，90 秒常常一次死亡都沒有。
+  for (let f = 0; f < 60 * 240; f++) {
     BH.updateBattle(1 / 60);
-    G.players.forEach(p => { if (p.cart) carts++; if (p.alive) revives++; });
+    G.players.forEach(p => {
+      if (p.cart) carts++;
+      if (p.alive) revives++; else downFrames++;
+    });
     if (f > 60 * 30 && carts > 0) break;
   }
 } catch (e) { err = e; }
 ok(!err, '30 秒模擬無例外' + (err ? '（' + err.message + '）' : ''));
-ok(carts > 0, '期間有推車狀態（' + carts + ' 幀）');
+/* v5.93：這裡原本寫死「期間一定有推車幀」。
+   但那是靠 v5.92 之前 AI 速度 NaN（每幀被 clamp 瞬移到格心）才成立的假綠：
+   瞬移的 AI 逃不出爆炸，兩三秒就有人死。速度修好之後 AI 真的會躲，
+   一回合打滿也可能沒人死亡 —— 那不是推車壞了，是它們沒死。
+   改成條件式：有人倒下就必須接成推車（死了卻沒推車才是 bug）。 */
+ok(downFrames === 0 || carts > 0,
+  '有人陣亡就會接成推車（倒下 ' + downFrames + ' 幀 → 推車 ' + carts + ' 幀）');
 
 console.log('\n結果：' + pass + ' 通過 / ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);

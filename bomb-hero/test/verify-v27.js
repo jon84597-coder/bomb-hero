@@ -69,15 +69,17 @@ ok(/rad \* \.14/.test(html), '搖桿死區從 30% 縮到 14%（輕輕一撥就�
 ok(/const TH = \.50;/.test(html), '四方向判定放大到 ±30°（不容易被誤判成斜走）');
 ok(!/const TH = \.382;/.test(html), '舊的 22.5° 門檻已換掉');
 
-// tryMove：轉向時對齊加速
-ok(/p\.y \+= clamp\(cyT - p\.y, -sp \* 1\.9, sp \* 1\.9\);/.test(html), '往左右走時立即對齊列中心（1.9 倍修正）');
-ok(/p\.x \+= clamp\(cxT - p\.x, -sp \* 1\.9, sp \* 1\.9\);/.test(html), '往上下走時立即對齊行中心（1.9 倍修正）');
-ok(!/Math\.abs\(offY\) > \.4/.test(html) && !/Math\.abs\(offX\) > \.4/.test(html),
-  '舊的「0.4px 才滑」門檻已移除（那正是轉到一半卡住的原因）');
-ok(/Math\.abs\(offY\) > T \* \.10/.test(html) && /Math\.abs\(offX\) > T \* \.10/.test(html),
-  '改為「偏離格中心 10% 以上就自動補位」');
+// tryMove：v5.93 起改成「自由走位」，不再把玩家吸回格中心
+ok(/function tryMove\(p, dx, dy, dt, spd, noAlign\) \{ freeMove\(p, dx, dy, dt, spd\); \}/.test(html),
+  'tryMove 走自由位移（每步不再對齊格中心）');
+ok(/const MOVE_HALF = \.30;/.test(html), '角色當 0.60×0.60 格的方盒做碰撞（MOVE_HALF = 0.30）');
+ok(!/if \(!noAlign\) p\.y \+= clamp\(cyT - p\.y/.test(html.replace(/tryMoveSnap[\s\S]*?^}/m, '')),
+  '自由走位路徑裡沒有「轉向立刻拉回列中心」的 1.9 倍修正（磁鐵感的來源）');
+ok(/const bx = boxBlocked\(p, p\.x \+ vx \* sp, p\.y\);/.test(html) &&
+   /const by = boxBlocked\(p, p\.x, p\.y \+ vy \* sp\);/.test(html),
+  '分軸解算：X 被擋不影響 Y（貼著牆邊滑走）');
 
-// 實測：横向走一半時要往上轉，且只有「下一格」上面開口 → 應該自動滑過去再轉上去
+// 實測：純往上撞牆 → 就停在牆前（v5.93：不再自動補位滑到缺口）
 (function () {
   const p = freshSolo(1);
   openField();
@@ -85,15 +87,36 @@ ok(/Math\.abs\(offY\) > T \* \.10/.test(html) && /Math\.abs\(offX\) > T \* \.10/
   // 佈置：一排軟磚的迷宮，只有第 4 列上方通的到上面
   for (let x = 1; x < G.cols - 1; x++) G.grid[3][x] = 1;   // 第 3 列全是硬牆
   G.grid[3][4] = 0;                                        // 只有 x=4 有缺口
-  G.players[0].x = 3 * T + T * .5;
-  G.players[0].y = 4 * T + T * .5;
   G.players[0].invuln = 999;
-  // 關鍵：人正好走在「兩格之間」（3.9 格），這正是手機上最容易轉不過去的時候
+  // 關鍵：人正好走在「兩格之間」（3.9 格）
   p.x = 3 * T + T * .9;
+  p.y = 4 * T + T * .5;
+  const x0 = p.x, y0 = p.y;
   for (let i = 0; i < 200; i++) P.tryMove(p, 0, -1, 1 / 60);   // 一直往上
   const c = cellOf(p);
-  ok(c.y <= 3, '卡在兩牆中間也能自動補位往上走（最終到第 ' + c.y + ' 列，起點第 4 列）');
-  ok(Math.abs(p.x - (4 * T + T / 2)) < T * .35, '而且是從唯一的缺口（x=4）上去的（x=' + (p.x / T).toFixed(2) + '）');
+  ok(Math.abs(p.x - x0) < .001, '純往上撞牆就停住，不會被程式自動搬到缺口（x ' + (x0 / T).toFixed(2) + ' → ' + (p.x / T).toFixed(2) + '）');
+  ok(c.y >= 3 && p.y < y0, '往上頂到牆面為止（y ' + y0.toFixed(1) + ' → ' + p.y.toFixed(1) + '）');
+})();
+
+// 實測：斜推右上 → 貼著牆邊滑到缺口，然後鑽上去（用戶要的「滑著牆壁邊緣走」）
+(function () {
+  const p = freshSolo(1);
+  openField();
+  const T = G.T;
+  for (let x = 1; x < G.cols - 1; x++) G.grid[3][x] = 1;
+  G.grid[3][4] = 0;
+  G.players[0].invuln = 999;
+  p.x = 3 * T + T * .9;
+  p.y = 4 * T + T * .5;
+  let thruX = null;
+  for (let i = 0; i < 260 && thruX === null; i++) {
+    P.tryMove(p, 1, -1, 1 / 60);
+    if (cellOf(p).y <= 2) thruX = p.x;
+  }
+  ok(thruX !== null, '斜推右上：沿著牆邊滑到缺口後鑽上去（' +
+    (thruX === null ? '沒過去' : 'x=' + (thruX / T).toFixed(2)) + '）');
+  ok(thruX !== null && Math.abs(thruX - (4 * T + T / 2)) < T * .75,
+    '確實是從唯一的缺口（x=4）過的（' + (thruX === null ? '-' : (thruX / T).toFixed(2)) + '）');
 })();
 
 // 實測：完全對齊時撞牆就是撞牆（不會無緣無故飄走）

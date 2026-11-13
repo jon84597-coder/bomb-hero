@@ -258,7 +258,7 @@ pS.speedLv = 3;
 ok(P.playerSpeed(pS) > P.playerSpeed(Object.assign({}, pS, { speedLv: 0 })), '滑冰鞋仍然會加速');
 
 // ================================================================
-console.log('=== 7. 撞牆不卡：往牆走會自動滑到可通行的那一列 ===');
+console.log('=== 7. 撞牆不卡：貼著牆面停住，斜推則沿牆滑走 ===');
 freshBattle();
 clearAll();
 const G7 = P.Game, T7 = G7.T;
@@ -269,9 +269,15 @@ G7.grid[4][5] = 1;
 pw.x = 4 * T7 + T7 / 2; pw.y = 4 * T7 + T7 / 2 - 10;   // 站在格子偏上
 const y0 = pw.y;
 for (let i = 0; i < 20; i++) P.tryMove(pw, 1, 0, 1 / 60);
-ok(pw.y < y0 - 1, '撞牆後會往上滑（y ' + y0.toFixed(1) + ' → ' + pw.y.toFixed(1) + '）');
+// v5.93：純水平推撞牆就是撞牆 —— 不再被程式自動補位到相鄰列
+ok(Math.abs(pw.y - y0) < .001, '純往右撞牆時不會被自動搬到別列（y ' + y0.toFixed(1) + ' → ' + pw.y.toFixed(1) + '）');
+ok(pw.x <= 5 * T7 - T7 * .30 + .5, '停在牆面前（x=' + pw.x.toFixed(1) + ' / 牆面 ' + (5 * T7).toFixed(0) + '）');
 ok(!(Math.floor(pw.x / T7) === 5 && Math.floor(pw.y / T7) === 4), '沒有卡進牆格（格 ' +
   Math.floor(pw.x / T7) + ',' + Math.floor(pw.y / T7) + '）');
+// 改成斜推右上 → 右邊照樣被擋，但往上會沿著牆邊滑走
+const ySlide = pw.y;
+for (let i = 0; i < 20; i++) P.tryMove(pw, 1, -1, 1 / 60);
+ok(pw.y < ySlide - 1, '斜推右上時沿著牆邊往上滑（y ' + ySlide.toFixed(1) + ' → ' + pw.y.toFixed(1) + '）');
 // 滑到上一列後就能繼續往右走
 for (let i = 0; i < 40; i++) P.tryMove(pw, 1, 0, 1 / 60);
 ok(pw.x > 5 * T7, '滑開後能繼續往右通過（x=' + pw.x.toFixed(1) + '）');

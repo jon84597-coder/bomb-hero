@@ -51,7 +51,7 @@ head('1. 源碼檢查');
     '決定素材時不再把 Game.sdActive 直接當落石');
   ok(/function recalcSpdK\(\)/.test(src) && /recalcSpdK\(\);/.test(src),
     '有 recalcSpdK() 而且建圖時會呼叫');
-  ok(/const base = \(146 \+ p\.speedLv \* 20\) \* \(p\.rpgSpd \|\| 1\) \* \(Game\.spdK \|\| 1\);/.test(src),
+  ok(/const base = \(146 \+ \(p\.speedLv \| 0\) \* 20\) \* \(p\.rpgSpd \|\| 1\) \* \(Game\.spdK \|\| 1\);/.test(src),
     '玩家速度乘上 Game.spdK');
   ok(/speed: \(sp\.spd \+ stage \*[\s\S]{0,80}\* \(Game\.spdK \|\| 1\)/.test(src), '小怪速度乘上 Game.spdK');
   ok(/FLY_SPEED_CAP \* M \* \(Game\.spdK \|\| 1\)/.test(src), '飛行怪上限也乘上 Game.spdK');

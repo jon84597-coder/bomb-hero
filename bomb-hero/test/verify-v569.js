@@ -182,7 +182,11 @@ function aiRun(useBR) {
   }
   P.BR_AI.on = !!useBR;
   const OPP = { left: 'right', right: 'left', up: 'down', down: 'up' };
-  const last = new Array(5).fill(null);
+  /* v5.93：v5.92 之前 AI 的速度算出來是 NaN，每幀都被 clamp 吸到格心，
+     所以「反向」幾乎一定發生在同一格內。速度修好之後 AI 真的會跨格，
+     被落石／縮圈逼著改方向是正常行為，一次反向不算抽筋。
+     這裡改成抓真正的抽筋樣式：**同一格內 A → B → A**（走一步又馬上走回來）。 */
+  const hist = [[], [], [], [], []];
   let flips = 0, moved = 0;
   for (let i = 0; i < 60 * 12; i++) {
     for (let k = 0; k < 5; k++) {
@@ -190,8 +194,14 @@ function aiRun(useBR) {
       if (!p.alive) continue;
       const ox = p.x, oy = p.y;
       try { P.controlAI(p, 1 / 60); } catch (e) { continue; }
-      if (p.aiDir && last[k] && OPP[last[k]] === p.aiDir) flips++;
-      if (p.aiDir) last[k] = p.aiDir;
+      if (p.aiDir) {
+        const h = hist[k];
+        h.push({ d: p.aiDir, c: p.lastC ? p.lastC.x + ',' + p.lastC.y : '' });
+        if (h.length > 3) h.shift();
+        if (h.length === 3 && h[0].c === h[2].c && h[0].d === h[2].d && h[1].d === OPP[h[0].d]) {
+          flips++; h.length = 0;
+        }
+      }
       moved += Math.abs(p.x - ox) + Math.abs(p.y - oy);
     }
   }

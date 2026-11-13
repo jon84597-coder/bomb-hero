@@ -45,13 +45,15 @@ function corridor() {
   for (let y = 1; y < G.rows - 1; y++) { G.grid[y][0] = 1; G.grid[y][G.cols - 1] = 1; }
   return G.players[0];
 }
-// (a) 主力是 y（往上推）→ 應該往上轉
+// (a) 上方是牆、往右通 → 沿著牆邊往右滑走，而且不會被程式自動搬進缺口
+//     v5.93：拿掉格子吸附後，這一軸被擋就是停住，不再自動補位
 (function () {
   const p = corridor(); const T = G.T;
   p.x = 5 * T + T / 2; p.y = 3 * T + T / 2;
-  const y0 = p.y;
+  const x0 = p.x, y0 = p.y;
   for (let i = 0; i < 20; i++) P.tryMoveDiag(p, 1, -1, 1 / 60, undefined, 'y');
-  ok(p.y < y0 - T * .5, '斜推右上、主力往上 → 真的往上轉（y ' + y0.toFixed(0) + ' → ' + p.y.toFixed(0) + '）');
+  ok(p.x > x0 + T * .5, '上方被牆擋住時，貼著牆邊往右滑走（x ' + x0.toFixed(0) + ' → ' + p.x.toFixed(0) + '）');
+  ok(p.y <= y0 + .01 && p.y > y0 - T * .5, '往上頂到牆面就停住（不被自動搬進缺口，y ' + y0.toFixed(0) + ' → ' + p.y.toFixed(0) + '）');
 })();
 // (b) 主力是 x → 繼續往右
 (function () {
@@ -88,15 +90,16 @@ function corridor() {
   for (let i = 0; i < 40; i++) P.tryMoveDiag(p, 1, -1, 1 / 60, undefined, 'x');
   const xMid = p.x;
   ok(xMid > 3 * T, '帶斜度的右推可以正常往右走（x=' + xMid.toFixed(0) + '）');
-  // 到開口後改成往右上、主力往上 → 應該轉上去
+  // 到缺口正下方改成純往上推（v5.93：斜推會被牆面帶著滑走，直推才進得去）
   p.x = 5 * T + T / 2; p.y = 3 * T + T / 2;
-  for (let i = 0; i < 40; i++) P.tryMoveDiag(p, 1, -1, 1 / 60, undefined, 'y');
-  ok(p.y < 2.6 * T, '到開口後主力往上 → 轉得進去（y=' + p.y.toFixed(0) + '）');
+  for (let i = 0; i < 40; i++) P.tryMoveDiag(p, 0, -1, 1 / 60, undefined, 'y');
+  ok(p.y < 2.6 * T, '在缺口正下方往上推 → 鑽進缺口（y=' + p.y.toFixed(0) + '）');
 })();
 // (f) 觸控主力軸判定：手指往上偏多 → pref = 'y'
 ok(/Math\.abs\(ts\.ax\) >= Math\.abs\(ts\.ay\) \? 'x' : 'y'/.test(html),
   'controlHuman 用手指推得比較多的那一軸當主力（不是固定先走水平）');
-ok(/function tryMoveDiag\(p, mx, my, dt, spd, pref\)/.test(html), 'tryMoveDiag 收得到主力軸參數 pref');
+//   v5.93：自由走位不再用 pref 把另一軸拉正，但簽名與呼叫端保持相容（不必改一輪呼叫點）
+ok(/function tryMoveDiag\(p, mx, my, dt, spd, pref\)/.test(html), 'tryMoveDiag 的 pref 參數保留（呼叫端相容）');
 
 // ================================================================
 console.log('\n=== 2. 討伐 BOSS 進去後有退回鍵 ===');

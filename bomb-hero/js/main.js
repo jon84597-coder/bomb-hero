@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.92';
+const VERSION = '5.93';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -5401,7 +5401,10 @@ function playerSpeed(p) {
   // v4.67：速度是 px/s —— 隨機大圖的格子比一般關卡小很多（手機 35px vs 54px），
   //   同一組數字在小格子裡等於每秒多走 1.5 倍的路。乘上 Game.spdK（格子比例）之後，
   //   「每秒走幾格」跟一般關卡一致，炸彈 2.5 秒的逃命距離也才對得上。
-  const base = (146 + p.speedLv * 20) * (p.rpgSpd || 1) * (Game.spdK || 1);   // v4.0：RPG 的速度點數加成
+  // v5.93：speedLv 用 |0 收斂 —— 少了這個，沒有 speedLv 的物件（AI／測試假玩家／
+  //   舊存檔補不回來的角色）會算出 NaN 速度。舊版撞牆分支的 clamp(NaN,NaN) 剛好回傳
+  //   原值，所以「還能動」看不出來；換成自由位移後 NaN 會直接寫進座標 → 角色整個消失。
+  const base = (146 + (p.speedLv | 0) * 20) * (p.rpgSpd || 1) * (Game.spdK || 1);   // v4.0：RPG 的速度點數加成
   const mountK = p.storm ? OSTRICH_SPD2 : (p.ostrich ? OSTRICH_SPD : 1);       // v4.87 鴕鳥 1.45 倍速／v4.89 風暴 1.62
   return (p.skull === 'slow' ? base * .45 : base) * mountK;
 }
@@ -5665,9 +5668,69 @@ function resetPlayerStats(p) {
   p.carry = null;
 }
 
-// ----- 移動（格子吸附 + 牆角自動滑行，撞牆不停頓） -----
+// ----- v5.93：自由走位（拿掉格子吸附） -----
+/*   玩家指定：「不要被格子磁鐵吸住，45 度任意走，貼牆要能沿著牆邊滑」。
+   舊版 tryMove 的目標永遠是「下一格的中心」，而且轉向時會用 1.9 倍速把另一軸拉正 ——
+   那就是磁鐵感的來源：每走一步都被吸回格線，斜走也會被拉直。
+
+   現在改成真正的連續位移：
+     · 角色當成一個 0.60×0.60 格的方盒（MOVE_HALF = 0.30），移動後檢查「盒角壓到哪些格」
+     · **分軸解算**：X 被擋只影響 X、Y 照走 → 貼著牆邊自然滑走，不會整個人停住
+     · 撞到時逐像素回退到「剛好貼住」的位置（不是硬拉回格中心），所以貼牆可以貼得很近
+     · 已經卡在牆裡（傳送門／重生點在磚上）→ 這一幀不限制移動，先讓它出來，不會鎖死
+   落點仍以「腳下那一格」為準（放炸彈、撿道具、踢彈都用 floor），差最多半格。 */
+const MOVE_HALF = .30;
+function boxBlocked(p, x, y) {
+  const T = Game.T, half = T * MOVE_HALF;
+  const x0 = Math.floor((x - half) / T), x1 = Math.floor((x + half - .001) / T);
+  const y0 = Math.floor((y - half) / T), y1 = Math.floor((y + half - .001) / T);
+  for (let cy = y0; cy <= y1; cy++) {
+    for (let cx = x0; cx <= x1; cx++) if (solidOrBomb(cx, cy, p)) return true;
+  }
+  return false;
+}
+function freeMove(p, mx, my, dt, spd) {
+  if (!mx && !my) return;
+  const T = Game.T;
+  let sp = (spd || moveSpeed(p)) * dt;
+  // 速度來源萬一壞掉（NaN／負值）就先退回基礎速度，寧可走慢也不要讓座標變成 NaN
+  if (!(sp > 0)) { if (!isFinite(sp)) sp = 146 * (Game.spdK || 1) * dt; else return; }
+  let vx = mx, vy = my;
+  if (vx && vy) { vx *= .7071; vy *= .7071; }        // 斜走分量，總速度一致
+  if (boxBlocked(p, p.x, p.y)) { p.x += vx * sp; p.y += vy * sp; return; }
+  // 斜推時其中一軸被牆擋住 → 把那一軸的速度讓給另一軸（總長度不變）
+  //   這樣貼著牆邊斜走是「順著牆滑出去」，不會像踩了煞車一樣變慢
+  if (vx && vy) {
+    const bx = boxBlocked(p, p.x + vx * sp, p.y);
+    const by = boxBlocked(p, p.x, p.y + vy * sp);
+    if (bx && !by) { vy *= 1.4142; vx = 0; }
+    else if (by && !bx) { vx *= 1.4142; vy = 0; }
+  }
+  if (vx) {
+    const nx = p.x + vx * sp;
+    if (!boxBlocked(p, nx, p.y)) p.x = nx;
+    else {                                            // 逐像素退到貼牆，不整格對齊
+      const st = vx > 0 ? 1 : -1;
+      let x = p.x;
+      while (Math.abs(x - p.x) < Math.abs(vx * sp) && !boxBlocked(p, x + st, p.y)) x += st;
+      p.x = x;
+    }
+  }
+  if (vy) {
+    const ny = p.y + vy * sp;
+    if (!boxBlocked(p, p.x, ny)) p.y = ny;
+    else {
+      const st = vy > 0 ? 1 : -1;
+      let y = p.y;
+      while (Math.abs(y - p.y) < Math.abs(vy * sp) && !boxBlocked(p, p.x, y + st)) y += st;
+      p.y = y;
+    }
+  }
+}
+
+// ----- 舊版「格子吸附」移動（保留作對照與回退，正常遊戲不走這條） -----
 //   輸送帶推力一定要用這個：舊版推力走 tryMove 的一般分支，每帧把玩家吸回格子中心，
-function tryMove(p, dx, dy, dt, spd, noAlign) {
+function tryMoveSnap(p, dx, dy, dt, spd, noAlign) {
   const T = Game.T;
   const sp = (spd || moveSpeed(p)) * dt;
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
@@ -5722,6 +5785,9 @@ function tryMove(p, dx, dy, dt, spd, noAlign) {
     return;
   }
 }
+// v5.93：對外一律走自由位移（簽名不變，所有呼叫端自動受益）
+function tryMove(p, dx, dy, dt, spd, noAlign) { freeMove(p, dx, dy, dt, spd); }
+
 // v1.9：頭暈 —— 被任何「丟出來的炸彈」砸到（場外推車投的、場內玩家擲的都算）
 // 效果：整個人停住 1 秒不能動也不能放彈（頭上轉星星）
 const DIZZY_TIME = 1;
@@ -5848,7 +5914,8 @@ function solidOrBomb(cx, cy, p) {
 
 // 斜向（45°）移動：兩軸同時走；撞到牆會沿著沒被擋的那一軸滑開
 // v2.3：pref = 'x' | 'y' —— 手指「推得比較多」的那一軸優先（轉彎時才不會卡死）
-function tryMoveDiag(p, mx, my, dt, spd, pref) {
+function tryMoveDiag(p, mx, my, dt, spd, pref) { freeMove(p, mx, my, dt, spd); }
+function tryMoveDiagSnap(p, mx, my, dt, spd, pref) {
   const T = Game.T;
   const sp = (spd || moveSpeed(p)) * dt * .7071;   // 斜走分量，總速度維持一致
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
@@ -20014,8 +20081,13 @@ function controlAI(p, dt) {
   p.moving = false;
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
   // v5.68：跨格時記下上一格 —— 用來阻止「A↔B 兩格無限橫跳」的那種抖動
+  // v5.93：crossed 也是「該重新決策了」的訊號。以前用 atCenter（距格心 3px 內）當這個訊號，
+  //   那是格子吸附年代的產物；改成自由位移之後 AI 幾乎不會正好停在格心，
+  //   決策頻率就掉下去了（放彈變少、撞牆才轉彎）。跨格才是自由走位下的自然決策點。
+  let crossed = false;
   if (!p.lastC || p.lastC.x !== cx || p.lastC.y !== cy) {
     p.prevC = p.lastC; p.lastC = { x: cx, y: cy };
+    crossed = true;
   }
   const atCenter = Math.abs(p.x - (cx * T + T / 2)) < 3 && Math.abs(p.y - (cy * T + T / 2)) < 3;
   function passable(x, y) { return cellAt(x, y) === 0 && !bombAt(x, y); }
@@ -20024,7 +20096,7 @@ function controlAI(p, dt) {
   const sdHere = sdSoon(cx, cy, 3);
   const aiD = DIRS[p.aiDir] || DIRS.down;
   const sdAhead = sdSoon(cx + aiD.x, cy + aiD.y, 12);
-  if (atCenter || !p.aiDir || !neighborOk(p.aiDir) || p.aiT <= 0 || sdHere || sdAhead) {
+  if (crossed || atCenter || !p.aiDir || !neighborOk(p.aiDir) || p.aiT <= 0 || sdHere || sdAhead) {
     p.aiT = lv.think[0] + Math.random() * (lv.think[1] - lv.think[0]);
     const optsAll = ['up', 'down', 'left', 'right'].filter(neighborOk);
     /* v5.68：只要還有別的路，就不要「立刻走回上一格」。
