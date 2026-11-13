@@ -1,0 +1,26 @@
+{
+ "v": 1,
+ "charHpx": 200,
+ "cellW": 187,
+ "cellH": 234,
+ "ax": 93.55,
+ "ay": 226.38,
+ "actions": {
+  "walk": {
+   "file": "hero-anim-dog-walk.webp",
+   "frames": 12
+  },
+  "idle": {
+   "file": "hero-anim-dog-idle.webp",
+   "frames": 12
+  },
+  "hold": {
+   "file": "hero-anim-dog-hold.webp",
+   "frames": 12
+  },
+  "victory": {
+   "file": "hero-anim-dog-victory.webp",
+   "frames": 12
+  }
+ }
+}

@@ -73,7 +73,7 @@ const H = BH.HeroAnim;
 ok(!!H && typeof H.pick === 'function', 'HeroAnim 掛在 __BH 上（除錯／驗收用）');
 ok(H.has('rabbit') === true, 'rabbit 有精靈動作');
 ok(H.has('bear') === true, 'bear 也有精靈動作（v5.94）');
-ok(H.has('dog') === false, '還沒做動作的角色走零件（dog = false）');
+ok(H.has('chick') === false, '還沒做動作的角色走零件（chick = false；v5.96 起 dog 已經有圖集）');
 if (H && H.pick) {
   ok(H.pick({ moving: true }) === 'walk', '走動 → walk');
   ok(H.pick({ moving: false }) === 'idle', '站著 → idle');

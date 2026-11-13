@@ -32,7 +32,10 @@ CHARS = {
                    walk='frames_game/w%02d.png'),
     # 小熊：1080 寬畫布（手臂甩出去到 ±531）。走路也走這套，所以沒有 frames_game。
     'bear':   dict(src='frames_anim_bear', crop=(0, 150, 1080, 1250),
-                   acts=['walk', 'idle', 'hold', 'victory', 'hurt'], walk=None),
+                   acts=['walk', 'idle', 'hold', 'victory', 'hurt', 'throw'], walk=None),
+    # 柴犬（v5.96）：站姿比兔兔寬一點，勝利雙手一張會頂到 900 的左邊界 → 畫布 1000。
+    'dog':    dict(src='frames_anim_dog', crop=(0, 150, 1000, 1250),
+                   acts=['walk', 'idle', 'hold', 'victory'], walk=None),
 }
 
 

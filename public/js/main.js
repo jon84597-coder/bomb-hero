@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.95';
+const VERSION = '5.96';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -30388,12 +30388,14 @@ const HeroAnim = (function () {
   //   ax 是「錨點在格子裡的位置」，畫圖時 -ax*k 就是讓腳底中心落在 (x, footY)。
   const SHEET = {
     rabbit: { pre: 'rabbit', cellW: 142, ax: 71.09, acts: ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'] },
-    bear:   { pre: 'bear',   cellW: 202, ax: 101.03, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] }
+    bear:   { pre: 'bear',   cellW: 202, ax: 101.03, acts: ['walk', 'idle', 'hold', 'victory', 'hurt', 'throw'] },
+    // v5.96：柴犬。站姿比兔兔寬一點（勝利雙手一張就頂到 900 的左邊界）→ 1000 寬畫布、格子 187。
+    dog:    { pre: 'dog',    cellW: 187, ax: 93.55,  acts: ['walk', 'idle', 'hold', 'victory'] }
   };
   const ACTS = ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'];
   const FPS  = { walk: 15, idle: 7, hold: 9, throw: 20, hurt: 11, victory: 11 };
   const LOOP = { walk: 1, idle: 1, hold: 1, throw: 0, hurt: 0, victory: 1 };
-  const KEYS = { rabbit: 1, bear: 1 };
+  const KEYS = { rabbit: 1, bear: 1, dog: 1 };
   const imgs = {}, ready = {};
   function load() {
     if (typeof Image === 'undefined') return;
@@ -31502,6 +31504,14 @@ const HOLD_BOMB = {
     up: 0.83, side: 0,
     upFrames:   [0.8149, 0.8149, 0.8177, 0.8401, 0.8410, 0.8410, 0.8410, 0.8410, 0.8410, 0.8336, 0.8298, 0.8177],
     sideFrames: [-0.0346, -0.0337, -0.0330, -0.0141, 0.0312, 0.0265, 0.0819, 0.0856, 0.0703, 0.0189, -0.0002, -0.0292]
+  },
+  /* v5.96：柴犬 —— 一手托球在胸前、一手往外攤。這支動作幾乎不動
+     （12 格身高只差 3px、腳底固定），所以不必逐格，一組常數就夠。
+     球心實測在畫布 (214, 963)：離腳底 0.3714H、往左 0.2675H。
+     注意：素材球只有 0.23H 直徑，比遊戲炸彈（0.566H）小很多 ——
+     炸彈上緣會壓到一點眉角，這是使用者看過對位圖後決定採用的（放大才明顯）。 */
+  dog: {
+    up: 0.3714, side: -0.2675
   },
 };
 function holdBombPos(animal, bd) {

@@ -21,6 +21,14 @@
   "victory": {
    "file": "hero-anim-bear-victory.webp",
    "frames": 12
+  },
+  "hurt": {
+   "file": "hero-anim-bear-hurt.webp",
+   "frames": 12
+  },
+  "throw": {
+   "file": "hero-anim-bear-throw.webp",
+   "frames": 12
   }
  }
 }
