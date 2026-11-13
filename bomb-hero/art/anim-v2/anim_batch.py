@@ -19,12 +19,9 @@ REF_H = 640       # 站姿身高（五支影片第 1 幀實測一致）
 TARGET_H = 1069   # 遊戲角色實測高度，五支動作與走路全部對齊到這個值
 
 
-def find_loop(placed, lo=18, hi=60):
-    def sig(im):
-        a = np.array(im)[:, :, 3] > 40
-        return np.array(Image.fromarray((a * 255).astype(np.uint8)).resize((90, 156), Image.BILINEAR)) > 100
-
-    sigs = np.array([sig(im) for im in placed], dtype=np.float32)
+def find_loop(sigs, lo=18, hi=60):
+    """sigs 是每格的剪影簽章（bool 陣列），已經含擺位資訊。"""
+    sigs = np.array(sigs, dtype=np.float32)
     best = None
     for L in range(lo, min(hi, len(sigs) - 3) + 1):
         diff = np.abs(sigs[:-L] - sigs[L:]).mean(axis=(1, 2))
@@ -50,36 +47,52 @@ def run(name, srcdir, start, end, loop, nout=12, ref_h=None, outdir='frames_anim
     k = TARGET_H / float(med)
     foot = int(A[0][1])                                # 第一幀腳底為固定基線
     cx = float(A[0][2])                                # 第一幀頭部質心為固定水平中心
+    CW = canvas_w or CANVAS_W
+    CX0 = center_x or CENTER_X
 
-    placed = []
-    for ar in arrs:
+    def place(ar):
         im = Image.fromarray(ar, 'RGBA')
         s = np.array(im.resize((max(1, int(im.width * k)), max(1, int(im.height * k))), Image.BICUBIC))
         s = despill(s)
-        cv = Image.new('RGBA', (canvas_w or CANVAS_W, CANVAS_H), (0, 0, 0, 0))
+        cv = Image.new('RGBA', (CW, CANVAS_H), (0, 0, 0, 0))
         cv.alpha_composite(Image.fromarray(s, 'RGBA'),
-                           (int(round((center_x or CENTER_X) - cx * k)), int(round(FOOT_Y - foot * k))))
-        placed.append(cv)
+                           (int(round(CX0 - cx * k)), int(round(FOOT_Y - foot * k))))
+        return cv
+
+    def sig(im):
+        a = np.array(im)[:, :, 3] > 40
+        return np.array(Image.fromarray((a * 255).astype(np.uint8)).resize((90, 156), Image.BILINEAR)) > 100
+
+    # 兩段式：先逐格算剪影簽章就丟掉畫布，選好段落後才重建那 12 格。
+    #   （貓的畫布 1500x1560，124 張同時留在記憶體會吃到 1.1GB 直接被系統砍掉。）
+    sigs = []
+    for ar in arrs:
+        cv = place(ar)
+        sigs.append(sig(cv))
+        del cv
 
     info = {'action': name, 'k': round(k, 4), 'median_h': med, 'src_frames': len(files),
-            'canvas_w': canvas_w or CANVAS_W, 'center_x': center_x or CENTER_X,
+            'canvas_w': CW, 'center_x': CX0,
             'foot': foot, 'cx': round(cx, 1), 'height_var_pct': round(100.0 * (hs.max() - hs.min()) / med, 2)}
 
     if loop:
-        sc, L, off = find_loop(placed)
-        seg = placed[off:off + L]
+        sc, L, off = find_loop(sigs)
+        seg = list(range(off, off + L))
         info.update({'loop': True, 'loop_len': L, 'loop_start': off, 'loop_score': round(sc, 4)})
         print('  %s 循環：%d 幀（%.2fs）起點 %d 剪影差 %.4f' % (name, L, L / 24.0, off, sc))
     else:
-        seg = placed
+        seg = list(range(len(arrs)))
         info.update({'loop': False})
         print('  %s 一次性：%d 幀' % (name, len(seg)))
 
     idx = np.linspace(0, len(seg) - 1, nout).round().astype(int)
     out = os.path.join(outdir, name)
     os.makedirs(out, exist_ok=True)
+    placed = {}
     for j, i in enumerate(idx):
-        seg[i].save(os.path.join(out, '%02d.png' % j))
+        cv = place(arrs[seg[i]])
+        cv.save(os.path.join(out, '%02d.png' % j))
+        placed[j] = cv
 
     # 量測
     def prof(im):
@@ -96,7 +109,7 @@ def run(name, srcdir, start, end, loop, nout=12, ref_h=None, outdir='frames_anim
         ext = np.array(ext)
         return h, int(ext[:int(h * .42)].max()), y1
 
-    P = [prof(seg[i]) for i in idx]
+    P = [prof(placed[j]) for j in range(nout)]
     hh = np.array([p[0] for p in P]); hw = np.array([p[1] for p in P]); bt = np.array([p[2] for p in P])
     info.update({'out_frames': nout, 'h_min': int(hh.min()), 'h_max': int(hh.max()),
                  'headw_min': int(hw.min()), 'headw_max': int(hw.max()),
@@ -145,6 +158,21 @@ JOBS = {
         ('victory', 'vid/dog-victory/fr',  1, 124, False, 12, 638),
         # hold：第一支洋紅底變彩虹（黃→綠→青）；hold2 加上「背景全程不得變色」後通過。
         ('hold',    'vid/dog-hold2/fr',    1, 124, True, 12, 638),
+        # v5.97：hurt（後仰縮身護頭）。第一支就過：底色 124 幀全穩、臉上沒有異物。
+        ('hurt',    'vid/dog-hurt4/fr',    1, 124, False, 12, 639),
+    ]),
+    # 貓咪（v5.97）：貓的尾巴又長又往外甩 —— 實測需要右側 0.70H、左側 0.51H 的空間，
+    #   1500 寬畫布（左右各 750）才不會把尾巴切掉。格子 281 因此比其他角色寬。
+    'cat':    ('frames_anim_cat', 1500, 750, [
+        ('walk',    'vid/cat-walk/fr',     1, 124, True, 12, 634),
+        # 1~56：第 60~62 幀尾巴甩到右邊界（會出現直切邊）。
+        ('idle',    'vid/cat-idle/fr',     1, 56, True, 12, 635),
+        # 1~60：第 64 幀起洋紅底被換成綠色（模型慣性）。這段動作幾乎靜止（面積只變 4.9%），
+        #   截短完全不影響表現。
+        ('hold',    'vid/cat-hold/fr',     1, 60, True, 12, 636),
+        ('victory', 'vid/cat-victory/fr',  1, 124, False, 12, 636),
+        # hurt 從缺：第 4 幀頭上出現一顆巨大青綠球體（模型自加道具）。
+        # throw 從缺：整支只是把球抱在懷裡慢慢坐下，完全沒有拋的動作。
     ]),
 }
 

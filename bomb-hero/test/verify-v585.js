@@ -41,7 +41,10 @@ head('1. 主角 30 支專屬音效');
     'explode', 'pick'];
   const miss = HERO.filter(k => keys.indexOf(k) < 0);
   ok(miss.length === 0, '★ 30 支主角音效全部在表裡', miss);
-  ok(keys.length === 84, '音效表共 84 支（怪物 59 ＋ 主角新增 25）', keys.length);
+  /* v5.98：新增 mount()／mount2() 兩支坐騎獎勵音 → 84 變成 86。
+   這裡改成「不低於 84」＋「必需的那幾支都在」，才不會每次加音效就變紅。 */
+ok(keys.length >= 86, '音效表至少 86 支（v5.98 加入坐騎 mount／mount2）', keys.length);
+ok(keys.indexOf('mount') >= 0 && keys.indexOf('mount2') >= 0, '坐騎獎勵音 mount／mount2 都在表內');
   ok(keys.indexOf('levelup') >= 0, '★ levelup 終於有聲音了（以前 switch 沒有這個 case → 靜音）', true);
 
   // 每一支都要有「厚度」：至少 3 個合成層（tone/boom/hiss/sub/stack/fm/grit/metal/whoosh/crack/swell）

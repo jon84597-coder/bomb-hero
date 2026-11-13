@@ -47,7 +47,8 @@ function mkPlayer(cx, cy) {
 sec('① 機制：自由位移取代格子吸附');
 ok(typeof P.tryMove === 'function', 'tryMove 已匯出');
 ok(/const MOVE_HALF = \.30;/.test(SRC), '角色碰撞盒半寬 0.30 格（0.60×0.60 的方盒）');
-ok(/function boxBlocked\(p, x, y\)/.test(SRC), '有 boxBlocked()：盒角壓到的格子才算擋');
+/* v5.98：boxBlocked 多了 noBomb 參數（被自己的炸彈壓住時要忽略炸彈、但牆照擋）。 */
+ok(/function boxBlocked\(p, x, y(, noBomb)?\)/.test(SRC), '有 boxBlocked()：盒角壓到的格子才算擋');
 ok(/function freeMove\(p, mx, my, dt, spd\)/.test(SRC), '有 freeMove()：連續位移');
 ok(/function tryMove\(p, dx, dy, dt, spd, noAlign\) \{ freeMove\(p, dx, dy, dt, spd\); \}/.test(SRC),
   'tryMove 直接轉給 freeMove（所有呼叫端自動受益）');

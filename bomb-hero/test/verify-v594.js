@@ -46,7 +46,7 @@ const env = makeEnv();
 const BA = env.BH.HeroAnim;
 ok(!!BA, 'HeroAnim 存在');
 ok(BA.has('rabbit') === true && BA.has('bear') === true, 'rabbit 與 bear 都有精靈動作');
-ok(BA.has('cat') === false, '還沒做的角色（cat）走零件');
+ok(BA.has('pig') === false, '還沒做的角色（pig）走零件（v5.97 起 cat 已經有圖集）');
 const mt = mainSrc.match(/const META = \{ charHpx: ([\d.]+), cellH: (\d+), ay: ([\d.]+), frames: (\d+) \};/);
 ok(!!mt && +mt[1] === 200 && +mt[2] === 234 && Math.abs(+mt[3] - 226.38) < .01,
   '全域 META 只剩「所有角色共用」的常數（cellW／ax 已下放到每隻角色）');

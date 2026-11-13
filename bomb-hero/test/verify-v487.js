@@ -61,19 +61,20 @@ ok(Math.abs(B.playerSpeed(p) - 146) < .01, '沒騎鴕鳥時速度回到 146');
 B.rideOstrich(p);
 ok(B.fireBreath(p) === false, '鴕鳥不會吐火（同一顆鍵改叫跳躍）');
 
-console.log('=== ③ 跳躍規則（v5.92：跨 2 → 跨 1 → 原地）===');
-// v5.92：玩家定案 —— 「跨」是指跳過障礙物。前方空著就不叫跨，直接原地起跳原地落地。
+console.log('=== ③ 跳躍規則（v5.98：隔二格 > 隔一格 > 前方無牆往前跳 > 原地）===');
+/* v5.98：玩家定案 —— 前方「全無牆」也要往前跳（舊規格是原地起跳原地落地，常常原地發呆）。
+   現在的優先序：先試跨二格 → 再試跨一格 → 再試往前跳（落點要空）→ 都不行才原地跳。 */
 B.rideOstrich(p);
 G.grid[4][3] = 0; G.grid[4][4] = 0;
 p.x = 2 * 40 + 20; p.y = 4 * 40 + 20; p.facing = 'right';
 p.air = 0; p.fireCd = 0;
 ok(B.mountJump(p) === true, '前方空地：跳得起來（不會像舊版直接沒反應）');
-ok(p.air > 0 && p.jumpTo && Math.floor(p.jumpTo.x / 40) === 2, '前方空地沒有「跨」→ 原地跳（落點 x=2）');
+ok(p.air > 0 && p.jumpTo && Math.floor(p.jumpTo.x / 40) === 4, '前方全空 → 往前跳 2 格（落點 x=4）');
 ok(p.jumpOver === false, 'jumpOver = false（沒有跨過障礙）');
 ok(p.invuln >= B.OSTRICH_JUMP_T, '滯空期間有無敵罩');
 let guard = 0;
 while (p.air > 0 && guard++ < 200) B.jumpTick(p, 1 / 60);
-ok(Math.floor(p.x / 40) === 2 && Math.floor(p.y / 40) === 4, '原地起跳原地落地');
+ok(Math.floor(p.x / 40) === 4 && Math.floor(p.y / 40) === 4, '往前跳 2 格後落地');
 
 // 中間一格是牆 → 跨 1 格，落在牆的另一側
 G.grid[4][3] = 1;
@@ -88,15 +89,17 @@ ok(Math.floor(p.x / 40) === 4, '確實落在牆的另一側');
 G.grid[4][5] = 1;
 p.x = 3 * 40 + 20; p.y = 4 * 40 + 20; p.air = 0; p.fireCd = 0;
 ok(B.mountJump(p) === true, '連兩格牆：還是跳得起來（原地跳）');
-ok(Math.floor(p.jumpTo.x / 40) === 3, '原地落地（x=3），不會硬塞進牆裡');
+/* 站在牆上（退化情況：傳送門／重生點在磚上）＋前面 (5) 也是牆 → 只跨得過一格到 x=4。
+   v5.98 以前會原地跳，現在會找「最近的空落地」往前挪一格。 */
+ok(Math.floor(p.jumpTo.x / 40) === 4, '兩格牆擋死 → 往前挪一格到空地（x=4），不會硬塞進牆裡');
 guard = 0; while (p.air > 0 && guard++ < 200) B.jumpTick(p, 1 / 60);
-ok(Math.floor(p.x / 40) === 3, '落地站在原地');
+ok(Math.floor(p.x / 40) === 4, '落地在往前一格的空地');
 
 // 落點是軟磚 → 也不能跨過去 → 原地跳
 G.grid[4][5] = 0; G.grid[4][6] = 2;
 p.x = 4 * 40 + 20; p.air = 0; p.fireCd = 0;
 ok(B.mountJump(p) === true, '落點是軟磚：跳過去 → 原地跳');
-ok(Math.floor(p.jumpTo.x / 40) === 4, '原地落地（軟磚上不能站）');
+ok(Math.floor(p.jumpTo.x / 40) === 5, '落點是軟磚 → 退回往前一格（x=5），不站上軟磚');
 
 // 冷卻中不能連跳
 G.grid[4][6] = 0;

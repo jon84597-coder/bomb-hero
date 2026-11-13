@@ -30,7 +30,7 @@ ok(uniq.length === 227, '227 個不同的貼圖檔名');
 head('2. 貼圖檔案');
 const SPR = path.join(ROOT, 'spr');
 const files = fs.readdirSync(SPR).filter(function (f) { return /\.webp$/.test(f); });
-ok(files.length === 243, 'spr/ 內有 ' + files.length + ' 個 .webp（v5.96：小熊 throw + 柴犬四套）');
+ok(files.length === 247, 'spr/ 內有 ' + files.length + ' 個 .webp（v5.97：柴犬 hurt + 貓咪三套）');
 const missing = uniq.filter(function (u) { return !fs.existsSync(path.join(ROOT, u)); });
 ok(missing.length === 0, '每個引用都找得到檔案' + (missing.length ? '（缺 ' + missing.slice(0, 3) + '）' : ''));
 let badMagic = 0, total = 0;
@@ -46,8 +46,9 @@ ok(badMagic === 0, '全部是合法 WEBP（壞檔 ' + badMagic + '）');
 // v5.94：小熊四套＋其 1080 寬格子約 +456KB → 預算線 3.40MB 調到 3.65MB。
 // v5.95：小熊 hurt +102KB → 3.65MB 調到 3.85MB。
 // v5.96：小熊 throw + 柴犬四套約 +509KB → 3.85MB 調到 4.40MB。
+// v5.97：柴犬 hurt + 貓咪三套（格子 281 很寬）約 +0.24MB → 4.40MB 調到 4.75MB。
 //   同樣是「取代零件拼裝」，不是多餘素材；以後每隻角色大約 +450KB。
-ok(total > 1200000 && total < 4400000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 4.40 MB：v5.96 小熊六套＋柴犬四套）');
+ok(total > 1200000 && total < 4750000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 4.75 MB：v5.97 貓咪三套）');
 
 // ---------- 3. 位元組與原始 base64 完全一致 ----------
 head('3. 抽出過程零損失');
@@ -67,7 +68,7 @@ ok(mismatch === 0, '全部位元組／雜湊與抽取當下一致（不一致 ' 
 // ---------- 4. 清單與檔案一致 ----------
 head('4. 預熱清單');
 const list = JSON.parse(fs.readFileSync(path.join(SPR, '_list.json'), 'utf8'));
-ok(Array.isArray(list) && list.length === 246, '_list.json 有 246 筆（v5.96 多了小熊 throw 與柴犬四套）');
+ok(Array.isArray(list) && list.length === 251, '_list.json 有 251 筆（v5.97 多了柴犬 hurt 與貓咪三套＋meta）');
 const notInList = files.filter(function (f) { return list.indexOf(f) < 0; });
 ok(notInList.length === 0, '每個檔案都在清單裡' + (notInList.length ? '（漏 ' + notInList.slice(0, 3) + '）' : ''));
 const missingFile = list.filter(function (f) { return !fs.existsSync(path.join(SPR, f)); });

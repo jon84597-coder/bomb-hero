@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.96';
+const VERSION = '5.98';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -1879,11 +1879,42 @@ const AudioSys = (function () {
       hiss(.50, .07, 1400, 220, .8, .40);
     },
     // 撿道具：亮叮 ＋ 上升 ＋ 一點金屬甜味
+    /* v5.98：取得道具 —— 玩家要求「愉悅、高亢」。
+       舊版是 760→1120 的兩聲短音，聽起來像介面提示音；
+       現在改成 C6–E6–G6–C7 的上行四連音（大三和弦琶音）＋ 亮片尾，
+       一聽就是「好東西到手了」。隨從撿道具走同一個音效，所以兩邊一起換。 */
     item() {
-      tone(760, .07, 'square', .13, 1120);
-      tone(1120, .09, 'triangle', .11, 0, .05);
-      metal(1520, .17, .06, .05);
-      hiss(.12, .05, 2600, 4200, 1.4, .03);
+      tone(1047, .07, 'triangle', .13, 0, 0);
+      tone(1319, .07, 'triangle', .13, 0, .055);
+      tone(1568, .08, 'triangle', .14, 0, .11);
+      tone(2093, .14, 'sine', .11, 0, .17);
+      tone(2637, .16, 'sine', .07, 3136, .24);
+      metal(3136, .22, .05, .22);
+      hiss(.11, .045, 6200, 9200, 1.6, .22);
+    },
+    /* v5.98：坐騎（恐龍蛋／紫蛋）—— 獨立一種「獎勵」音，不再借用取得道具的短音。
+       玩家要求：一般坐騎是「高亢愉悅」，二階（紅龍／風暴鴕鳥）要更高、更像頒獎。 */
+    mount() {
+      tone(1047, .08, 'triangle', .12, 0, 0);
+      tone(1319, .08, 'triangle', .13, 0, .08);
+      tone(1568, .09, 'triangle', .13, 0, .16);
+      tone(2093, .19, 'sine', .11, 0, .25);
+      tone(2637, .20, 'sine', .06, 3136, .30);
+      metal(2637, .26, .05, .27);
+      hiss(.14, .05, 5600, 9200, 1.5, .26);
+    },
+    // 二階坐騎：整組大三和弦同時亮 → 五連上行 → 兩層超高亮片。比 mount 更長、更高、更「頒獎」
+    mount2() {
+      [1047, 1319, 1568].forEach(function (f) { tone(f, .17, 'triangle', .11); });
+      sub(180, 330, .26, .10, .02);
+      [1047, 1319, 1568, 2093, 2637].forEach(function (f, i) {
+        tone(f, .20, 'triangle', .10, 0, .19 + i * .065);
+      });
+      tone(3136, .30, 'sine', .08, 0, .52);
+      metal(3136, .42, .05, .34);
+      metal(4186, .34, .03, .48);
+      hiss(.34, .06, 5000, 11000, 1.4, .30);
+      sub(92, 62, .34, .14, .40);
     },
     // 金幣：三層叮 ＋ 極淡金屬尾（比舊版多一層「錢的重量」）
     coin() {
@@ -5680,14 +5711,34 @@ function resetPlayerStats(p) {
      · 已經卡在牆裡（傳送門／重生點在磚上）→ 這一幀不限制移動，先讓它出來，不會鎖死
    落點仍以「腳下那一格」為準（放炸彈、撿道具、踢彈都用 floor），差最多半格。 */
 const MOVE_HALF = .30;
-function boxBlocked(p, x, y) {
+function boxBlocked(p, x, y, noBomb) {
   const T = Game.T, half = T * MOVE_HALF;
   const x0 = Math.floor((x - half) / T), x1 = Math.floor((x + half - .001) / T);
   const y0 = Math.floor((y - half) / T), y1 = Math.floor((y + half - .001) / T);
   for (let cy = y0; cy <= y1; cy++) {
-    for (let cx = x0; cx <= x1; cx++) if (solidOrBomb(cx, cy, p)) return true;
+    for (let cx = x0; cx <= x1; cx++) if (solidOrBomb(cx, cy, p, noBomb)) return true;
   }
   return false;
+}
+/* v5.98：只看「牆／軟磚」的碰撞（不含炸彈）。
+   freeMove 用它分辨「真的卡在牆裡」和「只是被炸彈壓住」—— 這兩件事的處理必須不同。 */
+function terrainBlocked(p, x, y) {
+  const T = Game.T, half = T * MOVE_HALF;
+  const x0 = Math.floor((x - half) / T), x1 = Math.floor((x + half - .001) / T);
+  const y0 = Math.floor((y - half) / T), y1 = Math.floor((y + half - .001) / T);
+  for (let cy = y0; cy <= y1; cy++) {
+    for (let cx = x0; cx <= x1; cx++) if (cellAt(cx, cy) !== 0) return true;
+  }
+  return false;
+}
+/* v5.98：炸彈的 passers（可以站在這顆炸彈上、不會被它卡住的人）要保留到什麼時候。
+   舊版規則寫在 updateBombs 裡、用「腳下格子」判斷；現在抽成函式並改成「身體方盒」，
+   測試才驗得到真正的規則。 */
+function bombPassKeep(b, p) {
+  if (!b || !p || p.alive === false) return false;
+  const T = Game.T, half = T * MOVE_HALF;
+  return p.x + half > b.cx * T && p.x - half < (b.cx + 1) * T &&
+         p.y + half > b.cy * T && p.y - half < (b.cy + 1) * T;
 }
 function freeMove(p, mx, my, dt, spd) {
   if (!mx && !my) return;
@@ -5697,32 +5748,42 @@ function freeMove(p, mx, my, dt, spd) {
   if (!(sp > 0)) { if (!isFinite(sp)) sp = 146 * (Game.spdK || 1) * dt; else return; }
   let vx = mx, vy = my;
   if (vx && vy) { vx *= .7071; vy *= .7071; }        // 斜走分量，總速度一致
-  if (boxBlocked(p, p.x, p.y)) { p.x += vx * sp; p.y += vy * sp; return; }
+  /* v5.98（玩家回報：放完炸彈可以走上旁邊的軟牆／硬牆）
+     這一行原本是「只要現在被擋住就無條件放行」的自救機制。問題是
+     「站在自己剛放下的炸彈旁邊、方盒還壓到炸彈格」也會被算成被擋住 →
+     進入放行模式 → 玩家就能一路走上牆。
+     現在只有「真的壓在牆／軟磚裡」才放行；單純被炸彈壓住時改用忽略炸彈的碰撞
+     （走得出去，但走不進牆）。 */
+  let skipBomb = false;
+  if (boxBlocked(p, p.x, p.y)) {
+    if (terrainBlocked(p, p.x, p.y)) { p.x += vx * sp; p.y += vy * sp; return; }
+    skipBomb = true;
+  }
   // 斜推時其中一軸被牆擋住 → 把那一軸的速度讓給另一軸（總長度不變）
   //   這樣貼著牆邊斜走是「順著牆滑出去」，不會像踩了煞車一樣變慢
   if (vx && vy) {
-    const bx = boxBlocked(p, p.x + vx * sp, p.y);
-    const by = boxBlocked(p, p.x, p.y + vy * sp);
+    const bx = boxBlocked(p, p.x + vx * sp, p.y, skipBomb);
+    const by = boxBlocked(p, p.x, p.y + vy * sp, skipBomb);
     if (bx && !by) { vy *= 1.4142; vx = 0; }
     else if (by && !bx) { vx *= 1.4142; vy = 0; }
   }
   if (vx) {
     const nx = p.x + vx * sp;
-    if (!boxBlocked(p, nx, p.y)) p.x = nx;
+    if (!boxBlocked(p, nx, p.y, skipBomb)) p.x = nx;
     else {                                            // 逐像素退到貼牆，不整格對齊
       const st = vx > 0 ? 1 : -1;
       let x = p.x;
-      while (Math.abs(x - p.x) < Math.abs(vx * sp) && !boxBlocked(p, x + st, p.y)) x += st;
+      while (Math.abs(x - p.x) < Math.abs(vx * sp) && !boxBlocked(p, x + st, p.y, skipBomb)) x += st;
       p.x = x;
     }
   }
   if (vy) {
     const ny = p.y + vy * sp;
-    if (!boxBlocked(p, p.x, ny)) p.y = ny;
+    if (!boxBlocked(p, p.x, ny, skipBomb)) p.y = ny;
     else {
       const st = vy > 0 ? 1 : -1;
       let y = p.y;
-      while (Math.abs(y - p.y) < Math.abs(vy * sp) && !boxBlocked(p, p.x, y + st)) y += st;
+      while (Math.abs(y - p.y) < Math.abs(vy * sp) && !boxBlocked(p, p.x, y + st, skipBomb)) y += st;
       p.y = y;
     }
   }
@@ -5901,8 +5962,9 @@ function drawAngerMark(x, y, T, k) {
   ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   ctx.restore();
 }
-function solidOrBomb(cx, cy, p) {
+function solidOrBomb(cx, cy, p, noBomb) {
   if (cellAt(cx, cy) !== 0) return true;
+  if (noBomb) return false;
   const b = bombAt(cx, cy);
   // v4.14：炸彈對所有人都是實體（含戴手套）。
   //   v4.11 讓手套把炸彈當空氣 → 玩家直接走過炸彈格，
@@ -6634,7 +6696,9 @@ function rideDino(p, red) {
   try { if (isMyPlayer(p)) Ach.count('mountDragon', 1); } catch (e) {}
   p.ostrich = false; p.air = 0; p.jumpLift = 0;        // v4.87：換坐騎時把鴕鳥狀態清乾淨
   p.storm = false; p.dived = false; p.slamGuard = 0;   // v4.89
-  AudioSys.sfx('item');
+  // v5.98：坐騎有自己的獎勵音（不再借用 item）；進化成紅龍是二階 → 頒獎音＋繽紛大特效
+  AudioSys.sfx(red ? 'mount2' : 'mount');
+  if (red) mountUpFx(p, '#ff7a8a');
   if (red) {
     // v1.8：已經騎著小龍再吃到第二顆蛋 → 進化成「紅龍」
     p.redDragon = true;
@@ -6656,7 +6720,9 @@ function rideOstrich(p, storm) {
   p.ostrich = true; p.redDragon = false; p.air = 0; p.jumpLift = 0; p.dived = false;
   p.storm = !!storm;
   try { if (isMyPlayer(p)) { Ach.count('mountOstrich', 1); if (storm) Ach.count('stormMount', 1); } } catch (e) {}
-  AudioSys.sfx(up ? 'storm' : 'item');
+  // v5.98：坐騎獎勵音；up＝二階「風暴鴕鳥」→ 頒獎音 ＋ 繽紛大特效
+  AudioSys.sfx(up ? 'mount2' : 'mount');
+  if (up) mountUpFx(p, '#c9a7f2');
   if (isMyPlayer(p)) toast(t(up ? 'toast.storm' : 'toast.ostrich'), 2.8, 'g:ostrich');
   if (up) {
     burst(p.x, p.y, '#b98bff', 34, 300);
@@ -6775,32 +6841,51 @@ function fireBreath(p) {
 //   往前跳 2 格；「中間那格」可以是硬牆或軟磚（等於跨過一格），
 //   但落點必須是站得住的空地 —— 所以連續兩層牆一定跳不過去。
 //   滯空期間完全免疫傷害；落地時半徑 1 格震波打怪，但一根牆都不會破壞。
-/* v5.92：鴕鳥跳躍規則（玩家指定）
-   「跨」= 跳過去的路上有障礙（牆／軟磚）擋著，才叫跨。
-   · 還沒進化（紫蛋鴕鳥）：最多跨 1 格 → 中間 1 格是牆、落點（第 2 格）是空地才跳得過去。
-   · 進化後（風暴鴕鳥）：先試跨 2 格（中間 2 格都是牆、第 3 格空地）；
-     跨不到 → 退回跨 1 格；連 1 格都跨不到 → **原地跳、原地落**（不再像舊版直接「跳不了」）。
-   原地跳一樣會砸出震波，所以貼著牆時按跳躍仍然有作用。 */
-function mountJump(p) {
+/* v5.98（玩家指定）：
+   · 可以 45 度斜跳 —— 按跳躍時同時按住兩個「互相垂直」的方向鍵（例如 ↑+→），
+     就往對角線跳；只按一個方向就照舊走四方向。
+   · 前方「完全沒有牆」也要往前跳。舊版只認「跨」：路上沒有障礙就當成跳不出去 →
+     變成原地跳，玩家會覺得「明明空空的卻跳不動」。
+   · 判斷順序（玩家指定）：隔二格牆 > 隔一格牆 > 前方無牆直跳 > 原地跳。
+     最後一個「原地跳」只在落點全是牆／地圖外時才發生，一樣會砸出震波。 */
+function mountJump(p, dirs) {
   if (!p || !p.alive || !p.ostrich) return false;
   if (p.air > 0 || (p.fireCd || 0) > 0) return false;
   const T = Game.T;
-  const d = DIRS[p.facing] || DIRS.down;
+  const d0 = DIRS[p.facing] || DIRS.down;
+  let dx = d0.x, dy = d0.y;
+  if (dirs && dirs.length === 2) {
+    const a = DIRS[dirs[0]], b = DIRS[dirs[1]];
+    // 只有「互相垂直」的兩鍵才算斜向；上下或左右同時按（互相反向）不成立
+    if (a && b && (a.x * b.x + a.y * b.y) === 0) { dx = a.x + b.x; dy = a.y + b.y; }
+  }
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
   const maxCross = p.storm ? (OSTRICH_JUMP_CELLS2 - 1) : (OSTRICH_JUMP_CELLS - 1);   // 可跨越的障礙格數
   const inMap = function (x, y) { return x >= 0 && y >= 0 && x < Game.cols && y < Game.rows; };
   const blocked = function (x, y) { return cellAt(x, y) !== 0; };
+  const landable = function (x, y) { return inMap(x, y) && cellAt(x, y) === 0 && !bombAt(x, y); };
   let plan = null;
+  // ① 跨牆：路上 n 格全是障礙、第 n+1 格站得住 → 由遠到近試（隔二格優先於隔一格）
   for (let n = maxCross; n >= 1 && !plan; n--) {
-    const lx = cx + d.x * (n + 1), ly = cy + d.y * (n + 1);
-    if (!inMap(lx, ly)) continue;
-    if (cellAt(lx, ly) !== 0 || bombAt(lx, ly)) continue;      // 落點必須站得住
+    const lx = cx + dx * (n + 1), ly = cy + dy * (n + 1);
+    if (!landable(lx, ly)) continue;
     let walls = 0;
-    for (let k = 1; k <= n; k++) if (blocked(cx + d.x * k, cy + d.y * k)) walls++;
-    if (walls < n) continue;                                    // 中間沒有障礙 → 這不叫「跨」，跳過
+    for (let k = 1; k <= n; k++) if (blocked(cx + dx * k, cy + dy * k)) walls++;
+    if (walls < n) continue;                                    // 中間沒有障礙 → 這不叫「跨」
     plan = { lx: lx, ly: ly, over: true };
   }
-  if (!plan) plan = { lx: cx, ly: cy, over: false };            // 沒東西可跨 → 原地跳
+  // ② 前方無障礙 → 直接往前跳（距離沿用這一階的跳躍長度；太遠／落點被擋就往近的試）
+  if (!plan) {
+    for (let n = maxCross + 1; n >= 1 && !plan; n--) {
+      const lx = cx + dx * n, ly = cy + dy * n;
+      if (!landable(lx, ly)) continue;
+      let clear = true;
+      for (let k = 1; k < n; k++) if (blocked(cx + dx * k, cy + dy * k)) { clear = false; break; }
+      if (!clear) continue;
+      plan = { lx: lx, ly: ly, over: false };
+    }
+  }
+  if (!plan) plan = { lx: cx, ly: cy, over: false };            // ③ 真的跳不出去 → 原地跳
   const lx = plan.lx, ly = plan.ly;
   p.air = OSTRICH_JUMP_T;
   p.jumpDur = OSTRICH_JUMP_T;
@@ -7027,6 +7112,49 @@ function confetti(x, y, n) {
 function battleEndFx(good, x, y) {
   AudioSys.sfx(good ? 'finish' : 'finishLose');
   if (good && x !== undefined && x !== null) confetti(x, y, 46);
+}
+
+/* v5.98：二階坐騎（紅龍／風暴鴕鳥）進化的「繽紛大特效」。
+   玩家要求「進化二階坐騎要有發出一個繽紛的大特效」——
+   所以這裡不是單純多丟幾顆粒子，而是五層一起上：
+   ① 白金爆核（heroImpact 提供環＋碎片＋定格）
+   ② 三圈不同色、彼此錯開 0.10 秒的擴散環 → 看起來是「一波一波」往外炸
+   ③ 五色放射光線（旋轉 36° 錯開，像頒獎的探照燈）
+   ④ 彩帶（會飄、會轉的紙片，最「慶典」的一層）
+   ⑤ 金色光柱上升 ＋ 一次鏡頭微推 */
+function mountUpFx(p, base) {
+  if (!p) return;
+  const T = Game.T || 40;
+  const gt = Game.gameT || 0;
+  const col = base || '#ffd166';
+  const cx = p.x, cy = p.y - T * .34;
+  // ① 主爆核（power 2.2 ＝ 連招級）
+  try { heroImpact(cx, cy, { power: 2.2, col: col, bit: 'star', stop: 0, shake: 2, cam: false }); } catch (e) {}
+  // ② 三圈錯開的彩色擴散環
+  if (!Game.rings) Game.rings = [];
+  const PAL = ['#ffd166', '#ff5e7e', '#6ee7ff'];
+  for (let i = 0; i < 3; i++) {
+    Game.rings.push({
+      kind: 'ring', x: cx, y: cy, born: gt + i * .10, glow: true,
+      dur: .52 + i * .06, r: T * (1.5 + i * .55), color: PAL[i], thick: .085 - i * .016
+    });
+  }
+  // ③ 五色放射光線
+  try {
+    for (let i = 0; i < 5; i++) speedLines(cx, cy, (i / 5) * 6.2832, 3, T * 1.5, PAL[i % 3]);
+  } catch (e) {}
+  // ④ 彩帶（分兩批，第二批往上多一點）
+  try { confetti(cx, cy, 40); confetti(cx, cy - T * .3, 22); } catch (e) {}
+  // ⑤ 五色爆散
+  try {
+    burst(cx, cy, '#ffd166', 18, 260);
+    burst(cx, cy, '#ff5e7e', 12, 230);
+    burst(cx, cy, '#6ee7ff', 12, 230);
+    burst(cx, cy, '#ffffff', 10, 190);
+  } catch (e) {}
+  try { if (typeof pushPop === 'function') pushPop(p.x, p.y - T * .95, '★', { color: '#ffe9a8', size: 1.15, life: .8 }); } catch (e) {}
+  Game.shake = Math.min(1, (Game.shake || 0) + .42);
+  Game.flash = Math.max(Game.flash || 0, .10);
 }
 
 // ====
@@ -18358,7 +18486,8 @@ function controlHuman(p, dt) {
   if (p.scheme.detonate && p.scheme.detonate()) detonateRemote(p);
   // F 鍵（手把 Y／手機 🔥）：騎恐龍吐火；騎鴕鳥時同一顆鍵變成跳躍
   if (p.scheme.fire && p.scheme.fire()) {
-    if (p.ostrich) mountJump(p);
+    // v5.98：把「現在按住的方向」傳進去 → 同時按住兩個垂直方向鍵就是 45 度斜跳
+    if (p.ostrich) mountJump(p, dirs);
     else fireBreath(p);
   }
   // 撿道具
@@ -20454,10 +20583,13 @@ function updateWorld(dt) {
       }
     }
     // passers 更新（離開後不得再穿）
+    /* v5.98（玩家回報：放完炸彈可以走上牆）
+       舊版只要「腳下格子」不再是炸彈格就把人踢出名單 —— 但他的身體方盒
+       （0.6 格寬）還壓在炸彈格上，於是 boxBlocked 立刻變成 true，
+       freeMove 進入「被卡住 → 放行」模式，人就走上旁邊的牆了。
+       改成「方盒完全離開炸彈格」才移除。 */
     if (b.passers) {
-      b.passers = b.passers.filter(function (p) {
-        return p.alive !== false && Math.floor(p.x / T) === b.cx && Math.floor(p.y / T) === b.cy;
-      });
+      b.passers = b.passers.filter(function (p) { return bombPassKeep(b, p); });
     }
     // 地雷觸發
     if (b.mine) {
@@ -25976,17 +26108,13 @@ function render() {
       }
     }
   }
-  // v4.75：把大關卡的氛圍照片「混」到地板上（overlay）—— 材質與光線透上來，
-  //   牆／道具／角色是之後才畫的，所以完全不受影響。
-  if (Game.bgPhoto) {
-    try {
-      ctx.save();
-      ctx.globalCompositeOperation = 'overlay';
-      ctx.globalAlpha = .26;
-      ctx.drawImage(Game.bgPhoto, 0, 0, Game.cols * T, Game.rows * T);
-      ctx.restore();
-    } catch (e) { try { ctx.restore(); } catch (e2) {} }
-  }
+  /* v5.98：這裡原本把「大關卡氛圍照片」以 overlay 26% 壓在整片地板上。
+     玩家回報「每一關的地板看起來半透明、會透到底下的背景底圖」—— 就是這一層：
+     照片的樹／石頭／菇的形狀會浮在地板上面。氛圍留給「地圖外面的背景」就好，
+     地圖內的地板改用自己主題的材質＋光線＋接縫 AO，維持乾淨可讀。
+     （Game.bgPhoto 仍然保留：paintBackdrop 用它畫地圖外面的那張大圖。） */
+  // v4.75 的舊行為（要回退就照這三步還原：把合成模式設成 overlay、透明度設成 .26、
+  //   然後用 Game.bgPhoto 以「整片地圖」的尺寸畫一次，也就是 cols*T × rows*T）。
   // 出口門
   if (Game.door && Game.door.revealed) {
     const px = Game.door.x * T, py = Game.door.y * T;
@@ -30390,12 +30518,16 @@ const HeroAnim = (function () {
     rabbit: { pre: 'rabbit', cellW: 142, ax: 71.09, acts: ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'] },
     bear:   { pre: 'bear',   cellW: 202, ax: 101.03, acts: ['walk', 'idle', 'hold', 'victory', 'hurt', 'throw'] },
     // v5.96：柴犬。站姿比兔兔寬一點（勝利雙手一張就頂到 900 的左邊界）→ 1000 寬畫布、格子 187。
-    dog:    { pre: 'dog',    cellW: 187, ax: 93.55,  acts: ['walk', 'idle', 'hold', 'victory'] }
+    //   v5.97 補 hurt。
+    dog:    { pre: 'dog',    cellW: 187, ax: 93.55,  acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
+    // v5.97：貓咪。尾巴又長又往外甩 → 1500 寬畫布、格子 281、錨點 140.32（= 750 × 200/1069）。
+    //   hold／hurt／throw 三支這批不合格（見 anim_batch 註解），先不登記。
+    cat:    { pre: 'cat',    cellW: 281, ax: 140.32, acts: ['walk', 'idle', 'victory'] }
   };
   const ACTS = ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'];
   const FPS  = { walk: 15, idle: 7, hold: 9, throw: 20, hurt: 11, victory: 11 };
   const LOOP = { walk: 1, idle: 1, hold: 1, throw: 0, hurt: 0, victory: 1 };
-  const KEYS = { rabbit: 1, bear: 1, dog: 1 };
+  const KEYS = { rabbit: 1, bear: 1, dog: 1, cat: 1 };
   const imgs = {}, ready = {};
   function load() {
     if (typeof Image === 'undefined') return;
@@ -31512,6 +31644,12 @@ const HOLD_BOMB = {
      炸彈上緣會壓到一點眉角，這是使用者看過對位圖後決定採用的（放大才明顯）。 */
   dog: {
     up: 0.3714, side: -0.2675
+  },
+  /* v5.97：貓咪「暫時」的位置 —— 牠的 hold 動作被模型把球畫在臉旁邊（球心離腳底 0.74H、
+     往左 0.43H），遊戲炸彈是素材球的 2.1 倍大，會整個蓋住臉，所以先不採用。
+     等 hold 重生成後再換成實測值；在那之前用胸口高度，至少不要浮在頭頂。 */
+  cat: {
+    up: 0.62, side: 0
   },
 };
 function holdBombPos(animal, bd) {
@@ -42419,6 +42557,9 @@ window.__BH = {
   updateWorld: updateWorld, updateSolo: updateSolo, updateBattle: updateBattle,
   killPlayer: killPlayer, killBattlePlayer: killBattlePlayer, makePlayer: makePlayer, safeRespawnCell: safeRespawnCell,
   makeEnemy: makeEnemy, makeBoss: makeBoss, solidOrBomb: solidOrBomb, bombAt: bombAt,
+  /* v5.98：走路碰撞（測試要驗「放完炸彈不能走上牆」） */
+  freeMove: freeMove, boxBlocked: boxBlocked, terrainBlocked: terrainBlocked, MOVE_HALF: MOVE_HALF,
+  bombPassKeep: bombPassKeep, mountUpFx: mountUpFx,
   cellAt: cellAt, beginCountdown: beginCountdown, spawnItem: spawnItem, markWallKinds: markWallKinds, freeRimRocks: freeRimRocks,
   guardTaunt: guardTaunt, petHeroThreat: petHeroThreat, bombUnderFoot: bombUnderFoot, drawOuterWall: drawOuterWall,
   updateEnemy: updateEnemy, updateBoss: updateBoss, buildSdList: buildSdList,

@@ -34,7 +34,12 @@ CHARS = {
     'bear':   dict(src='frames_anim_bear', crop=(0, 150, 1080, 1250),
                    acts=['walk', 'idle', 'hold', 'victory', 'hurt', 'throw'], walk=None),
     # 柴犬（v5.96）：站姿比兔兔寬一點，勝利雙手一張會頂到 900 的左邊界 → 畫布 1000。
+    #   v5.97 補 hurt（後仰縮身護頭）。
     'dog':    dict(src='frames_anim_dog', crop=(0, 150, 1000, 1250),
+                   acts=['walk', 'idle', 'hold', 'victory', 'hurt'], walk=None),
+    # 貓咪（v5.97）：1500 寬畫布 —— 牠的尾巴又長又往外甩，實測右側需要 0.70H 的空間，
+    #   用 1000 會把尾巴切掉。格子因此 281（其他角色 187~202），高度與縮放基準不變。
+    'cat':    dict(src='frames_anim_cat', crop=(0, 150, 1500, 1250),
                    acts=['walk', 'idle', 'hold', 'victory'], walk=None),
 }
 

@@ -75,8 +75,9 @@ ok(/function tryMove\(p, dx, dy, dt, spd, noAlign\) \{ freeMove\(p, dx, dy, dt, 
 ok(/const MOVE_HALF = \.30;/.test(html), '角色當 0.60×0.60 格的方盒做碰撞（MOVE_HALF = 0.30）');
 ok(!/if \(!noAlign\) p\.y \+= clamp\(cyT - p\.y/.test(html.replace(/tryMoveSnap[\s\S]*?^}/m, '')),
   '自由走位路徑裡沒有「轉向立刻拉回列中心」的 1.9 倍修正（磁鐵感的來源）');
-ok(/const bx = boxBlocked\(p, p\.x \+ vx \* sp, p\.y\);/.test(html) &&
-   /const by = boxBlocked\(p, p\.x, p\.y \+ vy \* sp\);/.test(html),
+/* v5.98：boxBlocked 多了第四個參數 skipBomb → 被自己的炸彈壓住時忽略炸彈、牆照擋。 */
+ok(/const bx = boxBlocked\(p, p\.x \+ vx \* sp, p\.y(, skipBomb)?\);/.test(html) &&
+   /const by = boxBlocked\(p, p\.x, p\.y \+ vy \* sp(, skipBomb)?\);/.test(html),
   '分軸解算：X 被擋不影響 Y（貼著牆邊滑走）');
 
 // 實測：純往上撞牆 → 就停在牆前（v5.93：不再自動補位滑到缺口）

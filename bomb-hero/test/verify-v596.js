@@ -19,14 +19,14 @@ function ok(c, m) { if (c) { pass++; } else { fail++; console.log('  ✗ FAIL: '
 function sec(t) { console.log('\n' + t); }
 
 /* ---------------------------------------------------------------- ① */
-sec('① 柴犬四套圖集');
-const ACTS = ['walk', 'idle', 'hold', 'victory'];
+sec('① 柴犬五套圖集（v5.97 補 hurt）');
+const ACTS = ['walk', 'idle', 'hold', 'victory', 'hurt'];
 const meta = JSON.parse(fs.readFileSync(path.join(SPR, 'hero-anim-dog.json'), 'utf8'));
 ok(meta.charHpx === 200, 'charHpx = 200（三隻共用同一個量綱）');
 ok(meta.cellW === 187 && meta.cellH === 234, '格子 187x234（1000 寬畫布 × 200/1069）');
 ok(Math.abs(meta.ax - 93.55) < 0.05, 'ax = 93.55 ＝ 畫布中線 500 × 200/1069');
 ok(Math.abs(meta.ay - 226.38) < 0.05, 'ay = 226.38（與兔兔／小熊相同 → 腳底同一條線）');
-ok(Object.keys(meta.actions).length === 4, '柴犬四套（walk／idle／hold／victory）');
+ok(Object.keys(meta.actions).length === 5, '柴犬五套（walk／idle／hold／victory／hurt）');
 ACTS.forEach(function (a) {
   const f = path.join(SPR, 'hero-anim-dog-' + a + '.webp');
   ok(fs.existsSync(f), '有 hero-anim-dog-' + a + '.webp');
@@ -42,14 +42,14 @@ ACTS.forEach(function (a) {
 
 /* ---------------------------------------------------------------- ② */
 sec('② HeroAnim 登記柴犬');
-ok(/dog:\s*\{ pre: 'dog',\s*cellW: 187, ax: 93\.55,\s*acts: \['walk', 'idle', 'hold', 'victory'\] \}/.test(mainSrc),
+ok(/dog:\s*\{ pre: 'dog',\s*cellW: 187, ax: 93\.55,\s*acts: \['walk', 'idle', 'hold', 'victory', 'hurt'\] \}/.test(mainSrc),
   'SHEET.dog 的 cellW／ax／acts 與 meta 一致');
-ok(/const KEYS = \{ rabbit: 1, bear: 1, dog: 1 \};/.test(mainSrc), 'KEYS 有三隻（沒登記就會被當成「沒有圖集」）');
+ok(/const KEYS = \{ rabbit: 1, bear: 1, dog: 1, cat: 1 \};/.test(mainSrc), 'KEYS 有四隻（沒登記就會被當成「沒有圖集」）');
 ok(mainSrc.indexOf("'spr/hero-anim-' + sh.pre + '-' + k + '.webp'") >= 0, '檔名仍走動態模板（不寫死角色）');
 
 /* ---------------------------------------------------------------- ③ */
 sec('③ 缺動作的退回鏈');
-ok(!meta.actions.hurt && !meta.actions.throw, '柴犬沒有 hurt／throw（這版只做四套）');
+ok(!!meta.actions.hurt && !meta.actions.throw, '柴犬有 hurt、沒有 throw（throw 這批底色變青）');
 ok(/if \(!get\(key, act\)\) act = get\(key, 'idle'\) \? 'idle'/.test(mainSrc), '退回順序 idle → walk → null 仍在');
 const env = makeEnv(); const BH = env.BH;
 ok(BH.HeroAnim && typeof BH.HeroAnim.has === 'function', 'HeroAnim 對外可用');

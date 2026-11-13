@@ -33,6 +33,16 @@ CHARS = {
         ('armL', 'hero-parts-bear-arm-l.webp', 0.0064, 0.4606, 0.2102, 0.2964),
         ('armR', 'hero-parts-bear-arm-r.webp', 0.7803, 0.4606, 0.1624, 0.2964),
     ]),
+    # 貓咪：原圖是「一手垂在身側（獨立零件）＋一手叉腰（畫在軀幹裡）」的固定姿勢，
+    #   所以沒有右臂零件。**不要鏡射補手**：實測會多出一隻手掌浮在尾巴旁邊（模型會混亂）。
+    'cat': dict(asp=0.6908, p=[
+        ('legL', 'hero-parts-cat-leg-l.webp', -0.0586, 0.7441, 0.6080, 0.2729),
+        ('legR', 'hero-parts-cat-leg-r.webp', 0.4506, 0.7441, 0.6080, 0.2729),
+        ('torso', 'hero-parts-cat-torso.webp', -0.0586, 0.3838, 1.1173, 0.4286),
+        ('tail', 'hero-parts-cat-tail.webp', 0.6975, 0.2580, 0.3025, 0.5608),
+        ('head', 'hero-parts-cat-head.webp', -0.0586, -0.0171, 1.1173, 0.4691),
+        ('armL', 'hero-parts-cat-arm-l.webp', 0.0278, 0.5650, 0.1204, 0.1642),
+    ]),
     'dog': dict(asp=0.6716, p=[
         ('legL', 'hero-parts-dog-leg-l.webp', -0.0571, 0.7846, 0.6063, 0.2324),
         ('legR', 'hero-parts-dog-leg-r.webp', 0.4476, 0.7846, 0.6095, 0.2324),
@@ -62,8 +72,12 @@ def main(key):
     OX = (CANVAS[0] - W) / 2.0
     OY = CANVAS[1] - 40 - H          # 腳底基線 1360
     cv = Image.new('RGBA', CANVAS, (0, 0, 0, 0))
-    for name, f, dx, dy, dw, dh in cfg['p']:
+    for row in cfg['p']:
+        name, f, dx, dy, dw, dh = row[:6]
+        mx = len(row) > 6 and 'mx' in row[6]
         im = dehaze(Image.open(os.path.join(SPR, f)).convert('RGBA'))
+        if mx:
+            im = im.transpose(Image.FLIP_LEFT_RIGHT)
         tw, th = int(round(dw * W)), int(round(dh * H))
         im = im.resize((tw, th), Image.LANCZOS)
         cv.alpha_composite(im, (int(round(OX + dx * W)), int(round(OY + dy * H))))

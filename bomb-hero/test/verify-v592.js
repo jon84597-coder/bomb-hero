@@ -133,7 +133,9 @@ at(p3, 5, 5);
 const before = { x: p3.x, y: p3.y };
 const j3 = BH.mountJump(p3);
 ok(j3 === true, '沒東西可跨也是「跳得起來」（不像舊版直接跳不了）');
-ok(p3.jumpTo.x === before.x && p3.jumpTo.y === before.y, '原地起跳原地落地（落點＝自己那一格中心）');
+/* v5.98：玩家要求「前方全無牆也可以往前跳」，所以這條由「原地」改成「往前 2 格」。 */
+ok(p3.jumpTo.x === before.x + 3 * G.T && p3.jumpTo.y === before.y,
+  '前方全空 → 往前跳 3 格（風暴的跳躍長度；v5.98 起不再原地發呆）');
 ok(p3.jumpOver === false, 'jumpOver = false（沒有跨東西）');
 
 // 普通鴕鳥（沒進化）：天花板就是跨 1 —— 兩格牆的中間擋住，落點（第 2 格）還是牆 → 只能原地
@@ -154,7 +156,7 @@ grid(12, 12, function () { return 0; });
 let p5 = mkP({ ostrich: true, facing: 'right', air: 0, fireCd: 0, invuln: 0 });
 at(p5, 5, 5);
 BH.mountJump(p5);
-ok(Math.round(p5.jumpTo.x / G.T - .5) === 5, '普通鴕鳥沒得跨 → 原地跳');
+ok(Math.round(p5.jumpTo.x / G.T - .5) === 7, '普通鴕鳥前方全空 → 往前跳 2 格（v5.98 起；舊版原地跳）');
 
 /* ⑥ 精靈與版本 */
 sec('⑥ 精靈圖與版本');

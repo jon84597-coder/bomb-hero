@@ -199,7 +199,9 @@ head('6. 實際炸一顆：遠的近的各一次');
 /* ================================================================ */
 head('7. 音效總表沒有被動到');
 {
-  ok(P.sfxKeys().length === 84, '音效表仍是 84 支（這一版只改「播不播」，不是改音色）', P.sfxKeys().length);
+  /* v5.98：v5.98 加了坐騎的 mount／mount2 → 84 變 86。
+     這支測的是「每一支都播得出來、不會拋錯」，所以用下限而不是死數字。 */
+  ok(P.sfxKeys().length >= 84, '音效表至少 84 支（v5.98 起為 86）', P.sfxKeys().length);
   const all = P.sfxKeys();
   let threw = 0;
   all.forEach(function (k) { try { A.sfx(k, me.x, me.y); } catch (e) { threw++; } });
