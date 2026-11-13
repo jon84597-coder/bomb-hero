@@ -43,17 +43,28 @@ ok(ACTS.every(a => list.indexOf('hero-anim-rabbit-' + a + '.webp') >= 0), '六�
 
 /* ② META 一致 */
 sec('② main.js 與 json 的對位參數一致');
-const metaM = mainSrc.match(/const META = \{ charHpx: ([\d.]+), cellW: (\d+), cellH: (\d+), ax: ([\d.]+), ay: ([\d.]+), frames: (\d+) \};/);
+// v5.94：cellW／ax 已經不是全域常數，改成「每隻角色一張表」（SHEET），
+//   因為小熊比兔子胖、要用 1080 寬的畫布才不會把兩側手掌切掉。
+const metaM = mainSrc.match(/const META = \{ charHpx: ([\d.]+), cellH: (\d+), ay: ([\d.]+), frames: (\d+) \};/);
 ok(!!metaM, 'main.js 找得到 META');
-if (metaM) {
-  ok(+metaM[1] === json.charHpx, 'charHpx 一致（' + metaM[1] + ' = ' + json.charHpx + '）');
-  ok(+metaM[2] === json.cellW, 'cellW 一致（' + metaM[2] + ' = ' + json.cellW + '）');
-  ok(+metaM[3] === json.cellH, 'cellH 一致（' + metaM[3] + ' = ' + json.cellH + '）');
-  ok(Math.abs(+metaM[4] - json.ax) < 0.02, 'ax 一致（' + metaM[4] + ' ≈ ' + json.ax + '）');
-  ok(Math.abs(+metaM[5] - json.ay) < 0.02, 'ay 一致（' + metaM[5] + ' ≈ ' + json.ay + '）');
-  ok(+metaM[6] === 12, 'frames = 12');
-  ok(Math.abs(json.ax - json.cellW * 0.5) < json.cellW * 0.06,
-    '錨點在幀寬中央（ax ' + json.ax + ' vs 中線 ' + (json.cellW / 2) + '）');
+const bearJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'spr/hero-anim-bear.json'), 'utf8'));
+const sheets = {};
+const shRe = /(\w+):\s*\{ pre: '(\w+)',\s*cellW: (\d+),\s*ax: ([\d.]+)/g;
+let sm;
+while ((sm = shRe.exec(mainSrc))) sheets[sm[1]] = { pre: sm[2], cellW: +sm[3], ax: +sm[4] };
+ok(!!sheets.rabbit && !!sheets.bear, 'SHEET 有 rabbit 與 bear 兩隻');
+if (metaM && sheets.rabbit) {
+  ok(+metaM[1] === json.charHpx && +metaM[1] === bearJson.charHpx, 'charHpx 兩隻一致（' + metaM[1] + '）');
+  ok(+metaM[2] === json.cellH && +metaM[2] === bearJson.cellH, 'cellH 兩隻一致（' + metaM[2] + '）');
+  ok(Math.abs(+metaM[3] - json.ay) < 0.02 && Math.abs(+metaM[3] - bearJson.ay) < 0.02, 'ay 一致（' + metaM[3] + '）');
+  ok(+metaM[4] === 12, 'frames = 12');
+  ok(sheets.rabbit.cellW === json.cellW && Math.abs(sheets.rabbit.ax - json.ax) < 0.02,
+    '兔子 cellW／ax 與 json 一致（' + sheets.rabbit.cellW + '/' + sheets.rabbit.ax + '）');
+  ok(sheets.bear.cellW === bearJson.cellW && Math.abs(sheets.bear.ax - bearJson.ax) < 0.02,
+    '小熊 cellW／ax 與 json 一致（' + sheets.bear.cellW + '/' + sheets.bear.ax + '）');
+  ok(Math.abs(json.ax - json.cellW * 0.5) < json.cellW * 0.06 &&
+     Math.abs(bearJson.ax - bearJson.cellW * 0.5) < bearJson.cellW * 0.06,
+    '兩隻的錨點都在幀寬中央');
 }
 
 /* ③ 動作挑選 */
@@ -61,7 +72,8 @@ sec('③ 遊戲狀態 → 動作');
 const H = BH.HeroAnim;
 ok(!!H && typeof H.pick === 'function', 'HeroAnim 掛在 __BH 上（除錯／驗收用）');
 ok(H.has('rabbit') === true, 'rabbit 有精靈動作');
-ok(H.has('bear') === false, '沒做動作的角色走零件（bear = false）');
+ok(H.has('bear') === true, 'bear 也有精靈動作（v5.94）');
+ok(H.has('dog') === false, '還沒做動作的角色走零件（dog = false）');
 if (H && H.pick) {
   ok(H.pick({ moving: true }) === 'walk', '走動 → walk');
   ok(H.pick({ moving: false }) === 'idle', '站著 → idle');
@@ -85,8 +97,8 @@ ok(iAnim > 0, 'drawRigChar 裡有精靈分支');
 ok(iParts > 0 && iAnim < iParts, '精靈分支在零件之前（先試精靈，失敗才拼零件）');
 ok(/if \(r\) return r;/.test(mainSrc), '精靈畫成功就直接 return（不會重複畫零件）');
 ok(/HeroAnim.readyCount|function get\(k\)/.test(mainSrc), '有載入狀態查詢');
-ok(/im.onerror = function \(\) \{ ready\[k\] = false; \}/.test(mainSrc), '載入失敗會標記 false');
-ok(/if \(!im\) return null;/.test(mainSrc), '圖沒載完時 draw 回傳 null（退回零件，不破圖）');
+ok(/ready\[key\]\[k\] = false;/.test(mainSrc), '載入失敗會標記 false');
+ok(/if \(!act\) return null;/.test(mainSrc), '整套圖都沒載完時 draw 回傳 null（退回零件，不破圖）');
 
 /* ⑤ Service Worker 分桶 */
 sec('⑤ SW 預熱分桶');

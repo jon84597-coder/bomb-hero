@@ -1,39 +1,39 @@
 # -*- coding: utf-8 -*-
-"""把 anim-v2 的六套動作輸出成遊戲用精靈圖（spr/hero-anim-rabbit-*.webp）。
+"""把 anim-v2 的動作輸出成遊戲用精靈圖（spr/hero-anim-<角色>-*.webp）
 
 要點：
   1. 逐幀做連通塊清理 —— 影片壓縮會在畫面邊緣留下一條 alpha=255 的近白細條，
      肉眼在淺底看不到，但貼到遊戲裡會變成淡白色方塊。
-  2. 所有動作共用「同一個裁切框 + 同一個縮放 + 同一個錨點（腳底中心）」，
+  2. 同一隻角色的所有動作共用「同一個裁切框 + 同一個縮放 + 同一個錨點（腳底中心）」，
      所以切換動作時位置與比例天生一致，不可能跳。
+  3. 裁切框可以「逐隻角色」不同（小熊比兔子胖，900 寬的畫布會把手掌切掉），
+     但縮放基準 CHAR_H_CANVAS 一定要一樣，否則每隻角色大小不同。
+
+用法：python export_game.py [角色key]
 """
 import os
+import sys
 import json
-import glob
 import numpy as np
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.normpath(os.path.join(HERE, '..', '..', 'spr'))
 
-FRAMES = {
-    'walk':    lambda i: os.path.join(HERE, 'frames_game', 'w%02d.png' % i),
-    'idle':    lambda i: os.path.join(HERE, 'frames_anim', 'idle', '%02d.png' % i),
-    'hold':    lambda i: os.path.join(HERE, 'frames_anim', 'hold', '%02d.png' % i),
-    'throw':   lambda i: os.path.join(HERE, 'frames_anim', 'throw', '%02d.png' % i),
-    'hurt':    lambda i: os.path.join(HERE, 'frames_anim', 'hurt', '%02d.png' % i),
-    'victory': lambda i: os.path.join(HERE, 'frames_anim', 'victory', '%02d.png' % i),
-}
-
-CROP_X, CROP_Y, CROP_W, CROP_H = 70, 150, 760, 1250
-ANCHOR_X, ANCHOR_Y = 450.0, 1360.0     # 畫布座標裡「腳底中心」的位置
-CHAR_H_CANVAS = 1069.0                 # 角色在 900x1560 畫布上的高度
+CHAR_H_CANVAS = 1069.0                 # 角色在畫布上的高度（所有角色一致）
 TARGET_H = 200                         # 輸出素材裡的角色高度（遊戲約顯示 78px，約 2.5x 餘量）
+FOOT_Y_CANVAS = 1360.0                 # 腳底基線（畫布座標）
 SCALE = TARGET_H / CHAR_H_CANVAS
-CELL_W = int(round(CROP_W * SCALE))
-CELL_H = int(round(CROP_H * SCALE))
-AX = (ANCHOR_X - CROP_X) * SCALE
-AY = (ANCHOR_Y - CROP_Y) * SCALE
+
+CHARS = {
+    # 裁切框＝(x, y, w, h)，畫布座標。中心 x 必須等於 x + w/2（錨點靠它對齊）
+    'rabbit': dict(src='frames_anim', crop=(70, 150, 760, 1250),
+                   acts=['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'],
+                   walk='frames_game/w%02d.png'),
+    # 小熊：1080 寬畫布（手臂甩出去到 ±531）。走路也走這套，所以沒有 frames_game。
+    'bear':   dict(src='frames_anim_bear', crop=(0, 150, 1080, 1250),
+                   acts=['walk', 'idle', 'hold', 'victory'], walk=None),
+}
 
 
 def clean(a):
@@ -45,36 +45,44 @@ def clean(a):
     return a
 
 
-def load(act, i):
-    im = Image.open(FRAMES[act](i)).convert('RGBA')
-    a = clean(np.array(im))
-    return Image.fromarray(a, 'RGBA')
+def main(key):
+    cfg = CHARS[key]
+    cx, cy, cw, ch = cfg['crop']
+    cell_w = int(round(cw * SCALE))
+    cell_h = int(round(ch * SCALE))
+    ax = (cx + cw / 2.0 - cx) * SCALE      # 錨點在裁切框裡的座標
+    ay = (FOOT_Y_CANVAS - cy) * SCALE
 
+    def load(act, i):
+        if act == 'walk' and cfg['walk']:
+            p = os.path.join(HERE, cfg['walk'] % i)
+        else:
+            p = os.path.join(HERE, cfg['src'], act, '%02d.png' % i)
+        return Image.fromarray(clean(np.array(Image.open(p).convert('RGBA'))), 'RGBA')
 
-def main():
-    os.makedirs(OUT, exist_ok=True)
     meta = {
         'v': 1,
         'charHpx': TARGET_H,
-        'cellW': CELL_W, 'cellH': CELL_H,
-        'ax': round(AX, 2), 'ay': round(AY, 2),
+        'cellW': cell_w, 'cellH': cell_h,
+        'ax': round(ax, 2), 'ay': round(ay, 2),
         'actions': {},
     }
-    for act in FRAMES:
-        sheet = Image.new('RGBA', (CELL_W * 12, CELL_H), (0, 0, 0, 0))
+    os.makedirs(OUT, exist_ok=True)
+    for act in cfg['acts']:
+        sheet = Image.new('RGBA', (cell_w * 12, cell_h), (0, 0, 0, 0))
         for i in range(12):
-            im = load(act, i).crop((CROP_X, CROP_Y, CROP_X + CROP_W, CROP_Y + CROP_H))
-            im = im.resize((CELL_W, CELL_H), Image.LANCZOS)
-            sheet.alpha_composite(im, (CELL_W * i, 0))
-        fn = 'hero-anim-rabbit-%s.webp' % act
+            im = load(act, i).crop((cx, cy, cx + cw, cy + ch))
+            im = im.resize((cell_w, cell_h), Image.LANCZOS)
+            sheet.alpha_composite(im, (cell_w * i, 0))
+        fn = 'hero-anim-%s-%s.webp' % (key, act)
         sheet.save(os.path.join(OUT, fn), 'WEBP', quality=80, method=5)
         kb = os.path.getsize(os.path.join(OUT, fn)) / 1024.0
         meta['actions'][act] = {'file': fn, 'frames': 12}
         print('%-8s %s  %dx%d  %.0f KB' % (act, fn, sheet.width, sheet.height, kb))
-    with open(os.path.join(OUT, 'hero-anim-rabbit.json'), 'w', encoding='utf-8', newline='\n') as f:
+    with open(os.path.join(OUT, 'hero-anim-%s.json' % key), 'w', encoding='utf-8', newline='\n') as f:
         json.dump(meta, f, ensure_ascii=False, indent=1)
-    print('\ncell %dx%d  anchor (%.1f, %.1f)  charHpx %d' % (CELL_W, CELL_H, AX, AY, TARGET_H))
+    print('\n%s  cell %dx%d  anchor (%.2f, %.2f)  charHpx %d' % (key, cell_w, cell_h, ax, ay, TARGET_H))
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1] if len(sys.argv) > 1 else 'rabbit')

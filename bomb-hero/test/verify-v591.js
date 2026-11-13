@@ -49,7 +49,7 @@ if (typeof holdPos === 'function') {
   const r = holdPos('rabbit', { footY: 500, H: 200 });
   ok(!!r && Math.abs(r.y - (500 - (+upM[1]) * 200)) < 0.01, '兔子：y = 腳底 − up·H（實際 ' + (r && r.y) + '）');
   ok(!!r && Math.abs(r.dx) < 0.06 * 200, '兔子：水平偏移在 0.06H 內（實際 ' + (r && r.dx) + '）');
-  ok(holdPos('bear', { footY: 500, H: 200 }) === null, '沒校準的角色 → null（走舊公式）');
+  ok(holdPos('dog', { footY: 500, H: 200 }) === null, '沒校準的角色 → null（走舊公式）');
   ok(holdPos('rabbit', { H: 200 }) === null, '沒有 footY → null（不會算出 NaN 座標）');
   ok(holdPos('rabbit', { footY: 500, H: 0 }) === null, '沒有 H → null');
 }

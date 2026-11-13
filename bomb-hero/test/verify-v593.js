@@ -184,13 +184,16 @@ ok(isFinite(ai.x) && isFinite(ai.y), 'AI 座標沒有變成 NaN');
 sec('⑨ 版本戳記');
 const vm = SRC.match(/const VERSION = '([\d.]+)'/);
 ok(vm && parseFloat(vm[1]) >= 5.93, 'VERSION ≥ 5.93（' + (vm && vm[1]) + '）');
-ok(/verLogVer">5\.93</.test(HTML) && /verTxt">5\.93</.test(HTML), 'index.html 兩處版號都是 5.93');
+/* v5.94：版號斷言改成「跟主檔一致」而不是釘死 5.93 —— 釘死的話每一版都要回頭改這三行。 */
+const V = vm ? vm[1] : '0', VRE = V.replace(/\./g, '\\.');
+ok(new RegExp('verLogVer">' + VRE + '<').test(HTML) && new RegExp('verTxt">' + VRE + '<').test(HTML),
+  'index.html 兩處版號都跟主檔一致（' + V + '）');
 const SW = fs.readFileSync(__dirname + '/../sw.js', 'utf8');
-ok(/var SW_VERSION = 'v5\.93\.0';/.test(SW), 'SW 版號 v5.93.0');
+ok(new RegExp("var SW_VERSION = 'v" + VRE + "\\.0';").test(SW), 'SW 版號 v' + V + '.0');
 const LOG = fs.readFileSync(__dirname + '/../js/version-log.js', 'utf8');
-ok(/v: '5\.93'[\s\S]{0,80}?now: true/.test(LOG), '更新紀錄有 5.93 條目（now: true）');
+ok(new RegExp("v: '" + VRE + "'[\\s\\S]{0,80}?now: true").test(LOG), '更新紀錄有 ' + V + ' 條目（now: true）');
 ok(/v: '5\.92'[\s\S]{0,80}?now: false/.test(LOG), '上一版 5.92 已標成 now: false');
-ok(!/後台|開發者模式/.test(LOG.split("v: '5.93'")[1].split('v:')[0]), '5.93 條目沒有提到「後台／開發者」');
+ok(!/後台|開發者模式/.test(LOG.split("v: '" + V + "'")[1].split('v:')[0]), V + ' 條目沒有提到「後台／開發者」');
 
 console.log('\n' + '='.repeat(40));
 console.log('v5.93 自由走位：' + pass + ' 通過 / ' + fail + ' 失敗');

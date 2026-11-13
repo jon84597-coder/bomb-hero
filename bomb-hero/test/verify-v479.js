@@ -30,7 +30,7 @@ ok(uniq.length === 227, '227 個不同的貼圖檔名');
 head('2. 貼圖檔案');
 const SPR = path.join(ROOT, 'spr');
 const files = fs.readdirSync(SPR).filter(function (f) { return /\.webp$/.test(f); });
-ok(files.length === 233, 'spr/ 內有 ' + files.length + ' 個 .webp（v5.90：主角精靈動畫 +6）');
+ok(files.length === 237, 'spr/ 內有 ' + files.length + ' 個 .webp（v5.94：小熊四套動畫 +4）');
 const missing = uniq.filter(function (u) { return !fs.existsSync(path.join(ROOT, u)); });
 ok(missing.length === 0, '每個引用都找得到檔案' + (missing.length ? '（缺 ' + missing.slice(0, 3) + '）' : ''));
 let badMagic = 0, total = 0;
@@ -43,7 +43,9 @@ ok(badMagic === 0, '全部是合法 WEBP（壞檔 ' + badMagic + '）');
 // v5.90：主角（兔子）改用影片生成的六套精靈動作，spr/ 多了 6 張
 //   （spr/hero-anim-rabbit-{walk,idle,hold,throw,hurt,victory}.webp，合計約 540KB）。
 //   這批圖是「取代原本的零件拼裝」，不是額外堆積，所以預算線由 2.70MB 調到 3.40MB。
-ok(total > 1200000 && total < 3400000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 3.40 MB：v5.90 六套主角動畫 +540KB）');
+// v5.94：小熊四套＋其 1080 寬格子約 +456KB → 預算線 3.40MB 調到 3.65MB。
+//   同樣是「取代零件拼裝」，不是多餘素材；以後每隻角色大約 +450KB。
+ok(total > 1200000 && total < 3650000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 3.65 MB：v5.94 小熊四套動畫）');
 
 // ---------- 3. 位元組與原始 base64 完全一致 ----------
 head('3. 抽出過程零損失');
@@ -63,7 +65,7 @@ ok(mismatch === 0, '全部位元組／雜湊與抽取當下一致（不一致 ' 
 // ---------- 4. 清單與檔案一致 ----------
 head('4. 預熱清單');
 const list = JSON.parse(fs.readFileSync(path.join(SPR, '_list.json'), 'utf8'));
-ok(Array.isArray(list) && list.length === 233, '_list.json 有 233 筆（v5.90 六套主角動畫幀）');
+ok(Array.isArray(list) && list.length === 238, '_list.json 有 238 筆（v5.94 多了小熊四套動畫幀＋meta）');
 const notInList = files.filter(function (f) { return list.indexOf(f) < 0; });
 ok(notInList.length === 0, '每個檔案都在清單裡' + (notInList.length ? '（漏 ' + notInList.slice(0, 3) + '）' : ''));
 const missingFile = list.filter(function (f) { return !fs.existsSync(path.join(SPR, f)); });
@@ -71,11 +73,16 @@ ok(missingFile.length === 0, '清單沒有指向不存在的檔案');
 // v5.90：動畫幀不是死檔 —— main.js 必須真的組出這些檔名
 const mainSrc = fs.readFileSync(path.join(ROOT, 'js', 'main.js'), 'utf8');
 const animActs = ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'];
-const dead = animActs.filter(function (a) {
-  return files.indexOf('hero-anim-rabbit-' + a + '.webp') >= 0 &&
-         mainSrc.indexOf("'spr/hero-anim-rabbit-' + k + '.webp'") < 0;
+// v5.94：檔名改成動態組（hero-anim-<角色>-<動作>.webp），所以驗「組名模板存在」＋
+//   「每隻角色的動作表都列在 SHEET 裡」。
+const dynName = mainSrc.indexOf("'spr/hero-anim-' + sh.pre + '-' + k + '.webp'") >= 0;
+const animFiles = files.filter(function (f) { return /^hero-anim-.*\.webp$/.test(f); });
+const sheetActs = (mainSrc.match(/acts: \[[^\]]*\]/g) || []).join(',');
+const dead = animFiles.filter(function (f) {
+  const m = f.match(/^hero-anim-(\w+?)-(\w+)\.webp$/);
+  return !m || sheetActs.indexOf("'" + m[2] + "'") < 0;
 });
-ok(dead.length === 0, '六套動畫幀都有程式引用（沒有死檔' + (dead.length ? '，缺 ' + dead.join(',') : '') + '）');
+ok(dynName && dead.length === 0, '動畫幀都有程式引用（沒有死檔' + (dead.length ? '，缺 ' + dead.join(',') : '') + '）');
 
 // ---------- 5. 體積效益 ----------
 head('5. 體積與 gzip');

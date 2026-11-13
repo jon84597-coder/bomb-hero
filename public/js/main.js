@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.93';
+const VERSION = '5.94';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -30381,24 +30381,41 @@ const Parts = (function () {
 const HeroAnim = (function () {
     try {
       return (function () {
-  const META = { charHpx: 200, cellW: 142, cellH: 234, ax: 71.09, ay: 226.38, frames: 12 };
+  const META = { charHpx: 200, cellH: 234, ay: 226.38, frames: 12 };
+  // v5.94：每隻角色一張表。cellW/ax 由「裁切框」決定，不是全域常數 ——
+  //   小熊在同一角色高度下比兔子胖（站姿寬高比 0.71 vs 0.67），手臂一甩到 ±531，
+  //   塞進兔子那個 760 寬的裁切框會把兩側手掌切掉 → 小熊用 1080 寬畫布、格子 202。
+  //   ax 是「錨點在格子裡的位置」，畫圖時 -ax*k 就是讓腳底中心落在 (x, footY)。
+  const SHEET = {
+    rabbit: { pre: 'rabbit', cellW: 142, ax: 71.09, acts: ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'] },
+    bear:   { pre: 'bear',   cellW: 202, ax: 101.03, acts: ['walk', 'idle', 'hold', 'victory'] }
+  };
   const ACTS = ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'];
   const FPS  = { walk: 15, idle: 7, hold: 9, throw: 20, hurt: 11, victory: 11 };
   const LOOP = { walk: 1, idle: 1, hold: 1, throw: 0, hurt: 0, victory: 1 };
-  const KEYS = { rabbit: 1 };
+  const KEYS = { rabbit: 1, bear: 1 };
   const imgs = {}, ready = {};
   function load() {
     if (typeof Image === 'undefined') return;
-    ACTS.forEach(function (k) {
-      const im = new Image();
-      im.onload = function () { ready[k] = true; };
-      im.onerror = function () { ready[k] = false; };
-      try { im.src = 'spr/hero-anim-rabbit-' + k + '.webp'; } catch (e) {}
-      imgs[k] = im;
+    Object.keys(SHEET).forEach(function (key) {
+      const sh = SHEET[key];
+      imgs[key] = imgs[key] || {};
+      ready[key] = ready[key] || {};
+      sh.acts.forEach(function (k) {
+        const im = new Image();
+        im.onload = function () { ready[key][k] = true; };
+        im.onerror = function () { ready[key][k] = false; };
+        try { im.src = 'spr/hero-anim-' + sh.pre + '-' + k + '.webp'; } catch (e) {}
+        imgs[key][k] = im;
+      });
     });
   }
   function has(key) { return !!KEYS[key]; }
-  function get(k) { const im = imgs[k]; return (im && ready[k] && im.naturalWidth) ? im : null; }
+  function get(key, k) {
+    const m = imgs[key];
+    const im = m && m[k];
+    return (im && ready[key][k] && im.naturalWidth) ? im : null;
+  }
   // 遊戲狀態 → 動作。優先順序：明確指定 ＞ 哭（被炸到）＞ 笑（炸到人／獲勝）＞ 舉彈 ＞ 走路 ＞ 待機
   function pick(a) {
     a = a || {};
@@ -30427,9 +30444,14 @@ const HeroAnim = (function () {
   // H ＝ 角色總高（與零件版同一個量綱），腳底中心 ＝ (x, footY)
   function draw(g, key, x, footY, H, a) {
     if (!KEYS[key] || !g || !g.drawImage) return null;
-    const act = pick(a);
-    const im = get(act);
-    if (!im) return null;
+    const sh = SHEET[key];
+    if (!sh) return null;
+    // 這隻角色沒做那個動作（小熊目前沒有 throw／hurt）→ 退到待機，
+    //   而不是回 null 讓呼叫端掉回零件骨架（那會出現「精靈＋方塊」混在一起的畫面）。
+    let act = pick(a);
+    if (!get(key, act)) act = get(key, 'idle') ? 'idle' : (get(key, 'walk') ? 'walk' : null);
+    if (!act) return null;
+    const im = get(key, act);
     const k = H / META.charHpx;
     const f = frameOf(act, a);
     const fx = (typeof DIRS !== 'undefined' && DIRS[a.facing]) ? DIRS[a.facing] : { x: 0 };
@@ -30437,15 +30459,25 @@ const HeroAnim = (function () {
     g.save();
     g.translate(x, footY - (a.jump || 0));
     if (side < 0) g.scale(-1, 1);
-    g.drawImage(im, f * META.cellW, 0, META.cellW, META.cellH,
-                -META.ax * k, -META.ay * k, META.cellW * k, META.cellH * k);
+    g.drawImage(im, f * sh.cellW, 0, sh.cellW, META.cellH,
+                -sh.ax * k, -META.ay * k, sh.cellW * k, META.cellH * k);
     g.restore();
     return { topY: footY - H * .94, footY: footY - (a.jump || 0),
              ex: side * H * .04, ey: 0, H: H, act: act, frame: f,
-             W: H * META.cellW / META.charHpx };
+             W: H * sh.cellW / META.charHpx };
   }
-  function readyCount() { return ACTS.filter(function (k) { return ready[k]; }).length; }
-  function inject(k, im) { if (!k || !im) return; imgs[k] = im; ready[k] = true; }
+  function readyCount() {
+    let n = 0;
+    Object.keys(SHEET).forEach(function (key) {
+      SHEET[key].acts.forEach(function (k) { if (ready[key] && ready[key][k]) n++; });
+    });
+    return n;
+  }
+  function inject(k, im) {
+    if (!k || !im) return;
+    imgs.rabbit = imgs.rabbit || {}; ready.rabbit = ready.rabbit || {};
+    imgs.rabbit[k] = im; ready.rabbit[k] = true;
+  }
   return { load: load, has: has, get: get, pick: pick, draw: draw,
            readyCount: readyCount, imgs: imgs, inject: inject, META: META };
       })();
@@ -31462,16 +31494,26 @@ const HOLD_BOMB = {
     //   差 0.02H（遊戲裡 4px）球就會從炸彈下緣露出一圈。前兩格站直（0.93），中間蹲下（0.90）。
     upFrames: [0.930, 0.935, 0.875, 0.860, 0.855, 0.855, 0.860, 0.870, 0.885, 0.880, 0.880, 0.875]
   },
+  /* v5.94：小熊（重裝力量型）。art/anim-v2/measure_hold_bear.py 逐格量 ——
+     素材球是灰色，用「低飽和＋亮」切出最大連通塊取圓心。球徑 0.505H。
+     這隻的球會往右飄到 +0.127H（舉重晃動），所以水平也要逐格跟，
+     只固定 side 的話球右緣會從炸彈底下露出來。 */
+  bear: {
+    up: 0.83, side: 0,
+    upFrames:   [0.8149, 0.8149, 0.8177, 0.8401, 0.8410, 0.8410, 0.8410, 0.8410, 0.8410, 0.8336, 0.8298, 0.8177],
+    sideFrames: [-0.0346, -0.0337, -0.0330, -0.0141, 0.0312, 0.0265, 0.0819, 0.0856, 0.0703, 0.0189, -0.0002, -0.0292]
+  },
 };
 function holdBombPos(animal, bd) {
   const cfg = HOLD_BOMB[animal];
   if (!cfg || !bd || bd.footY == null || !bd.H) return null;
-  let up = cfg.up;
-  if (cfg.upFrames && bd.frame != null) {
-    const F = cfg.upFrames;
-    up = F[((bd.frame % F.length) + F.length) % F.length];
+  function at(F, i) { return F[((i % F.length) + F.length) % F.length]; }
+  let up = cfg.up, side = (cfg.side || 0);
+  if (bd.frame != null) {
+    if (cfg.upFrames) up = at(cfg.upFrames, bd.frame);
+    if (cfg.sideFrames) side = at(cfg.sideFrames, bd.frame);
   }
-  return { dx: (cfg.side || 0) * bd.H, y: bd.footY - up * bd.H };
+  return { dx: side * bd.H, y: bd.footY - up * bd.H };
 }
 
 function drawPlayer(p, T) {

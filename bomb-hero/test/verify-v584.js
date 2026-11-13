@@ -166,6 +166,10 @@ head('6. 平衡：四招按建議調整');
   try {
     for (let yy = 3; yy <= 7; yy++) for (let xx = 3; xx <= 7; xx++) {
       if (H.grid && H.grid[yy]) H.grid[yy][xx] = 0;
+      // v5.94：**躲點也要清**。地圖會隨機在格子裡撒樹叢／破屋（Game.hazards），
+      //   玩家站在裡面＝躲起來，小怪「看不到」就永遠不進仇恨、也永遠不出招。
+      //   這就是「單跑 10 次都過、跑全套偶爾紅」的真正原因（實測 40 次裡 2 次踩到）。
+      if (H.hazards && H.hazards[yy]) H.hazards[yy][xx] = null;
     }
     if (typeof Q.markWallKinds === 'function') Q.markWallKinds();
   } catch (e0) {}
@@ -178,6 +182,11 @@ head('6. 平衡：四招按建議調整');
   H.foeAoe = [];
   let sawCast = false, firedWhileCast = false;
   for (let i = 0; i < 200; i++) {
+    // v5.94：鬼火是「飄忽不定」的飛行怪，偶爾自己飄出仇恨圈（2 格）就不再出招。
+    //   這裡每幀把牠拉回玩家旁 1.2 格 —— 等同玩家追著牠跑，仇恨一定維持得住。
+    const ddx = e.x - me.x, ddy = e.y - me.y;
+    const dd = Math.sqrt(ddx * ddx + ddy * ddy) || 1;
+    if (dd > 1.2 * TT) { e.x = me.x + ddx / dd * 1.2 * TT; e.y = me.y + ddy / dd * 1.2 * TT; }
     Q.updateEnemy(e, 1 / 60);
     if (e.castSkill) sawCast = true;
     if (e.castSkill && (H.foeAoe || []).length) firedWhileCast = true;
