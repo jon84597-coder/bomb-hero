@@ -222,7 +222,9 @@ sec('版本戳記');
 const vm = mainSrc.match(/const VERSION = '([\d.]+)'/);
 ok(vm && parseFloat(vm[1]) >= 5.98, 'VERSION ≥ 5.98（' + (vm && vm[1]) + '）');
 const SW = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
-ok(/var SW_VERSION = 'v5\.98\.0';/.test(SW), 'SW 版號 v5.98.0');
+/* v5.99：版本斷言改成「不低於」，才不會每次升版就紅（v5.74 的慣例）。 */
+const swv = (SW.match(/var SW_VERSION = 'v([\d.]+)';/) || [])[1];
+ok(!!swv && parseFloat(swv) >= 5.98, 'SW 版號 ≥ v5.98（實際 ' + (swv ? 'v' + swv : '?') + '）');
 
 console.log('\n' + (fail ? '❌' : '✅') + ' v5.98：' + pass + ' 通過 / ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);

@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.98';
+const VERSION = '5.99';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -30528,27 +30528,60 @@ const HeroAnim = (function () {
   const FPS  = { walk: 15, idle: 7, hold: 9, throw: 20, hurt: 11, victory: 11 };
   const LOOP = { walk: 1, idle: 1, hold: 1, throw: 0, hurt: 0, victory: 1 };
   const KEYS = { rabbit: 1, bear: 1, dog: 1, cat: 1 };
-  const imgs = {}, ready = {};
-  function load() {
+  const imgs = {}, ready = {}, started = {};
+  /* v5.99：改成「按需載入」。原本開機一次把「所有角色 × 所有動作」全部丟給 Image 解碼 ——
+     4 隻角色 20 支＝41MB 解碼記憶體；8 隻角色 48 支會到約 115MB，低階手機光開首頁就吃掉一半。
+     現在只有「真的被畫到」的角色才載，sweep() 再把不在這場名單、又久沒畫到的角色釋放掉。
+     單人模式只載 1 隻（約 13MB），8 人房全部不同角色才是 8 隻。 */
+  let tick = 0;
+  const lastUse = {};
+  function loadActs(key) {
+    const sh = SHEET[key];
+    if (!sh) return;
+    started[key] = 1;
     if (typeof Image === 'undefined') return;
-    Object.keys(SHEET).forEach(function (key) {
-      const sh = SHEET[key];
-      imgs[key] = imgs[key] || {};
-      ready[key] = ready[key] || {};
-      sh.acts.forEach(function (k) {
-        const im = new Image();
-        im.onload = function () { ready[key][k] = true; };
-        im.onerror = function () { ready[key][k] = false; };
-        try { im.src = 'spr/hero-anim-' + sh.pre + '-' + k + '.webp'; } catch (e) {}
-        imgs[key][k] = im;
-      });
+    imgs[key] = imgs[key] || {};
+    ready[key] = ready[key] || {};
+    sh.acts.forEach(function (k) {
+      const im = new Image();
+      im.onload = function () { ready[key][k] = true; };
+      im.onerror = function () { ready[key][k] = false; };
+      try { im.src = 'spr/hero-anim-' + sh.pre + '-' + k + '.webp'; } catch (e) {}
+      imgs[key][k] = im;
     });
   }
+  function ensure(key) {
+    if (!SHEET[key]) return;
+    lastUse[key] = tick;
+    if (!started[key]) loadActs(key);
+  }
+  function release(key) {
+    if (!started[key]) return;
+    const m = imgs[key] || {};
+    Object.keys(m).forEach(function (k) {
+      const im = m[k];
+      if (im) { try { im.onload = null; im.onerror = null; im.src = ''; } catch (e) {} }
+    });
+    delete imgs[key]; delete ready[key]; delete started[key]; delete lastUse[key];
+  }
+  /* 只留「這場比賽的角色」＋「最近有被畫到的角色」；其餘釋放（maxAge 以 draw 次數計） */
+  function sweep(roster, maxAge) {
+    const keep = {};
+    (roster || []).forEach(function (k) { if (SHEET[k]) keep[k] = 1; });
+    const age = (maxAge == null) ? 600 : maxAge;   // 0 是合法值（立刻掃），不能用 ||
+    Object.keys(started).forEach(function (k) {
+      if (keep[k]) return;
+      if (tick - (lastUse[k] || 0) < age) return;
+      release(k);
+    });
+  }
+  // 舊 API：load() 不再「一次載入全部」，可傳角色名預載（不傳就什麼都不做）
+  function load(key) { if (typeof key === 'string') ensure(key); }
   function has(key) { return !!KEYS[key]; }
   function get(key, k) {
     const m = imgs[key];
     const im = m && m[k];
-    return (im && ready[key][k] && im.naturalWidth) ? im : null;
+    return (im && ready[key] && ready[key][k] && im.naturalWidth) ? im : null;
   }
   // 遊戲狀態 → 動作。優先順序：明確指定 ＞ 哭（被炸到）＞ 笑（炸到人／獲勝）＞ 舉彈 ＞ 走路 ＞ 待機
   function pick(a) {
@@ -30580,6 +30613,8 @@ const HeroAnim = (function () {
     if (!KEYS[key] || !g || !g.drawImage) return null;
     const sh = SHEET[key];
     if (!sh) return null;
+    tick++;
+    ensure(key);                                    // v5.99：第一次畫到才開始載入
     // 這隻角色沒做那個動作（小熊目前沒有 throw／hurt）→ 退到待機，
     //   而不是回 null 讓呼叫端掉回零件骨架（那會出現「精靈＋方塊」混在一起的畫面）。
     let act = pick(a);
@@ -30610,10 +30645,12 @@ const HeroAnim = (function () {
   function inject(k, im) {
     if (!k || !im) return;
     imgs.rabbit = imgs.rabbit || {}; ready.rabbit = ready.rabbit || {};
-    imgs.rabbit[k] = im; ready.rabbit[k] = true;
+    imgs.rabbit[k] = im; ready.rabbit[k] = true; started.rabbit = 1;
   }
   return { load: load, has: has, get: get, pick: pick, draw: draw,
-           readyCount: readyCount, imgs: imgs, inject: inject, META: META };
+           readyCount: readyCount, imgs: imgs, inject: inject, META: META,
+           ensure: ensure, release: release, sweep: sweep,
+           loaded: function () { return Object.keys(started); } };
       })();
     } catch (__e) {
       __bootFail('HeroAnim', __e);
@@ -31066,7 +31103,22 @@ const HERO_ART_SCALE = .81;
 // v5.0b：青蛙再縮 5%（.95 → .90），玩家覺得牠原本偏大、擋視線
 const HERO_SIZE_K = { pig: .95, frog: .90, chick: .95 };
 function heroSizeK(animal) { return HERO_SIZE_K[animal] || 1; }
+/* v5.99：每 90 次畫角色巡一次（約 1.5 秒），把「不在這場名單、又久沒被畫到」的動作圖集釋放掉。
+   名單＝Game.players 身上的角色（單人是自己；對戰是大廳裡所有人）。 */
+let _haSweep = 0;
+function heroAnimSweep() {
+  if (typeof HeroAnim === 'undefined' || !HeroAnim || !HeroAnim.sweep) return;
+  const roster = [];
+  try {
+    (Game.players || []).forEach(function (p) {
+      const c = (p && p.chIdx != null) ? CHARACTERS[p.chIdx] : (p && p.ch ? p.ch : null);
+      if (c && c.animal) roster.push(c.animal);
+    });
+  } catch (e) {}
+  try { HeroAnim.sweep(roster); } catch (e) {}
+}
 function drawSpriteChar(g, c, x, y, R, a) {
+  if ((++_haSweep % 90) === 0) heroAnimSweep();       // v5.99：按需載入 + 釋放
   // 先用「部位骨架」畫（頭／手／腳各自動）；沒有部位圖才退回整張圖
   const rigH = R * 3.75 * HERO_ART_SCALE * heroSizeK(c.animal);
   const rig = drawRigChar(g, c.animal, x, y + R * .82, rigH, a);
