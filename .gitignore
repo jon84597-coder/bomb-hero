@@ -109,3 +109,14 @@ bomb-hero/patch_v*.py
 bomb-hero/_bak_*.html
 bomb-hero/_v45*_*.py
 bomb-hero/_cur_*.html
+
+# v5.92：動作素材的中間產物（影片幀／生成幀／截圖，加起來 500MB，只留腳本）
+bomb-hero/art/anim-v2/vid/
+bomb-hero/art/anim-v2/frames/
+bomb-hero/art/anim-v2/frames_anim/
+bomb-hero/art/anim-v2/frames_game/
+bomb-hero/art/anim-v2/frames_vid/
+bomb-hero/art/anim-v2/shots/
+bomb-hero/art/anim-v2/gen/
+bomb-hero/art/rig/
+bomb-hero/art/anim-test/

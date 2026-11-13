@@ -60,9 +60,11 @@ p.storm = false;
 ok(Math.abs(B.playerSpeed(p) - 146 * B.OSTRICH_SPD) < .01, '退回普通鴕鳥速度');
 p.storm = true;
 
-console.log('=== ④ 跳 3 格 ===');
+console.log('=== ④ 跳 3 格（v5.92：跨 2 格障礙 → 落在第 3 格）===');
+// v5.92：一定要「跨過障礙」才算跨 —— 所以中間兩格擺牆，落點（第 3 格）才是空地
+G.grid[5][2] = 1; G.grid[5][3] = 1;
 p.x = 1 * 40 + 20; p.y = 5 * 40 + 20; p.facing = 'right'; p.air = 0; p.fireCd = 0;
-ok(B.mountJump(p) === true, '風暴鴕鳥前方空地：可以跳');
+ok(B.mountJump(p) === true, '風暴鴕鳥跨兩格牆：跳得過去');
 ok(Math.floor(p.jumpTo.x / 40) === 4, '落點在往前第 3 格（x=4）');
 let guard = 0; while (p.air > 0 && guard++ < 200) B.jumpTick(p, 1 / 60);
 ok(Math.floor(p.x / 40) === 4, '實際落在 x=4');

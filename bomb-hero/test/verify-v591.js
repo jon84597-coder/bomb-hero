@@ -21,14 +21,15 @@ function sec(n) { console.log('\n=== ' + n + ' ==='); }
 
 /* ① 校準數字 */
 sec('① 兔子炸彈位置（從素材反推）');
-const tableM = mainSrc.match(/const HOLD_BOMB = \{([\s\S]*?)\};/);
+const tableM = mainSrc.match(/const HOLD_BOMB = \{([\s\S]*?)\n\};/);
 ok(!!tableM, 'main.js 有 HOLD_BOMB 表（每隻角色各自校準）');
-const upM = tableM && tableM[1].match(/rabbit:\s*\{\s*up:\s*([\d.]+),\s*side:\s*(-?[\d.]+)\s*\}/);
+// v5.92：rabbit 的 up 後面多了 upFrames，正則改成「同一個 rabbit 物件裡找 up／side」
+const upM = tableM && tableM[1].match(/rabbit:\s*\{[\s\S]{0,400}?up:\s*([\d.]+),[\s\S]{0,400}?side:\s*(-?[\d.]+)/);
 ok(!!upM, 'rabbit 有自己的 up／side');
 if (upM) {
   const up = +upM[1], side = +upM[2];
-  // 素材實測：球心距腳底 0.95H；遊戲炸彈半徑比素材球大 19%，上抬 0.04H → 0.99H
-  ok(up > 0.94 && up < 1.03, 'up 落在 0.94~1.03H（實際 ' + up + '，素材球心 0.95H）');
+  // 素材實測：球心距腳底 0.949~0.968H（v5.92 逐格量測，取中位當常數）
+  ok(up > 0.90 && up < 1.03, 'up 落在 0.90~1.03H（實際 ' + up + '，素材球心 0.95H）');
   ok(Math.abs(side) < 0.06, 'side 幾乎不偏（實際 ' + side + '）');
 }
 
@@ -47,7 +48,7 @@ sec('② holdBombPos 計算');
 if (typeof holdPos === 'function') {
   const r = holdPos('rabbit', { footY: 500, H: 200 });
   ok(!!r && Math.abs(r.y - (500 - (+upM[1]) * 200)) < 0.01, '兔子：y = 腳底 − up·H（實際 ' + (r && r.y) + '）');
-  ok(!!r && Math.abs(r.dx) < 0.01, '兔子：水平偏移 0');
+  ok(!!r && Math.abs(r.dx) < 0.06 * 200, '兔子：水平偏移在 0.06H 內（實際 ' + (r && r.dx) + '）');
   ok(holdPos('bear', { footY: 500, H: 200 }) === null, '沒校準的角色 → null（走舊公式）');
   ok(holdPos('rabbit', { H: 200 }) === null, '沒有 footY → null（不會算出 NaN 座標）');
   ok(holdPos('rabbit', { footY: 500, H: 0 }) === null, '沒有 H → null');

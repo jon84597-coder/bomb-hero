@@ -61,35 +61,42 @@ ok(Math.abs(B.playerSpeed(p) - 146) < .01, '沒騎鴕鳥時速度回到 146');
 B.rideOstrich(p);
 ok(B.fireBreath(p) === false, '鴕鳥不會吐火（同一顆鍵改叫跳躍）');
 
-console.log('=== ③ 跳躍規則 ===');
-// 空地 → 跳 2 格
+console.log('=== ③ 跳躍規則（v5.92：跨 2 → 跨 1 → 原地）===');
+// v5.92：玩家定案 —— 「跨」是指跳過障礙物。前方空著就不叫跨，直接原地起跳原地落地。
 B.rideOstrich(p);
+G.grid[4][3] = 0; G.grid[4][4] = 0;
 p.x = 2 * 40 + 20; p.y = 4 * 40 + 20; p.facing = 'right';
 p.air = 0; p.fireCd = 0;
-ok(B.mountJump(p) === true, '前方空地：可以跳');
-ok(p.air > 0 && p.jumpTo && Math.floor(p.jumpTo.x / 40) === 4, '落點在往前第 2 格（x=4）');
+ok(B.mountJump(p) === true, '前方空地：跳得起來（不會像舊版直接沒反應）');
+ok(p.air > 0 && p.jumpTo && Math.floor(p.jumpTo.x / 40) === 2, '前方空地沒有「跨」→ 原地跳（落點 x=2）');
+ok(p.jumpOver === false, 'jumpOver = false（沒有跨過障礙）');
 ok(p.invuln >= B.OSTRICH_JUMP_T, '滯空期間有無敵罩');
 let guard = 0;
 while (p.air > 0 && guard++ < 200) B.jumpTick(p, 1 / 60);
-ok(Math.floor(p.x / 40) === 4 && Math.floor(p.y / 40) === 4, '落地站在目標格');
+ok(Math.floor(p.x / 40) === 2 && Math.floor(p.y / 40) === 4, '原地起跳原地落地');
 
-// 中間一格是牆 → 還是跳得過去
+// 中間一格是牆 → 跨 1 格，落在牆的另一側
 G.grid[4][3] = 1;
 p.x = 2 * 40 + 20; p.y = 4 * 40 + 20; p.air = 0; p.fireCd = 0;
 ok(B.mountJump(p) === true, '中間那格是硬牆：跨得過去');
+ok(Math.floor(p.jumpTo.x / 40) === 4, '落點在往前第 2 格（x=4）');
+ok(p.jumpOver === true, 'jumpOver = true（真的跨過障礙）');
 guard = 0; while (p.air > 0 && guard++ < 200) B.jumpTick(p, 1 / 60);
 ok(Math.floor(p.x / 40) === 4, '確實落在牆的另一側');
 
-// 連續兩格牆 → 跳不過去
+// 連續兩格牆 → 沒地方落腳 → 原地跳（不再「按了沒反應」）
 G.grid[4][5] = 1;
 p.x = 3 * 40 + 20; p.y = 4 * 40 + 20; p.air = 0; p.fireCd = 0;
-ok(B.mountJump(p) === false, '連兩格牆（中間＋落點都是牆）：跳不過去');
-ok(p.air === 0, '跳不出去時不會卡在空中');
+ok(B.mountJump(p) === true, '連兩格牆：還是跳得起來（原地跳）');
+ok(Math.floor(p.jumpTo.x / 40) === 3, '原地落地（x=3），不會硬塞進牆裡');
+guard = 0; while (p.air > 0 && guard++ < 200) B.jumpTick(p, 1 / 60);
+ok(Math.floor(p.x / 40) === 3, '落地站在原地');
 
-// 落點是軟磚 → 也不行（不能落進磚裡）
+// 落點是軟磚 → 也不能跨過去 → 原地跳
 G.grid[4][5] = 0; G.grid[4][6] = 2;
 p.x = 4 * 40 + 20; p.air = 0; p.fireCd = 0;
-ok(B.mountJump(p) === false, '落點是軟磚：跳不過去');
+ok(B.mountJump(p) === true, '落點是軟磚：跳過去 → 原地跳');
+ok(Math.floor(p.jumpTo.x / 40) === 4, '原地落地（軟磚上不能站）');
 
 // 冷卻中不能連跳
 G.grid[4][6] = 0;
@@ -102,7 +109,7 @@ ok(B.mountJump(p) === false, '沒騎鴕鳥的人不能跳');
 B.rideOstrich(p);
 
 console.log('=== ④ 落地震波 ===');
-G.grid[4][3] = 0;
+G.grid[4][3] = 1;   // 中間一格牆 → 跨 1 格，落在 x=4（震波中心＝落點）
 G.enemies = [
   { x: 4 * 40 + 20, y: 4 * 40 + 20, hp: 1, maxHp: 1, hitT: 0, r: 10, color: '#fff' },     // 落點那格（雜兵）
   { x: 5 * 40 + 20, y: 4 * 40 + 20, hp: 20, maxHp: 20, hitT: 0, r: 10, color: '#fff' },   // 隔壁 1 格（有血條的大怪）

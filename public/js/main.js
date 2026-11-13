@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.91';
+const VERSION = '5.92';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -6708,25 +6708,39 @@ function fireBreath(p) {
 //   往前跳 2 格；「中間那格」可以是硬牆或軟磚（等於跨過一格），
 //   但落點必須是站得住的空地 —— 所以連續兩層牆一定跳不過去。
 //   滯空期間完全免疫傷害；落地時半徑 1 格震波打怪，但一根牆都不會破壞。
+/* v5.92：鴕鳥跳躍規則（玩家指定）
+   「跨」= 跳過去的路上有障礙（牆／軟磚）擋著，才叫跨。
+   · 還沒進化（紫蛋鴕鳥）：最多跨 1 格 → 中間 1 格是牆、落點（第 2 格）是空地才跳得過去。
+   · 進化後（風暴鴕鳥）：先試跨 2 格（中間 2 格都是牆、第 3 格空地）；
+     跨不到 → 退回跨 1 格；連 1 格都跨不到 → **原地跳、原地落**（不再像舊版直接「跳不了」）。
+   原地跳一樣會砸出震波，所以貼著牆時按跳躍仍然有作用。 */
 function mountJump(p) {
   if (!p || !p.alive || !p.ostrich) return false;
   if (p.air > 0 || (p.fireCd || 0) > 0) return false;
   const T = Game.T;
   const d = DIRS[p.facing] || DIRS.down;
-  const cells = p.storm ? OSTRICH_JUMP_CELLS2 : OSTRICH_JUMP_CELLS;   // v4.89：風暴鴕鳥跳 3 格
   const cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
-  const lx = cx + d.x * cells, ly = cy + d.y * cells;
-  // 落點：地圖內、不是牆、不是炸彈（軟磚也算牆 → 不能落在軟磚上）
-  const out = (lx < 0 || ly < 0 || lx >= Game.cols || ly >= Game.rows);
-  if (out || cellAt(lx, ly) !== 0 || bombAt(lx, ly)) {
-    if (isMyPlayer(p)) AudioSys.sfx('nope');
-    return false;
+  const maxCross = p.storm ? (OSTRICH_JUMP_CELLS2 - 1) : (OSTRICH_JUMP_CELLS - 1);   // 可跨越的障礙格數
+  const inMap = function (x, y) { return x >= 0 && y >= 0 && x < Game.cols && y < Game.rows; };
+  const blocked = function (x, y) { return cellAt(x, y) !== 0; };
+  let plan = null;
+  for (let n = maxCross; n >= 1 && !plan; n--) {
+    const lx = cx + d.x * (n + 1), ly = cy + d.y * (n + 1);
+    if (!inMap(lx, ly)) continue;
+    if (cellAt(lx, ly) !== 0 || bombAt(lx, ly)) continue;      // 落點必須站得住
+    let walls = 0;
+    for (let k = 1; k <= n; k++) if (blocked(cx + d.x * k, cy + d.y * k)) walls++;
+    if (walls < n) continue;                                    // 中間沒有障礙 → 這不叫「跨」，跳過
+    plan = { lx: lx, ly: ly, over: true };
   }
+  if (!plan) plan = { lx: cx, ly: cy, over: false };            // 沒東西可跨 → 原地跳
+  const lx = plan.lx, ly = plan.ly;
   p.air = OSTRICH_JUMP_T;
   p.jumpDur = OSTRICH_JUMP_T;
   p.jumpFrom = { x: p.x, y: p.y };
   p.jumpTo = { x: lx * T + T / 2, y: ly * T + T / 2 };
-  p.jumpOver = cellAt(cx + d.x, cy + d.y) !== 0;    // 跨過去的是牆（給特效判斷用）
+  p.jumpOver = plan.over;                           // 真的跨過障礙（給特效判斷用）
+  p.jumpDive = false;
   p.jumpLift = 0;
   p.dived = false;                                  // v4.89：新的一次跳躍，俯衝可用
   p.moving = false;
@@ -18148,6 +18162,18 @@ function humanMoveDirs(p, dirs, dt) {
 //   · 觸發：只認專用鍵 —— Shift／手把 RB／手機 💨（不再用「連點方向」判定）
 //   ══════════════════════════════════════════════════════════════════ */
 const DASH_CD = 1.2, DASH_T = .16, DASH_IFRAME = .18, DASH_TILES = 1.5;
+/* v5.92：衝刺要「吃」得到道具與坐騎 —— 舊版速度寫死成 1.5 格/0.16 秒，
+   滑冰鞋吃滿、騎鴕鳥 1.45 倍、風暴 1.62 倍，衝出去還是一樣遠，手感很斷。
+   現在衝刺速度 = 目前走速 × 3.47（原本 9.375 格/秒 ÷ 基礎 2.7 格/秒），
+   倍率上限 2.4 倍 —— 再快下去單幀位移會超過半格，就可能穿過一格厚的牆。 */
+const DASH_SPD_MUL = 3.47, DASH_SPD_CAP = 2.4;
+function dashSpeedOf(p) {
+  const base = 146 * (Game.spdK || 1);
+  let k = 1;
+  try { k = playerSpeed(p) / base; } catch (e) { k = 1; }
+  k = Math.max(.55, Math.min(DASH_SPD_CAP, k));
+  return Game.T * (DASH_TILES / DASH_T) * k;
+}
 function dashWanted(p, dirs) {
   // v5.0b：衝刺「只認專用鍵」—— 以前多做了「同方向連點兩下」，結果正常走路快一點
   //   就會被判定成連點 → 玩家沒按衝刺鍵也在衝。拿掉之後走位完全可預期。
@@ -18165,6 +18191,8 @@ function startDash(p, dirs) {
   p.dashDy = dy > 0 ? 1 : dy < 0 ? -1 : 0;
   p.dashT = DASH_T;
   p.dashCd = DASH_CD;
+  p.dashSpd = dashSpeedOf(p);       // v5.92：道具／坐騎加成在這裡就被算進去
+  p.dashMissCd = 0;
   p.moving = true;
   // 霸體：沿用落地震攝那條（三個受傷入口都會看它），而且不會讓角色閃白
   p.slamGuard = Math.max(p.slamGuard || 0, DASH_IFRAME);
@@ -18178,10 +18206,16 @@ function startDash(p, dirs) {
 }
 function dashStep(p, dt) {
   const T = Game.T;
-  const sp = T * (DASH_TILES / DASH_T);
+  const sp = p.dashSpd || (T * (DASH_TILES / DASH_T));
   const ox = p.x, oy = p.y;
-  if (p.dashDx && p.dashDy) tryMoveDiag(p, p.dashDx, p.dashDy, dt, sp, 'x');
-  else tryMove(p, p.dashDx, p.dashDy, dt, sp, true);
+  // v5.92：速度可能到 2.4 倍（≈22 格/秒）→ 一幀就走掉 0.37 格，
+  //   撞到 1 格厚的牆時 tryMove 只看「下一格」會直接跳過去。切成每步 ≤0.4 格。
+  const steps = Math.max(1, Math.ceil((sp * dt) / (T * .4)));
+  const sdt = dt / steps;
+  for (let i = 0; i < steps; i++) {
+    if (p.dashDx && p.dashDy) tryMoveDiag(p, p.dashDx, p.dashDy, sdt, sp, 'x');
+    else tryMove(p, p.dashDx, p.dashDy, sdt, sp, true);
+  }
   p.moving = true;
   p.walkT += dt * 1.8;
   // 殘影：每幀掉 2 顆，看得出「瞬間位移」
@@ -18197,6 +18231,17 @@ function dashStep(p, dt) {
     p.dashT = 0; p.dashDx = 0; p.dashDy = 0;
     try { burst(p.x, p.y, '#bfefff', 7, 110); } catch (e) {}
   }
+}
+/* v5.92：衝刺閃掉傷害 → 頭上彈一個 MISS
+   衝刺期間本來就有 slamGuard（0.18 秒霸體），但玩家「看不到」自己閃掉了什麼，
+   只會覺得「剛剛怎麼沒事」。這裡在四個受傷入口補一個提示（0.35 秒節流，
+   同一格火焰連續判定不會洗頻）。 */
+function dashMiss(p) {
+  if (!p || !p.alive) return;
+  const now = Game.gameT || 0;
+  if ((p.dashMissCd || 0) > now) return;
+  p.dashMissCd = now + .35;
+  try { pushPop(p.x, p.y - (Game.T || 40) * .58, 'MISS', { color: '#9fe8ff', size: .85, life: .5 }); } catch (e) {}
 }
 function controlHuman(p, dt) {
   const T = Game.T;
@@ -18972,7 +19017,7 @@ function foeAoeTick(dt) {
     if (a.haz) foeHazAdd(a.cx, a.cy, a.haz, a.kind);
     Game.players.forEach(function (p) {
       if (!p || !p.alive) return;
-      if (p.invuln > 0 || p.slamGuard > 0) return;
+      if (p.invuln > 0 || p.slamGuard > 0) { if (p.dashT > 0) dashMiss(p); return; }
       if (Math.floor(p.x / T) !== a.cx || Math.floor(p.y / T) !== a.cy) return;
       if (Game.teamsOn >= 2 && a.team >= 0 && a.team === p.team) return;
       hurtPlayerAt(p, null);
@@ -18993,7 +19038,7 @@ function foeHazTick(dt) {
     }
     Game.players.forEach(function (p) {
       if (!p || !p.alive) return;
-      if (p.invuln > 0 || p.slamGuard > 0) return;
+      if (p.invuln > 0 || p.slamGuard > 0) { if (p.dashT > 0) dashMiss(p); return; }
       if (p.hazCd > 0) return;
       if (Math.floor(p.x / T) !== h.cx || Math.floor(p.y / T) !== h.cy) return;
       p.hazCd = .9;
@@ -19033,7 +19078,7 @@ function foeRollerTick(dt) {
     if (r.cells > 10) { Game.rollers.splice(i, 1); continue; }
     Game.players.forEach(function (p) {
       if (!p || !p.alive) return;
-      if (p.invuln > 0 || p.slamGuard > 0) return;
+      if (p.invuln > 0 || p.slamGuard > 0) { if (p.dashT > 0) dashMiss(p); return; }
       if (Math.abs(p.x - r.x) > T * .55 || Math.abs(p.y - r.y) > T * .55) return;
       hurtPlayerAt(p, null);
     });
@@ -19079,7 +19124,7 @@ function foeOrbTick(dt) {
     if (Math.random() < .5) burst(o.x, o.y, BOLT_COLOR[o.kind] || '#9fdcff', 1, 30);
     for (let k = 0; k < Game.players.length; k++) {
       const p = Game.players[k];
-      if (!p || !p.alive || p.invuln > 0 || p.slamGuard > 0) continue;
+      if (!p || !p.alive || p.invuln > 0 || p.slamGuard > 0) { if (p && p.dashT > 0) dashMiss(p); continue; }
       if (Math.abs(p.x - o.x) > T * .5 || Math.abs(p.y - o.y) > T * .5) continue;
       hurtPlayerAt(p, null);
       Game.orbs.splice(i, 1);
@@ -21585,6 +21630,12 @@ function updateHud() {
     const cd0 = dm0 ? (dm0.dashCd || 0) : 0;
     dashBtn.classList.toggle('cool', cd0 > 0);
     dashBtn.classList.toggle('ready', cd0 <= 0);
+    // v5.92：灰態時直接在按鈕上報剩餘秒數（0.1 秒精度，四捨五入到整數位以上才顯示）
+    try {
+      if (cd0 > 0) dashBtn.setAttribute('data-cd', cd0.toFixed(1));
+      else if (dashBtn.removeAttribute) dashBtn.removeAttribute('data-cd');
+      else dashBtn.setAttribute('data-cd', '');
+    } catch (e) {}
   }
   // v4.86：手機的 🐾 隨從鈕（跟 🔥 吐火鍵一樣，有需要才出現）
   const petBtn2 = $id('petTouchBtn');
@@ -26813,11 +26864,10 @@ function drawBomb(b, T) {
     if (blink) { ctx.fillStyle = '#ff5e6e'; ctx.beginPath(); ctx.arc(x, y + 6, 2.4, 0, 6.283); ctx.fill(); }
     return;
   }
-  const r = T * .32;
+  const r = T * (b.held ? .30 : .32);
   const scale = b.flying ? 1 + Math.sin(Math.min(1, b.flying.t / b.flying.dur) * Math.PI) * .12 : 1;
   const lift = (b.onWall && !b.flying) ? T * .22 : 0;
-  // 影子（飛在空中時變小變淡）
-  // v5.91：拿在手上的彈不投影 —— 它已經貼在手掌上，影子只會蓋在角色臉上
+  // 影子（飛在空中時變小變淡）；v5.91 手上的彈不投影（會蓋在臉上）
   if (!b.held) softShadow(x, y + r * .9 - lift, r * (b.flying ? .62 : .88), r * (b.flying ? .2 : .3), b.flying ? .2 : .32);
   // 準備爆炸 → 本體晃動（越接近引爆晃得越凶）
   const armed = !b.remoteArmed && !b.mine;
@@ -30319,7 +30369,7 @@ const HeroAnim = (function () {
                 -META.ax * k, -META.ay * k, META.cellW * k, META.cellH * k);
     g.restore();
     return { topY: footY - H * .94, footY: footY - (a.jump || 0),
-             ex: side * H * .04, ey: 0, H: H,
+             ex: side * H * .04, ey: 0, H: H, act: act, frame: f,
              W: H * META.cellW / META.charHpx };
   }
   function readyCount() { return ACTS.filter(function (k) { return ready[k]; }).length; }
@@ -31319,24 +31369,37 @@ function drawDailyGhost(T) {
   }
 }
 
-/* v5.91：手舉炸彈的位置 —— 每隻角色各自校準（以後換誰的動作，就在這裡加一行）
+/* v5.92：手舉炸彈的位置 —— 每隻角色各自校準（以後換誰的動作，就在這裡加一行）
    ----------------------------------------------------------------------------
-   兔子的數字不是猜的，是從素材反推回去的：
-   舉彈影片裡模型自己畫了一顆球（已挖掉），圓心 (377.5, 94.7)、半徑 141.7（768px 影片座標），
-   換算到精靈座標是 cell(67.6, 36.3)、r 44.3（角色高 200px）→ 球心距腳底 0.95H。
-   遊戲的炸彈半徑是 0.32T = 0.263H，比素材那顆球大 19%，所以再往上抬 0.04H，
-   讓炸彈的「底緣」剛好落在手掌上 → up = 0.99H。這樣炸彈正好塞進挖掉的那個缺口，
-   連球殼留下的淡色殘影都會被蓋掉。
-   up   = 炸彈圓心距腳底的高度（角色總高 H = 1）
-   side = 水平偏移（+1 = 角色右側，面朝左時自動鏡射）
+   兔子的數字是「量」出來的，不是猜的：
+   舉彈影片裡模型自己就在頭頂畫了一顆球、雙手托著（v5.91 曾用 fix_ball.py 想挖掉它，
+   結果圓擬合抓到的是兩隻耳朵上緣 → 頭上被挖出一個透明大洞，看起來像多一顆白球）。
+   v5.92 起不再挖，改成「用真炸彈蓋住那顆素材球」：
+   art/anim-v2/measure_ball.py 逐格擬合圓心，得到
+     球心距腳底 0.949~0.968H（呼吸上下 0.019H）、半徑 0.22H、水平偏 -0.017H。
+   遊戲炸彈半徑 0.32T = 0.263H 比素材球大 19% → 蓋上去剛好整顆吃掉，不會露邊。
+   up       = 球心距腳底的高度（角色總高 H = 1），沒量到的角色用這個常數
+   upFrames = 逐格高度表（球會隨呼吸起伏，照著走才不會「人蹲了球還在上面」）
+   side     = 水平偏移（+1 = 角色右側，面朝左時自動鏡射）
    沒列到的角色 → 回傳 null，沿用舊公式 topY - 1.7R，行為完全不變。 */
 const HOLD_BOMB = {
-  rabbit: { up: 0.99, side: 0.00 },
+  rabbit: {
+    up: 0.910, side: -0.017,
+    // v5.92：逐格定標（art/anim-v2/measure_ball.py 量不到的格用 probe-scan 掃描確認）。
+    //   素材球半徑 0.22H，遊戲炸彈 0.30T = 0.247H，只大 12% —— 所以高度要逐格準，
+    //   差 0.02H（遊戲裡 4px）球就會從炸彈下緣露出一圈。前兩格站直（0.93），中間蹲下（0.90）。
+    upFrames: [0.930, 0.935, 0.875, 0.860, 0.855, 0.855, 0.860, 0.870, 0.885, 0.880, 0.880, 0.875]
+  },
 };
 function holdBombPos(animal, bd) {
   const cfg = HOLD_BOMB[animal];
   if (!cfg || !bd || bd.footY == null || !bd.H) return null;
-  return { dx: (cfg.side || 0) * bd.H, y: bd.footY - cfg.up * bd.H };
+  let up = cfg.up;
+  if (cfg.upFrames && bd.frame != null) {
+    const F = cfg.upFrames;
+    up = F[((bd.frame % F.length) + F.length) % F.length];
+  }
+  return { dx: (cfg.side || 0) * bd.H, y: bd.footY - up * bd.H };
 }
 
 function drawPlayer(p, T) {
@@ -42224,6 +42287,7 @@ window.__BH = {
   startSolo: startSolo, startBattle: startBattle, buildSoloStage: buildSoloStage,
   // v5.90：主角精靈動作（除錯用：確認六張圖載入狀態與目前選中的動作）
   HeroAnim: (typeof HeroAnim !== 'undefined' ? HeroAnim : null), drawRigChar: drawRigChar,
+  drawBombOn: drawBombOn, holdBombPos: (typeof holdBombPos === 'function' ? holdBombPos : null),
   buildBattleRound: buildBattleRound, buildMap: buildMap, placeBomb: placeBomb,
   explodeBomb: explodeBomb, kickBomb: kickBomb, punchBomb: punchBomb, punchLanding: punchLanding, beltGrab: beltGrab,
   throwCarried: throwCarried, findThrowLanding: findThrowLanding, Zoom: Zoom,
@@ -42409,6 +42473,8 @@ window.__BH = {
   OSTRICH_SPD2: OSTRICH_SPD2, OSTRICH_JUMP_CELLS2: OSTRICH_JUMP_CELLS2, OSTRICH_LAND_R2: OSTRICH_LAND_R2,
   OSTRICH_LAND_DMG2: OSTRICH_LAND_DMG2, OSTRICH_DIVE_MUL: OSTRICH_DIVE_MUL,
   rideOstrich: rideOstrich, mountJump: mountJump, jumpTick: jumpTick, ostrichLand: ostrichLand,
+  // v5.92：衝刺速度（吃道具／坐騎）與閃避提示
+  startDash: startDash, dashStep: dashStep, dashSpeedOf: dashSpeedOf, dashMiss: dashMiss,
   ostrichDive: ostrichDive, swapMountBurst: swapMountBurst,
   rollEggKind: rollEggKind, spawnEggs: spawnEggs, takeEgg: takeEgg, breakDino: breakDino, fireBreath: fireBreath,
   playerSpeed: playerSpeed, drawOstrich: drawOstrich, drawClawOn: drawClawOn,

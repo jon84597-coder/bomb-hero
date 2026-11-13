@@ -1647,6 +1647,17 @@ left: var(--act-left2); right: var(--act-right2); bottom: 126px;
   --tb-glow: rgba(90,190,255,.46);
 }
 #touchUI .tdash.cool { filter: grayscale(.8) brightness(.62); opacity: .70; }
+/* v5.92：冷卻剩下幾秒 —— 灰態時直接在按鈕上報秒數，玩家不用猜「還要等多久」 */
+#touchUI .tdash.cool::after {
+  content: attr(data-cd);
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font: 800 20px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: rgba(255,255,255,.94);
+  text-shadow: 0 1px 3px rgba(0,0,0,.72);
+  pointer-events: none;
+}
+#touchUI .tdash { position: absolute; }
 #touchUI .tdash.ready {
   box-shadow: 0 0 0 1.5px rgba(255,255,255,.72), 0 0 0 4.5px var(--tb-edge),
     0 0 24px 3px var(--tb-glow), inset 0 6px 12px rgba(255,255,255,.30);
@@ -5264,7 +5275,7 @@ background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .18)
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.91</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.92</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5320,7 +5331,7 @@ background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .18)
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.91</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">5.92</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" id="nickWrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
