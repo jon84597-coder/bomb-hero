@@ -12,7 +12,7 @@
      · /api/ 一律不攔（帳號、雲端存檔、線上配對都必須即時）
    ================================================================ */
 
-var SW_VERSION = 'v5.89.0';
+var SW_VERSION = 'v5.90.0';
 var CORE_CACHE = 'bh-core-' + SW_VERSION;   // 遊戲本體（離線也要開得起來）
 var ASSET_CACHE = 'bh-asset-' + SW_VERSION; // 圖示等靜態資源
 var NAV_TIMEOUT = 2200;   // v4.22：Render 冷啟動一定超過，早點回快取讓畫面先出來
@@ -63,6 +63,7 @@ function warmBucket(f) {
   if (/^(pet-|mount-)/.test(f)) return 3;              /* 隨從／坐騎：買了才看得到 */
   if (/^(br-|nuke-|drop-)/.test(f)) return 2;          /* 大逃殺專用 */
   if (/^img-parts-/.test(f)) return 2;                 /* RPG 的王／龍坐騎拼裝件 */
+  if (/^hero-anim-/.test(f)) return 1;                 /* v5.90：主角精靈動畫（6 張 540KB）——首屏必需但別跟地形搶 P0，80ms 後抓 */
   if (/^(foe-|boss-)/.test(f)) return 1;               /* 怪物：第一關只遇得到幾種 */
   return 0;                                            /* 地形／火焰／道具／UI／角色 */
 }

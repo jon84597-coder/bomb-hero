@@ -1,0 +1,34 @@
+{
+ "v": 1,
+ "charHpx": 200,
+ "cellW": 142,
+ "cellH": 234,
+ "ax": 71.09,
+ "ay": 226.38,
+ "actions": {
+  "walk": {
+   "file": "hero-anim-rabbit-walk.webp",
+   "frames": 12
+  },
+  "idle": {
+   "file": "hero-anim-rabbit-idle.webp",
+   "frames": 12
+  },
+  "hold": {
+   "file": "hero-anim-rabbit-hold.webp",
+   "frames": 12
+  },
+  "throw": {
+   "file": "hero-anim-rabbit-throw.webp",
+   "frames": 12
+  },
+  "hurt": {
+   "file": "hero-anim-rabbit-hurt.webp",
+   "frames": 12
+  },
+  "victory": {
+   "file": "hero-anim-rabbit-victory.webp",
+   "frames": 12
+  }
+ }
+}

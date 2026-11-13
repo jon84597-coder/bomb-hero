@@ -60,6 +60,7 @@ if (typeof wb === 'function') {
   ok(wb('img-parts-boss-head.webp') === 2, 'RPG 王拼裝件 → P2');
   ok(wb('foe-art-slime.webp') === 1, '怪物 → P1');
   ok(wb('boss-b1-idle.webp') === 1, 'BOSS → P1');
+  ok(wb('hero-anim-rabbit-walk.webp') === 1, 'v5.90 主角精靈動畫 → P1（540KB 不進 P0，80ms 後抓）');
   ok(wb('tile-grass.webp') === 0, '地形 → P0');
   ok(wb('hero-parts-cat-head.webp') === 0, '角色拼裝 → P0');
   ok(wb('title-logo.webp') === 0, '標題 logo → P0');

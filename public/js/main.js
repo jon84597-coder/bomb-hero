@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.89';
+const VERSION = '5.90';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -30246,6 +30246,79 @@ const Parts = (function () {
     }
   })();
 
+// ---------- 影片生成的精靈動畫（v5.90：目前只有 rabbit 一套）----------
+// 素材 spr/hero-anim-rabbit-<act>.webp ＝ 12 格橫排，六套動作（走路／待機／舉彈／投擲／受傷／勝利）。
+// 六套全部由「同一張 900×1560 畫布、同一個縮放係數、同一個腳底基線」輸出，
+// 所以切換動作時角色的高度與位置天生一致 —— 這正是舊「貼零件」做不到的事。
+// 與 spr/hero-anim-rabbit.json 同步（內聯在這裡，省一支請求）。
+const HeroAnim = (function () {
+    try {
+      return (function () {
+  const META = { charHpx: 200, cellW: 142, cellH: 234, ax: 71.09, ay: 226.38, frames: 12 };
+  const ACTS = ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'];
+  const FPS  = { walk: 15, idle: 7, hold: 9, throw: 20, hurt: 11, victory: 11 };
+  const LOOP = { walk: 1, idle: 1, hold: 1, throw: 0, hurt: 0, victory: 1 };
+  const KEYS = { rabbit: 1 };
+  const imgs = {}, ready = {};
+  function load() {
+    if (typeof Image === 'undefined') return;
+    ACTS.forEach(function (k) {
+      const im = new Image();
+      im.onload = function () { ready[k] = true; };
+      im.onerror = function () { ready[k] = false; };
+      try { im.src = 'spr/hero-anim-rabbit-' + k + '.webp'; } catch (e) {}
+      imgs[k] = im;
+    });
+  }
+  function has(key) { return !!KEYS[key]; }
+  function get(k) { const im = imgs[k]; return (im && ready[k] && im.naturalWidth) ? im : null; }
+  // 遊戲狀態 → 動作。優先順序：明確指定 ＞ 哭（被炸到）＞ 笑（炸到人／獲勝）＞ 舉彈 ＞ 走路 ＞ 待機
+  function pick(a) {
+    a = a || {};
+    if (a.act && ACTS.indexOf(a.act) >= 0) return a.act;
+    if (a.expr === 'cry') return 'hurt';
+    if (a.expr === 'laugh') return 'victory';
+    if (a.carry) return a.moving ? 'walk' : 'hold';
+    if (a.moving) return 'walk';
+    return 'idle';
+  }
+  function frameOf(act, a) {
+    const n = META.frames;
+    const t = (act === 'walk') ? ((a.walk || 0) / 15) : (a.idle || 0);
+    const f = Math.floor(t * FPS[act]);
+    if (LOOP[act]) return ((f % n) + n) % n;
+    return Math.max(0, Math.min(n - 1, f));
+  }
+  // H ＝ 角色總高（與零件版同一個量綱），腳底中心 ＝ (x, footY)
+  function draw(g, key, x, footY, H, a) {
+    if (!KEYS[key] || !g || !g.drawImage) return null;
+    const act = pick(a);
+    const im = get(act);
+    if (!im) return null;
+    const k = H / META.charHpx;
+    const f = frameOf(act, a);
+    const fx = (typeof DIRS !== 'undefined' && DIRS[a.facing]) ? DIRS[a.facing] : { x: 0 };
+    const side = fx.x < 0 ? -1 : 1;
+    g.save();
+    g.translate(x, footY - (a.jump || 0));
+    if (side < 0) g.scale(-1, 1);
+    g.drawImage(im, f * META.cellW, 0, META.cellW, META.cellH,
+                -META.ax * k, -META.ay * k, META.cellW * k, META.cellH * k);
+    g.restore();
+    return { topY: footY - H * .94, ex: side * H * .04, ey: 0, H: H,
+             W: H * META.cellW / META.charHpx };
+  }
+  function readyCount() { return ACTS.filter(function (k) { return ready[k]; }).length; }
+  function inject(k, im) { if (!k || !im) return; imgs[k] = im; ready[k] = true; }
+  return { load: load, has: has, get: get, pick: pick, draw: draw,
+           readyCount: readyCount, imgs: imgs, inject: inject, META: META };
+      })();
+    } catch (__e) {
+      __bootFail('HeroAnim', __e);
+      return (typeof __stubModule === 'function') ? __stubModule('HeroAnim') : {};
+    }
+  })();
+
 // 用部位骨架畫角色。key = 'rabbit'… / 'boss' / 'dragon'
 // x = 腳底中心；footY = 腳底 y；H = 角色總高（像素）
 // a = { walk, moving, facing, amp, idle, jump, expr, alpha, armSwing, headTilt }
@@ -30572,6 +30645,12 @@ function drawRigChar(g, key, x, footY, H, a) {
       g.restore();
     }
   } catch (e) {}
+  // v5.90：有影片精靈動畫的角色（目前只有 rabbit）優先走精靈，零件版留著當後備。
+  if (typeof HeroAnim !== 'undefined' && HeroAnim && typeof HeroAnim.draw === 'function' &&
+      typeof HeroAnim.has === 'function' && HeroAnim.has(key)) {
+    const r = HeroAnim.draw(g, key, x, footY, H, a || {});
+    if (r) return r;
+  }
   const M = IMG_PARTS[key];
   if (!M || !Parts.has(key)) return null;
   a = a || {};
@@ -31298,7 +31377,8 @@ function drawPlayer(p, T) {
     bob: bob + jumpY * .9, blink: false,
     // v1.7：大哭（被炸到）＞ 大笑（炸到人／獲勝）＞ 一般
     expr: p.cry > 0 ? 'cry' : ((p.gloat > 0 || p.cheerT > 0) ? 'laugh' : ''),
-    idle: Game.gameT, skin: c.color, jump: jumpY
+    idle: Game.gameT, skin: c.color, jump: jumpY,
+    carry: !!p.carry   // v5.90：拿著炸彈時走「舉彈」動作（站著）／走路
   };
   const crying = !p.alive && p.cry > 0;
   if (crying) ctx.globalAlpha = Math.min(1, p.cry / .5);   // 最後 0.5 秒淡出
@@ -35799,6 +35879,7 @@ updateViewportVars();
 Sprites.load();
 try { applyA11y(); } catch (e) {}   // v5.28：文字大小／減少動態
 Parts.load();
+try { if (HeroAnim && HeroAnim.load) HeroAnim.load(); } catch (e) {}   // v5.90：影片精靈動作
 FoeArt.load();
 ItemArt.load();          // v4.38：道具圖示
 DropArt.load();          // v5.39：空投寶箱貼圖
@@ -42099,6 +42180,8 @@ window.__BH = {
   isFullscreenNow: isFullscreenNow, setPseudoFull: setPseudoFull, hasUserGesture: hasUserGesture,
   fixOrientationLayout: fixOrientationLayout, enemyFlameDamage: enemyFlameDamage,
   startSolo: startSolo, startBattle: startBattle, buildSoloStage: buildSoloStage,
+  // v5.90：主角精靈動作（除錯用：確認六張圖載入狀態與目前選中的動作）
+  HeroAnim: (typeof HeroAnim !== 'undefined' ? HeroAnim : null), drawRigChar: drawRigChar,
   buildBattleRound: buildBattleRound, buildMap: buildMap, placeBomb: placeBomb,
   explodeBomb: explodeBomb, kickBomb: kickBomb, punchBomb: punchBomb, punchLanding: punchLanding, beltGrab: beltGrab,
   throwCarried: throwCarried, findThrowLanding: findThrowLanding, Zoom: Zoom,

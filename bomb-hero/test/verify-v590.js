@@ -249,8 +249,12 @@ function paintDetail(sel) {
   ok(/DC\.open\(\{ pid: S\.sel\.pid, name: S\.sel\.name \}\)/.test(src), '★ 好友頁把 pid 與名字交給 devcard');
   ok(/Cloud\.isDev && Cloud\.isDev\(\)[\s\S]{0,900}?id="onDev"/.test(src),
     '★ 按鈕用 Cloud.isDev() 判定（與後台入口同源）');
-  ok(src.indexOf("const VERSION = '5.89'") > 0, '主檔版本 5.89');
-  ok(html.indexOf('<span id="verTxt">5.89</span>') > 0, 'index.html 版本戳記 5.89');
+  // 這一支是 v5.89 的驗收，版本戳記只驗「不低於 5.89」——之後每一版升號都不該讓它紅
+  const vm = src.match(/const VERSION = '([\d.]+)'/);
+  const vh = html.match(/<span id="verTxt">([\d.]+)<\/span>/);
+  const vnum = s => (s ? parseFloat(s) : 0);
+  ok(!!vm && vnum(vm[1]) >= 5.89, '主檔版本 ≥ 5.89（實際 ' + (vm ? vm[1] : '?') + '）');
+  ok(!!vh && vnum(vh[1]) >= 5.89, 'index.html 版本戳記 ≥ 5.89（實際 ' + (vh ? vh[1] : '?') + '）');
 
   /* 主檔預算 */
   const chars = src.length;
