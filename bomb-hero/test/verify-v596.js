@@ -52,7 +52,7 @@ ok(mainSrc.indexOf("'spr/hero-anim-' + sh.pre + '-' + k + '.webp'") >= 0, '檔�
 /* ---------------------------------------------------------------- ③ */
 sec('③ 缺動作的退回鏈');
 ok(!!meta.actions.hurt && !meta.actions.throw, '柴犬有 hurt、沒有 throw（throw 這批底色變青）');
-ok(/if \(!get\(key, act\)\) act = get\(key, 'idle'\) \? 'idle'/.test(mainSrc), '退回順序 idle → walk → null 仍在');
+ok(/if \(!get\(key, act\)\) \{[\s\S]{0,200}?act = get\(key, 'idle'\) \? 'idle'/.test(mainSrc), '退回順序 idle → walk → null 仍在');
 const env = makeEnv(); const BH = env.BH;
 ok(BH.HeroAnim && typeof BH.HeroAnim.has === 'function', 'HeroAnim 對外可用');
 ok(BH.HeroAnim.has('dog') === true, 'HeroAnim.has(\'dog\') 為真');

@@ -51,7 +51,9 @@ ok(made === 0, 'load() 不帶參數 → 一張圖都不開（舊版這裡會開 
 
 made = 0; cleared = 0;
 H.ensure('rabbit');
-ok(made === 6, 'ensure(rabbit) 只開兔子的 6 支', made);
+/* v6.00：改成「按動作載入」—— 先開走路＋待機 2 支，其餘第一次用到才開（大逃殺開場不再一次解 40 張） */
+ok(made === 2 && H.imgs.rabbit && H.imgs.rabbit.walk && H.imgs.rabbit.idle,
+  'ensure(rabbit) 只先開走路＋待機 2 支', made);
 ok(H.loaded().join(',') === 'rabbit', 'loaded() 只有 rabbit', H.loaded());
 
 made = 0;
@@ -60,17 +62,17 @@ ok(made === 0, 'ensure 第二次不會重複開圖（同一隻只載一次）', 
 
 made = 0;
 H.load('bear');
-ok(made === 6, 'load(bear) 可以預載指定角色', made);
+ok(made === 2, 'load(bear) 可以預載指定角色（2 支）', made);
 ok(H.loaded().indexOf('bear') >= 0, 'bear 進入名單');
 
 cleared = 0;
 H.sweep(['bear'], 0);
-ok(cleared === 6, 'sweep 只留名單內的 → rabbit 被釋放（6 支）', cleared);
+ok(cleared === 2, 'sweep 只留名單內的 → rabbit 被釋放（2 支）', cleared);
 ok(H.loaded().join(',') === 'bear', '名單外的角色真的從記憶體移除', H.loaded());
 
 cleared = 0;
 H.release('bear');
-ok(cleared === 6, 'release(bear) 清掉 6 支', cleared);
+ok(cleared === 2, 'release(bear) 清掉 2 支', cleared);
 ok(H.loaded().length === 0, '全部釋放後名單是空的', H.loaded());
 
 // 名單內的不會被 sweep 誤殺
@@ -79,6 +81,19 @@ H.ensure('cat');
 H.sweep(['cat'], 0);
 ok(cleared === 0 && H.loaded().join(',') === 'cat', '名單內的 cat 不會被釋放', cleared);
 H.release('cat');
+
+/* v6.00：拿炸彈（hold）第一次要用才開那一支 */
+made = 0;
+H.ensure('pig');
+made = 0;                      // 只算「畫的時候」多開了幾張
+const ctx0 = { drawImage: function () {}, save: function () {}, restore: function () {},
+  translate: function () {}, scale: function () {} };
+H.draw(ctx0, 'pig', 100, 200, 80, { carry: true, idle: 1, facing: 'down' });
+ok(made === 1 && H.imgs.pig && H.imgs.pig.hold, '畫到「舉彈」時才去開 hold（開場不多解一張）', made);
+made = 0;
+H.draw(ctx0, 'pig', 100, 200, 80, { carry: true, idle: 1.1, facing: 'down' });
+ok(made === 0, '已經開過就不會重開');
+H.release('pig');
 
 /* ---------------------------------------------------------------- ③ */
 sec('③ 真的會自動載入／自動釋放');

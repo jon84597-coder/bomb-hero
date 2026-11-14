@@ -31064,20 +31064,31 @@ const HeroAnim = (function () {
      單人模式只載 1 隻（約 13MB），8 人房全部不同角色才是 8 隻。 */
   let tick = 0;
   const lastUse = {};
+  /* v6.00：一次只開「這一支動作」的圖。
+     大逃殺開場 8 隻不同角色 × 5 支動作 = 40 張 webp 同時解碼，那一瞬間就是玩家回報的
+     「大逃殺一開始 FPS 就變低」—— 開場的尖峰全花在解圖上。
+     現在每隻只先載「走路＋待機」兩支（一定用得到），拿炸彈／攻擊／被打／勝利
+     第一次真的要用時才載（webp 在本地快取，通常下一幀就到了）。 */
+  function loadAct(key, k) {
+    const sh = SHEET[key];
+    if (!sh || !k || sh.acts.indexOf(k) < 0) return null;
+    if (typeof Image === 'undefined') return null;
+    imgs[key] = imgs[key] || {};
+    ready[key] = ready[key] || {};
+    if (imgs[key][k]) return imgs[key][k];
+    const im = new Image();
+    im.onload = function () { ready[key][k] = true; };
+    im.onerror = function () { ready[key][k] = false; };
+    try { im.src = 'spr/hero-anim-' + sh.pre + '-' + k + '.webp'; } catch (e) {}
+    imgs[key][k] = im;
+    return im;
+  }
   function loadActs(key) {
     const sh = SHEET[key];
     if (!sh) return;
     started[key] = 1;
-    if (typeof Image === 'undefined') return;
-    imgs[key] = imgs[key] || {};
-    ready[key] = ready[key] || {};
-    sh.acts.forEach(function (k) {
-      const im = new Image();
-      im.onload = function () { ready[key][k] = true; };
-      im.onerror = function () { ready[key][k] = false; };
-      try { im.src = 'spr/hero-anim-' + sh.pre + '-' + k + '.webp'; } catch (e) {}
-      imgs[key][k] = im;
-    });
+    loadAct(key, 'walk');
+    loadAct(key, 'idle');
   }
   function ensure(key) {
     if (!SHEET[key]) return;
@@ -31170,7 +31181,10 @@ const HeroAnim = (function () {
     // 這隻角色沒做那個動作（小熊目前沒有 throw／hurt）→ 退到待機，
     //   而不是回 null 讓呼叫端掉回零件骨架（那會出現「精靈＋方塊」混在一起的畫面）。
     let act = pick(a);
-    if (!get(key, act)) act = get(key, 'idle') ? 'idle' : (get(key, 'walk') ? 'walk' : null);
+    if (!get(key, act)) {
+      loadAct(key, act);                              // v6.00：第一次用到才載（不在開場全部解碼）
+      act = get(key, 'idle') ? 'idle' : (get(key, 'walk') ? 'walk' : null);
+    }
     if (!act) return null;
     const im = get(key, act);
     const k = H / META.charHpx;
@@ -31202,7 +31216,7 @@ const HeroAnim = (function () {
     imgs.rabbit = imgs.rabbit || {}; ready.rabbit = ready.rabbit || {};
     imgs.rabbit[k] = im; ready.rabbit[k] = true; started.rabbit = 1;
   }
-  return { load: load, has: has, get: get, pick: pick, draw: draw, flipOf: flipOf,
+  return { load: load, has: has, get: get, pick: pick, draw: draw, flipOf: flipOf, loadAct: loadAct,
            readyCount: readyCount, imgs: imgs, inject: inject, META: META,
            ensure: ensure, release: release, sweep: sweep,
            loaded: function () { return Object.keys(started); } };

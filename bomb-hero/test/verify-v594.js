@@ -62,7 +62,7 @@ sec('③ 沒做的動作退回待機');
 ok(BA.pick({ expr: 'cry' }) === 'hurt', '受傷的「意圖」還是 hurt');
 ok(BA.pick({ carry: true }) === 'hold', '拿炸彈 → hold');
 ok(BA.pick({ act: 'throw' }) === 'throw', '明確指定 throw 的意圖不變');
-ok(/if \(!get\(key, act\)\) act = get\(key, 'idle'\) \? 'idle'/.test(mainSrc),
+ok(/if \(!get\(key, act\)\) \{[\s\S]{0,200}?act = get\(key, 'idle'\) \? 'idle'/.test(mainSrc),
   'draw 會把不存在的動作退到 idle（小熊拿炸彈受傷時不會掉回零件骨架）');
 ok(/if \(!act\) return null;/.test(mainSrc), '整套圖都沒載完才回 null');
 
