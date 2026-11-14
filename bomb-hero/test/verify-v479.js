@@ -30,7 +30,7 @@ ok(uniq.length === 227, '227 個不同的貼圖檔名');
 head('2. 貼圖檔案');
 const SPR = path.join(ROOT, 'spr');
 const files = fs.readdirSync(SPR).filter(function (f) { return /\.webp$/.test(f); });
-ok(files.length === 269, 'spr/ 內有 ' + files.length + ' 個 .webp（v6.0：八隻主角全部做完）');
+ok(files.length === 284, 'spr/ 內有 ' + files.length + ' 個 .webp（v6.1：八隻主角 ＋ 三隻隨從五動作）');
 const missing = uniq.filter(function (u) { return !fs.existsSync(path.join(ROOT, u)); });
 ok(missing.length === 0, '每個引用都找得到檔案' + (missing.length ? '（缺 ' + missing.slice(0, 3) + '）' : ''));
 let badMagic = 0, total = 0;
@@ -49,7 +49,8 @@ ok(badMagic === 0, '全部是合法 WEBP（壞檔 ' + badMagic + '）');
 // v5.97：柴犬 hurt + 貓咪三套（格子 281 很寬）約 +0.24MB → 4.40MB 調到 4.75MB。
 // v6.0：豬豬／熊貓／青蛙／小雞各五套 ＋ 貓咪 hold／hurt 約 +2.06MB → 4.75MB 調到 7.10MB。
 //   八隻角色都在「取代零件拼裝」，不是多餘素材；這是全主角做完的最終量。
-ok(total > 1200000 && total < 7500000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 7.50 MB：v6.0 八隻主角）');
+// v5.99.2：三隻隨從 15 支圖集 +1.12MB → 7.10MB 調到 8.40MB。
+ok(total > 1200000 && total < 8400000, '二進位總量 ' + (total / 1048576).toFixed(2) + ' MB（上限 8.40 MB：v5.99.2 八隻主角＋三隻隨從）');
 
 // ---------- 3. 位元組與原始 base64 完全一致 ----------
 head('3. 抽出過程零損失');
@@ -69,7 +70,7 @@ ok(mismatch === 0, '全部位元組／雜湊與抽取當下一致（不一致 ' 
 // ---------- 4. 清單與檔案一致 ----------
 head('4. 預熱清單');
 const list = JSON.parse(fs.readFileSync(path.join(SPR, '_list.json'), 'utf8'));
-ok(Array.isArray(list) && list.length === 277, '_list.json 有 277 筆（v6.0：269 張 webp ＋ 8 份 meta）');
+ok(Array.isArray(list) && list.length === 295, '_list.json 有 295 筆（v6.1：284 張 webp ＋ 11 份 meta）');
 const notInList = files.filter(function (f) { return list.indexOf(f) < 0; });
 ok(notInList.length === 0, '每個檔案都在清單裡' + (notInList.length ? '（漏 ' + notInList.slice(0, 3) + '）' : ''));
 const missingFile = list.filter(function (f) { return !fs.existsSync(path.join(SPR, f)); });

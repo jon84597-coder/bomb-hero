@@ -119,18 +119,18 @@ sec('⑤ 丟彈（throw）不再新增');
 /* ---------------------------------------------------------------- ⑥ */
 sec('⑥ 素材預算');
 const files = fs.readdirSync(SPR).filter(function (f) { return /\.webp$/.test(f); });
-ok(files.length === 269, 'spr/ 內 ' + files.length + ' 張 webp（八隻主角全部到位）');
+ok(files.length === 284, 'spr/ 內 ' + files.length + ' 張 webp（八隻主角 ＋ 三隻隨從）');
 let total = 0, anim = 0;
 files.forEach(function (f) {
   const sz = fs.statSync(path.join(SPR, f)).size;
   total += sz;
-  if (f.indexOf('hero-anim-') === 0) anim += sz;
+  if (f.indexOf('hero-anim-') === 0 || f.indexOf('pet-anim-') === 0) anim += sz;   // v5.99.2：隨從圖集也算動作圖集
 });
 const mb = function (x) { return +(x / 1048576).toFixed(2); };
 console.log('   總 ' + mb(total) + ' MB（動作圖集 ' + mb(anim) + ' MB ＋ 零件 ' + mb(total - anim) + ' MB）');
 ok(mb(total - anim) < 2.8, '零件與其他 ≤ 2.8 MB', mb(total - anim));
 ok(mb(anim) < 5.6, '動作圖集 ≤ 5.6 MB', mb(anim));
-ok(mb(total) < 7.5, '全部 webp ≤ 7.5 MB', mb(total));
+ok(mb(total) < 8.2, '全部 webp ≤ 8.2 MB（v6.0 加上 15 支隨從圖集 1.12MB）', mb(total));
 
 // 解碼記憶體：每支圖集解碼 = 寬 × 234 × 4
 let worst = 0, worstKey = '';

@@ -96,7 +96,10 @@ const iAnim = mainSrc.indexOf('HeroAnim.draw(g, key, x, footY, H, a || {})');
 const iParts = mainSrc.indexOf("const M = IMG_PARTS[key];\n  if (!M || !Parts.has(key)) return null;");
 ok(iAnim > 0, 'drawRigChar 裡有精靈分支');
 ok(iParts > 0 && iAnim < iParts, '精靈分支在零件之前（先試精靈，失敗才拼零件）');
-ok(/if \(r\) return r;/.test(mainSrc), '精靈畫成功就直接 return（不會重複畫零件）');
+/* v5.99.2：精靈分支裡多了「頭頂情緒泡泡」，所以從 `if (r) return r;` 變成 `if (r) { …; return r; }`。
+   這裡改成驗「精靈分支之後很快就 return」—— 一樣保證不會再往下拼零件。 */
+const iRet = mainSrc.indexOf('return r;', iAnim);
+ok(iRet > iAnim && iRet - iAnim < 1200, '精靈畫成功就直接 return（不會重複畫零件）', iRet - iAnim);
 ok(/HeroAnim.readyCount|function get\(k\)/.test(mainSrc), '有載入狀態查詢');
 ok(/ready\[key\]\[k\] = false;/.test(mainSrc), '載入失敗會標記 false');
 ok(/if \(!act\) return null;/.test(mainSrc), '整套圖都沒載完時 draw 回傳 null（退回零件，不破圖）');

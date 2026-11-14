@@ -97,7 +97,8 @@ let total = 0, anim = 0;
 files.forEach(function (f) {
   const n = fs.statSync(path.join(SPR, f)).size;
   total += n;
-  if (/^hero-anim-/.test(f)) anim += n;
+  /* v5.99.2：隨從的 15 支圖集也算「動作圖集」，不然會被算成零件讓這條紅。 */
+  if (/^(hero|pet)-anim-/.test(f)) anim += n;
 });
 const mb = function (n) { return +(n / 1048576).toFixed(2); };
 console.log('   現在：總 ' + mb(total) + ' MB（動作圖集 ' + mb(anim) + ' MB ＋ 零件與其他 ' + mb(total - anim) + ' MB）、' + files.length + ' 支');

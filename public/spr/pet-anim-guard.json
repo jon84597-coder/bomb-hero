@@ -1,0 +1,30 @@
+{
+ "v": 1,
+ "charHpx": 132,
+ "cellW": 156,
+ "cellH": 153,
+ "ax": 74.95,
+ "ay": 146.69,
+ "actions": {
+  "idle": {
+   "file": "pet-anim-guard-idle.webp",
+   "frames": 12
+  },
+  "move": {
+   "file": "pet-anim-guard-move.webp",
+   "frames": 12
+  },
+  "attack": {
+   "file": "pet-anim-guard-attack.webp",
+   "frames": 12
+  },
+  "hurt": {
+   "file": "pet-anim-guard-hurt.webp",
+   "frames": 12
+  },
+  "victory": {
+   "file": "pet-anim-guard-victory.webp",
+   "frames": 12
+  }
+ }
+}

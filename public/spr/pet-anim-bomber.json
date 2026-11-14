@@ -1,0 +1,30 @@
+{
+ "v": 1,
+ "charHpx": 132,
+ "cellW": 158,
+ "cellH": 147,
+ "ax": 75.32,
+ "ay": 142.5,
+ "actions": {
+  "idle": {
+   "file": "pet-anim-bomber-idle.webp",
+   "frames": 12
+  },
+  "move": {
+   "file": "pet-anim-bomber-move.webp",
+   "frames": 12
+  },
+  "attack": {
+   "file": "pet-anim-bomber-attack.webp",
+   "frames": 12
+  },
+  "hurt": {
+   "file": "pet-anim-bomber-hurt.webp",
+   "frames": 12
+  },
+  "victory": {
+   "file": "pet-anim-bomber-victory.webp",
+   "frames": 12
+  }
+ }
+}

@@ -211,6 +211,37 @@ JOBS = {
         ('hurt',    'vid/frog-hurt/flat',    1, 124, False, 12, 0),
     ]),
     # 小雞（v6.0）：圓滾滾，翅膀一張到 0.62H → 畫布 1352（左右各 676）。
+    # ---- v6.1：三隻隨從（武士狼／爆彈猴／盾犀）----
+    #   動作名稱跟主角不同：idle 待機／move 移動／attack 攻擊／hurt 被打／victory 勝利。
+    #   畫布一律 1340／中心 670 —— 這是「768 影片 × 1.72 倍」的全寬（1322），也就是
+    #   完整保留影片裡所有內容。第一版給 1080／1180，結果狼的刀光弧、犀牛的盾、
+    #   猴子的尾巴都被畫布邊界切掉（貼邊 200~900px），匯出後會出現一條直切口。
+    #   空白留著沒關係：export_pet 會依「實際內容」重新緊裁，格子不會變大。
+    #   高度一律 1560、腳底 1360，跟主角同一套對齊。
+    #   第二版（*2 目錄）：第一版有 7~10% 的鏡頭推近，12 格精靈會忽大忽小 →
+    #   提示詞前面加「STATIC LOCKED CAMERA, FIXED FRAMING」＋「body height in pixels stays
+    #   EXACTLY the same」後重出，底線全部穩定在 705~707。
+    'pet_wolf':   ('frames_pet_wolf', 1340, 670, [
+        ('idle',    '../pet-video/wolf-idle/flat',    1, 124, True,  12, 0),
+        ('move',    '../pet-video/wolf-move2/flat',    1, 124, True,  12, 0),
+        ('attack',  '../pet-video/wolf-attack2/flat',  1, 124, False, 12, 0),
+        ('hurt',    '../pet-video/wolf-hurt2/flat',    1, 124, False, 12, 0),
+        ('victory', '../pet-video/wolf-victory2/flat', 1, 124, False, 12, 0),
+    ]),
+    'pet_monkey': ('frames_pet_monkey', 1340, 670, [
+        ('idle',    '../pet-video/monkey-idle/flat',    1, 124, True,  12, 0),
+        ('move',    '../pet-video/monkey-move/flat',    1, 124, True,  12, 0),
+        ('attack',  '../pet-video/monkey-attack2/flat',  1, 124, False, 12, 0),
+        ('hurt',    '../pet-video/monkey-hurt/flat',    1, 124, False, 12, 0),
+        ('victory', '../pet-video/monkey-victory2/flat', 1, 124, False, 12, 0),
+    ]),
+    'pet_rhino':  ('frames_pet_rhino', 1340, 670, [
+        ('idle',    '../pet-video/rhino-idle/flat',    1, 124, True,  12, 0),
+        ('move',    '../pet-video/rhino-move2/flat',    1, 124, True,  12, 0),
+        ('attack',  '../pet-video/rhino-attack2/flat',  1, 124, False, 12, 0),
+        ('hurt',    '../pet-video/rhino-hurt2/flat',    1, 124, False, 12, 0),
+        ('victory', '../pet-video/rhino-victory2/flat', 1, 124, False, 12, 0),
+    ]),
     'chick':  ('frames_anim_chick', 1352, 676, [
         ('walk',    'vid/chick-walk/flat',    1, 124, True, 12, 0),
         ('idle',    'vid/chick-idle/flat',    1, 124, True, 12, 0),

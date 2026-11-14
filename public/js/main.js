@@ -13449,6 +13449,7 @@ function petTouchEnemies(pt) {
       petHurt(pt, 1);
       pt.restT = 3;                                        // 擋完原地休息 3 秒
       pt.blockT = .45;                                     // v5.0：盾牌硬擋一幀（美術第 4 幀）
+      pt.atkAnimT = .55;                                   // v6.0：影片攻擊動作播放 0.55 秒
       AudioSys.sfx('kick');
       burst(pt.x, pt.y, '#9ad2ff', 14, 210);
       toast('🛡️ 格檔隨從擋下攻擊，原地休息 3 秒', 1.9);
@@ -13471,6 +13472,8 @@ function updatePets(dt) {
     if (pt.healT > 0) pt.healT -= dt;
     if (pt.atkCd > 0) pt.atkCd -= dt;
     if (pt.slashT > 0) pt.slashT -= dt;
+    if (pt.atkAnimT > 0) pt.atkAnimT -= dt;   // v6.0
+    if (pt.cheerT > 0) pt.cheerT -= dt;       // v6.0：勝利歡呼
     if (pt.throwT > 0) pt.throwT -= dt;
     pt.moving = false;
     // v4.31：被軟磚圍住／卡在牆的另一側 → 2.5 秒後瞬移到主人旁邊，不要讓玩家等
@@ -13527,6 +13530,7 @@ function updatePets(dt) {
           if (pt.atkCd <= 0) {
             pt.atkCd = 2 * petCdMul(pt);                   // 冷卻 2 秒（升級後更短）
             pt.slashT = .28;                               // 刀光
+            pt.atkAnimT = .55;                             // v6.0：影片攻擊動作（12 格 22fps）
             const dx = foe.x - pt.x, dy = foe.y - pt.y;
             pt.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
             petHitEnemy(foe, petDmgOf(pt));               // v5.64：Lv.3／5 各 +1 傷害
@@ -13545,7 +13549,7 @@ function updatePets(dt) {
         const heroSafe = Math.hypot(foe.x - hero.x, foe.y - hero.y) > T * 1.6;
         if (d > T * .6 && heroSafe) {
           pt.atkCd = 3 * petCdMul(pt);                     // 冷卻 3 秒（升級後更短）
-          if (petThrowBomb(pt, foe)) pt.throwT = .3;
+          if (petThrowBomb(pt, foe)) { pt.throwT = .3; pt.atkAnimT = .55; }   // v6.0
         }
       }
       if (foe) {
@@ -13653,6 +13657,18 @@ function drawPetSprite(g, kind, x, footY, bodyH, side, a) {
 }
 // v5.0：救回來時的治療光環（綠色上升圈＋十字光）
 //   v5.0b：加上 pulse=1 → 救援進行中持續呼吸，不會像「一瞬間閃過」
+// v6.0：讓場上所有隨從歡呼 sec 秒（過關、救回來都用得到）
+function petCheer(sec) {
+  if (!Game.pets || !Game.pets.length) return 0;
+  let n = 0;
+  for (let i = 0; i < Game.pets.length; i++) {
+    const pt = Game.pets[i];
+    if (!pt) continue;
+    pt.cheerT = Math.max(pt.cheerT || 0, sec || 1.8);
+    n++;
+  }
+  return n;
+}
 function drawPetHeal(x, y, T, k, pulse) {
   if (!(k > 0)) return;
   const a = Math.min(1, k / 1.1);
@@ -13684,8 +13700,11 @@ function drawPet(pt, T) {
   softShadow(x, y + T * .30, R * .82, R * .26, .30);
   if (pt.down) {
     // 坐在地上一直哭
-    const drewDown = drawPetSprite(ctx, pt.kind, x, y + T * .30, petBodyH(T, pt.kind) * .94, 1,
-      { frame: 0, idle: Game.gameT, tilt: .13 });
+    const drewDown = (typeof PetAnim !== 'undefined' && PetAnim && PetAnim.has && PetAnim.has(pt.kind) &&
+        PetAnim.draw(ctx, pt.kind, x, y + T * .30, petBodyH(T, pt.kind) * .94, 1,
+          { act: 'hurt', hurt: 1, idle: Game.gameT }))
+      || drawPetSprite(ctx, pt.kind, x, y + T * .30, petBodyH(T, pt.kind) * .94, 1,
+          { frame: 0, idle: Game.gameT, tilt: .13 });
     if (!drewDown) {
       const args = { walk: 0, moving: false, facing: pt.facing, bob: 0, blink: false,
                      expr: 'cry', idle: Game.gameT, skin: c.color };
@@ -13731,9 +13750,16 @@ function drawPet(pt, T) {
   if (pt.hitT > 0 && Math.floor(Game.gameT * 14) % 2 === 0) ctx.globalAlpha = .45;
   // v5.0：優先用美術圖（站立 0 / 跑動 1·2 / 出招 3），面向左邊就水平翻轉
   const facingX = (DIRS[pt.facing] || DIRS.down).x;
-  const atkFrame = (pt.slashT > 0 || pt.throwT > 0 || (pt.blockT || 0) > 0);
+  const atkFrame = (pt.slashT > 0 || pt.throwT > 0 || (pt.blockT || 0) > 0 || (pt.atkAnimT || 0) > 0);
   const fr = atkFrame ? 3 : (pt.moving ? (Math.floor(pt.walkT * 8) % 2 ? 2 : 1) : 0);
-  const drewArt = drawPetSprite(ctx, pt.kind, x, y + T * .30, petBodyH(T, pt.kind), facingX < 0 ? -1 : 1,
+  /* v6.0：先播影片動作（待機／移動／攻擊／被打／勝利）；那隻隨從沒有圖集時，
+     退回 v5.0 的四幀美術圖，再沒有才畫程式方塊 —— 三層後備都不會空白。 */
+  const drewAnim = (typeof PetAnim !== 'undefined' && PetAnim && PetAnim.has && PetAnim.has(pt.kind)) &&
+    PetAnim.draw(ctx, pt.kind, x, y + T * .30, petBodyH(T, pt.kind), facingX < 0 ? -1 : 1,
+      { atk: atkFrame, hurt: pt.hitT > 0,
+        cheer: (pt.cheerT || 0) > 0 || (pt.healT || 0) > 0,
+        moving: pt.moving, walk: pt.walkT * 13, idle: Game.gameT });
+  const drewArt = drewAnim || drawPetSprite(ctx, pt.kind, x, y + T * .30, petBodyH(T, pt.kind), facingX < 0 ? -1 : 1,
     { frame: fr, walk: pt.walkT * 13, moving: pt.moving, idle: Game.gameT });
   if (!drewArt) drawSpriteChar(ctx, c, x, y - bob, R, args) || drawCharBody(ctx, c, x, y - bob, R, args);
   ctx.globalAlpha = 1;
@@ -13746,7 +13772,8 @@ function drawPet(pt, T) {
     ctx.fillText(k.ico, x, y - R * 2.15);
   }
   // 刀光（白色＋青色新月）
-  if (pt.slashT > 0) {
+  //   v6.0：影片模式已經自帶刀光弧（狼的那一支掃得很漂亮）→ 不再多畫一道，否則會變成雙弧。
+  if (pt.slashT > 0 && !drewAnim) {
     const k2 = Math.min(1, pt.slashT / .28);
     const d = DIRS[pt.facing] || DIRS.down;
     const ang = Math.atan2(d.y, d.x);
@@ -13974,6 +14001,7 @@ function updateSolo(dt) {
           try { localStorage.setItem('bombhero-stage', String(Solo.unlocked)); } catch (e) {}
           Solo.renderGrid();
         }
+        try { petCheer(2.2); } catch (e3) {}      // v6.0：過關了，隨從跟著歡呼
         setTimeout(function () {
           if (Game.stage >= maxStage) {
             showEnd(Game.bossRush ? t('solo.bossWinTitle') : t('solo.winTitle'),
@@ -30665,6 +30693,105 @@ const HeroAnim = (function () {
     }
   })();
 
+/* v6.0：隨從的影片動作圖集（武士狼／爆彈猴／盾犀 × 待機・移動・攻擊・被打・勝利）
+   跟主角同一條管線（影片 → 任意純色去背 → 對齊 1069 → 12 格 webp），差別只有兩個：
+     1. 字高 132（隨從在場上只有主角的四成高，約 48~58px），格子 152 而不是 234。
+     2. 動作名稱是 idle／move／attack／hurt／victory。
+   ⚠ 比例：charHpx 就是「腳底到頭頂」的可見身高，所以 k = bodyH / charHpx 直接對上。
+     不要學 drawPetSprite 再除一次 bodyRatio —— 那一支是因為舊圖「圖片比角色高」才要除；
+     這裡的格子雖然也有留白，但 charHpx 已經只算角色本人（除下去會變成大 14%）。
+   場上永遠只有一隻隨從 → 第一次畫到才載入，沒有主角那套 sweep。 */
+const PetAnim = (function () {
+    try {
+      return (function () {
+  const META = { charHpx: 132, frames: 12 };
+  // 每隻隨從一個格子尺寸：cellW＝裁切寬 × 132/1069；(ax, ay)＝腳底中心在格子裡的位置。
+  // cellH/ay 逐表存而不是放 META —— 犀牛有盾牌，裁切框比狼／猴高一點。
+  const SHEET = {
+    blade:  { pre: 'blade',  cellW: 148, cellH: 159, ax: 82.73, ay: 146.69 },
+    bomber: { pre: 'bomber', cellW: 158, cellH: 147, ax: 75.32, ay: 142.5 },
+    guard:  { pre: 'guard',  cellW: 156, cellH: 153, ax: 74.95, ay: 146.69 }
+  };
+  const ACTS = ['idle', 'move', 'attack', 'hurt', 'victory'];
+  // 攻擊很快（遊戲裡的 slashT 只有 0.28 秒）→ 22fps 讓 12 格在 0.55 秒內播完
+  const FPS  = { idle: 8, move: 15, attack: 22, hurt: 11, victory: 11 };
+  const LOOP = { idle: 1, move: 1, attack: 0, hurt: 0, victory: 0 };
+  const imgs = {}, ready = {}, started = {};
+  function loadActs(kind) {
+    const sh = SHEET[kind];
+    if (!sh || started[kind] || typeof Image === 'undefined') return;
+    started[kind] = 1;
+    imgs[kind] = imgs[kind] || {};
+    ready[kind] = ready[kind] || {};
+    ACTS.forEach(function (k) {
+      const im = new Image();
+      im.onload = function () { ready[kind][k] = true; };
+      im.onerror = function () { ready[kind][k] = false; };
+      try { im.src = 'spr/pet-anim-' + sh.pre + '-' + k + '.webp'; } catch (e) {}
+      imgs[kind][k] = im;
+    });
+  }
+  function get(kind, act) {
+    const m = imgs[kind];
+    const im = m && m[act];
+    return (im && ready[kind] && ready[kind][act] && im.naturalWidth) ? im : null;
+  }
+  function has(kind) { return !!SHEET[kind]; }
+  /* 遊戲狀態 → 動作。優先序：明確指定 ＞ 勝利歡呼 ＞ 被打 ＞ 攻擊 ＞ 移動 ＞ 待機 */
+  function pick(a) {
+    a = a || {};
+    if (a.act && ACTS.indexOf(a.act) >= 0) return a.act;
+    if (a.cheer) return 'victory';
+    if (a.hurt) return 'hurt';
+    if (a.atk) return 'attack';
+    if (a.moving) return 'move';
+    return 'idle';
+  }
+  function frameOf(act, a) {
+    const n = META.frames;
+    // move 用走路相位（跟實際位移同步），其餘用全域時間
+    const t = (act === 'move') ? ((a.walk || 0) / 13) : (a.idle || 0);
+    const f = Math.floor(t * FPS[act]);
+    if (LOOP[act]) return ((f % n) + n) % n;
+    return Math.max(0, Math.min(n - 1, f));
+  }
+  // bodyH ＝ 角色可見身高（跟 drawPetSprite 的 bodyH 同一個數字，不含裁切框留白）；
+  // (x, footY) ＝ 腳底中心
+  function draw(g, kind, x, footY, bodyH, side, a) {
+    const sh = SHEET[kind];
+    if (!sh || !g || !g.drawImage || !(bodyH > 0)) return false;
+    if (!started[kind]) loadActs(kind);
+    let act = pick(a);
+    if (!get(kind, act)) act = get(kind, 'idle') ? 'idle' : (get(kind, 'move') ? 'move' : null);
+    if (!act) return false;
+    const im = get(kind, act);
+    const k = bodyH / META.charHpx;                        // 可見身高 ÷ 132 → 縮放倍率
+    const f = frameOf(act, a);
+    g.save();
+    g.translate(x, footY);
+    if (side < 0) g.scale(-1, 1);
+    g.drawImage(im, f * sh.cellW, 0, sh.cellW, sh.cellH,
+                -sh.ax * k, -sh.ay * k, sh.cellW * k, sh.cellH * k);
+    g.restore();
+    return true;
+  }
+  function readyCount() {
+    let n = 0;
+    Object.keys(SHEET).forEach(function (k) {
+      ACTS.forEach(function (a) { if (ready[k] && ready[k][a]) n++; });
+    });
+    return n;
+  }
+  return { draw: draw, pick: pick, get: get, has: has, load: loadActs,
+           META: META, SHEET: SHEET, ACTS: ACTS, readyCount: readyCount,
+           loaded: function () { return Object.keys(started); } };
+      })();
+    } catch (__e) {
+      __bootFail('PetAnim', __e);
+      return (typeof __stubModule === 'function') ? __stubModule('PetAnim') : {};
+    }
+  })();
+
 // 用部位骨架畫角色。key = 'rabbit'… / 'boss' / 'dragon'
 // x = 腳底中心；footY = 腳底 y；H = 角色總高（像素）
 // a = { walk, moving, facing, amp, idle, jump, expr, alpha, armSwing, headTilt }
@@ -30995,7 +31122,20 @@ function drawRigChar(g, key, x, footY, H, a) {
   if (typeof HeroAnim !== 'undefined' && HeroAnim && typeof HeroAnim.draw === 'function' &&
       typeof HeroAnim.has === 'function' && HeroAnim.has(key)) {
     const r = HeroAnim.draw(g, key, x, footY, H, a || {});
-    if (r) return r;
+    if (r) {
+      /* v6.0 修：v5.90 換成影片精靈之後，這裡直接 return，把下面的「情緒圖示＋特效」整段跳過
+         → 玩家看到的就是「開心／難哭的圖示都不見了」。精靈版沒有頭部件框，改用身高推：
+         頭頂 ≈ 腳底 - H（精靈上緣），圖示泡泡中心再往上 0.235H（剛好貼在頭頂外側）。 */
+      const ja = a || {};
+      const mood = heroMood(ja);
+      if (mood) {
+        const jy = footY - (ja.jump || 0);
+        const hb = { x: x - H * .26, y: jy - H * .98, w: H * .52, h: H * .36 };
+        heroMoodVfx(g, mood, x, jy, H, ja.idle || 0, hb);
+        heroEmoteIcon(g, mood, x, jy - H * 1.235, H * .215, ja.idle || 0, 1);
+      }
+      return r;
+    }
   }
   const M = IMG_PARTS[key];
   if (!M || !Parts.has(key)) return null;
@@ -42628,6 +42768,7 @@ window.__BH = {
   startSolo: startSolo, startBattle: startBattle, buildSoloStage: buildSoloStage,
   // v5.90：主角精靈動作（除錯用：確認六張圖載入狀態與目前選中的動作）
   HeroAnim: (typeof HeroAnim !== 'undefined' ? HeroAnim : null), drawRigChar: drawRigChar,
+  PetAnim: (typeof PetAnim !== 'undefined' ? PetAnim : null), petCheer: (typeof petCheer === 'function' ? petCheer : null),
   drawBombOn: drawBombOn, holdBombPos: (typeof holdBombPos === 'function' ? holdBombPos : null),
   buildBattleRound: buildBattleRound, buildMap: buildMap, placeBomb: placeBomb,
   explodeBomb: explodeBomb, kickBomb: kickBomb, punchBomb: punchBomb, punchLanding: punchLanding, beltGrab: beltGrab,
