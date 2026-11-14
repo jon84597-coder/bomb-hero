@@ -95,8 +95,10 @@ ok(/const bx = boxBlocked\(p, p\.x \+ vx \* sp, p\.y(, skipBomb)?\);/.test(html)
   const x0 = p.x, y0 = p.y;
   for (let i = 0; i < 200; i++) P.tryMove(p, 0, -1, 1 / 60);   // 一直往上
   const c = cellOf(p);
-  ok(Math.abs(p.x - x0) < .001, '純往上撞牆就停住，不會被程式自動搬到缺口（x ' + (x0 / T).toFixed(2) + ' → ' + (p.x / T).toFixed(2) + '）');
-  ok(c.y >= 3 && p.y < y0, '往上頂到牆面為止（y ' + y0.toFixed(1) + ' → ' + p.y.toFixed(1) + '）');
+  /* v6.00：v5.93 的「純往上撞牆就完全停住」被使用者回報成「按了在走但原地不動」。
+     現在貼到牆面後會順著牆滑向缺口（這裡的缺口在 x=4，只差 0.1 格）再鑽上去。 */
+  ok(p.x > x0 + T * .05, '純往上撞牆時順著牆滑向缺口（x ' + (x0 / T).toFixed(2) + ' → ' + (p.x / T).toFixed(2) + '）');
+  ok(c.y < 3, '滑到缺口後真的鑽上去了（y ' + y0.toFixed(1) + ' → ' + p.y.toFixed(1) + '）');
 })();
 
 // 實測：斜推右上 → 貼著牆邊滑到缺口，然後鑽上去（用戶要的「滑著牆壁邊緣走」）

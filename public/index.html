@@ -4254,6 +4254,18 @@ box-shadow:0 3px 0 #3c1f80,inset 0 2px 0 rgba(255,255,255,.60)}
 .padlive:empty { display: none; }
 .padlive b { color: #2f6b4a; margin-right: 3px; }
 .padlive span { color: #8a7452; font-size: 10px; }
+/* ===== v6.00：手把按鍵對應（1P～4P 各自一組，點按鈕再按手把上的鍵） ===== */
+.padmapwrap { margin-top: 9px; padding-top: 8px; border-top: 1.5px dashed rgba(160,124,72,.34); }
+.padmapwrap .padtabs { margin-bottom: 7px; }
+.padmap { display: flex; flex-direction: column; gap: 5px; }
+.padmaprow { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.72); border: 1.5px solid rgba(160,124,72,.34); border-radius: 11px; padding: 6px 9px; }
+.padmaprow > span { font-size: 11.5px; font-weight: 700; color: #4a3a22; line-height: 1.35; }
+.padmapbtn { min-width: 94px; background: #fffdf8; color: #4a3a22; border: 1.5px solid #c9ae86;
+  border-radius: 9px; font-family: inherit; font-size: 12px; font-weight: 900; padding: 6px 10px; cursor: pointer; }
+.padmapbtn.cap { background: #ffe9c9; border-color: #e2a04a; color: #8a4a10; animation: padcap .7s ease-in-out infinite; }
+@keyframes padcap { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.18); } }
+@media (prefers-reduced-motion: reduce) { .padmapbtn.cap { animation: none; } }
 
 /* ══════════════════════════════════════════════════════════════════
    v5.0：全站水晶按鈕
@@ -5275,7 +5287,7 @@ background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .18)
     <div class="toprow" id="topRow">
     <!-- v4.0：「版本更新內容」標籤 -->
     <button class="verlogbtn" id="verLogBtn" type="button" title="看看每個版本改了什麼">
-      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">5.99</span></span>
+      📜 <b>版本更新內容</b><span class="vlnum">v<span id="verLogVer">6.00</span></span>
     </button>
     <!-- v5.5：首頁的 🛠 小圖示移除（使用者要求）→ 後台改用「版本號連點 3 下 / Ctrl+Alt+D / #admin」進入 -->
     <!-- v3.0：作者公告欄（左上角；手機預設收起成小膠囊） -->
@@ -5331,7 +5343,7 @@ background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .18)
         </div>
       </div>
 
-      <div class="ver beta">測試版 v<span id="verTxt">5.99</span></div>
+      <div class="ver beta">測試版 v<span id="verTxt">6.00</span></div>
       <div class="gap24" style="height:24px"></div>
       <div class="nickwrap" id="nickWrap">
         <label class="nklabel" for="playerName">🦸 暱稱（最多 8 字，<b>可以留空</b>）</label>
@@ -5733,6 +5745,14 @@ background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .18)
       <div class="field" id="padField"><label>手把指派（1P～4P）</label>
         <div class="padlist" id="padList"></div>
         <div class="padlive" id="padLive"></div>
+        <!-- v6.00：1P～4P 各自的四顆功能鍵（點按鈕 → 再按手把上的鍵；Start／Menu 固定是暫停／確認） -->
+        <div class="padmapwrap">
+          <div class="seg padtabs" id="padTabs">
+            <button data-v="0">1P</button><button data-v="1">2P</button><button data-v="2">3P</button><button data-v="3">4P</button>
+          </div>
+          <div class="padmap" id="padMap"></div>
+          <div class="keybtns" style="margin-top:6px"><button class="minibtn" id="btnPadMapReset">按鍵回復預設（A／B／X／Y）</button></div>
+        </div>
         <div class="hint">接上手把後<b>按一下任意鍵</b>，瀏覽器才會回報。同一支手把只能佔一個位置；兩支同款也分得開（用「型號＋序號」認）。藍牙延遲高時把距離拉近或改用有線。</div>
         <div class="keybtns"><button class="minibtn" id="btnPadReset2">清除全部指派</button></div>
       </div>

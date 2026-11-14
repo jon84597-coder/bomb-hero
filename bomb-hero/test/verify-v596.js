@@ -42,7 +42,7 @@ ACTS.forEach(function (a) {
 
 /* ---------------------------------------------------------------- ② */
 sec('② HeroAnim 登記柴犬');
-ok(/dog:\s*\{ pre: 'dog',\s*cellW: 187, ax: 93\.55,\s*acts: \['walk', 'idle', 'hold', 'victory', 'hurt'\] \}/.test(mainSrc),
+ok(/dog:\s*\{ pre: 'dog',\s*cellW: 187, ax: 93\.55,\s*acts: \['walk', 'idle', 'hold', 'victory', 'hurt'\](?:, dir: -?1)? \}/.test(mainSrc),
   'SHEET.dog 的 cellW／ax／acts 與 meta 一致');
 /* v6.0：八隻全部登記。 */
 ok(/const KEYS = \{ rabbit: 1, bear: 1, dog: 1, cat: 1, pig: 1, panda: 1, frog: 1, chick: 1 \};/.test(mainSrc),

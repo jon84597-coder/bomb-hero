@@ -30,7 +30,7 @@ function head(t) { console.log('\n' + t); }
 /* ================================================================ ⓪ */
 head('⓪ 版本');
 const vm = SRC.match(/const VERSION = '([^']+)'/);
-ok(vm && (vm[1].split('.').map(Number)[1] | 0) >= 19, '版本是 5.19 以上（' + (vm ? vm[1] : '?') + '）');
+ok(vm && ((function(v){v=v.split('.').map(Number);return v[0]*1000+(v[1]||0);})(vm[1]) | 0) >= 5000+19, '版本是 5.19 以上（' + (vm ? vm[1] : '?') + '）');
 ok(vm && SRC.indexOf('id="verTxt">' + vm[1]) > 0, '徽章 verTxt 與 VERSION 同步（' + (vm ? vm[1] : '?') + '）');
 ok(SRC.indexOf("{ v: '5.19'") > 0, 'VERSION_LOG 留著 5.19 這一筆');
 ok(/\{ v: '5\.18', date: '[^']+', now: false/.test(SRC), '上一版 5.18 已標成 now:false');

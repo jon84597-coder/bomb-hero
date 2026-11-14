@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '5.99';
+const VERSION = '6.00';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -929,6 +929,66 @@ let charPickedByUser = false;
 function randomChar() { return Math.floor(Math.random() * (CHARACTERS.length || 1)); }   // v1.9：預設「小」，一般手型最好按
 const CTRL_MODES = ['auto', 'kb', 'pad', 'touch'];
 
+/* ══════════════════════════════════════════════════════════════
+   v6.00：手把按鍵對應（1P～4P 各自一組）
+   ------------------------------------------------------------------
+   使用者要的預設：
+     A 放炸彈／撿彈／丟彈　B 遙控引爆　X 衝刺　Y 坐騎招式
+     Start／Menu（Xbox 中間那顆）＝暫停／確認
+   每一槽（1P~4P）都可以在「設定 → 操作設定 → 手把按鍵」個別改，
+   互不影響；改完立刻寫回 settings 並存檔。
+   值＝Xbox 標準映射的按鈕索引：
+     0 A／1 B／2 X／3 Y／4 LB／5 RB／6 LT／7 RT／8 Back／9 Start／10 L3／11 R3／12~15 十字鍵
+   ══════════════════════════════════════════════════════════════ */
+const PAD_BTN_NAMES = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'Back', 'Start', 'L3', 'R3',
+  '↑', '↓', '←', '→'];
+const PAD_ACTS = ['act', 'det', 'dash', 'fire'];
+const PAD_ACT_LABEL = { act: '放炸彈／撿彈／丟彈', det: '遙控引爆', dash: '衝刺', fire: '坐騎招式' };
+const PAD_DEF = { act: 0, det: 1, dash: 2, fire: 3 };
+function padBtnName(i) {
+  const n = PAD_BTN_NAMES[i | 0];
+  return n == null ? ('按鈕 ' + (i | 0)) : n;
+}
+/* 把任何存檔／表單內容收斂成「4 槽 × 4 動作」的完整表；壞值一律落回預設。 */
+function normalizePadBtn(raw) {
+  const out = [];
+  for (let s = 0; s < 4; s++) {
+    const src = (raw && raw[s]) || null;
+    const one = {};
+    PAD_ACTS.forEach(function (k) {
+      let v = src ? src[k] : null;
+      v = (v == null || !isFinite(v)) ? PAD_DEF[k] : (v | 0);
+      if (v < 0 || v > 15) v = PAD_DEF[k];
+      one[k] = v;
+    });
+    /* 同一槽內不允許兩個動作用同一顆鍵（後面那個退回預設）→ 才不會「按 X 同時衝刺又引爆」。 */
+    PAD_ACTS.forEach(function (k, i) {
+      for (let j = 0; j < i; j++) {
+        if (one[PAD_ACTS[j]] === one[k]) one[k] = PAD_DEF[k];
+      }
+    });
+    out.push(one);
+  }
+  return out;
+}
+function padMapOf(slot) {
+  const t = (settings && settings.padBtn) || null;
+  const one = (t && t[slot]) || null;
+  return one || PAD_DEF;
+}
+function padSetBtn(slot, act, btn) {
+  if (slot < 0 || slot > 3 || PAD_ACTS.indexOf(act) < 0) return null;
+  if (!(btn >= 0 && btn <= 15)) return null;
+  settings.padBtn = normalizePadBtn(settings.padBtn);
+  /* 同一顆鍵在這個槽已經被別的動作佔用 → 兩者互換（比「清掉別人的」更符合直覺） */
+  const cur = settings.padBtn[slot];
+  PAD_ACTS.forEach(function (k) {
+    if (k !== act && cur[k] === btn) cur[k] = cur[act];
+  });
+  cur[act] = btn;
+  settings.padBtn = normalizePadBtn(settings.padBtn);
+  return settings.padBtn[slot];
+}
 let settings = {
   size: 'M', wins: 2, time: 120, hazards: 'on', sd: 'on', revenge: 'on',
   battleTheme: 'r',                                 // v5.72：對戰／線上連線的地圖風格（'r' = 八張洗牌輪替；'0'~'7' = 指定那一張）
@@ -961,6 +1021,11 @@ let settings = {
   nukeShake: 1,                                   // v5.37：核彈震動獨立開關（預設開 —— 核彈要有份量）
   shakeV: 2,                                      // v5.37：震動預設值戳記（<2 的舊存檔會被歸零一次）
   cb: 0,                                          // v5.27：色盲友善隊色（加圖形與虛線，不只用顏色）
+  /* v6.00：手把按鍵「逐槽」對應（1P~4P 各自一組）。
+     預設：A 放炸彈／撿彈／丟彈、B 遙控引爆、X 衝刺、Y 坐騎招式；Start／Menu＝暫停／確認。
+     值＝Xbox 標準映射的按鈕索引（0=A 1=B 2=X 3=Y 4=LB 5=RB 6=LT 7=RT 8=Back 9=Start…）。
+     null＝還沒設定過 → 用 PAD_DEF。 */
+  padBtn: null,
   tpad: Object.assign({}, DEF_TPAD)               // 手機觸控版面
 };
 // v4.15：對戰人數 2～8（原本只有 4／8 兩種）
@@ -1003,6 +1068,9 @@ try {
     settings.keysVer = 2;
   }
   settings.tpad = Object.assign({}, DEF_TPAD, settings.tpad || {});
+  /* v6.00：手把按鍵表 —— 一定要補成「4 槽 × 4 動作」的完整結構，
+     不然舊存檔（沒有 padBtn）會讓 padScheme 讀到 undefined。 */
+  settings.padBtn = normalizePadBtn(settings.padBtn);
   // v4.2：老玩家（本來就有觸控設定、但沒有 mode 欄位）維持原本的實體搖桿；
   //       全新玩家則直接給「隱形滑動區」（推薦模式）。
   if (savedSettings && savedSettings.tpad && !savedSettings.tpad.mode) settings.tpad.mode = 'stick';
@@ -2288,6 +2356,29 @@ const AudioSys = (function () {
         boom(.32, .40, .16);
         break;
       case 'nope': tone(180, .10, 'square', .12, 120); break;
+      /* v6.00：隨從的四種動作音 —— 讓「誰在做事」用耳朵就聽得出來。
+         全部走同一條合成器（沒有新音檔），也一樣吃六格可聽半徑。 */
+      case 'petSlash':                       // 武士狼拔刀橫斬：金屬摩擦→切開空氣
+        tone(2600, .05, 'sawtooth', .12, 820);
+        tone(760, .13, 'triangle', .17, 230);
+        tone(150, .10, 'sine', .10, 90, .03);
+        boom(.10, .26, .01);
+        break;
+      case 'petThrow':                       // 爆彈猴丟彈：手臂甩出的風切
+        tone(430, .09, 'square', .13, 1000);
+        tone(1250, .07, 'sine', .08, 520, .04);
+        break;
+      case 'petBlock':                       // 盾犀格檔：金屬「鏘」
+        tone(1850, .06, 'square', .12, 1180);
+        tone(620, .22, 'triangle', .18, 360);
+        tone(2450, .28, 'sine', .06, 1480, .02);
+        boom(.16, .30);
+        break;
+      case 'petBash':                        // 盾犀盾撞：悶擊＋低頻推力
+        boom(.22, .40);
+        tone(120, .18, 'sawtooth', .18, 58);
+        tone(880, .07, 'square', .10, 300, .01);
+        break;
       case 'door': tone(520, .12, 'square', .15); tone(660, .12, 'square', .15, null, .1); tone(880, .2, 'square', .16, null, .2); break;
       // 出口開啟（清場）：上行琶音 + 亮片叮咚 + 低頻推力，跟一般過場音明顯不同
       case 'doorOpen':
@@ -3244,11 +3335,14 @@ const Input = (function () {
         if (ax < -.5) d.push('left'); if (ax > .5) d.push('right');
         return d;
       },
-      action: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, 0); },
-      actionHeld: function () { const pi = padPhys(slot); return pi >= 0 && padDown(pi, 0); },
-      detonate: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, 2); },   // X／□
-      fire: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, 3); },       // Y／△
-      dash: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, 5); }        // RB／R1
+      /* v6.00：按鍵改成「每個槽各自一組」——1P~4P 可以個別指定，互不干擾。
+         預設 A 放炸彈／撿彈／丟彈、B 遙控引爆、X 衝刺、Y 坐騎招式。
+         每幀都重讀 settings.padBtn：改鍵立刻生效，不用重開關卡。 */
+      action: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, padMapOf(slot).act); },
+      actionHeld: function () { const pi = padPhys(slot); return pi >= 0 && padDown(pi, padMapOf(slot).act); },
+      detonate: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, padMapOf(slot).det); },
+      fire: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, padMapOf(slot).fire); },
+      dash: function () { const pi = padPhys(slot); return pi >= 0 && padEdge(pi, padMapOf(slot).dash); }
     };
   }
   const PAD0 = padScheme(0);
@@ -4338,6 +4432,8 @@ const PadUI = (function () {
       clearPaint(); cacheAt = 0;
     }
     if (!navigator.getGamepads) return;
+    /* v6.00：設定頁正在「抓手把按鍵」→ 這段時間不要拿 A 去點按鈕（否則一按就被點掉）。 */
+    if (window.__padCapture) return;
     const pi = padIndex();
     if (pi < 0) { if (focusEl) { clearPaint(); focusEl = null; } return; }
     // 只有「真的有人在用手把」才顯示光環（插著手把但用滑鼠的人不會一直被光環騷擾）
@@ -4371,7 +4467,10 @@ const PadUI = (function () {
 
     // ---- 按鍵：就算沒有選單（遊戲中）也要能按，B＝暫停 ----
     if (Input.padEdge(pi, 0)) activate();       // A 確認
-    if (Input.padEdge(pi, 1)) back();           // B 返回／遊戲中暫停
+    if (Input.padEdge(pi, 1)) back();           // B 返回
+    /* v6.00：Xbox 中間那顆（Start／Menu）＝「暫停／確認」——
+       遊戲中由主迴圈負責開關暫停，這裡只補「選單裡也能當確認鍵」。 */
+    if (cacheScope && Input.padEdge(pi, 9)) activate();
     if (cacheScope) {
       if (Input.padEdge(pi, 4)) step(-1);       // LB 上一項
       if (Input.padEdge(pi, 5)) step(1);        // RB 下一項
@@ -4416,12 +4515,13 @@ const PAD_MAP = [
   ['左蘑菇頭／十字鍵', '選單：移動游標　遊戲中：移動角色（8 向）'],
   ['右蘑菇頭', '選單：上下左右捲動畫面　遊戲中：上下縮放視野'],
   ['A', '確認／選取　遊戲中：放炸彈（撿彈、丟彈也用它）'],
-  ['B', '返回上一頁　遊戲中：暫停／繼續'],
-  ['X', '遙控引爆（要有 📱 遙控器）'],
-  ['Y', '坐騎招式（恐龍吐火，要有坐騎）'],
-  ['LB／RB', '選單：上一個／下一個項目（一定選得到每一個）　遊戲中：RB 衝刺'],
+  ['B', '遊戲中：遙控引爆（要有 📱 遙控器）　選單：返回上一頁'],
+  ['X', '遊戲中：衝刺'],
+  ['Y', '遊戲中：坐騎招式（恐龍吐火／鴕鳥跳躍，要有坐騎）'],
+  ['Start／Menu', '暫停／確認（Xbox 中間那顆）'],
+  ['LB／RB', '選單：上一個／下一個項目（一定選得到每一個）'],
   ['LT／RT', '遊戲中：縮小／放大畫面'],
-  ['Start', '暫停／繼續']
+  ['※ 1P～4P', '每支手把的按鍵可以在「設定 → 操作設定 → 手把按鍵」個別改']
 ];
 
 // ---------- 角色外觀（原創：8 隻可愛的胖胖動物，對應選角圖的 8 隻） ----------
@@ -4937,6 +5037,33 @@ function qualLevel() {
 }
 function qualDprCap() { return QUAL_CAP[qualLevel()]; }
 function qualPart() { return QUAL_PART[qualLevel()]; }
+
+/* ══════════════════════════════════════════════════════════════
+   v6.00：自動降載（frametime 驅動）
+   ------------------------------------------------------------------
+   使用者回報「大逃殺開局 FPS 掉到 60 以下」。畫質是固定的，
+   但 100 人同場＋滿地特效的實際成本遠高於單人，所以再加一層「動態」：
+   連續 1 秒平均幀時間 > 19ms（≈53fps）→ fxLv 升一級（最多兩級）；
+   回到 15ms（≈66fps）以下撐滿 2 秒才降回一級 —— 不會在門檻上下抖。
+   降載只關「好看但不影響判讀」的東西：全螢幕調色層、光暈（shadowBlur）、
+   表情圖示、粒子量、名牌描邊 —— 碰撞、爆炸、血量一律不動。
+   ══════════════════════════════════════════════════════════════ */
+let _fxEma = 16.7, _fxGoodT = 0, _fxBadT = 0, _fxLv = 0;
+function fxLv() { return _fxLv; }
+function perfTick(dt) {
+  if (!(dt > 0)) return;
+  const ms = Math.min(80, dt * 1000);
+  _fxEma += (ms - _fxEma) * .12;
+  if (_fxEma > 19) _fxBadT += dt; else _fxBadT = 0;
+  if (_fxEma < 15) _fxGoodT += dt; else _fxGoodT = 0;
+  if (_fxBadT > 1.0) {
+    _fxBadT = 0; _fxGoodT = 0;
+    if (_fxLv < 2) _fxLv++;
+  } else if (_fxGoodT > 2.0 && _fxLv > 0) {
+    _fxGoodT = 0; _fxLv--;
+  }
+}
+function fxPart() { return _fxLv >= 2 ? .45 : _fxLv >= 1 ? .72 : 1; }
 // 粒子上限（環境粒子用）：至少留 1 顆，不然整個場景會「空掉」
 function ambN(n) { return Math.max(1, Math.round(n * qualPart() * (settings.calm ? .45 : 1))); }
 
@@ -5740,6 +5867,59 @@ function bombPassKeep(b, p) {
   return p.x + half > b.cx * T && p.x - half < (b.cx + 1) * T &&
          p.y + half > b.cy * T && p.y - half < (b.cy + 1) * T;
 }
+/* v6.00：轉角補位 —— 拿掉格子吸附之後，玩家最常抱怨的就是「明明只差一點點就能過，
+   卻整個人黏在牆邊不動」。這裡在「貼住牆」之後補一個很小幅度的側向推力：
+   只有在「側移 ≤ 0.30 格就能鑽進缺口」時才生效，而且速度不超過當前走速
+   → 手感像「順著牆滑進巷口」，不會變成磁鐵把人吸去對齊格心。 */
+const CORNER_ASSIST = .30;
+function slideAssist(p, sx, sy, sp, noBomb) {
+  const T = Game.T;
+  const adv = Math.max(sp, 1.2);                 // 往牆裡「想走多遠」
+  const lim = Math.max(2, Math.round(T * CORNER_ASSIST));
+  for (let d = 1; d <= lim; d++) {
+    for (let sg = -1; sg <= 1; sg += 2) {
+      const off = d * sg;
+      if (sx) {
+        if (boxBlocked(p, p.x, p.y + off, noBomb)) continue;          // 側移的這一步不能穿牆
+        if (boxBlocked(p, p.x + sx * adv, p.y + off, noBomb)) continue; // 側移後還是前進不了 → 不是缺口
+      } else {
+        if (boxBlocked(p, p.x + off, p.y, noBomb)) continue;
+        if (boxBlocked(p, p.x + off, p.y + sy * adv, noBomb)) continue;
+      }
+      const step = Math.min(Math.abs(off), Math.max(sp, .8));
+      return off > 0 ? step : -step;
+    }
+  }
+  return 0;
+}
+/* v6.00：第二級 —— 沿著牆滑向缺口
+   ------------------------------------------------------------------
+   缺口常常不在「旁邊 0.52 格」內：站在走道最下緣、缺口在上一格，
+   方盒要退 40 幾像素才鑽得過去，第一級永遠救不到 → 玩家看到的就是
+   「明明按著往右，人卻貼在牆上原地踏步」。
+   這裡往同一側找「退到那裡之後前方就通了」的車道（最多 1.25 格），
+   找到就每幀往那邊挪一點（速度略低於走速，像貼著牆滑），
+   一旦前方通了就不再介入 —— 所以不是把人吸去對齊格心，是帶到缺口。 */
+function laneSlide(p, sx, sy, sp, noBomb) {
+  const T = Game.T;
+  const adv = Math.max(sp * 2, T * .30);
+  const lim = Math.round(T * 1.25);
+  for (let d = 1; d <= lim; d += 2) {          // 每 2px 取樣：夠準，又把碰撞呼叫砍一半
+    for (let sg = -1; sg <= 1; sg += 2) {
+      const off = d * sg;
+      if (sx) {
+        if (boxBlocked(p, p.x, p.y + off, noBomb)) continue;
+        if (boxBlocked(p, p.x + sx * adv, p.y + off, noBomb)) continue;
+      } else {
+        if (boxBlocked(p, p.x + off, p.y, noBomb)) continue;
+        if (boxBlocked(p, p.x + off, p.y + sy * adv, noBomb)) continue;
+      }
+      const st = Math.max(sp * .85, .7);
+      return off > 0 ? st : -st;
+    }
+  }
+  return 0;
+}
 function freeMove(p, mx, my, dt, spd) {
   if (!mx && !my) return;
   const T = Game.T;
@@ -5775,6 +5955,11 @@ function freeMove(p, mx, my, dt, spd) {
       let x = p.x;
       while (Math.abs(x - p.x) < Math.abs(vx * sp) && !boxBlocked(p, x + st, p.y, skipBomb)) x += st;
       p.x = x;
+      /* v6.00：貼到牆了，但旁邊就是缺口 → 順著牆「靠」過去（玩家不用手動微調對格） */
+      if (!vy) {
+        const push = slideAssist(p, st, 0, sp, skipBomb) || laneSlide(p, st, 0, sp, skipBomb);
+        if (push) p.y += push;
+      }
     }
   }
   if (vy) {
@@ -5785,6 +5970,11 @@ function freeMove(p, mx, my, dt, spd) {
       let y = p.y;
       while (Math.abs(y - p.y) < Math.abs(vy * sp) && !boxBlocked(p, p.x, y + st, skipBomb)) y += st;
       p.y = y;
+      /* v6.00：同上（垂直方向） */
+      if (!vx) {
+        const push = slideAssist(p, 0, st, sp, skipBomb) || laneSlide(p, 0, st, sp, skipBomb);
+        if (push) p.x += push;
+      }
     }
   }
 }
@@ -6759,7 +6949,11 @@ function swapMountBurst(p) {
 // 吃到蛋（人類與 AI 共用）：沒坐騎 → 依蛋種上坐騎；已有坐騎 → 升級成紅龍
 function takeEgg(p) {
   const T = Game.T;
-  const eg = eggAt(Math.floor(p.x / T), Math.floor(p.y / T));
+  return takeEggAt(p, Math.floor(p.x / T), Math.floor(p.y / T));
+}
+/* v6.00：指定格子孵蛋 —— 衝刺一幀可能跨過半格以上，只驗腳下那一格會漏掉路上的蛋。 */
+function takeEggAt(p, cx, cy) {
+  const eg = eggAt(cx, cy);
   if (!eg) return false;
   Game.eggs.splice(Game.eggs.indexOf(eg), 1);
   // 已經有坐騎 → 同種蛋升級、異種蛋換騎（舊坐騎爆散一次當補償）
@@ -7543,26 +7737,36 @@ const PetPreview = (function () {
         const W = o.w || 240, H = o.h || 240, g = o.g;
         const kd = o.kind || 'blade';
         g.clearRect(0, 0, W, H);
-        // 左右踱步（跟選角卡一樣的節奏，幅度小一點 → 不會撞到框邊）
-        const phase = now * .82 + kd.length;
-        const cx = W / 2 + Math.sin(phase) * W * .075;
-        const facing = Math.cos(phase) >= 0 ? 1 : -1;
-        const walk = now * 6.4;
-        // 每 3.4 秒揮一次（用攻擊幀，讓靜態的商店頁有「活的」感覺）
-        const cyc = (now + kd.charCodeAt(0) % 7) % 3.4;
-        const atk = cyc > 2.92;
-        const frame = atk ? 3 : (1 + (Math.floor(walk / 2.4) % 2));
+        /* v6.00：商店的隨從換成「真的動作圖集」。
+           一支 4.6 秒的循環：待機 → 走兩步 → 攻擊 → 格檔 → 回待機，
+           跟遊戲裡看到的是同一支影片素材（不是另一套靜態圖），
+           所以玩家在店裡就能預覽牠上場之後長什麼樣。 */
+        const cyc = (now + (kd.charCodeAt(0) % 7) * .37) % 4.6;
+        let act = 'idle', step = 0;
+        if (cyc >= 2.0 && cyc < 3.0) { act = 'move'; step = cyc - 2.0; }        // 走兩步
+        else if (cyc >= 3.0 && cyc < 3.6) { act = 'attack'; step = cyc - 3.0; }  // 出招
+        else if (cyc >= 3.6 && cyc < 4.2) { act = 'hurt'; step = cyc - 3.6; }    // 被打／格檔
+        const walking = act === 'move';
+        const cx = W / 2 + (walking ? Math.sin(step * 6.4) * W * .10 : 0);
+        const facing = walking ? (Math.cos(step * 6.4) >= 0 ? 1 : -1) : 1;
         const footY = H * .95;
         const bodyH = H * .72;
-        // 地面影子（奶油底上用淡咖啡色，比黑色自然）
+        /* 地面影子（奶油底上用淡咖啡色，比黑色自然）
+           待機時影子跟著呼吸微微脹縮 —— 一眼就看得出「牠是活的」，不是貼圖。 */
+        const br = walking ? 1 : 1 + Math.sin(now * 2.2 + kd.length) * .05;
         g.fillStyle = 'rgba(120,80,30,.16)';
         g.beginPath();
-        g.ellipse(cx, footY, W * .21, H * .045, 0, 0, 6.283);
+        g.ellipse(cx, footY, W * .21 * br, H * .045 * br, 0, 0, 6.283);
         g.fill();
-        const ok = (typeof drawPetSprite === 'function') &&
+        /* 先走影片圖集；沒有圖集才退回 v5.0 的四幀美術圖。 */
+        const okAnim = (typeof PetAnim !== 'undefined' && PetAnim && PetAnim.has && PetAnim.has(kd)) &&
+          PetAnim.draw(g, kd, cx, footY, bodyH, facing,
+            { act: act, idle: now, walk: now * 13, moving: walking });
+        const okArt = okAnim || ((typeof drawPetSprite === 'function') &&
           drawPetSprite(g, kd, cx, footY, bodyH, facing,
-            { frame: frame, walk: walk, moving: true, idle: now });
-        if (!ok) {                                  // 圖還沒載到 → 先畫名字的 emoji 佔位
+            { frame: act === 'attack' ? 3 : (walking ? (1 + (Math.floor(now * 8) % 2)) : 0),
+              walk: now * 6.4, moving: walking, idle: now }));
+        if (!okArt) {                               // 圖還沒載到 → 先畫名字的 emoji 佔位
           const pk = (typeof petKind === 'function') ? petKind(kd) : null;
           g.font = Math.round(H * .38) + 'px "Segoe UI Emoji","Apple Color Emoji",sans-serif';
           g.textAlign = 'center';
@@ -11921,6 +12125,34 @@ function leaveSpecialRun() {
   if (was) { try { AbyssHud.paint(); } catch (e) {} }
 }
 
+const MOUNT_TUT_KEY = 'bombhero-mount-tut-v1';
+function mountTutSeen() {
+  try { return String(localStorage.getItem(MOUNT_TUT_KEY) || '') === '1'; } catch (e) { return true; }
+}
+function mountTutMark() {
+  try { localStorage.setItem(MOUNT_TUT_KEY, '1'); } catch (e) {}
+}
+/* 這一關該不該生坐騎蛋：劇情前 3 關不給（BOSS 連戰／每日／深淵／RPG 走自己的規則） */
+function mountEggOK(stage) {
+  if (Game.bossRush || Game.daily || Game.abyss || Game.rpg) return true;
+  return (stage | 0) >= 4;
+}
+function mtxt(zh, en) { return (typeof LANG === 'string' && LANG === 'en') ? en : zh; }
+function mountTips() {
+  return [
+  mtxt('🥚 蛋從哪裡來：打掉軟磚會露出恐龍蛋（打不到也沒關係，走上去也算）',
+       '🥚 Eggs hide inside soft blocks — blow one up and the egg pops out'),
+  mtxt('🐾 走上去就孵化：直接騎上恐龍，移動速度變快、還能撞開軟磚',
+       '🐾 Walk onto an egg to hatch it: you ride the dino, move faster and smash soft blocks'),
+  mtxt('🔥 坐騎招式：鍵盤 Alt／Space、手把 Y、手機 🔥 鍵 —— 朝面向吐火，燒直線上的敵人',
+       '🔥 Mount skill: Alt / Space, gamepad Y or the 🔥 button — breathe fire forward'),
+  mtxt('🐦 鴕鳥是跳躍：同一顆鍵變成「跳過一格」，跳起來可以躲過爆炸',
+       '🐦 On an ostrich the same button jumps over one tile to dodge blasts'),
+  mtxt('⬆️ 再吃一顆蛋會升級成紅龍：火力更強、吐火更遠',
+       '⬆️ Eat a second egg to upgrade into the red dragon: stronger, longer flame')
+  ];
+}
+
 function startSolo(stage, bossRush, daily) {
   try { DeathCard.reset(); } catch (e) {}
   /* v5.73：普通入口一律離開深淵（深淵自己會透過 Game.abyssNext 在下面釘回去） */
@@ -12003,12 +12235,12 @@ function startSolo(stage, bossRush, daily) {
      玩家看到普通關的標題＋聽到普通關的音樂，自然覺得「這不是深淵」。
      現在深淵有自己的標題／副標／按鈕（「潛下去」）。 */
   const abyssLv = (Game.abyss && !Game.bossRush) ? (Game.abyss.layer | 0) : 0;
-  const ovT = abyssLv
+  let ovT = abyssLv
     ? t('abyss.ovTitle', { n: abyssLv }) + (soloIsBoss(stage) ? '\u3000\u26A0\uFE0F BOSS' : '')
     : (Game.daily
       ? t('daily.ovTitle', { d: Game.daily.day })
       : (Game.bossRush ? t('solo.ovBossTitle', { name: mapName(soloInfo(stage)) }) : t('solo.ovTitle', { n: stage, name: mapName(soloInfo(stage)) })));
-  const ovS = Game.daily
+  let ovS = Game.daily
     ? t('daily.ovSub', { n: stage, name: mapName(soloInfo(stage)) }) +
       t('daily.ovRule', { t: fmtTime(tSec) }) + '　🔑 ' + seedCodeOf(Game.daily.seed)
     : (abyssLv
@@ -12017,14 +12249,24 @@ function startSolo(stage, bossRush, daily) {
         t('solo.ovTime', { d: diffLabel(), t: (tSec ? fmtTime(tSec) : t('time.inf')) }) +
         seedTag() +
         (revN > 0 ? '\n💢 ' + t('rev.on', { n: revN }, '復仇 ×' + revN + '：開場多 ' + revN + ' 顆炸彈') : '')));
+  /* v6.00：第 4 關＝坐騎蛋第一次出現 → 開場卡直接換成坐騎教學（只講一次，
+     之後要複習可以看「說明 → 操作」）。 */
+  const mountTut = mountEggOK(stage) && (stage | 0) === 4 && !Game.rpg && !Game.daily &&
+    !Game.bossRush && !Game.abyss && !mountTutSeen();
+  if (mountTut) {
+    ovT = mtxt('🥚 坐騎蛋出現了！', '🥚 Mount eggs are here!');
+    ovS = mtxt('從這一關開始，地圖上會藏著恐龍蛋。撿到坐騎＝跑得更快、還能吐火清場。',
+               'From this stage on, eggs are hidden in the map. A mount runs faster and breathes fire.');
+  }
   showOverlay({
     title: ovT,
-    sub: ovS + foeSkillIntroSub(),
+    sub: ovS + (mountTut ? '' : foeSkillIntroSub()),
     btn: abyssLv ? t('abyss.ovGo') : t('solo.ovGo'),
     /* v5.82：第 3 關（示範關）改放「小怪會出招」的三條教學，蓋掉一般模式提示 */
-    tips: foeSkillIntroTips() || ModeTip.tips(Game.rpg ? 'rpg' : 'solo'),
+    tips: mountTut ? mountTips() : (foeSkillIntroTips() || ModeTip.tips(Game.rpg ? 'rpg' : 'solo')),
     tipMode: Game.rpg ? 'rpg' : 'solo',
     action: function () {
+      if (mountTut) { mountTutMark(); }
       /* v5.63：第一關開場先給一次「起手三選一」。
          原本只有「過關後」才抽 —— 新玩家第一關永遠是白板，
          點「再來一局」重開也還是同一個白板，等於每局開頭都一樣。
@@ -12509,8 +12751,16 @@ function buildSoloStageInner(stage, fresh) {
     boss.dirName = 'up';                         // 從下方上來 → 面朝上方
     Game.enemies.push(boss);
   }
-  // 恐龍蛋：炸得到，走上蛋格就會孵出恐龍
-  spawnEggs(Game.bossRush ? 2 : diff.eggs);
+  /* ══════════════════════════════════════════════════════════════
+   v6.00：坐騎蛋從第 4 關才出現（前 3 關練基本功），並在第一次出現時教學
+   ------------------------------------------------------------------
+   使用者要：「第一＋二＋三關沒有坐騎，第四關坐騎蛋才會出現，
+   然後出現蛋以後要跳出教學，教玩家蛋出現要做什麼、怎麼用坐騎招式、
+   坐騎賦予什麼功能」。
+   ══════════════════════════════════════════════════════════════ */
+// 恐龍蛋：炸得到，走上蛋格就會孵出恐龍
+  /* v6.00：前 3 關不給坐騎蛋 —— 新手一次要學放彈／踢彈／引爆，再加坐騎只會亂。 */
+  spawnEggs(mountEggOK(stage) ? (Game.bossRush ? 2 : diff.eggs) : 0);
   const tSec = soloTimeVal();
   Game.timer = tSec > 0 ? tSec : Infinity;
   Game.timerMax = Game.timer;          // v4.87：三星判定用（剩餘時間比例）
@@ -13450,7 +13700,7 @@ function petTouchEnemies(pt) {
       pt.restT = 3;                                        // 擋完原地休息 3 秒
       pt.blockT = .45;                                     // v5.0：盾牌硬擋一幀（美術第 4 幀）
       pt.atkAnimT = .55;                                   // v6.0：影片攻擊動作播放 0.55 秒
-      AudioSys.sfx('kick');
+      petFxStart(pt, 'block', .60);                         // v6.00：超大盾牌＋金屬撞擊音
       burst(pt.x, pt.y, '#9ad2ff', 14, 210);
       toast('🛡️ 格檔隨從擋下攻擊，原地休息 3 秒', 1.9);
     } else {
@@ -13474,6 +13724,7 @@ function updatePets(dt) {
     if (pt.slashT > 0) pt.slashT -= dt;
     if (pt.atkAnimT > 0) pt.atkAnimT -= dt;   // v6.0
     if (pt.cheerT > 0) pt.cheerT -= dt;       // v6.0：勝利歡呼
+    if (pt.fxT > 0) pt.fxT -= dt;             // v6.00：大招特效
     if (pt.throwT > 0) pt.throwT -= dt;
     pt.moving = false;
     // v4.31：被軟磚圍住／卡在牆的另一側 → 2.5 秒後瞬移到主人旁邊，不要讓玩家等
@@ -13529,8 +13780,9 @@ function updatePets(dt) {
         if (d <= T * 1.12) {
           if (pt.atkCd <= 0) {
             pt.atkCd = 2 * petCdMul(pt);                   // 冷卻 2 秒（升級後更短）
-            pt.slashT = .28;                               // 刀光
+            pt.slashT = .28;                               // 刀光（舊的小弧，只有沒精靈時才畫）
             pt.atkAnimT = .55;                             // v6.0：影片攻擊動作（12 格 22fps）
+            petFxStart(pt, 'slash', .46);                   // v6.00：特大斬擊弧＋劈砍音效
             const dx = foe.x - pt.x, dy = foe.y - pt.y;
             pt.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
             petHitEnemy(foe, petDmgOf(pt));               // v5.64：Lv.3／5 各 +1 傷害
@@ -13549,7 +13801,10 @@ function updatePets(dt) {
         const heroSafe = Math.hypot(foe.x - hero.x, foe.y - hero.y) > T * 1.6;
         if (d > T * .6 && heroSafe) {
           pt.atkCd = 3 * petCdMul(pt);                     // 冷卻 3 秒（升級後更短）
-          if (petThrowBomb(pt, foe)) { pt.throwT = .3; pt.atkAnimT = .55; }   // v6.0
+          if (petThrowBomb(pt, foe)) {
+            pt.throwT = .3; pt.atkAnimT = .55;             // v6.0：影片動作
+            petFxStart(pt, 'throw', .44);                   // v6.00：火球＋煙＋震波＋音效
+          }
         }
       }
       if (foe) {
@@ -13563,8 +13818,25 @@ function updatePets(dt) {
 
     if (pt.kind === 'guard') {
       const gfoe = foe || petHeroThreat(hero, T * 5);
-      if (gfoe) petStepTo(pt, (hero.x + gfoe.x) / 2, (hero.y + gfoe.y) / 2, dt, T * 4.0);
-      else petFollowWork(pt, hero, dt);
+      if (gfoe) {
+        /* v6.00：盾犀以前只會擋、不會打 —— 攻擊圖集做出來之後給牠一記「盾撞」：
+           貼到 1.05 格就往前頂，擊退＋傷害，看得出來牠是「重裝前鋒」而不是只會擋。 */
+        const gd = Math.hypot(gfoe.x - pt.x, gfoe.y - pt.y);
+        /* 貼在身上（< 0.30 格）時牠一定正在格檔 —— 那一下只震暈、不補刀，
+           免得「擋住＝打人」破壞格檔隨從「只守不攻」的定位（v6.2 測試在守這條）。 */
+        if (gd <= T * 1.05 && gd > T * .30 && pt.atkCd <= 0) {
+          pt.atkCd = 2.4 * petCdMul(pt);
+          pt.atkAnimT = .55;
+          const dx = gfoe.x - pt.x, dy = gfoe.y - pt.y;
+          pt.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+          petHitEnemy(gfoe, petDmgOf(pt));
+          gfoe.knockX = (dx > 0 ? 1 : -1) * T * .22;
+          gfoe.knockY = (dy > 0 ? 1 : -1) * T * .12;
+          petFxStart(pt, 'bash', .50);
+          burst(gfoe.x, gfoe.y, '#ffe0a0', 10, 190);
+        }
+        petStepTo(pt, (hero.x + gfoe.x) / 2, (hero.y + gfoe.y) / 2, dt, T * 4.0);
+      } else petFollowWork(pt, hero, dt);
       petTouchEnemies(pt);
       continue;
     }
@@ -13631,6 +13903,163 @@ function petSeparate() {
     a._sx = 0; a._sy = 0;
   }
 }
+/* ══════════════════════════════════════════════════════════════
+   v6.00：隨從的「大招」特效 ＋ 專屬音效
+   ------------------------------------------------------------------
+   使用者要：「攻擊或格檔特效要大又明顯 —— 斬刀的砍擊要特大、還要有劈砍聲，
+   丟炸彈要自己的特效、格檔要有盾牌大特效，而且個別都要有音效。」
+   所以每個動作都有 ①自己的音效 ②自己的大型圖形特效，
+   不再借用 item／place／heal 這些不相干的音，也不會「只有一顆小閃光」。
+   動畫用 pt.fxT（剩餘秒數）驅動，畫在角色之後 → 一定蓋在角色上，不會被擋。
+   ══════════════════════════════════════════════════════════════ */
+function petFxStart(pt, kind, life) {
+  if (!pt) return;
+  pt.fxKind = kind;
+  pt.fxT = life || .46;
+  pt.fxMax = pt.fxT;
+  /* 音效一律走 AudioSys.sfx(name, x, y) → 會套「六格可聽半徑」，
+     遠處的隨從打架不會把玩家的耳朵灌滿。 */
+  const map = { slash: 'petSlash', throw: 'petThrow', block: 'petBlock', bash: 'petBash' };
+  try { if (map[kind]) AudioSys.sfx(map[kind], pt.x, pt.y); } catch (e) {}
+}
+/* 盾牌圖形：格檔與盾撞共用（只是顏色與大小不同） */
+function petShieldArt(cx, cy, R, tilt, tint, alpha) {
+  if (!ctx || !(R > 0)) return;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(tilt || 0);
+  ctx.globalAlpha = alpha == null ? 1 : alpha;
+  // 盾體（上寬下尖，像鳶形盾）
+  ctx.beginPath();
+  ctx.moveTo(0, -R * 1.02);
+  ctx.quadraticCurveTo(R * .95, -R * .78, R * .82, R * .10);
+  ctx.quadraticCurveTo(R * .62, R * .82, 0, R * 1.10);
+  ctx.quadraticCurveTo(-R * .62, R * .82, -R * .82, R * .10);
+  ctx.quadraticCurveTo(-R * .95, -R * .78, 0, -R * 1.02);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(16,24,44,.55)';
+  ctx.fill();
+  ctx.lineWidth = Math.max(2, R * .16);
+  ctx.strokeStyle = tint || '#bfe4ff';
+  ctx.stroke();
+  // 中央盾徽 + 兩顆鉚釘
+  ctx.beginPath();
+  ctx.arc(0, -R * .12, R * .30, 0, 6.2832);
+  ctx.fillStyle = tint || '#bfe4ff';
+  ctx.fill();
+  ctx.globalAlpha = (alpha == null ? 1 : alpha) * .85;
+  ctx.fillStyle = 'rgba(255,255,255,.92)';
+  ctx.beginPath(); ctx.arc(0, -R * .12, R * .13, 0, 6.2832); ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+function drawPetFx(pt, x, y, T) {
+  if (!ctx || !(pt.fxT > 0) || !pt.fxMax) return;
+  const p = clamp(1 - pt.fxT / pt.fxMax, 0, 1);       // 0 → 1
+  const d = DIRS[pt.facing] || DIRS.down;
+  const sx = d.x || 0, sy = d.y || 0;
+  const kind = pt.fxKind || 'slash';
+  const born = 1 - p;                                  // 1 → 0（淡出用）
+  ctx.save();
+  if (kind === 'slash') {
+    /* 拔刀橫斬：一道 300° 的月牙，白芯＋青邊＋外光暈，越掃越長 → 真的「砍出去」 */
+    const ang = Math.atan2(sy * .62, sx);
+    const R = T * (1.05 + p * .38);
+    ctx.translate(x + sx * T * .18, y - T * .06 + sy * T * .10);
+    ctx.scale(1, .66);
+    ctx.rotate(ang);
+    const a0 = -1.42 + p * .28, a1 = a0 + (2.10 + p * .55);
+    const fade = Math.min(1, born * 2.2);
+    // ① 外光暈（加亮）
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = .34 * fade;
+    ctx.strokeStyle = '#59d8ff';
+    ctx.lineWidth = T * .40 * (1 - p * .35);
+    ctx.beginPath(); ctx.arc(0, 0, R, a0, a1); ctx.stroke();
+    // ② 主刃（白）
+    ctx.globalAlpha = .96 * fade;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = T * .17 * (1 - p * .45);
+    ctx.beginPath(); ctx.arc(0, 0, R, a0, a1); ctx.stroke();
+    // ③ 內側青色細線（速度感）
+    ctx.globalAlpha = .78 * fade;
+    ctx.strokeStyle = '#aef4ff';
+    ctx.lineWidth = Math.max(1, T * .045);
+    ctx.beginPath(); ctx.arc(0, 0, R - T * .12, a0 + .12, a1 - .05); ctx.stroke();
+    // ④ 刀尖爆點
+    ctx.globalAlpha = .9 * (1 - p) * (1 - p);
+    ctx.fillStyle = '#ffffff';
+    const ex = Math.cos(a1) * R, ey = Math.sin(a1) * R;
+    ctx.beginPath(); ctx.arc(ex, ey, Math.max(2, T * .17 * (1 - p)), 0, 6.2832); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    // ⑤ 地面刮痕（貼著腳下的短橫線，讓斬擊有「落地」的重量）
+    ctx.globalAlpha = .5 * (1 - p);
+    ctx.strokeStyle = 'rgba(220,250,255,.9)';
+    ctx.lineWidth = Math.max(1.5, T * .05);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, R * .92, R * .22, 0, -.5, .5);
+    ctx.stroke();
+  } else if (kind === 'throw') {
+    /* 丟炸彈：手上一顆火球往外飛，後面拖三圈煙 ＋ 地面震波 */
+    const ox = x + sx * T * .30, oy = y - T * .16 + sy * T * .14;
+    const fly = T * (.35 + p * 1.05);
+    const bx = ox + sx * fly, by = oy + sy * fly * .55 - Math.sin(p * 3.14) * T * .22;
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 1; i <= 3; i++) {
+      const k = Math.max(0, p - i * .12);
+      const px = ox + sx * T * (.35 + k * 1.05), py = oy + sy * T * (.35 + k * 1.05) * .55 - Math.sin(k * 3.14) * T * .22;
+      ctx.globalAlpha = (1 - p) * .5 / i;
+      ctx.fillStyle = i % 2 ? '#ffd27a' : '#ff8a3d';
+      ctx.beginPath(); ctx.arc(px, py, T * .16 * (1 - k * .3), 0, 6.2832); ctx.fill();
+    }
+    ctx.globalAlpha = 1 - p * .55;
+    ctx.fillStyle = '#fff2c4';
+    ctx.beginPath(); ctx.arc(bx, by, T * .15, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = 'rgba(255,150,60,.95)';
+    ctx.beginPath(); ctx.arc(bx, by, T * .20, 0, 6.2832); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    // 地面震波（橢圓環）
+    ctx.globalAlpha = .55 * (1 - p);
+    ctx.strokeStyle = '#ffd8a0';
+    ctx.lineWidth = Math.max(1.5, T * .05 * (1 - p * .5));
+    ctx.beginPath(); ctx.ellipse(x, y + T * .28, T * (.30 + p * .55), T * (.14 + p * .22), 0, 0, 6.2832); ctx.stroke();
+  } else {
+    /* 格檔（block）／盾撞（bash）：一面超大的盾，由小放大再淡出 */
+    const isBash = kind === 'bash';
+    const R = T * ((isBash ? .58 : .52) + p * (isBash ? .52 : .34));
+    const tint = isBash ? '#ffd88a' : '#bfe4ff';
+    const tilt = isBash ? (sx >= 0 ? .35 : -.35) : (sx >= 0 ? -.18 : .18);
+    const cx = x + sx * T * .20, cy = y - T * .10 + sy * T * .06;
+    ctx.globalAlpha = 1 - p * .25;
+    petShieldArt(cx, cy, R, tilt, tint, 1 - p * .2);
+    // 撞擊白閃
+    if (p < .45) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = (1 - p / .45) * .85;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = Math.max(2, T * .07);
+      for (let i = 0; i < 8; i++) {
+        const a = i * .785 + .39;
+        const r0 = R * .55, r1 = R * (.95 + (isBash ? .35 : .20));
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0);
+        ctx.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+        ctx.stroke();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    // 地面衝擊環
+    ctx.globalAlpha = .6 * (1 - p);
+    ctx.strokeStyle = tint;
+    ctx.lineWidth = Math.max(1.5, T * .06 * (1 - p));
+    ctx.beginPath();
+    ctx.ellipse(x, y + T * .28, T * (.34 + p * .62), T * (.15 + p * .24), 0, 0, 6.2832);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
 // 繪製隨從（角色＋種類徽章＋刀光＋血量；倒地時是哭臉＋Help）
 // v5.0：隨從美術（四幀）。有圖就用圖，沒載到回 false → 呼叫端退回原本的角色畫法。
 function drawPetSprite(g, kind, x, footY, bodyH, side, a) {
@@ -13763,6 +14192,8 @@ function drawPet(pt, T) {
     { frame: fr, walk: pt.walkT * 13, moving: pt.moving, idle: Game.gameT });
   if (!drewArt) drawSpriteChar(ctx, c, x, y - bob, R, args) || drawCharBody(ctx, c, x, y - bob, R, args);
   ctx.globalAlpha = 1;
+  /* v6.00：大招特效畫在角色之後（一定蓋在上面） */
+  if (pt.fxT > 0) drawPetFx(pt, x, y, T);
   drawPetHeal(x, y, T, pt.healT || 0);
   // 種類徽章（v5.0：有美術圖就不畫表情符號了 —— 造型本身就分得出誰是誰）
   const k = petKind(pt.kind);
@@ -13773,7 +14204,7 @@ function drawPet(pt, T) {
   }
   // 刀光（白色＋青色新月）
   //   v6.0：影片模式已經自帶刀光弧（狼的那一支掃得很漂亮）→ 不再多畫一道，否則會變成雙弧。
-  if (pt.slashT > 0 && !drewAnim) {
+  if (pt.slashT > 0 && !drewAnim && !(pt.fxT > 0)) {
     const k2 = Math.min(1, pt.slashT / .28);
     const d = DIRS[pt.facing] || DIRS.down;
     const ang = Math.atan2(d.y, d.x);
@@ -18427,6 +18858,36 @@ function startDash(p, dirs) {
   try { heroGhost(p, p.dashColor || '#9fe8ff', 1); } catch (e) {}
   try { heroImpact(p.x, p.y + (p.r || 14) * .5, { power: .80, col: '#9fe8ff', bit: 'circ', stop: .010, shake: 0, cam: false }); } catch (e) {}
 }
+/* v6.00：撿東西的共用入口（道具 ＋ 坐騎蛋）。
+   衝刺時一幀可能走掉 0.37 格（速度 2.4 倍），只驗「腳下那一格」會直接穿過道具／蛋。 */
+function pickupCell(p, cx, cy) {
+  if (!p || !p.alive) return false;
+  let got = false;
+  for (let i = Game.items.length - 1; i >= 0; i--) {
+    const it = Game.items[i];
+    if (it.cx === cx && it.cy === cy) {
+      // AI 不吃骷髏（跟一般拾取同一條規則：撿走但不施加）
+      if (!(p.ai && it.type === 'skull')) applyItem(p, it.type, it);
+      Game.items.splice(i, 1);
+      got = true;
+    }
+  }
+  if (takeEggAt(p, cx, cy)) got = true;
+  return got;
+}
+/* 沿著「這一幀的位移」逐段取樣補撿（每 0.25 格撿一次，走多快都不會漏） */
+function pickupSweep(p, x0, y0, x1, y1) {
+  const T = Game.T;
+  const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / (T * .25)));
+  let got = false;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const cx = Math.floor(((x0 + (x1 - x0) * t)) / T);
+    const cy = Math.floor(((y0 + (y1 - y0) * t)) / T);
+    if (pickupCell(p, cx, cy)) got = true;
+  }
+  return got;
+}
 function dashStep(p, dt) {
   const T = Game.T;
   const sp = p.dashSpd || (T * (DASH_TILES / DASH_T));
@@ -18480,8 +18941,16 @@ function controlHuman(p, dt) {
   if (p.dizzy > 0) { p.dizzy -= dt; p.moving = false; return; }
   let dirs = p.scheme.dirs();
   if (p.skull === 'reverse') dirs = dirs.map(function (dn) { return OPP_DIR[dn]; });
-  // v5.0：衝刺／翻滾 —— 衝刺中吃掉所有其他輸入（不能邊衝邊放彈）
-  if (p.dashT > 0) { dashStep(p, dt); return; }
+  /* v5.0：衝刺／翻滾 —— 衝刺中吃掉所有其他輸入（不能邊衝邊放彈）
+     v6.00：但「吃道具」不能吃掉 —— 衝過去要順手把路上的道具／蛋撿起來
+     （以前整段位移都不做拾取判定，玩家眼睜睜看道具留在原地）。
+     霸體照舊：衝刺中仍然有機會閃過傷害（DASH_IFRAME）。 */
+  if (p.dashT > 0) {
+    const dx0 = p.x, dy0 = p.y;
+    dashStep(p, dt);
+    pickupSweep(p, dx0, dy0, p.x, p.y);
+    return;
+  }
   if (p.dashCd > 0) p.dashCd -= dt;
   if (p.dashCd <= 0 && dashWanted(p, dirs)) { startDash(p, dirs); return; }
   humanMoveDirs(p, dirs, dt);
@@ -20232,7 +20701,13 @@ function controlAI(p, dt) {
   // v1.9：頭暈中 —— AI 也一樣停手
   if (p.dizzy > 0) { p.dizzy -= dt; p.moving = false; return; }
   // v5.4：衝刺中 —— 交給 dashStep（跟玩家同一套），冷卻也在這裡跑
-  if (p.dashT > 0) { p.moving = true; dashStep(p, dt); return; }
+  if (p.dashT > 0) {
+    p.moving = true;
+    const ax0 = p.x, ay0 = p.y;
+    dashStep(p, dt);
+    pickupSweep(p, ax0, ay0, p.x, p.y);   // v6.00：AI 衝刺也吃得到路上的道具／蛋
+    return;
+  }
   if (p.dashCd > 0) p.dashCd -= dt;
   if (p.aiDashGap > 0) p.aiDashGap -= dt;   // v5.11：趕路衝刺的間隔
   p.moving = false;
@@ -20446,7 +20921,15 @@ function controlAI(p, dt) {
     p.beltMul = beltMulFor(p, d.x, d.y);
     const aiSpd = Math.min(moveSpeed(p), AI_SPEED_CAP);
     tryMove(p, d.x, d.y, dt * lv.spd, aiSpd);
-    if (p.x !== oldX || p.y !== oldY) { p.moving = true; p.walkT += dt; }
+    if (p.x !== oldX || p.y !== oldY) { p.moving = true; p.walkT += dt; p.aiStuckT = 0; }
+    else {
+      /* v6.00：一步都沒動（貼在牆邊／卡在格角）→ 累積到 0.5 秒就清掉決策快取重想一次。
+         自由走位之後 AI 常常「目標格就在眼前、身體卻對不上車道」，
+         以前沒有任何偵測，牠會一直往牆裡推直到被炸死（使用者回報的「AI 卡牆」）。
+         車道對齊交給 freeMove 的 laneSlide，這裡只負責讓牠換一個目標。 */
+      p.aiStuckT = (p.aiStuckT || 0) + dt;
+      if (p.aiStuckT > .5) { p.aiStuckT = 0; p.lastC = null; p.aiDir = null; }
+    }
   } else {
     p.beltMul = 1;
   }
@@ -25702,6 +26185,7 @@ const GRADE_TINT = {
 };
 function drawGrade() {
   if (!ctx || !VIEW_W || !VIEW_H) return;
+  if (fxLv() >= 1) return;      // v6.00：降載中 → 三層全螢幕填色直接省掉（畫面只差一點點）
   try {
     if (Game.abyss) {
       const L = Math.max(1, Game.abyss.layer | 0);
@@ -26433,8 +26917,11 @@ function render() {
       ctx.lineWidth = 1;
     }
   });
-  // 炸彈
-  Game.bombs.forEach(function (b) { drawBomb(b, T); });
+  /* 炸彈
+     v6.00：手上舉著的那一顆（b.held）不在這裡畫 —— drawPlayer 已經把它擺進
+     「雙手托舉的缺口」裡。以前兩邊都畫，角色背後（批次圖層）就多出一顆，
+     看起來像「拿了兩顆炸彈」。 */
+  Game.bombs.forEach(function (b) { if (!b.held) drawBomb(b, T); });
   // 火焰
   Game.flames.forEach(function (f) { drawFlame(f, T); });
   if (Game.mode === 'br') drawBRBurn(T);              // v5.33：核彈燒地（畫在角色之下）
@@ -26470,6 +26957,9 @@ function render() {
   if ((Game.daily && Game.daily.ms) || Game.wchal) { try { drawDailyGhost(T); } catch (e) {} }
   drawHeroGhosts(T);          // v5.84：主角殘影（畫在角色之前，才不會蓋住本人）
   Game.players.forEach(function (p) {
+    /* v6.00：坐推車的人由 drawCart 負責畫（連人帶車＋一次名牌）。
+       以前這裡又畫一次 → 場外推車的人身上疊了好幾層名字。 */
+    if (p.cart) return;
     if (playerHiding(p) && !isMyPlayer(p)) return;
     if (!onScreen(p.x, p.y, T * 1.6)) return;      // v4.77：鏡頭外不畫（大步跳過）
     if (p.alive || p.cry > 0) drawPlayer(p, T);
@@ -30542,22 +31032,26 @@ const HeroAnim = (function () {
   //   小熊在同一角色高度下比兔子胖（站姿寬高比 0.71 vs 0.67），手臂一甩到 ±531，
   //   塞進兔子那個 760 寬的裁切框會把兩側手掌切掉 → 小熊用 1080 寬畫布、格子 202。
   //   ax 是「錨點在格子裡的位置」，畫圖時 -ax*k 就是讓腳底中心落在 (x, footY)。
+  /* dir＝這隻角色原圖「本來就朝向哪邊」（+1 右、-1 左）。影片精靈是從參考圖生成的，
+     參考圖又沿用零件骨架那一組原畫 → 兩邊必須用同一個 dir，否則會出現
+     「往左走、臉卻朝右」：bear／cat／pig／frog／chick 的原畫本來就偏左，
+     程式再翻一次就變成朝右了（使用者回報的正是這幾隻）。 */
   const SHEET = {
-    rabbit: { pre: 'rabbit', cellW: 142, ax: 71.09, acts: ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'] },
-    bear:   { pre: 'bear',   cellW: 202, ax: 101.03, acts: ['walk', 'idle', 'hold', 'victory', 'hurt', 'throw'] },
+    rabbit: { pre: 'rabbit',  cellW: 142, ax: 71.09, acts: ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'], dir: 1 },
+    bear:   { pre: 'bear', cellW: 202, ax: 101.03, acts: ['walk', 'idle', 'hold', 'victory', 'hurt', 'throw'], dir: -1 },
     // v5.96：柴犬。站姿比兔兔寬一點（勝利雙手一張就頂到 900 的左邊界）→ 1000 寬畫布、格子 187。
     //   v5.97 補 hurt。
-    dog:    { pre: 'dog',    cellW: 187, ax: 93.55,  acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
+    dog:    { pre: 'dog', cellW: 187, ax: 93.55,  acts: ['walk', 'idle', 'hold', 'victory', 'hurt'], dir: 1 },
     // v5.97：貓咪。尾巴又長又往外甩 → 1500 寬畫布、格子 281、錨點 140.32（= 750 × 200/1069）。
     //   v6.0 補 hold／hurt（第三支影片才合格）。
-    cat:    { pre: 'cat',    cellW: 281, ax: 140.32, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
+    cat:    { pre: 'cat', cellW: 281, ax: 140.32, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'], dir: -1 },
     // ---- v6.0：剩下四隻全部補齊（豬豬／熊貓／青蛙／小雞）----
     //   格子寬度 = 畫布寬 × 200/1069；畫布寬是按「該角色動作的最大左右伸展」實測決定的
     //   （見 art/anim-v2/anim_batch.py 的 JOBS 註解），所以每隻的格子寬都不同。
-    pig:    { pre: 'pig',    cellW: 210, ax: 104.77, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
-    panda:  { pre: 'panda',  cellW: 241, ax: 120.49, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
-    frog:   { pre: 'frog',   cellW: 245, ax: 122.36, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
-    chick:  { pre: 'chick',  cellW: 253, ax: 126.47, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] }
+    pig:    { pre: 'pig', cellW: 210, ax: 104.77, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'], dir: -1 },
+    panda:  { pre: 'panda', cellW: 241, ax: 120.49, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'], dir: 1 },
+    frog:   { pre: 'frog', cellW: 245, ax: 122.36, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'], dir: -1 },
+    chick:  { pre: 'chick', cellW: 253, ax: 126.47, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'], dir: -1 },
   };
   const ACTS = ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'];
   const FPS  = { walk: 15, idle: 7, hold: 9, throw: 20, hurt: 11, victory: 11 };
@@ -30598,6 +31092,7 @@ const HeroAnim = (function () {
       if (im) { try { im.onload = null; im.onerror = null; im.src = ''; } catch (e) {} }
     });
     delete imgs[key]; delete ready[key]; delete started[key]; delete lastUse[key];
+    delete actSt[key];                                   // v6.00：非循環動作的計時器一起回收
   }
   /* 只留「這場比賽的角色」＋「最近有被畫到的角色」；其餘釋放（maxAge 以 draw 次數計） */
   function sweep(roster, maxAge) {
@@ -30631,17 +31126,39 @@ const HeroAnim = (function () {
     if (a.moving) return 'walk';
     return 'idle';
   }
-  function frameOf(act, a) {
+  /* v6.00：非循環動作（throw／hurt）一定要用自己的計時器。
+     舊版直接拿 a.idle（＝Game.gameT，整個遊戲累積的時間）去算格子：
+     hurt 11fps × 12 格 ＝ 1.09 秒，開局 1.09 秒之後 floor(gameT*11) 永遠 > 11
+     → 永遠停在最後一格 = 玩家看到的「受傷／失敗只有一張圖，都不會動」。
+     現在記住「這個動作是什麼時候開始的」，用經過時間算 → 每支都完整播 12 格。 */
+  const actSt = {};                       // key → { act, t0 }
+  function actTime(key, act, a) {
+    const now = a.idle || 0;
+    const st = actSt[key];
+    if (!st || st.act !== act || now < st.t0) { actSt[key] = { act: act, t0: now }; return 0; }
+    return now - st.t0;
+  }
+  function frameOf(act, a, key) {
     const n = META.frames;
     // v5.91：a.animSpd 是「播放倍率」，只有選角預覽會給。
     // 預覽的 walk 相位是 4.6 rad/s（零件骨架的節奏，一輪 1.37 秒），
     // 精靈的走路卻是 15fps × 12 格（一輪 0.8 秒）—— 直接套會變成 4.6fps、慢 1.9 倍，
     // 選角一看就比其他角色慢。倍率由呼叫端依畫法給，不在這裡寫死。
     const spd = (a.animSpd > 0) ? a.animSpd : 1;
-    const t = (act === 'walk') ? ((a.walk || 0) / 15) : (a.idle || 0);
+    let t;
+    if (act === 'walk') t = (a.walk || 0) / 15;
+    else if (LOOP[act]) t = a.idle || 0;
+    else t = actTime(key, act, a);
     const f = Math.floor(t * FPS[act] * spd);
     if (LOOP[act]) return ((f % n) + n) % n;
     return Math.max(0, Math.min(n - 1, f));
+  }
+  /* v6.00：這一隻「往某方向走時要不要翻面」。
+     side ＝ 方向 × 原圖朝向；<0 才翻。拆成一支小函式，測試可以直接驗八隻。 */
+  function flipOf(key, dirX) {
+    const sh = SHEET[key];
+    if (!sh) return 1;
+    return (dirX < 0 ? -1 : 1) * (sh.dir || 1);
   }
   // H ＝ 角色總高（與零件版同一個量綱），腳底中心 ＝ (x, footY)
   function draw(g, key, x, footY, H, a) {
@@ -30657,9 +31174,12 @@ const HeroAnim = (function () {
     if (!act) return null;
     const im = get(key, act);
     const k = H / META.charHpx;
-    const f = frameOf(act, a);
+    const f = frameOf(act, a, key);
     const fx = (typeof DIRS !== 'undefined' && DIRS[a.facing]) ? DIRS[a.facing] : { x: 0 };
-    const side = fx.x < 0 ? -1 : 1;
+    /* v6.00：面朝哪就往哪走 —— 要乘上「這隻角色原圖本身的朝向」。
+       原畫偏左的角色（bear／cat／pig／frog／chick）以前被多翻一次，
+       往左走卻看到朝右的臉。 */
+    const side = flipOf(key, fx.x);
     g.save();
     g.translate(x, footY - (a.jump || 0));
     if (side < 0) g.scale(-1, 1);
@@ -30682,7 +31202,7 @@ const HeroAnim = (function () {
     imgs.rabbit = imgs.rabbit || {}; ready.rabbit = ready.rabbit || {};
     imgs.rabbit[k] = im; ready.rabbit[k] = true; started.rabbit = 1;
   }
-  return { load: load, has: has, get: get, pick: pick, draw: draw,
+  return { load: load, has: has, get: get, pick: pick, draw: draw, flipOf: flipOf,
            readyCount: readyCount, imgs: imgs, inject: inject, META: META,
            ensure: ensure, release: release, sweep: sweep,
            loaded: function () { return Object.keys(started); } };
@@ -30747,10 +31267,23 @@ const PetAnim = (function () {
     if (a.moving) return 'move';
     return 'idle';
   }
-  function frameOf(act, a) {
+  /* v6.00：非循環動作（attack／hurt／victory）用自己的計時器 ——
+     跟主角同一個坑：拿 Game.gameT 去算，開局一秒後就永遠停在最後一格，
+     攻擊／被打／勝利全部變成「一張圖」。 */
+  const actSt = {};
+  function actTime(kind, act, a) {
+    const now = a.idle || 0;
+    const st = actSt[kind];
+    if (!st || st.act !== act || now < st.t0) { actSt[kind] = { act: act, t0: now }; return 0; }
+    return now - st.t0;
+  }
+  function frameOf(act, a, kind) {
     const n = META.frames;
-    // move 用走路相位（跟實際位移同步），其餘用全域時間
-    const t = (act === 'move') ? ((a.walk || 0) / 13) : (a.idle || 0);
+    // move 用走路相位（跟實際位移同步），循環動作用全域時間，其餘用「這個動作開始到現在」
+    let t;
+    if (act === 'move') t = (a.walk || 0) / 13;
+    else if (LOOP[act]) t = a.idle || 0;
+    else t = actTime(kind, act, a);
     const f = Math.floor(t * FPS[act]);
     if (LOOP[act]) return ((f % n) + n) % n;
     return Math.max(0, Math.min(n - 1, f));
@@ -30766,7 +31299,7 @@ const PetAnim = (function () {
     if (!act) return false;
     const im = get(kind, act);
     const k = bodyH / META.charHpx;                        // 可見身高 ÷ 132 → 縮放倍率
-    const f = frameOf(act, a);
+    const f = frameOf(act, a, kind);
     g.save();
     g.translate(x, footY);
     if (side < 0) g.scale(-1, 1);
@@ -32555,6 +33088,7 @@ function loop(ts) {
   if (!last) last = ts;
   let dt = Math.min(.05, (ts - last) / 1000);
   last = ts;
+  try { perfTick(dt); } catch (e) {}       // v6.00：自動降載（幀時間驅動，只關特效）
   /* v5.21：頓幀 —— 命中那幾幀把「遊戲時間」壓到 8%，畫面／UI／飄字照常跑。
      只影響模擬（updateSolo/updateBR/updateBattle），不影響相機與選單。 */
   let gdt = dt;
@@ -33251,9 +33785,146 @@ function applyCtrl() {
     window.addEventListener('gamepaddisconnected', function () { render(true); });
     if (!liveTimer) liveTimer = setInterval(live, 130);
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wirePad);
-  else wirePad();
-  window.__padRender = function () { render(true); };
+  /* ══════════════════════════════════════════════════════════════════
+     v6.00：1P～4P 的手把按鍵對應
+     ------------------------------------------------------------------
+     使用者要：「手把可以切換按鈕內容設定 1P 2P 3P 4P 都可以個別選擇按鈕設定」。
+     每個槽一組「放炸彈／遙控引爆／衝刺／坐騎招式」，點按鈕 → 再按手把上的鍵
+     就綁定（同一槽撞鍵自動互換）。Start／Menu 固定是暫停與確認，不列在這四格裡。
+     抓鍵用 requestAnimationFrame 逐幀掃（130ms 的輪詢會漏掉短按），
+     抓鍵期間 __padCapture 會讓 PadUI 停手，免得「按 A 綁定」順便把按鈕點掉。
+     ══════════════════════════════════════════════════════════════════ */
+  let mapSlot = 0, capAct = null, capPrev = [], capRaf = 0;
+  function paintMap() {
+    const box = $id('padMap');
+    if (!box) return;
+    const m = padMapOf(mapSlot);
+    box.innerHTML = PAD_ACTS.map(function (k) {
+      const cap = (capAct === k);
+      return '<div class="padmaprow"><span>' + esc2(PAD_ACT_LABEL[k]) + '</span>' +
+        '<button type="button" class="padmapbtn' + (cap ? ' cap' : '') + '" data-act="' + k + '">' +
+        (cap ? '按手把鍵…' : esc2(padBtnName(m[k]))) + '</button></div>';
+    }).join('');
+  }
+  function paintTabs() {
+    const tb = $id('padTabs');
+    if (!tb || !tb.querySelectorAll) return;
+    const bs = tb.querySelectorAll('button');
+    for (let i = 0; i < bs.length; i++) {
+      const on = Number(bs[i].getAttribute('data-v')) === mapSlot;
+      bs[i].classList.toggle('sel', on);
+    }
+  }
+  // 目前按著哪些鍵（抓鍵前先拍一張，才不會把「正在按的那顆」當成新按鍵）
+  function snapPads() {
+    capPrev = [];
+    if (!navigator.getGamepads) return;
+    let gs;
+    try { gs = navigator.getGamepads(); } catch (e) { return; }
+    for (let i = 0; i < gs.length && i < 4; i++) {
+      const gp = gs[i], arr = [];
+      if (gp) for (let b = 0; b < 16; b++) arr[b] = !!(gp.buttons[b] && gp.buttons[b].pressed);
+      capPrev[i] = arr;
+    }
+  }
+  // 有沒有人剛按下某一顆鍵（優先看「這一槽指派的那支手把」，沒有就任何一支都收）
+  function anyPadPress() {
+    if (!navigator.getGamepads) return null;
+    let gs;
+    try { gs = navigator.getGamepads(); } catch (e) { return null; }
+    let want = -1;
+    try { want = (Input.padInfo && Input.padInfo().slots[mapSlot]) | 0; } catch (e) { want = -1; }
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = 0; i < gs.length && i < 4; i++) {
+        const gp = gs[i];
+        if (!gp || !gp.connected) continue;
+        if (pass === 0 && want >= 0 && i !== want) continue;   // 第一次只掃指定那支
+        const prev = capPrev[i] || (capPrev[i] = []);
+        for (let b = 0; b < gp.buttons.length && b < 16; b++) {
+          const down = !!(gp.buttons[b] && gp.buttons[b].pressed);
+          if (down && !prev[b]) { prev[b] = true; return b; }
+          prev[b] = down;
+        }
+      }
+      if (want < 0) break;            // 沒有指定手把 → 一次就夠
+    }
+    return null;
+  }
+  function capStop() {
+    capAct = null;
+    window.__padCapture = 0;
+    if (capRaf && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(capRaf);
+    capRaf = 0;
+    paintMap();
+  }
+  function capLoop() {
+    capRaf = 0;
+    if (!capAct) return;
+    const b = anyPadPress();
+    if (b != null) {
+      const act = capAct;
+      const one = padSetBtn(mapSlot, act, b);
+      saveSettings();
+      capStop();
+      paintTabs();
+      if (one) {
+        AudioSys.sfx('click');
+        toast('🎮 ' + LBL[mapSlot] + '：' + PAD_ACT_LABEL[act] + ' → ' + padBtnName(one[act]), 2.6);
+      }
+      return;
+    }
+    if (typeof requestAnimationFrame === 'function') capRaf = requestAnimationFrame(capLoop);
+  }
+  function capStart(act) {
+    if (capAct === act) { capStop(); return; }        // 再點一次＝取消
+    capAct = act;
+    window.__padCapture = 1;
+    snapPads();
+    paintMap();
+    if (!capRaf && typeof requestAnimationFrame === 'function') capRaf = requestAnimationFrame(capLoop);
+  }
+  let mapWired = false;
+  function wirePadMap() {
+    if (mapWired) return;
+    mapWired = true;
+    const tabs = $id('padTabs');
+    if (tabs) tabs.addEventListener('click', function (e) {
+      const b = e.target && e.target.closest ? e.target.closest('button[data-v]') : null;
+      if (!b) return;
+      const n = Number(b.getAttribute('data-v'));
+      if (!(n >= 0 && n <= 3)) return;
+      capStop();
+      mapSlot = n;
+      paintTabs();
+      paintMap();
+      AudioSys.sfx('click');
+    });
+    const box = $id('padMap');
+    if (box) box.addEventListener('click', function (e) {
+      const b = e.target && e.target.closest ? e.target.closest('button[data-act]') : null;
+      if (!b) return;
+      capStart(b.getAttribute('data-act'));
+    });
+    const rs = $id('btnPadMapReset');
+    if (rs) rs.addEventListener('click', function () {
+      capStop();
+      settings.padBtn = normalizePadBtn(null);
+      saveSettings();
+      paintMap();
+      AudioSys.sfx('click');
+      toast('手把按鍵已回復 A 放炸彈／B 引爆／X 衝刺／Y 坐騎招式', 2.6);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (capAct && (e.key === 'Escape' || e.key === 'Esc')) { capStop(); }
+    }, true);
+    paintTabs();
+    paintMap();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { wirePad(); wirePadMap(); });
+  else { wirePad(); wirePadMap(); }
+  window.__padRender = function () { render(true); paintMap(); };
+  window.__padMapPaint = paintMap;
 })();
 refreshers.push(segWire('segCtrl', function () { return settings.ctrl; }, function (v) { settings.ctrl = v; applyCtrl(); }));
 refreshers.push(segWire('segTmode', function () { return padMode(); }, function (v) {
@@ -42877,7 +43548,10 @@ window.__BH = {
   WARP_COLORS: WARP_COLORS, hazardAt: hazardAt, hazardTick: hazardTick, beltMulFor: beltMulFor,
   BELT_SPEED: BELT_SPEED, BELT_FAST: BELT_FAST, BELT_SLOW: BELT_SLOW, moveSpeed: moveSpeed,
   confetti: confetti, battleEndFx: battleEndFx,
-  Pad: Pad, PadUI: PadUI, PAD_MAP: PAD_MAP, SOLO_DIFF: SOLO_DIFF, soloDiffCfg: soloDiffCfg, soloTimeVal: soloTimeVal,
+  Pad: Pad, PadUI: PadUI, PAD_MAP: PAD_MAP, SOLO_DIFF: SOLO_DIFF,
+  /* v6.00：手把按鍵表（設定頁／測試共用同一份，不再各自寫死） */
+  PAD_BTN_NAMES: PAD_BTN_NAMES, PAD_ACTS: PAD_ACTS, PAD_ACT_LABEL: PAD_ACT_LABEL, PAD_DEF: PAD_DEF,
+  padBtnName: padBtnName, padMapOf: padMapOf, padSetBtn: padSetBtn, normalizePadBtn: normalizePadBtn, soloDiffCfg: soloDiffCfg, soloTimeVal: soloTimeVal,
   soloLives: soloLives, soloGuardInvuln: soloGuardInvuln,   // v5.29：難度 → 命數／重生無敵
   soloHpMax: soloHpMax, soloHpInvuln: soloHpInvuln, soloHurt: soloHurt,   // v5.30：格血（簡單 2 格）
   detonateRemote: detonateRemote, aiRemoteTick: aiRemoteTick, pickBossCell: pickBossCell,

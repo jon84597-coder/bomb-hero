@@ -29,14 +29,14 @@ head('1. 版本七處一致（>= 5.82）');
 {
   const ver = (mainJs.match(/const VERSION = '([\d.]+)'/) || [])[1];
   ok(parseFloat(ver) >= 5.82, '主檔 VERSION >= 5.82', ver);
-  ok(/<span id="verTxt">5\.(8[2-9]|9\d)<\/span>/.test(idx), '首頁 verTxt >= 5.82');
-  ok(/<span id="verLogVer">5\.(8[2-9]|9\d)<\/span>/.test(idx), '版本面板 verLogVer >= 5.82');
-  ok(/"version":\s*"5\.(8[2-9]|9\d)\.\d+"/.test(pkg), 'package.json >= 5.82.0');
+  ok(/<span id="verTxt">(5\.(8[2-9]|9\d)|[6-9]\.\d+)<\/span>/.test(idx), '首頁 verTxt >= 5.82');
+  ok(/<span id="verLogVer">(5\.(8[2-9]|9\d)|[6-9]\.\d+)<\/span>/.test(idx), '版本面板 verLogVer >= 5.82');
+  ok(/"version":\s*"(5\.(8[2-9]|9\d)|[6-9]\.\d+)\.\d+"/.test(pkg), 'package.json >= 5.82.0');
   const sws = ['sw.js', '../public/sw.js', '../bomberman-online/public/sw.js', '../dist/site/sw.js']
     .map(f => { try { return (read(f).match(/SW_VERSION = '(v[\d.]+)'/) || [])[1]; } catch (e) { return null; } })
     .filter(Boolean);
-  ok(sws.length >= 3 && sws.every(v => /^v5\.(8[2-9]|9\d)\.\d+$/.test(v)), '四份 sw.js 都是 >= v5.82.0', sws);
-  ok(/v: '5\.(8[2-9]|9\d)'[\s\S]{0,80}now: true/.test(vlog), 'VERSION_LOG[0] 是 5.82+ 且 now:true');
+  ok(sws.length >= 3 && sws.every(v => /^v(5\.(8[2-9]|9\d)|[6-9]\.\d+)\.\d+$/.test(v)), '四份 sw.js 都是 >= v5.82.0', sws);
+  ok(/v: '(5\.(8[2-9]|9\d)|[6-9]\.\d+)'[\s\S]{0,80}now: true/.test(vlog), 'VERSION_LOG[0] 是 5.82+ 且 now:true');
   ok(!/v: '5\.81'[\s\S]{0,60}now: true/.test(vlog), '5.81 已改成 now:false（不會兩條同時亮）');
 }
 

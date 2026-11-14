@@ -148,7 +148,7 @@ head('7. 版本');
   const v = vm ? vm[1].split('.').map(Number) : [0, 0];
   ok(v[0] > 5 || (v[0] === 5 && v[1] >= 31), '主檔版號 ≥ 5.31（目前 ' + (vm && vm[1]) + '）');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
-  ok(/var SW_VERSION = 'v5\.(3[1-9]|[4-9]\d)\.\d+'/.test(sw), 'sw.js 版本 ≥ 5.31');
+  ok(/var SW_VERSION = '(v5\.(3[1-9]|[4-9]\d)|v[6-9]\.\d+)\.\d+'/.test(sw), 'sw.js 版本 ≥ 5.31');
 }
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v5.29/5.31：' + pass + ' 通過 / ' + fail + ' 失敗');

@@ -135,7 +135,8 @@ ok(/document\.addEventListener\('pointerdown', function \(\) \{\s*armed = false;
 // ---------------------------------------------------------------
 head('⑧ PAD_MAP：說明頁與程式共用一份');
 
-ok(Array.isArray(B.PAD_MAP) && B.PAD_MAP.length === 9, 'PAD_MAP 9 條（' + (B.PAD_MAP ? B.PAD_MAP.length : '?') + '）');
+/* v6.00：A／B／X／Y 四顆改成「逐槽可設定」後說明表多了一列（至少 9 條） */
+ok(Array.isArray(B.PAD_MAP) && B.PAD_MAP.length >= 9, 'PAD_MAP 至少 9 條（' + (B.PAD_MAP ? B.PAD_MAP.length : '?') + '）');
 const keys = (B.PAD_MAP || []).map(function (r) { return r[0]; }).join('|');
 ok(/左蘑菇頭/.test(keys) && /右蘑菇頭/.test(keys), '有左右蘑菇頭');
 ok(/LB／RB/.test(keys), '有 LB／RB（逐項）');

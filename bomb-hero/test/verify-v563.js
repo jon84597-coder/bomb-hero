@@ -212,7 +212,7 @@ ok(parseFloat(ver) >= 5.63, '主檔版本 ≥ 5.63（實際 ' + ver + '）');
 ok(new RegExp("var SW_VERSION = 'v" + ver.replace(/\./g, '\\.') + "\\.\\d+';").test(swSrc), 'SW 版本同步（v' + ver + '.0）');
 ok(new RegExp('"version": "' + ver.replace(/\./g, '\\.') + '\\.\\d+"').test(fs.readFileSync(path.join(SRC, 'package.json'), 'utf8')), 'package.json 同步（' + ver + '.0）');
 const vlog = fs.readFileSync(path.join(ROOT, 'js/version-log.js'), 'utf8');
-ok(new RegExp("v: '5\\." + ver.split('.')[1] + "', date: '[^']+', now: true").test(vlog),
+ok(new RegExp("v: '" + ver.replace(/\./g, '\\.') + "', date: '[^']+', now: true").test(vlog),
   'VERSION_LOG 第一筆是這版且 now:true');
 ok(!/v: '5\.62', date: '[^']+', now: true/.test(vlog), '上一版已經改成 now:false');
 

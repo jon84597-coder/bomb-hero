@@ -239,7 +239,7 @@ head('9. 版本與預算');
   // 不寫死版號（後續版本沿用這支）：只驗「至少是 5.35」與四處戳記同步
   const VN = P.VERSION.split('.').map(Number);
   const vEsc = P.VERSION.replace(/\./g, '\\.');
-  ok(VN[0] === 5 && VN[1] >= 35, 'VERSION 是 5.35 以上（' + P.VERSION + '）');
+  ok((VN[0] > 5 || (VN[0] === 5 && VN[1] >= 35)), 'VERSION 是 5.35 以上（' + P.VERSION + '）');
   ok(new RegExp('<span id="verTxt">' + vEsc + '</span>').test(src), '#verTxt 同步');
   ok(new RegExp('<span id="verLogVer">' + vEsc + '</span>').test(src), '#verLogVer 同步');
   ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 首位＝' + P.VERSION + ' 且 now:true');

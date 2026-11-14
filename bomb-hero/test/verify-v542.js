@@ -113,8 +113,8 @@ ok(nowCount === 1, '全檔只有一筆 now:true（實際 ' + nowCount + '）');
 const sw = (function () { try { return require('fs').readFileSync(__dirname + '/../sw.js', 'utf8'); } catch (e) { return ''; } })();
 {
   /* v5.99.1：補丁版（v5.99.1）也要吃得下。 */
-  const m = sw.match(/SW_VERSION = 'v5\.(\d+)\.\d+'/);
-  ok(!!m && +m[1] >= 42, 'sw.js SW_VERSION ≥ v5.42（實際 ' + (m ? 'v5.' + m[1] + '.0' : '?') + '）');
+  const m = sw.match(/SW_VERSION = 'v(\d+)\.(\d+)\.\d+'/);
+  ok(!!m && (+m[1] * 1000 + +m[2]) >= 5042, 'sw.js SW_VERSION ≥ v5.42（實際 ' + (m ? 'v' + m[1] + '.' + m[2] : '?') + '）');
 }
 
 console.log('\n' + (fail === 0 ? '✅ 全部 ' + pass + ' 項通過' : '❌ ' + fail + ' 項失敗 / ' + (pass + fail) + ' 項'));

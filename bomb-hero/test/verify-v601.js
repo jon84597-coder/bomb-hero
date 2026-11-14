@@ -121,7 +121,8 @@ ok(/const drewArt = drewAnim \|\| drawPetSprite\(/.test(mainSrc),
 ok(/if \(!drewArt\)/.test(mainSrc), '第三層：四幀美術也沒有才走零件骨架');
 ok(/pt\.atkAnimT/.test(mainSrc), 'atkAnimT 讓攻擊動作播完（slashT 只有 0.28 秒會切斷）');
 ok(/pt\.cheerT/.test(mainSrc) && /function petCheer/.test(mainSrc), '通關會讓隨從歡呼');
-ok(/if \(pt\.slashT > 0 && !drewAnim\)/.test(mainSrc), '影片自帶刀光 → 不再多畫一道');
+/* v6.00：新的大招特效（pt.fxT）播放時也不再多畫舊的小弧 */
+ok(/if \(pt\.slashT > 0 && !drewAnim/.test(mainSrc), '影片自帶刀光 → 不再多畫一道');
 ok(/act: 'hurt', hurt: 1/.test(mainSrc), '倒地也播影片的被打動作');
 
 /* ---------------------------------------------------------------- ⑥ */

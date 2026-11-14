@@ -123,9 +123,9 @@ ok(swPub.indexOf('hero-anim-') > 0, 'public/sw.js 同步了分桶規則');
 sec('⑥ 版本與預算');
 const vm = mainSrc.match(/const VERSION = '([\d.]+)'/);
 ok(!!vm && parseFloat(vm[1]) >= 5.9, '主檔版本 ≥ 5.90（實際 ' + (vm ? vm[1] : '?') + '）');
-ok(/<span id="verTxt">5\.9\d<\/span>/.test(idxSrc), 'index.html 版本戳記同步');
-ok(/SW_VERSION = 'v5\.9\d(\.\d+)?'/.test(swSrc), 'sw.js 版號跟著升');
-ok(/SW_VERSION = 'v5\.9\d(\.\d+)?'/.test(swPub), 'public/sw.js 版號同步');
+ok(/<span id="verTxt">(5\.9\d|[6-9]\.\d+)<\/span>/.test(idxSrc), 'index.html 版本戳記同步');
+ok(/SW_VERSION = '(v5\.9\d|v[6-9]\.\d+)(\.\d+)?'/.test(swSrc), 'sw.js 版號跟著升');
+ok(/SW_VERSION = '(v5\.9\d|v[6-9]\.\d+)(\.\d+)?'/.test(swPub), 'public/sw.js 版號同步');
 ok(/v: '5\.90'/.test(fs.readFileSync(path.join(ROOT, 'js/version-log.js'), 'utf8')), '版本紀錄有 5.90');
 ok(/主檔 \d[\d,]* 字元/.test('主檔 ' + mainSrc.length + ' 字元') && mainSrc.length < 1950000,
   '主檔仍在預算內（' + mainSrc.length + ' / 1,950,000）');

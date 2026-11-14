@@ -144,7 +144,7 @@ head('7. i18n 與版本');
 
   const vv = P.VERSION.split('.').map(Number);
   ok(vv[0] > 5 || (vv[0] === 5 && vv[1] >= 28), 'VERSION ≥ 5.28（目前 ' + P.VERSION + '）');
-  ok(/id="verTxt">5\.(2[8-9]|[3-9]\d)</.test(src), '首頁徽章同步 ≥ 5.28');
+  ok(/id="verTxt">(5\.(2[8-9]|[3-9]\d)|[6-9]\.)/.test(src), '首頁徽章同步 ≥ 5.28');
   // v5.38：紀錄搬到 js/version-log.js
   const logHead = vlog.slice(vlog.indexOf('window.__VERSION_LOG = ['), vlog.indexOf('window.__VERSION_LOG = [') + 120);
   ok(/now: true/.test(logHead), 'VERSION_LOG 第一筆 now:true');
@@ -154,10 +154,10 @@ head('7. i18n 與版本');
   ['bomb-hero/sw.js', 'public/sw.js', 'bomberman-online/public/sw.js'].forEach(function (rel) {
     const f = path.join(root, rel);
     const w = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
-    ok(/var SW_VERSION = 'v5\.(2[89]|[3-9]\d)\.\d+';/.test(w), rel + ' SW_VERSION ≥ 5.28');
+    ok(/var SW_VERSION = '(v5\.(2[89]|[3-9]\d)|v[6-9]\.\d+)\.\d+';/.test(w), rel + ' SW_VERSION ≥ 5.28');
   });
   const pw = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-  ok(/^5\.(2[89]|[3-9]\d)\./.test(pw.version), 'package.json ≥ 5.28（目前 ' + pw.version + '）');
+  ok(/^(5\.(2[89]|[3-9]\d)|[6-9]\.)/.test(pw.version), 'package.json ≥ 5.28（目前 ' + pw.version + '）');
   const rawLen = require('./_sandbox').rawHtml.length;
   ok(rawLen < 2400000, '主檔 ' + rawLen + ' 字元（v5.54：合併全文防呆上限 2,400,000；單檔預算已拆成 index.html／js/main.js）');
 }

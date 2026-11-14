@@ -25,7 +25,7 @@ function head(t) { console.log('\n' + t); }
 
 const vm = SRC.match(/const VERSION = '([^']+)'/);
 head('⓪ 版本');
-ok(vm && vm[1].split('.').map(Number)[1] >= 18, '版本是 5.18 以上（' + (vm ? vm[1] : '?') + '）');
+ok(vm && (function(v){v=v.split('.').map(Number);return v[0]*1000+(v[1]||0);})(vm[1]) >= 5000+18, '版本是 5.18 以上（' + (vm ? vm[1] : '?') + '）');
 ok(SRC.indexOf("{ v: '5.18'") > 0, 'VERSION_LOG 第一筆是 5.18');
 
 /* ================================================================ ① */

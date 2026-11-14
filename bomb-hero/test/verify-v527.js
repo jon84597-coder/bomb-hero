@@ -178,7 +178,7 @@ head('5. 五模式新手提示');
   ok(P.ModeTip.tips('solo').length === 3, 'reset 之後會再顯示（測試用）');
   // 真的送到覆蓋層
   /* v5.82：單人開場那一處改成「招式教學優先、沒有就退回模式提示」→ 一樣算接上了 */
-  ok((src.match(/tips: (?:foeSkillIntroTips\(\) \|\| )?ModeTip\.tips\(/g) || []).length === 4, '四個開場覆蓋層都接了提示');
+  ok((src.match(/tips: [^\n]*ModeTip\.tips\(/g) || []).length === 4, '四個開場覆蓋層都接了提示');
   ok(/if \(o\.tipMode\) ModeTip\.mark\(o\.tipMode\);/.test(src), '按掉才記住（不是一開就記）');
   // 沙盒沒有真的 DOM，也不能炸
   let threw = false;
@@ -274,13 +274,13 @@ head('7. 快捷語（跨語言）');
 head('8. 版號與整合');
 {
   // 版號用元組比較：之後每版都會往前走，這裡只保證「至少是 5.27」
-  ok(P.VERSION.split('.').map(Number)[1] >= 27, '主檔版號 ≥ 5.27（目前 ' + P.VERSION + '）');
+  ok((function(v){v=v.split('.').map(Number);return v[0]*1000+(v[1]||0);})(P.VERSION) >= 5027, '主檔版號 ≥ 5.27（目前 ' + P.VERSION + '）');
   // v5.38：紀錄搬到 js/version-log.js → 改看那個檔（沙盒已比照瀏覽器載入，P.VERSION_LOG 也拿得到）
   const log0 = vlog.slice(vlog.indexOf('window.__VERSION_LOG = ['), vlog.indexOf('window.__VERSION_LOG = [') + 400);
   ok(/now: true/.test(log0), 'VERSION_LOG 第一筆是 now:true');
   ok(/v: '5\.26', date: '2026-11-06', now: false/.test(vlog), '上一版已改成 now:false');
-  ok(new RegExp('var SW_VERSION = .v5\\.(2[7-9]|[3-9]\\d)').test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 版本 ≥ 5.27');
-  ok(/id="verLogVer">5\.(2[7-9]|[3-9]\d)</.test(src), '版本號顯示同步');
+  ok(new RegExp('var SW_VERSION = .(v5\\.(2[7-9]|[3-9]\\d)|v[6-9]\\.)').test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js 版本 ≥ 5.27');
+  ok(/id="verLogVer">(5\.(2[7-9]|[3-9]\d)|[6-9]\.)/.test(src), '版本號顯示同步');
   // 新功能的 i18n 都在
   const keys = ['ui.qual', 'ui.fps', 'ui.shake', 'ui.cb', 'se.title', 'se.pts', 'qc.0', 'net.inviteMsg'];
   const missing = keys.filter(function (k) { return i18.indexOf('\n' + k + '|') < 0; });

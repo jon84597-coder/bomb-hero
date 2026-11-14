@@ -23,7 +23,7 @@ head('⓪ 版本');
 // v5.21：版本斷言改成「不低於 5.20」，升版不會再紅一支
 const VN = P.VERSION.split('.').map(Number);
 const MIN = [5, 20];
-ok(VN[1] >= MIN[1], '版本不低於 5.20（' + P.VERSION + '）');
+ok(VN[0] * 1000 + VN[1] >= MIN[0] * 1000 + MIN[1], '版本不低於 5.20（' + P.VERSION + '）');
 ok(html.indexOf('id="verTxt">' + P.VERSION) > 0, '首頁徽章與 VERSION 同步（' + P.VERSION + '）');
 ok(html.indexOf('id="verLogVer">' + P.VERSION) > 0, '版本紀錄標題與 VERSION 同步');
 ok(P.VERSION_LOG[0].now === true, '版本紀錄最上面是 now:true');
@@ -33,7 +33,7 @@ ok(has520 && has520.items.length >= 4, '5.20 版本紀錄至少 4 條（' + (has
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (rel) {
   const f = path.join(__dirname, rel);
   const v = (/SW_VERSION = '([^']+)'/.exec(fs.readFileSync(f, 'utf8')) || [])[1] || '';
-  ok(Number(v.replace(/^v/, '').split('.')[1]) >= MIN[1], rel + ' SW_VERSION 不低於 v5.20（' + v + '）');
+  ok((function(a){a=String(v).replace(/^v/,'').split('.').map(Number);return a[0]*1000+(a[1]||0);})() >= 5000+MIN[1], rel + ' SW_VERSION 不低於 v5.20（' + v + '）');
 });
 
 /* ================================================================ ① */

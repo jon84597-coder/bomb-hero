@@ -220,7 +220,7 @@ head('④-b 選關畫面：40 格、8 個決戰場');
 head('⑤ 版本與預算');
 {
   const VN = P.VERSION.split('.').map(Number);
-  ok(VN[0] === 5 && VN[1] >= 36, 'VERSION 是 5.36 以上（' + P.VERSION + '）');
+  ok((VN[0] > 5 || (VN[0] === 5 && VN[1] >= 36)), 'VERSION 是 5.36 以上（' + P.VERSION + '）');
   ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 首位＝' + P.VERSION + ' 且 now:true');
   ok(P.VERSION_LOG[1].now === false, '上一版 ' + P.VERSION_LOG[1].v + ' 已是 now:false');
   ok(P.VERSION_LOG[0].items.length >= 5, '本版至少 5 條（' + P.VERSION_LOG[0].items.length + ' 條）');
@@ -228,7 +228,7 @@ head('⑤ 版本與預算');
   ok(env.html.indexOf('id="verTxt">' + P.VERSION) > 0, '#verTxt 同步');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const swv = (sw.match(/var SW_VERSION = 'v([\d.]+)'/) || [])[1] || '0';
-  ok(Number(swv.split('.')[1]) >= 36, 'sw.js = v' + swv);
+  ok((function(a){a=String(swv).replace(/^v/,'').split('.').map(Number);return a[0]*1000+(a[1]||0);})() >= 5036, 'sw.js = v' + swv);
   ok(rawHtml.length < 2400000, '主檔 ' + rawHtml.length + ' 字元（v5.54：合併全文防呆上限 2,400,000；單檔預算已拆成 index.html／js/main.js）');
   ok((rawHtml.match(/\r/g) || []).length === 0, '整檔 LF（0 個 \\r）');
 }

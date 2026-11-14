@@ -182,7 +182,7 @@ sec('⑤ 字典六語言');
 sec('⑥ 版本');
 const m = mainSrc.match(/const VERSION = '([\d.]+)';/);
 const ver = m ? m[1] : '';
-ok(!!ver && Number(ver.split('.')[1]) >= 64, 'VERSION ≥ 5.64（實際 ' + ver + '）');
+ok(!!ver && (function(a){a=String(ver).split('.').map(Number);return a[0]*1000+(a[1]||0);})() >= 5064, 'VERSION ≥ 5.64（實際 ' + ver + '）');
 
 console.log('\n' + (fail ? '❌ ' : '✅ ') + pass + ' 通過 / ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);

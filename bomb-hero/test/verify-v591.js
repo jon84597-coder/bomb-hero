@@ -108,8 +108,8 @@ ok(Math.abs(4.6 * 1.9 - wantFps) < 0.1, '倍率與零件骨架同節奏（4.6×1
 sec('⑦ 版本');
 const vm2 = mainSrc.match(/const VERSION = '([\d.]+)'/);
 ok(!!vm2 && parseFloat(vm2[1]) >= 5.91, '主檔版本 ≥ 5.91（實際 ' + (vm2 ? vm2[1] : '?') + '）');
-ok(/<span id="verTxt">5\.9\d<\/span>/.test(idxSrc), 'index.html 版本戳記同步');
-ok(/SW_VERSION = 'v5\.9\d(\.\d+)?'/.test(swSrc), 'sw.js 版號跟著升');
+ok(/<span id="verTxt">(5\.9\d|[6-9]\.\d+)<\/span>/.test(idxSrc), 'index.html 版本戳記同步');
+ok(/SW_VERSION = '(v5\.9\d|v[6-9]\.\d+)(\.\d+)?'/.test(swSrc), 'sw.js 版號跟著升');
 ok(/v: '5\.91'/.test(fs.readFileSync(path.join(ROOT, 'js/version-log.js'), 'utf8')), '版本紀錄有 5.91');
 ok(mainSrc.length < 1950000, '主檔仍在預算內（' + mainSrc.length + ' / 1,950,000）');
 

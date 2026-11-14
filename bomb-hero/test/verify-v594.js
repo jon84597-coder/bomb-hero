@@ -112,7 +112,7 @@ ok(Math.abs(ballInCell - (axFromCanvas + 0.0819 * 200)) < 0.5,
 sec('⑥ 版本與素材清單');
 const vm = mainSrc.match(/const VERSION = '([\d.]+)'/);
 ok(!!vm && parseFloat(vm[1]) >= 5.94, '主檔版本 ≥ 5.94（實際 ' + (vm ? vm[1] : '?') + '）');
-ok(/<span id="verTxt">5\.9\d<\/span>/.test(idxSrc), 'index.html 版本戳記同步');
+ok(/<span id="verTxt">(5\.9\d|[6-9]\.\d+)<\/span>/.test(idxSrc), 'index.html 版本戳記同步');
 const list = JSON.parse(fs.readFileSync(path.join(SPR, '_list.json'), 'utf8'));
 ACTS.forEach(function (a) {
   ok(list.indexOf('hero-anim-bear-' + a + '.webp') >= 0, '_list.json 有小熊 ' + a);

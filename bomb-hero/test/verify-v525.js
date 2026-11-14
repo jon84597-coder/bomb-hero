@@ -43,7 +43,7 @@ function sigOf(ops) { return ops.map(function (c) { return c[0]; }).join(','); }
 /* ================================================================ ⓪ */
 head('⓪ 版本');
 const VN = P.VERSION.split('.').map(Number);
-ok(VN[0] === 5 && VN[1] >= 25, '版本是 5.25 以上（' + P.VERSION + '）');
+ok((VN[0] > 5 || (VN[0] === 5 && VN[1] >= 25)), '版本是 5.25 以上（' + P.VERSION + '）');
 ok(html.indexOf('id="verTxt">' + P.VERSION) > 0, '首頁徽章與 VERSION 同步');
 ok(html.indexOf('id="verLogVer">' + P.VERSION) > 0, '版本紀錄標題與 VERSION 同步');
 ok(P.VERSION_LOG[0].v === P.VERSION, '版本紀錄第一筆就是 ' + P.VERSION);
@@ -52,8 +52,8 @@ ok(P.VERSION_LOG[1] && P.VERSION_LOG[1].now === false, '上一版（' + (P.VERSI
 ok(P.VERSION_LOG[0].items.length >= 4, '5.25 至少 4 條更新（' + P.VERSION_LOG[0].items.length + ' 條）');
 ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'].forEach(function (rel) {
   const v = (/SW_VERSION = '([^']+)'/.exec(fs.readFileSync(path.join(__dirname, rel), 'utf8')) || [])[1] || '';
-  const n = Number((v.replace(/^v/, '').split('.')[1]));
-  ok(n >= 25, rel + ' SW_VERSION = ' + v);
+  const n = (function (a) { a = v.replace(/^v/, '').split('.').map(Number); return a[0] * 1000 + (a[1] || 0); })();
+  ok(n >= 5025, rel + ' SW_VERSION = ' + v);
 });
 ok((html.match(/\r/g) || []).length === 0, '整檔 LF（0 個 \\r）');
 ok(html.length < 2400000, '主檔 ' + html.length + ' 字元（v5.54：合併全文防呆上限 2,400,000；單檔預算已拆成 index.html／js/main.js）');

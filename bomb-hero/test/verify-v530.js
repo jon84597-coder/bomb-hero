@@ -165,7 +165,7 @@ head('8. 版本');
   // v5.38：紀錄搬到 js/version-log.js
   ok(/v: '5\.30'/.test(vlog) && /v: '5\.31'/.test(vlog), 'VERSION_LOG 有 5.30 與 5.31 條目');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
-  ok(/var SW_VERSION = 'v5\.(3[1-9]|[4-9]\d)\.\d+'/.test(sw), 'sw.js 版本 ≥ 5.31');
+  ok(/var SW_VERSION = '(v5\.(3[1-9]|[4-9]\d)|v[6-9]\.\d+)\.\d+'/.test(sw), 'sw.js 版本 ≥ 5.31');
 }
 
 console.log('\n' + (fail === 0 ? '✅' : '❌') + ' v5.30/5.31：' + pass + ' 通過 / ' + fail + ' 失敗');
