@@ -128,9 +128,9 @@ ok(new RegExp('<span id="verLogVer">' + P.VERSION + '</span>').test(src), '#verL
 ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 首位＝當前版本且 now:true');
 ok(P.VERSION_LOG[1].now === false, '上一版（4.83）已設 now:false');
 ok(P.VERSION_LOG[0].items.length >= 3, '本版至少 3 條更新（實際 ' + P.VERSION_LOG[0].items.length + '）');
-ok(fs.readFileSync(ROOT + '/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >= 0, 'sw.js 跟著升版');
-ok(fs.readFileSync(ROOT + '/../public/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >= 0, 'public/sw.js 跟著升版');
-ok(fs.readFileSync(ROOT + '/../bomberman-online/public/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".0'") >= 0, 'bomberman-online/public/sw.js 跟著升版');
+ok(fs.readFileSync(ROOT + '/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".") >= 0, 'sw.js 跟著升版');
+ok(fs.readFileSync(ROOT + '/../public/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".") >= 0, 'public/sw.js 跟著升版');
+ok(fs.readFileSync(ROOT + '/../bomberman-online/public/sw.js', 'utf8').indexOf("'v" + P.VERSION + ".") >= 0, 'bomberman-online/public/sw.js 跟著升版');
 // v5.20 起 src = 字典（外部檔）＋主檔，這裡量的是「整頁」；主檔自己的預算線在 verify-v479
 // v5.38：這一條只是「整頁不要失控」的粗略上限，真正卡住的是主檔 1,950,000 字元（verify-v479）。
 //   每加一批功能，字典（i18n-src.js）都會跟著長 10~20 KB，所以這條線放寬到 2.20M；

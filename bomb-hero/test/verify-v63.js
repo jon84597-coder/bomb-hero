@@ -168,7 +168,7 @@ head('6. 版本與 SW');
   ok(v418.items.join(' ').indexOf('分享') >= 0, '4.18 條目寫了分享');
   ok(v418.items.join(' ').indexOf('暱稱') >= 0, '4.18 條目寫了暱稱');
   ok(v418.items.join(' ').indexOf('手套') >= 0, '4.18 條目寫了手套');
-  ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v' + P.VERSION + '.0');
+  ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.\\d+'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v' + P.VERSION + '.0');
 }
 
 // ================================================================

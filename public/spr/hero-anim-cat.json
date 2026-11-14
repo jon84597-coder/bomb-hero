@@ -21,6 +21,10 @@
   "victory": {
    "file": "hero-anim-cat-victory.webp",
    "frames": 12
+  },
+  "hurt": {
+   "file": "hero-anim-cat-hurt.webp",
+   "frames": 12
   }
  }
 }

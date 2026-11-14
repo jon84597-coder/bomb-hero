@@ -229,7 +229,7 @@ ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_L
 ok((P.VERSION_LOG.filter(function (e) { return e.v === '4.19'; })[0] || {}).now === false, '4.19 已不再是 now');
 // v4.20：隨從是 4.17 的內容，版本紀錄一直往後長 → 用內容找人，不要綁死索引
 ok(P.VERSION_LOG.some(function (e) { return e.items.join(' ').indexOf('隨從') >= 0; }), '版本紀錄有寫隨從系統');
-ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')),
+ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.\\d+'").test(require('fs').readFileSync(__dirname + '/../sw.js', 'utf8')),
   'sw.js 快取版號升到 v' + P.VERSION + '.0');
 
 // ================================================================

@@ -1,0 +1,30 @@
+{
+ "v": 1,
+ "charHpx": 200,
+ "cellW": 241,
+ "cellH": 234,
+ "ax": 120.49,
+ "ay": 226.38,
+ "actions": {
+  "walk": {
+   "file": "hero-anim-panda-walk.webp",
+   "frames": 12
+  },
+  "idle": {
+   "file": "hero-anim-panda-idle.webp",
+   "frames": 12
+  },
+  "hold": {
+   "file": "hero-anim-panda-hold.webp",
+   "frames": 12
+  },
+  "victory": {
+   "file": "hero-anim-panda-victory.webp",
+   "frames": 12
+  },
+  "hurt": {
+   "file": "hero-anim-panda-hurt.webp",
+   "frames": 12
+  }
+ }
+}

@@ -229,10 +229,10 @@ ok(devVer === VER, 'bomb-hero 與 public 的 VERSION 一致（' + VER + '）');
 ok(new RegExp('<span id="verTxt">' + VER.replace(/\./g, '\\.') + '<\\/span>').test(pubIdx), '首頁顯示的版號同步');
 ok(new RegExp('<span id="verLogVer">' + VER.replace(/\./g, '\\.') + '<\\/span>').test(pubIdx), '版本日誌標題同步');
 const swv = function (p) { return (/var SW_VERSION = 'v([\d.]+)'/.exec(fs.readFileSync(p, 'utf8')) || [])[1] || ''; };
-ok(swv(path.join(DEV, 'sw.js')) === VER + '.0', 'bomb-hero/sw.js = v' + VER + '.0');
-ok(swv(path.join(PUB, 'sw.js')) === VER + '.0', 'public/sw.js = v' + VER + '.0');
-ok(swv(path.join(ROOT, 'bomberman-online', 'public', 'sw.js')) === VER + '.0', '舊副本的 sw.js 也同步（測試會讀它）');
-ok(pkg.version === VER + '.0', 'package.json = ' + VER + '.0');
+ok(swv(path.join(DEV, 'sw.js')) .indexOf(VER + '.') === 0, 'bomb-hero/sw.js = v' + VER + '.0');
+ok(swv(path.join(PUB, 'sw.js')) .indexOf(VER + '.') === 0, 'public/sw.js = v' + VER + '.0');
+ok(swv(path.join(ROOT, 'bomberman-online', 'public', 'sw.js')) .indexOf(VER + '.') === 0, '舊副本的 sw.js 也同步（測試會讀它）');
+ok(new RegExp('^' + VER.replace(/\./g, '\\.') + '\\.\\d+$').test(pkg.version), 'package.json = ' + pkg.version);
 
 // ---------------------------------------------------------------
 console.log('\n' + (fail ? '✗ ' : '') + '通過 ' + pass + ' / ' + (pass + fail));

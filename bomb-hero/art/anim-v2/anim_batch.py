@@ -43,7 +43,9 @@ def run(name, srcdir, start, end, loop, nout=12, ref_h=None, outdir='frames_anim
     # 舉手／跳躍會把手臂算進 bbox，令 k 變小、角色本體被縮小 → 切動作會跳。
     # 值要「逐支量」而不是整隻角色共用一個：影片模型每次的鏡位不完全一樣，
     #   兔子四支剛好都 640，小熊五支是 641~644（差 0.5%，共用會讓某支動作整體大／小一點）。
-    med = ref_h if ref_h else REF_H
+    # v6.0：ref_h 傳 0／None 時，改用「這個範圍的第 1 幀身高」——
+    #   新增角色不必再逐支人工量，而且第 1 幀一定剛好落在 TARGET_H、腳底 1360。
+    med = ref_h if ref_h else float(hs[0])
     k = TARGET_H / float(med)
     foot = int(A[0][1])                                # 第一幀腳底為固定基線
     cx = float(A[0][2])                                # 第一幀頭部質心為固定水平中心
@@ -167,12 +169,54 @@ JOBS = {
         ('walk',    'vid/cat-walk/fr',     1, 124, True, 12, 634),
         # 1~56：第 60~62 幀尾巴甩到右邊界（會出現直切邊）。
         ('idle',    'vid/cat-idle/fr',     1, 56, True, 12, 635),
-        # 1~60：第 64 幀起洋紅底被換成綠色（模型慣性）。這段動作幾乎靜止（面積只變 4.9%），
-        #   截短完全不影響表現。
-        ('hold',    'vid/cat-hold/fr',     1, 60, True, 12, 636),
+        # v6.0：改吃 hold2（key_flat 去背版）。舊的 cat-hold 第 64 幀起洋紅被換成綠幕；
+        #   hold2 的第 30 幀之後球才穩定出現在腰側（球心離腳底 0.486H、往左 0.274H），
+        #   所以從 30 開始截，整段都有球、可以無縫循環。
+        # v6.0：hold 改吃 hold3（球抱在腰側、雙手托著、球跟頭一樣大）。
+        #   hold2 的球在 0.58H 的胸口，遊戲炸彈半徑 0.213H → 上緣會蓋到眼睛，作廢。
+        # 前 10 幀球還沒出現（模型先擺手勢才把球放下來）→ 從 20 開始截，整段都有球。
+        ('hold',    'vid/cat-hold3/flat', 20, 124, True, 12, 0),
         ('victory', 'vid/cat-victory/fr',  1, 124, False, 12, 636),
-        # hurt 從缺：第 4 幀頭上出現一顆巨大青綠球體（模型自加道具）。
-        # throw 從缺：整支只是把球抱在懷裡慢慢坐下，完全沒有拋的動作。
+        # hurt 改吃 hurt3（後仰縮身護頭；前兩支頭上會冒出青綠球體）。
+        ('hurt',    'vid/cat-hurt3/flat',  1, 124, False, 12, 0),
+        # throw：使用者指示「丟炸彈動作不再生成」（遊戲端本來就沒播這套）。
+    ]),
+    # 豬豬（v6.0）：圓滾滾又背小背包，站姿 0.72 寬高比；雙手一張（勝利）到 0.50H，
+    #   畫布用 1120（左右各 560＝0.52H）才不會切到手掌。
+    #   hold 從缺：第一支把球頂在頭上、腳下多了一條深灰地面陰影、眼睛還發粉光 → 重生成中。
+    'pig':    ('frames_anim_pig', 1120, 560, [
+        ('walk',    'vid/pig-walk/flat',    1, 124, True, 12, 644),
+        # v6.0：改吃 idle2（站著彈腳跟、拍肚子）。原本的 idle 1~62 是「低頭聞地」，
+        #   整隻縮成一顆球，剪影跟站姿差太多；80 之後雖然站定但幾乎不動。
+        ('idle',    'vid/pig-idle2/flat',   1, 124, True, 12, 0),
+        ('victory', 'vid/pig-victory/flat', 1, 124, False, 12, 644),
+        ('hurt',    'vid/pig-hurt/flat',    1, 124, False, 12, 644),
+        # v6.0：hold 重生成（第一支把球頂在頭上、腳下有深灰地面陰影、眼睛發粉光）。
+        ('hold',    'vid/pig-hold2/flat',   1, 124, True, 12, 0),
+    ]),
+    # 熊貓（v6.0）：膽小貼身走，勝利張手到 0.54H、受傷甩手到 0.59H → 畫布 1288（左右各 644）。
+    'panda':  ('frames_anim_panda', 1288, 644, [
+        ('walk',    'vid/panda-walk/flat',    1, 124, True, 12, 0),
+        ('idle',    'vid/panda-idle/flat',    1, 124, True, 12, 0),
+        ('hold',    'vid/panda-hold/flat',    1, 124, True, 12, 0),
+        ('victory', 'vid/panda-victory/flat', 1, 124, False, 12, 0),
+        ('hurt',    'vid/panda-hurt/flat',    1, 124, False, 12, 0),
+    ]),
+    # 青蛙（v6.0）：勝利大字張開到 0.60H → 畫布 1308（左右各 654）。
+    'frog':   ('frames_anim_frog', 1308, 654, [
+        ('walk',    'vid/frog-walk/flat',    1, 124, True, 12, 0),
+        ('idle',    'vid/frog-idle/flat',    1, 124, True, 12, 0),
+        ('hold',    'vid/frog-hold/flat',    1, 124, True, 12, 0),
+        ('victory', 'vid/frog-victory/flat', 1, 124, False, 12, 0),
+        ('hurt',    'vid/frog-hurt/flat',    1, 124, False, 12, 0),
+    ]),
+    # 小雞（v6.0）：圓滾滾，翅膀一張到 0.62H → 畫布 1352（左右各 676）。
+    'chick':  ('frames_anim_chick', 1352, 676, [
+        ('walk',    'vid/chick-walk/flat',    1, 124, True, 12, 0),
+        ('idle',    'vid/chick-idle/flat',    1, 124, True, 12, 0),
+        ('hold',    'vid/chick-hold/flat',    1, 124, True, 12, 0),
+        ('victory', 'vid/chick-victory/flat', 1, 124, False, 12, 0),
+        ('hurt',    'vid/chick-hurt/flat',    1, 124, False, 12, 0),
     ]),
 }
 

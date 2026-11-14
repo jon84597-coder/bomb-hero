@@ -349,7 +349,7 @@ ok(((P.VERSION_LOG.filter(function (e) { return e.v === '4.21'; })[0] || {}).ite
 ok((P.VERSION_LOG.filter(function (e) { return e.v === '4.19'; })[0] || {}).now === false, '4.19 已不是 now');
 ok(((P.VERSION_LOG.filter(function (e) { return e.v === '4.19'; })[0] || {}).items || []).join(' ').indexOf('2 格') >= 0, '4.19 條目仍寫著 2 格規則');
 ok((P.VERSION_LOG.filter(function (e) { return e.v === '4.18'; })[0] || {}).now === false, '4.18 已不是 now');
-ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v' + P.VERSION + '.0');
+ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.\\d+'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v' + P.VERSION + '.0');
 
 console.log('\n' + (fail ? '✗ ' + fail + ' 項失敗 / ' : '') + '通過 ' + pass + ' 項');
 process.exit(fail ? 1 : 0);

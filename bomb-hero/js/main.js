@@ -30521,13 +30521,20 @@ const HeroAnim = (function () {
     //   v5.97 補 hurt。
     dog:    { pre: 'dog',    cellW: 187, ax: 93.55,  acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
     // v5.97：貓咪。尾巴又長又往外甩 → 1500 寬畫布、格子 281、錨點 140.32（= 750 × 200/1069）。
-    //   hold／hurt／throw 三支這批不合格（見 anim_batch 註解），先不登記。
-    cat:    { pre: 'cat',    cellW: 281, ax: 140.32, acts: ['walk', 'idle', 'victory'] }
+    //   v6.0 補 hold／hurt（第三支影片才合格）。
+    cat:    { pre: 'cat',    cellW: 281, ax: 140.32, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
+    // ---- v6.0：剩下四隻全部補齊（豬豬／熊貓／青蛙／小雞）----
+    //   格子寬度 = 畫布寬 × 200/1069；畫布寬是按「該角色動作的最大左右伸展」實測決定的
+    //   （見 art/anim-v2/anim_batch.py 的 JOBS 註解），所以每隻的格子寬都不同。
+    pig:    { pre: 'pig',    cellW: 210, ax: 104.77, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
+    panda:  { pre: 'panda',  cellW: 241, ax: 120.49, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
+    frog:   { pre: 'frog',   cellW: 245, ax: 122.36, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] },
+    chick:  { pre: 'chick',  cellW: 253, ax: 126.47, acts: ['walk', 'idle', 'hold', 'victory', 'hurt'] }
   };
   const ACTS = ['walk', 'idle', 'hold', 'throw', 'hurt', 'victory'];
   const FPS  = { walk: 15, idle: 7, hold: 9, throw: 20, hurt: 11, victory: 11 };
   const LOOP = { walk: 1, idle: 1, hold: 1, throw: 0, hurt: 0, victory: 1 };
-  const KEYS = { rabbit: 1, bear: 1, dog: 1, cat: 1 };
+  const KEYS = { rabbit: 1, bear: 1, dog: 1, cat: 1, pig: 1, panda: 1, frog: 1, chick: 1 };
   const imgs = {}, ready = {}, started = {};
   /* v5.99：改成「按需載入」。原本開機一次把「所有角色 × 所有動作」全部丟給 Image 解碼 ——
      4 隻角色 20 支＝41MB 解碼記憶體；8 隻角色 48 支會到約 115MB，低階手機光開首頁就吃掉一半。
@@ -31697,11 +31704,31 @@ const HOLD_BOMB = {
   dog: {
     up: 0.3714, side: -0.2675
   },
-  /* v5.97：貓咪「暫時」的位置 —— 牠的 hold 動作被模型把球畫在臉旁邊（球心離腳底 0.74H、
-     往左 0.43H），遊戲炸彈是素材球的 2.1 倍大，會整個蓋住臉，所以先不採用。
-     等 hold 重生成後再換成實測值；在那之前用胸口高度，至少不要浮在頭頂。 */
+  /* v6.0：貓咪 —— 第三支 hold 才對（前兩支球在 0.58~0.74H 的胸口／臉側，
+     遊戲炸彈半徑 0.213H，上緣會蓋到眼睛）。這支把球抱在腰側、球跟頭一樣大，
+     實測球心離腳底 0.429H、往左 0.098H；再往下 0.02H 讓炸彈上緣剛好落在下巴下緣。 */
   cat: {
-    up: 0.62, side: 0
+    up: 0.410, side: -0.100
+  },
+  /* v6.0：豬豬 —— 球抱在肚子前（離腳底 0.352H、往左 0.10H）。
+     牠的球會隨身體左右晃，但幅度只有 ±0.03H（遊戲裡 6px），一組常數就夠。 */
+  pig: {
+    up: 0.352, side: -0.100
+  },
+  /* v6.0：熊貓 —— 模型把球「抱」成兩手交握，球幾乎被手掌蓋住（量不到圓）。
+     取手掌交握的中心（離腳底 0.49H），炸彈放上去剛好整顆落在懷裡。 */
+  panda: {
+    up: 0.490, side: 0.020
+  },
+  /* v6.0：青蛙 —— 球托在肚子前（量到的暗塊把牠深綠的腹部一起吃進來，所以取肉眼
+     讀格線的值：球心離腳底 0.40H；再往下 0.01H 避開下嘴唇）。 */
+  frog: {
+    up: 0.390, side: -0.020
+  },
+  /* v6.0：小雞 —— 球頂在蛋殼帽上（離腳底 0.704H）。牠的素材球直徑 0.39H，
+     遊戲炸彈 0.427H 几乎一樣大，蓋上去剛好；臉在 0.16~0.41H，完全不會被擋。 */
+  chick: {
+    up: 0.704, side: 0
   },
 };
 function holdBombPos(animal, bd) {

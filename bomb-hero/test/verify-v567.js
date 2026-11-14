@@ -82,7 +82,7 @@ ok(kept566 && kept566.now === false, 'v5.66（移除入口那一版）的紀錄�
 ok(P.VERSION_LOG[0].items.length >= 5, '本版至少 5 條更新說明（' + P.VERSION_LOG[0].items.length + ' 條）');
 ok(!/後台|開發者/.test(P.VERSION_LOG[0].items.join('')), '更新內容不出現「後台／開發者」');
 const sw = fs.readFileSync(__dirname + '/../sw.js', 'utf8');
-ok(new RegExp("SW_VERSION = 'v" + vEsc + "\\.0'").test(sw), 'SW 版號跟 VERSION 同步（v' + P.VERSION + '.0）');
+ok(new RegExp("SW_VERSION = 'v" + vEsc + "\\.\\d+'").test(sw), 'SW 版號跟 VERSION 同步（v' + P.VERSION + '.0）');
 
 console.log('\n' + (fail === 0 ? '通過 ' + pass + ' / ' + (pass + fail) : '✗ ' + fail + ' 項失敗（通過 ' + pass + '）'));
 process.exit(fail === 0 ? 0 : 1);

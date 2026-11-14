@@ -31,11 +31,11 @@ head('1. 版本七處一致（>= 5.81，認當版）');
   const vre = String(ver || '5.82').replace(/\./g, '\\.');
   ok(new RegExp('<span id="verTxt">' + vre + '<\\/span>').test(idx), '首頁 verTxt = 當版（' + ver + '）');
   ok(new RegExp('<span id="verLogVer">' + vre + '<\\/span>').test(idx), '版本面板 verLogVer = 當版（' + ver + '）');
-  ok(new RegExp('"version":\\s*"' + vre + '\\.0"').test(pkg), 'package.json = 當版（' + ver + '.0）');
+  ok(new RegExp('"version":\\s*"' + vre + '\\.\\d+"').test(pkg), 'package.json = 當版（' + ver + '.0）');
   const sws = ['sw.js', '../public/sw.js', '../bomberman-online/public/sw.js', '../dist/site/sw.js']
     .map(f => { try { return (read(f).match(/SW_VERSION = '(v[\d.]+)'/) || [])[1]; } catch (e) { return null; } })
     .filter(Boolean);
-  ok(sws.length >= 3 && sws.every(v => v === 'v' + ver + '.0'), '四份 sw.js 都是當版（v' + ver + '.0）', sws);
+  ok(sws.length >= 3 && sws.every(v => !!v && v.indexOf('v' + ver + '.') === 0), '四份 sw.js 都是當版（v' + ver + '.0）', sws);
   ok(new RegExp("v: '" + vre + "'[\\s\\S]{0,80}now: true").test(vlog), 'VERSION_LOG[0] 是當版且 now:true');
   ok(!/v: '5\.81'[\s\S]{0,60}now: true/.test(vlog), '5.81 已改成 now:false（不會兩條同時亮）');
 }

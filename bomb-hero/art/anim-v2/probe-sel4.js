@@ -1,0 +1,22 @@
+const path = require('path');
+const fs = require('fs');
+const { launch, sleep } = require(path.join(__dirname, '..', '..', 'test', 'cdp.js'));
+const OUT = path.join(__dirname, 'shots');
+(async () => {
+  const b = await launch({ w: 1400, h: 1000 });
+  const p = await b.newPage();
+  await p.send('Network.enable');
+  await p.send('Network.setCacheDisabled', { cacheDisabled: true });
+  await p.goto('http://localhost:3122/', 9000);
+  await p.eval("(async()=>{try{const rs=await navigator.serviceWorker.getRegistrations();for(const r of rs)await r.unregister();}catch(e){}try{const ks=await caches.keys();for(const k of ks)await caches.delete(k);}catch(e){}return 1})()");
+  await p.goto('http://localhost:3122/', 12000);
+  await sleep(2200);
+  const clicked = await p.eval("(function(){var b=document.getElementById('btnSolo');if(!b)return 'no btnSolo';b.click();return 'clicked '+(__BH.Screen.current);})()");
+  console.log('click', clicked);
+  await sleep(1400);
+  console.log('state', await p.eval("(function(){try{return {screen:__BH.Screen.current, items:__BH.CharPreview.items().length};}catch(e){return 'ERR '+e.message;}})()"));
+  console.log('alpha', await p.eval("(function(){var c=document.querySelectorAll('canvas.chpv');var o=[];for(var i=0;i<Math.min(c.length,8);i++){var g=c[i].getContext('2d');var d=g.getImageData(0,0,c[i].width,c[i].height).data;var n=0;for(var j=3;j<d.length;j+=4) if(d[j]>8) n++; o.push(n);}return o;})()"));
+  await p.shot(path.join(OUT, 'sel_real.png'));
+  fs.writeFileSync(path.join(OUT, 'sel_real.png'), fs.readFileSync(path.join(OUT, 'sel_real.png')));
+  b.close();
+})().catch(e => { console.error('FAIL', e.message); process.exit(1); });

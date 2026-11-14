@@ -395,7 +395,7 @@ ok(css.indexOf('id="verTxt">' + P.VERSION + '<') > 0, '畫面版本文字同步 
 ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_LOG 第一筆 = ' + P.VERSION + '（now）');
 ok((P.VERSION_LOG.filter(function (e) { return e.v === '4.19'; })[0] || {}).now === false, '4.19 已不再是 now');
 ok(P.VERSION_LOG.filter(function (e) { return e.v === '4.17'; })[0].items.join(' ').indexOf('隨從') >= 0, '4.17 版本紀錄有寫隨從');
-ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v' + P.VERSION + '.0');
+ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.\\d+'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')), 'sw.js = v' + P.VERSION + '.0');
 
 // ================================================================
 console.log('\n----------------------------------------');

@@ -52,6 +52,38 @@ CHARS = {
         ('armL', 'hero-parts-dog-arm-l.webp', 0.0000, 0.5778, 0.1841, 0.2601),
         ('armR', 'hero-parts-dog-arm-r.webp', 0.8127, 0.5778, 0.1810, 0.2601),
     ]),
+    # ---- v6.0：v5.99 從 HERO_PARTS 直接轉出來的（座標一字未改，只把 px／py 拿掉） ----
+    'pig': dict(asp=0.7173, p=[
+        ('legL', 'hero-parts-pig-leg-l.webp', -0.0597, 0.8051, 0.6060, 0.2120),
+        ('legR', 'hero-parts-pig-leg-r.webp', 0.4507, 0.8051, 0.6090, 0.2120),
+        ('torso', 'hero-parts-pig-torso.webp', -0.0597, 0.4454, 1.1194, 0.4283),
+        ('head', 'hero-parts-pig-head.webp', -0.0597, -0.0171, 1.1194, 0.5310),
+        ('armL', 'hero-parts-pig-arm-l.webp', 0.0627, 0.5846, 0.1194, 0.1734),
+        ('armR', 'hero-parts-pig-arm-r.webp', 0.8179, 0.5525, 0.1403, 0.2677),
+    ]),
+    # 熊貓沒有獨立手臂零件（手臂畫在軀幹裡）→ 只拼四個零件，不要硬補手
+    'panda': dict(asp=0.6218, p=[
+        ('legL', 'hero-parts-panda-leg-l.webp', -0.0584, 0.7842, 0.6117, 0.2329),
+        ('legR', 'hero-parts-panda-leg-r.webp', 0.4433, 0.7842, 0.6151, 0.2329),
+        ('torso', 'hero-parts-panda-torso.webp', -0.0584, 0.4145, 1.1168, 0.4380),
+        ('head', 'hero-parts-panda-head.webp', -0.0584, -0.0171, 1.1168, 0.5000),
+    ]),
+    'frog': dict(asp=0.7393, p=[
+        ('legL', 'hero-parts-frog-leg-l.webp', -0.0578, 0.6838, 0.6040, 0.3333),
+        ('legR', 'hero-parts-frog-leg-r.webp', 0.4538, 0.6838, 0.6040, 0.3333),
+        ('torso', 'hero-parts-frog-torso.webp', -0.0578, 0.3440, 1.1156, 0.4081),
+        ('head', 'hero-parts-frog-head.webp', -0.0578, -0.0171, 1.1156, 0.4295),
+        ('armL', 'hero-parts-frog-arm-l.webp', 0.0434, 0.5598, 0.0925, 0.1303),
+        ('armR', 'hero-parts-frog-arm-r.webp', 0.8613, 0.5342, 0.1127, 0.1816),
+    ]),
+    'chick': dict(asp=0.6503, p=[
+        ('legL', 'hero-parts-chick-leg-l.webp', -0.0590, 0.7846, 0.6098, 0.2324),
+        ('legR', 'hero-parts-chick-leg-r.webp', 0.4459, 0.7846, 0.6131, 0.2324),
+        ('torso', 'hero-parts-chick-torso.webp', -0.0590, 0.4648, 1.1180, 0.3881),
+        ('head', 'hero-parts-chick-head.webp', -0.0590, -0.0171, 1.1180, 0.5501),
+        ('armL', 'hero-parts-chick-arm-l.webp', 0.0787, 0.5800, 0.0492, 0.2004),
+        ('armR', 'hero-parts-chick-arm-r.webp', 0.8689, 0.5800, 0.0820, 0.2324),
+    ]),
 }
 
 

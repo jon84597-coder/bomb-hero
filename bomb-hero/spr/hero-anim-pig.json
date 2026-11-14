@@ -1,0 +1,30 @@
+{
+ "v": 1,
+ "charHpx": 200,
+ "cellW": 210,
+ "cellH": 234,
+ "ax": 104.77,
+ "ay": 226.38,
+ "actions": {
+  "walk": {
+   "file": "hero-anim-pig-walk.webp",
+   "frames": 12
+  },
+  "idle": {
+   "file": "hero-anim-pig-idle.webp",
+   "frames": 12
+  },
+  "hold": {
+   "file": "hero-anim-pig-hold.webp",
+   "frames": 12
+  },
+  "victory": {
+   "file": "hero-anim-pig-victory.webp",
+   "frames": 12
+  },
+  "hurt": {
+   "file": "hero-anim-pig-hurt.webp",
+   "frames": 12
+  }
+ }
+}

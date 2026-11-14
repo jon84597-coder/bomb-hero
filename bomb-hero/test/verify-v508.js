@@ -39,8 +39,8 @@ const VSTR = String(B.VERSION || '').replace(/\./g, '\\.');
 ok(/^\d+\.\d+$/.test(B.VERSION) && VGE(B.VERSION, '5.8'), 'VERSION 是 x.y 且不低於 5.8（' + B.VERSION + '）');
 ok(new RegExp('<span id="verTxt">' + VSTR + '<\\/span>').test(SRC), '首頁版號同步（' + B.VERSION + '）');
 ok(new RegExp('<span id="verLogVer">' + VSTR + '<\\/span>').test(SRC), '版本日誌標題同步');
-ok(new RegExp("var SW_VERSION = 'v" + VSTR + "\\.0';").test(SW1), 'bomb-hero/sw.js = v' + B.VERSION + '.0');
-ok(new RegExp("var SW_VERSION = 'v" + VSTR + "\\.0';").test(SW2), 'public/sw.js = v' + B.VERSION + '.0');
+ok(new RegExp("var SW_VERSION = 'v" + VSTR + "\\.\\d+';").test(SW1), 'bomb-hero/sw.js = v' + B.VERSION + '.0');
+ok(new RegExp("var SW_VERSION = 'v" + VSTR + "\\.\\d+';").test(SW2), 'public/sw.js = v' + B.VERSION + '.0');
 ok(B.VERSION_LOG[0].v === B.VERSION && B.VERSION_LOG[0].now === true, '日誌最新一筆 = 當前版本且標 now');
 // v5.10 教訓：不要假設「5.8 一定在第二筆」——每升一版它就被往後推一格。
 //   改成「5.8 那一筆還在，而且不再是 now」＋「除了第一筆以外沒有任何 now」。

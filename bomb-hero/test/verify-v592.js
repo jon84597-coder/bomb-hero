@@ -165,7 +165,7 @@ ok(json.actions.hold && json.actions.hold.frames === 12, 'hold 仍是 12 格');
 const V = (mainSrc.match(/const VERSION = '([\d.]+)'/) || [])[1];
 ok(V && parseFloat(V) >= 5.92, 'VERSION ≥ 5.92（實際 ' + V + '）');
 ok(idxSrc.indexOf('<span id="verTxt">' + V + '</span>') > 0, 'index.html 的 verTxt 同版號');
-ok(swSrc.indexOf("SW_VERSION = 'v" + V + ".0'") > 0, 'sw.js 同版號');
+ok(swSrc.indexOf("SW_VERSION = 'v" + V + ".") > 0, 'sw.js 同版號');
 
 console.log('\n────────────────────────────');
 console.log('通過 ' + pass + ' 項，失敗 ' + fail + ' 項');

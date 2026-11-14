@@ -49,7 +49,8 @@ if (typeof holdPos === 'function') {
   const r = holdPos('rabbit', { footY: 500, H: 200 });
   ok(!!r && Math.abs(r.y - (500 - (+upM[1]) * 200)) < 0.01, '兔子：y = 腳底 − up·H（實際 ' + (r && r.y) + '）');
   ok(!!r && Math.abs(r.dx) < 0.06 * 200, '兔子：水平偏移在 0.06H 內（實際 ' + (r && r.dx) + '）');
-  ok(holdPos('chick', { footY: 500, H: 200 }) === null, '沒校準的角色 → null（走舊公式；v5.96 起 dog 已校準）');
+  /* v5.99.1：八隻全部校準了 → 改用沒登記的 key 驗「走舊公式」。 */
+  ok(holdPos('bunny', { footY: 500, H: 200 }) === null, '沒校準的角色 → null（走舊公式；八隻主角都已校準）');
   ok(holdPos('rabbit', { H: 200 }) === null, '沒有 footY → null（不會算出 NaN 座標）');
   ok(holdPos('rabbit', { footY: 500, H: 0 }) === null, '沒有 H → null');
 }
@@ -108,7 +109,7 @@ sec('⑦ 版本');
 const vm2 = mainSrc.match(/const VERSION = '([\d.]+)'/);
 ok(!!vm2 && parseFloat(vm2[1]) >= 5.91, '主檔版本 ≥ 5.91（實際 ' + (vm2 ? vm2[1] : '?') + '）');
 ok(/<span id="verTxt">5\.9\d<\/span>/.test(idxSrc), 'index.html 版本戳記同步');
-ok(/SW_VERSION = 'v5\.9\d\.0'/.test(swSrc), 'sw.js 版號跟著升');
+ok(/SW_VERSION = 'v5\.9\d(\.\d+)?'/.test(swSrc), 'sw.js 版號跟著升');
 ok(/v: '5\.91'/.test(fs.readFileSync(path.join(ROOT, 'js/version-log.js'), 'utf8')), '版本紀錄有 5.91');
 ok(mainSrc.length < 1950000, '主檔仍在預算內（' + mainSrc.length + ' / 1,950,000）');
 

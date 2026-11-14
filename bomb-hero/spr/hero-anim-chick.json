@@ -1,0 +1,30 @@
+{
+ "v": 1,
+ "charHpx": 200,
+ "cellW": 253,
+ "cellH": 234,
+ "ax": 126.47,
+ "ay": 226.38,
+ "actions": {
+  "walk": {
+   "file": "hero-anim-chick-walk.webp",
+   "frames": 12
+  },
+  "idle": {
+   "file": "hero-anim-chick-idle.webp",
+   "frames": 12
+  },
+  "hold": {
+   "file": "hero-anim-chick-hold.webp",
+   "frames": 12
+  },
+  "victory": {
+   "file": "hero-anim-chick-victory.webp",
+   "frames": 12
+  },
+  "hurt": {
+   "file": "hero-anim-chick-hurt.webp",
+   "frames": 12
+  }
+ }
+}

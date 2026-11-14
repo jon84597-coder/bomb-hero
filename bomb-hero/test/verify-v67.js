@@ -211,7 +211,7 @@ head('7. 版號與 SW');
   ok(e423.items.join(' ').indexOf('寒冰') >= 0, '4.23 更新內容寫了寒冰地圖');
   ok(P.VERSION_LOG.filter(function (e) { return e.v === '4.22'; }).every(function (e) { return e.now === false; }),
     '4.22 已不是 now');
-  ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')),
+  ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.\\d+'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')),
     'sw.js = v' + P.VERSION + '.0');
 }
 

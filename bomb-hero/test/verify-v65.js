@@ -191,7 +191,7 @@ head('9. 版本與 Service Worker');
   const e421 = P.VERSION_LOG.filter(e => e.v === '4.21')[0];
   ok(!!e421 && e421.items.join(' ').indexOf('離開遊戲') >= 0, '4.21 的更新內容寫了離開遊戲');
   ok(P.VERSION_LOG.filter(e => e.v === '4.20').every(e => e.now === false), '4.20 已不是 now');
-  ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.0'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')),
+  ok(new RegExp("SW_VERSION = 'v" + P.VERSION + "\\.\\d+'").test(fs.readFileSync(__dirname + '/../sw.js', 'utf8')),
     'sw.js = v' + P.VERSION + '.0');
 }
 

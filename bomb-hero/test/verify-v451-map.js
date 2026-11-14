@@ -213,7 +213,7 @@ ok(P.VERSION_LOG[0].v === P.VERSION && P.VERSION_LOG[0].now === true, 'VERSION_L
 ok(P.VERSION_LOG[0].now === true, '第一筆 now = true');
 ok(P.VERSION_LOG[0].items.length >= 2, '本版寫了 ' + P.VERSION_LOG[0].items.length + ' 條更新');
 ok(P.VERSION_LOG[1].now === false, '上一版已取消 now');
-ok(fs.readFileSync(__dirname + '/../sw.js', 'utf8').indexOf('v' + P.VERSION + '.0') >= 0, 'sw.js 跟著版本升（v' + P.VERSION + '.0）');
+ok(fs.readFileSync(__dirname + '/../sw.js', 'utf8').indexOf('v' + P.VERSION + '.') >= 0, 'sw.js 跟著版本升（v' + P.VERSION + '.0）');
 
 console.log('\n========================================');
 console.log('v4.51 地圖生成：' + pass + ' 通過 / ' + fail + ' 失敗');

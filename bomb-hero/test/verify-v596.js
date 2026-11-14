@@ -44,7 +44,9 @@ ACTS.forEach(function (a) {
 sec('② HeroAnim 登記柴犬');
 ok(/dog:\s*\{ pre: 'dog',\s*cellW: 187, ax: 93\.55,\s*acts: \['walk', 'idle', 'hold', 'victory', 'hurt'\] \}/.test(mainSrc),
   'SHEET.dog 的 cellW／ax／acts 與 meta 一致');
-ok(/const KEYS = \{ rabbit: 1, bear: 1, dog: 1, cat: 1 \};/.test(mainSrc), 'KEYS 有四隻（沒登記就會被當成「沒有圖集」）');
+/* v6.0：八隻全部登記。 */
+ok(/const KEYS = \{ rabbit: 1, bear: 1, dog: 1, cat: 1, pig: 1, panda: 1, frog: 1, chick: 1 \};/.test(mainSrc),
+  'KEYS 有八隻（沒登記就會被當成「沒有圖集」）');
 ok(mainSrc.indexOf("'spr/hero-anim-' + sh.pre + '-' + k + '.webp'") >= 0, '檔名仍走動態模板（不寫死角色）');
 
 /* ---------------------------------------------------------------- ③ */
@@ -54,7 +56,8 @@ ok(/if \(!get\(key, act\)\) act = get\(key, 'idle'\) \? 'idle'/.test(mainSrc), '
 const env = makeEnv(); const BH = env.BH;
 ok(BH.HeroAnim && typeof BH.HeroAnim.has === 'function', 'HeroAnim 對外可用');
 ok(BH.HeroAnim.has('dog') === true, 'HeroAnim.has(\'dog\') 為真');
-ok(BH.HeroAnim.has('chick') === false, '沒做的角色（小雞）仍然是 false');
+/* v6.0：八隻全部做完 → 改成驗「沒登記的 key」而不是特定角色。 */
+ok(BH.HeroAnim.has('bunny') === false, '沒登記的角色（bunny）仍然是 false');
 
 /* ---------------------------------------------------------------- ④ */
 sec('④ 柴犬舉彈位置');
@@ -92,7 +95,7 @@ ok(vm && parseFloat(vm[1]) >= 5.96, '主檔版本 ≥ 5.96（' + (vm && vm[1]) +
 const V = vm ? vm[1] : '0', VRE = V.replace(/\./g, '\\.');
 ok(new RegExp('verTxt">' + VRE + '<').test(idxSrc), 'index.html 版號跟主檔一致');
 const SW = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
-ok(new RegExp("var SW_VERSION = 'v" + VRE + "\\.0';").test(SW), 'SW 版號 v' + V + '.0');
+ok(new RegExp("var SW_VERSION = 'v" + VRE + "\\.\\d+';").test(SW), 'SW 版號 v' + V + '.0');
 const LOG = fs.readFileSync(path.join(ROOT, 'js', 'version-log.js'), 'utf8');
 ok(new RegExp("v: '" + VRE + "'[\\s\\S]{0,80}?now: true").test(LOG), '更新紀錄有 ' + V + ' 條目（now: true）');
 ok(!/後台|開發者模式/.test(LOG.split("v: '" + V + "'")[1].split('v:')[0]), V + ' 條目沒有提到「後台／開發者」');

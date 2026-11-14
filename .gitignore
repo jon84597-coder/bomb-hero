@@ -120,3 +120,13 @@ bomb-hero/art/anim-v2/shots/
 bomb-hero/art/anim-v2/gen/
 bomb-hero/art/rig/
 bomb-hero/art/anim-test/
+
+# v5.99：主角動作影片管線的中間產物（可重跑，2.5GB，不進 git）
+bomb-hero/art/anim-v2/vid/
+bomb-hero/art/anim-v2/frames_anim*/
+bomb-hero/art/anim-v2/_*.png
+bomb-hero/_atlas_*.png
+bomb-hero/art/anim-v2/_tmp*/
+bomb-hero/test/_*.png
+bomb-hero/art/anim-v2/_tmp*/
+bomb-hero/test/_*.png

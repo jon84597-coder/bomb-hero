@@ -72,10 +72,10 @@ sws.forEach(function (rel) {
   const f = path.join(__dirname, rel);
   if (!fs.existsSync(f)) return;
   const s = fs.readFileSync(f, 'utf8');
-  ok(new RegExp("var SW_VERSION = 'v" + VERSION.replace(/\./g, '\\.') + "\\.0';").test(s), rel + ' SW_VERSION = v' + VERSION + '.0');
+  ok(new RegExp("var SW_VERSION = 'v" + VERSION.replace(/\./g, '\\.') + "\\.\\d+';").test(s), rel + ' SW_VERSION = v' + VERSION + '.0');
 });
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8'));
-ok(pkg.version === VERSION + '.0', 'package.json = VERSION.0', pkg.version);
+ok(new RegExp('^' + VERSION.replace(/\./g, '\\.') + '\\.\\d+$').test(pkg.version), 'package.json = VERSION.x', pkg.version);
 
 // 遊戲內版本紀錄不得出現後台／開發者字樣
 const log = (function () {

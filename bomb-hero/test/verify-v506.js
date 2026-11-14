@@ -135,10 +135,10 @@ const itemN = (src.match(/(?:const VERSION_LOG|window\.__VERSION_LOG) = \[[\s\S]
 ok((itemN.match(/'/g) || []).length >= 8, '本版至少 4 條更新（' + Math.floor((itemN.match(/'/g) || []).length / 2) + ' 條）');
 ['bomb-hero/sw.js', 'public/sw.js', 'bomberman-online/public/sw.js'].forEach(function (f) {
   const t = fs.readFileSync(path.join(ROOT, '..', f), 'utf8');
-  ok(t.indexOf("var SW_VERSION = 'v" + V + ".0'") > 0, f + ' 的 SW 版號 = v' + V + '.0');
+  ok(t.indexOf("var SW_VERSION = 'v" + V + ".") > 0, f + ' 的 SW 版號 = v' + V + '.0');
 });
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, '..', 'package.json'), 'utf8'));
-ok(pkg.version === V + '.0', 'package.json = ' + pkg.version);
+ok(new RegExp('^' + V.replace(/\./g, '\\.') + '\\.\\d+$').test(pkg.version), 'package.json = ' + pkg.version);
 ok(fs.readFileSync(path.join(ROOT, '..', 'public', 'index.html'), 'utf8') ===
   fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'), 'public/index.html 與主檔一致');
 

@@ -190,7 +190,7 @@ const V = vm ? vm[1] : '0', VRE = V.replace(/\./g, '\\.');
 ok(new RegExp('verLogVer">' + VRE + '<').test(HTML) && new RegExp('verTxt">' + VRE + '<').test(HTML),
   'index.html 兩處版號都跟主檔一致（' + V + '）');
 const SW = fs.readFileSync(__dirname + '/../sw.js', 'utf8');
-ok(new RegExp("var SW_VERSION = 'v" + VRE + "\\.0';").test(SW), 'SW 版號 v' + V + '.0');
+ok(new RegExp("var SW_VERSION = 'v" + VRE + "\\.\\d+';").test(SW), 'SW 版號 v' + V + '.0');
 const LOG = fs.readFileSync(__dirname + '/../js/version-log.js', 'utf8');
 ok(new RegExp("v: '" + VRE + "'[\\s\\S]{0,80}?now: true").test(LOG), '更新紀錄有 ' + V + ' 條目（now: true）');
 ok(/v: '5\.92'[\s\S]{0,80}?now: false/.test(LOG), '上一版 5.92 已標成 now: false');

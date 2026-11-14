@@ -144,7 +144,9 @@ sec('版本戳記');
 const vm = mainSrc.match(/const VERSION = '([\d.]+)'/);
 ok(vm && parseFloat(vm[1]) >= 5.99, 'VERSION ≥ 5.99（' + (vm && vm[1]) + '）');
 const SW = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
-ok(/var SW_VERSION = 'v5\.99\.0';/.test(SW), 'SW 版號 v5.99.0');
+/* v5.99.1：改成「不低於」，以後補丁版才不會一直弄紅這支。 */
+const swv599 = (SW.match(/var SW_VERSION = 'v([\d.]+)'/) || [])[1] || '0';
+ok(parseFloat(swv599) >= 5.99, 'SW 版號 ≥ v5.99（實際 v' + swv599 + '）');
 
 console.log('\n' + (fail ? '❌' : '✅') + ' v5.99：' + pass + ' 通過 / ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);

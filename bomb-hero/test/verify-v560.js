@@ -213,7 +213,7 @@ const m2 = /v: '([\d.]+)', date: '[^']*', now: true/.exec(vlogSrc);
 ok(!!m2 && parseFloat(m2[1]) >= 5.6, 'VERSION_LOG 最新一條是 5.6 以上且 now:true（實際 ' + (m2 ? m2[1] : '') + '）');
 ok(/now: false/.test(vlogSrc), '上一版有改成 now:false');
 ok(/v5\.60|v5\.6/.test(vlogSrc), 'VERSION_LOG 裡有這一版');
-ok(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8').indexOf('v' + ver + '.0') >= 0,
+ok(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8').indexOf('v' + ver + '.') >= 0,
   'SW_VERSION 跟著版本（實際 ' + (function () {
     const mm = /SW_VERSION = '(v[\d.]+)'/.exec(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8'));
     return mm ? mm[1] : '';

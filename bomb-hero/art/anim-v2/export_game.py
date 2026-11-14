@@ -40,7 +40,19 @@ CHARS = {
     # 貓咪（v5.97）：1500 寬畫布 —— 牠的尾巴又長又往外甩，實測右側需要 0.70H 的空間，
     #   用 1000 會把尾巴切掉。格子因此 281（其他角色 187~202），高度與縮放基準不變。
     'cat':    dict(src='frames_anim_cat', crop=(0, 150, 1500, 1250),
-                   acts=['walk', 'idle', 'hold', 'victory'], walk=None),
+                   acts=['walk', 'idle', 'hold', 'victory', 'hurt'], walk=None),
+    # 豬豬（v6.0）：1120 寬畫布（勝利雙手一張到 0.50H）。裁切框 150 起是為了避開
+    #   畫布上緣的空白；高度 1250 與其他角色一致，縮放基準不變。
+    'pig':    dict(src='frames_anim_pig', crop=(0, 150, 1120, 1250),
+                   acts=['walk', 'idle', 'hold', 'victory', 'hurt'], walk=None),
+    # 熊貓／青蛙／小雞（v6.0）：裁切寬度＝各自的畫布寬（見 anim_batch JOBS 的註解）。
+    #   高度 1250 與其他角色一致 → 縮放基準與腳底基線全部相同，換角色不會跳。
+    'panda':  dict(src='frames_anim_panda', crop=(0, 150, 1288, 1250),
+                   acts=['walk', 'idle', 'hold', 'victory', 'hurt'], walk=None),
+    'frog':   dict(src='frames_anim_frog', crop=(0, 150, 1308, 1250),
+                   acts=['walk', 'idle', 'hold', 'victory', 'hurt'], walk=None),
+    'chick':  dict(src='frames_anim_chick', crop=(0, 150, 1352, 1250),
+                   acts=['walk', 'idle', 'hold', 'victory', 'hurt'], walk=None),
 }
 
 

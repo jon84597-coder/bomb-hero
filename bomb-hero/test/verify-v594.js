@@ -46,7 +46,9 @@ const env = makeEnv();
 const BA = env.BH.HeroAnim;
 ok(!!BA, 'HeroAnim 存在');
 ok(BA.has('rabbit') === true && BA.has('bear') === true, 'rabbit 與 bear 都有精靈動作');
-ok(BA.has('pig') === false, '還沒做的角色（pig）走零件（v5.97 起 cat 已經有圖集）');
+/* v6.0：八隻全部都有圖集了 —— 改成驗「沒登記的 key 一律 false」，
+   這樣才不會因為又補了一隻角色就變紅。 */
+ok(BA.has('bunny') === false, '沒登記的角色（bunny）走零件，不會誤用別人的圖集');
 const mt = mainSrc.match(/const META = \{ charHpx: ([\d.]+), cellH: (\d+), ay: ([\d.]+), frames: (\d+) \};/);
 ok(!!mt && +mt[1] === 200 && +mt[2] === 234 && Math.abs(+mt[3] - 226.38) < .01,
   '全域 META 只剩「所有角色共用」的常數（cellW／ax 已下放到每隻角色）');

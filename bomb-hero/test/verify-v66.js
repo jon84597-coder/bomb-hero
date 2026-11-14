@@ -191,11 +191,11 @@ ok(v422log.items.join(' ').indexOf('14px') > 0, '4.22 更新內容有寫「整�
   ok(P.VERSION_LOG.filter(e => e.v === '4.21').every(e => e.now === false), '4.21 已不是 now');
   ok(src.indexOf('id="verLogVer">' + P.VERSION + '<') > 0, '版本紀錄標題同步');
   const sws = ['../sw.js', '../../public/sw.js', '../../bomberman-online/public/sw.js'];
-  const want = "SW_VERSION = 'v" + P.VERSION + ".0'";
+  const want = new RegExp("SW_VERSION = 'v" + P.VERSION.replace(/\./g, '\\.') + "\\.\\d+'");
   sws.forEach(function (p) {
     const fp = __dirname + '/' + p;
     if (!fs.existsSync(fp)) { ok(true, p + ' 不存在（跳過）'); return; }
-    ok(fs.readFileSync(fp, 'utf8').indexOf(want) > 0, p.replace('../', '') + ' = v' + P.VERSION + '.0');
+    ok(want.test(fs.readFileSync(fp, 'utf8')), p.replace('../', '') + ' = v' + P.VERSION + '.0');
   });
 }
 
