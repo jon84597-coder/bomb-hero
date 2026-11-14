@@ -177,7 +177,7 @@ const DIRS = {
 // v4.0（大更新）：全新「RPG 模式（測試版）」獨立系統 —— 四維屬性 HP／防禦／速度／攻擊、
 //       10 點自由配點、怪物血量與防禦分級、32 張不規則動態地圖（8 主題 × 4 小地圖）、
 //       首頁「版本更新內容」面板與「商店」預留鈕
-const VERSION = '6.00';
+const VERSION = '6.01';
 
 /* ===== v2.7 多語言系統：字典（繁中原文 / 簡中 / 英文） ===== */
 const LANGS = [
@@ -4465,12 +4465,18 @@ const PadUI = (function () {
       } else lastDir = null;
     } else lastDir = null;
 
-    // ---- 按鍵：就算沒有選單（遊戲中）也要能按，B＝暫停 ----
-    if (Input.padEdge(pi, 0)) activate();       // A 確認
-    if (Input.padEdge(pi, 1)) back();           // B 返回
+    /* ---- 按鍵 ----
+       v6.01：遊戲中的 B 只留給「遙控引爆」。
+       以前這裡是無條件 back()，而 back() 在遊戲畫面第一句就是 togglePause() ——
+       於是玩家按 B 引爆的同時遊戲也被暫停（使用者回報的「B 多了暫停功能」）。
+       現在遊戲畫面（含暫停面板）的 A／B／Start 一律不進選單導航：
+       暫停／繼續只認 Start（Menu），由主迴圈統一處理，按鈕本身交給手上的操作。 */
+    const inGame = (typeof Screen !== 'undefined' && Screen.current === 'game');
+    if (!inGame && Input.padEdge(pi, 0)) activate();          // A 確認（只在選單）
+    if (!inGame && Input.padEdge(pi, 1)) back();             // B 返回（只在選單；遊戲中是遙控引爆）
     /* v6.00：Xbox 中間那顆（Start／Menu）＝「暫停／確認」——
        遊戲中由主迴圈負責開關暫停，這裡只補「選單裡也能當確認鍵」。 */
-    if (cacheScope && Input.padEdge(pi, 9)) activate();
+    if (!inGame && cacheScope && Input.padEdge(pi, 9)) activate();
     if (cacheScope) {
       if (Input.padEdge(pi, 4)) step(-1);       // LB 上一項
       if (Input.padEdge(pi, 5)) step(1);        // RB 下一項
@@ -33130,7 +33136,11 @@ function loop(ts) {
     if (Input.edges.Digit0 || Input.edges.Numpad0) Zoom.reset();
     Zoom.tick(dt);
   }
-  if (Screen.current === 'game' && Input.padEdge(0, 9)) togglePause();   // 手把 Start 暫停
+  /* 手把 Start／Menu＝暫停／繼續（v6.01：1P～4P 哪一支按都算 ——
+     多人同機時不該只有插在第一槽的人能暫停）。 */
+  if (Screen.current === 'game') {
+    for (let pi = 0; pi < 4; pi++) if (Input.padEdge(pi, 9)) { togglePause(); break; }
+  }
   // v5.19：招式冷卻只在戰鬥中跑
   try { if (Game.rpg) RpgSkill.tick(dt); } catch (e) {}
   if (Screen.current !== 'game') {

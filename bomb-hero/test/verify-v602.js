@@ -30,22 +30,27 @@ const P = env.BH;
 const G = P.Game;
 
 /* ---------------------------------------------------------------- ① */
-sec('① 版本 6.00');
-ok(P.VERSION === '6.00', 'VERSION = 6.00', P.VERSION);
-ok(/<span id="verTxt">6\.00<\/span>/.test(idxSrc), '首頁徽章 verTxt = 6.00');
-ok(/<span id="verLogVer">6\.00<\/span>/.test(idxSrc), '版本面板 verLogVer = 6.00');
+sec('① 版本 ≥ 6.00');
+/* v6.01：這一支是 v6.00 的驗收，不該被後續補丁版卡住 →
+   改成「跟著當前版本走 + 6.00 那一筆自己要夠完整」。 */
+const VN = String(P.VERSION).split('.').map(Number);
+ok(VN[0] * 1000 + (VN[1] || 0) >= 6000, 'VERSION ≥ 6.00（目前 ' + P.VERSION + '）', P.VERSION);
+ok(idxSrc.indexOf('<span id="verTxt">' + P.VERSION + '</span>') > 0, '首頁徽章同步 ' + P.VERSION);
+ok(idxSrc.indexOf('<span id="verLogVer">' + P.VERSION + '</span>') > 0, '版本面板同步 ' + P.VERSION);
 const vl = P.VERSION_LOG || [];
-ok(vl[0] && vl[0].v === '6.00', 'VERSION_LOG 第一筆是 6.00', vl[0] && vl[0].v);
+ok(vl[0] && vl[0].v === P.VERSION, 'VERSION_LOG 第一筆是當前版本（' + (vl[0] && vl[0].v) + '）');
 ok(vl[0] && vl[0].now === true, '第一筆 now:true');
-ok(vl[0] && vl[0].items.length >= 10, '6.00 至少 10 條更新（' + (vl[0] ? vl[0].items.length : 0) + ' 條）');
+ok(vl[0] && vl[0].items.length >= 3, '本版至少 3 條更新（' + (vl[0] ? vl[0].items.length : 0) + ' 條）');
 ok(vl[1] && vl[1].now === false, '上一版（' + (vl[1] && vl[1].v) + '）改成 now:false');
+const e600 = vl.filter(function (x) { return x.v === '6.00'; })[0];
+ok(e600 && e600.items.length >= 10, '6.00 那一筆至少 10 條更新（' + (e600 ? e600.items.length : 0) + ' 條）');
 ok(!/後台|開發者/.test(vl[0] ? vl[0].items.join('') : ''), 'VERSION_LOG 沒有「後台／開發者」字樣');
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, '..', 'package.json'), 'utf8'));
-ok(/^6\.00\.\d+$/.test(pkg.version), 'package.json = 6.00.x（' + pkg.version + '）');
+ok(/^6\.\d+\.\d+$/.test(pkg.version), 'package.json = 6.x.x（' + pkg.version + '）');
 ['sw.js', '../public/sw.js', '../bomberman-online/public/sw.js', '../dist/site/sw.js'].forEach(function (rel) {
   const f = path.join(ROOT, rel);
   const w = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
-  ok(/SW_VERSION = 'v6\.00\.\d+'/.test(w), rel + ' 的 SW_VERSION = v6.00.x');
+  ok(/SW_VERSION = 'v6\.\d+\.\d+'/.test(w), rel + ' 的 SW_VERSION = v6.x.x');
 });
 
 /* ---------------------------------------------------------------- ② */

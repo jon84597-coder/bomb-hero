@@ -109,12 +109,15 @@ ok(/const isScreen = !cacheScope \|\| \(cacheScope\.classList && cacheScope\.cla
   '彈窗內不捲背後的頁面');
 
 // ---------------------------------------------------------------
-head('⑥ 按鍵：A 確認／B 返回（遊戲中＝暫停）／Start');
+head('⑥ 按鍵：A 確認／B 返回（只在選單）／Start');
 
-ok(/if \(Input\.padEdge\(pi, 0\)\) activate\(\);/.test(SRC), 'A 確認');
-ok(/if \(Input\.padEdge\(pi, 1\)\) back\(\);/.test(SRC), 'B 返回');
-ok(/Screen\.current === 'game'\) \{ try \{ togglePause\(\); \} catch \(e\) \{\} return true; \}/.test(SRC),
-  '遊戲中按 B ＝ 暫停（不是選單返回）');
+ok(/if \(!inGame && Input\.padEdge\(pi, 0\)\) activate\(\);/.test(SRC), 'A 確認');
+ok(/if \(!inGame && Input\.padEdge\(pi, 1\)\) back\(\);/.test(SRC), 'B 返回');
+/* v6.01：使用者回報「B 有遙控引爆，卻順便暫停」→ 手把的選單導航整段在遊戲畫面停手。
+   back() 裡那條 togglePause 分支只留給 ESC／瀏覽器返回，手把走不到。 */
+ok(/const inGame = \(typeof Screen !== 'undefined' && Screen\.current === 'game'\);/.test(SRC)
+  && /if \(!inGame && Input\.padEdge\(pi, 1\)\) back\(\);/.test(SRC),
+  '遊戲中手把 B 不會暫停（選單導航停手，B 只留給遙控引爆）');
 ok(/if \(Input\.padEdge\(pi, 4\)\) step\(-1\);/.test(SRC) && /if \(Input\.padEdge\(pi, 5\)\) step\(1\);/.test(SRC),
   'LB／RB 逐項');
 ok(/if \(cacheScope\) \{\s*if \(Input\.padEdge\(pi, 4\)\)/.test(SRC),

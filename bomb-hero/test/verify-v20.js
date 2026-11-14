@@ -187,8 +187,9 @@ ok(P.Pad.name().indexOf('Xbox') >= 0, '讀得到手把名稱（' + P.Pad.name() 
 ok(typeof P.PadUI.tick === 'function', '手把選單導航模組存在');
 ok(html.indexOf('.padfocus') >= 0, '選單有手把焦點樣式（方向鍵可選項目）');
 // v5.66：v5.x 手把導航重寫（支援多支手把與多層彈窗）→ 改成對應目前的寫法
-ok(/if \(Input\.padEdge\([^,]+, 0\)\) activate\(\);/.test(html), '手把 A 鍵可以確認選項');
-ok(/if \(Input\.padEdge\([^,]+, 1\)\) back\(\);/.test(html), '手把 B 鍵可以返回');
+ok(/if \(!inGame && Input\.padEdge\([^,]+, 0\)\) activate\(\);/.test(html), '手把 A 鍵可以確認選項（選單裡）');
+/* v6.01：遊戲中的 B 不再 back()（back 就是暫停）—— B 在遊戲裡只剩遙控引爆 */
+ok(/if \(!inGame && Input\.padEdge\([^,]+, 1\)\) back\(\);/.test(html), '手把 B 鍵可以返回（選單裡）');
 ok(/Input\.padDown\([^,]+, 12\)[\s\S]{0,60}?dir = 'up'/.test(html), '手把十字鍵可以選擇選單項目');
 // 一按鍵盤就切回鍵盤
 const kd = (listeners.keydown || []);
